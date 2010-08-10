@@ -62,7 +62,10 @@ function xboxkrnl_MmAllocateSystemMemory(
   NumberOfBytes: ULONG;
   Protect: ULONG
   ): PVOID; stdcall;
-function xboxkrnl_MmClaimGpuInstanceMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmClaimGpuInstanceMemory(
+  NumberOfBytes: SIZE_T;
+  NumberOfPaddingBytes: PSIZE_T // OUT
+  ): PVOID; stdcall;
 function xboxkrnl_MmCreateKernelStack(
   NumberOfBytes: ULONG;
   DebuggerThread: _BOOLEAN
@@ -84,8 +87,15 @@ function xboxkrnl_MmGetPhysicalAddress(
 function xboxkrnl_MmIsAddressValid(
   VirtualAddress: PVOID
   ): _BOOLEAN; stdcall;
-function xboxkrnl_MmLockUnlockBufferPages(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_MmLockUnlockPhysicalPage(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_MmLockUnlockBufferPages(
+  BaseAddress: PVOID;
+  NumberOfBytes: SIZE_T;
+  UnlockPages: BOOLEAN
+  ); stdcall;
+procedure xboxkrnl_MmLockUnlockPhysicalPage(
+  PhysicalAddress: PHYSICAL_ADDRESS;
+  UnlockPage: _BOOLEAN
+  ); stdcall;
 function xboxkrnl_MmMapIoSpace(
   PhysicalAddress: PHYSICAL_ADDRESS;
   NumberOfBytes: ULONG;
@@ -96,7 +106,9 @@ procedure xboxkrnl_MmPersistContiguousMemory(
   NumberOfBytes: ULONG;
   Persist: LONGBOOL
   ); stdcall;
-function xboxkrnl_MmQueryAddressProtect(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmQueryAddressProtect(
+  VirtualAddress: PVOID
+  ): ULONG; stdcall;
 function xboxkrnl_MmQueryAllocationSize(
   BaseAddress: PVOID
   ): NTSTATUS; stdcall;
@@ -120,6 +132,8 @@ function xboxkrnl_MmDbgWriteCheck(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 
+const lfUnit = lfCxbx or lfKernel or lfMemory;
+
 // MmAllocateContiguousMemory:
 // Allocates a range of physically contiguous, cache-aligned memory from the
 // non-paged pool (= main pool on XBOX).
@@ -136,13 +150,11 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmAllocateContiguousMemory' +
-         #13#10'(' +
-         #13#10'   NumberOfBytes            : 0x%.08X' +
-         #13#10');',
-         [NumberOfBytes]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : MmAllocateContiguousMemory').
+      _(NumberOfBytes, 'NumberOfBytes').
+    LogEnd();
+
 
   //
   // Cxbx NOTE: Kludgey (but necessary) solution:
@@ -161,9 +173,9 @@ begin
     pRet := PVOID(dwRet);
   end;
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmAllocateContiguous returned 0x%.08X', [pRet]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : MmAllocateContiguous returned 0x%.08X', [pRet]);
+
 
   EmuSwapFS(fsXbox);
   Result := pRet;
@@ -187,18 +199,14 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmAllocateContiguousMemoryEx' +
-         #13#10'(' +
-         #13#10'   NumberOfBytes            : 0x%.08X' +
-         #13#10'   LowestAcceptableAddress  : 0x%.08X' +
-         #13#10'   HighestAcceptableAddress : 0x%.08X' +
-         #13#10'   Alignment                : 0x%.08X' +
-         #13#10'   ProtectionType           : 0x%.08X' +
-         #13#10');',
-         [NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress,
-         Alignment, ProtectionType]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : MmAllocateContiguousMemoryEx').
+      _(NumberOfBytes, 'NumberOfBytes').
+      _(LowestAcceptableAddress, 'LowestAcceptableAddress').
+      _(HighestAcceptableAddress, 'HighestAcceptableAddress').
+      _(Alignment, 'Alignment').
+      _(ProtectionType, 'ProtectionType').
+    LogEnd();
 
   //
   // NOTE: Kludgey (but necessary) solution:
@@ -224,9 +232,8 @@ begin
     Inc(Count);
   end;
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmAllocateContiguousEx returned 0x%.08X', [pRet]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : MmAllocateContiguousEx returned 0x%.08X', [pRet]);
 
   EmuSwapFS(fsXbox);
 
@@ -241,14 +248,11 @@ function xboxkrnl_MmAllocateSystemMemory(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmAllocateSystemMemory' +
-         #13#10'(' +
-         #13#10'   NumberOfBytes            : 0x%.08X' +
-         #13#10'   Protect                  : 0x%.08X' +
-         #13#10');',
-         [NumberOfBytes, Protect]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : MmAllocateSystemMemory').
+      _(NumberOfBytes, 'NumberOfBytes').
+      _(Protect, 'Protect').
+    LogEnd();
 
   // TODO -oCXBX: should this be aligned?
   Result := DxbxMalloc(NumberOfBytes);
@@ -256,11 +260,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_MmClaimGpuInstanceMemory(): NTSTATUS; stdcall;
+function xboxkrnl_MmClaimGpuInstanceMemory(
+  NumberOfBytes: SIZE_T;
+  NumberOfPaddingBytes: PSIZE_T // OUT
+  ): PVOID; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmClaimGpuInstanceMemory');
+  Result := PVOID(Unimplemented('MmClaimGpuInstanceMemory'));
   EmuSwapFS(fsXbox);
 end;
 
@@ -273,14 +280,11 @@ function xboxkrnl_MmCreateKernelStack(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmCreateKernelStack' +
-      #13#10'(' +
-      #13#10'   NumberOfBytes            : 0x%.08X' +
-      #13#10'   DebuggerThread           : 0x%.08X' +
-      #13#10');',
-      [NumberOfBytes, DebuggerThread]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : MmCreateKernelStack').
+      _(NumberOfBytes, 'NumberOfBytes').
+      _(DebuggerThread, 'DebuggerThread').
+    LogEnd();
 
   if (DebuggerThread <> FALSE) then
     EmuWarning('MmCreateKernelStack : DebuggerThread ignored');
@@ -304,14 +308,11 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmDeleteKernelStack' +
-      #13#10'(' +
-      #13#10'   EndAddress               : 0x%.08X' +
-      #13#10'   BaseAddress              : 0x%.08X' +
-      #13#10');',
-      [EndAddress, BaseAddress]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : MmDeleteKernelStack').
+      _(EndAddress, 'EndAddress').
+      _(BaseAddress, 'BaseAddress').
+    LogEnd();
 
   RegionSize := 0;
   if (FAILED(JwaNative.NtFreeVirtualMemory(GetCurrentProcess(), @BaseAddress, @RegionSize, MEM_RELEASE))) then
@@ -333,13 +334,10 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmFreeContiguousMemory' +
-      #13#10'(' +
-      #13#10'   BaseAddress              : 0x%.08X' +
-      #13#10');',
-      [BaseAddress]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : MmFreeContiguousMemory').
+      _(BaseAddress, 'BaseAddress').
+    LogEnd();
 
   OrigBaseAddress := g_AlignCache.remove({uiKey=}uint32(BaseAddress));
   if OrigBaseAddress = nil then
@@ -351,9 +349,9 @@ begin
   end
   else
   begin
-{$IFDEF DEBUG}
-    DbgPrintf('Ignored MmFreeContiguousMemory(&xLaunchDataPage)');
-{$ENDIF}
+    if MayLog(lfUnit) then
+      DbgPrintf('Ignored MmFreeContiguousMemory(&xLaunchDataPage)');
+
   end;
 
   // TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
@@ -372,14 +370,11 @@ function xboxkrnl_MmFreeSystemMemory(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmFreeSystemMemory' +
-      #13#10'(' +
-      #13#10'   BaseAddress              : 0x%.08X' +
-      #13#10'   NumberOfBytes            : 0x%.08X' +
-      #13#10');',
-      [BaseAddress, NumberOfBytes]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : MmFreeSystemMemory').
+      _(BaseAddress, 'BaseAddress').
+      _(NumberOfBytes, 'NumberOfBytes').
+    LogEnd();
 
   DxbxFree(BaseAddress);
 
@@ -394,10 +389,11 @@ end;
 function xboxkrnl_MmGetPhysicalAddress(
   BaseAddress: PVOID
   ): PHYSICAL_ADDRESS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:1
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmGetPhysicalAddress');
+  Unimplemented('MmGetPhysicalAddress');
+  Result := PHYSICAL_ADDRESS(BaseAddress); // Dxbx addition : For now, return the virtual address as if it was physical
   EmuSwapFS(fsXbox);
 end;
 
@@ -408,22 +404,30 @@ function xboxkrnl_MmIsAddressValid(
 begin
   EmuSwapFS(fsWindows);
   Result := _BOOLEAN(Unimplemented('MmIsAddressValid'));
+  // TODO -oDxbx : Could we use our IsValidAddress function for this perhaps?
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_MmLockUnlockBufferPages(): NTSTATUS; stdcall;
+procedure xboxkrnl_MmLockUnlockBufferPages(
+  BaseAddress: PVOID;
+  NumberOfBytes: SIZE_T;
+  UnlockPages: BOOLEAN
+  ); stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmLockUnlockBufferPages');
+  Unimplemented('MmLockUnlockBufferPages');
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_MmLockUnlockPhysicalPage(): NTSTATUS; stdcall;
+procedure xboxkrnl_MmLockUnlockPhysicalPage(
+  PhysicalAddress: PHYSICAL_ADDRESS;
+  UnlockPage: _BOOLEAN
+  ); stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmLockUnlockPhysicalPage');
+  Unimplemented('MmLockUnlockPhysicalPage');
   EmuSwapFS(fsXbox);
 end;
 
@@ -458,15 +462,12 @@ procedure xboxkrnl_MmPersistContiguousMemory(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmPersistContiguousMemory' +
-         #13#10'(' +
-         #13#10'   BaseAddress              : 0x%.08X' +
-         #13#10'   NumberOfBytes            : 0x%.08X' +
-         #13#10'   Persist                  : 0x%.08X' +
-         #13#10');',
-         [BaseAddress, NumberOfBytes, Persist]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : MmPersistContiguousMemory').
+      _(BaseAddress, 'BaseAddress').
+      _(NumberOfBytes, 'NumberOfBytes').
+      _(Persist, 'Persist').
+    LogEnd();
 
   // TODO -oCXBX: Actually set this up to be remember across a 'reboot'
   EmuWarning('MmPersistContiguousMemory is being ignored');
@@ -486,11 +487,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_MmQueryAddressProtect(): NTSTATUS; stdcall;
+function xboxkrnl_MmQueryAddressProtect(
+  VirtualAddress: PVOID
+  ): ULONG; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmQueryAddressProtect');
+  // TODO -oDxbx : Should we use VirtualQuery for implementing this, like in EmuCheckAllocationSize ?
   EmuSwapFS(fsXbox);
 end;
 
@@ -501,13 +505,10 @@ function xboxkrnl_MmQueryAllocationSize(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmQueryAllocationSize' +
-      #13#10'(' +
-      #13#10'   BaseAddress              : 0x%.08X' +
-      #13#10');',
-      [BaseAddress]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : MmQueryAllocationSize').
+      _(BaseAddress, 'BaseAddress').
+    LogEnd();
 
   Result := EmuCheckAllocationSize(BaseAddress, false);
   EmuSwapFS(fsXbox);
@@ -522,13 +523,11 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmQueryStatistics' +
-      #13#10'(' +
-      #13#10'   MemoryStatistics         : 0x%.08X' +
-      #13#10');',
-      [MemoryStatistics]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : MmQueryStatistics').
+      _(MemoryStatistics, 'MemoryStatistics').
+    LogEnd();
+
 
   GlobalMemoryStatus({var}MemoryStatus);
 
@@ -558,15 +557,13 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmSetAddressProtect' +
-      #13#10'(' +
-      #13#10'   BaseAddress              : 0x%.08X' +
-      #13#10'   NumberOfBytes            : 0x%.08X' +
-      #13#10'   NewProtect               : 0x%.08X' +
-      #13#10');',
-      [BaseAddress, NumberOfBytes, NewProtect]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : MmSetAddressProtect').
+      _(BaseAddress, 'BaseAddress').
+      _(NumberOfBytes, 'NumberOfBytes').
+      _(NewProtect, 'NewProtect').
+    LogEnd();
+
 
   if IsRunning(TITLEID_Halo) then
   begin
@@ -582,9 +579,9 @@ begin
   if(not VirtualProtect(BaseAddress, NumberOfBytes, NewProtect and (not PAGE_WRITECOMBINE), @dwOldProtect)) then
     EmuWarning('VirtualProtect Failed!');
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : VirtualProtect was 0x%.08X -> 0x%.08X', [dwOldProtect, NewProtect and (not PAGE_WRITECOMBINE)]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : VirtualProtect was 0x%.08X -> 0x%.08X', [dwOldProtect, NewProtect and (not PAGE_WRITECOMBINE)]);
+
 
   EmuSwapFS(fsXbox);
 end;
