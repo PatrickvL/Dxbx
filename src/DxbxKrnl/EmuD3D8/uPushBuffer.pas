@@ -79,9 +79,9 @@ uses
     uDxbxKrnlUtils
   , uLog
   , uConvert
+  , uEmuD3D8 // DxbxPresent
   , uState
-  , uVertexShader
-  , uEmuD3D8;
+  , uVertexShader;
 
 // From PushBuffer.cpp :
 
@@ -739,7 +739,7 @@ begin
 
   if (XTL_g_bStepPush) then
   begin
-    IDirect3DDevice8(g_pD3DDevice8).Present(nil, nil, 0, nil);
+    DxbxPresent(nil, nil, 0, nil);
     Sleep(500);
   end;
 end;
