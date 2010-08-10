@@ -23,6 +23,7 @@ interface
 uses
   // Delphi
   Windows,
+  SysUtils, // Format
   // Dxbx
   uConsts, // TITLEID_AZURIK
   uTypes,
@@ -428,6 +429,8 @@ type PS_GLOBALFLAGS =
 
 // dump pixel shader definition to file
 procedure XTL_DumpPixelShaderDefToFile(pPSDef: PX_D3DPIXELSHADERDEF);
+// dump pixel shader definition to string
+function XTL_DumpPixelShaderDefToString(pPSDef: PX_D3DPIXELSHADERDEF): string;
 // print relevant contents to the debug console
 procedure XTL_PrintPixelShaderDefContents(pPSDef: PX_D3DPIXELSHADERDEF);
 // Recompile Xbox PixelShader def
@@ -452,6 +455,8 @@ begin
 end;
 
 // From PixelShader.cpp -----------------------------------------------------------
+
+type P_char = string; // Strings are easier for Delphi
 
 // PS Texture Modes
 const PS_TextureModesStr: array [{PS_TEXTUREMODES=}0..32-1] of P_char =
@@ -590,9 +595,7 @@ const PS_FinalCombinerSettingStr: array [{PS_FINALCOMBINERSETTING=}0..3-1] of P_
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_FINALCOMBINERSETTING_CLAMP_SUM'  ,    // 0x80, // V1+R0 sum clamped to [0,1]
-
     'PS_FINALCOMBINERSETTING_COMPLEMENT_V1',  // 0x40, // unsigned invert mapping
-
     'PS_FINALCOMBINERSETTING_COMPLEMENT_R0'   // 0x20, // unsigned invert mapping
 );
 
@@ -642,7 +645,15 @@ begin
   out_ := fopen(szPSDef, 'w');
   if Assigned(out_) then
   begin
-    fprintf(out_, 'PSAphaInputs[8]              = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10 +
+    fprintf(out_, PAnsiChar(AnsiString(XTL_DumpPixelShaderDefToString(pPSDef))));
+    fclose(out_);
+  end;
+end;
+
+function XTL_DumpPixelShaderDefToString(pPSDef: PX_D3DPIXELSHADERDEF): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  Result :=Format('PSAphaInputs[8]              = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10 +
                   'PSFinalCombinerInputsABCD    = 0x%.08X'#13#10 +
                   'PSFinalCombinerInputsEFG     = 0x%.08X'#13#10 +
                   'PSConstant0[8]               = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10 +
@@ -684,8 +695,34 @@ begin
                   pPSDef.PSC0Mapping,
                   pPSDef.PSC1Mapping,
                   pPSDef.PSFinalCombinerConstants]);
-    fclose(out_);
-  end;
+end;
+
+function PSFinalCombinerInputToStr(const dwPSFCI: DWORD): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+    if dwPSFCI and $F = Ord(PS_REGISTER_ZERO) then
+      Result := 'PS_REGISTER_ZERO'
+    else
+      Result := Format('%s | %s | %s', [
+        PS_RegisterStr[(dwPSFCI and $F) + 1],
+        PS_InputMappingStr[dwPSFCI shr 5],
+        PS_ChannelStr[iif((dwPSFCI and Ord(PS_CHANNEL_ALPHA)) > 0, 2, 0)]
+        ]);
+end;
+
+function PSFinalCombinerSettingToStr(const dwPS_FINALCOMBINERSETTING: DWORD): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  Result := '';
+  if (dwPS_FINALCOMBINERSETTING and Ord(PS_FINALCOMBINERSETTING_CLAMP_SUM)) > 0 then
+    Result := Result + ' | ' + PS_FinalCombinerSettingStr[0];
+  if (dwPS_FINALCOMBINERSETTING and Ord(PS_FINALCOMBINERSETTING_COMPLEMENT_V1)) > 0 then
+    Result := Result + ' | ' + PS_FinalCombinerSettingStr[1];
+  if (dwPS_FINALCOMBINERSETTING and Ord(PS_FINALCOMBINERSETTING_COMPLEMENT_R0)) > 0 then
+    Result := Result + ' | ' + PS_FinalCombinerSettingStr[2];
+
+  if Result <> '' then
+    Delete(Result, 1, 3);
 end;
 
 // print relevant contents to the debug console
@@ -714,15 +751,25 @@ var
   dwPSCCC0: DWORD;
   dwPSCCC1: DWORD;
 
+  i: int;
+
   dwPSFCIA: DWORD;
   dwPSFCIB: DWORD;
   dwPSFCIC: DWORD;
   dwPSFCID: DWORD;
+
+  dwPSFCIE: DWORD;
+  dwPSFCIF: DWORD;
+  dwPSFCIG: DWORD;
+  dwPS_FINALCOMBINERSETTING: DWORD;
+
+  dwPS_GLOBALFLAGS: DWORD;
 begin
   // Show the contents to the user
   if Assigned(pPSDef) then
   begin
     DbgPshPrintf(#13#10'-----PixelShader Def Contents-----');
+    DbgPshPrintf(XTL_DumpPixelShaderDefToString(pPSDef));
 
     if (pPSDef.PSTextureModes > 0) then
     begin
@@ -731,112 +778,136 @@ begin
       dwPSTexMode2 := (pPSDef.PSTextureModes shr 10) and $1F;
       dwPSTexMode3 := (pPSDef.PSTextureModes shr 15) and $1F;
 
-      DbgPshPrintf('PSTextureModes ->');
+      DbgPshPrintf(#13#10'PSTextureModes ->'); // Texture addressing modes
       DbgPshPrintf('Stage 0: %s', [PS_TextureModesStr[dwPSTexMode0]]);
       DbgPshPrintf('Stage 1: %s', [PS_TextureModesStr[dwPSTexMode1]]);
       DbgPshPrintf('Stage 2: %s', [PS_TextureModesStr[dwPSTexMode2]]);
       DbgPshPrintf('Stage 3: %s', [PS_TextureModesStr[dwPSTexMode3]]);
     end;
 
-    if (pPSDef.PSDotMapping > 0) then
+    if (pPSDef.PSDotMapping > 0) then // Input mapping for dot product modes
     begin
       dwPSDMStage1 := (pPSDef.PSDotMapping shr 0) and $7;
       dwPSDMStage2 := (pPSDef.PSDotMapping shr 4) and $7;
       dwPSDMStage3 := (pPSDef.PSDotMapping shr 8) and $7;
 
-      DbgPshPrintf('PSDotMapping ->');
+      DbgPshPrintf(#13#10'PSDotMapping ->');
       DbgPshPrintf('Stage 1: %s', [PS_DotMappingStr[dwPSDMStage1]]);
       DbgPshPrintf('Stage 2: %s', [PS_DotMappingStr[dwPSDMStage2]]);
       DbgPshPrintf('Stage 3: %s', [PS_DotMappingStr[dwPSDMStage3]]);
     end;
 
-    if (pPSDef.PSCompareMode > 0) then
+    if (pPSDef.PSCompareMode > 0) then // Compare modes for clipplane texture mode
     begin
       dwPSCMStage0 := (pPSDef.PSCompareMode shr 0) and $F;
       dwPSCMStage1 := (pPSDef.PSCompareMode shr 4) and $F;
       dwPSCMStage2 := (pPSDef.PSCompareMode shr 8) and $F;
       dwPSCMStage3 := (pPSDef.PSCompareMode shr 12) and $F;
 
-      DbgPshPrintf('PSCompareMode ->');
+      DbgPshPrintf(#13#10'PSCompareMode ->');
       DbgPshPrintf('Stage 0: %s', [PS_CompareModeStr[iif(dwPSCMStage0 = 0, 0, 1)]]);
       DbgPshPrintf('Stage 1: %s', [PS_CompareModeStr[iif(dwPSCMStage1 = 0, 2, 3)]]);
       DbgPshPrintf('Stage 2: %s', [PS_CompareModeStr[iif(dwPSCMStage2 = 0, 4, 5)]]);
       DbgPshPrintf('Stage 3: %s', [PS_CompareModeStr[iif(dwPSCMStage3 = 0, 6, 7)]]);
     end;
 
-    if (pPSDef.PSInputTexture > 0) then
+    if (pPSDef.PSInputTexture > 0) then // Texture source for some texture modes
     begin
       dwPSITStage2 := (pPSDef.PSInputTexture shr 16) and $1;
       dwPSITStage3 := (pPSDef.PSInputTexture shr 20) and $3;
 
-      DbgPshPrintf('PSInputTexture ->');
+      DbgPshPrintf(#13#10'PSInputTexture ->');
       DbgPshPrintf('Stage 2: %s', [PS_TextureModesStr[dwPSITStage2]]);
       DbgPshPrintf('Stage 3: %s', [PS_TextureModesStr[dwPSITStage3]]);
     end;
 
-    if (pPSDef.PSCombinerCount > 0) then
+    if (pPSDef.PSCombinerCount > 0) then // Active combiner count (Stages 0-7)
     begin
       dwPSCCNumCombiners := (pPSDef.PSCombinerCount shr 0) and $F;
       dwPSCCMux := (pPSDef.PSCombinerCount shr 8) and $1;
       dwPSCCC0 := (pPSDef.PSCombinerCount shr 12) and $1;
       dwPSCCC1 := (pPSDef.PSCombinerCount shr 16) and $1;
 
-      DbgPshPrintf('PSCombinerCount ->');
+      DbgPshPrintf(#13#10'PSCombinerCount ->');
       DbgPshPrintf('Combiners: %d', [dwPSCCNumCombiners]);
       DbgPshPrintf('Mux:       %s', [PS_CombinerCountFlagsStr[dwPSCCMux]]);
       DbgPshPrintf('C0:        %s', [PS_CombinerCountFlagsStr[iif(dwPSCCC0 = 0, 2, 3)]]);
       DbgPshPrintf('C1:        %s', [PS_CombinerCountFlagsStr[iif(dwPSCCC1 = 0, 4, 5)]]);
     end;
 
-    if (pPSDef.PSFinalCombinerInputsABCD > 0) then
+    // Dxbx additions from here onwards :
+
+    for i := 0 to 8-1 do
     begin
-      dwPSFCIA := (pPSDef.PSFinalCombinerInputsABCD shr 0) and $FF;
-      dwPSFCIB := (pPSDef.PSFinalCombinerInputsABCD shr 8) and $FF;
-      dwPSFCIC := (pPSDef.PSFinalCombinerInputsABCD shr 16) and $FF;
-      dwPSFCID := (pPSDef.PSFinalCombinerInputsABCD shr 24) and $FF;
-
-      DbgPshPrintf('PSFinalCombinerInputsABCD ->');
-      if dwPSFCIA and $F = Ord(PS_REGISTER_ZERO) then
-        DbgPshPrintf('Input A: PS_REGISTER_ZERO')
-      else
-        DbgPshPrintf('Input A: %s | %s | %s', [
-          PS_RegisterStr[(dwPSFCIA and $F) + 1],
-          PS_InputMappingStr[dwPSFCIA shr 5],
-          PS_ChannelStr[iif((dwPSFCIA and Ord(PS_CHANNEL_ALPHA)) > 0, 2, 0)]
-          ]);
-
-      if dwPSFCIB and $F = Ord(PS_REGISTER_ZERO) then
-        DbgPshPrintf('Input B: PS_REGISTER_ZERO')
-      else
-        DbgPshPrintf('Input B: %s | %s | %s', [
-          PS_RegisterStr[(dwPSFCIB and $F) + 1],
-          PS_InputMappingStr[dwPSFCIB shr 5],
-          PS_ChannelStr[iif((dwPSFCIB and Ord(PS_CHANNEL_ALPHA)) > 0, 2, 0)]
-          ]);
-
-      if dwPSFCIC and $F = Ord(PS_REGISTER_ZERO) then
-        DbgPshPrintf('Input C: PS_REGISTER_ZERO')
-      else
-        DbgPshPrintf('Input C: %s | %s | %s', [
-          PS_RegisterStr[(dwPSFCIC and $F) + 1],
-          PS_InputMappingStr[dwPSFCIC shr 5],
-          PS_ChannelStr[iif((dwPSFCIC and Ord(PS_CHANNEL_ALPHA)) > 0, 2, 0)]
-          ]);
-
-      if dwPSFCID and $F = Ord(PS_REGISTER_ZERO) then
-        DbgPshPrintf('Input D: PS_REGISTER_ZERO')
-      else
-        DbgPshPrintf('Input D: %s | %s | %s', [
-          PS_RegisterStr[(dwPSFCID and $F) + 1],
-          PS_InputMappingStr[dwPSFCID shr 5],
-          PS_ChannelStr[iif((dwPSFCID and Ord(PS_CHANNEL_ALPHA)) > 0, 2, 0)]
-          ]);
+      if (pPSDef.PSRGBInputs[i] > 0) then // RGB inputs for each stage
+      begin
+        DbgPshPrintf(#13#10'pPSDef.PSRGBInputs[%d] ->', [i]);
+        DbgPshPrintf('pPSDef.PSRGBInputs[%d] A: %s', [i, PSFinalCombinerInputToStr((pPSDef.PSRGBInputs[i] shr 24) and $FF)]);
+        DbgPshPrintf('pPSDef.PSRGBInputs[%d] B: %s', [i, PSFinalCombinerInputToStr((pPSDef.PSRGBInputs[i] shr 16) and $FF)]);
+        DbgPshPrintf('pPSDef.PSRGBInputs[%d] C: %s', [i, PSFinalCombinerInputToStr((pPSDef.PSRGBInputs[i] shr  8) and $FF)]);
+        DbgPshPrintf('pPSDef.PSRGBInputs[%d] D: %s', [i, PSFinalCombinerInputToStr((pPSDef.PSRGBInputs[i] shr  0) and $FF)]);
+      end;
     end;
 
-    (*for(int i := 0; i > 7; i++)
+    for i := 0 to 8-1 do
     begin
-      if Assigned(pPSDef.PSRGBInputs[i]) then
-      begin*)
+      if (pPSDef.PSAlphaInputs[i] > 0) then // Alpha inputs for each stage
+      begin
+        DbgPshPrintf(#13#10'pPSDef.PSAlphaInputs[%d] ->', [i]);
+        DbgPshPrintf('pPSDef.PSAlphaInputs[%d] A: %s', [i, PSFinalCombinerInputToStr((pPSDef.PSAlphaInputs[i] shr 24) and $FF)]);
+        DbgPshPrintf('pPSDef.PSAlphaInputs[%d] B: %s', [i, PSFinalCombinerInputToStr((pPSDef.PSAlphaInputs[i] shr 16) and $FF)]);
+        DbgPshPrintf('pPSDef.PSAlphaInputs[%d] C: %s', [i, PSFinalCombinerInputToStr((pPSDef.PSAlphaInputs[i] shr  8) and $FF)]);
+        DbgPshPrintf('pPSDef.PSAlphaInputs[%d] D: %s', [i, PSFinalCombinerInputToStr((pPSDef.PSAlphaInputs[i] shr  0) and $FF)]);
+      end;
+    end;
+
+    if (pPSDef.PSFinalCombinerInputsABCD > 0) then // Final combiner inputs
+    begin
+      dwPSFCIA := (pPSDef.PSFinalCombinerInputsABCD shr 24) and $FF;
+      dwPSFCIB := (pPSDef.PSFinalCombinerInputsABCD shr 16) and $FF;
+      dwPSFCIC := (pPSDef.PSFinalCombinerInputsABCD shr  8) and $FF;
+      dwPSFCID := (pPSDef.PSFinalCombinerInputsABCD shr  0) and $FF;
+
+      DbgPshPrintf(#13#10'PSFinalCombinerInputsABCD ->');
+      DbgPshPrintf('Input A: %s', [PSFinalCombinerInputToStr(dwPSFCIA)]);
+      DbgPshPrintf('Input B: %s', [PSFinalCombinerInputToStr(dwPSFCIB)]);
+      DbgPshPrintf('Input C: %s', [PSFinalCombinerInputToStr(dwPSFCIC)]);
+      DbgPshPrintf('Input D: %s', [PSFinalCombinerInputToStr(dwPSFCID)]);
+    end;
+
+    if (pPSDef.PSFinalCombinerInputsEFG > 0) then // Final combiner inputs (continued)
+    begin
+      dwPSFCIE := (pPSDef.PSFinalCombinerInputsEFG shr 24) and $FF;
+      dwPSFCIF := (pPSDef.PSFinalCombinerInputsEFG shr 16) and $FF;
+      dwPSFCIG := (pPSDef.PSFinalCombinerInputsEFG shr  8) and $FF;
+      dwPS_FINALCOMBINERSETTING := (pPSDef.PSFinalCombinerInputsEFG shr 0) and $FF;
+
+      DbgPshPrintf(#13#10'PSFinalCombinerInputsEFG ->');
+      DbgPshPrintf('Input E: %s', [PSFinalCombinerInputToStr(dwPSFCIE)]);
+      DbgPshPrintf('Input F: %s', [PSFinalCombinerInputToStr(dwPSFCIF)]);
+      DbgPshPrintf('Input G: %s', [PSFinalCombinerInputToStr(dwPSFCIG)]);
+      DbgPshPrintf('Final combiner setting: %s', [PSFinalCombinerSettingToStr(dwPS_FINALCOMBINERSETTING)]);
+    end;
+
+(* TODO :
+    PSConstant0: array [0..8-1] of DWORD;    // C0 for each stage
+    PSConstant1: array [0..8-1] of DWORD;    // C1 for each stage
+    PSAlphaOutputs: array [0..8-1] of DWORD; // Alpha output for each stage
+    PSFinalCombinerConstant0: DWORD;         // C0 in final combiner
+    PSFinalCombinerConstant1: DWORD;         // C1 in final combiner
+    PSRGBOutputs: array [0..8-1] of DWORD;   // Stage 0 RGB outputs
+    // These last three DWORDs are used to define how Direct3D8 pixel shader constants map to the constant
+    // registers in each combiner stage. They are used by the Direct3D run-time software but not by the hardware.
+    PSC0Mapping: DWORD;                      // Mapping of c0 regs to D3D constants
+    PSC1Mapping: DWORD;                      // Mapping of c1 regs to D3D constants
+*)
+    DbgPshPrintf(#13#10'PSFinalCombinerConstants ->'); // // Final combiner constant mapping
+    DbgPshPrintf('Offset of D3D constant for C0: %d', [(pPSDef.PSFinalCombinerConstants shr 0) and $F]);
+    DbgPshPrintf('Offset of D3D constant for C1: %d', [(pPSDef.PSFinalCombinerConstants shr 4) and $F]);
+    dwPS_GLOBALFLAGS := (pPSDef.PSFinalCombinerConstants shr 8) and $1;
+    DbgPshPrintf('Adjust texture flag: %s', [PS_GlobalFlagsStr[PS_GLOBALFLAGS(dwPS_GLOBALFLAGS)]]);
+
+    DbgPshPrintf(#13#10);
   end;
 end;
 
