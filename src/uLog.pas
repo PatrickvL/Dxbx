@@ -91,6 +91,7 @@ const
     lfThreading     = $00040000; //
     lfXOnline       = $00080000;
     lfXapi          = $00100000;
+    lfMemory        = $00200000;
 
 // Note : Some units declare (and use) lfUnit, a variable that best describes the logging in these units.
 
@@ -128,6 +129,7 @@ type
     function _(const aValue: WORD; const aName: string = ''): PlogStack; overload;
     function _(const aValue: DWORD; const aName: string = ''): PLogStack; overload;
     function _(const aValue: BOOL; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: _BOOLEAN; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PVOID; const aName: string = ''): PLogStack; overload;
     function _(const aValue: LPCSTR; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PPOINT; const aName: string = ''): PLogStack; overload;
@@ -860,6 +862,12 @@ function RLogStack._(const aValue: BOOL; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'BOOL');
   SetValue(IntToStr(aValue));
+end;
+
+function RLogStack._(const aValue: _BOOLEAN; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, '_BOOLEAN');
+  SetValue(IntToStr(Ord(aValue)));
 end;
 
 function RLogStack._(const aValue: LARGE_INTEGER; const aName: string = ''): PLogStack;
