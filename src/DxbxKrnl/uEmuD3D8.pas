@@ -1483,7 +1483,7 @@ begin
 
         // initially, show a black screen
         IDirect3DDevice8(g_pD3DDevice8).Clear(0, nil, D3DCLEAR_TARGET or D3DCLEAR_ZBUFFER, $FF000000, 1.0, 0);
-        IDirect3DDevice8(g_pD3DDevice8).Present(nil, nil, 0, nil);
+        DxbxPresent(nil, nil, 0, nil);
 
         // signal completion
         g_EmuCDPD.bReady := false;
@@ -4824,7 +4824,7 @@ begin
   EmuSwapFS(fsXbox);
 
   // Forward to Present
-  Result := XTL_EmuIDirect3DDevice8_Present(nil, nil, nil, nil);
+  Result := DxbxPresent(nil, nil, 0, nil);
 end;
 
 procedure XTL_EmuIDirect3DResource8_Register
