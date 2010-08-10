@@ -170,7 +170,7 @@ function DxbxCreateSymbolicLink(SymbolicLinkName, FullPath: AnsiString): NTSTATU
 function DxbxPC2XB_FS_INFORMATION(NativeFileInformation, FileInformation: PVOID;
   FsInformationClass: FS_INFORMATION_CLASS): Boolean;
 
-  function DxbxPC2XB_FILE_INFORMATION(NativeFileInformation, FileInformation: PVOID;
+function DxbxPC2XB_FILE_INFORMATION(NativeFileInformation, FileInformation: PVOID;
   FileInformationClass: FILE_INFORMATION_CLASS): Boolean;
 function DxbxXB2PC_FILE_INFORMATION(FileInformation, NativeFileInformation: PVOID;
   FileInformationClass: FILE_INFORMATION_CLASS): Boolean;

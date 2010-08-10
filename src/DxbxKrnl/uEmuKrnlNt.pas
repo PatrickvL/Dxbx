@@ -1645,16 +1645,15 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuKrnl : NtQueryInformationFile' +
-       #13#10'(' +
-       #13#10'   FileHandle          : 0x%.08X' +
-       #13#10'   IoStatusBlock       : 0x%.08X' +
-       #13#10'   FileInformation     : 0x%.08X' +
-       #13#10'   Length              : 0x%.08X' +
-       #13#10'   FileInformationClass: 0x%.08X (%s)' +
-       #13#10');',
-       [FileHandle, IoStatusBlock, FileInformation,
-        Length, Ord(FileInformationClass), FileInformationClassToString(FileInformationClass)]);
+  begin
+    LogBegin('EmuKrnl : NtQueryInformationFile').
+      _(FileHandle, 'FileHandle').
+      _(IoStatusBlock, 'IoStatusBlock').
+      _(FileInformation, 'FileInformation').
+      _(Length, 'Length').
+      _(FileInformationClass, 'FileInformationClass').
+    LogEnd();
+  end;
 
   // TODO -oCxbx: IIRC, this function is depreciated.  Maybe we should just use
   // ZwQueryInformationFile instead?

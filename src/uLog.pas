@@ -137,6 +137,7 @@ type
     function _(const aValue: PLARGE_INTEGER; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PANSI_STRING; const aName: string = ''): PLogStack; overload;
     function _(const aValue: POBJECT_ATTRIBUTES; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: FILE_INFORMATION_CLASS; const aName: string = ''): PLogStack; overload;
 
     function _ACCESS_MASK(const aValue: ACCESS_MASK; const aName: string = ''): PLogStack;
     function _FileAttributes(const aValue: ULONG; const aName: string = ''): PLogStack;
@@ -924,6 +925,12 @@ begin
     SetValue(UIntPtr(aValue), '"' + string(POBJECT_ATTRIBUTES_String(aValue)) + '"')
   else
     SetValue(UIntPtr(aValue));
+end;
+
+function RLogStack._(const aValue: FILE_INFORMATION_CLASS; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'FILE_INFORMATION_CLASS');
+  SetValue(UIntPtr(aValue), FileInformationClassToString(aValue));
 end;
 
 function RLogStack._ACCESS_MASK(const aValue: ACCESS_MASK; const aName: string = ''): PLogStack;
