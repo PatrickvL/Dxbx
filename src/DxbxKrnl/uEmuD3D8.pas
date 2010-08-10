@@ -4738,7 +4738,7 @@ function XTL_EmuIDirect3DDevice8_Present
 (
     {CONST} pSourceRect: PRECT;
     {CONST} pDestRect: PRECT;
-    pDummy1: PVOID;
+    pDummy1: HWND;
     pDummy2: PVOID
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -4824,7 +4824,7 @@ begin
   EmuSwapFS(fsXbox);
 
   // Forward to Present
-  Result := DxbxPresent(nil, nil, 0, nil);
+  Result := XTL_EmuIDirect3DDevice8_Present(nil, nil, 0, nil);
 end;
 
 procedure XTL_EmuIDirect3DResource8_Register
