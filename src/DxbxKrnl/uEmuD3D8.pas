@@ -281,7 +281,7 @@ begin
 
   g_iWireframe := 0;
 
-  g_BuildVersion := 0;
+  g_BuildVersion := DEFAULT_XDK_VERSION;
 
   ZeroMemory(@g_EmuD3DResourceCache, SizeOf(g_EmuD3DResourceCache));
 

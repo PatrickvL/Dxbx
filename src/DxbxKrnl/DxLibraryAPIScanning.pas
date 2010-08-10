@@ -152,7 +152,7 @@ type
 
 var
   SymbolManager: TSymbolManager;
-  LibD3D8: PStoredLibrary;
+  LibD3D8: PStoredLibrary = nil;
 
 const
   OPCODE_NOP = $90;
@@ -1135,10 +1135,7 @@ begin
       StoredLibrary := PatternTrieReader.GetStoredLibrary(BestStoredLibraryIndex);
       StoredLibraryName := PatternTrieReader.GetString(StoredLibrary.LibNameIndex);
       if SameLibName(StoredLibraryName, 'D3D8') then
-      begin
         LibD3D8 := StoredLibrary;
-        g_BuildVersion := LibD3D8.LibVersion;
-      end;
 
       // Add this library to a set we'll use in the detection-code :
       LibraryVersionsToScan := LibraryVersionsToScan + [LibraryVersionNumberToFlag(StoredLibrary.LibVersion)];
@@ -1161,6 +1158,12 @@ begin
     // Skip to the next library :
     Inc(CurrentXbeLibraryVersion);
   end; // for all library versions
+
+  if Assigned(LibD3D8) then
+    g_BuildVersion := LibD3D8.LibVersion
+  else
+    // For OpenSDK / SDLx linked XBEs, assume 4627 libs where used :
+    g_BuildVersion := DEFAULT_XDK_VERSION; // TODO -oDxbx: Make this configurable!
 
   FreeAndNil(StoredLibraryVersions);
 end; // DetectVersionedXboxLibraries
@@ -1509,24 +1512,24 @@ begin
     begin
       // Calculate the location of D3DDeferredRenderState via an XDK-dependent offset to _D3D__RenderState :
       // Dxbx note : XTL_EmuD3DDeferredRenderState:PDWORDs cast to UIntPtr to avoid incrementing with that many array-sizes!
-      if LibD3D8.LibVersion <= 3925 then
+      if g_BuildVersion <= 3925 then
       begin
         XTL_EmuD3DDeferredRenderState_Start := X_D3DRS_DEFERRED_START_3925;
         XTL_EmuD3DDeferredRenderState_Size := X_D3DRS_DEFERRED_SIZE_3925;
       end
-      else if LibD3D8.LibVersion <= 4361 then
+      else if g_BuildVersion <= 4361 then
       begin
         XTL_EmuD3DDeferredRenderState_Start := X_D3DRS_DEFERRED_START_4361;
         XTL_EmuD3DDeferredRenderState_Size := X_D3DRS_DEFERRED_SIZE_4361;
       end
-      else if LibD3D8.LibVersion <= 4432 then
+      else if g_BuildVersion <= 4432 then
       begin
         XTL_EmuD3DDeferredRenderState_Start := X_D3DRS_DEFERRED_START_4432;
         XTL_EmuD3DDeferredRenderState_Size := X_D3DRS_DEFERRED_SIZE_4432;
       end
       else
       begin
-        Assert(LibD3D8.LibVersion <= 5933);
+        Assert(g_BuildVersion <= 5933);
 
         XTL_EmuD3DDeferredRenderState_Start := X_D3DRS_DEFERRED_START_5933;
         XTL_EmuD3DDeferredRenderState_Size := X_D3DRS_DEFERRED_SIZE_5933;

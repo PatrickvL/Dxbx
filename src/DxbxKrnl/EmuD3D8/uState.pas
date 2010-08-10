@@ -44,7 +44,8 @@ var XTL_EmuD3DDeferredRenderState_Start: DWord; // Dxbx addition, to allow for S
 var XTL_EmuD3DDeferredRenderState_Size: DWord; // Dxbx addition
 var XTL_EmuD3DRenderState_ComplexCorrection: Integer; // Dxbx addition, to allow for SDK version dependant shifting
 
-var g_BuildVersion: uint32;
+const DEFAULT_XDK_VERSION = 4627; // TODO -oDxbx : Make this configurable
+var g_BuildVersion: uint32 = DEFAULT_XDK_VERSION;
 // var g_OrigBuildVersion: uint32; // Dxbx note : Unused
 
 
