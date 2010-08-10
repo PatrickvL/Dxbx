@@ -1288,10 +1288,10 @@ begin
 
           // Cxbx HACK: Disable Tripple Buffering for now...
           // TODO -oCXBX: Enumerate maximum BackBufferCount if possible.
-          if g_EmuCDPD.NativePresentationParameters.BackBufferCount > 4 then
+          if g_EmuCDPD.NativePresentationParameters.BackBufferCount > 1 then
           begin
-            EmuWarning('Limiting BackBufferCount to 4...');
-            g_EmuCDPD.NativePresentationParameters.BackBufferCount := 4;
+            EmuWarning('Limiting BackBufferCount to 1...');
+            g_EmuCDPD.NativePresentationParameters.BackBufferCount := 1;
           end;
 
           g_EmuCDPD.NativePresentationParameters.MultiSampleType := D3DMULTISAMPLE_NONE;//EmuXB2PC_D3DMultiSampleFormat(g_EmuCDPD.pPresentationParameters.MultiSampleType);
