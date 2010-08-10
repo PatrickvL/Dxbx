@@ -714,7 +714,7 @@ begin
       Result := STATUS_DEVICE_DOES_NOT_EXIST; // TODO : Is this the correct error?
 
       // Make a distinction between Xbox paths (starting with '\Device'...) and Native paths :
-      IsNativePath := not StartsWithText(aFullPath, '\Device');
+      IsNativePath := not StartsWithText(aFullPath, AnsiString('\Device'));
       if IsNativePath then
         DeviceIndex := 0
       else

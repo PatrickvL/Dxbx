@@ -3599,8 +3599,9 @@ begin
   end
   else // PCFormat <> D3DFMT_YUY2
   begin
-//    PCUsage := Usage and (D3DUSAGE_RENDERTARGET);
-    PCUsage := Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL);
+    // TODO -oDxbx: Turok crashes when D3DUSAGE_DEPTHSTENCIL is forwarded to PC, so disable that for now :
+    PCUsage := Usage and (D3DUSAGE_RENDERTARGET);
+//    PCUsage := Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL);
     PCPool := D3DPOOL_MANAGED;
 
     if ((g_D3DCaps.TextureCaps and D3DPTEXTURECAPS_POW2) <> 0) then
