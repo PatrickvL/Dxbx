@@ -2526,7 +2526,7 @@ function XTL_EmuIDirect3DDevice8_GetBackBuffer
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-{$IFDEF _DEBUG_TRACE}
+  if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
     DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetBackBuffer >>' +
@@ -2538,7 +2538,6 @@ begin
         [BackBuffer, Ord(Type_), ppBackBuffer]);
     EmuSwapFS(fsXbox);
   end;
-{$ENDIF}
 
   // Allow backbuffer -1 and up to the allocated BackBufferCount, but nothing beyond this :
   if (BackBuffer < -1) or (BackBuffer >= int(g_EmuCDPD.NativePresentationParameters.BackBufferCount)) then
@@ -3242,16 +3241,17 @@ procedure XTL_EmuIDirect3DDevice8_SetVertexShaderConstant1(
   ); register; // VALIDATED fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-{$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexShaderConstant1' +
-      #13#10'(' +
-      #13#10'   Register                  : 0x%.08X' +
-      #13#10'   pConstantData             : 0x%.08X' +
-      #13#10');',
-    [Register_, pConstantData]);
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexShaderConstant1' +
+        #13#10'(' +
+        #13#10'   Register                  : 0x%.08X' +
+        #13#10'   pConstantData             : 0x%.08X' +
+        #13#10');',
+      [Register_, pConstantData]);
+    EmuSwapFS(fsXbox);
+  end;
 
   // Dxbx note: Shouldn't we return the result of this call?
   XTL_EmuIDirect3DDevice8_SetVertexShaderConstant(Register_, pConstantData, 1);
@@ -3264,16 +3264,17 @@ procedure XTL_EmuIDirect3DDevice8_SetVertexShaderConstant4(
   ); register; // VALIDATED fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-{$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexShaderConstant4' +
-      #13#10'(' +
-      #13#10'   Register                  : 0x%.08X' +
-      #13#10'   pConstantData             : 0x%.08X' +
-      #13#10');',
-      [Register_, pConstantData]);
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexShaderConstant4' +
+        #13#10'(' +
+        #13#10'   Register                  : 0x%.08X' +
+        #13#10'   pConstantData             : 0x%.08X' +
+        #13#10');',
+        [Register_, pConstantData]);
+    EmuSwapFS(fsXbox);
+  end;
 
   // Dxbx note: Shouldn't we return the result of this call?
   XTL_EmuIDirect3DDevice8_SetVertexShaderConstant(Register_, pConstantData, 4);
@@ -3287,17 +3288,18 @@ procedure XTL_EmuIDirect3DDevice8_SetVertexShaderConstantNotInline(
   ); register; // fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-{$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexShaderConstantNotInline' +
-      #13#10'(' +
-      #13#10'   Register                  : 0x%.08X' +
-      #13#10'   pConstantData             : 0x%.08X' +
-      #13#10'   ConstantCount             : 0x%.08X' +
-      #13#10');',
-      [Register_, pConstantData, ConstantCount]);
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexShaderConstantNotInline' +
+        #13#10'(' +
+        #13#10'   Register                  : 0x%.08X' +
+        #13#10'   pConstantData             : 0x%.08X' +
+        #13#10'   ConstantCount             : 0x%.08X' +
+        #13#10');',
+        [Register_, pConstantData, ConstantCount]);
+    EmuSwapFS(fsXbox);
+  end;
 
   // Dxbx note: Shouldn't we return the result of this call?
   XTL_EmuIDirect3DDevice8_SetVertexShaderConstant(Register_, pConstantData, ConstantCount div 4);
@@ -4267,7 +4269,7 @@ function XTL_EmuIDirect3DDevice8_SetVertexData2f
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-{$IFDEF _DEBUG_TRACE}
+  if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
     LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData2f >>').
@@ -4277,7 +4279,6 @@ begin
     LogEnd();
     EmuSwapFS(fsXbox);
   end;
-{$ENDIF}
   // TODO -oDxbx : Handle Vertex Attributes that need a Color (in this case, r,g,b,a=0.0-1.0)
   Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, a, b, 0.0, 1.0);
 end;
@@ -4306,15 +4307,16 @@ function XTL_EmuIDirect3DDevice8_SetVertexData2s
 var
   dwA, dwB: DWORD;
 begin
-{$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(fsWindows);
-  LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData2s >>').
-    _(Register_, 'Register').
-    _(a, 'a').
-    _(b, 'b').
-  LogEnd();
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+  begin
+    EmuSwapFS(fsWindows);
+    LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData2s >>').
+      _(Register_, 'Register').
+      _(a, 'a').
+      _(b, 'b').
+    LogEnd();
+    EmuSwapFS(fsXbox);
+  end;
 
   dwA := a; dwB := b;
 
@@ -4534,17 +4536,18 @@ function XTL_EmuIDirect3DDevice8_SetVertexData4ub
 var
   dwA, dwB, dwC, dwD: FLOAT;
 begin
-{$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(fsWindows);
-  LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData4ub >>').
-    _(Register_, 'Register').
-    _(a, 'a').
-    _(b, 'b').
-    _(c, 'c').
-    _(d, 'd').
-  LogEnd();
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+  begin
+    EmuSwapFS(fsWindows);
+    LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData4ub >>').
+      _(Register_, 'Register').
+      _(a, 'a').
+      _(b, 'b').
+      _(c, 'c').
+      _(d, 'd').
+    LogEnd();
+    EmuSwapFS(fsXbox);
+  end;
 
   dwA := a; dwB := b; dwC := c; dwD := d;
 
@@ -4574,17 +4577,18 @@ function XTL_EmuIDirect3DDevice8_SetVertexData4s
 var
   dwA, dwB, dwC, dwD: DWORD;
 begin
-{$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(fsWindows);
-  LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData4s >>').
-    _(Register_, 'Register').
-    _(a, 'a').
-    _(b, 'b').
-    _(c, 'c').
-    _(d, 'd').
-  LogEnd();
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+  begin
+    EmuSwapFS(fsWindows);
+    LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData4s >>').
+      _(Register_, 'Register').
+      _(a, 'a').
+      _(b, 'b').
+      _(c, 'c').
+      _(d, 'd').
+    LogEnd();
+    EmuSwapFS(fsXbox);
+  end;
 
   dwA := a; dwB := b; dwC := c; dwD := d;
 
@@ -4613,14 +4617,15 @@ var
   g: FLOAT;
   b: FLOAT;
 begin
-{$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(fsWindows);
-  LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexDataColor >>').
-    _(Register_, 'Register').
-    _(Color, 'Color').
-  LogEnd();
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+  begin
+    EmuSwapFS(fsWindows);
+    LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexDataColor >>').
+      _(Register_, 'Register').
+      _(Color, 'Color').
+    LogEnd();
+    EmuSwapFS(fsXbox);
+  end;
 
   // TODO -oDxbx note : Is this correct? Shouldn't it be r,b,g,a ?
   a := ((Color and $FF000000) shr 24);
@@ -5641,16 +5646,17 @@ procedure XTL_EmuGet2DSurfaceDescD
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-{$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuD3D8 : EmuGet2DSurfaceDescD' +
-      #13#10'(' +
-      #13#10'   pPixelContainer           : 0x%.08X' +
-      #13#10'   pDesc                     : 0x%.08X' +
-      #13#10');',
-      [pPixelContainer, pDesc]);
-  EmuSwapFS(fsXbox);
-{$endif}
+  if MayLog(lfUnit or lfTrace) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuD3D8 : EmuGet2DSurfaceDescD' +
+        #13#10'(' +
+        #13#10'   pPixelContainer           : 0x%.08X' +
+        #13#10'   pDesc                     : 0x%.08X' +
+        #13#10');',
+        [pPixelContainer, pDesc]);
+    EmuSwapFS(fsXbox);
+  end;
 
   Xtl_EmuGet2DSurfaceDesc(pPixelContainer, $FEFEFEFE, pDesc);
 end;
@@ -7638,14 +7644,13 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
+  if MayLog(lfUnit or lfTrace) then
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetStreamSource2' +
       #13#10'(' +
       #13#10'   StreamNumber            : 0x%.08X' +
       #13#10'   pStride                 : 0x%.08X' +
       #13#10');',
       [StreamNumber, pStride]);
-{$ENDIF}
 
   EmuWarning('Not correctly implemented yet!');
   {ignore HRESULT?}IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(
@@ -8558,7 +8563,7 @@ procedure XTL_EmuIDirect3DDevice8_SelectVertexShaderDirect
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
+  if MayLog(lfUnit or lfTrace) then
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SelectVertexShaderDirect' +
       #13#10'(' +
       #13#10'   pVAF              : 0x%.08X' +
@@ -8567,7 +8572,6 @@ begin
     [pVAF, Address]);
 
   DbgPrintf('NOT YET IMPLEMENTED!');
-{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -8578,15 +8582,16 @@ procedure XTL_EmuIDirect3DDevice8_GetShaderConstantMode
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-{$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetShaderConstantMode' +
-      #13#10'(' +
-      #13#10'   pMode             : 0x%.08X' +
-      #13#10');',
-    [pMode]);
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetShaderConstantMode' +
+        #13#10'(' +
+        #13#10'   pMode             : 0x%.08X' +
+        #13#10');',
+      [pMode]);
+    EmuSwapFS(fsXbox);
+  end;
 
   if Assigned(pMode) then
     pMode^ := g_VertexShaderConstantMode;
@@ -8600,13 +8605,12 @@ function XTL_EmuIDirect3DDevice8_GetVertexShader
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
+  if MayLog(lfUnit or lfTrace) then
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetVertexShader' +
       #13#10'(' +
       #13#10'   pHandle           : 0x%.08X' +
       #13#10');',
     [pHandle]);
-{$ENDIF}
 
   if  Assigned(pHandle)
   and VshHandleIsValidShader(g_CurrentVertexShader) then
@@ -8630,7 +8634,7 @@ function XTL_EmuIDirect3DDevice8_GetVertexShaderConstant
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
+  if MayLog(lfUnit or lfTrace) then
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderConstant' +
       #13#10'(' +
       #13#10'   Register          : 0x%.08X' +
@@ -8638,7 +8642,6 @@ begin
       #13#10'   ConstantCount     : 0x%.08X' +
       #13#10');',
     [Register_, pConstantData, ConstantCount]);
-{$ENDIF}
 
   // TODO -oDxbx: If we ever find a title that calls this, check if this correction
   // should indeed be done version-dependantly (like in SetVertexShaderConstant);
@@ -8666,17 +8669,16 @@ function XTL_EmuIDirect3DDevice8_SetVertexShaderInputDirect
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SelectVertexShaderDirect' +
-      #13#10'(' +
-      #13#10'   pVAF              : 0x%.08X' +
-      #13#10'   StreamCount       : 0x%.08X' +
-      #13#10'   pStreamInputs     : 0x%.08X' +
-      #13#10');',
-    [pVAF, StreamCount, pStreamInputs]);
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SelectVertexShaderDirect' +
+        #13#10'(' +
+        #13#10'   pVAF              : 0x%.08X' +
+        #13#10'   StreamCount       : 0x%.08X' +
+        #13#10'   pStreamInputs     : 0x%.08X' +
+        #13#10');',
+      [pVAF, StreamCount, pStreamInputs]);
 
   DbgPrintf('NOT YET IMPLEMENTED!');
-{$ENDIF}
 
   EmuSwapFS(fsXbox);
   Result := D3D_OK;
@@ -8692,17 +8694,16 @@ function XTL_EmuIDirect3DDevice8_GetVertexShaderInput
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderInput' +
-      #13#10'(' +
-      #13#10'   pHandle           : 0x%.08X' +
-      #13#10'   pStreamCount      : 0x%.08X' +
-      #13#10'   pStreamInputs     : 0x%.08X' +
-      #13#10');',
-    [pHandle, pStreamCount, pStreamInputs]);
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderInput' +
+        #13#10'(' +
+        #13#10'   pHandle           : 0x%.08X' +
+        #13#10'   pStreamCount      : 0x%.08X' +
+        #13#10'   pStreamInputs     : 0x%.08X' +
+        #13#10');',
+      [pHandle, pStreamCount, pStreamInputs]);
 
   DbgPrintf('NOT YET IMPLEMENTED!');
-{$ENDIF}
 
   EmuSwapFS(fsXbox);
 
@@ -8719,17 +8720,16 @@ function XTL_EmuIDirect3DDevice8_SetVertexShaderInput
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexShaderInput' +
-      #13#10'(' +
-      #13#10'   Handle            : 0x%.08X' +
-      #13#10'   StreamCount       : 0x%.08X' +
-      #13#10'   pStreamInputs     : 0x%.08X' +
-      #13#10');',
-    [aHandle, StreamCount, pStreamInputs]);
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexShaderInput' +
+        #13#10'(' +
+        #13#10'   Handle            : 0x%.08X' +
+        #13#10'   StreamCount       : 0x%.08X' +
+        #13#10'   pStreamInputs     : 0x%.08X' +
+        #13#10');',
+      [aHandle, StreamCount, pStreamInputs]);
 
   DbgPrintf('NOT YET IMPLEMENTED!');
-{$ENDIF}
 
   EmuSwapFS(fsXbox);
   Result := D3D_OK;
@@ -8744,16 +8744,15 @@ procedure XTL_EmuIDirect3DDevice8_RunVertexStateShader
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_RunVertexStateShader' +
-      #13#10'(' +
-      #13#10'   Address           : 0x%.08X' +
-      #13#10'   pData             : 0x%.08X' +
-      #13#10');',
-    [Address, pData]);
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_RunVertexStateShader' +
+        #13#10'(' +
+        #13#10'   Address           : 0x%.08X' +
+        #13#10'   pData             : 0x%.08X' +
+        #13#10');',
+      [Address, pData]);
 
   DbgPrintf('NOT YET IMPLEMENTED!');
-{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -8767,16 +8766,15 @@ procedure XTL_EmuIDirect3DDevice8_LoadVertexShaderProgram
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_LoadVertexShaderProgram' +
-      #13#10'(' +
-      #13#10'   pFunction         : 0x%.08X' +
-      #13#10'   Address           : 0x%.08X' +
-      #13#10');',
-    [pFunction, Address]);
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_LoadVertexShaderProgram' +
+        #13#10'(' +
+        #13#10'   pFunction         : 0x%.08X' +
+        #13#10'   Address           : 0x%.08X' +
+        #13#10');',
+      [pFunction, Address]);
 
   DbgPrintf('NOT YET IMPLEMENTED!');
-{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -8790,14 +8788,13 @@ procedure XTL_EmuIDirect3DDevice8_GetVertexShaderType
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderType' +
-      #13#10'(' +
-      #13#10'   Handle             : 0x%.08X' +
-      #13#10'   pType              : 0x%.08X' +
-      #13#10');',
-    [aHandle, pType]);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderType' +
+        #13#10'(' +
+        #13#10'   Handle             : 0x%.08X' +
+        #13#10'   pType              : 0x%.08X' +
+        #13#10');',
+      [aHandle, pType]);
 
   if Assigned(pType) and VshHandleIsVertexShader(aHandle) then
   begin
@@ -8819,15 +8816,14 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderDeclaration' +
-      #13#10'(' +
-      #13#10'   Handle             : 0x%.08X' +
-      #13#10'   pData              : 0x%.08X' +
-      #13#10'   pSizeOfData        : 0x%.08X' +
-      #13#10');',
-    [Handle, pData, pSizeOfData]);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderDeclaration' +
+        #13#10'(' +
+        #13#10'   Handle             : 0x%.08X' +
+        #13#10'   pData              : 0x%.08X' +
+        #13#10'   pSizeOfData        : 0x%.08X' +
+        #13#10');',
+      [Handle, pData, pSizeOfData]);
 
   Result := D3DERR_INVALIDCALL;
 
@@ -8861,15 +8857,14 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderFunction' +
-      #13#10'(' +
-      #13#10'   Handle             : 0x%.08X' +
-      #13#10'   pData              : 0x%.08X' +
-      #13#10'   pSizeOfData        : 0x%.08X' +
-      #13#10');',
-    [aHandle, pData, pSizeOfData]);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderFunction' +
+        #13#10'(' +
+        #13#10'   Handle             : 0x%.08X' +
+        #13#10'   pData              : 0x%.08X' +
+        #13#10'   pSizeOfData        : 0x%.08X' +
+        #13#10');',
+      [aHandle, pData, pSizeOfData]);
 
   Result := D3DERR_INVALIDCALL;
 
@@ -8903,14 +8898,13 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf( 'EmuD3D8 : EmuIDirect3D8_AllocContiguousMemory' +
-      #13#10'(' +
-      #13#10'   dwSize             : 0x%.08X' +
-      #13#10'   dwAllocAttributes  : 0x%.08X' +
-      #13#10');',
-             [dwSize, dwAllocAttributes]);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf( 'EmuD3D8 : EmuIDirect3D8_AllocContiguousMemory' +
+        #13#10'(' +
+        #13#10'   dwSize             : 0x%.08X' +
+        #13#10'   dwAllocAttributes  : 0x%.08X' +
+        #13#10');',
+               [dwSize, dwAllocAttributes]);
 
   //
   // Cxbx NOTE: Kludgey (but necessary) solution:
@@ -8949,15 +8943,14 @@ function XTL_EmuIDirect3DTexture8_GetLevelDesc
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DTexture8_GetLevelDesc' +
-      #13#10'(' +
-      #13#10'   pThis               : 0x%.08X' +
-      #13#10'   Level               : 0x%.08X' +
-      #13#10'   pDesc               : 0x%.08X' +
-      #13#10');',
-    [pThis, Level, pDesc]);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('EmuD3D8 : EmuIDirect3DTexture8_GetLevelDesc' +
+        #13#10'(' +
+        #13#10'   pThis               : 0x%.08X' +
+        #13#10'   Level               : 0x%.08X' +
+        #13#10'   pDesc               : 0x%.08X' +
+        #13#10');',
+      [pThis, Level, pDesc]);
 
   IDirect3DTexture8(pThis).GetLevelDesc(Level, PD3DSURFACE_DESC(pDesc)^);
 

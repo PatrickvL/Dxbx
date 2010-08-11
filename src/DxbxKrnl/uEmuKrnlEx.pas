@@ -138,6 +138,8 @@ function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
 
 implementation
 
+const lfUnit = lfCxbx or lfKernel;
+
 function {012} xboxkrnl_ExAcquireReadWriteLockExclusive(
   Arg1: DWORD
   ): NTSTATUS; stdcall;
@@ -171,13 +173,12 @@ begin
   EmuSwapFS(fsWindows);
 
   //  Result := xboxkrnl_ExAllocatePoolWithTag(NumberOfBytes, ULONG($656E6F4E {?}));
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : ExAllocatePool' +
-           #13#10'(' +
-           #13#10'   NumberOfBytes       : 0x%.08X' +
-           #13#10');',
-           [NumberOfBytes]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : ExAllocatePool' +
+             #13#10'(' +
+             #13#10'   NumberOfBytes       : 0x%.08X' +
+             #13#10');',
+             [NumberOfBytes]);
 
   pRet := DxbxMalloc(NumberOfBytes);
   EmuSwapFS(fsXbox);
@@ -197,14 +198,13 @@ var
 begin
   EmuSwapFS(fsWindows);
   
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : ExAllocatePoolWithTag' +
-           #13#10'(' +
-           #13#10'   NumberOfBytes       : 0x%.08X' +
-           #13#10'   Tag                 : 0x%.08X' +
-           #13#10');',
-           [NumberOfBytes, Tag]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : ExAllocatePoolWithTag' +
+             #13#10'(' +
+             #13#10'   NumberOfBytes       : 0x%.08X' +
+             #13#10'   Tag                 : 0x%.08X' +
+             #13#10');',
+             [NumberOfBytes, Tag]);
 
   // TODO -oCXBX: Actually implement this
   pRet := DxbxMalloc(NumberOfBytes);
@@ -302,17 +302,16 @@ function {024} xboxkrnl_ExQueryNonVolatileSetting
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : ExQueryNonVolatileSetting' +
-         #13#10'(' +
-         #13#10'   ValueIndex          : 0x%.08X' +
-         #13#10'   Type                : 0x%.08X' +
-         #13#10'   Value               : 0x%.08X' +
-         #13#10'   ValueLength         : 0x%.08X' +
-         #13#10'   ResultLength        : 0x%.08X' +
-         #13#10');',
-         [ValueIndex, Type_, Value, ValueLength, ResultLength]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : ExQueryNonVolatileSetting' +
+           #13#10'(' +
+           #13#10'   ValueIndex          : 0x%.08X' +
+           #13#10'   Type                : 0x%.08X' +
+           #13#10'   Value               : 0x%.08X' +
+           #13#10'   ValueLength         : 0x%.08X' +
+           #13#10'   ResultLength        : 0x%.08X' +
+           #13#10');',
+           [ValueIndex, Type_, Value, ValueLength, ResultLength]);
 
   // handle eeprom read
   case XC_VALUE_INDEX(ValueIndex) of

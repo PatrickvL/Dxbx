@@ -537,7 +537,6 @@ begin
   Result := BOOL_TRUE;
 end;
 
-
 // Dxbx note : This function selects the oldest cache partition and formats it.
 // So once we support this in the kernel, we don't need this patch anymore.
 function XTL_EmuXMountUtilityDrive
@@ -548,11 +547,10 @@ function XTL_EmuXMountUtilityDrive
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
-  LogBegin('EmuXMountUtilityDrive').
-     _(fFormatClean, 'fFormatClean').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+    LogBegin('EmuXMountUtilityDrive').
+       _(fFormatClean, 'fFormatClean').
+    LogEnd();
 
   Result := DxbxMountUtilityDrive(fFormatClean);
 
@@ -596,12 +594,11 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXInitDevices').
-    _(Unknown1, 'Unknown1').
-    _(Unknown2, 'Unknown2').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXInitDevices').
+      _(Unknown1, 'Unknown1').
+      _(Unknown2, 'Unknown2').
+    LogEnd();
 
   for v := 0 to XINPUT_SETSTATE_SLOTS-1 do
   begin
@@ -626,11 +623,10 @@ function XTL_EmuXGetDevices
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXGetDevices').
-    _(DeviceType, 'DeviceType').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXGetDevices').
+      _(DeviceType, 'DeviceType').
+    LogEnd();
 
   Result := 0;
 
@@ -765,11 +761,10 @@ procedure XTL_EmuXInputClose
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXInputClose').
-    _(hDevice, 'hDevice').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXInputClose').
+      _(hDevice, 'hDevice').
+    LogEnd();
 
   {pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);} // DXBX - pph never used
 
@@ -812,11 +807,10 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXInputPoll').
-    _(hDevice, 'hDevice').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXInputPoll').
+      _(hDevice, 'hDevice').
+    LogEnd();
 
   {pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);} // DXBX - pph never used
 
@@ -872,12 +866,11 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXInputGetCapabilities').
-    _(hDevice, 'hDevice').
-    _(pCapabilities, 'pCapabilities').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXInputGetCapabilities').
+      _(hDevice, 'hDevice').
+      _(pCapabilities, 'pCapabilities').
+    LogEnd();
 
   Result := ERROR_INVALID_HANDLE;
 
@@ -967,12 +960,11 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXInputSetState').
-    _(hDevice, 'hDevice').
-    _(pFeedback, 'pFeedback').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXInputSetState').
+      _(hDevice, 'hDevice').
+      _(pFeedback, 'pFeedback').
+    LogEnd();
 
   ret := ERROR_IO_PENDING;
 
@@ -1049,13 +1041,12 @@ function XTL_EmuCreateMutex
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuCreateMutex').
-    _(lpMutexAttributes, 'lpMutexAttributes').
-    _(bInitialOwner, 'bInitialOwner').
-    _(lpName, 'lpName').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuCreateMutex').
+      _(lpMutexAttributes, 'lpMutexAttributes').
+      _(bInitialOwner, 'bInitialOwner').
+      _(lpName, 'lpName').
+    LogEnd();
 
   Result := CreateMutexA(PSecurityAttributes(lpMutexAttributes), bInitialOwner <> BOOL_FALSE, lpName);
 
@@ -1093,12 +1084,11 @@ function XTL_EmuSetThreadPriorityBoost
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuSetThreadPriorityBoost').
-    _(hThread, 'hThread').
-    _(DisablePriorityBoost, 'DisablePriorityBoost').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuSetThreadPriorityBoost').
+      _(hThread, 'hThread').
+      _(DisablePriorityBoost, 'DisablePriorityBoost').
+    LogEnd();
 
   Result := BOOL(SetThreadPriorityBoost(hThread, DisablePriorityBoost <> BOOL_FALSE));
 
@@ -1119,12 +1109,11 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuSetThreadPriority').
-    _(hThread, 'hThread').
-    _(nPriority, 'nPriority').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuSetThreadPriority').
+      _(hThread, 'hThread').
+      _(nPriority, 'nPriority').
+    LogEnd();
 
   bRet := BOOL(SetThreadPriority(hThread, nPriority));  // marked by cxbx
 
@@ -1148,11 +1137,10 @@ function XTL_EmuGetThreadPriority
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuGetThreadPriority').
-    _(hThread, 'hThread').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuGetThreadPriority').
+      _(hThread, 'hThread').
+    LogEnd();
 
   Result := GetThreadPriority(hThread);
 
@@ -1171,12 +1159,11 @@ function XTL_EmuGetExitCodeThread
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuGetExitCodeThread').
-    _(hThread, 'hThread').
-    _(lpExitCode, 'lpExitCode').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuGetExitCodeThread').
+      _(hThread, 'hThread').
+      _(lpExitCode, 'lpExitCode').
+    LogEnd();
 
   Result := BOOL(GetExitCodeThread(hThread, {var}lpExitCode^));
 
@@ -1186,11 +1173,12 @@ end;
 procedure XTL_EmuXapiInitAutoPowerDown(); stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-{$IFDEF DEBUG}
+  if MayLog(lfUnit) then
+  begin
   EmuSwapFS(fsWindows);
   DbgPrintf('EmuXapi : EmuXapiInitAutoPowerDown(); // Perhaps XapiInitProcess isn''t found?');
   EmuSwapFS(fsXbox);
-{$ENDIF}
+  end;
 end;
 
 procedure XTL_EmuXapiInitProcess(); stdcall;
@@ -1204,9 +1192,8 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXapiInitProcess();');
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuXapiInitProcess();');
 
   // call RtlCreateHeap
   begin
@@ -1273,12 +1260,11 @@ XTL.NTSTATUS CDECL XTL_XapiSetupPerTitleDriveLetters(DWord dwTitleId, PWideChar 
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXapiSetupPerTitleDriveLetters').
-    _(dwTitleId, 'dwTitleId').
-    _(wszTitleName, 'wszTitleName').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXapiSetupPerTitleDriveLetters').
+      _(dwTitleId, 'dwTitleId').
+      _(wszTitleName, 'wszTitleName').
+    LogEnd();
 
   NTSTATUS ret := STATUS_SUCCESS;
 
@@ -1293,13 +1279,12 @@ procedure XTL_EmuXapiBootToDash(UnknownA: DWORD; UnknownB: DWORD; UnknownC: DWOR
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXapiBootToDash').
-    _(UnknownA, 'UnknownA').
-    _(UnknownB, 'UnknownB').
-    _(UnknownC, 'UnknownC').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXapiBootToDash').
+      _(UnknownA, 'UnknownA').
+      _(UnknownB, 'UnknownB').
+      _(UnknownC, 'UnknownC').
+    LogEnd();
 
   DxbxKrnlCleanup('Emulation Terminated (XapiBootToDash)');
 
@@ -1317,12 +1302,11 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXRegisterThreadNotifyRoutine').
-    _(pThreadNotification, 'pThreadNotification').
-    _(fRegister, 'fRegister').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXRegisterThreadNotifyRoutine').
+      _(pThreadNotification, 'pThreadNotification').
+      _(fRegister, 'fRegister').
+    LogEnd();
 
   if fRegister <> BOOL_FALSE then
   begin
@@ -1371,13 +1355,12 @@ function XTL_EmuCreateFiber
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuCreateFiber').
-    _(dwStackSize, 'dwStackSize').
-    _(lpStartRoutine, 'lpStartRoutine').
-    _(lpParameter, 'lpParameter').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuCreateFiber').
+      _(dwStackSize, 'dwStackSize').
+      _(lpStartRoutine, 'lpStartRoutine').
+      _(lpParameter, 'lpParameter').
+    LogEnd();
 
   Result := CreateFiber(dwStackSize, lpStartRoutine, lpParameter);
   if (Result = nil) then
@@ -1394,11 +1377,10 @@ procedure XTL_EmuDeleteFiber
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuDeleteFiber').
-    _(lpFiber, 'lpFiber').
-    LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuDeleteFiber').
+      _(lpFiber, 'lpFiber').
+      LogEnd();
 
   DeleteFiber(lpFiber);
 
@@ -1446,11 +1428,10 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXLoadSectionByHandle').
-    _(hSection, 'hSection').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXLoadSectionByHandle').
+      _(hSection, 'hSection').
+    LogEnd();
 
   // The handle should contain the address of this section by the hack
   // used in EmuXGetSectionHandleA.
@@ -1487,11 +1468,10 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXFreeSectionByHandle').
-    _(hSection, 'hSection').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXFreeSectionByHandle').
+      _(hSection, 'hSection').
+    LogEnd();
 
   // TODO : We should probably use a lock here, to make access to the SectionHeader thread-safe
   
@@ -1521,13 +1501,14 @@ function XTL_EmuXLoadSectionA
 var
   SectionHandle: XTL_SECTIONHANDLE;
 begin
-{$IFDEF DEBUG}
-  EmuSwapFS(fsWindows);
-  LogBegin('EmuXLoadSectionA').
-    _(pSectionName, 'pSectionName'). // TODO : Honour XBE_SECTIONNAME_MAXLENGTH
-  LogEnd();
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    LogBegin('EmuXLoadSectionA').
+      _(pSectionName, 'pSectionName'). // TODO : Honour XBE_SECTIONNAME_MAXLENGTH
+    LogEnd();
+    EmuSwapFS(fsXbox);
+  end;
 
   SectionHandle := XTL_EmuXGetSectionHandleA(pSectionName);
   if SectionHandle = XTL_SECTIONHANDLE(INVALID_HANDLE_VALUE) then
@@ -1546,11 +1527,10 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXFreeSectionA').
-    _(pSectionName, 'pSectionName'). // TODO : Honour XBE_SECTIONNAME_MAXLENGTH
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXFreeSectionA').
+      _(pSectionName, 'pSectionName'). // TODO : Honour XBE_SECTIONNAME_MAXLENGTH
+    LogEnd();
 
   SectionHandle := XTL_EmuXGetSectionHandleA(pSectionName);
   if SectionHandle = XTL_SECTIONHANDLE(INVALID_HANDLE_VALUE) then
@@ -1572,11 +1552,10 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXGetSectionSize').
-    _(hSection, 'hSection').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXGetSectionSize').
+      _(hSection, 'hSection').
+    LogEnd();
 
   SectionHeader := PXBE_SECTIONHEADER(hSection);
   if Assigned(SectionHeader) then // TODO -oDxbx : Check section handle more thoroughly than this
@@ -1711,9 +1690,8 @@ begin
     CopyMemory({Dest=}@g_SavedLaunchData, {Source=}pLaunchData, sizeof(LAUNCH_DATA));
 
     // Save the launch data parameters to disk for later.
-{$IFDEF DEBUG}
-    DbgPrintf('Saving launch data as DxbxLaunchData.bin...');
-{$ENDIF}
+    if MayLog(lfUnit) then
+      DbgPrintf('Saving launch data as DxbxLaunchData.bin...');
 
     fp := fopen('DxbxLaunchData.bin', 'wb');
     if Assigned(fp) then

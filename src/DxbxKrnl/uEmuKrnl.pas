@@ -299,6 +299,9 @@ function {373} xboxkrnl_UnknownAPI373(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 
+const lfUnit = lfCxbx or lfKernel;
+
+
 function Unimplemented(const aAPI: string): NTSTATUS;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
@@ -349,15 +352,14 @@ function {051} xboxkrnl_InterlockedCompareExchange(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : InterlockedCompareExchange' +
-      #13#10'(' +
-      #13#10'   Exchange           : 0x%.08X' +
-      #13#10'   Destination        : 0x%.08X' +
-      #13#10'   Comparand          : 0x%.08X' +
-      #13#10');',
-      [Exchange, Destination, Comparand]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : InterlockedCompareExchange' +
+        #13#10'(' +
+        #13#10'   Exchange           : 0x%.08X' +
+        #13#10'   Destination        : 0x%.08X' +
+        #13#10'   Comparand          : 0x%.08X' +
+        #13#10');',
+        [Exchange, Destination, Comparand]);
 
   Result := InterlockedCompareExchange({var}Destination^, Exchange, Comparand);
   EmuSwapFS(fsXbox);
@@ -373,13 +375,12 @@ function {052} xboxkrnl_InterlockedDecrement(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : InterlockedDecrement' +
-      #13#10'(' +
-      #13#10'   Addend             : 0x%.08X' +
-      #13#10');',
-      [Addend]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : InterlockedDecrement' +
+        #13#10'(' +
+        #13#10'   Addend             : 0x%.08X' +
+        #13#10');',
+        [Addend]);
 
   Result := InterlockedDecrement({var}Addend^);
   EmuSwapFS(fsXbox);
@@ -395,13 +396,12 @@ function {053} xboxkrnl_InterlockedIncrement(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : InterlockedIncrement' +
-      #13#10'(' +
-      #13#10'   Addend             : 0x%.08X' +
-      #13#10');',
-      [Addend]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : InterlockedIncrement' +
+        #13#10'(' +
+        #13#10'   Addend             : 0x%.08X' +
+        #13#10');',
+        [Addend]);
 
   Result := InterlockedIncrement({var}Addend^);
   EmuSwapFS(fsXbox);
@@ -417,14 +417,13 @@ function {054} xboxkrnl_InterlockedExchange(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : InterlockedExchange' +
-      #13#10'(' +
-      #13#10'   Value              : 0x%.08X' +
-      #13#10'   Destination        : 0x%.08X' +
-      #13#10');',
-      [Value, Destination]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : InterlockedExchange' +
+        #13#10'(' +
+        #13#10'   Value              : 0x%.08X' +
+        #13#10'   Destination        : 0x%.08X' +
+        #13#10');',
+        [Value, Destination]);
 
   Result := InterlockedExchange({var}Destination^, Value);
   EmuSwapFS(fsXbox);
@@ -440,14 +439,13 @@ function {055} xboxkrnl_InterlockedExchangeAdd(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : InterlockedExchangeAdd' +
-      #13#10'(' +
-      #13#10'   Value              : 0x%.08X' +
-      #13#10'   Addend             : 0x%.08X' +
-      #13#10');',
-      [Value, Addend]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : InterlockedExchangeAdd' +
+        #13#10'(' +
+        #13#10'   Value              : 0x%.08X' +
+        #13#10'   Addend             : 0x%.08X' +
+        #13#10');',
+        [Value, Addend]);
 
   Result := InterlockedExchangeAdd({var}Addend^, Value);
   EmuSwapFS(fsXbox);
@@ -464,13 +462,12 @@ function {056} xboxkrnl_InterlockedFlushSList(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : InterlockedFlushSList' +
-      #13#10'(' +
-      #13#10'   ListHead           : 0x%.08X' +
-      #13#10');',
-      [ListHead]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : InterlockedFlushSList' +
+        #13#10'(' +
+        #13#10'   ListHead           : 0x%.08X' +
+        #13#10');',
+        [ListHead]);
 
   Result := InterlockedFlushSList(ListHead);
   EmuSwapFS(fsXbox);
@@ -486,13 +483,12 @@ function {057} xboxkrnl_InterlockedPopEntrySList(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : InterlockedPopEntrySList' +
-      #13#10'(' +
-      #13#10'   ListHead           : 0x%.08X' +
-      #13#10');',
-      [ListHead]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : InterlockedPopEntrySList' +
+        #13#10'(' +
+        #13#10'   ListHead           : 0x%.08X' +
+        #13#10');',
+        [ListHead]);
 
   Result := InterlockedPopEntrySList(ListHead);
   EmuSwapFS(fsXbox);
@@ -508,14 +504,13 @@ function {058} xboxkrnl_InterlockedPushEntrySList(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : InterlockedPopEntrySList' +
-      #13#10'(' +
-      #13#10'   ListEntry          : 0x%.08X' +
-      #13#10'   ListHead           : 0x%.08X' +
-      #13#10');',
-      [ListEntry, ListHead]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : InterlockedPopEntrySList' +
+        #13#10'(' +
+        #13#10'   ListEntry          : 0x%.08X' +
+        #13#10'   ListHead           : 0x%.08X' +
+        #13#10');',
+        [ListEntry, ListHead]);
 
   Result := InterlockedPushEntrySList(ListHead, ListEntry);
   EmuSwapFS(fsXbox);
@@ -535,13 +530,12 @@ function {160} xboxkrnl_KfRaiseIrql(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : KfRaiseIrql' +
-      #13#10'(' +
-      #13#10'   NewIrql            : 0x%.08X' +
-      #13#10');',
-      [NewIrql]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : KfRaiseIrql' +
+        #13#10'(' +
+        #13#10'   NewIrql            : 0x%.08X' +
+        #13#10');',
+        [NewIrql]);
 
   EmuSwapFS(fsXbox);
   Result := 0;
@@ -559,13 +553,12 @@ function {161} xboxkrnl_KfLowerIrql(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : KfLowerIrql' +
-      #13#10'(' +
-      #13#10'   NewIrql            : 0x%.08X' +
-      #13#10');',
-      [NewIrql]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : KfLowerIrql' +
+        #13#10'(' +
+        #13#10'   NewIrql            : 0x%.08X' +
+        #13#10');',
+        [NewIrql]);
 
   EmuSwapFS(fsXbox);
   Result := 0;
