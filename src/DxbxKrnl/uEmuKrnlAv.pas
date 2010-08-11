@@ -60,6 +60,9 @@ function {004} xboxkrnl_AvSetSavedDataAddress(
 
 implementation
 
+const lfUnit = lfCxbx or lfKernel;
+
+
 var xboxkrnl_AvSavedDataAddress: PVOID = PVOID($F0040000);
 // TODO -oDXBX: Take shogun's NULL ?
 
@@ -67,11 +70,12 @@ function {001} xboxkrnl_AvGetSavedDataAddress()
   : PVOID; stdcall;
 // Source:OpenXDK  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-{$IFDEF DEBUG}
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : AvGetSavedDataAddress();');
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuKrnl : AvGetSavedDataAddress();');
+    EmuSwapFS(fsXbox);
+  end;
 
   Result := xboxkrnl_AvSavedDataAddress; // Dxbx addition
 end;
@@ -110,16 +114,18 @@ function {004} xboxkrnl_AvSetSavedDataAddress(
   ): PVOID; stdcall;
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:50
 begin
-{$IFDEF DEBUG}
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : AvSetSavedDataAddress' +
-    #13#10'(' +
-    #13#10'  Address          : 0x%.8x' +
-    #13#10');', [
-    Address
-    ]);
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuKrnl : AvSetSavedDataAddress' +
+      #13#10'(' +
+      #13#10'  Address          : 0x%.8x' +
+      #13#10');', [
+      Address
+      ]);
+    EmuSwapFS(fsXbox);
+  end;
+
   Result := Address;
   xboxkrnl_AvSavedDataAddress := Result;
 end;
