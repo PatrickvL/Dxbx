@@ -517,15 +517,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlAnsiStringToUnicodeString' +
-        #13#10'(' +
-        #13#10'   DestinationString         : 0x%.08X' +
-        #13#10'   SourceString              : 0x%.08X ("%s")' +
-        #13#10'   AllocateDestinationString : 0x%.08X' +
-        #13#10');',
-        [DestinationString,
-         SourceString, PSTRING_String(SourceString),
-         AllocateDestinationString]);
+    LogBegin('RtlAnsiStringToUnicodeString').
+      _(DestinationString, 'DestinationString').
+      _(SourceString, 'SourceString').
+      _(AllocateDestinationString, ' AllocateDestinationString').
+    LogEnd();
 
   Result := JwaNative.RtlAnsiStringToUnicodeString(DestinationString, SourceString, Boolean(AllocateDestinationString));
   EmuSwapFS(fsXbox);
@@ -540,13 +536,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlAppendStringToString' +
-        #13#10'(' +
-        #13#10'   DestinationString         : 0x%.08X' +
-        #13#10'   AppendThisString          : 0x%.08X' +
-        #13#10');',
-        [DestinationString,
-         AppendThisString]);
+    LogBegin('RtlAppendStringToString').
+      _(DestinationString, 'DestinationString').
+      _(AppendThisString, 'AppendThisString').
+    LogEnd();
 
   Result := JwaNative.RtlAppendStringToString(DestinationString, AppendThisString);
   EmuSwapFS(fsXbox);
@@ -561,13 +554,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlAppendUnicodeStringToString' +
-        #13#10'(' +
-        #13#10'   DestinationString         : 0x%.08X' +
-        #13#10'   SourceString              : 0x%.08X' +
-        #13#10');',
-        [DestinationString,
-         SourceString]);
+    LogBegin('RtlAppendUnicodeStringToString').
+      _(DestinationString, 'DestinationString').
+      _(SourceString, 'SourceString').
+    LogEnd();
 
   Result := JwaNative.RtlAppendUnicodeStringToString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
@@ -582,13 +572,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlAppendUnicodeToString' +
-        #13#10'(' +
-        #13#10'   Destination               : 0x%.08X' +
-        #13#10'   Source                    : 0x%.08X' +
-        #13#10');',
-        [Destination,
-         Source]);
+    LogBegin('RtlAppendUnicodeToString').
+      _(Destination, 'Destination').
+      _(Source, 'Source').
+    LogEnd();
 
   Result := JwaNative.RtlAppendUnicodeToString(Destination, Source);
   EmuSwapFS(fsXbox);
@@ -630,11 +617,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlCaptureContext' +
-        #13#10'(' +
-        #13#10'   ContextRecord             : 0x%.08X' +
-        #13#10');',
-        [ContextRecord]);
+    LogBegin('RtlCaptureContext').
+      _(ContextRecord, 'ContextRecord').
+    LogEnd();
 
   JwaNative.RtlCaptureContext(ContextRecord);
   EmuSwapFS(fsXbox);
@@ -651,17 +636,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlCaptureStackBackTrace' +
-        #13#10'(' +
-        #13#10'   FramesToSkip              : 0x%.08X' +
-        #13#10'   FramesToCapture           : 0x%.08X' +
-        #13#10'   BackTrace                 : 0x%.08X' +
-        #13#10'   BackTraceHash             : 0x%.08X' +
-        #13#10');',
-        [FramesToSkip,
-        FramesToCapture,
-        BackTrace,
-        BackTraceHash]);
+    LogBegin('RtlCaptureStackBackTrace').
+      _(FramesToSkip, 'FramesToSkip').
+      _(FramesToCapture, 'FramesToCapture').
+      _(BackTrace, 'BackTrace').
+      _(BackTraceHash, 'BackTraceHash').
+    LogEnd();
 
   Result := Unimplemented('RtlCaptureStackBackTrace');
   EmuSwapFS(fsXbox);
@@ -677,15 +657,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlCharToInteger' +
-        #13#10'(' +
-        #13#10'   Str                       : 0x%.08X' +
-        #13#10'   Base                      : 0x%.08X' +
-        #13#10'   Value                     : 0x%.08X' +
-        #13#10');',
-        [Str,
-        Base,
-        Value]);
+    LogBegin('RtlCharToInteger').
+      _(Str, 'Str').
+      _(Base, 'Base').
+      _(Value, 'Value').
+    LogEnd();
 
   Result := JwaNative.RtlCharToInteger(Str, Base, Value);
   EmuSwapFS(fsXbox);
@@ -701,15 +677,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlCompareMemory' +
-        #13#10'(' +
-        #13#10'   Source1                   : 0x%.08X' +
-        #13#10'   Source2                   : 0x%.08X' +
-        #13#10'   Length                    : 0x%.08X' +
-        #13#10');',
-        [Source1,
-        Source2,
-        Length]);
+    LogBegin('RtlCompareMemory').
+      _(Source1, 'Source1').
+      _(Source2, 'Source2').
+      _(Length).
+    LogEnd();
 
   Result := JwaNative.RtlCompareMemory(Source1, Source2, Length);
   EmuSwapFS(fsXbox);
@@ -725,15 +697,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlCompareMemoryUlong' +
-        #13#10'(' +
-        #13#10'   Source                    : 0x%.08X' +
-        #13#10'   Length                    : 0x%.08X' +
-        #13#10'   Value                     : 0x%.08X' +
-        #13#10');',
-        [Source,
-        Length,
-        Value]);
+    LogBegin('RtlCompareMemoryUlong').
+      _(Source, 'Source').
+      _(Length, 'Length').
+      _(Value, 'Value').
+    LogEnd();
 
   Result := JwaNative.RtlCompareMemoryUlong(Source, Length, Value);
   EmuSwapFS(fsXbox);
@@ -749,15 +717,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlCompareString' +
-        #13#10'(' +
-        #13#10'   String1                   : 0x%.08X' +
-        #13#10'   String2                   : 0x%.08X' +
-        #13#10'   CaseInsensitive           : 0x%.08X' +
-        #13#10');',
-        [String1,
-        String2,
-        CaseInsensitive]);
+    LogBegin('RtlCompareString').
+      _(String1, 'String1').
+      _(String2, 'String2').
+      _(CaseInsensitive, 'CaseInsensitive').
+    LogEnd();
 
   Result := JwaNative.RtlCompareString(String1, String2, CaseInsensitive);
   EmuSwapFS(fsXbox);
@@ -773,15 +737,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlCompareUnicodeString' +
-        #13#10'(' +
-        #13#10'   String1                   : 0x%.08X' +
-        #13#10'   String2                   : 0x%.08X' +
-        #13#10'   CaseInsensitive           : 0x%.08X' +
-        #13#10');',
-        [String1,
-        String2,
-        CaseInsensitive]);
+    LogBegin('RtlCompareUnicodeString').
+      _(String1, 'String1').
+      _(String2, 'String2').
+      _(CaseInsensitive, 'CaseInsensitive').
+    LogEnd();
 
   Result := JwaNative.RtlCompareUnicodeString(String1, String2, CaseInsensitive);
   EmuSwapFS(fsXbox);
@@ -796,13 +756,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlCopyString' +
-        #13#10'(' +
-        #13#10'   DestinationString         : 0x%.08X' +
-        #13#10'   SourceString              : 0x%.08X' +
-        #13#10');',
-        [DestinationString,
-        SourceString]);
+    LogBegin('RtlCopyString').
+      _(DestinationString, 'DestinationString').
+      _(SourceString, 'SourceString').
+    LogEnd();
 
   JwaNative.RtlCopyString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
@@ -817,13 +774,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlCopyUnicodeString' +
-        #13#10'(' +
-        #13#10'   DestinationString         : 0x%.08X' +
-        #13#10'   SourceString              : 0x%.08X' +
-        #13#10');',
-        [DestinationString,
-        SourceString]);
+    LogBegin('RtlCopyUnicodeString').
+      _(DestinationString, 'DestinationString').
+      _(SourceString, 'SourceString').
+    LogEnd();
 
   JwaNative.RtlCopyUnicodeString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
@@ -838,13 +792,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlCreateUnicodeString' +
-        #13#10'(' +
-        #13#10'   DestinationString         : 0x%.08X' +
-        #13#10'   SourceString              : 0x%.08X' +
-        #13#10');',
-        [DestinationString,
-        SourceString]);
+    LogBegin('RtlCreateUnicodeString').
+      _(DestinationString, 'DestinationString').
+      _(SourceString, 'SourceString').
+    LogEnd();
 
   Result := JwaNative.RtlCreateUnicodeString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
@@ -858,11 +809,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlDowncaseUnicodeChar' +
-        #13#10'(' +
-        #13#10'   Source                    : 0x%.08X' +
-        #13#10');',
-        [Source]);
+    LogBegin('RtlDowncaseUnicodeChar').
+      _(Source, 'Source').
+    LogEnd();
 
   Result := JwaNative.RtlDowncaseUnicodeChar(Source);
   EmuSwapFS(fsXbox);
@@ -878,15 +827,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlDowncaseUnicodeString' +
-        #13#10'(' +
-        #13#10'   DestinationString         : 0x%.08X' +
-        #13#10'   SourceString              : 0x%.08X' +
-        #13#10'   AllocateDestinationString : 0x%.08X' +
-        #13#10');',
-        [DestinationString,
-        SourceString,
-        AllocateDestinationString]);
+    LogBegin('RtlDowncaseUnicodeString').
+      _(DestinationString, 'DestinationString').
+      _(SourceString, 'SourceString').
+      _(AllocateDestinationString, 'AllocateDestinationString').
+    LogEnd();
 
   Result := JwaNative.RtlDowncaseUnicodeString(DestinationString, SourceString, AllocateDestinationString);
   EmuSwapFS(fsXbox);
@@ -900,13 +845,10 @@ procedure xboxkrnl_RtlEnterCriticalSection
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_EXTREME_LOGGING}
-  DbgPrintf('EmuKrnl : RtlEnterCriticalSection' +
-           #13#10'(' +
-           #13#10'   CriticalSection              : 0x%.08X' +
-           #13#10');',
-           [CriticalSection]);
-{$ENDIF}
+  if MayLog(lfUnit or lfDxbx or lfExtreme) then
+    LogBegin('RtlEnterCriticalSection').
+      _(CriticalSection, 'CriticalSection').
+    LogEnd();
 
 {$IFDEF XBOX_CRITICAL_SECTION}
   // Cxbx : This seems redundant, but xbox software doesn't always do it
@@ -931,13 +873,10 @@ procedure xboxkrnl_RtlEnterCriticalSectionAndRegion(
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:50
 begin
   EmuSwapFS(fsWindows);
-{$IFDEF DXBX_EXTREME_LOGGING}
-  DbgPrintf('EmuKrnl : RtlEnterCriticalSectionAndRegion' +
-           #13#10'(' +
-           #13#10'   CriticalSection              : 0x%.08X' +
-           #13#10');',
-           [CriticalSection]);
-{$ENDIF}
+  if MayLog(lfUnit or lfDxbx or lfExtreme) then
+    LogBegin('RtlEnterCriticalSectionAndRegion').
+      _(CriticalSection, 'CriticalSection').
+    LogEnd();
 
 {$IFDEF XBOX_CRITICAL_SECTION}
   X_RtlEnterCriticalSection(CriticalSection); // TODO : Do something better (region-related?)
@@ -959,13 +898,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlEqualString' +
-        #13#10'(' +
-        #13#10'  String1            : 0x%.08X ("%s")' +
-        #13#10'  String2            : 0x%.08X ("%s")' +
-        #13#10'  CaseInsensitive    : 0x%.08X' +
-        #13#10');',
-        [String1, PSTRING_String(String1), String2, PSTRING_String(String2), CaseInsensitive]);
+    LogBegin('RtlEqualString').
+      _(String1, 'String1').
+      _(String2, 'String2').
+      _(CaseInsensitive, 'CaseInsensitive').
+    LogEnd();
 
   Result := JwaNative.RtlEqualString(String1, String2, CaseInsensitive);
 
@@ -982,15 +919,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlEqualUnicodeString' +
-        #13#10'(' +
-        #13#10'   String1                   : 0x%.08X' +
-        #13#10'   String2                   : 0x%.08X' +
-        #13#10'   CaseInsensitive           : 0x%.08X' +
-        #13#10');',
-        [String1,
-        String2,
-        CaseInsensitive]);
+    LogBegin('RtlEqualUnicodeString').
+      _(String1, 'String1').
+      _(String2, 'String2').
+      _(CaseInsensitive, 'CaseInsensitive').
+    LogEnd();
 
   Result := JwaNative.RtlEqualUnicodeString(String1, String2, CaseInsensitive);
   EmuSwapFS(fsXbox);
@@ -1005,13 +938,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlExtendedIntegerMultiply' +
-        #13#10'(' +
-        #13#10'   Multiplicand              : 0x%.08X' +
-        #13#10'   Multiplier                : 0x%.08X' +
-        #13#10');',
-        [Multiplicand.QuadPart,
-        Multiplier]);
+    LogBegin('RtlExtendedIntegerMultiply').
+      _(Multiplicand.QuadPart, 'Multiplicand').
+      _(Multiplier, 'Multiplier').
+    LogEnd();
 
   Result := _LARGE_INTEGER(JwaNative.RtlExtendedIntegerMultiply(Multiplicand, Multiplier));
   EmuSwapFS(fsXbox);
