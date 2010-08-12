@@ -1227,13 +1227,12 @@ procedure xboxkrnl_RtlLeaveCriticalSection
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG_TRACE}
-  DbgPrintf('EmuKrnl : RtlLeaveCriticalSection' +
-      #13#10'(' +
-      #13#10'   CriticalSection              : 0x%.08X' +
-      #13#10');',
-      [CriticalSection]);
-{$ENDIF}
+  if MayLog(lfUnit and lfDxbx and lfTrace) then
+    DbgPrintf('EmuKrnl : RtlLeaveCriticalSection' +
+        #13#10'(' +
+        #13#10'   CriticalSection              : 0x%.08X' +
+        #13#10');',
+        [CriticalSection]);
 
 {$IFDEF XBOX_CRITICAL_SECTION}
   X_RtlLeaveCriticalSection(CriticalSection);
@@ -1250,13 +1249,12 @@ procedure xboxkrnl_RtlLeaveCriticalSectionAndRegion(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG_TRACE}
-  DbgPrintf('EmuKrnl : RtlLeaveCriticalSectionAndRegion' +
-      #13#10'(' +
-      #13#10'   CriticalSection              : 0x%.08X' +
-      #13#10');',
-      [CriticalSection]);
-{$ENDIF}
+  if MayLog(lfUnit and lfDxbx and lfTrace) then
+    DbgPrintf('EmuKrnl : RtlLeaveCriticalSectionAndRegion' +
+        #13#10'(' +
+        #13#10'   CriticalSection              : 0x%.08X' +
+        #13#10');',
+        [CriticalSection]);
 
 {$IFDEF XBOX_CRITICAL_SECTION}
   X_RtlLeaveCriticalSection(CriticalSection); // TODO : Do something better (region-related?)

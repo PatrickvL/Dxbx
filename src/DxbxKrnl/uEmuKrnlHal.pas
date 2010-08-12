@@ -143,6 +143,8 @@ function {366} xboxkrnl_HalWriteSMCScratchRegister(
 
 implementation
 
+const lfUnit = lfCxbx or lfKernel;
+
 procedure {009} xboxkrnl_HalReadSMCTrayState
 (
   State: PDWORD;
@@ -155,15 +157,12 @@ const TRAY_OPEN = 16;
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : HalReadSMCTrayState' +
-      #13#10'(' +
-      #13#10'   State              : 0x%.08X' +
-      #13#10'   Count              : 0x%.08X' +
-      #13#10');',
-      [State, Count]);
-{$ENDIF}
-
+  if MayLog(lfUnit) then
+    LogBegin('HalReadSMCTrayState').
+      _(State, 'State').
+      _(Count, 'Count').
+    LogEnd();
+        
   // TODO -oCXBX: Make this configurable?
   // TODO -oCXBX: What is the count parameter for??
 
@@ -237,16 +236,13 @@ procedure {045} xboxkrnl_HalReadSMBusValue(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : HalReadSMBusValue' +
-      #13#10'(' +
-      #13#10'   Address             : 0x%.08X' +
-      #13#10'   Command             : 0x%.08X' +
-      #13#10'   WordFlag            : 0x%.08X' +
-      #13#10'   Value               : 0x%.08X' +
-      #13#10');',
-      [Address, Command, WordFlag, Value]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('HalReadSMBusValue').
+      _(Address, 'Address').
+      _(Command, 'Command').
+      _(WordFlag, 'WordFlag').
+      _(Value, 'Value').
+    LogEnd();
 
   Unimplemented('HalReadSMBusValue');
   Value^ := 0; // TODO : Zero is probably the safest value to return
@@ -301,14 +297,11 @@ procedure {049} xboxkrnl_HalReturnToFirmware
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : HalReturnToFirmware' +
-      #13#10'(' +
-      #13#10'   Routine             : 0x%.08X' +
-      #13#10');',
-      [Ord(Routine)]);
-{$ENDIF}
-
+  if MayLog(lfUnit) then
+  LogBegin('HalReturnToFirmware').
+    _(Int(Routine), 'Routine').
+  LogEnd();
+     
   DxbxKrnlCleanup('Xbe has rebooted : HalReturnToFirmware(%d)', [Ord(Routine)]);
 
   EmuSwapFS(fsXbox); // Dxbx addition : Not really necessary
@@ -324,17 +317,14 @@ function {050} xboxkrnl_HalWriteSMBusValue(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : HalWriteSMBusValue' +
-      #13#10'(' +
-      #13#10'   Address             : 0x%.08X' +
-      #13#10'   Command             : 0x%.08X' +
-      #13#10'   WordFlag            : 0x%.08X' +
-      #13#10'   Value               : 0x%.08X' +
-      #13#10');',
-      [Address, Command, WordFlag, Value]);
-{$ENDIF}
-
+  if MayLog(lfUnit) then
+    LogBegin('HalWriteSMBusValue').
+      _(Address, 'Address').
+      _(Command, 'Command').
+      _(WordFlag, 'WordFlag').
+      _(Value, 'Value').
+    LogEnd();
+      
   Result := Unimplemented('HalWriteSMBusValue');
 
   EmuSwapFS(fsXbox);
@@ -378,13 +368,10 @@ function {366} xboxkrnl_HalWriteSMCScratchRegister(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : HalWriteSMCScratchRegister' +
-      #13#10'(' +
-      #13#10'   ScratchRegister     : 0x%.08X' +
-      #13#10');',
-      [ScratchRegister]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('HalWriteSMCScratchRegister').
+      _(ScratchRegister, 'ScratchRegister').
+    LogEnd();
 
   HalpSMCScratchRegister := ScratchRegister;
 
