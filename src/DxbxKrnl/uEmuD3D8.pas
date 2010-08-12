@@ -1970,12 +1970,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SelectVertexShader' +
-        #13#10'(' +
-        #13#10'   Handle                    : 0x%.08X' +
-        #13#10'   Address                   : 0x%.08X' +
-        #13#10');',
-        [Handle, Address]);
+    LogBegin('EmuIDirect3DDevice8_SelectVertexShader').
+      _(Handle, 'Handle').
+      _(Address, 'Address').
+    LogEnd();
 
   if (VshHandleIsVertexShader(Handle)) then
   begin
@@ -2018,11 +2016,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3D8_GetAdapterModeCount' +
-        #13#10'(' +
-        #13#10'   Adapter                   : 0x%.08X' +
-        #13#10');',
-        [Adapter]);
+    LogBegin('EmuIDirect3D8_GetAdapterModeCount').
+      _(Adapter, 'Adapter').
+    LogEnd();
 
   ret := IDirect3D8(g_pD3D8).GetAdapterModeCount(g_XBVideo.GetDisplayAdapter());
   if ret > 0 then // Dxbx addition, to prevent underflow
@@ -2052,12 +2048,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3D8_GetAdapterDisplayMode' +
-        #13#10'(' +
-        #13#10'   Adapter                   : 0x%.08X' +
-        #13#10'   pMode                     : 0x%.08X' +
-        #13#10');',
-        [Adapter, pMode]);
+    LogBegin('EmuIDirect3D8_GetAdapterDisplayMode').
+      _(Adapter, 'Adapter').
+      _(pMode, 'pMode').
+    LogEnd();
 
   // Cxbx NOTE: WARNING: We should cache the 'Emulated' display mode and return
   // This value. We can initialize the cache with the default Xbox mode data.
@@ -2099,13 +2093,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3D8_EnumAdapterModes' +
-        #13#10'(' +
-        #13#10'   Adapter                   : 0x%.08X' +
-        #13#10'   Mode                      : 0x%.08X' +
-        #13#10'   pMode                     : 0x%.08X' +
-        #13#10');',
-        [Adapter, Mode, pMode]);
+    LogBegin('EmuIDirect3D8_EnumAdapterModes').
+      _(Adapter, 'Adapter').
+      _(Mode, 'Mode').
+      _(pMode, 'pMode').
+    LogEnd();
 
   Result := D3D_OK;
 
