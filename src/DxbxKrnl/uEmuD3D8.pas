@@ -3320,6 +3320,9 @@ function XTL_EmuIDirect3DDevice8_CreatePixelShader
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
+  ConvertedPixelShader: AnsiString;
+  pShader: XTL_LPD3DXBUFFER;
+  pErrors: XTL_LPD3DXBUFFER;
   pFunction: PDWORD;
 begin
   EmuSwapFS(fsWindows);
@@ -3332,23 +3335,45 @@ begin
         #13#10');',
       [pPSDef, pHandle]);
 
-  pFunction := PDWORD(pPSDef);
-
   // Attempt to recompile PixelShader
-  XTL_EmuRecompilePshDef(pPSDef, NULL);
+  ConvertedPixelShader := XTL_EmuRecompilePshDef(pPSDef);
 
-  // redirect to windows d3d
-  Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader
-  (
-    pFunction,
-    {out}pHandle^
-  );
+  // assemble the shader
+  pShader := nil;
+  pErrors := nil;
+  Result := D3DXAssembleShader(P_char(ConvertedPixelShader), Length(ConvertedPixelShader), {Flags=}0, {ppConstants=}NULL, {ppCompiledShader=}@pShader, {ppCompilationErrors}@pErrors);
+
+  if Assigned(pShader) then
+  begin
+    pFunction := PDWORD(ID3DXBuffer(pShader).GetBufferPointer());
+
+    if (Result = D3D_OK) then
+      // redirect to windows d3d
+      Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader
+      (
+        pFunction,
+        {out}pHandle^
+      );
+
+    // Dxbx note : We must release pShader here, else we would have a resource leak!
+    ID3DXBuffer(pShader)._Release;
+    pShader := nil;
+  end;
 
   if FAILED(Result) then
   begin
     pHandle^ := X_PIXELSHADER_FAKE_HANDLE;
+    EmuWarning(string(AnsiString(PAnsiChar(ID3DXBuffer(pErrors).GetBufferPointer)))); // Dxbx addition
+    EmuWarning(string(ConvertedPixelShader));
     EmuWarning('We''re lying about the creation of a pixel shader!');
     Result := D3D_OK;
+  end;
+
+  // Dxbx addition : We release pErrors here (or it would become a resource leak!)
+  if Assigned(pErrors) then
+  begin
+    ID3DXBuffer(pErrors)._Release();
+    pErrors := nil;
   end;
 
   EmuSwapFS(fsXbox);

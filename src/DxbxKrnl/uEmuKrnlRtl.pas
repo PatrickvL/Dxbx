@@ -658,7 +658,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('RtlCharToInteger').
-      _(Str, 'Str').
+      _(LPCSTR(Str), 'Str').
       _(Base, 'Base').
       _(Value, 'Value').
     LogEnd();
