@@ -132,6 +132,7 @@ type
     function _(const aValue: _BOOLEAN; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PVOID; const aName: string = ''): PLogStack; overload;
     function _(const aValue: LPCSTR; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: LPCWSTR; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PPOINT; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PRECT; const aName: string = ''): PLogStack; overload;
     function _(const aValue: LARGE_INTEGER; const aName: string = ''): PLogStack; overload;
@@ -886,6 +887,12 @@ function RLogStack._(const aValue: LPCSTR; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'LPCSTR');
   SetValue(UIntPtr(aValue), '"' + string(PAnsiCharMaxLenToString(aValue, LOG_MAX_STRING_LENGTH)) + '"');
+end;
+
+function RLogStack._(const aValue: LPCWSTR; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'LPCWSTR');
+  SetValue(UIntPtr(aValue), '"' + string(PWideCharMaxLenToString(aValue, LOG_MAX_STRING_LENGTH)) + '"');
 end;
 
 function RLogStack._(const aValue: PPOINT; const aName: string = ''): PLogStack;

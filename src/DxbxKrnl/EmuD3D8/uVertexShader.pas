@@ -445,7 +445,7 @@ const MAC_OpCode: array [VSH_MAC] of P_char =
     'max',
     'slt',
     'sge',
-    'mov' // Cxbx says : really 'arl' - Dxbx asks : Why can't we use 'arl' then?
+    'mov' // Cxbx says : really 'arl' - Dxbx note : Alias for 'mov a0.x'
 );
 
 const ILU_OpCode: array [VSH_ILU] of P_char =
