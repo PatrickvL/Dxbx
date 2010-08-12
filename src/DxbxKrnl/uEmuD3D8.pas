@@ -1416,13 +1416,14 @@ begin
             EmuWarning('YUY2 overlays are not supported in hardware, could be slow!');
 
           // Does the user want to use Hardware accelerated YUV surfaces?
-          if g_bSupportsYUY2 and g_XBVideo.GetHardwareYUV() then
+          if g_bSupportsYUY2 and g_XBVideo.GetHardwareYUV() and MayLog(lfUnit) then
             DbgPrintf('EmuD3D8 : Hardware accelerated YUV surfaces Enabled...');
 
           if not g_XBVideo.GetHardwareYUV() then
           begin
             g_bSupportsYUY2 := false;
-            DbgPrintf('EmuD3D8 : Hardware accelerated YUV surfaces Disabled...');
+            if MayLog(lfUnit) then
+              DbgPrintf('EmuD3D8 : Hardware accelerated YUV surfaces Disabled...');
           end
         end;
 
@@ -1712,11 +1713,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuIDirect3DDevice8_GetCreationParameters' +
-        #13#10'(' +
-        #13#10'   pParameters               : 0x%.08X' +
-        #13#10');',
-        [pParameters]);
+    LogBegin('EmuIDirect3DDevice8_GetCreationParameters').
+      _(pParameters, 'pParameters').
+    LogEnd();
 
   pParameters.AdapterOrdinal := D3DADAPTER_DEFAULT;
   pParameters.DeviceType := D3DDEVTYPE_HAL;
@@ -1824,8 +1823,7 @@ begin
   if MayLog(lfUnit) then
   begin
     EmuSwapFS(fsWindows);
-    if MayLog(lfUnit) then
-      DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BeginVisibilityTest();');
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BeginVisibilityTest();');
     EmuSwapFS(fsXbox);
   end;
 
@@ -1843,11 +1841,9 @@ begin
     EmuSwapFS(fsWindows);
 
     if MayLog(lfUnit) then
-      DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_EndVisibilityTest' +
-          #13#10'(' +
-          #13#10'   Index                     : 0x%.08X' +
-          #13#10');',
-          [Index]);
+      LogBegin('EmuIDirect3DDevice8_EndVisibilityTest').
+        _(Index, 'Index').
+      LogEnd();
 
     EmuSwapFS(fsXbox);
   end;
@@ -1865,12 +1861,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetBackBufferScale' +
-        #13#10'(' +
-        #13#10'   x                         : %f' +
-        #13#10'   y                         : %f' +
-        #13#10');',
-        [x, y]);
+    LogBegin('EmuIDirect3DDevice8_SetBackBufferScale').
+      _(X, 'x').
+      _(Y, 'y').
+    LogEnd();
 
   EmuWarning('SetBackBufferScale ignored');
 
@@ -1890,13 +1884,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetVisibilityTestResult' +
-        #13#10'(' +
-        #13#10'   Index                     : 0x%.08X' +
-        #13#10'   pResult                   : 0x%.08X' +
-        #13#10'   pTimeStamp                : 0x%.08X' +
-        #13#10');',
-        [Index, pResult, pTimeStamp]);
+    LogBegin('EmuIDirect3DDevice8_GetVisibilityTestResult').
+      _(Index, 'Index').
+      _(pResult, 'pResult').
+      _(pTimeStamp, 'pTimeStamp').
+    LogEnd();
 
   // TODO -oCXBX: actually emulate this!?
 
@@ -1920,11 +1912,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetDeviceCaps' +
-        #13#10'(' +
-        #13#10'   pCaps                     : 0x%.08X' +
-        #13#10');',
-        [pCaps]);
+    LogBegin('EmuIDirect3DDevice8_GetDeviceCaps').
+      _(pCaps, 'pCaps').
+    LogEnd();
 
   IDirect3D8(g_pD3D8).GetDeviceCaps(
     g_XBVideo.GetDisplayAdapter(),
@@ -1947,12 +1937,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_LoadVertexShader' +
-        #13#10'(' +
-        #13#10'   Handle                    : 0x%.08X' +
-        #13#10'   Address                   : 0x%.08X' +
-        #13#10');',
-        [Handle, Address]);
+    LogBegin('EmuIDirect3DDevice8_LoadVertexShader').
+      _(Handle, 'Handle').
+      _(Address, 'Address').
+    LogEnd();
 
   if (Address < D3DVS_XBOX_NR_ADDRESS_SLOTS{=136}) and VshHandleIsVertexShader(Handle) then
   begin
@@ -5649,12 +5637,11 @@ begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    DbgPrintf('EmuD3D8 : EmuGet2DSurfaceDescD' +
-        #13#10'(' +
-        #13#10'   pPixelContainer           : 0x%.08X' +
-        #13#10'   pDesc                     : 0x%.08X' +
-        #13#10');',
-        [pPixelContainer, pDesc]);
+    LogBegin('EmuGet2DSurfaceDescD').
+      _(pPixelContainer, 'pPixelContainer').
+      _(pDesc, 'pDesc').
+    LogEnd();
+
     EmuSwapFS(fsXbox);
   end;
 
@@ -5674,12 +5661,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DSurface8_GetDesc' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10'   pDesc                     : 0x%.08X' +
-        #13#10');',
-      [pThis, pDesc]);
+    LogBegin('EmuIDirect3DSurface8_GetDesc').
+      _(pThis, 'pThis').
+      _(pDesc, 'pDesc').
+    LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
 
@@ -5736,14 +5721,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DSurface8_LockRect' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10'   pLockedRect               : 0x%.08X' +
-        #13#10'   pRect                     : 0x%.08X' +
-        #13#10'   Flags                     : 0x%.08X' +
-        #13#10');',
-      [pThis, pLockedRect, pRect, Flags]);
+    LogBegin('EmuIDirect3DSurface8_LockRect').
+      _(pThis, 'pThis').
+      _(pLockedRect, 'pLockedRect').
+      _(pRect, 'pRect').
+      _(Flags, 'Flags').
+    LogEnd();
 
   hRet := 0; // Dxbx : Prevent 'not initialized' compiler warning
 
@@ -5810,11 +5793,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DBaseTexture8_GetLevelCount' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10');',
-      [pThis]);
+    LogBegin('EmuIDirect3DBaseTexture8_GetLevelCount').
+      _(pThis, 'pThis').
+    LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
   
@@ -5837,12 +5818,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DTexture8_GetSurfaceLevel2' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10'   Level                     : 0x%.08X' +
-        #13#10');',
-        [pThis, Level]);
+    LogBegin('EmuIDirect3DTexture8_GetSurfaceLevel2').
+      _(pThis, 'pThis').
+      _(Level, 'Level').
+    LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis); // Dxbx addition
 
@@ -5887,15 +5866,13 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    DbgPrintf('EmuD3D8 : EmuIDirect3DTexture8_LockRect' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10'   Level                     : 0x%.08X' +
-        #13#10'   pLockedRect               : 0x%.08X' +
-        #13#10'   pRect                     : 0x%.08X' +
-        #13#10'   Flags                     : 0x%.08X' +
-        #13#10');',
-             [pThis, Level, pLockedRect, pRect, Flags]);
+    LogBegin('EmuIDirect3DTexture8_LockRect').
+      _(pThis, 'pThis').
+      _(Level, 'Level').
+      _(pLockedRect, 'pLockedRect').
+      _(pRect, 'pRect').
+      _(Flags, 'Flags').
+    LogEnd();
 
     DbgPrintf('EmuD3D8 : EmuIDirect3DTexture8_LockRect (pThis->Texture = 0x%8.8X)', [pThis.Emu.Texture8]);
   end;
@@ -5965,13 +5942,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DTexture8_GetSurfaceLevel' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10'   Level                     : 0x%.08X' +
-        #13#10'   ppSurfaceLevel            : 0x%.08X' +
-        #13#10');',
-        [pThis, Level, ppSurfaceLevel]);
+    LogBegin('EmuIDirect3DTexture8_GetSurfaceLevel').
+      _(pThis, 'pThis').
+      _(Level, 'Level').
+      _(ppSurfaceLevel, 'ppSurfaceLevel').
+    LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
 
@@ -6033,15 +6008,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DVolumeTexture8_LockBox' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10'   Level                     : 0x%.08X' +
-        #13#10'   pLockedVolume             : 0x%.08X' +
-        #13#10'   pBox                      : 0x%.08X' +
-        #13#10'   Flags                     : 0x%.08X' +
-        #13#10');',
-      [pThis, Level, pLockedVolume, pBox, Flags]);
+    LogBegin('EmuIDirect3DVolumeTexture8_LockBox').
+      _(pThis, 'pThis').
+      _(Level, 'Level').
+      _(pLockedVolume, 'pLockedVolume').
+      _(pBox, 'pBox').
+      _(Flags, 'Flags').
+    LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
 
