@@ -51,12 +51,15 @@ var
 
 implementation
 
+const lfUnit = lfCxbx or lfKernel;
+
 function {035} xboxkrnl_FscGetCacheSize(
   ): SIZE_T; stdcall;
 // Source:Dxbx  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : FscGetCacheSize();');
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : FscGetCacheSize();');
   Result := FscNumberOfCachePages;
   EmuSwapFS(fsXbox);
 end;
@@ -76,13 +79,10 @@ function {037} xboxkrnl_FscSetCacheSize(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : FscSetCacheSize' +
-      #13#10'(' +
-      #13#10'   uCachePages         : 0x%.08X' +
-      #13#10');',
-      [uCachePages]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('FscSetCacheSize').
+      _(uCachePages, 'uCachePages').
+    LogEnd();
 
   // TODO -oDxbx : Actually make this have some effect somehow?
 

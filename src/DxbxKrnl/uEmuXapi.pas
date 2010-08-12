@@ -1063,11 +1063,10 @@ function XTL_EmuCloseHandle
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
-  LogBegin('EmuCloseHandle').
-    _(hObject, 'hObject').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit or lfDxbx}
+    LogBegin('EmuCloseHandle').
+      _(hObject, 'hObject').
+    LogEnd();
 
   Result := BOOL(CloseHandle(hObject));
 
@@ -1218,12 +1217,11 @@ procedure XTL_EmuXapiThreadStartup
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
-  LogBegin('EmuXapiThreadStartup').
-    _(Addr(StartRoutine), 'StartRoutine').
-    _(StartContext, 'StartContext').
-  LogEnd();
-{$ENDIF}
+  if Maylog( lfUnit or lfDxbx) then
+    LogBegin('EmuXapiThreadStartup').
+      _(Addr(StartRoutine), 'StartRoutine').
+      _(StartContext, 'StartContext').
+    LogEnd();
 
   EmuSwapFS(fsXbox);
 
@@ -1242,12 +1240,11 @@ function XTL_EmuXapiValidateDiskPartitionEx(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
-  LogBegin('EmuXapiValidateDiskPartitionEx').
-    _(PartitionName, 'PartitionName').
-    _(BytesPerCluster, 'BytesPerCluster').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit or lfDxbx) then
+    LogBegin('EmuXapiValidateDiskPartitionEx').
+      _(PartitionName, 'PartitionName').
+      _(BytesPerCluster, 'BytesPerCluster').
+    LogEnd();
 
   EmuSwapFS(fsXbox);
 
@@ -1400,11 +1397,10 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXGetSectionHandleA').
-    _(pSectionName, 'pSectionName'). // TODO : Honour XBE_SECTIONNAME_MAXLENGTH
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXGetSectionHandleA').
+      _(pSectionName, 'pSectionName'). // TODO : Honour XBE_SECTIONNAME_MAXLENGTH
+    LogEnd();
 
   SectionHeader := XBE_FindSectionHeaderByName(pSectionName);
   if Assigned(SectionHeader) then
