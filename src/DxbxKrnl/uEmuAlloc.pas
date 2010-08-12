@@ -47,6 +47,9 @@ function DxbxRtlSizeHeap(Heap: HANDLE; Flags: ULONG; pMem: PVOID): SIZE_T;
 
 implementation
 
+const lfUnit = lfCxbx or lfKernel;
+
+
 {$IFDEF _DEBUG_ALLOC}
 
 (*
@@ -184,19 +187,19 @@ begin
 
   if Puint32(GetMemStart(pBlock))^ <> MEMORY_GUARD then
   begin
-{$IFDEF DEBUG}
-    DbgPrintf('    Memory block corrupted at start, overwrite: 0x%.04X',
-              [Puint32(GetMemStart(pBlock))^]);
-{$ENDIF}
+    if MayLog(lfUnit) then
+      DbgPrintf('    Memory block corrupted at start, overwrite: 0x%.04X',
+                [Puint32(GetMemStart(pBlock))^]);
+
     Integrity := false;
   end;
 
   if Puint32(GetMemEnd(pBlock))^ <> MEMORY_GUARD then
   begin
-{$IFDEF DEBUG}
-    DbgPrintf('    Memory block corrupted at end, overwrite: 0x%.04X',
-              [Puint32(GetMemEnd(pBlock))^]);
-{$ENDIF}
+    if MayLog(lfUnit) then
+      DbgPrintf('    Memory block corrupted at end, overwrite: 0x%.04X',
+                [Puint32(GetMemEnd(pBlock))^]);
+
     Integrity := false;
   end;
 
@@ -369,24 +372,24 @@ var
 begin
   g_MemoryMutex.Lock();
 
-{$IFDEF DEBUG}
-  DbgPrintf('******************************************************'#13#10 +
-            '* Dumping memory allocations                         *'#13#10 +
-            '******************************************************');
-{$ENDIF}
-  // Dxbx note : Translated 'for' to 'while', because counter is dereferenced instead of incremented :    
+  if MayLog(lfUnit) then
+    DbgPrintf('******************************************************'#13#10 +
+              '* Dumping memory allocations                         *'#13#10 +
+              '******************************************************');
+
+  // Dxbx note : Translated 'for' to 'while', because counter is dereferenced instead of incremented :
   pCur := g_pFirstBlock; while Assigned(pCur) do
   begin
-{$IFDEF DEBUG}
-    DbgPrintf(#13#10 +
-        #13#10'    Block: 0x%.08X' +
-        #13#10'    Size : %d' +
-        #13#10'    File : %s' +
-        #13#10'    Line : %d' +
-        #13#10'    Type : %s',
-        [pCur.pMem, pCur.Size, pCur.pFile, pCur.Line,
-        iif(pCur.Type_ = DXBX_ALLOC_NORMAL, 'NORMAL', 'RTL')]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+      DbgPrintf(#13#10 +
+          #13#10'    Block: 0x%.08X' +
+          #13#10'    Size : %d' +
+          #13#10'    File : %s' +
+          #13#10'    Line : %d' +
+          #13#10'    Type : %s',
+          [pCur.pMem, pCur.Size, pCur.pFile, pCur.Line,
+          iif(pCur.Type_ = DXBX_ALLOC_NORMAL, 'NORMAL', 'RTL')]);
+
     CheckIntegrity(pCur);
     
     pCur := pCur.pNext;
@@ -414,13 +417,12 @@ begin
   pMem := malloc(Size + 2 * sizeof(MEMORY_GUARD));
   if(nil=pMem) then
   begin
-{$IFDEF DEBUG}
-    DbgPrintf('DxbxMallocDebug: Allocation failed' +
-        #13#10'    Size: %d' +
-        #13#10'    File: %s' +
-        #13#10'    Line: %d',
-        [Size, pFile, Line]);
-{$ENDIF}
+    if MayLog(lfUnit) then
+      DbgPrintf('DxbxMallocDebug: Allocation failed' +
+          #13#10'    Size: %d' +
+          #13#10'    File: %s' +
+          #13#10'    Line: %d',
+          [Size, pFile, Line]);
   end
   else
   begin
@@ -456,14 +458,13 @@ begin
   pMem := calloc(NbrElements * ElementSize + 2 * sizeof(MEMORY_GUARD), 1);
   if(nil=pMem) then
   begin
-{$IFDEF DEBUG}
-    DbgPrintf('DxbxCallocDebug: Allocation failed' +
-        #13#10'    NbrElements: %d' +
-        #13#10'    ElementSize: %d' +
-        #13#10'    File       : %s' +
-        #13#10'    Line       : %d',
-        [NbrElements, ElementSize, pFile, Line]);
-{$ENDIF}
+    if MayLog(lfUnit) then
+      DbgPrintf('DxbxCallocDebug: Allocation failed' +
+          #13#10'    NbrElements: %d' +
+          #13#10'    ElementSize: %d' +
+          #13#10'    File       : %s' +
+          #13#10'    Line       : %d',
+          [NbrElements, ElementSize, pFile, Line]);
   end
   else
   begin
@@ -499,29 +500,27 @@ begin
   pFree := RemoveMemoryBlock(pMem);
   if(pFree = NULL) then
   begin
-{$IFDEF DEBUG}
-    DbgPrintf('DxbxFreeDebug: free on non-existent block: 0x%.08X! ' +
-              'Possibly a multiple free.' +
-        #13#10'    File: %s' +
-        #13#10'    Line: %d',
-        [pMem, pFile, Line]);
-{$ENDIF}
+    if MayLog(lfUnit) then
+      DbgPrintf('DxbxFreeDebug: free on non-existent block: 0x%.08X! ' +
+                'Possibly a multiple free.' +
+          #13#10'    File: %s' +
+          #13#10'    Line: %d',
+          [pMem, pFile, Line]);
   end
   else
   begin
     if not CheckIntegrity(pFree) then
     begin
-{$IFDEF DEBUG}
-      DbgPrintf('DxbxFreeDebug: Free on damaged block' +
-          #13#10'    Block   : 0x%.08X' +
-          #13#10'    Allocation' +
-          #13#10'        File: %s' +
-          #13#10'        Line: %d' +
-          #13#10'    Free' +
-          #13#10'        File: %s' +
-          #13#10'        Line: %d',
-          [pFree.pMem, pFree.pFile, pFree.Line, pFile, Line]);
-{$ENDIF}
+      if MayLog(lfUnit) then
+        DbgPrintf('DxbxFreeDebug: Free on damaged block' +
+            #13#10'    Block   : 0x%.08X' +
+            #13#10'    Allocation' +
+            #13#10'        File: %s' +
+            #13#10'        Line: %d' +
+            #13#10'    Free' +
+            #13#10'        File: %s' +
+            #13#10'        Line: %d',
+            [pFree.pMem, pFree.pFile, pFree.Line, pFile, Line]);
     end;
 
     free(GetMemStart(pFree));
@@ -553,15 +552,14 @@ begin
   pMem := DxbxRtlAlloc(Heap, Flags, Bytes + 2 * SizeOf(MEMORY_GUARD));
   if(nil=pMem) then
   begin
-{$IFDEF DEBUG}
-    DbgPrintf('DxbxRtlAllocDebug: Allocation failed' +
-        #13#10'    Heap  : 0x%.08X' +
-        #13#10'    Flags : 0x%.08X' +
-        #13#10'    Bytes : %d' +
-        #13#10'    File  : %s' +
-        #13#10'    Line  : %d',
-        [Heap, Flags, Bytes, pFile, Line]);
-{$ENDIF}
+    if MayLog(lfUnit) then
+      DbgPrintf('DxbxRtlAllocDebug: Allocation failed' +
+          #13#10'    Heap  : 0x%.08X' +
+          #13#10'    Flags : 0x%.08X' +
+          #13#10'    Bytes : %d' +
+          #13#10'    File  : %s' +
+          #13#10'    Line  : %d',
+          [Heap, Flags, Bytes, pFile, Line]);
   end
   else
   begin
@@ -601,29 +599,27 @@ begin
   pFree := RemoveMemoryBlock(pMem);
   if(pFree = NULL) then
   begin
-{$IFDEF DEBUG}
+    if MayLog(lfUnit) then
     DbgPrintf('DxbxRtlFreeDebug: free on non-existent block: 0x%.08X! ' +
               'Possibly a multiple free.' +
         #13#10'    File: %s' +
         #13#10'    Line: %d',
         [pMem, pFile, Line]);
-{$ENDIF}
   end
   else
   begin
     if not CheckIntegrity(pFree) then
     begin
-{$IFDEF DEBUG}
-      DbgPrintf('DxbxRtlFreeDebug: Free on damaged block' +
-          #13#10'    Block   : $.%08X' +
-          #13#10'    Allocation' +
-          #13#10'        File: %s' +
-          #13#10'        Line: %d' +
-          #13#10'    Free' +
-          #13#10'        File: %s' +
-          #13#10'        Line: %d',
-          [pFree.pMem, pFree.pFile, pFree.Line, pFile, Line]);
-{$ENDIF}
+      if MayLog(lfUnit) then
+        DbgPrintf('DxbxRtlFreeDebug: Free on damaged block' +
+            #13#10'    Block   : $.%08X' +
+            #13#10'    Allocation' +
+            #13#10'        File: %s' +
+            #13#10'        Line: %d' +
+            #13#10'    Free' +
+            #13#10'        File: %s' +
+            #13#10'        Line: %d',
+            [pFree.pMem, pFree.pFile, pFree.Line, pFile, Line]);
     end;
     Result := DxbxRtlFree(Heap, Flags, GetMemStart(pFree));
     free(pFree.pFile);
@@ -655,48 +651,45 @@ begin
   pRealloc := FindMemoryBlock(pMem);
   if(pRealloc = NULL) then
   begin
-{$IFDEF DEBUG}
-    DbgPrintf('DxbxRtlRealloc: realloc on non-existent block: 0x%.08X!' +
-        #13#10'    File: %s' +
-        #13#10'    Line: %d',
-        [pMem, pFile, Line]);
-{$ENDIF}
+    if MayLog(lfUnit) then
+      DbgPrintf('DxbxRtlRealloc: realloc on non-existent block: 0x%.08X!' +
+          #13#10'    File: %s' +
+          #13#10'    Line: %d',
+          [pMem, pFile, Line]);
   end
   else
   begin
     if not CheckIntegrity(pRealloc) then
     begin
-{$IFDEF DEBUG}
-      DbgPrintf('DxbxRtlReallocDebug: Realloc on damaged block' +
-          #13#10'    Block   : 0x.%08X' +
-          #13#10'    Allocation' +
-          #13#10'        Size: %d' +
-          #13#10'        File: %s' +
-          #13#10'        Line: %d' +
-          #13#10'    Reallocation' +
-          #13#10'        Size: %d' +
-          #13#10'        File: %s' +
-          #13#10'        Line: %d',
-          [pRealloc.pMem,
-           pRealloc.pFile, pRealloc.Size, pRealloc.Line,
-           Bytes, pFile, Line]);
-{$ENDIF}
+      if MayLog(lfUnit) then
+        DbgPrintf('DxbxRtlReallocDebug: Realloc on damaged block' +
+            #13#10'    Block   : 0x.%08X' +
+            #13#10'    Allocation' +
+            #13#10'        Size: %d' +
+            #13#10'        File: %s' +
+            #13#10'        Line: %d' +
+            #13#10'    Reallocation' +
+            #13#10'        Size: %d' +
+            #13#10'        File: %s' +
+            #13#10'        Line: %d',
+            [pRealloc.pMem,
+             pRealloc.pFile, pRealloc.Size, pRealloc.Line,
+             Bytes, pFile, Line]);
     end;
     pNewMem := DxbxRtlReAlloc(Heap, Flags, GetMemStart(pRealloc), Bytes + 2 * sizeof(MEMORY_GUARD));
     free(pRealloc.pFile);
     free(pRealloc);
     if(nil=pNewMem) then
     begin
-{$IFDEF DEBUG}
-      DbgPrintf('DxbxRtlReallocDebug: Reallocation failed' +
-          #13#10'    Heap  : 0x%.08X' +
-          #13#10'    Flags : 0x%.08X' +
-          #13#10'    pMem  : 0x%.08X' +
-          #13#10'    Bytes : %d' +
-          #13#10'    File  : %s' +
-          #13#10'    Line  : %d',
-          [Heap, Flags, pMem, Bytes, pFile, Line]);
-{$ENDIF}
+      if MayLog(lfUnit) then
+        DbgPrintf('DxbxRtlReallocDebug: Reallocation failed' +
+            #13#10'    Heap  : 0x%.08X' +
+            #13#10'    Flags : 0x%.08X' +
+            #13#10'    pMem  : 0x%.08X' +
+            #13#10'    Bytes : %d' +
+            #13#10'    File  : %s' +
+            #13#10'    Line  : %d',
+            [Heap, Flags, pMem, Bytes, pFile, Line]);
     end
     else
     begin
@@ -733,29 +726,27 @@ begin
   pBlock := FindMemoryBlock(pMem);
   if(pBlock = NULL) then
   begin
-{$IFDEF DEBUG}
-    DbgPrintf('DxbxRtlSizeHeap: size heap on non-existent block: 0x%.08X! ' +
-        #13#10'    File: %s' +
-        #13#10'    Line: %d',
-        [pMem, pFile, Line]);
-{$ENDIF}
+    if MayLog(lfUnit) then
+      DbgPrintf('DxbxRtlSizeHeap: size heap on non-existent block: 0x%.08X! ' +
+          #13#10'    File: %s' +
+          #13#10'    Line: %d',
+          [pMem, pFile, Line]);
   end
   else
   begin
     ActualSize := DxbxRtlSizeHeap(Heap, Flags, GetMemStart(pBlock))
                         - 2 * SizeOf(MEMORY_GUARD);
-{$IFDEF DEBUG}
-    if(ActualSize <> pBlock.Size) then
-    begin
-      DbgPrintf('DxbxRtlSizeHeap: heap size mismatch, RtlSizeHeap: %d Tracker: %d' +
-          #13#10'    File  : %s' +
-          #13#10'    Line  : %d',
-          [ActualSize,
-           pBlock.Size,
-           pFile,
-           Line]);
-    end;
-{$ENDIF}
+    if MayLog(lfUnit) then
+      if(ActualSize <> pBlock.Size) then
+      begin
+        DbgPrintf('DxbxRtlSizeHeap: heap size mismatch, RtlSizeHeap: %d Tracker: %d' +
+            #13#10'    File  : %s' +
+            #13#10'    Line  : %d',
+            [ActualSize,
+             pBlock.Size,
+             pFile,
+             Line]);
+      end;
     Size := ActualSize;
   end;
 
