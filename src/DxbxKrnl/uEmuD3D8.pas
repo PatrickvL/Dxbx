@@ -10655,7 +10655,7 @@ exports
   XTL_EmuIDirect3DDevice8_SetBackBufferScale name PatchPrefix + 'D3DDevice_SetBackBufferScale',
   XTL_EmuIDirect3DDevice8_SetBackMaterial name PatchPrefix + 'D3DDevice_SetBackMaterial', // ??
   XTL_EmuIDirect3DDevice8_SetFlickerFilter name PatchPrefix + 'D3DDevice_SetFlickerFilter',
-  XTL_EmuIDirect3DDevice8_SetGammaRamp name PatchPrefix + 'Direct3D8_SetGammaRamp',
+  XTL_EmuIDirect3DDevice8_SetGammaRamp name PatchPrefix + 'D3DDevice_SetGammaRamp',
   XTL_EmuIDirect3DDevice8_SetIndices name PatchPrefix + 'D3DDevice_SetIndices',
   XTL_EmuIDirect3DDevice8_SetLight name PatchPrefix + 'D3DDevice_SetLight',
   XTL_EmuIDirect3DDevice8_SetMaterial name PatchPrefix + 'D3DDevice_SetMaterial',
@@ -10759,7 +10759,7 @@ exports
 
   XTL_EmuIDirect3DCubeTexture8_GetLevelDesc name PatchPrefix + 'D3DCubeTexture_GetLevelDesc',
   XTL_EmuIDirect3DCubeTexture8_GetCubeMapSurface2 name PatchPrefix + 'D3DCubeTexture_GetLevelDesc',
-  XTL_EmuIDirect3DCubeTexture8_LockRect name PatchPrefix + 'D3DCubeTexture8_LockRect', // _D3DCubeTexture_LockRect@24
+  XTL_EmuIDirect3DCubeTexture8_LockRect name PatchPrefix + 'D3DCubeTexture_LockRect', // _D3DCubeTexture_LockRect@24
 
   XTL_EmuIDirect3DTexture8_GetLevelDesc name PatchPrefix + 'D3DTexture_GetLevelDesc', // DXBX : better
   XTL_EmuIDirect3DTexture8_GetSurfaceLevel name PatchPrefix + 'D3DTexture_GetSurfaceLevel',
