@@ -299,8 +299,8 @@ type PS_REGISTER =
     PS_REGISTER_T3=                $0b, // r/w
     PS_REGISTER_R0=                $0c, // r/w
     PS_REGISTER_R1=                $0d, // r/w
-    PS_REGISTER_V1R0_SUM=          $0e, // r
-    PS_REGISTER_EF_PROD=           $0f, // r
+    PS_REGISTER_V1R0_SUM=          $0e, // r    = r0 + v1
+    PS_REGISTER_EF_PROD=           $0f, // r    = E * F
 
     PS_REGISTER_ONE=               Ord({PS_REGISTER_ZERO or} PS_INPUTMAPPING_UNSIGNED_INVERT), // OK for final combiner
     PS_REGISTER_NEGATIVE_ONE=      Ord({PS_REGISTER_ZERO or} PS_INPUTMAPPING_EXPAND_NORMAL),   // invalid for final combiner
@@ -321,16 +321,18 @@ type PS_CHANNEL =
 );
 
 const
-  PS_NoChannelMask = not Ord(PS_CHANNEL_ALPHA);
-  PS_NoChannelsMask = not (Ord(PS_CHANNEL_ALPHA) or (Ord(PS_CHANNEL_ALPHA) shl 8) or (Ord(PS_CHANNEL_ALPHA) shl 16) or (Ord(PS_CHANNEL_ALPHA) shl 24));
+  PS_ChannelMask = DWORD(Ord(PS_CHANNEL_ALPHA));
+  PS_NoChannelMask = DWORD(not PS_ChannelMask);
+  PS_AlphaChannelsMask = DWORD(PS_ChannelMask or (PS_ChannelMask shl 8) or (PS_ChannelMask shl 16) or (PS_ChannelMask shl 24));
+  PS_NoChannelsMask = DWORD(not PS_AlphaChannelsMask);
 
 type PS_FINALCOMBINERSETTING =
 (
     PS_FINALCOMBINERSETTING_CLAMP_SUM=     $80, // V1+R0 sum clamped to [0,1]
 
-    PS_FINALCOMBINERSETTING_COMPLEMENT_V1= $40, // unsigned invert mapping
+    PS_FINALCOMBINERSETTING_COMPLEMENT_V1= $40, // unsigned invert mapping  (1 - v1) is used as an input to the sum rather than v1
 
-    PS_FINALCOMBINERSETTING_COMPLEMENT_R0= $20  // unsigned invert mapping
+    PS_FINALCOMBINERSETTING_COMPLEMENT_R0= $20  // unsigned invert mapping  (1 - r1) is used as an input to the sum rather than r1
 );
 
 // =========================================================================================================
@@ -769,7 +771,6 @@ begin
 end;
 
 type
-  PSCombinerInput = ^RPSCombinerInput;
   RPSCombinerInput = record
     D: Byte;
     C: Byte;
@@ -890,57 +891,54 @@ begin
     // Dxbx additions from here onwards :
 
     if dwPSCCNumCombiners > 0 then
-    for i := 0 to dwPSCCNumCombiners-1 do // Loop over all  combiner stages
+    for i := 0 to dwPSCCNumCombiners-1 do // Loop over all combiner stages
     begin
-      DbgPshPrintf(#13#10'pPSDef.PSRGBInputs[%d] ->', [i]);
-      DbgPshPrintf('pPSDef.PSRGBInputs[%d] A: %s', [i, PSCombinerInputToStr((pPSDef.PSRGBInputs[i] shr 24) and $FF)]);
-      DbgPshPrintf('pPSDef.PSRGBInputs[%d] B: %s', [i, PSCombinerInputToStr((pPSDef.PSRGBInputs[i] shr 16) and $FF)]);
-      DbgPshPrintf('pPSDef.PSRGBInputs[%d] C: %s', [i, PSCombinerInputToStr((pPSDef.PSRGBInputs[i] shr  8) and $FF)]);
-      DbgPshPrintf('pPSDef.PSRGBInputs[%d] D: %s', [i, PSCombinerInputToStr((pPSDef.PSRGBInputs[i] shr  0) and $FF)]);
-
-      DbgPshPrintf(#13#10'pPSDef.PSAlphaInputs[%d] ->', [i]);
-      DbgPshPrintf('pPSDef.PSAlphaInputs[%d] A: %s', [i, PSCombinerInputToStr((pPSDef.PSAlphaInputs[i] shr 24) and $FF, {IsAlpha=}True)]);
-      DbgPshPrintf('pPSDef.PSAlphaInputs[%d] B: %s', [i, PSCombinerInputToStr((pPSDef.PSAlphaInputs[i] shr 16) and $FF, {IsAlpha=}True)]);
-      DbgPshPrintf('pPSDef.PSAlphaInputs[%d] C: %s', [i, PSCombinerInputToStr((pPSDef.PSAlphaInputs[i] shr  8) and $FF, {IsAlpha=}True)]);
-      DbgPshPrintf('pPSDef.PSAlphaInputs[%d] D: %s', [i, PSCombinerInputToStr((pPSDef.PSAlphaInputs[i] shr  0) and $FF, {IsAlpha=}True)]);
-
-      DbgPshPrintf(#13#10'pPSDef.PSRGBOutputs[%d] ->', [i]);
+      DbgPshPrintf(#13#10);
       DbgPshPrintf('pPSDef.PSRGBOutputs[%d] AB: %s', [i, PS_RegisterStr[((pPSDef.PSRGBOutputs[i] shr 4) and $F) + 1]]);
       DbgPshPrintf('pPSDef.PSRGBOutputs[%d] CD: %s', [i, PS_RegisterStr[((pPSDef.PSRGBOutputs[i] shr 0) and $F) + 1]]);
       DbgPshPrintf('pPSDef.PSRGBOutputs[%d] SUM: %s', [i, PS_RegisterStr[((pPSDef.PSRGBOutputs[i] shr 8) and $F) + 1]]);
       DbgPshPrintf('pPSDef.PSRGBOutputs[%d] flags: %s', [i, PSCombinerOutputFlagsToStr(pPSDef.PSRGBOutputs[i] shr 12)]);
 
-      DbgPshPrintf(#13#10'pPSDef.PSAlphaOutputs[%d] ->', [i]);
+      DbgPshPrintf(#13#10);
+      DbgPshPrintf('pPSDef.PSRGBInputs[%d] A: %s', [i, PSCombinerInputToStr((pPSDef.PSRGBInputs[i] shr 24) and $FF)]);
+      DbgPshPrintf('pPSDef.PSRGBInputs[%d] B: %s', [i, PSCombinerInputToStr((pPSDef.PSRGBInputs[i] shr 16) and $FF)]);
+      DbgPshPrintf('pPSDef.PSRGBInputs[%d] C: %s', [i, PSCombinerInputToStr((pPSDef.PSRGBInputs[i] shr  8) and $FF)]);
+      DbgPshPrintf('pPSDef.PSRGBInputs[%d] D: %s', [i, PSCombinerInputToStr((pPSDef.PSRGBInputs[i] shr  0) and $FF)]);
+
+      DbgPshPrintf(#13#10);
       DbgPshPrintf('pPSDef.PSAlphaOutputs[%d] AB: %s', [i, PS_RegisterStr[((pPSDef.PSAlphaOutputs[i] shr 4) and $F) + 1]]);
       DbgPshPrintf('pPSDef.PSAlphaOutputs[%d] CD: %s', [i, PS_RegisterStr[((pPSDef.PSAlphaOutputs[i] shr 0) and $F) + 1]]);
       DbgPshPrintf('pPSDef.PSAlphaOutputs[%d] SUM: %s', [i, PS_RegisterStr[((pPSDef.PSAlphaOutputs[i] shr 8) and $F) + 1]]);
       DbgPshPrintf('pPSDef.PSAlphaOutputs[%d] flags: %s', [i, PSCombinerOutputFlagsToStr(pPSDef.PSAlphaOutputs[i] shr 12, {IsAlpha=}True)]);
 
       DbgPshPrintf(#13#10);
+      DbgPshPrintf('pPSDef.PSAlphaInputs[%d] A: %s', [i, PSCombinerInputToStr((pPSDef.PSAlphaInputs[i] shr 24) and $FF, {IsAlpha=}True)]);
+      DbgPshPrintf('pPSDef.PSAlphaInputs[%d] B: %s', [i, PSCombinerInputToStr((pPSDef.PSAlphaInputs[i] shr 16) and $FF, {IsAlpha=}True)]);
+      DbgPshPrintf('pPSDef.PSAlphaInputs[%d] C: %s', [i, PSCombinerInputToStr((pPSDef.PSAlphaInputs[i] shr  8) and $FF, {IsAlpha=}True)]);
+      DbgPshPrintf('pPSDef.PSAlphaInputs[%d] D: %s', [i, PSCombinerInputToStr((pPSDef.PSAlphaInputs[i] shr  0) and $FF, {IsAlpha=}True)]);
+
+      DbgPshPrintf(#13#10);
       DbgPshPrintf('pPSDef.PSConstant0[%d] : %x', [i, pPSDef.PSConstant0[i]]); // C0 for each stage
       DbgPshPrintf('pPSDef.PSConstant1[%d] : %x', [i, pPSDef.PSConstant1[i]]); // C1 for each stage
     end;
 
-    if (pPSDef.PSFinalCombinerInputsABCD > 0) then // Final combiner inputs
+    if (pPSDef.PSFinalCombinerInputsABCD > 0)
+    or (pPSDef.PSFinalCombinerInputsEFG  > 0) then // Final combiner inputs
     begin
       dwPSFCIA := (pPSDef.PSFinalCombinerInputsABCD shr 24) and $FF;
       dwPSFCIB := (pPSDef.PSFinalCombinerInputsABCD shr 16) and $FF;
       dwPSFCIC := (pPSDef.PSFinalCombinerInputsABCD shr  8) and $FF;
       dwPSFCID := (pPSDef.PSFinalCombinerInputsABCD shr  0) and $FF;
+      dwPSFCIE := (pPSDef.PSFinalCombinerInputsEFG  shr 24) and $FF;
+      dwPSFCIF := (pPSDef.PSFinalCombinerInputsEFG  shr 16) and $FF;
+      dwPSFCIG := (pPSDef.PSFinalCombinerInputsEFG  shr  8) and $FF;
+      dwPS_FINALCOMBINERSETTING := (pPSDef.PSFinalCombinerInputsEFG shr 0) and $FF;
 
       DbgPshPrintf(#13#10'PSFinalCombinerInputsABCD ->');
       DbgPshPrintf('Input A: %s', [PSCombinerInputToStr(dwPSFCIA)]);
       DbgPshPrintf('Input B: %s', [PSCombinerInputToStr(dwPSFCIB)]);
       DbgPshPrintf('Input C: %s', [PSCombinerInputToStr(dwPSFCIC)]);
       DbgPshPrintf('Input D: %s', [PSCombinerInputToStr(dwPSFCID)]);
-    end;
-
-    if (pPSDef.PSFinalCombinerInputsEFG > 0) then // Final combiner inputs (continued)
-    begin
-      dwPSFCIE := (pPSDef.PSFinalCombinerInputsEFG shr 24) and $FF;
-      dwPSFCIF := (pPSDef.PSFinalCombinerInputsEFG shr 16) and $FF;
-      dwPSFCIG := (pPSDef.PSFinalCombinerInputsEFG shr  8) and $FF;
-      dwPS_FINALCOMBINERSETTING := (pPSDef.PSFinalCombinerInputsEFG shr 0) and $FF;
 
       DbgPshPrintf(#13#10'PSFinalCombinerInputsEFG ->');
       DbgPshPrintf('Input E: %s', [PSCombinerInputToStr(dwPSFCIE)]);
@@ -968,7 +966,7 @@ begin
 end;
 
 var // TODO : Make these thread-safe :
-  InstructionModifier: AnsiString;
+  InstructionOutputCombiner: AnsiString;
   SourceRegisterModifier: AnsiString ;
 
 function PSRegToStr(const aPSReg: PS_REGISTER): AnsiString;
@@ -992,28 +990,45 @@ begin
   end;
 end;
 
-function CombineStageInputDot(InputA, InputB: DWORD; const OutputReg: PS_REGISTER; const OutputWriteMask: AnsiString): AnsiString;
+function CombineStageInputDot(const InputA, InputB: DWORD; const OutputReg: PS_REGISTER; const OutputWriteMask: AnsiString): AnsiString;
 begin
-  Result := Result + 'dp3' + InstructionModifier + ' ' + PSRegToStr(OutputReg) + OutputWriteMask + ' ...'; // TODO : Complete this
+  Result := Result + 'dp3' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputReg) + OutputWriteMask + ' ...'; // TODO : Complete this
 end;
 
-function CombineStageInputMul(InputA, InputB: DWORD; const OutputReg: PS_REGISTER; const OutputWriteMask: AnsiString): AnsiString;
+function CombineStageInputMul(const InputA, InputB: DWORD; const OutputReg: PS_REGISTER; const OutputWriteMask: AnsiString): AnsiString;
 var
   InputRegisterA: PS_REGISTER;
   InputRegisterB: PS_REGISTER;
-  InputMappingA: DWORD;
-  InputMappingB: DWORD;
-  Start: AnsiString;
+  InputMappingA: PS_INPUTMAPPING;
+  InputMappingB: PS_INPUTMAPPING;
+  OutputStr: AnsiString;
+  InputAReadMask: AnsiString;
+  InputBReadMask: AnsiString;
 begin
   InputRegisterA := PS_REGISTER(InputA and $F);
   InputRegisterB := PS_REGISTER(InputB and $F);
-  InputMappingA := InputA and $F0;
-  InputMappingB := InputA and $F0;
+  InputMappingA := PS_INPUTMAPPING(InputA and $F0);
+  InputMappingB := PS_INPUTMAPPING(InputB and $F0);
+
+  InputAReadMask := '';
+  InputBReadMask := '';
+  if OutputWriteMask = '.a' then
+  begin
+    if (InputA and PS_ChannelMask) = DWORD(PS_CHANNEL_BLUE) then
+      InputAReadMask := '.b'
+    else
+      InputAReadMask := '.a';
+
+    if (InputB and PS_ChannelMask) = DWORD(PS_CHANNEL_BLUE) then
+      InputBReadMask := '.b'
+    else
+      InputBReadMask := '.a';
+  end;
 
   // For now, we only accept PS_INPUTMAPPING_UNSIGNED_IDENTITY and PS_INPUTMAPPING_SIGNED_IDENTITY:
   // (Altough the unsigned variant is not actively emulated - just ignored)
-  Assert(InputMappingA in [Ord(PS_INPUTMAPPING_UNSIGNED_IDENTITY), Ord(PS_INPUTMAPPING_SIGNED_IDENTITY)]);
-  Assert(InputMappingB in [Ord(PS_INPUTMAPPING_UNSIGNED_IDENTITY), Ord(PS_INPUTMAPPING_SIGNED_IDENTITY)]);
+//  Assert(InputMappingA in [PS_INPUTMAPPING_UNSIGNED_IDENTITY, PS_INPUTMAPPING_SIGNED_IDENTITY]);
+//  Assert(InputMappingB in [PS_INPUTMAPPING_UNSIGNED_IDENTITY, PS_INPUTMAPPING_SIGNED_IDENTITY]);
 
 (* The possible input mappings are :
     PS_INPUTMAPPING_UNSIGNED_IDENTITY
@@ -1026,21 +1041,21 @@ begin
     PS_INPUTMAPPING_SIGNED_NEGATE=     $e0  // -x               invalid for final combiner
 *)
   Result := '';
-  Start := InstructionModifier + ' ' + PSRegToStr(OutputReg) + OutputWriteMask + ', ';
+  OutputStr := InstructionOutputCombiner + ' ' + PSRegToStr(OutputReg) + OutputWriteMask + ', ';
 
   // Check for cases where InputA doesn't matter :
   case InputA and PS_NoChannelMask of
-    Ord(PS_REGISTER_ONE):
-      Result := Result + 'mov' + Start + PSRegToStr(InputRegisterB);
-    Ord(PS_REGISTER_NEGATIVE_ONE):
-      Result := Result + 'mov' + Start + '1-' + PSRegToStr(InputRegisterB);
-    Ord(PS_REGISTER_ONE_HALF):
-      if InstructionModifier = '' then
-        Result := Result + 'mov_d2' + Start + PSRegToStr(InputRegisterB)
-      else
-        ; //Unhandled;
-    Ord(PS_REGISTER_NEGATIVE_ONE_HALF):
-      ; // Unhandled;
+    Ord(PS_REGISTER_ONE): // = input * 1.0 = input
+    begin
+      if (InputB and PS_NoChannelMask) = Ord(PS_REGISTER_ONE) then // When InputB = PS_REGISTER_ONE, skip this
+        Exit;
+
+      Result := Result + 'mov' + OutputStr + PSRegToStr(InputRegisterB) + InputBReadMask;
+    end;
+    Ord(PS_REGISTER_NEGATIVE_ONE): // = input * -1.0 = - input
+      Result := Result + 'mov' + OutputStr + '-' + PSRegToStr(InputRegisterB) + InputBReadMask;
+//    Ord(PS_REGISTER_ONE_HALF): // = input * 0.5
+//    Ord(PS_REGISTER_NEGATIVE_ONE_HALF): // = input * -0.5
   end;
 
   if Result <> '' then
@@ -1048,29 +1063,24 @@ begin
 
   // Check for cases where InputB doesn't matter :
   case InputB and PS_NoChannelMask of
-    Ord(PS_REGISTER_ONE):
-      Result := Result + 'mov' + Start + PSRegToStr(InputRegisterA);
-    Ord(PS_REGISTER_NEGATIVE_ONE):
-      Result := Result + 'mov' + Start + '1-' + PSRegToStr(InputRegisterA);
-    Ord(PS_REGISTER_ONE_HALF):
-      if InstructionModifier = '' then
-        Result := Result + 'mov_d2' + Start + PSRegToStr(InputRegisterA)
-      else
-        ; //Unhandled;
-    Ord(PS_REGISTER_NEGATIVE_ONE_HALF):
-      ; // Unhandled;
+    Ord(PS_REGISTER_ONE): // = input * 1.0 = input
+      Result := Result + 'mov' + OutputStr + PSRegToStr(InputRegisterA) + InputAReadMask;
+    Ord(PS_REGISTER_NEGATIVE_ONE): // = input * -1.0 = - input
+      Result := Result + 'mov' + OutputStr + '-' + PSRegToStr(InputRegisterA) + InputAReadMask;
+//    Ord(PS_REGISTER_ONE_HALF): // = input * 0.5
+//    Ord(PS_REGISTER_NEGATIVE_ONE_HALF): // = -0.5
   end;
 
   if Result <> '' then
     Exit;
 
-  Result := Result + 'mul' + Start + PSRegToStr(InputRegisterA) + ', ' + PSRegToStr(InputRegisterB);
+  Result := Result + 'mul' + OutputStr + PSRegToStr(InputRegisterA) + InputAReadMask + ', ' + PSRegToStr(InputRegisterB) + InputBReadMask;
 end;
 
 function CombineStage(const dwInput, dwOutput: DWORD; const OutputWriteMask: AnsiString): AnsiString;
 var
   OutputAB, OutputCD, OutputSUM: PS_REGISTER;
-  OutputFlags: DWORD;
+  OutputFlags: DWORD; // Actually PS_COMBINEROUTPUT, but easier to handle as DWORD
   InputA, InputB, InputC, InputD: DWORD;
 begin
   Result := '';
@@ -1083,22 +1093,22 @@ begin
   OutputAB := PS_REGISTER((dwOutput shr 4) and $F);
   OutputCD := PS_REGISTER((dwOutput shr 0) and $F);
   OutputSUM := PS_REGISTER((dwOutput shr 8) and $F);
-  OutputFlags := (dwOutput shr 12); // : PS_COMBINEROUTPUT, for example : PS_COMBINEROUTPUT_IDENTITY | PS_COMBINEROUTPUT_AB_MULTIPLY | PS_COMBINEROUTPUT_CD_MULTIPLY | PS_COMBINEROUTPUT_AB_CD_SUM
+  OutputFlags := (dwOutput shr 12);
 
-  // Convert the CombinerOutput flag to a InstructionModifier
+  // Convert the CombinerOutput flag to a InstructionOutputCombiner
   // or an SourceRegisterModifier (so far as that's possible):
-  InstructionModifier := '';
+  InstructionOutputCombiner := '';
   SourceRegisterModifier := '';
-  case OutputFlags and $38 of
-    Ord(PS_COMBINEROUTPUT_IDENTITY):         InstructionModifier    := '';      // y = x             TODO
-    Ord(PS_COMBINEROUTPUT_BIAS):             SourceRegisterModifier := '_bias'; // y = x - 0.5
-    Ord(PS_COMBINEROUTPUT_SHIFTLEFT_1):      InstructionModifier    := '_x2';   // y = x*2
-    Ord(PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS): InstructionModifier    := '';      // y = (x - 0.5)*2   TODO
-    Ord(PS_COMBINEROUTPUT_SHIFTLEFT_2):      InstructionModifier    := '_x4';   // y = x*4
-    Ord(PS_COMBINEROUTPUT_SHIFTRIGHT_1):     InstructionModifier    := '_d2';   // y = x/2
-  end;
+  case (OutputFlags and $38) of
+    Ord(PS_COMBINEROUTPUT_IDENTITY):         InstructionOutputCombiner := '';      // y = x
+    Ord(PS_COMBINEROUTPUT_BIAS):             SourceRegisterModifier    := '_bias'; // y = x - 0.5
+    Ord(PS_COMBINEROUTPUT_SHIFTLEFT_1):      InstructionOutputCombiner := '_x2';   // y = x*2
+    Ord(PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS): SourceRegisterModifier    := '_bias_x2'; // y = (x - 0.5)*2
+    Ord(PS_COMBINEROUTPUT_SHIFTLEFT_2):      InstructionOutputCombiner := '_x4';   // y = x*4
+    Ord(PS_COMBINEROUTPUT_SHIFTRIGHT_1):     InstructionOutputCombiner := '_d2';   // y = x/2
+  end;   //
 
-  // Do we need to calculate AB?
+  // Do we need to calculate AB ?
   if OutputAB > PS_REGISTER_DISCARD then
   begin
     // Handle combining of A and B (doing either a dot-product, or a multiplication) :
@@ -1109,9 +1119,13 @@ begin
 
     if Result <> '' then
       Result := Result + #13#10;
+
+    // The blue-to-alpha flag is only valid for RGB, so the '+' extend syntax if free to use :
+    if (OutputFlags and Ord(PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA)) > 0 then
+      Result := Result + '+ mov ' + PSRegToStr(OutputAB) + '.a, ' + PSRegToStr(OutputAB) + '.b'#13#10;
   end;
 
-  // Do we need to calculate AB?
+  // Do we need to calculate CD ?
   if OutputCD > PS_REGISTER_DISCARD then
   begin
     // Handle combining of C and D (doing either a dot-product, or a multiplication) :
@@ -1122,13 +1136,215 @@ begin
 
     if Result <> '' then
       Result := Result + #13#10;
+
+    // The blue-to-alpha flag is only valid for RGB, so the '+' extend syntax if free to use :
+    if (OutputFlags and Ord(PS_COMBINEROUTPUT_CD_BLUE_TO_ALPHA)) > 0 then
+      Result := Result + '+ mov ' + PSRegToStr(OutputCD) + '.a, ' + PSRegToStr(OutputAB) + '.b'#13#10;
   end;
 
-  // Do we need to calculate AB?
+  // Do we need to calculate SUM ?
   if OutputSUM > PS_REGISTER_DISCARD then
   begin
-    // TODO : Handle PS_COMBINEROUTPUT_AB_CD_MUX
+    if OutputFlags and Ord(PS_COMBINEROUTPUT_AB_CD_MUX) > 0 then
+    begin
+      // Handle PS_COMBINEROUTPUT_AB_CD_MUX, output is MUX(AB,CD) based on R0.a :
+
+      if (OutputAB = PS_REGISTER_DISCARD) then
+      begin
+        if (OutputCD = PS_REGISTER_DISCARD) then
+        begin
+          if  ((InputB and PS_NoChannelMask) = Ord(PS_REGISTER_ONE))
+          and ((InputD and PS_NoChannelMask) = Ord(PS_REGISTER_ONE)) then
+            Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
+              PSRegToStr(PS_REGISTER(InputA and $F)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputC and $F)) + #13#10
+          else
+          if  ((InputA and PS_NoChannelMask) = Ord(PS_REGISTER_ONE))
+          and ((InputD and PS_NoChannelMask) = Ord(PS_REGISTER_ONE)) then
+            Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
+              PSRegToStr(PS_REGISTER(InputB and $F)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputC and $F)) + #13#10
+          else
+          if  ((InputB and PS_NoChannelMask) = Ord(PS_REGISTER_ONE))
+          and ((InputC and PS_NoChannelMask) = Ord(PS_REGISTER_ONE)) then
+            Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
+              PSRegToStr(PS_REGISTER(InputA and $F)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputD and $F)) + #13#10
+          else
+          if  ((InputA and PS_NoChannelMask) = Ord(PS_REGISTER_ONE))
+          and ((InputC and PS_NoChannelMask) = Ord(PS_REGISTER_ONE)) then
+            Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
+              PSRegToStr(PS_REGISTER(InputB and $F)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputD and $F)) + #13#10
+          else
+            // TODO :
+            Result := Result + '; Can''t mux when both AB and CD discarded (no PS_REGISTER_ONE''s present)!'#13#10;
+        end
+        else
+          // TODO :
+          Result := Result + '; Can''t mux when AB is discarded!'#13#10;
+      end
+      else
+      begin
+        if (OutputCD = PS_REGISTER_DISCARD) then
+        begin
+          // TODO :
+          Result := Result + '; Can''t mux when CD is discarded!'#13#10;
+        end
+        else
+        begin
+          Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
+            PSRegToStr(OutputAB) + ', ' +
+            PSRegToStr(OutputCD) + #13#10;
+        end;
+      end;
+    end
+    else
+    begin
+      // Handle PS_COMBINEROUTPUT_AB_CD_SUM, output is AB+CD :
+
+      // TODO : Handle PS_INPUTMAPPING here too !
+      if (OutputAB = PS_REGISTER_DISCARD) then
+      begin
+        if (OutputCD = PS_REGISTER_DISCARD) then
+        begin
+          // AB and CD are discarded, but we still have to calculate "sum = (A * B) + (C * D)"
+          // The problem is, there's no instruction for that. Luckily, we do have 'mad' to our disposal,
+          // which can do "output = (input1 * input2) + input3", but if we want to use that, we must check
+          // if one of the inputs is 1, so that it can be ignored (as "A * 1" equals "A") :
+          if (InputA and PS_NoChannelMask) = Ord(PS_REGISTER_ONE) then
+            Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+              PSRegToStr(PS_REGISTER(InputC and $F)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputD and $F)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputB and $F)) + #13#10
+          else
+          if (InputB and PS_NoChannelMask) = Ord(PS_REGISTER_ONE) then
+            Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+              PSRegToStr(PS_REGISTER(InputC and $F)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputD and $F)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputA and $F)) + #13#10
+          else
+          if (InputC and PS_NoChannelMask) = Ord(PS_REGISTER_ONE) then
+            Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+              PSRegToStr(PS_REGISTER(InputA and $F)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputB and $F)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputD and $F)) + #13#10
+          else
+          if (InputD and PS_NoChannelMask) = Ord(PS_REGISTER_ONE) then
+            Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+              PSRegToStr(PS_REGISTER(InputA and $F)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputB and $F)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputC and $F)) + #13#10
+          else
+          begin
+            if  ((InputA and $F) = (InputD and $F))
+            and True{InputA is inverse of InputD PS_INPUTMAPPING_UNSIGNED_INVERT } then
+            begin
+              Result := Result + 'lrp' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+                PSRegToStr(PS_REGISTER(InputA and $F)) + ', ' +
+                PSRegToStr(PS_REGISTER(InputB and $F)) + ', ' +
+                PSRegToStr(PS_REGISTER(InputC and $F)) + #13#10
+            end
+            else
+              // TODO : Unsupported for now, maybe try to use a temp register?
+              Result := Result + '; Can''t sum when both AB and CD discarded (no PS_REGISTER_ONE present)!'#13#10;
+          end;
+        end
+        else
+        begin
+          // Only AB is discarded, but we still have to calculate "sum = (A * B) + (C * D)"
+          Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+            PSRegToStr(PS_REGISTER(InputA and $F)) + ', ' +
+            PSRegToStr(PS_REGISTER(InputB and $F)) + ', ' +
+            PSRegToStr(OutputCD) + #13#10
+        end;
+      end
+      else
+      begin
+        if (OutputCD = PS_REGISTER_DISCARD) then
+        begin
+          // Only CD is discarded, but we still have to calculate "sum = (A * B) + (C * D)"
+          Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+            PSRegToStr(PS_REGISTER(InputC and $F)) + ', ' +
+            PSRegToStr(PS_REGISTER(InputD and $F)) + ', ' +
+            PSRegToStr(OutputAB) + #13#10;
+        end
+        else
+          Result := Result + 'add' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+            PSRegToStr(OutputAB) + ', ' + PSRegToStr(OutputCD) + #13#10;
+      end;
+    end;
   end;
+end;
+
+function ProcessTextureMode(const aStage: int; const aDotMapping: PS_DOTMAPPING;
+  const aTextureMode: PS_TEXTUREMODES; const aInputStage: int): AnsiString;
+
+  function TStr(const t: int): AnsiString;
+  begin
+    Result := 't' + AnsiString(IntToStr(t));
+  end;
+
+begin
+  Result := '';
+  // TODO : Handle the parameters to all other texture-addressing methods (than 'tex') here too
+
+  // Convert the texture mode to a texture addressing instruction :
+  case aTextureMode of
+    PS_TEXTUREMODES_PROJECT2D: Result := 'tex';
+    PS_TEXTUREMODES_PROJECT3D: Result := 'tex'; // Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
+    PS_TEXTUREMODES_CUBEMAP: Result := 'tex'; // Note : If we use 'texreg2rgb', that requires ps.1.2 (we're still using ps.1.1)
+    PS_TEXTUREMODES_PASSTHRU: Result := 'textcoord';
+    PS_TEXTUREMODES_CLIPPLANE: Result := 'texkill';
+    PS_TEXTUREMODES_BUMPENVMAP: Result := 'texbem';
+    PS_TEXTUREMODES_BUMPENVMAP_LUM: Result := 'texbemi';
+//    PS_TEXTUREMODES_BRDF: Result := 'texbrdf'; // Note : Not supported by Direct3D8 ?
+    PS_TEXTUREMODES_DOT_ST: Result := 'texm3x2tex';
+    PS_TEXTUREMODES_DOT_ZW: Result := 'texm3x2depth';
+//    PS_TEXTUREMODES_DOT_RFLCT_DIFF: Result := 'texm3x3diff'; // Note : Not supported by Direct3D8 ?
+    PS_TEXTUREMODES_DOT_RFLCT_SPEC: Result := 'texm3x3vspec';
+    PS_TEXTUREMODES_DOT_STR_3D: Result := 'texm3x3tex'; // Note : Uses a 3d texture
+    PS_TEXTUREMODES_DOT_STR_CUBE: Result := 'texm3x3tex'; // Note : Uses a cube texture
+    PS_TEXTUREMODES_DPNDNT_AR: Result := 'texreg2ar';
+    PS_TEXTUREMODES_DPNDNT_GB: Result := 'texreg2gb';
+    PS_TEXTUREMODES_DOTPRODUCT: Result := 'texm3x3pad';
+    PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST: Result := 'texm3x3spec'; // Note : Needs 3 arguments!
+  end;
+
+  if Result = '' then
+    Exit;
+
+  Result := Result + ' ' + TStr(aStage);
+
+  // For those texture modes that need it, add the source stage as argument :
+  if aTextureMode in [
+    PS_TEXTUREMODES_BUMPENVMAP,
+    PS_TEXTUREMODES_BUMPENVMAP_LUM,
+    PS_TEXTUREMODES_DOT_ST,
+    PS_TEXTUREMODES_DOT_ZW,
+    PS_TEXTUREMODES_DOT_RFLCT_DIFF,
+    PS_TEXTUREMODES_DOT_RFLCT_SPEC,
+    PS_TEXTUREMODES_DOT_STR_3D,
+    PS_TEXTUREMODES_DOT_STR_CUBE,
+    PS_TEXTUREMODES_DPNDNT_AR,
+    PS_TEXTUREMODES_DPNDNT_GB,
+    PS_TEXTUREMODES_DOTPRODUCT,
+    PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST] then
+  begin
+    Result := Result + ', ' + TStr(aInputStage);
+
+    case aDotMapping of
+      PS_DOTMAPPING_MINUS1_TO_1_D3D:
+        Result := Result + '_bx2';
+    end;
+  end;
+
+  // Add the third argument :
+  if aTextureMode in [
+    PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST] then
+    Result := Result + ', c0 ; Dxbx guess'; // TODO : Where do we get the 3rd argument to
+
+  Result := Result + #13#10;
 end;
 
 function XTL_EmuRecompilePshDef(pPSDef: PX_D3DPIXELSHADERDEF): AnsiString;
@@ -1141,6 +1357,7 @@ var
   RGBOutput: DWORD;
   AlphaInput: DWORD;
   AlphaOutput: DWORD;
+  AlphaAdd: AnsiString;
 begin
   // Azurik likes to create and destroy the same shader every frame! O_o
   LogFlags := lfUnit;
@@ -1157,7 +1374,7 @@ begin
   // First things first, set the pixel shader version
   // TODO -oCXBX: ps.1.1 might be a better idea...
   //Result := 'ps.1.0'#13#10;
-  Result := 'ps.1.1'#13#10;
+  Result := 'ps.1.1'#13#10; // 1.1 allows reading from 2 textures (which we use in 'cnd')
 
   for i := 0 to 8-1 do
   begin
@@ -1172,15 +1389,20 @@ begin
   end;
 
   // Handle Texture declarations :
-  // TODO : Handle all other texture-addressing methods (than 'tex') here too
-  if ((pPSDef.PSTextureModes shr 0) and $1F) > 0 then
-    Result := Result + 'tex t0'#13#10;
-  if ((pPSDef.PSTextureModes shr 5) and $1F) > 0 then
-    Result := Result + 'tex t1'#13#10;
-  if ((pPSDef.PSTextureModes shr 10) and $1F) > 0 then
-    Result := Result + 'tex t2'#13#10;
-  if ((pPSDef.PSTextureModes shr 15) and $1F) > 0 then
-    Result := Result + 'tex t3'#13#10;
+  Result := Result + ProcessTextureMode(0, PS_DOTMAPPING(0),
+    PS_TEXTUREMODES((pPSDef.PSTextureModes shr  0) and $1F), -1); // Stage 0 has no predecessors
+  Result := Result + ProcessTextureMode(1, PS_DOTMAPPING((pPSDef.PSDotMapping shr 0) and 7),
+    PS_TEXTUREMODES((pPSDef.PSTextureModes shr  5) and $1F), 0); // Stage 1 can only use stage 0
+  Result := Result + ProcessTextureMode(2, PS_DOTMAPPING((pPSDef.PSDotMapping shr 4) and 7),
+    PS_TEXTUREMODES((pPSDef.PSTextureModes shr 10) and $1F), (pPSDef.PSInputTexture shr 16) and $1);
+  Result := Result + ProcessTextureMode(3, PS_DOTMAPPING((pPSDef.PSDotMapping shr 8) and 7),
+    PS_TEXTUREMODES((pPSDef.PSTextureModes shr 15) and $1F), (pPSDef.PSInputTexture shr 20) and $3);
+
+  // On the Xbox, the alpha portion of the R0 register is initialized to
+  // the alpha component of texture 0 if texturing is enabled for texture 0 :
+  if ((pPSDef.PSTextureModes shr  0) and $1F) > 0 then
+    // TODO : Move this over to where r0.a is first read (if ever)
+    Result := Result + 'mov r0.a, t0.a'#13#10;
 
   // Loop over all stages :
   dwPSCCNumCombiners := (pPSDef.PSCombinerCount shr 0) and $F;
@@ -1197,20 +1419,50 @@ begin
 
     // Check if RGB and Alpha are handled identical :
     if  (RGBOutput = AlphaOutput)
-    and ((RGBInput and PS_NoChannelsMask) = (AlphaInput and PS_NoChannelsMask)) then
-      // In that case, we combine without Output Write Masks (which defaults to '.rgba') :
+    and ((RGBInput and PS_NoChannelsMask) = (AlphaInput and PS_NoChannelsMask))
+    and ((RGBInput and PS_AlphaChannelsMask) = 0)
+    and ((AlphaInput and PS_AlphaChannelsMask) = PS_AlphaChannelsMask) then
+      // In that case, we combine both channels in one go without Output Write Masks (which defaults to '.rgba') :
       Result := Result + CombineStage(RGBInput, RGBOutput, '')
     else
     begin
       // Else, handle rgb separately from alpha :
       Result := Result + CombineStage(RGBInput, RGBOutput, '.rgb');
-      Result := Result + CombineStage(AlphaInput, AlphaOutput, '.a');
+      AlphaAdd := CombineStage(AlphaInput, AlphaOutput, '.a');
+      if AlphaAdd <> '' then
+        Result := Result + '+ ' + AlphaAdd;
     end;
   end;
 
-  // TODO : Handle final combiner
+  // Check if there's a final combiner
+  if (pPSDef.PSFinalCombinerInputsABCD > 0)
+  or (pPSDef.PSFinalCombinerInputsEFG > 0) then
+  begin
+    // TODO : Implement this
+//  A := (pPSDef.PSFinalCombinerInputsABCD shr 24) and $FF;
+//  B := (pPSDef.PSFinalCombinerInputsABCD shr 16) and $FF;
+//  C := (pPSDef.PSFinalCombinerInputsABCD shr  8) and $FF;
+//  D := (pPSDef.PSFinalCombinerInputsABCD shr  0) and $FF;
+//  E := (pPSDef.PSFinalCombinerInputsEFG shr 24) and $FF;
+//  F := (pPSDef.PSFinalCombinerInputsEFG shr 16) and $FF;
+//  G := (pPSDef.PSFinalCombinerInputsEFG shr  8) and $FF;
+//  flags := PS_FINALCOMBINERSETTING((pPSDef.PSFinalCombinerInputsEFG shr 0) and $FF);
+//
+//  The final combiner performs the following operations :
+//
+//    prod register = E*F                // PS_REGISTER_EF_PROD, useable in A,B,C,D,G
+//
+//    rgbout        = A*B + (1-A)*C + D  // lrp tmp.rgb, A, B, C       // Note : tmp can be r0 if [A,B,C,D] * r0 = []
+//                                       // add r0.rgb, tmp.rgb, D.rgb // Otherwise use a writable register from A,B or C
+//
+//    alphaout      = G.a                // mov r0.a, G.a              // Not necessary if G = r0
+//
+//    (also the final combiner can read PS_REGISTER_V1R0_SUM, which is equal to v1 + r0)
+//  Normal optimizations apply, like when A = PS_REGISTER_ZERO, all we have left is C + D (add r0.rgb, C.rgb, D.rgb)
+//  Also, is D = PS_REGISTER_ZERO, the add can be changed into a mov (if the result isn't already in r0.rgb)
+  end;
 
-  // Note : Final result should be in r0 (output register) now!
+  // Note : The end result (rgba) should be in r0 (output register) now!
 
   if MayLog(LogFlags) then
     DbgPrintf(string(Result));
