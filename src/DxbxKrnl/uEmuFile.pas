@@ -202,7 +202,7 @@ begin
   // High bit must be set, the rest should indicate a valid address and it should be an TEmuHandle instance :
   Result := (int32(hFile) < 0)
         and IsValidAddress(Pointer(hFile and $7FFFFFFF))
-        and (TClass(PPointer(hFile)^) = TEmuHandle);
+        and (TClass(PPointer(hFile and $7FFFFFFF)^) = TEmuHandle);
 end;
 
 // convert from 'special' emulated handle to a pointer
