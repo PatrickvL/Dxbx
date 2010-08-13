@@ -483,7 +483,7 @@ begin
   ActualLen := 0;
   if Assigned(Source) then
     while (ActualLen < MaxLen)
-      and (Source[ActualLen] < #9) do // Anything below tab will be treated as end of string
+      and (Source[ActualLen] > #9) do // Anything below tab will be treated as end of string
         Inc(ActualLen);
 
   SetLength(Result, ActualLen);
@@ -498,7 +498,7 @@ begin
   ActualLen := 0;
   if Assigned(Source) then
     while (ActualLen < MaxLen)
-      and (Source[ActualLen] < #9) do // Anything below tab will be treated as end of string
+      and (Source[ActualLen] > #9) do // Anything below tab will be treated as end of string
         Inc(ActualLen);
 
   SetLength(Result, ActualLen);
