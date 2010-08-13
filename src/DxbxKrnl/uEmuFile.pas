@@ -268,6 +268,7 @@ end;
 
 function TEmuNtObject.NewHandle: HANDLE;
 begin
+  Inc(RefCount);
   Result := EmuHandleToHandle(TEmuHandle.Create(Self));
 end;
 
