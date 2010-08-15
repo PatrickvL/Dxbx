@@ -137,7 +137,7 @@ procedure XTL_EmuIDirect3DDevice_SetRenderState_Simple_Internal(
 
 var
   // Global(s)
-  g_pD3DDevice: IDirect3DDevice8 = NULL;
+  g_pD3DDevice: IDirect3DDevice = NULL;
   g_pDDSPrimary7: XTL_LPDIRECTDRAWSURFACE7 = NULL;  // DirectDraw7 Primary Surface
   g_pDDSOverlay7: XTL_LPDIRECTDRAWSURFACE7 = NULL; // DirectDraw7 Overlay Surface
   g_pDDClipper7: XTL_LPDIRECTDRAWCLIPPER = NULL;    // DirectDraw7 Clipper
@@ -329,45 +329,45 @@ begin
   if IsSpecialResource(pResource.Data) then
     Exit;
 
-  case (IDirect3DResource8(pResource.Emu.Resource).GetType()) of
+  case (IDirect3DResource(pResource.Emu.Resource).GetType()) of
     D3DRTYPE_SURFACE:
-      repeat until IDirect3DSurface8(pResource.Emu.Surface).UnlockRect() <= D3D_OK;
+      repeat until IDirect3DSurface(pResource.Emu.Surface).UnlockRect() <= D3D_OK;
 
     D3DRTYPE_VOLUME:
       // TODO -oDxbx : Totally untested! Volume's aren't used yet!
-      repeat until IDirect3DVolume8(pResource.Emu.Resource).UnlockBox() <= D3D_OK;
+      repeat until IDirect3DVolume(pResource.Emu.Resource).UnlockBox() <= D3D_OK;
 
     D3DRTYPE_TEXTURE:
-      repeat until IDirect3DTexture8(pResource.Emu.Texture).UnlockRect(uiLevel) <= D3D_OK;
+      repeat until IDirect3DTexture(pResource.Emu.Texture).UnlockRect(uiLevel) <= D3D_OK;
 
     D3DRTYPE_VOLUMETEXTURE:
       // TODO -oDxbx : Totally untested! VolumeTexture's aren't used yet!?
-      repeat until IDirect3DVolumeTexture8(pResource.Emu.VolumeTexture).UnlockBox(uiLevel) <= D3D_OK;
+      repeat until IDirect3DVolumeTexture(pResource.Emu.VolumeTexture).UnlockBox(uiLevel) <= D3D_OK;
 
     D3DRTYPE_CUBETEXTURE:
     begin
       if iFace >= Ord(D3DCUBEMAP_FACE_POSITIVE_X) then
       begin
         // Only one face given, so unlock only that one :
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture).UnlockRect(TD3DCubeMapFaces(iFace), uiLevel) <= D3D_OK;
+        repeat until IDirect3DCubeTexture(pResource.Emu.CubeTexture).UnlockRect(TD3DCubeMapFaces(iFace), uiLevel) <= D3D_OK;
       end
       else
       begin
         // No face given, so unlock all faces (just to be sure) :
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, uiLevel) <= D3D_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_X, uiLevel) <= D3D_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Y, uiLevel) <= D3D_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Y, uiLevel) <= D3D_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Z, uiLevel) <= D3D_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Z, uiLevel) <= D3D_OK;
+        repeat until IDirect3DCubeTexture(pResource.Emu.CubeTexture).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, uiLevel) <= D3D_OK;
+        repeat until IDirect3DCubeTexture(pResource.Emu.CubeTexture).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_X, uiLevel) <= D3D_OK;
+        repeat until IDirect3DCubeTexture(pResource.Emu.CubeTexture).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Y, uiLevel) <= D3D_OK;
+        repeat until IDirect3DCubeTexture(pResource.Emu.CubeTexture).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Y, uiLevel) <= D3D_OK;
+        repeat until IDirect3DCubeTexture(pResource.Emu.CubeTexture).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Z, uiLevel) <= D3D_OK;
+        repeat until IDirect3DCubeTexture(pResource.Emu.CubeTexture).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Z, uiLevel) <= D3D_OK;
       end;
     end;
 
     D3DRTYPE_VERTEXBUFFER:
-      repeat until IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer).Unlock() <= D3D_OK;
+      repeat until IDirect3DVertexBuffer(pResource.Emu.VertexBuffer).Unlock() <= D3D_OK;
 
     D3DRTYPE_INDEXBUFFER:
-      repeat until IDirect3DIndexBuffer8(pResource.Emu.IndexBuffer).Unlock() <= D3D_OK;
+      repeat until IDirect3DIndexBuffer(pResource.Emu.IndexBuffer).Unlock() <= D3D_OK;
   else
     Result := False;
   end;
@@ -1343,7 +1343,7 @@ begin
           g_EmuCDPD.CreationParameters.hFocusWindow,
           g_EmuCDPD.CreationParameters.BehaviorFlags,
           {var}g_EmuCDPD.NativePresentationParameters,
-          PIDirect3DDevice8(g_EmuCDPD.ppReturnedDeviceInterface)
+          PIDirect3DDevice(g_EmuCDPD.ppReturnedDeviceInterface)
         );
 
         // report error
@@ -1476,7 +1476,7 @@ begin
         for Streams := 0 to 8-1 do
         begin
           // Dxbx note : Why do we need a dummy stream at all?
-          g_pD3DDevice.SetStreamSource(Streams, IDirect3DVertexBuffer8(g_pDummyBuffer), 1);
+          g_pD3DDevice.SetStreamSource(Streams, IDirect3DVertexBuffer(g_pDummyBuffer), 1);
         end;
 
         // begin scene
@@ -2308,7 +2308,7 @@ begin
 
   // Dxbx addition : This is safer than a hardcoded call to UnlockRect like Cxbx does :
   DxbxUnlockD3DResource(pSourceSurface); // Dxbx addition
-//  IDirect3DSurface8(pSourceSurface.Emu.Surface).UnlockRect();
+//  IDirect3DSurface(pSourceSurface.Emu.Surface).UnlockRect();
 
   { MARKED OUT BY CXBX
   kthx := 0;
@@ -2319,10 +2319,10 @@ begin
 
   Result := g_pD3DDevice.CopyRects
   (
-    IDirect3DSurface8(pSourceSurface.Emu.Surface),
+    IDirect3DSurface(pSourceSurface.Emu.Surface),
     pSourceRectsArray,
     cRects,
-    IDirect3DSurface8(pDestinationSurface.Emu.Surface),
+    IDirect3DSurface(pDestinationSurface.Emu.Surface),
     pDestPointsArray
   );
 
@@ -2360,7 +2360,7 @@ begin
     Width,
     Height,
     PCFormat,
-    PIDirect3DSurface8(@(ppBackBuffer^.Emu.Surface)));
+    PIDirect3DSurface(@(ppBackBuffer^.Emu.Surface)));
 
   DbgPrintf('Created image surface @ 0x%08X [hRet = 0x%08X]: %dx%d, format = 0x%08X', [
         ppBackBuffer^.Emu.Surface,
@@ -2375,7 +2375,7 @@ begin
       Width,
       Height,
       D3DFMT_A8R8G8B8,
-      PIDirect3DSurface8(@(ppBackBuffer^.Emu.Surface)));
+      PIDirect3DSurface(@(ppBackBuffer^.Emu.Surface)));
 
     DbgPrintf('Created image surface @ 0x%08X [hRet = 0x%08X]: %dx%d, format = 0x%08X', [
         ppBackBuffer^.Emu.Surface,
@@ -2455,7 +2455,7 @@ begin
         begin
             // create a buffer to return
             // TODO -oCXBX: Verify the surface is always 640x480
-            g_pD3DDevice.CreateImageSurface(640, 480, D3DFMT_A8R8G8B8, {out}{IDirect3DSurface8(pCachedPrimarySurface));
+            g_pD3DDevice.CreateImageSurface(640, 480, D3DFMT_A8R8G8B8, {out}{IDirect3DSurface(pCachedPrimarySurface));
          end;
 
         pBackBuffer.Emu.Surface := pCachedPrimarySurface;
@@ -2785,7 +2785,7 @@ begin
 
   pSurface := g_pCachedRenderTarget.Emu.Surface;
 
-  IDirect3DSurface8(pSurface)._AddRef();
+  IDirect3DSurface(pSurface)._AddRef();
 
   ppRenderTarget^ := g_pCachedRenderTarget;
 
@@ -2811,7 +2811,7 @@ begin
 
   pSurface := g_pCachedRenderTarget.Emu.Surface;
 
-  IDirect3DSurface8(pSurface)._AddRef();
+  IDirect3DSurface(pSurface)._AddRef();
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuD3D8 : RenderTarget := 0x%.08X', [pSurface]);
@@ -2885,7 +2885,7 @@ begin
   pSurface := g_pCachedZStencilSurface.Emu.Surface;
 
   if (pSurface <> nil) then
-    IDirect3DSurface8(pSurface)._AddRef();
+    IDirect3DSurface(pSurface)._AddRef();
 
   ppZStencilSurface^ := g_pCachedZStencilSurface;
 
@@ -2910,7 +2910,7 @@ begin
   pSurface := g_pCachedZStencilSurface.Emu.Surface;
 
   if (pSurface <> nil) then
-    IDirect3DSurface8(pSurface)._AddRef();
+    IDirect3DSurface(pSurface)._AddRef();
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuD3D8 : DepthStencilSurface := 0x%.08X', [pSurface]);
@@ -3724,7 +3724,7 @@ begin
     else
     begin
       // Dxbx addition : Request how many where created (as Levels could be 0) :
-      Levels := IDirect3DTexture8(ppTexture^.Emu.Texture).GetLevelCount();
+      Levels := IDirect3DTexture(ppTexture^.Emu.Texture).GetLevelCount();
       DbgPrintf('Texture created @ 0x%08X [hRet = 0x%08X]: %dx%d, %d levels, usage = 0x%08X, format = 0x%08X', [
             ppTexture^.Emu.Texture, Result, Width, Height, Levels, Ord(PCUsage), Ord(PCFormat)]);
 
@@ -3733,7 +3733,7 @@ begin
       begin
         Dec(Levels);
         // Dxbx addition : Check if LockRect actually succeeds :
-        if IDirect3DTexture8(ppTexture^.Emu.Texture).LockRect(Levels, {out}LockedRect, NULL, 0) = D3D_OK then
+        if IDirect3DTexture(ppTexture^.Emu.Texture).LockRect(Levels, {out}LockedRect, NULL, 0) = D3D_OK then
         begin
           if Levels = 0 then
           begin
@@ -3743,7 +3743,7 @@ begin
 
           g_DataToTexture.insert(DWORD(LockedRect.pBits), ppTexture^);
 
-          IDirect3DTexture8(ppTexture^.Emu.Texture).UnlockRect(Levels);
+          IDirect3DTexture(ppTexture^.Emu.Texture).UnlockRect(Levels);
         end;
       end;
     end;
@@ -3949,12 +3949,12 @@ begin
   begin
     pData := NULL;
 
-    IDirect3DIndexBuffer8(ppIndexBuffer^.Emu.IndexBuffer).Lock(0, Length, {out PByte}pData, 0);
+    IDirect3DIndexBuffer(ppIndexBuffer^.Emu.IndexBuffer).Lock(0, Length, {out PByte}pData, 0);
 
     ppIndexBuffer^.Data := DWORD(pData);
 
     // StrikerX3: experimenting...
-    IDirect3DIndexBuffer8(ppIndexBuffer^.Emu.IndexBuffer).Unlock();
+    IDirect3DIndexBuffer(ppIndexBuffer^.Emu.IndexBuffer).Unlock();
   end;
 
   EmuSwapFS(fsXbox);
@@ -4039,7 +4039,7 @@ begin
     pIndexBuffer := pIndexData.Emu.IndexBuffer;
     DxbxUnlockD3DResource(pIndexData); // Dxbx addition
     if (pIndexData.Emu.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
-      Result := g_pD3DDevice.SetIndices(IDirect3DIndexBuffer8(pIndexBuffer), BaseVertexIndex);
+      Result := g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer), BaseVertexIndex);
   end
   else
   begin
@@ -4104,14 +4104,14 @@ begin
         begin
           // dwDumpTexture := 0; // Dxbx note : Do not reset 'static' var
 
-          case (IDirect3DResource8(pTexture.Emu.Resource).GetType()) of
+          case (IDirect3DResource(pTexture.Emu.Resource).GetType()) of
             D3DRTYPE_TEXTURE:
             begin
               sprintf(@szBuffer[0], 'SetTextureNorm - %.03d (0x%.08X).bmp', [dwDumpTexture, UIntPtr(pTexture.Emu.Texture)]);
               Inc(dwDumpTexture);
-              IDirect3DTexture8(pTexture.Emu.Texture).UnlockRect(0);
+              IDirect3DTexture(pTexture.Emu.Texture).UnlockRect(0);
 
-              D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture), NULL);
+              D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture(pTexture.Emu.Texture), NULL);
             end;
 
             D3DRTYPE_CUBETEXTURE:
@@ -4121,8 +4121,8 @@ begin
               begin
                 Inc(dwDumpTexture);
                 sprintf(@szBuffer[0], 'SetTextureCube%d - %.03d (0x%.08X).bmp', [face, dwDumpTexture, UIntPtr(pTexture.Emu.Texture)]);
-                IDirect3DTexture8(pTexture.Emu.CubeTexture).UnlockRect(face);
-                D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture), NULL);
+                IDirect3DTexture(pTexture.Emu.CubeTexture).UnlockRect(face);
+                D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture(pTexture.Emu.Texture), NULL);
                 Inc(Face);
               end;
             end;
@@ -4133,7 +4133,7 @@ begin
   end;
 
   (* --- MARKED OUT BY CXBX --
-    IDirect3DTexture8 *pDummyTexture[X_D3DTS_STAGECOUNT] := (0, 0, 0, 0);
+    IDirect3DTexture *pDummyTexture[X_D3DTS_STAGECOUNT] := (0, 0, 0, 0);
 
     if (pDummyTexture[Stage] = 0) then
     begin
@@ -4163,8 +4163,8 @@ begin
   DxbxUnlockD3DResource(pTexture);
 
   // hRet = g_pD3DDevice.SetTexture(Stage, pDummyTexture[Stage]); // MARKED OUT BY CXBX
-//  Result := g_pD3DDevice.SetTexture(Stage, IDirect3DBaseTexture8(iif((g_iWireframe = 0), pBaseTexture, nil)));
-  Result := g_pD3DDevice.SetTexture(Stage, IDirect3DBaseTexture8(pBaseTexture));
+//  Result := g_pD3DDevice.SetTexture(Stage, IDirect3DBaseTexture(iif((g_iWireframe = 0), pBaseTexture, nil)));
+  Result := g_pD3DDevice.SetTexture(Stage, IDirect3DBaseTexture(pBaseTexture));
 
   // TODO -oDxbx: There's a problem in Sokoban - on the first frame we get a textured floor,
   // a textured wall and seemingly correct z-ordering. On all following frames, the textures
@@ -4245,7 +4245,7 @@ begin
     EmuWarning('Switching Texture 0x%.08X (0x%.08X) @ Stage %d', [pTexture, pTexture.Emu.BaseTexture, Stage]);
 
     DxbxUnlockD3DResource(pTexture); // Dxbx addition : Attempt to fix missing textures
-    {hRet := }g_pD3DDevice.SetTexture(Stage, IDirect3DBaseTexture8(pTexture.Emu.BaseTexture));
+    {hRet := }g_pD3DDevice.SetTexture(Stage, IDirect3DBaseTexture(pTexture.Emu.BaseTexture));
 
     // TODO -oDxbx : Shouldn't we do this too? :
     // g_EmuD3DActiveTexture[Stage] := pTexture;
@@ -4838,8 +4838,8 @@ begin
   begin
     if g_pD3DDevice.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, @pBackBuffer) = D3D_OK then
     begin
-      IDirect3DSurface8(pBackBuffer).UnlockRect();
-      IDirect3DSurface8(pBackBuffer)._Release;
+      IDirect3DSurface(pBackBuffer).UnlockRect();
+      IDirect3DSurface(pBackBuffer)._Release;
     end;
     // TODO : What about the other backbuffers?
   end;
@@ -4942,7 +4942,7 @@ var
   dwDumpSurface: int;
   szBuffer: array [0..255 - 1] of _char;
   dwDumpCube: Integer;
-  pSurface: IDirect3DSurface8;
+  pSurface: IDirect3DSurface;
   dwDumpTex: Integer;
 {$ENDIF}
 
@@ -5018,14 +5018,14 @@ begin
 
         pData := nil;
 
-        hRet := IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer).Lock(0, 0, {out}pData, 0);
+        hRet := IDirect3DVertexBuffer(pResource.Emu.VertexBuffer).Lock(0, 0, {out}pData, 0);
 
         if FAILED(hRet) then
           DxbxKrnlCleanup('VertexBuffer Lock Failed!');
 
         memcpy(pData, pBase, dwSize);
 
-        IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer).Unlock();
+        IDirect3DVertexBuffer(pResource.Emu.VertexBuffer).Unlock();
 
         pResource.Data := ULONG(pData);
       end;
@@ -5070,14 +5070,14 @@ begin
 
           pData := nil;
 
-          hRet := IDirect3DIndexBuffer8(pResource.Emu.IndexBuffer).Lock(0, dwSize, {out}pData, 0);
+          hRet := IDirect3DIndexBuffer(pResource.Emu.IndexBuffer).Lock(0, dwSize, {out}pData, 0);
 
           if (FAILED(hRet)) then
             DxbxKrnlCleanup('IndexBuffer Lock Failed!');
 
           memcpy(pData, pBase, dwSize);
 
-          IDirect3DIndexBuffer8(pResource.Emu.IndexBuffer).Unlock();
+          IDirect3DIndexBuffer(pResource.Emu.IndexBuffer).Unlock();
 
           pResource.Data := ULONG(pData);
 
@@ -5264,7 +5264,7 @@ begin
           dwDumpSurface := 0;
 
           sprintf(@szBuffer[0], '_DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegSurface%.03d.bmp', [X_Format, dwDumpSurface]); Inc(dwDumpSurface);
-          D3DXSaveSurfaceToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DSurface8(pResource.Emu.Surface), 0, 0);
+          D3DXSaveSurfaceToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DSurface(pResource.Emu.Surface), 0, 0);
         end
         else
         if (bCubemap) then
@@ -5277,7 +5277,7 @@ begin
 
             sprintf(szBuffer, '_DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegCubeTex%.03d -%d.bmp', [X_Format, dwDumpCube, v]); Inc(dwDumpCube);
 
-            IDirect3DCubeTexture8(pResource.Emu.CubeTexture).GetCubeMapSurface(D3DCUBEMAP_FACES(v), 0, @pSurface);
+            IDirect3DCubeTexture(pResource.Emu.CubeTexture).GetCubeMapSurface(D3DCUBEMAP_FACES(v), 0, @pSurface);
 
             D3DXSaveSurfaceToFileA(szBuffer, D3DXIFF_BMP, pSurface, 0, 0);
             Inc(v);
@@ -5287,7 +5287,7 @@ begin
         begin
           dwDumpTex := 0;
           sprintf(szBuffer,' _DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegTexture%.03d.bmp', [X_Format, dwDumpTex]); Inc(dwDumpTex);
-          D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pResource.Emu.Texture), 0);
+          D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture(pResource.Emu.Texture), 0);
         end;
 {$endif}
       end;
@@ -5327,7 +5327,7 @@ begin
     begin
       pFixup := PX_D3DFixup(pResource);
 
-      DxbxKrnlCleanup('IDirect3DResource8::Register -> X_D3DCOMMON_TYPE_FIXUP is not yet supported' +
+      DxbxKrnlCleanup('IDirect3DResource::Register -> X_D3DCOMMON_TYPE_FIXUP is not yet supported' +
                 #13#10'0x%.08X (pFixup->Common)' +
                 #13#10'0x%.08X (pFixup->Data)' +
                 #13#10'0x%.08X (pFixup->Lock)' +
@@ -5338,7 +5338,7 @@ begin
     end;
 
   else // case
-    DxbxKrnlCleanup('IDirect3DResource8.Register.Common Type 0x%.08X not yet supported', [dwCommonType]);
+    DxbxKrnlCleanup('IDirect3DResource.Register.Common Type 0x%.08X not yet supported', [dwCommonType]);
   end;
 
   EmuSwapFS(fsXbox);
@@ -5384,7 +5384,7 @@ begin
       uRet := pThis.Emu.Lock;
     end
     else if (pResource <> nil) then
-      uRet := IDirect3DResource8(pResource)._AddRef();
+      uRet := IDirect3DResource(pResource)._AddRef();
 
     pThis.Common := (pThis.Common and (not X_D3DCOMMON_REFCOUNT_MASK))
                  or ((pThis.Common and X_D3DCOMMON_REFCOUNT_MASK) + 1);
@@ -5435,7 +5435,7 @@ begin
   if (IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_TEXCLON) > 0)) then
   begin
     EmuWarning('Deleting clone texture (from D3DDevice::GetTexture2)...');
-//    uRet = IDirect3DBaseTexture8(pThis.Emu.BaseTexture)._Release();
+//    uRet = IDirect3DBaseTexture(pThis.Emu.BaseTexture)._Release();
     Dispose(pThis);
   end
   else if(IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
@@ -5483,10 +5483,10 @@ begin
           end;
 
 {$ifdef _DEBUG_TRACE_VB}
-        Type_ := IDirect3DResource8(pResource).GetType();
+        Type_ := IDirect3DResource(pResource).GetType();
 {$endif}
 
-        uRet := IDirect3DResource8(pResource)._Release();
+        uRet := IDirect3DResource(pResource)._Release();
 
         if (uRet = 0) then
         begin
@@ -5580,7 +5580,7 @@ begin
       [pThis]);
 
   // TODO -oCXBX: Handle situation where the resource type is >7
-  Result := X_D3DRESOURCETYPE(IDirect3DResource8(pThis.Emu.Resource).GetType());
+  Result := X_D3DRESOURCETYPE(IDirect3DResource(pThis.Emu.Resource).GetType());
 
   EmuSwapFS(fsXbox);
 end;
@@ -5611,9 +5611,9 @@ begin
   EmuVerifyResourceIsRegistered(pPixelContainer);
 
   // Dxbx addition : Remove old lock(s) :
-  IDirect3DCubeTexture8(pPixelContainer.Emu.CubeTexture).UnlockRect(FaceType, Level);
+  IDirect3DCubeTexture(pPixelContainer.Emu.CubeTexture).UnlockRect(FaceType, Level);
 
-  {ignore hRet:=}IDirect3DCubeTexture8(pPixelContainer.Emu.CubeTexture).LockRect(FaceType, Level, {out}pLockedRect^, pRect, Flags);
+  {ignore hRet:=}IDirect3DCubeTexture(pPixelContainer.Emu.CubeTexture).LockRect(FaceType, Level, {out}pLockedRect^, pRect, Flags);
 
   EmuSwapFS(fsXbox);
 end;
@@ -5649,7 +5649,7 @@ begin
     if MayLog(lfUnit) then
       DbgPrintf('EmuSurface8: = 0x%.08X', [pPixelContainer.Emu.Surface]);
 
-    hRet := IDirect3DSurface8(pPixelContainer.Emu.Surface).GetDesc({out}SurfaceDesc);
+    hRet := IDirect3DSurface(pPixelContainer.Emu.Surface).GetDesc({out}SurfaceDesc);
 
     (* marked by cxbx
      Integer dwDumpSurface := 0;
@@ -5668,13 +5668,13 @@ begin
 
 {$IFDEF GAME_HACKS_ENABLED}
     // TODO -oCXBX: Work on Namco Museum hack later...
-    // if pPixelContainer.Emu.Texture = (IDirect3DTexture8($078A0044)) then
+    // if pPixelContainer.Emu.Texture = (IDirect3DTexture($078A0044)) then
 {$ENDIF}
 
-    hRet := IDirect3DTexture8(pPixelContainer.Emu.Texture).GetLevelDesc(dwLevel, {out}SurfaceDesc);
-    //hRet = IDirect3DSurface8(pPixelContainer.Emu.Surface).GetDesc({out}SurfaceDesc);
+    hRet := IDirect3DTexture(pPixelContainer.Emu.Texture).GetLevelDesc(dwLevel, {out}SurfaceDesc);
+    //hRet = IDirect3DSurface(pPixelContainer.Emu.Surface).GetDesc({out}SurfaceDesc);
     if FAILED(hRet) then
-      EmuWarning('IDirect3DTexture8::GetSurfaceDesc failed!');
+      EmuWarning('IDirect3DTexture::GetSurfaceDesc failed!');
 
     DbgPrintf('Okay');
 
@@ -5766,7 +5766,7 @@ begin
   begin
     pSurface := pThis.Emu.Surface;
 
-    Result := IDirect3DSurface8(pSurface).GetDesc({out}SurfaceDesc);
+    Result := IDirect3DSurface(pSurface).GetDesc({out}SurfaceDesc);
 
     begin
       // Convert Format (PC->Xbox)
@@ -5817,7 +5817,7 @@ begin
 {$ENDIF}
 
   // Cxbx (shogun) commented this :
-  //if(nil=pThis.Emu.Surface) or (pThis.Emu.Surface = XTL_PIDirect3DSurface8($00000004)) then
+  //if(nil=pThis.Emu.Surface) or (pThis.Emu.Surface = IDirect3DSurface($00000004)) then
   //begin
   //  EmuWarning('Invalid Surface!');
   //  EmuSwapFS(fsXbox);
@@ -5850,9 +5850,9 @@ begin
 
     try
       // Remove old lock(s)
-      IDirect3DSurface8(pSurface).UnlockRect();
+      IDirect3DSurface(pSurface).UnlockRect();
 
-      hRet := IDirect3DSurface8(pSurface).LockRect({out}pLockedRect^, pRect, NewFlags);
+      hRet := IDirect3DSurface(pSurface).LockRect({out}pLockedRect^, pRect, NewFlags);
 
       if (FAILED(hRet)) then
         EmuWarning('LockRect Failed!');
@@ -5881,7 +5881,7 @@ begin
 
   EmuVerifyResourceIsRegistered(pThis);
   
-  Result := IDirect3DBaseTexture8(pThis.Emu.BaseTexture).GetLevelCount();
+  Result := IDirect3DBaseTexture(pThis.Emu.BaseTexture).GetLevelCount();
 
   EmuSwapFS(fsXbox);
 end;
@@ -5995,9 +5995,9 @@ begin
     else
     begin
       // Remove old lock(s)
-      IDirect3DTexture8(pTexture).UnlockRect(Level);
+      IDirect3DTexture(pTexture).UnlockRect(Level);
 
-      hRet := IDirect3DTexture8(pTexture).LockRect(Level, {out}pLockedRect^, pRect, NewFlags);
+      hRet := IDirect3DTexture(pTexture).LockRect(Level, {out}pLockedRect^, pRect, NewFlags);
 
       pThis.Common := pThis.Common or X_D3DCOMMON_ISLOCKED;
     end;
@@ -6057,7 +6057,7 @@ begin
     ppSurfaceLevel^.Size := 0;
     ppSurfaceLevel^.Common := 0;
     ppSurfaceLevel^.Data := $B00BBABE;
-    hRet := IDirect3DTexture8(pTexture).GetSurfaceLevel(Level, @(ppSurfaceLevel^.Emu.Surface));
+    hRet := IDirect3DTexture(pTexture).GetSurfaceLevel(Level, @(ppSurfaceLevel^.Emu.Surface));
 
     if (FAILED(hRet)) then
     begin
@@ -6102,7 +6102,7 @@ begin
 
   pVolumeTexture := pThis.Emu.VolumeTexture;
 
-  Result := IDirect3DVolumeTexture8(pVolumeTexture).LockBox(Level, {out}pLockedVolume^, pBox, Flags);
+  Result := IDirect3DVolumeTexture(pVolumeTexture).LockBox(Level, {out}pLockedVolume^, pBox, Flags);
 
   if (FAILED(Result)) then
     EmuWarning('LockBox Failed!');
@@ -6138,9 +6138,9 @@ begin
   EmuVerifyResourceIsRegistered(pThis);
 
   // Dxbx addition : Remove old lock(s) :
-  IDirect3DCubeTexture8(pThis.Emu.CubeTexture).UnlockRect(FaceType, Level);
+  IDirect3DCubeTexture(pThis.Emu.CubeTexture).UnlockRect(FaceType, Level);
 
-  Result := IDirect3DCubeTexture8(pThis.Emu.CubeTexture).LockRect(FaceType, Level, {out}pLockedBox^, pRect, Flags);
+  Result := IDirect3DCubeTexture(pThis.Emu.CubeTexture).LockRect(FaceType, Level, {out}pLockedBox^, pRect, Flags);
 
   EmuSwapFS(fsXbox);
 end;
@@ -6471,7 +6471,7 @@ begin
       hRet := g_pD3DDevice.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, @pBackBuffer);
 
       // if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
-      if (hRet = D3D_OK) and (IDirect3DSurface8(pBackBuffer).LockRect({out}LockedRectDest, NULL, 0) = D3D_OK) then
+      if (hRet = D3D_OK) and (IDirect3DSurface(pBackBuffer).LockRect({out}LockedRectDest, NULL, 0) = D3D_OK) then
       begin
         pCurByte := Puint08(pSurface.Emu.Lock);
 
@@ -6546,11 +6546,11 @@ begin
           end; // while
         end;
 
-        IDirect3DSurface8(pBackBuffer).UnlockRect();
+        IDirect3DSurface(pBackBuffer).UnlockRect();
       end;
 
       if (hRet = D3D_OK) then
-        IDirect3DSurface8(pBackBuffer)._Release;
+        IDirect3DSurface(pBackBuffer)._Release;
 
       // Update overlay if present was not called since the last call to
       // EmuIDirect3DDevice_UpdateOverlay.
@@ -7648,7 +7648,7 @@ begin
 
   pVertexBuffer := ppVertexBuffer.Emu.VertexBuffer;
 
-  hRet := IDirect3DVertexBuffer8(pVertexBuffer).Lock(OffsetToLock, SizeToLock, {out}ppbData^, Flags);
+  hRet := IDirect3DVertexBuffer(pVertexBuffer).Lock(OffsetToLock, SizeToLock, {out}ppbData^, Flags);
   (*DbgPrintf('VertexBuffer 0x%08X was locked: 0x%x - 0x%x, hRet = 0x%08x', [
         pVertexBuffer,
         OffsetToLock,
@@ -7686,7 +7686,7 @@ begin
   pVertexBuffer := ppVertexBuffer^.Emu.VertexBuffer;
   pbData := NULL;
 
-  {Dxbx unused hRet :=} IDirect3DVertexBuffer8(pVertexBuffer).Lock(0, 0, {out}pbData, EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
+  {Dxbx unused hRet :=} IDirect3DVertexBuffer(pVertexBuffer).Lock(0, 0, {out}pbData, EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
 
   if MayLog(lfUnit) then
   begin
@@ -7774,7 +7774,7 @@ begin
 
     pVertexBuffer := pStreamData.Emu.VertexBuffer;
     if Assigned(pVertexBuffer) then
-      IDirect3DVertexBuffer8(pVertexBuffer).Unlock();
+      IDirect3DVertexBuffer(pVertexBuffer).Unlock();
   end;
 
   {$ifdef _DEBUG_TRACK_VB}
@@ -7784,7 +7784,7 @@ begin
   end;
   {$endif}
 
-  Result := g_pD3DDevice.SetStreamSource(StreamNumber, IDirect3DVertexBuffer8(pVertexBuffer), Stride);
+  Result := g_pD3DDevice.SetStreamSource(StreamNumber, IDirect3DVertexBuffer(pVertexBuffer), Stride);
 
   if FAILED(RESULT) then
     DxbxKrnlCleanup('SetStreamSource Failed!');
@@ -8028,18 +8028,18 @@ begin
 
     pData := nil;
 
-    hRet := IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer).Lock(0, dwSize, {out}pData, 0);
+    hRet := IDirect3DIndexBuffer(g_pIndexBuffer.Emu.IndexBuffer).Lock(0, dwSize, {out}pData, 0);
 
     if (FAILED(hRet)) then
       DxbxKrnlCleanup('IndexBuffer Lock Failed!');
 
     memcpy(pData, Pvoid(g_pIndexBuffer.Data), dwSize);
 
-    IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer).Unlock();
+    IDirect3DIndexBuffer(g_pIndexBuffer.Emu.IndexBuffer).Unlock();
 
     g_pIndexBuffer.Data := ULONG(pData);
 
-    hRet := g_pD3DDevice.SetIndices(IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer), g_dwBaseVertexIndex);
+    hRet := g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(g_pIndexBuffer.Emu.IndexBuffer), g_dwBaseVertexIndex);
 
     if (FAILED(hRet)) then
       DxbxKrnlCleanup('SetIndices Failed!');
@@ -8085,7 +8085,7 @@ begin
       if (pIndexBuffer <> nil) then
       begin
         bActiveIB := true;
-        IDirect3DIndexBuffer8(pIndexBuffer)._Release();
+        IDirect3DIndexBuffer(pIndexBuffer)._Release();
         pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
        end;
     end;
@@ -8103,16 +8103,16 @@ begin
 
       pbData := nil;
 
-      IDirect3DIndexBuffer8(pIndexBuffer).Lock(0, 0, {out}pbData, 0);
+      IDirect3DIndexBuffer(pIndexBuffer).Lock(0, 0, {out}pbData, 0);
 
       if (pbData = nil) then
         DxbxKrnlCleanup('Could not lock index buffer!');
 
       memcpy(pbData, pIndexData, VertexCount * SizeOf(Word));
 
-      IDirect3DIndexBuffer8(pIndexBuffer).Unlock();
+      IDirect3DIndexBuffer(pIndexBuffer).Unlock();
 
-      g_pD3DDevice.SetIndices(IDirect3DIndexBuffer8(pIndexBuffer), g_dwBaseVertexIndex);
+      g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer), g_dwBaseVertexIndex);
 
       uiNumVertices := VertexCount;
       uiStartIndex := 0;
@@ -8150,7 +8150,7 @@ begin
     if(not bActiveIB) then
     begin
       g_pD3DDevice.SetIndices(nil, 0);
-      IDirect3DIndexBuffer8(pIndexBuffer)._Release();
+      IDirect3DIndexBuffer(pIndexBuffer)._Release();
       pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
     end;
 
@@ -8368,7 +8368,7 @@ begin
       [ pRenderTarget, pRenderTarget_EmuSurface,
         pNewZStencil,  pNewZStencil_EmuSurface]);
 
-  Result := g_pD3DDevice.SetRenderTarget(IDirect3DSurface8(pPCRenderTarget), IDirect3DSurface8(pPCNewZStencil));
+  Result := g_pD3DDevice.SetRenderTarget(IDirect3DSurface(pPCRenderTarget), IDirect3DSurface(pPCNewZStencil));
 
   if FAILED(Result) then
     EmuWarning('SetRenderTarget failed!' +
@@ -9021,7 +9021,7 @@ begin
         #13#10');',
       [pThis, Level, pDesc]);
 
-  IDirect3DTexture8(pThis).GetLevelDesc(Level, PD3DSURFACE_DESC(pDesc)^);
+  IDirect3DTexture(pThis).GetLevelDesc(Level, PD3DSURFACE_DESC(pDesc)^);
 
   EmuSwapFS(fsXbox);
 
@@ -9286,7 +9286,7 @@ begin
       _(pDesc, 'pDesc').
     LogEnd();
 
-  Result := IDirect3DVertexBuffer8(pThis).GetDesc({out}pDesc^);
+  Result := IDirect3DVertexBuffer(pThis).GetDesc({out}pDesc^);
 
   // Dxbx addition : Convert Format (PC->Xbox, in-place)
   X_D3DFORMAT(pDesc.Format) := EmuPC2XB_D3DFormat(pDesc.Format);
@@ -9622,7 +9622,7 @@ begin
   pTexture.Data := (X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_TEXCLON);
 
 //  printf( 'Adding reference...' + );
-//  IDirect3DBaseTexture8(pTexture.Emu.BaseTexture)._AddRef();
+//  IDirect3DBaseTexture(pTexture.Emu.BaseTexture)._AddRef();
 
 //  EmuSwapFS(fsXbox);
 //  EmuIDirect3DResource_AddRef(pTexture);
@@ -10047,7 +10047,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DDevice_GetMaterial(pMaterial : PD3DMaterial8): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice_GetMaterial(pMaterial : PD3DMaterial): HRESULT; stdcall;
 // Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -10208,7 +10208,7 @@ begin
 
   pVolumeTexture := pThis.Emu.VolumeTexture;
 
-  Result := IDirect3DVolumeTexture8(pVolumeTexture).GetLevelDesc(Level, {out}pDesc^);
+  Result := IDirect3DVolumeTexture(pVolumeTexture).GetLevelDesc(Level, {out}pDesc^);
 
   if (FAILED(Result)) then
     EmuWarning('GetLevelDesc Failed!');
@@ -10241,7 +10241,7 @@ begin
 
   pVolumeTexture := pThis.Emu.VolumeTexture;
 
-  Result := IDirect3DVolumeTexture8(pVolumeTexture).GetVolumeLevel2(Level, {out}ppVolumeLevel);
+  Result := IDirect3DVolumeTexture(pVolumeTexture).GetVolumeLevel2(Level, {out}ppVolumeLevel);
 
   if (FAILED(Result)) then
     EmuWarning('GetVolumeLevel2 Failed!');
@@ -10307,7 +10307,7 @@ begin
 
   pVolume := pThis.Emu.Volume8;
 
-  Result := IDirect3DVolume8(pVolume).LockBox({out}pLockedVolume^, pBox, Flags);
+  Result := IDirect3DVolume(pVolume).LockBox({out}pLockedVolume^, pBox, Flags);
 
   if (FAILED(Result)) then
     EmuWarning('LockBox Failed!');
@@ -10367,7 +10367,7 @@ begin
 
   EmuVerifyResourceIsRegistered(pThis);
   pSurface := pThis.Emu.Surface;
-  Result := IDirect3DSurface8(pSurface).GetContainer(pThis, {out}ppBaseTexture);
+  Result := IDirect3DSurface(pSurface).GetContainer(pThis, {out}ppBaseTexture);
 
   EmuSwapFS(fsXbox);
 end; *)

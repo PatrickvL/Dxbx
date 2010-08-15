@@ -145,15 +145,15 @@ begin
     begin
       pTexture := pPixelContainer.Emu.Texture;
 
-      dwLevelCount := IDirect3DTexture8(pTexture).GetLevelCount();
+      dwLevelCount := IDirect3DTexture(pTexture).GetLevelCount();
 
       if dwLevelCount > 0 then // Dxbx addition, to prevent underflow
       for v := 0 to dwLevelCount - 1 do
       begin
         // Dxbx addition : Remove lock for each level separately :
-        IDirect3DTexture8(pTexture).UnlockRect(v);
+        IDirect3DTexture(pTexture).UnlockRect(v);
 
-        hRet := IDirect3DTexture8(pTexture).GetLevelDesc(v, {out}SurfaceDesc);
+        hRet := IDirect3DTexture(pTexture).GetLevelDesc(v, {out}SurfaceDesc);
 
         if (FAILED(hRet)) then
           continue;
@@ -168,7 +168,7 @@ begin
           //  break;
           //DxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', [SurfaceDesc.Format]);
 
-          hRet := IDirect3DTexture8(pTexture).LockRect(v, {out}LockedRect, NULL, 0);
+          hRet := IDirect3DTexture(pTexture).LockRect(v, {out}LockedRect, NULL, 0);
 
           if (FAILED(hRet)) then
             continue;
@@ -190,7 +190,7 @@ begin
 
           memcpy(LockedRect.pBits, pTemp, dwPitch * dwHeight);
 
-          IDirect3DTexture8(pTexture).UnlockRect(v); // Dxbx fix : Cxbx unlocks level 0 each time!
+          IDirect3DTexture(pTexture).UnlockRect(v); // Dxbx fix : Cxbx unlocks level 0 each time!
 
           free(pTemp);
         end;
@@ -482,11 +482,11 @@ begin
         begin
           if (pIndexBuffer <> nil) then
           begin
-            IDirect3DIndexBuffer8(pIndexBuffer)._Release();
+            IDirect3DIndexBuffer(pIndexBuffer)._Release();
             pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
           end;
 
-          hRet := g_pD3DDevice.CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer8(@pIndexBuffer));
+          hRet := g_pD3DDevice.CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer(@pIndexBuffer));
 
           maxIBSize := dwCount*2 + 2*2;
         end
@@ -502,11 +502,11 @@ begin
         begin
           pData := nil;
 
-          IDirect3DIndexBuffer8(pIndexBuffer).Lock(0, dwCount*2 + 2*2, {out}PByte(pData), 0);
+          IDirect3DIndexBuffer(pIndexBuffer).Lock(0, dwCount*2 + 2*2, {out}PByte(pData), 0);
 
           memcpy(pData, @pIBMem[0], dwCount*2 + 2*2);
 
-          IDirect3DIndexBuffer8(pIndexBuffer).Unlock();
+          IDirect3DIndexBuffer(pIndexBuffer).Unlock();
         end;
 
         // render indexed vertices
@@ -527,7 +527,7 @@ begin
 
           {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
-          g_pD3DDevice.SetIndices(IDirect3DIndexBuffer8(pIndexBuffer), 0);
+          g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer), 0);
 
           {$ifdef _DEBUG_TRACK_PB}
           if ( not g_PBTrackDisable.exists(pdwOrigPushData)) then
@@ -596,13 +596,13 @@ begin
         g_pD3DDevice.GetStreamSource(0, @pActiveVB, {out}uiStride);
 
         // retrieve stream desc
-        IDirect3DVertexBuffer8(pActiveVB).GetDesc({out}VBDesc);
+        IDirect3DVertexBuffer(pActiveVB).GetDesc({out}VBDesc);
 
         // unlock just in case
-        IDirect3DVertexBuffer8(pActiveVB).Unlock();
+        IDirect3DVertexBuffer(pActiveVB).Unlock();
 
         // grab ptr
-        IDirect3DVertexBuffer8(pActiveVB).Lock(0, 0, {out}pVBData, D3DLOCK_READONLY);
+        IDirect3DVertexBuffer(pActiveVB).Lock(0, 0, {out}pVBData, D3DLOCK_READONLY);
 
         // print out stream data
         begin
@@ -618,7 +618,7 @@ begin
         end;
 
         // release ptr
-        IDirect3DVertexBuffer8(pActiveVB).Unlock();
+        IDirect3DVertexBuffer(pActiveVB).Unlock();
 
         DbgDumpMesh(PWORD(pIndexData), dwCount);
       end;
@@ -633,11 +633,11 @@ begin
         begin
           if (pIndexBuffer <> nil) then
           begin
-            IDirect3DIndexBuffer8(pIndexBuffer)._Release();
+            IDirect3DIndexBuffer(pIndexBuffer)._Release();
             pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
           end;
 
-          hRet := g_pD3DDevice.CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer8(@pIndexBuffer));
+          hRet := g_pD3DDevice.CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer(@pIndexBuffer));
 
           maxIBSize := dwCount*2;
         end
@@ -653,7 +653,7 @@ begin
         begin
           pData := nil;
 
-          IDirect3DIndexBuffer8(pIndexBuffer).Lock(0, dwCount*2, {out}PByte(pData), 0);
+          IDirect3DIndexBuffer(pIndexBuffer).Lock(0, dwCount*2, {out}PByte(pData), 0);
 
           memcpy(pData, pIndexData, dwCount*2);
 
@@ -668,7 +668,7 @@ begin
             pIBMem[0] := $FFFF;
           end;
 
-          IDirect3DIndexBuffer8(pIndexBuffer).Unlock();
+          IDirect3DIndexBuffer(pIndexBuffer).Unlock();
         end;
 
         // render indexed vertices
@@ -689,7 +689,7 @@ begin
 
           {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
-          g_pD3DDevice.SetIndices(IDirect3DIndexBuffer8(pIndexBuffer), 0);
+          g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer), 0);
 
           {$ifdef _DEBUG_TRACK_PB}
           if (not g_PBTrackDisable.exists(pdwOrigPushData)) then
@@ -783,13 +783,13 @@ begin
   dbgVertices := fopen(szFileName, 'wt');
 
   // retrieve stream desc
-  IDirect3DVertexBuffer8(pActiveVB).GetDesc({out}VBDesc);
+  IDirect3DVertexBuffer(pActiveVB).GetDesc({out}VBDesc);
 
   // unlock just in case
-  IDirect3DVertexBuffer8(pActiveVB).Unlock();
+  IDirect3DVertexBuffer(pActiveVB).Unlock();
 
   // grab ptr
-  IDirect3DVertexBuffer8(pActiveVB).Lock(0, 0, {out}pVBData, D3DLOCK_READONLY);
+  IDirect3DVertexBuffer(pActiveVB).Lock(0, 0, {out}pVBData, D3DLOCK_READONLY);
 
   // print out stream data
   if Assigned(dbgVertices) then // Dxbx addition
@@ -887,7 +887,7 @@ begin
   end;
 
   // release ptr
-  IDirect3DVertexBuffer8(pActiveVB).Unlock();
+  IDirect3DVertexBuffer(pActiveVB).Unlock();
 end;
 {$ENDIF}
 
