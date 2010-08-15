@@ -366,15 +366,15 @@ type X_D3DResource = object
     Data: DWORD;
     Emu: record {union}case Integer of
     0: (Lock: DWORD);
-    1: ({Emu}Resource8: XTL_PIDirect3DResource8);
-    2: ({Emu}BaseTexture8: XTL_PIDirect3DBaseTexture8);
-    3: ({Emu}Texture8: XTL_PIDirect3DTexture8);
-    4: ({Emu}VolumeTexture8: XTL_PIDirect3DVolumeTexture8);
-    5: ({Emu}CubeTexture8: XTL_PIDirect3DCubeTexture8);
-    6: ({Emu}Surface8: XTL_PIDirect3DSurface8);
-    7: ({Emu}VertexBuffer8: XTL_PIDirect3DVertexBuffer8);
-    8: ({Emu}IndexBuffer8: XTL_PIDirect3DIndexBuffer8);
-    9: ({Emu}Volume8: XTL_PIDirect3DVolume8); // Dxbx addition
+    1: ({Emu}Resource: XTL_PIDirect3DResource8);
+    2: ({Emu}BaseTexture: XTL_PIDirect3DBaseTexture8);
+    3: ({Emu}Texture: XTL_PIDirect3DTexture8);
+    4: ({Emu}VolumeTexture: XTL_PIDirect3DVolumeTexture8);
+    5: ({Emu}CubeTexture: XTL_PIDirect3DCubeTexture8);
+    6: ({Emu}Surface: XTL_PIDirect3DSurface8);
+    7: ({Emu}VertexBuffer: XTL_PIDirect3DVertexBuffer8);
+    8: ({Emu}IndexBuffer: XTL_PIDirect3DIndexBuffer8);
+    9: ({Emu}Volume: XTL_PIDirect3DVolume8); // Dxbx addition
     end; // union
   end; // size = 12 (as in Cxbx)
   PX_D3DResource = ^X_D3DResource;

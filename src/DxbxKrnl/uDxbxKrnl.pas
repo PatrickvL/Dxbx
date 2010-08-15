@@ -118,7 +118,7 @@ procedure DxbxKrnlInit(
   pXbeHeader: PXBEIMAGE_HEADER;
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc);
-// Branch:shogun  Revision:162  Translator:Patrick  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 {$IFDEF LOG_STRUCT_SIZES}
 var
   LogOnlyDifferences: Boolean;

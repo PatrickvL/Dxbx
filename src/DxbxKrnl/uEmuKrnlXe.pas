@@ -79,7 +79,7 @@ end;
 function {327} xboxkrnl_XeLoadSection(
   Section: PXBE_SECTIONHEADER // IN, OUT
   ): NTSTATUS; stdcall;
-// Source:XBMC  Branch:dxbx  Translator:PatrickvL  Done:100
+// Source:XBMC  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   if XTL_EmuXLoadSectionByHandle(XTL_SECTIONHANDLE(Section)) <> NULL then
     Result := STATUS_SUCCESS
@@ -95,7 +95,7 @@ end;
 function {328} xboxkrnl_XeUnloadSection(
   Section: PXBE_SECTIONHEADER // IN, OUT
   ): NTSTATUS; stdcall;
-// Source:XBMC  Branch:dxbx  Translator:PatrickvL  Done:100
+// Source:XBMC  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   if XTL_EmuXFreeSectionByHandle(XTL_SECTIONHANDLE(Section)) = BOOL_TRUE then
     Result := STATUS_SUCCESS

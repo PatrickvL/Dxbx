@@ -2443,7 +2443,7 @@ function IsValidCurrentShader(): boolean;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   // Dxbx addition : There's no need to go to XboxFS and call
-  // XTL_EmuIDirect3DDevice8_GetVertexShader, just check g_CurrentVertexShader :
+  // XTL_EmuIDirect3DDevice_GetVertexShader, just check g_CurrentVertexShader :
   Result := VshHandleIsValidShader(g_CurrentVertexShader);
 end; // IsValidCurrentShader
 

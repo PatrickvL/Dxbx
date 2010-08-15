@@ -466,13 +466,13 @@ begin
 
   if (nil=pPatchDesc.pVertexStreamZeroData) then
   begin
-    IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, PIDirect3DVertexBuffer8(@pOrigVertexBuffer), {out}uiStride);
+    IDirect3DDevice8(g_pD3DDevice).GetStreamSource(uiStream, PIDirect3DVertexBuffer8(@pOrigVertexBuffer), {out}uiStride);
     if (nil=pOrigVertexBuffer) then
     begin
-      (*if(nil=g_pVertexBuffer) or (nil=g_pVertexBuffer.EmuVertexBuffer8) then
+      (*if(nil=g_pVertexBuffer) or (nil=g_pVertexBuffer.Emu.VertexBuffer) then
         DxbxKrnlCleanup('Unable to retrieve original buffer (Stream := %d)', [uiStream]);
       else
-        pOrigVertexBuffer := g_pVertexBuffer.EmuVertexBuffer8;*)
+        pOrigVertexBuffer := g_pVertexBuffer.Emu.VertexBuffer;*)
 
       if Assigned(pbFatalError) then
         pbFatalError^ := true;
@@ -561,7 +561,7 @@ begin
       begin
         m_pStreams[uiStream].pOriginalStream := pOrigVertexBuffer;
         m_pStreams[uiStream].uiOrigStride := uiStride;
-        IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pCachedStream_.Stream.pPatchedStream), pCachedStream_.Stream.uiNewStride);
+        IDirect3DDevice8(g_pD3DDevice).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pCachedStream_.Stream.pPatchedStream), pCachedStream_.Stream.uiNewStride);
         IDirect3DVertexBuffer8(pCachedStream_.Stream.pPatchedStream)._AddRef();
         IDirect3DVertexBuffer8(pCachedStream_.Stream.pOriginalStream)._AddRef();
         m_pStreams[uiStream].pPatchedStream := pCachedStream_.Stream.pPatchedStream;
@@ -670,7 +670,7 @@ begin
 
   if (nil=pPatchDesc.pVertexStreamZeroData) then
   begin
-    IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, PIDirect3DVertexBuffer8(@pOrigVertexBuffer), {out}uiStride);
+    IDirect3DDevice8(g_pD3DDevice).GetStreamSource(uiStream, PIDirect3DVertexBuffer8(@pOrigVertexBuffer), {out}uiStride);
     if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc({out}Desc))) then
     begin
       DxbxKrnlCleanup('Could not retrieve original buffer size');
@@ -683,7 +683,7 @@ begin
     begin
       DxbxKrnlCleanup('Couldn''t lock the original buffer');
     end;
-    IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer(dwNewSize, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer8(@pNewVertexBuffer));
+    IDirect3DDevice8(g_pD3DDevice).CreateVertexBuffer(dwNewSize, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer8(@pNewVertexBuffer));
     if (FAILED(IDirect3DVertexBuffer8(pNewVertexBuffer).Lock(0, 0, {out}PByte(pNewData), 0))) then
     begin
       DxbxKrnlCleanup('Couldn''t lock the new buffer');
@@ -886,7 +886,7 @@ begin
     if Assigned(pOrigVertexBuffer) then // Dxbx addition
       IDirect3DVertexBuffer8(pOrigVertexBuffer).Unlock();
 
-    if (FAILED(IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pNewVertexBuffer), pStreamPatch.ConvertedStride))) then
+    if (FAILED(IDirect3DDevice8(g_pD3DDevice).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pNewVertexBuffer), pStreamPatch.ConvertedStride))) then
     begin
       DxbxKrnlCleanup('Failed to set the type patched buffer as the new stream source!');
     end;
@@ -978,7 +978,7 @@ begin
   begin
     // Copy stream for patching and caching.
 
-    IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, PIDirect3DVertexBuffer8(@pOrigVertexBuffer), {out}uiStride);
+    IDirect3DDevice8(g_pD3DDevice).GetStreamSource(uiStream, PIDirect3DVertexBuffer8(@pOrigVertexBuffer), {out}uiStride);
 
     if (nil=pOrigVertexBuffer) or (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc({out}Desc))) then
     begin
@@ -990,7 +990,7 @@ begin
     begin
       DxbxKrnlCleanup('Couldn''t lock original FVF buffer.');
     end;
-    IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer(Desc.Size, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer8(@pNewVertexBuffer));
+    IDirect3DDevice8(g_pD3DDevice).CreateVertexBuffer(Desc.Size, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer8(@pNewVertexBuffer));
     if(FAILED(IDirect3DVertexBuffer8(pNewVertexBuffer).Lock(0, 0, {out}PByte(pData), 0))) then
     begin
       DxbxKrnlCleanup('Couldn''t lock new FVF buffer.');
@@ -1061,7 +1061,7 @@ begin
   begin
     IDirect3DVertexBuffer8(pNewVertexBuffer).Unlock();
 
-    if (FAILED(IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pNewVertexBuffer), uiStride))) then
+    if (FAILED(IDirect3DDevice8(g_pD3DDevice).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pNewVertexBuffer), uiStride))) then
     begin
       DxbxKrnlCleanup('Failed to set the texcoord patched FVF buffer as the new stream source.');
     end;
@@ -1171,7 +1171,7 @@ begin
 
   if (pPatchDesc.pVertexStreamZeroData = nil) then
   begin
-    IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, PIDirect3DVertexBuffer8(@(pStream.pOriginalStream)), {out}pStream.uiOrigStride);
+    IDirect3DDevice8(g_pD3DDevice).GetStreamSource(0, PIDirect3DVertexBuffer8(@(pStream.pOriginalStream)), {out}pStream.uiOrigStride);
   end
   else
   begin
@@ -1217,7 +1217,7 @@ begin
       dwNewSizeWR := dwNewSize + dwOriginalSizeWR - dwOriginalSize;
     end;
 
-    IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer(dwNewSizeWR, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer8(@(pStream.pPatchedStream)));
+    IDirect3DDevice8(g_pD3DDevice).CreateVertexBuffer(dwNewSizeWR, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer8(@(pStream.pPatchedStream)));
 
     if (pStream.pOriginalStream <> nil) then
     begin
@@ -1331,7 +1331,7 @@ begin
     if (pStream.pPatchedStream <> nil) then // Dxbx addition - release the lock we got earlier
       IDirect3DVertexBuffer8(pStream.pPatchedStream).Unlock();
 
-    IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(0, IDirect3DVertexBuffer8(pStream.pPatchedStream), pStream.uiNewStride);
+    IDirect3DDevice8(g_pD3DDevice).SetStreamSource(0, IDirect3DVertexBuffer8(pStream.pPatchedStream), pStream.uiNewStride);
   end;
 
   pPatchDesc.uiVertexStreamZeroStride := pStream.uiNewStride; // Only usefull if changed (which it isn't)
@@ -1399,7 +1399,7 @@ begin
   begin
     if (m_pStreams[uiStream].pOriginalStream <> NULL) and (m_pStreams[uiStream].pPatchedStream <> NULL) then
     begin
-      IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(0, IDirect3DVertexBuffer8(m_pStreams[uiStream].pOriginalStream), m_pStreams[uiStream].uiOrigStride);
+      IDirect3DDevice8(g_pD3DDevice).SetStreamSource(0, IDirect3DVertexBuffer8(m_pStreams[uiStream].pOriginalStream), m_pStreams[uiStream].uiOrigStride);
     end;
 
     if (m_pStreams[uiStream].pOriginalStream <> NULL) then
@@ -1609,10 +1609,10 @@ begin
 
   if(bFVF) then
   begin
-    IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(dwCurFVF);
+    IDirect3DDevice8(g_pD3DDevice).SetVertexShader(dwCurFVF);
   end;
 
-  IDirect3DDevice8(g_pD3DDevice8).DrawPrimitiveUP(
+  IDirect3DDevice8(g_pD3DDevice).DrawPrimitiveUP(
       EmuPrimitiveType(VPDesc.PrimitiveType),
       VPDesc.dwPrimitiveCount,
       VPDesc.pVertexStreamZeroData,
@@ -1620,7 +1620,7 @@ begin
 
   if(bFVF) then
   begin
-    IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(g_CurrentVertexShader);
+    IDirect3DDevice8(g_pD3DDevice).SetVertexShader(g_CurrentVertexShader);
   end;
 
   VertPatch.Restore();
@@ -1755,7 +1755,7 @@ begin
     dwMipMapLevels := 6;
 end;
 
-// Dxbx Note: This code is taken from XTL_EmuIDirect3DResource8_Register and occured
+// Dxbx Note: This code is taken from XTL_EmuIDirect3DResource_Register and occured
 // in XTL_EmuUpdateActiveTexture too, so it's generalize in this single implementation.
 procedure DxbxUpdatePixelContainer(
   pPixelContainer: PX_D3DPixelContainer;
@@ -1826,13 +1826,13 @@ begin
 
       // copy over data (deswizzle if necessary)
       if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
-        hRet := IDirect3DSurface8(pPixelContainer.Emu.Surface8).LockRect(LockedRect, NULL, 0)
+        hRet := IDirect3DSurface8(pPixelContainer.Emu.Surface).LockRect(LockedRect, NULL, 0)
       else
       begin
         if (bCubemap) then
-          hRet := IDirect3DCubeTexture8(pPixelContainer.Emu.CubeTexture8).LockRect(D3DCUBEMAP_FACES(face), 0, LockedRect, NULL, 0)
+          hRet := IDirect3DCubeTexture8(pPixelContainer.Emu.CubeTexture).LockRect(D3DCUBEMAP_FACES(face), 0, LockedRect, NULL, 0)
         else
-          hRet := IDirect3DTexture8(pPixelContainer.Emu.Texture8).LockRect(level, {out}LockedRect, NULL, 0);
+          hRet := IDirect3DTexture8(pPixelContainer.Emu.Texture).LockRect(level, {out}LockedRect, NULL, 0);
       end;
 
       // Dxbx addition : Mirror the behaviour in EmuUnswizzleActiveTexture :
@@ -1943,7 +1943,7 @@ begin
           if (DWORD(LockedRect.Pitch) = dwMipPitch) and (dwMipPitch = dwMipWidth * dwBPP) then
           begin
             // TODO -oDxbx: This crashes on "minimario2ddemo", even though all arguments seem alright,
-            // It seems that the unpatched function IDirect3DDevice8_CreateSurface2 AND's the result
+            // It seems that the unpatched function IDirect3DDevice_CreateSurface2 AND's the result
             // of MmAllocateContiguousMemoryEx with $0FFFFFFF which makes us loose the high nibble!!!
             memcpy(pDest, pSrc + dwMipOffs, dwMipPitch * dwMipHeight);
           end
@@ -2000,7 +2000,7 @@ begin
     X_Format := X_D3DFORMAT(((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT));
 
     // TODO -oDxbx: Why is X_Format checked against the invalid value $CD here?
-    if (X_Format <> $CD) and (IDirect3DResource8(pPixelContainer.Emu.Resource8).GetType() = D3DRTYPE_TEXTURE) then
+    if (X_Format <> $CD) and (IDirect3DResource8(pPixelContainer.Emu.Resource).GetType() = D3DRTYPE_TEXTURE) then
     begin
       DxbxGetFormatRelatedVariables(pPixelContainer, X_Format,
         {var}dwWidth, {var}dwHeight, {var}dwBPP, {var}dwDepth, {var}dwPitch, {var}dwMipMapLevels,
@@ -2013,7 +2013,7 @@ begin
     end;
 
     DxbxUnlockD3DResource(pPixelContainer); // Dxbx addition
-    IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DTexture8(pPixelContainer.Emu.Texture8));
+    IDirect3DDevice8(g_pD3DDevice).SetTexture(Stage, IDirect3DTexture8(pPixelContainer.Emu.Texture));
   end;
 end; // XTL_EmuUpdateActiveTexture
 

@@ -103,7 +103,7 @@ EmuPrimitiveTypeLookup: array [0..Ord(X_D3DPT_POLYGON)] of D3DPRIMITIVETYPE = (
     D3DPT_TRIANGLEFAN      // X_D3DPT_POLYGON        = 10, Xbox
 );
 
-(* Dxbx note : Not used anymore, replaced by a switch in XTL_EmuIDirect3DDevice8_SetRenderState_Simple()
+(* Dxbx note : Not used anymore, replaced by a switch in XTL_EmuIDirect3DDevice_SetRenderState_Simple()
 // render state conversion table
 CONST {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWORD = (
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -771,7 +771,7 @@ begin
 
   // TODO -oCXBX: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
   if (Value and (not X_D3DCLEAR_ALL_SUPPORTED)) > 0 then
-    EmuWarning('Unsupported Flag(s) for IDirect3DDevice8_Clear: 0x%.08X', [Value and (not X_D3DCLEAR_ALL_SUPPORTED)]);
+    EmuWarning('Unsupported Flag(s) for IDirect3DDevice_Clear: 0x%.08X', [Value and (not X_D3DCLEAR_ALL_SUPPORTED)]);
 
   if (Value and X_D3DCLEAR_TARGET) > 0 then
     Result := Result or D3DCLEAR_TARGET;
