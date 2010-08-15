@@ -26,11 +26,48 @@ uses
   // Delphi
   Windows,
   // DirectX
+{$IFDEF DXBX_USE_D3D9}
+  Direct3D9,
+{$ELSE}
   Direct3D8, // D3DMULTISAMPLE_TYPE
+{$ENDIF}
   // Dxbx
   uTypes;
 
 type
+{$IFDEF DXBX_USE_D3D9}
+  IDirect3D = IDirect3D9;
+  IDirect3DBaseTexture = IDirect3DBaseTexture9;
+  IDirect3DCubeTexture = IDirect3DCubeTexture9;
+  IDirect3DDevice = IDirect3DDevice9;
+  IDirect3DIndexBuffer = IDirect3DIndexBuffer9;
+  IDirect3DResource = IDirect3DResource9;
+  IDirect3DSurface = IDirect3DSurface9;
+  IDirect3DTexture = IDirect3DTexture9;
+  IDirect3DVertexBuffer = IDirect3DVertexBuffer9;
+  IDirect3DVertexShader = IDirect3DVertexShader9;
+  IDirect3DVolume = IDirect3DVolume9;
+  IDirect3DVolumeTexture = IDirect3DVolumeTexture9;
+
+  PIDirect3DBaseTexture = PIDirect3DBaseTexture9;
+  PIDirect3DCubeTexture = PIDirect3DCubeTexture9;
+  PIDirect3DDevice = PIDirect3DDevice9;
+  PIDirect3DIndexBuffer = PIDirect3DIndexBuffer9;
+  PIDirect3DStateBlock = PIDirect3DStateBlock9;
+  PIDirect3DSurface = PIDirect3DSurface9;
+  PIDirect3DTexture = PIDirect3DTexture9;
+  PIDirect3DVertexBuffer = PIDirect3DVertexBuffer9;
+  PIDirect3DVolumeTexture = PIDirect3DVolumeTexture9;
+
+  PD3DMaterial = PD3DMaterial9;
+
+  D3DCAPS = D3DCAPS9;
+  D3DVIEWPORT = D3DVIEWPORT9;
+
+  PD3DCAPS = PD3DCAPS9;
+  PD3DVIEWPORT = PD3DVIEWPORT9;
+{$ELSE}
+  IDirect3D = IDirect3D8;
   IDirect3DBaseTexture = IDirect3DBaseTexture8;
   IDirect3DCubeTexture = IDirect3DCubeTexture8;
   IDirect3DDevice = IDirect3DDevice8;
@@ -52,6 +89,13 @@ type
   PIDirect3DVolumeTexture = PIDirect3DVolumeTexture8;
 
   PD3DMaterial = PD3DMaterial8;
+
+  D3DCAPS = D3DCAPS8;
+  D3DVIEWPORT = D3DVIEWPORT8;
+
+  PD3DCAPS = PD3DCAPS8;
+  PD3DVIEWPORT = PD3DVIEWPORT8;
+{$ENDIF}
 
 type
   // C++ nearly always works with pointer-to-interface, while Delphi's interfaces are already reference-types.

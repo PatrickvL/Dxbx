@@ -31,8 +31,13 @@ uses
   // Jedi Win32API
   , JwaWinType
   // DirectX
+{$IFDEF DXBX_USE_D3D9}
+  , Direct3D9
+  , D3DX9
+{$ELSE}
   , Direct3D8
   , D3DX8
+{$ENDIF}
   // Dxbx
   , uTypes
   , uDxbxKrnlUtils
@@ -2396,12 +2401,19 @@ begin
       hRet := D3DXERR_INVALIDDATA;
     end
     else
-      hRet := D3DXAssembleShader(pShaderDisassembly,
-                                strlen(pShaderDisassembly),
-                                {Flags=}D3DXASM_SKIPVALIDATION,
-                                {ppConstants=}NULL,
-                                {ppCompiledShader=}PID3DXBuffer(ppRecompiled),
-                                {ppCompilationErrors=}@pErrors); // Dxbx addition
+      hRet := D3DXAssembleShader(
+        pShaderDisassembly,
+        strlen(pShaderDisassembly),
+{$IFDEF DXBX_USE_D3D9}
+        {pDefines=}nil,
+        {pInclude=}nil,
+        {Flags=}D3DXSHADER_SKIPVALIDATION
+{$ELSE}
+        {Flags=}D3DXASM_SKIPVALIDATION,
+        {ppConstants=}NULL,
+{$ENDIF}
+        {ppCompiledShader=}PID3DXBuffer(ppRecompiled),
+        {ppCompilationErrors=}@pErrors); // Dxbx addition
 
     if (FAILED(hRet)) then
     begin

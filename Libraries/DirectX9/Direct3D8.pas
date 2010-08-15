@@ -3052,7 +3052,7 @@ type
     function CheckDepthStencilMatch(Adapter: LongWord; DeviceType: TD3DDevType; AdapterFormat, RenderTargetFormat, DepthStencilFormat: TD3DFormat): HResult; stdcall;
     function GetDeviceCaps(Adapter: LongWord; DeviceType: TD3DDevType; out pCaps: TD3DCaps8): HResult; stdcall;
     function GetAdapterMonitor(Adapter: LongWord): HMONITOR; stdcall;
-    function CreateDevice(Adapter: LongWord; DeviceType: TD3DDevType; hFocusWindow: HWND; BehaviorFlags: DWord; var pPresentationParameters: TD3DPresentParameters; {out} ppReturnedDeviceInterface: PIDirect3DDevice8): HResult; stdcall;
+    function CreateDevice(Adapter: LongWord; DeviceType: TD3DDevType; hFocusWindow: HWND; BehaviorFlags: DWord; {var} pPresentationParameters: PD3DPresentParameters; {out} ppReturnedDeviceInterface: PIDirect3DDevice8): HResult; stdcall;
   end;
 
 

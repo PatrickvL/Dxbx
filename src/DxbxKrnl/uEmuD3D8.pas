@@ -41,10 +41,15 @@ uses
   JwaWinType,
   JwaNative,
   // DirectX
-  Direct3D, // PD3DCOLOR
-  Direct3D8, // D3DDEVTYPE
   DirectDraw, // IDIRECTDRAWSURFACE7
+  Direct3D, // PD3DCOLOR
+{$IFDEF DXBX_USE_D3D9}
+  Direct3D9,
+  D3DX9,
+{$ELSE}
+  Direct3D8, // D3DDEVTYPE
   D3DX8, // PD3DXVECTOR4
+{$ENDIF}
   // OpenXDK
   XboxKrnl,
   // Dxbx
@@ -160,7 +165,7 @@ var
   // Static Variable(s)
   g_ddguid: GUID;                // DirectDraw driver GUID
   g_hMonitor: HMONITOR = 0;      // Handle to DirectDraw monitor
-  g_pD3D: IDirect3D8 = NULL;
+  g_pD3D: IDirect3D = NULL;
   g_bSupportsYUY2: BOOL_ = FALSE; // Does device support YUY2 overlays?
   g_pDD7: XTL_LPDIRECTDRAW7 = NULL;   // DirectDraw7
   g_dwOverlayW: DWORD = 640;     // Cached Overlay Width
@@ -169,7 +174,7 @@ var
 
   g_XbeHeader: PXBEIMAGE_HEADER = NULL;         // XbeHeader
   g_XbeHeaderSize: uint32 = 0;             // XbeHeaderSize
-  g_D3DCaps: D3DCAPS8;                     // Direct3D8 Caps
+  g_D3DCaps: D3DCAPS;                     // Direct3D8 Caps
   g_hBgBrush: HBRUSH = 0;                  // Background Brush
   g_bRenderWindowActive: _bool = false;     // volatile?
   g_XBVideo: XBVideo;
@@ -664,7 +669,11 @@ begin
     //  using namespace XTL;
 
     // xbox Direct3DCreate8 returns '1' always, so we need our own ptr
+{$IFDEF DXBX_USE_D3D9}
+    g_pD3D := Direct3DCreate9(D3D_SDK_VERSION);
+{$ELSE}
     g_pD3D := Direct3DCreate8(D3D_SDK_VERSION);
+{$ENDIF}
     if (g_pD3D = NULL) then
       DxbxKrnlCleanup('Could not initialize Direct3D8!');
 
@@ -1199,6 +1208,7 @@ function EmuThreadCreateDeviceProxy(lpVoid: LPVOID): DWORD; stdcall;
 var
   D3DDisplayMode: TD3DDisplayMode; // X_D3DDISPLAYMODE; // TODO -oDXBX: : What type should we use?
   szBackBufferFormat: array [0..16 - 1] of AnsiChar;
+  PresentationInterval: LongWord;
   hRet: HRESULT;
   dwCodes: DWORD;
   lpCodes: PDWORD;
@@ -1297,7 +1307,7 @@ begin
           g_EmuCDPD.NativePresentationParameters.MultiSampleType := D3DMULTISAMPLE_NONE;//EmuXB2PC_D3DMultiSampleFormat(g_EmuCDPD.pPresentationParameters.MultiSampleType);
 
           if (g_XBVideo.GetVSync()) then
-            g_EmuCDPD.NativePresentationParameters.SwapEffect := D3DSWAPEFFECT_COPY_VSYNC
+            g_EmuCDPD.NativePresentationParameters.SwapEffect := {$IFDEF DXBX_USE_D3D9}D3DSWAPEFFECT_COPY{$ELSE}D3DSWAPEFFECT_COPY_VSYNC{$ENDIF}
           else
             g_EmuCDPD.NativePresentationParameters.SwapEffect := g_EmuCDPD.pPresentationParameters.SwapEffect; // D3DSWAPEFFECT_COPY; // D3DSWAPEFFECT_DISCARD ??
 
@@ -1307,14 +1317,20 @@ begin
           g_EmuCDPD.NativePresentationParameters.Flags := D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
           if (not g_XBVideo.GetVSync() and ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_IMMEDIATE) > 0) and g_XBVideo.GetFullscreen()) then
-            g_EmuCDPD.NativePresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_IMMEDIATE
+            PresentationInterval := D3DPRESENT_INTERVAL_IMMEDIATE
           else
           begin
             if ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_ONE) > 0) and g_XBVideo.GetFullscreen() then
-              g_EmuCDPD.NativePresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_ONE
+              PresentationInterval := D3DPRESENT_INTERVAL_ONE
             else
-              g_EmuCDPD.NativePresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_DEFAULT;
+              PresentationInterval := D3DPRESENT_INTERVAL_DEFAULT;
           end;
+
+{$IFDEF DXBX_USE_D3D9}
+          g_EmuCDPD.NativePresentationParameters.PresentationInterval := PresentationInterval;
+{$ELSE}
+          g_EmuCDPD.NativePresentationParameters.FullScreen_PresentationInterval := PresentationInterval;
+{$ENDIF}
         end;
 
         // detect vertex processing capabilities
@@ -1342,7 +1358,7 @@ begin
           g_EmuCDPD.CreationParameters.DeviceType,
           g_EmuCDPD.CreationParameters.hFocusWindow,
           g_EmuCDPD.CreationParameters.BehaviorFlags,
-          {var}g_EmuCDPD.NativePresentationParameters,
+          @g_EmuCDPD.NativePresentationParameters,
           PIDirect3DDevice(g_EmuCDPD.ppReturnedDeviceInterface)
         );
 
@@ -1367,6 +1383,8 @@ begin
         g_EmuCDPD.pPresentationParameters.BackBufferCount := g_EmuCDPD.NativePresentationParameters.BackBufferCount;
 
         // cache device pointer
+        // TODO -oDxbx : g_pD3DDevice is already (indirectly) assigned here,
+        // what happens with it's reference-count? This needs investigation.
         Pointer(g_pD3DDevice) := g_EmuCDPD.ppReturnedDeviceInterface^;
 
         // default NULL guid
@@ -1471,12 +1489,13 @@ begin
           {FVF=}0,
           {Pool=}D3DPOOL_MANAGED,
           {ppVertexBuffer=}@g_pDummyBuffer
+          {$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF}
         );
 
         for Streams := 0 to 8-1 do
         begin
           // Dxbx note : Why do we need a dummy stream at all?
-          g_pD3DDevice.SetStreamSource(Streams, IDirect3DVertexBuffer(g_pDummyBuffer), 1);
+          g_pD3DDevice.SetStreamSource(Streams, IDirect3DVertexBuffer(g_pDummyBuffer), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0, {$ENDIF} 1);
         end;
 
         // begin scene
@@ -1905,7 +1924,7 @@ end;
 
 procedure XTL_EmuIDirect3DDevice_GetDeviceCaps
 (
-    pCaps: PD3DCAPS8
+    pCaps: PD3DCAPS
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -1978,11 +1997,20 @@ begin
   if (VshHandleIsVertexShader(Handle)) then
   begin
     pVertexShader := PVERTEX_SHADER(VshHandleGetVertexShader(Handle).Handle);
+{$IFDEF DXBX_USE_D3D9}
+    g_pD3DDevice.SetVertexShader(IDirect3DVertexShader(pVertexShader.Handle));
+{$ELSE}
     g_pD3DDevice.SetVertexShader(pVertexShader.Handle);
+{$ENDIF}
   end
   else if (Handle = HNULL) then
   begin
+{$IFDEF DXBX_USE_D3D9}
+    g_pD3DDevice.SetVertexShader(NULL);
+    g_pD3DDevice.SetFVF(D3DFVF_XYZ or D3DFVF_TEX0);
+{$ELSE}
     g_pD3DDevice.SetVertexShader(D3DFVF_XYZ or D3DFVF_TEX0);
+{$ENDIF}
   end
   else if (Address < D3DVS_XBOX_NR_ADDRESS_SLOTS{=136}) then
   begin
@@ -1990,7 +2018,11 @@ begin
 
     if (pVertexShader2 <> NULL) then
     begin
+{$IFDEF DXBX_USE_D3D9}
+      g_pD3DDevice.SetVertexShader(IDirect3DVertexShader(PVERTEX_SHADER(pVertexShader2.Handle).Handle));
+{$ELSE}
       g_pD3DDevice.SetVertexShader(PVERTEX_SHADER(pVertexShader2.Handle).Handle);
+{$ENDIF}
     end
     else
     begin
@@ -2020,11 +2052,11 @@ begin
       _(Adapter, 'Adapter').
     LogEnd();
 
-  ret := g_pD3D.GetAdapterModeCount(g_XBVideo.GetDisplayAdapter());
+  ret := g_pD3D.GetAdapterModeCount(g_XBVideo.GetDisplayAdapter(){$IFDEF DXBX_USE_D3D9}, D3DFMT_UNKNOWN{$ENDIF});
   if ret > 0 then // Dxbx addition, to prevent underflow
   for v := 0 to ret - 1 do
   begin
-    if (g_pD3D.EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), v, {out}Mode) <> D3D_OK) then
+    if (g_pD3D.EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), {$IFDEF DXBX_USE_D3D9}D3DFMT_UNKNOWN,{$ENDIF} v, {out}Mode) <> D3D_OK) then
       break;
 
     if (Mode.Width <> 640) or (Mode.Height <> 480) then
@@ -2106,7 +2138,7 @@ begin
 
   while true do
   begin
-    Result := g_pD3D.EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), Mode+ModeAdder, D3DDISPLAYMODE(PCMode));
+    Result := g_pD3D.EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), {$IFDEF DXBX_USE_D3D9}D3DFMT_UNKNOWN,{$ENDIF} Mode+ModeAdder, D3DDISPLAYMODE(PCMode));
     if (Result <> D3D_OK) or (PCMode.Width = 640) and (PCMode.Height = 480) then
       break;
 
@@ -2179,7 +2211,7 @@ begin
     PCRamp.blue[v] := pRamp.blue[v];
    end;
 
-  g_pD3DDevice.SetGammaRamp(dwPCFlags, PCRamp);
+  g_pD3DDevice.SetGammaRamp({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} dwPCFlags, PCRamp);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2240,7 +2272,11 @@ begin
         #13#10');',
         [Token]);
 
+{$IFDEF DXBX_USE_D3D9}
+  Result := IDirect3DStateBlock9(Token).Capture();
+{$ELSE}
   Result := g_pD3DDevice.CaptureStateBlock(Token);
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -2257,7 +2293,11 @@ begin
         #13#10');',
        [Token]);
 
+{$IFDEF DXBX_USE_D3D9}
+  Result := IDirect3DStateBlock9(Token).Apply();
+{$ELSE}
   Result := g_pD3DDevice.ApplyStateBlock(Token);
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -2274,7 +2314,11 @@ begin
         #13#10');',
         [pToken]);
 
+{$IFDEF DXBX_USE_D3D9}
+  Result := g_pD3DDevice.EndStateBlock(PIDirect3DStateBlock(pToken));
+{$ELSE}
   Result := g_pD3DDevice.EndStateBlock({out}pToken^);
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -2317,6 +2361,16 @@ begin
   D3DXSaveSurfaceToFileA(FileName, D3DXIFF_BMP, pSourceSurface.EmuSurface8, nil, nil);
   }
 
+{$IFDEF DXBX_USE_D3D9}
+  Result := IDirect3DDevice9(g_pD3DDevice).UpdateSurface // was CopyRects
+  (
+    IDirect3DSurface9(pSourceSurface.Emu.Surface),
+    pSourceRectsArray,
+    //cRects, {$MESSAGE 'fixme'} // What should happen to cRects?
+    IDirect3DSurface9(pDestinationSurface.Emu.Surface),
+    pDestPointsArray
+  );
+{$ELSE}
   Result := g_pD3DDevice.CopyRects
   (
     IDirect3DSurface(pSourceSurface.Emu.Surface),
@@ -2325,6 +2379,7 @@ begin
     IDirect3DSurface(pDestinationSurface.Emu.Surface),
     pDestPointsArray
   );
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -2409,7 +2464,7 @@ begin
 
   pGammaRamp := PD3DGAMMARAMP(malloc(sizeof(D3DGAMMARAMP)));
 
-  g_pD3DDevice.GetGammaRamp({out}pGammaRamp^);
+  g_pD3DDevice.GetGammaRamp({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} {out}pGammaRamp^);
 
   for v := 0 to 256-1 do
   begin
@@ -2455,7 +2510,7 @@ begin
         begin
             // create a buffer to return
             // TODO -oCXBX: Verify the surface is always 640x480
-            g_pD3DDevice.CreateImageSurface(640, 480, D3DFMT_A8R8G8B8, {out}{IDirect3DSurface(pCachedPrimarySurface));
+            IDirect3DDevice_CreateImageSurface(g_pD3DDevice, 640, 480, D3DFMT_A8R8G8B8, {out}{IDirect3DSurface(pCachedPrimarySurface));
          end;
 
         pBackBuffer.Emu.Surface := pCachedPrimarySurface;
@@ -2485,7 +2540,7 @@ begin
   if (BackBuffer = -1) then
       BackBuffer := 0; // TODO : Use actual FrontBuffer number here
 
-  hRet := g_pD3DDevice.GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, @(pBackBuffer.Emu.Surface));
+  hRet := g_pD3DDevice.GetBackBuffer({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} BackBuffer, D3DBACKBUFFER_TYPE_MONO, @(pBackBuffer.Emu.Surface));
 
   if (hRet <> D3D_OK) then
     DxbxKrnlCleanup('Unable to retrieve back buffer');
@@ -2532,7 +2587,7 @@ end;
 
 function XTL_EmuIDirect3DDevice_GetBackMaterial
 (
-  pMaterial: PD3DMaterial8
+  pMaterial: PD3DMaterial
 ): HRESULT; stdcall;
 // Branch:Dxbx  Translator:Shadow_Tj  Done:100
 begin
@@ -2553,7 +2608,7 @@ end;
 
 function XTL_EmuIDirect3DDevice_SetViewport
 (
-  pViewport: PD3DVIEWPORT8
+  pViewport: PD3DVIEWPORT
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:162+StrickerX3_patch  Translator:Shadow_Tj  Done:100
 (*
@@ -2562,7 +2617,7 @@ var
   dwY: DWORD;
   dwWidth: DWORD;
   dwHeight: DWORD;
-  currentViewport: D3DVIEWPORT8;
+  currentViewport: D3DVIEWPORT;
 *)
 begin
   EmuSwapFS(fsWindows);
@@ -2635,7 +2690,7 @@ end;
 
 function XTL_EmuIDirect3DDevice_GetViewport
 (
-  pViewport: PD3DVIEWPORT8
+  pViewport: PD3DVIEWPORT
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -2671,7 +2726,7 @@ var
   fScaleZ: Float;
   fOffsetX: Float;
   fOffsetY: Float;}
-  Viewport: D3DVIEWPORT8;
+  Viewport: D3DVIEWPORT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -3075,6 +3130,9 @@ begin
     end
     else
     begin
+{$IFDEF DXBX_USE_D3D9}
+  {$MESSAGE 'fixme'}
+{$ELSE}
       hRet := g_pD3DDevice.CreateVertexShader
       (
           pRecompiledDeclaration,
@@ -3082,6 +3140,7 @@ begin
           {out}Handle,
           g_dwVertexShaderUsage   // TODO -oCXBX: HACK: Xbox has extensions!
       );
+{$ENDIF}
     end;
     if Assigned(pRecompiledBuffer) then
     begin
@@ -3093,13 +3152,23 @@ begin
     if (FAILED(hRet)) then
     begin
       EmuWarning('Trying fallback:'#13#10'%s', [dummy]);
-      hRet := D3DXAssembleShader(dummy,
-                                 strlen(dummy),
-                                 {Flags=}D3DXASM_SKIPVALIDATION,
-                                 {ppConstants}NULL,
-                                 {ppCompiledShader}@pRecompiledBuffer,
-                                 {ppCompilationErrors}NULL);
+      hRet := D3DXAssembleShader(
+        dummy,
+        strlen(dummy),
+{$IFDEF DXBX_USE_D3D9}
+        {pDefines=}nil,
+        {pInclude=}nil,
+        {Flags=}D3DXSHADER_SKIPVALIDATION,
+{$ELSE}
+        {Flags=}D3DXASM_SKIPVALIDATION,
+        {ppConstants}NULL,
+{$ENDIF}
+        {ppCompiledShader}@pRecompiledBuffer,
+        {ppCompilationErrors}NULL);
       if not (FAILED(hRet)) then // Dxbx addition
+{$IFDEF DXBX_USE_D3D9}
+        ; {$MESSAGE 'fixme'}
+{$ELSE}
         hRet := g_pD3DDevice.CreateVertexShader
         (
             pRecompiledDeclaration,
@@ -3107,6 +3176,7 @@ begin
             {out}Handle,
             g_dwVertexShaderUsage
         );
+{$ENDIF}
     end;
     //*/
   end;
@@ -3202,12 +3272,22 @@ begin
       [Register_, pConstantData, ConstantCount]);
 
 // Dxbx note : Is this what's needed?
+{$IFDEF DXBX_USE_D3D9}
+  g_pD3DDevice.SetPixelShaderConstantF
+  (
+    Register_,
+    PSingle(pConstantData),
+    ConstantCount
+  );
+{$ELSE}
   g_pD3DDevice.SetPixelShaderConstant
   (
     Register_,
     {untyped const}pConstantData^,
     ConstantCount
   );
+{$ENDIF}
+
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
@@ -3260,12 +3340,21 @@ begin
   if g_BuildVersion <= 4361 then
     Inc(Register_, X_VSCM_CORRECTION{=96});
 
+{$IFDEF DXBX_USE_D3D9}
+  hRet := g_pD3DDevice.SetVertexShaderConstantF
+  (
+    Register_,
+    PSingle(pConstantData),
+    ConstantCount
+  );
+{$ELSE}
   hRet := g_pD3DDevice.SetVertexShaderConstant
   (
     Register_,
     pConstantData,
     ConstantCount
   );
+{$ENDIF}
 
   if (FAILED(hRet)) then
   begin
@@ -3372,7 +3461,11 @@ begin
   end
   else
   begin
+{$IFDEF DXBX_USE_D3D9}
+    {$MESSAGE 'fixme'}
+{$ELSE}
     g_pD3DDevice.DeletePixelShader(Handle);
+{$ENDIF}
   end;
 
   EmuSwapFS(fsXbox);
@@ -3406,7 +3499,19 @@ begin
   // assemble the shader
   pShader := nil;
   pErrors := nil;
-  Result := D3DXAssembleShader(P_char(ConvertedPixelShader), Length(ConvertedPixelShader), {Flags=}0, {ppConstants=}NULL, {ppCompiledShader=}@pShader, {ppCompilationErrors}@pErrors);
+  Result := D3DXAssembleShader(
+    P_char(ConvertedPixelShader),
+    Length(ConvertedPixelShader),
+{$IFDEF DXBX_USE_D3D9}
+    {pDefines=}nil,
+    {pInclude=}nil,
+    {Flags=}0,
+{$ELSE}
+    {Flags=}0,
+    {ppConstants=}NULL,
+{$ENDIF}
+    {ppCompiledShader=}@pShader,
+    {ppCompilationErrors}@pErrors);
 
   if Assigned(pShader) then
   begin
@@ -3417,7 +3522,11 @@ begin
       Result := g_pD3DDevice.CreatePixelShader
       (
         pFunction,
+{$IFDEF DXBX_USE_D3D9}
+        PIDirect3DPixelShader9(pHandle) {$MESSAGE 'fixme'} // @pHandle?
+{$ELSE}
         {out}pHandle^
+{$ENDIF}
       );
 
     // Dxbx note : We must release pShader here, else we would have a resource leak!
@@ -3484,13 +3593,32 @@ begin
       pErrors := nil;
 
       // assemble the shader
-      Result := D3DXAssembleShader(szDiffusePixelShader, strlen(szDiffusePixelShader), {Flags=}0, {ppConstants=}NULL, {ppCompiledShader=}@pShader, {ppCompilationErrors}@pErrors);
+      Result := D3DXAssembleShader(
+        szDiffusePixelShader,
+        strlen(szDiffusePixelShader),
+{$IFDEF DXBX_USE_D3D9}
+        {pDefines=}nil,
+        {pInclude=}nil,
+        {Flags=}0,
+{$ELSE}
+        {Flags=}0,
+        {ppConstants=}NULL,
+{$ENDIF}
+        {ppCompiledShader=}@pShader,
+        {ppCompilationErrors}@pErrors);
 
       if Assigned(pShader) then
       begin
         if (Result = D3D_OK) then
           // create the shader device handle
-          Result := g_pD3DDevice.CreatePixelShader(ID3DXBuffer(pShader).GetBufferPointer(), {out}dwHandle);
+          Result := g_pD3DDevice.CreatePixelShader(
+            ID3DXBuffer(pShader).GetBufferPointer(),
+{$IFDEF DXBX_USE_D3D9}
+            PIDirect3DPixelShader9(dwHandle) {$MESSAGE 'fixme'} // @dwHandle?
+{$ELSE}
+            {out}dwHandle
+{$ENDIF}
+            );
 
         // Dxbx note : We must release pShader here, else we would have a resource leak!
         ID3DXBuffer(pShader)._Release;
@@ -4991,6 +5119,7 @@ begin
         (
           dwSize, 0, 0, D3DPOOL_MANAGED,
           {ppVertexBuffer=}@(pVertexBuffer.Emu.VertexBuffer)
+          {$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF}
         );
 
         if (FAILED(hRet)) then
@@ -6239,6 +6368,7 @@ begin
     0,
     D3DPOOL_MANAGED,
     {ppVertexBuffer=}@(pD3DVertexBuffer.Emu.VertexBuffer)
+    {$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF}
   );
 
   if (FAILED(hRet)) then
@@ -7784,7 +7914,7 @@ begin
   end;
   {$endif}
 
-  Result := g_pD3DDevice.SetStreamSource(StreamNumber, IDirect3DVertexBuffer(pVertexBuffer), Stride);
+  Result := g_pD3DDevice.SetStreamSource(StreamNumber, IDirect3DVertexBuffer(pVertexBuffer), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0, {$ENDIF} Stride);
 
   if FAILED(RESULT) then
     DxbxKrnlCleanup('SetStreamSource Failed!');
@@ -7824,13 +7954,24 @@ begin
 //    with vScale do begin x := 2.0 / 640; y := -2.0 / 480; z := 0.0; w := 0.0; end;
 //    with vOffset do begin x := -1.0; y := 1.0; z := 0.0; w := 1.0; end;
 
+{$IFDEF DXBX_USE_D3D9}
+    g_pD3DDevice.SetVertexShaderConstantF({58=}X_VSCM_RESERVED_CONSTANT1{=-38}+X_VSCM_CORRECTION{=96}, @vScale, 1);
+    g_pD3DDevice.SetVertexShaderConstantF({59=}X_VSCM_RESERVED_CONSTANT2{=-37}+X_VSCM_CORRECTION{=96}, @vOffset, 1);
+{$ELSE}
     g_pD3DDevice.SetVertexShaderConstant({58=}X_VSCM_RESERVED_CONSTANT1{=-38}+X_VSCM_CORRECTION{=96}, @vScale, 1);
     g_pD3DDevice.SetVertexShaderConstant({59=}X_VSCM_RESERVED_CONSTANT2{=-37}+X_VSCM_CORRECTION{=96}, @vOffset, 1);
+{$ENDIF}
   end;
 
   if (VshHandleIsVertexShader(Handle)) then
   begin
-    RealHandle := PVERTEX_SHADER(VshHandleGetVertexShader(Handle).Handle).Handle
+    RealHandle := PVERTEX_SHADER(VshHandleGetVertexShader(Handle).Handle).Handle;
+
+{$IFDEF DXBX_USE_D3D9}
+    Result := g_pD3DDevice.SetVertexShader(IDirect3DVertexShader(RealHandle));
+{$ELSE}
+    Result := g_pD3DDevice.SetVertexShader(RealHandle);
+{$ENDIF}
   end
   else
   begin
@@ -7840,8 +7981,14 @@ begin
         g_VertexShaderSlots[RealHandle] := 0;
 
     RealHandle := Handle;
+
+{$IFDEF DXBX_USE_D3D9}
+    g_pD3DDevice.SetVertexShader(NULL);
+    Result := g_pD3DDevice.SetFVF(RealHandle);
+{$ELSE}
+    Result := g_pD3DDevice.SetVertexShader(RealHandle);
+{$ENDIF}
   end;
-  Result := g_pD3DDevice.SetVertexShader(RealHandle);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8096,7 +8243,7 @@ begin
     // TODO -oCXBX: caching (if it becomes noticably slow to recreate the buffer each time)
     if(not bActiveIB) then
     begin
-      g_pD3DDevice.CreateIndexBuffer(VertexCount*SizeOf(Word), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
+      IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, VertexCount*SizeOf(Word), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
 
       if (pIndexBuffer = nil) then
           DxbxKrnlCleanup('Could not create index buffer! (%d bytes)', [VertexCount*SizeOf(Word)]);
@@ -8261,7 +8408,7 @@ end;
 
 function XTL_EmuIDirect3DDevice_SetMaterial
 (
-  {CONST} pMaterial: PD3DMaterial8
+  {CONST} pMaterial: PD3DMaterial
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -9107,7 +9254,7 @@ function XTL_EmuIDirect3D_GetDeviceCaps
 (
   Adapter: UINT;
   DeviceType: D3DDEVTYPE;
-  pCaps: PD3DCAPS8
+  pCaps: PD3DCAPS
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -9469,7 +9616,7 @@ var
   Out: D3DMATRIX;
   mtxProjection: D3DMATRIX;
   mtxViewport: D3DMATRIX;
-  Viewport: D3DVIEWPORT8;
+  Viewport: D3DVIEWPORT;
   ClipWidth, ClipHeight, ClipX, ClipY, Width, Height: Float;
 begin
   EmuSwapFS(fsWindows);
@@ -10113,7 +10260,7 @@ end;
 
 function XTL_EmuIDirect3DDevice_SetBackMaterial
 (
-  pMaterial: PD3DMaterial8
+  pMaterial: PD3DMaterial
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:161  Translator:PatrickvL  Done:100
 begin

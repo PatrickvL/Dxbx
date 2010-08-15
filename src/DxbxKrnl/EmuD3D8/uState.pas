@@ -26,7 +26,11 @@ uses
   // Delphi
   Windows,
   // DirectX
+{$IFDEF DXBX_USE_D3D9}
+  Direct3D9,
+{$ELSE}
   Direct3D8, // IDirect3DBaseTexture8
+{$ENDIF}
   // Dxbx
   uTypes,
   uConvert,

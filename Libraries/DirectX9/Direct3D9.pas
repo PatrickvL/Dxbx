@@ -3451,7 +3451,24 @@ type
   IDirect3DSwapChain9 = interface;
   IDirect3DQuery9 = interface;
 
-  
+  PIDirect3D9 = ^IDirect3D9;
+  PIDirect3DDevice9 = ^IDirect3DDevice9;
+  PIDirect3DStateBlock9 = ^IDirect3DStateBlock9;
+  PIDirect3DVertexDeclaration9 = ^IDirect3DVertexDeclaration9;
+  PIDirect3DVertexShader9 = ^IDirect3DVertexShader9;
+  PIDirect3DPixelShader9 = ^IDirect3DPixelShader9;
+  PIDirect3DResource9 = ^IDirect3DResource9;
+  PIDirect3DBaseTexture9 = ^IDirect3DBaseTexture9;
+  PIDirect3DTexture9 = ^IDirect3DTexture9;
+  PIDirect3DVolumeTexture9 = ^IDirect3DVolumeTexture9;
+  PIDirect3DCubeTexture9 = ^IDirect3DCubeTexture9;
+  PIDirect3DVertexBuffer9 = ^IDirect3DVertexBuffer9;
+  PIDirect3DIndexBuffer9 = ^IDirect3DIndexBuffer9;
+  PIDirect3DSurface9 = ^IDirect3DSurface9;
+  PIDirect3DVolume9 = ^IDirect3DVolume9;
+  PIDirect3DSwapChain9 = ^IDirect3DSwapChain9;
+  PIDirect3DQuery9 = ^IDirect3DQuery9;
+
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(IDirect3D9);'}
   {$EXTERNALSYM IDirect3D9}
   IDirect3D9 = interface(IUnknown)
@@ -3495,41 +3512,41 @@ type
     function TestCooperativeLevel: HResult; stdcall;
     function GetAvailableTextureMem: LongWord; stdcall;
     function EvictManagedResources: HResult; stdcall;
-    function GetDirect3D(out ppD3D9: IDirect3D9): HResult; stdcall;
+    function GetDirect3D({out} ppD3D9: PIDirect3D9): HResult; stdcall;
     function GetDeviceCaps(out pCaps: TD3DCaps9): HResult; stdcall;
     function GetDisplayMode(iSwapChain: LongWord; out pMode: TD3DDisplayMode): HResult; stdcall;
     function GetCreationParameters(out pParameters: TD3DDeviceCreationParameters): HResult; stdcall;
     function SetCursorProperties(XHotSpot, YHotSpot: LongWord; pCursorBitmap: IDirect3DSurface9): HResult; stdcall;
     procedure SetCursorPosition(XScreenSpace, YScreenSpace: LongWord; Flags: DWord); stdcall;
     function ShowCursor(bShow: BOOL): BOOL; stdcall;
-    function CreateAdditionalSwapChain(const pPresentationParameters: TD3DPresentParameters; out pSwapChain: IDirect3DSwapChain9): HResult; stdcall;
-    function GetSwapChain(iSwapChain: LongWord; out pSwapChain: IDirect3DSwapChain9): HResult; stdcall;
+    function CreateAdditionalSwapChain(const pPresentationParameters: TD3DPresentParameters; {out} pSwapChain: PIDirect3DSwapChain9): HResult; stdcall;
+    function GetSwapChain(iSwapChain: LongWord; {out} pSwapChain: PIDirect3DSwapChain9): HResult; stdcall;
     function GetNumberOfSwapChains: LongWord; stdcall;
     function Reset(const pPresentationParameters: TD3DPresentParameters): HResult; stdcall;
     function Present(pSourceRect, pDestRect: PRect; hDestWindowOverride: HWND; pDirtyRegion: PRgnData): HResult; stdcall;
-    function GetBackBuffer(iSwapChain: LongWord; iBackBuffer: LongWord; _Type: TD3DBackBufferType; out ppBackBuffer: IDirect3DSurface9): HResult; stdcall;
+    function GetBackBuffer(iSwapChain: LongWord; iBackBuffer: LongWord; _Type: TD3DBackBufferType; {out} ppBackBuffer: PIDirect3DSurface9): HResult; stdcall;
     function GetRasterStatus(iSwapChain: LongWord; out pRasterStatus: TD3DRasterStatus): HResult; stdcall;
     function SetDialogBoxMode(bEnableDialogs: BOOL): HResult; stdcall;
     procedure SetGammaRamp(iSwapChain: LongWord; Flags: DWord; const pRamp: TD3DGammaRamp); stdcall;
     procedure GetGammaRamp(iSwapChain: LongWord; out pRamp: TD3DGammaRamp); stdcall;
-    function CreateTexture(Width, Height, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool; out ppTexture: IDirect3DTexture9; pSharedHandle: PHandle): HResult; stdcall;
-    function CreateVolumeTexture(Width, Height, Depth, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool; out ppVolumeTexture: IDirect3DVolumeTexture9; pSharedHandle: PHandle): HResult; stdcall;
-    function CreateCubeTexture(EdgeLength, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool; out ppCubeTexture: IDirect3DCubeTexture9; pSharedHandle: PHandle): HResult; stdcall;
-    function CreateVertexBuffer(Length: LongWord; Usage, FVF: DWord; Pool: TD3DPool; out ppVertexBuffer: IDirect3DVertexBuffer9; pSharedHandle: PHandle): HResult; stdcall;
-    function CreateIndexBuffer(Length: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool; out ppIndexBuffer: IDirect3DIndexBuffer9; pSharedHandle: PHandle): HResult; stdcall;
-    function CreateRenderTarget(Width, Height: LongWord; Format: TD3DFormat; MultiSample: TD3DMultiSampleType; MultisampleQuality: DWORD; Lockable: BOOL; out ppSurface: IDirect3DSurface9; pSharedHandle: PHandle): HResult; stdcall;
-    function CreateDepthStencilSurface(Width, Height: LongWord; Format: TD3DFormat; MultiSample: TD3DMultiSampleType; MultisampleQuality: DWORD; Discard: BOOL; out ppSurface: IDirect3DSurface9; pSharedHandle: PHandle): HResult; stdcall;
+    function CreateTexture(Width, Height, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool; {out} ppTexture: PIDirect3DTexture9; pSharedHandle: PHandle): HResult; stdcall;
+    function CreateVolumeTexture(Width, Height, Depth, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool; {out} ppVolumeTexture: PIDirect3DVolumeTexture9; pSharedHandle: PHandle): HResult; stdcall;
+    function CreateCubeTexture(EdgeLength, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool; {out} ppCubeTexture: PIDirect3DCubeTexture9; pSharedHandle: PHandle): HResult; stdcall;
+    function CreateVertexBuffer(Length: LongWord; Usage, FVF: DWord; Pool: TD3DPool; {out} ppVertexBuffer: PIDirect3DVertexBuffer9; pSharedHandle: PHandle): HResult; stdcall;
+    function CreateIndexBuffer(Length: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool; {out} ppIndexBuffer: PIDirect3DIndexBuffer9; pSharedHandle: PHandle): HResult; stdcall;
+    function CreateRenderTarget(Width, Height: LongWord; Format: TD3DFormat; MultiSample: TD3DMultiSampleType; MultisampleQuality: DWORD; Lockable: BOOL; {out} ppSurface: PIDirect3DSurface9; pSharedHandle: PHandle): HResult; stdcall;
+    function CreateDepthStencilSurface(Width, Height: LongWord; Format: TD3DFormat; MultiSample: TD3DMultiSampleType; MultisampleQuality: DWORD; Discard: BOOL; {out} ppSurface: PIDirect3DSurface9; pSharedHandle: PHandle): HResult; stdcall;
     function UpdateSurface(pSourceSurface: IDirect3DSurface9; pSourceRect: PRect; pDestinationSurface: IDirect3DSurface9; pDestPoint: PPoint): HResult; stdcall;
     function UpdateTexture(pSourceTexture, pDestinationTexture: IDirect3DBaseTexture9): HResult; stdcall;
     function GetRenderTargetData(pRenderTarget, pDestSurface: IDirect3DSurface9): HResult; stdcall;
     function GetFrontBufferData(iSwapChain: LongWord; pDestSurface: IDirect3DSurface9): HResult; stdcall;
     function StretchRect(pSourceSurface: IDirect3DSurface9; pSourceRect: PRect; pDestSurface: IDirect3DSurface9; pDestRect: PRect; Filter: TD3DTextureFilterType): HResult; stdcall;
     function ColorFill(pSurface: IDirect3DSurface9; pRect: PRect; color: TD3DColor): HResult; stdcall;
-    function CreateOffscreenPlainSurface(Width, Height: LongWord; Format: TD3DFormat; Pool: TD3DPool; out ppSurface: IDirect3DSurface9; pSharedHandle: PHandle): HResult; stdcall;
+    function CreateOffscreenPlainSurface(Width, Height: LongWord; Format: TD3DFormat; Pool: TD3DPool; {out} ppSurface: PIDirect3DSurface9; pSharedHandle: PHandle): HResult; stdcall;
     function SetRenderTarget(RenderTargetIndex: DWORD; pRenderTarget: IDirect3DSurface9): HResult; stdcall;
-    function GetRenderTarget(RenderTargetIndex: DWORD; out ppRenderTarget: IDirect3DSurface9): HResult; stdcall;
+    function GetRenderTarget(RenderTargetIndex: DWORD; {out} ppRenderTarget: PIDirect3DSurface9): HResult; stdcall;
     function SetDepthStencilSurface(pNewZStencil: IDirect3DSurface9): HResult; stdcall;
-    function GetDepthStencilSurface(out ppZStencilSurface: IDirect3DSurface9): HResult; stdcall;
+    function GetDepthStencilSurface({out} ppZStencilSurface: PIDirect3DSurface9): HResult; stdcall;
     function BeginScene: HResult; stdcall;
     function EndScene: HResult; stdcall;
     function Clear(Count: DWord; pRects: PD3DRect; Flags: DWord; Color: TD3DColor; Z: Single; Stencil: DWord): HResult; stdcall;
@@ -3548,12 +3565,12 @@ type
     function GetClipPlane(Index: DWord; pPlane: PSingle): HResult; stdcall;
     function SetRenderState(State: TD3DRenderStateType; Value: DWord): HResult; stdcall;
     function GetRenderState(State: TD3DRenderStateType; out pValue: DWord): HResult; stdcall;
-    function CreateStateBlock(_Type: TD3DStateBlockType; out ppSB: IDirect3DStateBlock9): HResult; stdcall;
+    function CreateStateBlock(_Type: TD3DStateBlockType; {out} ppSB: PIDirect3DStateBlock9): HResult; stdcall;
     function BeginStateBlock: HResult; stdcall;
-    function EndStateBlock(out ppSB: IDirect3DStateBlock9): HResult; stdcall;
+    function EndStateBlock({out} ppSB: PIDirect3DStateBlock9): HResult; stdcall;
     function SetClipStatus(const pClipStatus: TD3DClipStatus9): HResult; stdcall;
     function GetClipStatus(out pClipStatus: TD3DClipStatus9): HResult; stdcall;
-    function GetTexture(Stage: DWord; out ppTexture: IDirect3DBaseTexture9): HResult; stdcall;
+    function GetTexture(Stage: DWord; {out} ppTexture: PIDirect3DBaseTexture9): HResult; stdcall;
     function SetTexture(Stage: DWord; pTexture: IDirect3DBaseTexture9): HResult; stdcall;
     function GetTextureStageState(Stage: DWord; _Type: TD3DTextureStageStateType; out pValue: DWord): HResult; stdcall;
     function SetTextureStageState(Stage: DWord; _Type: TD3DTextureStageStateType; Value: DWord): HResult; stdcall;
@@ -3575,14 +3592,14 @@ type
     function DrawPrimitiveUP(PrimitiveType: TD3DPrimitiveType; PrimitiveCount: LongWord; const pVertexStreamZeroData; VertexStreamZeroStride: LongWord): HResult; stdcall;
     function DrawIndexedPrimitiveUP(PrimitiveType: TD3DPrimitiveType; MinVertexIndex, NumVertice, PrimitiveCount: LongWord; const pIndexData; IndexDataFormat: TD3DFormat; const pVertexStreamZeroData; VertexStreamZeroStride: LongWord): HResult; stdcall;
     function ProcessVertices(SrcStartIndex, DestIndex, VertexCount: LongWord; pDestBuffer: IDirect3DVertexBuffer9; pVertexDecl: IDirect3DVertexDeclaration9; Flags: DWord): HResult; stdcall;
-    function CreateVertexDeclaration(pVertexElements: PD3DVertexElement9; out ppDecl: IDirect3DVertexDeclaration9): HResult; stdcall;
+    function CreateVertexDeclaration(pVertexElements: PD3DVertexElement9; {out} ppDecl: PIDirect3DVertexDeclaration9): HResult; stdcall;
     function SetVertexDeclaration(pDecl: IDirect3DVertexDeclaration9): HResult; stdcall;
-    function GetVertexDeclaration(out ppDecl: IDirect3DVertexDeclaration9): HResult; stdcall;
+    function GetVertexDeclaration({out} ppDecl: PIDirect3DVertexDeclaration9): HResult; stdcall;
     function SetFVF(FVF: DWORD): HResult; stdcall;
     function GetFVF(out FVF: DWORD): HResult; stdcall;
-    function CreateVertexShader(pFunction: PDWord; out ppShader: IDirect3DVertexShader9): HResult; stdcall;
+    function CreateVertexShader(pFunction: PDWord; {out} ppShader: PIDirect3DVertexShader9): HResult; stdcall;
     function SetVertexShader(pShader: IDirect3DVertexShader9): HResult; stdcall;
-    function GetVertexShader(out ppShader: IDirect3DVertexShader9): HResult; stdcall;
+    function GetVertexShader({out} ppShader: PIDirect3DVertexShader9): HResult; stdcall;
     function SetVertexShaderConstantF(StartRegister: LongWord; pConstantData: PSingle; Vector4fCount: LongWord): HResult; stdcall;
     function GetVertexShaderConstantF(StartRegister: LongWord; pConstantData: PSingle; Vector4fCount: LongWord): HResult; stdcall;
     function SetVertexShaderConstantI(StartRegister: LongWord; pConstantData: PInteger; Vector4iCount: LongWord): HResult; stdcall;
@@ -3590,14 +3607,14 @@ type
     function SetVertexShaderConstantB(StartRegister: LongWord; pConstantData: PBOOL; BoolCount: LongWord): HResult; stdcall;
     function GetVertexShaderConstantB(StartRegister: LongWord; pConstantData: PBOOL; BoolCount: LongWord): HResult; stdcall;
     function SetStreamSource(StreamNumber: LongWord; pStreamData: IDirect3DVertexBuffer9; OffsetInBytes, Stride: LongWord): HResult; stdcall;
-    function GetStreamSource(StreamNumber: LongWord; out ppStreamData: IDirect3DVertexBuffer9; out pOffsetInBytes, pStride: LongWord): HResult; stdcall;
+    function GetStreamSource(StreamNumber: LongWord; {out} ppStreamData: PIDirect3DVertexBuffer9; out pOffsetInBytes, pStride: LongWord): HResult; stdcall;
     function SetStreamSourceFreq(StreamNumber: LongWord; Setting: LongWord): HResult; stdcall;
     function GetStreamSourceFreq(StreamNumber: LongWord; out Setting: LongWord): HResult; stdcall;
     function SetIndices(pIndexData: IDirect3DIndexBuffer9): HResult; stdcall;
-    function GetIndices(out ppIndexData: IDirect3DIndexBuffer9): HResult; stdcall;
-    function CreatePixelShader(pFunction: PDWord; out ppShader: IDirect3DPixelShader9): HResult; stdcall;
+    function GetIndices({out} ppIndexData: PIDirect3DIndexBuffer9): HResult; stdcall;
+    function CreatePixelShader(pFunction: PDWord; {out} ppShader: PIDirect3DPixelShader9): HResult; stdcall;
     function SetPixelShader(pShader: IDirect3DPixelShader9): HResult; stdcall;
-    function GetPixelShader(out ppShader: IDirect3DPixelShader9): HResult; stdcall;
+    function GetPixelShader({out} ppShader: PIDirect3DPixelShader9): HResult; stdcall;
     function SetPixelShaderConstantF(StartRegister: LongWord; pConstantData: PSingle; Vector4fCount: LongWord): HResult; stdcall;
     function GetPixelShaderConstantF(StartRegister: LongWord; pConstantData: PSingle; Vector4fCount: LongWord): HResult; stdcall;
     function SetPixelShaderConstantI(StartRegister: LongWord; pConstantData: PInteger; Vector4iCount: LongWord): HResult; stdcall;
@@ -3607,7 +3624,7 @@ type
     function DrawRectPatch(Handle: LongWord; pNumSegs: PSingle; pTriPatchInfo: PD3DRectPatchInfo): HResult; stdcall;
     function DrawTriPatch(Handle: LongWord; pNumSegs: PSingle; pTriPatchInfo: PD3DTriPatchInfo): HResult; stdcall;
     function DeletePatch(Handle: LongWord): HResult; stdcall;
-    function CreateQuery(_Type: TD3DQueryType; out ppQuery: IDirect3DQuery9): HResult; stdcall;
+    function CreateQuery(_Type: TD3DQueryType; {out} ppQuery: PIDirect3DQuery9): HResult; stdcall;
   end;
 
   {$EXTERNALSYM IDirect3DDevice9Helper}
@@ -3654,7 +3671,7 @@ type
   IDirect3DStateBlock9 = interface(IUnknown)
     ['{B07C4FE5-310D-4ba8-A23C-4F0F206F218B}']
      (*** IDirect3DStateBlock9 methods ***)
-    function GetDevice(out ppDevice: IDirect3DDevice9): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice9): HResult; stdcall;
     function Capture: HResult; stdcall;
     function Apply: HResult; stdcall;
   end;
@@ -3674,10 +3691,10 @@ type
     (*** IDirect3DSwapChain9 methods ***)
     function Present(pSourceRect, pDestRect: PRect; hDestWindowOverride: HWND; pDirtyRegion: PRgnData; dwFlags: DWORD): HResult; stdcall;
     function GetFrontBufferData(pDestSurface: IDirect3DSurface9): HResult; stdcall;
-    function GetBackBuffer(iBackBuffer: LongWord; _Type: TD3DBackBufferType; out ppBackBuffer: IDirect3DSurface9): HResult; stdcall;
+    function GetBackBuffer(iBackBuffer: LongWord; _Type: TD3DBackBufferType; {out} ppBackBuffer: PIDirect3DSurface9): HResult; stdcall;
     function GetRasterStatus(out pRasterStatus: TD3DRasterStatus): HResult; stdcall;
     function GetDisplayMode(out pMode: TD3DDisplayMode): HResult; stdcall;
-    function GetDevice(out ppDevice: IDirect3DDevice9): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice9): HResult; stdcall;
     function GetPresentParameters(out pPresentationParameters: TD3DPresentParameters): HResult; stdcall;
   end;
 
@@ -3696,7 +3713,7 @@ type
   IDirect3DResource9 = interface(IUnknown)
     ['{05EEC05D-8F7D-4362-B999-D1BAF357C704}']
     (*** IDirect3DResource9 methods ***)
-    function GetDevice(out ppDevice: IDirect3DDevice9): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice9): HResult; stdcall;
     function SetPrivateData(const refguid: TGUID; const pData: Pointer; SizeOfData, Flags: DWord): HResult; stdcall;
     function GetPrivateData(const refguid: TGUID; pData: Pointer; out pSizeOfData: DWord): HResult; stdcall;
     function FreePrivateData(const refguid: TGUID): HResult; stdcall;
@@ -3712,7 +3729,7 @@ type
   IDirect3DVertexDeclaration9 = interface(IUnknown)
     ['{DD13C59C-36FA-4098-A8FB-C7ED39DC8546}']
     (*** IDirect3DVertexDeclaration9 methods ***)
-    function GetDevice(out ppDevice: IDirect3DDevice9): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice9): HResult; stdcall;
     function GetDeclaration(pElement: PD3DVertexElement9; out pNumElements: LongWord): HResult; stdcall;
   end;
 
@@ -3729,7 +3746,7 @@ type
   IDirect3DVertexShader9 = interface(IUnknown)
     ['{EFC5557E-6265-4613-8A94-43857889EB36}']
     (*** IDirect3DVertexShader9 methods ***)
-    function GetDevice(out ppDevice: IDirect3DDevice9): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice9): HResult; stdcall;
     function GetFunction(pData: Pointer; out pSizeOfData: LongWord): HResult; stdcall;
   end;
 
@@ -3747,7 +3764,7 @@ type
   IDirect3DPixelShader9 = interface(IUnknown)
     ['{6D3BDBDC-5B02-4415-B852-CE5E8BCCB289}']
     (*** IDirect3DPixelShader9 methods ***)
-    function GetDevice(out ppDevice: IDirect3DDevice9): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice9): HResult; stdcall;
     function GetFunction(pData: Pointer; out pSizeOfData: LongWord): HResult; stdcall;
   end;
 
@@ -3780,7 +3797,7 @@ type
     ['{85C31227-3DE5-4f00-9B3A-F11AC38C18B5}']
     (*** IDirect3DTexture9 methods ***)
     function GetLevelDesc(Level: LongWord; out pDesc: TD3DSurfaceDesc): HResult; stdcall;
-    function GetSurfaceLevel(Level: LongWord; out ppSurfaceLevel: IDirect3DSurface9): HResult; stdcall;
+    function GetSurfaceLevel(Level: LongWord; {out} ppSurfaceLevel: PIDirect3DSurface9): HResult; stdcall;
     function LockRect(Level: LongWord; out pLockedRect: TD3DLockedRect; pRect: PRect; Flags: DWord): HResult; stdcall;
     function UnlockRect(Level: LongWord): HResult; stdcall;
     function AddDirtyRect(pDirtyRect: PRect): HResult; stdcall;
@@ -3811,7 +3828,7 @@ type
     ['{2518526C-E789-4111-A7B9-47EF328D13E6}']
     (*** IDirect3DVolumeTexture9 methods ***)
     function GetLevelDesc(Level: LongWord; out pDesc: TD3DVolumeDesc): HResult; stdcall;
-    function GetVolumeLevel(Level: LongWord; out ppVolumeLevel: IDirect3DVolume9): HResult; stdcall;
+    function GetVolumeLevel(Level: LongWord; {out} ppVolumeLevel: PIDirect3DVolume9): HResult; stdcall;
     function LockBox(Level: LongWord; out pLockedVolume: TD3DLockedBox; pBox: PD3DBox; Flags: DWord): HResult; stdcall;
     function UnlockBox(Level: LongWord): HResult; stdcall;
     function AddDirtyBox(pDirtyBox: PD3DBox): HResult; stdcall;
@@ -3843,7 +3860,7 @@ type
     ['{FFF32F81-D953-473a-9223-93D652ABA93F}']
     (*** IDirect3DCubeTexture9 methods ***)
     function GetLevelDesc(Level: LongWord; out pDesc: TD3DSurfaceDesc): HResult; stdcall;
-    function GetCubeMapSurface(FaceType: TD3DCubeMapFaces; Level: LongWord; out ppCubeMapSurface: IDirect3DSurface9): HResult; stdcall;
+    function GetCubeMapSurface(FaceType: TD3DCubeMapFaces; Level: LongWord; {out} ppCubeMapSurface: PIDirect3DSurface9): HResult; stdcall;
     function LockRect(FaceType: TD3DCubeMapFaces; Level: LongWord; out pLockedRect: TD3DLockedRect; pRect: PRect; Flags: DWord): HResult; stdcall;
     function UnlockRect(FaceType: TD3DCubeMapFaces; Level: LongWord): HResult; stdcall;
     function AddDirtyRect(FaceType: TD3DCubeMapFaces; pDirtyRect: PRect): HResult; stdcall;
@@ -3956,7 +3973,7 @@ type
   IDirect3DVolume9 = interface (IUnknown)
     ['{24F416E6-1F67-4aa7-B88E-D33F6F3128A1}']
     (*** IDirect3DVolume9 methods ***)
-    function GetDevice(out ppDevice: IDirect3DDevice9): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice9): HResult; stdcall;
     function SetPrivateData(const refguid: TGUID; const pData; SizeOfData, Flags: DWord): HResult; stdcall;
     function GetPrivateData(const refguid: TGUID; pData: Pointer; out pSizeOfData: DWord): HResult; stdcall;
     function FreePrivateData(const refguid: TGUID): HResult; stdcall;
@@ -3987,7 +4004,7 @@ type
   IDirect3DQuery9 = interface(IUnknown)
     ['{d9771460-a695-4f26-bbd3-27b840b541cc}']
     (*** IDirect3DQuery9 methods ***)
-    function GetDevice(out ppDevice: IDirect3DDevice9): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice9): HResult; stdcall;
     function GetType: TD3DQueryType; stdcall;
     function GetDataSize: DWORD; stdcall;
     function Issue(dwIssueFlags: DWORD): HResult; stdcall;
