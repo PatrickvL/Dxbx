@@ -4081,7 +4081,7 @@ function TIDirectSoundStream.SetFrequency
 (
   dwFrequency: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 

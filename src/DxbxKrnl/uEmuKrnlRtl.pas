@@ -587,7 +587,7 @@ procedure xboxkrnl_RtlAssert(
   LineNumber: ULONG;
   Message_: P_CHAR
   ); stdcall;
-// Source:shogun  Branch:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Branch:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 

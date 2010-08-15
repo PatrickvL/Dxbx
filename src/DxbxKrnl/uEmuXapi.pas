@@ -1236,7 +1236,7 @@ function XTL_EmuXapiValidateDiskPartitionEx(
   PartitionName: PANSI_STRING;
   BytesPerCluster: DWORD
   ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:Patrick  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
