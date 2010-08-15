@@ -27,7 +27,11 @@ uses
   Windows
   , SysUtils
   // DirectX
-  , Direct3D8 // was Direct3D9 ?!
+{$IFDEF DXBX_USE_D3D9}
+  , Direct3D9
+{$ELSE}
+  , Direct3D8
+{$ENDIF}
   // Dxbx
   , uTypes
   , uDxbxKrnlUtils

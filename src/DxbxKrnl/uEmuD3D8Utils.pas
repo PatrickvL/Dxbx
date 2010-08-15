@@ -26,8 +26,13 @@ uses
   Windows,
   // DirectX
   Direct3D, // PD3DCOLOR
+{$IFDEF DXBX_USE_D3D9}
+  Direct3D9,
+  D3DX9,
+{$ELSE}
   Direct3D8, // IDirect3DDevice8
   D3DX8, // ID3DXBuffer
+{$ENDIF}
   // Dxbx
   uTypes,
   uEmuD3D8Types;
@@ -94,7 +99,14 @@ end;
 function IDirect3DDevice_GetRenderTarget(const aDirect3DDevice: IDirect3DDevice;
   ppRenderTarget: PIDirect3DSurface): HResult;
 begin
-  Result := aDirect3DDevice.GetRenderTarget(ppRenderTarget);
+{$IFDEF DXBX_USE_D3D9}
+  Result := aDirect3DDevice.GetRenderTarget(
+    {RenderTargetIndex=}0,
+    ppRenderTarget);
+{$ELSE}
+  Result := aDirect3DDevice.GetRenderTarget(
+    ppRenderTarget);
+{$ENDIF}
 end;
 
 function IDirect3DDevice_GetDepthStencilSurface(const aDirect3DDevice: IDirect3DDevice;
@@ -107,45 +119,75 @@ function IDirect3DDevice_CreateImageSurface(const aDirect3DDevice: IDirect3DDevi
   Width, Height: LongWord; Format: TD3DFormat;
   ppSurface: PIDirect3DSurface): HResult;
 begin
+{$IFDEF DXBX_USE_D3D9}
+  Result := aDirect3DDevice.CreateOffscreenPlainSurface(
+    Width, Height, Format, D3DPOOL_SCRATCH,
+    ppSurface, {Handle=}NULL);
+{$ELSE}
   Result := aDirect3DDevice.CreateImageSurface(
     Width, Height, Format,
     ppSurface);
+{$ENDIF}
 end;
 
 function IDirect3DDevice_CreateIndexBuffer(const aDirect3DDevice: IDirect3DDevice;
   Length: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppIndexBuffer: PIDirect3DIndexBuffer): HResult;
 begin
+{$IFDEF DXBX_USE_D3D9}
+  Result := aDirect3DDevice.CreateIndexBuffer(
+    Length, Usage, Format, Pool,
+    ppIndexBuffer, {Handle=}NULL);
+{$ELSE}
   Result := aDirect3DDevice.CreateIndexBuffer(
     Length, Usage, Format, Pool,
     ppIndexBuffer);
+{$ENDIF}
 end;
 
 function IDirect3DDevice_CreateTexture(const aDirect3DDevice: IDirect3DDevice;
   Width, Height, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppTexture: PIDirect3DTexture): HResult;
 begin
+{$IFDEF DXBX_USE_D3D9}
+  Result := aDirect3DDevice.CreateTexture(
+    Width, Height, Levels, Usage, Format, Pool,
+    ppTexture, {Handle=}NULL);
+{$ELSE}
   Result := aDirect3DDevice.CreateTexture(
     Width, Height, Levels, Usage, Format, Pool,
     ppTexture);
+{$ENDIF}
 end;
 
 function IDirect3DDevice_CreateCubeTexture(const aDirect3DDevice: IDirect3DDevice;
   EdgeLength, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppCubeTexture: PIDirect3DCubeTexture): HResult;
 begin
+{$IFDEF DXBX_USE_D3D9}
+  Result := aDirect3DDevice.CreateCubeTexture(
+    EdgeLength, Levels, Usage, Format, Pool,
+    ppCubeTexture, {Handle=}NULL);
+{$ELSE}
   Result := aDirect3DDevice.CreateCubeTexture(
     EdgeLength, Levels, Usage, Format, Pool,
     ppCubeTexture);
+{$ENDIF}
 end;
 
 function IDirect3DDevice_CreateVolumeTexture(const aDirect3DDevice: IDirect3DDevice;
   Width, Height, Depth, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppVolumeTexture: PIDirect3DVolumeTexture): HResult;
 begin
+{$IFDEF DXBX_USE_D3D9}
+  Result := aDirect3DDevice.CreateVolumeTexture(
+    Width, Height, Depth, Levels, Usage, Format, Pool,
+    ppVolumeTexture, {Handle=}NULL);
+{$ELSE}
   Result := aDirect3DDevice.CreateVolumeTexture(
     Width, Height, Depth, Levels, Usage, Format, Pool,
     ppVolumeTexture);
+{$ENDIF}
 end;
 
 function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;

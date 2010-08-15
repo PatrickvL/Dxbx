@@ -26,7 +26,11 @@ uses
   // Jedi Win32API
   JwaWinType,
   // DirectX
+{$IFDEF DXBX_USE_D3D9}
+  Direct3D9,
+{$ELSE}
   Direct3D8, // D3DFORMAT
+{$ENDIF}
   // Dxbx
   uTypes,
   uLog,

@@ -48,6 +48,7 @@
 
 {$IFDEF DXBX_DLL}
   {$DEFINE DXBX_USE_JCLDEBUG}
+  {.$DEFINE DXBX_USE_D3D9}
 {$ENDIF}
 
 {.$DEFINE DXBX_RECTYPE} // Include RecType info in PatternTrie

@@ -32,12 +32,17 @@ uses
   // Jedi Win32API
   , JwaWinType
   // DirectX
+{$IFDEF DXBX_USE_D3D9}
+  , Direct3D9
+{$ELSE}
   , Direct3D8
+{$ENDIF}
   // Dxbx
   , uTypes
   , uDxbxUtils // iif
   , uResourceTracker
   , uEmuD3D8Types
+  , uEmuD3D8Utils
   , uVertexBuffer
   , uEmu
   , uEmuXG;
@@ -486,7 +491,7 @@ begin
             pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
           end;
 
-          hRet := g_pD3DDevice.CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer(@pIndexBuffer));
+          hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer(@pIndexBuffer));
 
           maxIBSize := dwCount*2 + 2*2;
         end
@@ -637,7 +642,7 @@ begin
             pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
           end;
 
-          hRet := g_pD3DDevice.CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer(@pIndexBuffer));
+          hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer(@pIndexBuffer));
 
           maxIBSize := dwCount*2;
         end
