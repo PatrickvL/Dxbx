@@ -618,6 +618,7 @@ type
     D3DRS_MULTISAMPLEANTIALIAS      = 161,  // BOOL - set to do FSAA with multisample buffer
     D3DRS_MULTISAMPLEMASK           = 162,  // DWORD - per-sample enable/disable
     D3DRS_PATCHEDGESTYLE            = 163,  // Sets whether patch edges will use float style tessellation
+    D3DRS_PATCHSEGMENTS             = 164,  // Number of segments per edge when drawing patches - Dxbx addition, taken from Direct3D8
     D3DRS_DEBUGMONITORTOKEN         = 165,  // DEBUG ONLY - token to debug monitor
     D3DRS_POINTSIZE_MAX             = 166,   (* float point size max threshold *)
     D3DRS_INDEXEDVERTEXBLENDENABLE  = 167,
@@ -3469,7 +3470,7 @@ type
     function CheckDeviceFormatConversion(Adapter: LongWord; DeviceType: TD3DDevType; SourceFormat, TargetFormat: TD3DFormat): HResult; stdcall;
     function GetDeviceCaps(Adapter: LongWord; DeviceType: TD3DDevType; out pCaps: TD3DCaps9): HResult; stdcall;
     function GetAdapterMonitor(Adapter: LongWord): HMONITOR; stdcall;
-    function CreateDevice(Adapter: LongWord; DeviceType: TD3DDevType; hFocusWindow: HWND; BehaviorFlags: DWord; pPresentationParameters: PD3DPresentParameters; out ppReturnedDeviceInterface: IDirect3DDevice9): HResult; stdcall;
+    function CreateDevice(Adapter: LongWord; DeviceType: TD3DDevType; hFocusWindow: HWND; BehaviorFlags: DWord; pPresentationParameters: PD3DPresentParameters; {out} ppReturnedDeviceInterface: PIDirect3DDevice9): HResult; stdcall;
   end;
 
   {$EXTERNALSYM IDirect3D9Helper}
