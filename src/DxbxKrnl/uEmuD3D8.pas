@@ -2530,6 +2530,27 @@ begin
   end;
 end;
 
+function XTL_EmuIDirect3DDevice8_GetBackMaterial
+(
+  pMaterial: PD3DMATERIAL8
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DDevice8_GetBackMaterial').
+      _(pMaterial, 'pMaterial').
+    LogEnd();
+
+  // D3DDevice_GetBackMaterial(pMaterial);
+  EmuWarning('GetBackMaterial not implemented!');
+
+  Result := D3D_OK;
+
+  EmuSwapFS(fsXbox);
+end;
+
 function XTL_EmuIDirect3DDevice8_SetViewport
 (
   pViewport: PD3DVIEWPORT8
@@ -2798,6 +2819,50 @@ begin
   EmuSwapFS(fsXbox);
 
   Result := g_pCachedRenderTarget;
+end;
+
+function XTL_EmuIDirect3DDevice8_GetTextureStageState
+(
+  Stage: DWORD;
+  Type_: D3DTEXTURESTAGESTATETYPE;
+  pValue: PDWORD
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
+begin
+  EmuSwapFs(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DDevice8_GetTextureStageState').
+      _(Stage, 'Stage').
+      _(Int(Type_), 'Type').
+      _(pValue, 'pValue').
+    LogEnd();
+
+  IDirect3DDevice8(g_pD3DDevice8).GetTextureStageState(Stage, Type_, pValue^);
+  Result := D3D_OK;
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirect3DDevice8_GetRenderState
+(
+  State: D3DRENDERSTATETYPE;
+  pValue: PDWORD
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DDevice8_GetRenderState').
+      _(Int(State), 'State').
+      _(pValue, 'pValue').
+    LogEnd();
+
+  IDirect3DDevice8(g_pD3DDevice8).GetRenderState(State, PValue^);
+  Result := D3D_OK;
+
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuIDirect3DDevice8_GetDepthStencilSurface
@@ -6519,6 +6584,20 @@ begin
   Result := (g_bHackUpdateSoftwareOverlay = False);
 end;
 
+procedure XTL_EmuIDirect3DDevice8_BlockUntilIdle(); stdcall;
+// Branch:dxbx  Translator:Shadow_Tj  Done:100
+begin
+  EmuSwapFs(fsWindows);
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BlockUntilIdle');
+
+  // D3DDevice_BlockUntilIdle();
+  EmuWarning('EmuIDirect3DDevice8_BlockUntilIdle not implemented!');
+
+  EmuSwapFs(fsXbox);
+end;
+
 procedure XTL_EmuIDirect3DDevice8_BlockUntilVerticalBlank(); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -9926,6 +10005,64 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+function XTL_EmuIDirect3DDevice8_GetLight
+(
+  Index: DWORD;
+  pLight: PD3DLIGHT8
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DDevice8_GetLight').
+      _(Index, 'Index').
+      _(pLight, 'pLight').
+    LogEnd();
+
+  IDirect3DDevice8(g_pD3DDevice8).GetLight(Index, pLight^);
+  Result := D3D_OK;
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirect3DDevice8_GetLightEnable
+(
+  Index: DWORD;
+  Enable: BOOL
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_tj  Done:50
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DDevice8_GetLightEnable').
+      _(Index, 'Index').
+      _(Enable, 'Enable').
+    LogEnd();
+
+  //TODO -DXBX: IDirect3DDevice8(g_pD3DDevice8).GetLightEnable(Index, @Enable);
+  Result := D3D_OK;
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirect3DDevice8_GetMaterial(pMaterial : PD3DMATERIAL8): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DDevice8_GetMaterial').
+      _(pMaterial, 'pMaterial').
+    LogEnd();
+
+  IDirect3DDevice8(g_pD3DDevice8).GetMaterial(pMaterial^);
+  Result := D3D_OK;
+
+  EmuSwapFS(fsXbox);
+end;
+
 function XTL_EmuIDirect3DDevice8_GetModelView
 (
   pModelView: PD3DXMATRIX
@@ -9938,7 +10075,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuIDirect3DDevice8_GetModelView').
+    LogBegin('EmuIDirect3DDevice8_GetModelView').
       _(pModelView, 'pModelView').
     LogEnd();
 
@@ -10567,6 +10704,7 @@ exports
   XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + 'D3DDevice_BeginStateBlock@0',
   XTL_EmuIDirect3DDevice8_BeginVisibilityTest name PatchPrefix + 'D3DDevice_BeginVisibilityTest@0', // [PvL] reviewed up to here
   XTL_EmuIDirect3DDevice8_BlockOnFence name PatchPrefix + 'D3DDevice_BlockOnFence',
+  XTL_EmuIDirect3DDevice8_BlockUntilIdle name PatchPrefix + 'D3DDevice_BlockUntilIdle',
   XTL_EmuIDirect3DDevice8_BlockUntilVerticalBlank name PatchPrefix + 'D3DDevice_BlockUntilVerticalBlank@0',
   XTL_EmuIDirect3DDevice8_CaptureStateBlock name PatchPrefix + 'D3DDevice_CaptureStateBlock',
   XTL_EmuIDirect3DDevice8_Clear name PatchPrefix + 'D3DDevice_Clear',
@@ -10604,6 +10742,7 @@ exports
   XTL_EmuIDirect3DDevice8_FlushVertexCache name PatchPrefix + 'D3DDevice_FlushVertexCache', // ??
   XTL_EmuIDirect3DDevice8_GetBackBuffer name PatchPrefix + 'D3DDevice_GetBackBuffer',
   XTL_EmuIDirect3DDevice8_GetBackBuffer2 name PatchPrefix + 'D3DDevice_GetBackBuffer2@4',
+  XTL_EmuIDirect3DDevice8_GetBackMaterial name PatchPrefix + 'D3DDevice_GetBackMaterial',
   XTL_EmuIDirect3DDevice8_GetCreationParameters name PatchPrefix + 'D3DDevice_GetCreationParameters',
   XTL_EmuIDirect3DDevice8_GetDepthStencilSurface name PatchPrefix + 'D3DDevice_GetDepthStencilSurface',
   XTL_EmuIDirect3DDevice8_GetDepthStencilSurface2 name PatchPrefix + 'D3DDevice_GetDepthStencilSurface2',
@@ -10611,6 +10750,9 @@ exports
   XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus name PatchPrefix + 'D3DDevice_GetDisplayFieldStatus',
   XTL_EmuIDirect3DDevice8_GetDisplayMode name PatchPrefix + 'D3DDevice_GetDisplayMode',
   XTL_EmuIDirect3DDevice8_GetGammaRamp name PatchPrefix + 'D3DDevice_GetGammaRamp',
+  XTL_EmuIDirect3DDevice8_GetLight name PatchPrefix + 'D3DDevice_GetLight',
+  XTL_EmuIDirect3DDevice8_GetLightEnable name PatchPrefix + 'D3DDevice_GetLightEnable',
+  XTL_EmuIDirect3DDevice8_GetMaterial name PatchPrefix + 'D3DDevice_GetMaterial',
   XTL_EmuIDirect3DDevice8_GetModelView name PatchPrefix + 'D3DDevice_GetModelView', // ??
   XTL_EmuIDirect3DDevice8_GetOverlayUpdateStatus name PatchPrefix + 'D3DDevice_GetOverlayUpdateStatus',
   XTL_EmuIDirect3DDevice8_GetPixelShaderFunction name PatchPrefix + 'D3DDevice_GetPixelShaderFunction',
@@ -10621,6 +10763,8 @@ exports
   XTL_EmuIDirect3DDevice8_GetRasterStatus name PatchPrefix + 'D3DDevice_GetRasterStatus',
   XTL_EmuIDirect3DDevice8_GetRenderTarget name PatchPrefix + 'D3DDevice_GetRenderTarget',
   XTL_EmuIDirect3DDevice8_GetRenderTarget2 name PatchPrefix + 'D3DDevice_GetRenderTarget2',
+  XTL_EmuIDirect3DDevice8_GetTextureStageState name PatchPrefix + 'D3DDevice_GetTextureStageState',
+  XTL_EmuIDirect3DDevice8_GetRenderState name PatchPrefix + 'D3DDevice_GetRenderState',
   XTL_EmuIDirect3DDevice8_GetShaderConstantMode name PatchPrefix + 'D3DDevice_GetShaderConstantMode',
   XTL_EmuIDirect3DDevice8_GetStreamSource2 name PatchPrefix + 'D3DDevice_GetStreamSource2',
   XTL_EmuIDirect3DDevice8_GetTexture2 name PatchPrefix + 'D3DDevice_GetTexture2',
