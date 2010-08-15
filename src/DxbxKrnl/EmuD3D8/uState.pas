@@ -352,8 +352,8 @@ begin
       pCur := @(XTL_EmuD3DDeferredTextureState[3*X_D3DTS_STAGESIZE]); // StrikerX3: why was this 2*32? PatrickvL: Probably a bug.
 
       // set the point sprites texture
-      g_pD3DDevice.GetTexture(3, PIDirect3DBaseTexture8(@pTexture));
-      g_pD3DDevice.SetTexture(0, IDirect3DBaseTexture8(pTexture));
+      g_pD3DDevice.GetTexture(3, PIDirect3DBaseTexture(@pTexture));
+      g_pD3DDevice.SetTexture(0, IDirect3DBaseTexture(pTexture));
       // TODO -oDXBX: Should we clear the pTexture interface (and how)?
 
       // disable all other stages

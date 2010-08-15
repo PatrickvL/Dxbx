@@ -31,6 +31,29 @@ uses
   uTypes;
 
 type
+  IDirect3DBaseTexture = IDirect3DBaseTexture8;
+  IDirect3DCubeTexture = IDirect3DCubeTexture8;
+  IDirect3DDevice = IDirect3DDevice8;
+  IDirect3DIndexBuffer = IDirect3DIndexBuffer8;
+  IDirect3DResource = IDirect3DResource8;
+  IDirect3DSurface = IDirect3DSurface8;
+  IDirect3DTexture = IDirect3DTexture8;
+  IDirect3DVertexBuffer = IDirect3DVertexBuffer8;
+  IDirect3DVolume = IDirect3DVolume8;
+  IDirect3DVolumeTexture = IDirect3DVolumeTexture8;
+
+  PIDirect3DBaseTexture = PIDirect3DBaseTexture8;
+  PIDirect3DCubeTexture = PIDirect3DCubeTexture8;
+  PIDirect3DDevice = PIDirect3DDevice8;
+  PIDirect3DIndexBuffer = PIDirect3DIndexBuffer8;
+  PIDirect3DSurface = PIDirect3DSurface8;
+  PIDirect3DTexture = PIDirect3DTexture8;
+  PIDirect3DVertexBuffer = PIDirect3DVertexBuffer8;
+  PIDirect3DVolumeTexture = PIDirect3DVolumeTexture8;
+
+  PD3DMaterial = PD3DMaterial8;
+
+type
   // C++ nearly always works with pointer-to-interface, while Delphi's interfaces are already reference-types.
   // To simulate C++ behaviour, define an empty structure here, so we can declare a normal pointer to that as
   // a base for all the following interface-type declarations :
