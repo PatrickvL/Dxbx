@@ -1766,8 +1766,71 @@ end;
 function Xb2PCRegisterType(VertexRegister: DWORD): DWORD;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
+{$IFDEF DXBX_USE_D3D9}
+  PCRegisterType: D3DDECLUSAGE;
+{$ELSE}
   PCRegisterType: DWORD;
+{$ENDIF}
 begin
+{$IFDEF DXBX_USE_D3D9}
+  case Integer(VertexRegister) of
+  -1: begin
+      DbgVshPrintf('D3DVSDE_VERTEX /* xbox ext. */');
+      PCRegisterType := D3DDECLUSAGE(-1);
+    end;
+  0: begin
+      DbgVshPrintf('D3DVSDE_POSITION');
+      PCRegisterType := D3DDECLUSAGE_POSITION;
+    end;
+  1: begin
+      DbgVshPrintf('D3DVSDE_BLENDWEIGHT');
+      PCRegisterType := D3DDECLUSAGE_BLENDWEIGHT;
+    end;
+  2: begin
+      DbgVshPrintf('D3DVSDE_NORMAL');
+      PCRegisterType := D3DDECLUSAGE_NORMAL;
+    end;
+  3: begin
+      DbgVshPrintf('D3DVSDE_DIFFUSE');
+      PCRegisterType := D3DDECLUSAGE_COLOR{0};//D3DDECLUSAGE_DIFFUSE;
+    end;
+  4: begin
+      DbgVshPrintf('D3DVSDE_SPECULAR');
+      PCRegisterType := D3DDECLUSAGE_COLOR{1};//D3DDECLUSAGE_SPECULAR;
+    end;
+  5: begin
+      DbgVshPrintf('D3DVSDE_FOG /* xbox ext. */');
+      PCRegisterType := D3DDECLUSAGE(-1);
+    end;
+  7: begin
+      DbgVshPrintf('D3DVSDE_BACKDIFFUSE /* xbox ext. */');
+      PCRegisterType := D3DDECLUSAGE(-1);
+    end;
+  8: begin
+      DbgVshPrintf('D3DVSDE_BACKSPECULAR /* xbox ext. */');
+      PCRegisterType := D3DDECLUSAGE(-1);
+    end;
+  9: begin
+      DbgVshPrintf('D3DVSDE_TEXCOORD0');
+      PCRegisterType := D3DDECLUSAGE_TEXCOORD{0};
+    end;
+  10: begin
+      DbgVshPrintf('D3DVSDE_TEXCOORD1');
+      PCRegisterType := D3DDECLUSAGE_TEXCOORD{1};
+    end;
+  11: begin
+      DbgVshPrintf('D3DVSDE_TEXCOORD2');
+      PCRegisterType := D3DDECLUSAGE_TEXCOORD{2};
+    end;
+  12: begin
+      DbgVshPrintf('D3DVSDE_TEXCOORD3');
+      PCRegisterType := D3DDECLUSAGE_TEXCOORD{3};
+    end;
+  else
+    DbgVshPrintf('%d /* unknown register */', [VertexRegister]);
+    PCRegisterType := D3DDECLUSAGE(-1);
+  end;
+{$ELSE}
   case Integer(VertexRegister) of
   -1: begin
       DbgVshPrintf('D3DVSDE_VERTEX /* xbox ext. */');
@@ -1825,10 +1888,12 @@ begin
     DbgVshPrintf('%d /* unknown register */', [VertexRegister]);
     PCRegisterType := DWORD(-1);
   end;
+{$ENDIF}
 
-  Result := PCRegisterType;
+  Result := DWORD(PCRegisterType);
 end; // Xb2PCRegisterType
 
+{$IFNDEF DXBX_USE_D3D9}
 function VshGetTokenType(Token: DWORD): DWORD; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
@@ -2244,6 +2309,7 @@ begin
 
   Result := Step;
 end; // VshRecompileToken
+{$ENDIF}
 
 // recompile xbox vertex shader declaration
 function XTL_EmuRecompileVshDeclaration
@@ -2262,6 +2328,7 @@ var
   Step: DWORD;
   StreamsSize: DWORD;
 begin
+{$IFNDEF DXBX_USE_D3D9}
   // First of all some info:
   // We have to figure out which flags are set and then
   // we have to patch their params
@@ -2300,6 +2367,7 @@ begin
   memcpy(pVertexDynamicPatch.pStreamPatches,
          @(PatchData.StreamPatchData.pStreamPatches[0]),
          StreamsSize);
+{$ENDIF}
 
   Result := D3D_OK;
 end; // XTL_EmuRecompileVshDeclaration
@@ -2407,7 +2475,7 @@ begin
 {$IFDEF DXBX_USE_D3D9}
         {pDefines=}nil,
         {pInclude=}nil,
-        {Flags=}D3DXSHADER_SKIPVALIDATION
+        {Flags=}D3DXSHADER_SKIPVALIDATION,
 {$ELSE}
         {Flags=}D3DXASM_SKIPVALIDATION,
         {ppConstants=}NULL,

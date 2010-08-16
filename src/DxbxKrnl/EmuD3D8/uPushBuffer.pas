@@ -355,7 +355,11 @@ begin
       Inc(pdwPushData, dwCount);
 
       // retrieve vertex shader
+{$IFDEF DXBX_USE_D3D9}
+      g_pD3DDevice.GetVertexShader({out}PIDirect3DVertexShader9(dwVertexShader));
+{$ELSE}
       g_pD3DDevice.GetVertexShader({out}dwVertexShader);
+{$ENDIF}
 
       if (dwVertexShader > $FFFF) then
       begin
@@ -546,7 +550,14 @@ begin
             begin
               g_pD3DDevice.DrawIndexedPrimitive
               (
-                  PCPrimitiveType, 0, 8*1024*1024, 0, PrimitiveCount
+                  PCPrimitiveType,
+{$IFDEF DXBX_USE_D3D9}
+                  {BaseVertexIndex=}0,
+{$ENDIF}
+                  {MinVertexIndex=}0,
+                  8*1024*1024,
+                  0,
+                  PrimitiveCount
                   // Dxbx : Why not this : EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, 0, VPDesc.dwPrimitiveCount
               );
             end;
@@ -712,7 +723,14 @@ begin
           begin
             g_pD3DDevice.DrawIndexedPrimitive
             (
-                PCPrimitiveType, 0, (*dwCount*2*)8*1024*1024, 0, PrimitiveCount
+                PCPrimitiveType,
+{$IFDEF DXBX_USE_D3D9}
+                {BaseVertexIndex=}0,
+{$ENDIF}
+                {MinVertexIndex=}0,
+                (*dwCount*2*)8*1024*1024,
+                0,
+                PrimitiveCount
                 // Dxbx : Why not this : EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, 0, VPDesc.dwPrimitiveCount
             );
           end;

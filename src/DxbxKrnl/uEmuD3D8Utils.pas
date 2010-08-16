@@ -66,6 +66,8 @@ function IDirect3DDevice_CreateCubeTexture(const aDirect3DDevice: IDirect3DDevic
 function IDirect3DDevice_CreateVolumeTexture(const aDirect3DDevice: IDirect3DDevice;
   Width, Height, Depth, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppVolumeTexture: PIDirect3DVolumeTexture): HResult;
+function IDirect3DDevice_SetSamplerState(const aDirect3DDevice: IDirect3DDevice;
+  Sampler: DWORD; _Type: TD3DSamplerStateType; Value: DWORD): HResult;
 
 function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;
 
@@ -189,6 +191,16 @@ begin
   Result := aDirect3DDevice.CreateVolumeTexture(
     Width, Height, Depth, Levels, Usage, Format, Pool,
     ppVolumeTexture);
+{$ENDIF}
+end;
+
+function IDirect3DDevice_SetSamplerState(const aDirect3DDevice: IDirect3DDevice;
+  Sampler: DWORD; _Type: TD3DSamplerStateType; Value: DWORD): HResult;
+begin
+{$IFDEF DXBX_USE_D3D9}
+  Result := aDirect3DDevice.SetSamplerState(DWORD(Sampler), _Type, Value);
+{$ELSE}
+  Result := aDirect3DDevice.SetTextureStageState(Sampler, _Type, Value);
 {$ENDIF}
 end;
 
