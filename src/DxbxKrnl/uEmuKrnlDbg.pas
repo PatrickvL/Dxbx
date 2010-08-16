@@ -103,17 +103,107 @@ end;
 function {008} xboxkrnl_DbgPrint(
   Format: PCCH
   ): ULONG; cdecl; // varargs;
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:75
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:95
 var
   va: RVarArgsReader;
   cp: PAnsiChar;
   ResultStr: AnsiString;
+  Arg: Pointer;
 begin
   EmuSwapFS(fsWindows);
 
+  // [From MSDN http://msdn.microsoft.com/en-us/library/ff543632(VS.85).aspx ]
+  //
+  // Specifies a pointer to the format string to print.
+  // The Format string supports all the printf-style format specification fields.
+  // However, the Unicode format codes (%C, %S, %lc, %ls, %wc, %ws, and %wZ) can only be used with IRQL = PASSIVE_LEVEL.
+  //
+  // [From MSDN http://msdn.microsoft.com/en-us/library/56e442dc.aspx ]
+  //
+  // A format specification, which consists of optional and required fields, has the following form:
+  // %[flags] [width] [.precision] [{h | l | ll | I | I32 | I64}]type
+  //
+  // Flag Characters
+  // – [default:Right align.]
+  //   Left align the result within the given field width.
+  //
+  // + [default:Sign appears only for negative signed values (–).]
+  //   Prefix the output value with a sign (+ or –) if the output value is of a signed type.
+  //
+  // 0 [default: No padding.]
+  //   If width is prefixed with 0, zeros are added until the minimum width is reached. If 0 and – appear, the 0 is ignored.
+  //   If 0 is specified with an integer format (i, u, x, X, o, d) and a precision specification is also present
+  //   (for example, %04.d), the 0 is ignored.
+  //
+  // blank (' ') [default:No blank appears.]
+  //   Prefix the output value with a blank if the output value is signed and positive; the blank is ignored if both the blank and + flags appear.
+  //
+  // # [default:No blank appears.]
+  //   When used with the o, x, or X format, the # flag prefixes any nonzero output value with 0, 0x, or 0X, respectively.
+  //
+  // # [default:Decimal point appears only if digits follow it.]
+  //   When used with the e, E, f, a or A format, the # flag forces the output value to contain a decimal point in all cases.
+  //
+  // # [default:Decimal point appears only if digits follow it. Trailing zeros are truncated.]
+  //   When used with the g or G format, the # flag forces the output value to contain a decimal point in all cases and prevents
+  //   the truncation of trailing zeros.
+  //   Ignored when used with c, d, i, u, or s.
+  //
+  //
+  // Type Field Characters
+  // c: int or wint_t
+  //    When used with printf functions, specifies a single-byte character; when used with wprintf functions, specifies a wide character.
+  // C: int or wint_t
+  //    When used with printf functions, specifies a wide character; when used with wprintf functions, specifies a single-byte character.
+  // d: int
+  //    Signed decimal integer.
+  // i: int
+  //    Signed decimal integer.
+  // o: int
+  //    Unsigned octal integer.
+  // u: int
+  //    Unsigned decimal integer.
+  // x: int
+  //    Unsigned hexadecimal integer, using "abcdef."
+  // X: int
+  //    Unsigned hexadecimal integer, using "ABCDEF."
+  // e: double
+  //    Signed value having the form [ – ]d.dddd e [sign]dd[d] where d is a single decimal digit, dddd is one or more decimal digits,
+  //    dd[d] is two or three decimal digits depending on the output format and size of the exponent, and sign is + or –.
+  // E: double
+  //    Identical to the e format except that E rather than e introduces the exponent.
+  // f: double
+  //    Signed value having the form [ – ]dddd.dddd, where dddd is one or more decimal digits. The number of digits before the decimal
+  //    point depends on the magnitude of the number, and the number of digits after the decimal point depends on the requested precision.
+  // g: double
+  //    Signed value printed in f or e format, whichever is more compact for the given value and precision. The e format is used only when
+  //    the exponent of the value is less than –4 or greater than or equal to the precision argument. Trailing zeros are truncated, and the
+  //    decimal point appears only if one or more digits follow it.
+  // G: double
+  //    Identical to the g format, except that E, rather than e, introduces the exponent (where appropriate).
+  // a: double
+  //    Signed hexadecimal double precision floating point value having the form [-]0xh.hhhh p±dd, where h.hhhh are the hex digits (using
+  //    lower case letters) of the mantissa, and dd are one or more digits for the exponent. The precision specifies the number of digits
+  //    after the point.
+  // A: double
+  //    Signed hexadecimal double precision floating point value having the form [-]0Xh.hhhh P±dd, where h.hhhh are the hex digits (using
+  //    capital letters) of the mantissa, and dd are one or more digits for the exponent. The precision specifies the number of digits after
+  //    the point.
+  // n: Pointer to integer
+  //    Number of characters successfully written so far to the stream or buffer; this value is stored in the integer whose address is given
+  //    as the argument. See Security Note below.
+  // p: Pointer to void
+  //    Prints the argument as an address in hexadecimal digits.
+  // s: String
+  //    When used with printf functions, specifies a single-byte–character string; when used with wprintf functions, specifies a
+  //    wide-character string. Characters are printed up to the first null character or until the precision value is reached.
+  // S: String
+  //    When used with printf functions, specifies a wide-character string; when used with wprintf functions, specifies a
+  //    single-byte–character string. Characters are printed up to the first null character or until the precision value is reached.
+  //    Note  If the argument corresponding to %s or %S is a null pointer, "(null)" will be printed.
+
   // Parse the varargs :
   va.Create(@Format, SizeOf(Format));
-
   cp := PAnsiChar(Format);
   ResultStr := '';
   while True do
@@ -125,22 +215,31 @@ begin
         // Skip the '%' (and any intermediate number for now) :
         repeat
           Inc(cp);
-        until not (cp^ in ['+','-','.',',','0'..'9']);
+        until not (cp^ in [' ','#','+','-','.',',','0'..'9']);
 
         // Handle the various types of input :
         case cp^ of
-          'i', 'd', 'u',
-          'I', 'D', 'U':
-            ResultStr := ResultStr + IntToStr(va.ReadInt32);
-          'f',
-          'F':
-            ResultStr := ResultStr + FloatToStr(va.ReadDouble);
-          's',
-          'S':
-            ResultStr := ResultStr + AnsiString(va.ReadPAnsiChar);
-          'x',
+          'c': // 'C':
+            ResultStr := ResultStr + cp^;
+          'd', 'i':
+            ResultStr := ResultStr + AnsiString(IntToStr(va.ReadInt32));
+          'o', 'u':
+            ResultStr := ResultStr + AnsiString(IntToStr(DWORD(va.ReadInt32)));
+          'x', 'p':
+            ResultStr := ResultStr + AnsiString(IntToHex(va.ReadInt32, 8));
           'X':
-            ResultStr := ResultStr + IntToHex(va.ReadInt32, 8);
+            ResultStr := ResultStr + AnsiString(Uppercase(IntToHex(va.ReadInt32, 8)));
+          'a', 'e', 'g', 'f',
+          'A', 'E', 'G':
+            ResultStr := ResultStr + AnsiString(FloatToStr(va.ReadDouble));
+          's': // 'S':
+          begin
+            Arg := va.ReadPAnsiChar;
+            if Arg = nil then
+              ResultStr := ResultStr + '(null)'
+            else
+              ResultStr := ResultStr + AnsiString(PAnsiChar(Arg));
+          end;
         else
           ResultStr := ResultStr + '!DXBX WARNING:UNSUPPORTED INPUT!';
         end;
@@ -153,8 +252,7 @@ begin
     Inc(cp);
   end;
 
-  // Return the length of the string (if that's what we're supposed to do?) :
-  Result := Length(ResultStr);
+  Result := STATUS_SUCCESS;
 
   // Write it to our log :
   if MayLog(lfKernel or lfDebug) then
