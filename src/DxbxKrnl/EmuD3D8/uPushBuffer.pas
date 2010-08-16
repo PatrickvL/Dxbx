@@ -246,6 +246,7 @@ var
   pActiveVB: XTL_PIDirect3DVertexBuffer8;
   VBDesc: D3DVERTEXBUFFER_DESC;
   pVBData: PBYTE;
+  uiOffsetInBytes: UINT;
   uiStride: UINT;
 {$endif}
 
@@ -507,7 +508,7 @@ begin
         begin
           pData := nil;
 
-          IDirect3DIndexBuffer(pIndexBuffer).Lock(0, dwCount*2 + 2*2, {out}PByte(pData), 0);
+          IDirect3DIndexBuffer(pIndexBuffer).Lock(0, dwCount*2 + 2*2, {out}TLockData(pData), 0);
 
           memcpy(pData, @pIBMem[0], dwCount*2 + 2*2);
 
@@ -532,7 +533,7 @@ begin
 
           {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
-          g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer), 0);
+          g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer){$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, 0{$ENDIF});
 
           {$ifdef _DEBUG_TRACK_PB}
           if ( not g_PBTrackDisable.exists(pdwOrigPushData)) then
@@ -557,7 +558,7 @@ begin
 
           VertPatch.Restore();
 
-          g_pD3DDevice.SetIndices(nil, 0);
+          g_pD3DDevice.SetIndices(nil{$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, 0{$ENDIF});
         end;
       end;
 
@@ -598,7 +599,13 @@ begin
         pVBData := nil;
 
         // retrieve stream data
-        g_pD3DDevice.GetStreamSource(0, @pActiveVB, {out}uiStride);
+        g_pD3DDevice.GetStreamSource(
+          0,
+          @pActiveVB,
+{$IFDEF DXBX_USE_D3D9}
+          {out}uiOffsetInBytes,
+{$ENDIF}
+          {out}uiStride);
 
         // retrieve stream desc
         IDirect3DVertexBuffer(pActiveVB).GetDesc({out}VBDesc);
@@ -607,7 +614,7 @@ begin
         IDirect3DVertexBuffer(pActiveVB).Unlock();
 
         // grab ptr
-        IDirect3DVertexBuffer(pActiveVB).Lock(0, 0, {out}pVBData, D3DLOCK_READONLY);
+        IDirect3DVertexBuffer(pActiveVB).Lock(0, 0, {out}TLockData(pVBData), D3DLOCK_READONLY);
 
         // print out stream data
         begin
@@ -658,7 +665,7 @@ begin
         begin
           pData := nil;
 
-          IDirect3DIndexBuffer(pIndexBuffer).Lock(0, dwCount*2, {out}PByte(pData), 0);
+          IDirect3DIndexBuffer(pIndexBuffer).Lock(0, dwCount*2, {out}TLockData(pData), 0);
 
           memcpy(pData, pIndexData, dwCount*2);
 
@@ -694,7 +701,7 @@ begin
 
           {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
-          g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer), 0);
+          g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer){$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, 0{$ENDIF});
 
           {$ifdef _DEBUG_TRACK_PB}
           if (not g_PBTrackDisable.exists(pdwOrigPushData)) then
@@ -716,7 +723,7 @@ begin
 
           VertPatch.Restore();
 
-          g_pD3DDevice.SetIndices(nil, 0);
+          g_pD3DDevice.SetIndices(nil{$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, 0{$ENDIF});
         end;
       end;
 
@@ -758,6 +765,9 @@ var
   pActiveVB: XTL_PIDirect3DVertexBuffer8;
   VBDesc: D3DVERTEXBUFFER_DESC;
   pVBData: PBYTE;
+{$IFDEF DXBX_USE_D3D9}
+  uiOffsetInBytes: UINT;
+{$ENDIF}
   uiStride: UINT;
   szFileName: array [0..128 - 1] of AnsiChar;
   pwVal: PWORD;
@@ -782,7 +792,13 @@ begin
   pVBData := nil;
   
   // retrieve stream data
-  g_pD3DDevice.GetStreamSource(0, @pActiveVB, {out}uiStride);
+  g_pD3DDevice.GetStreamSource(
+    0,
+    @pActiveVB,
+{$IFDEF DXBX_USE_D3D9}
+    {out}uiOffsetInBytes,
+{$ENDIF}
+    {out}uiStride);
 
   sprintf(@szFileName[0], DxbxDebugFolder +'\DxbxMesh-0x%.08X.x', [pIndexData]);
   dbgVertices := fopen(szFileName, 'wt');
@@ -794,7 +810,7 @@ begin
   IDirect3DVertexBuffer(pActiveVB).Unlock();
 
   // grab ptr
-  IDirect3DVertexBuffer(pActiveVB).Lock(0, 0, {out}pVBData, D3DLOCK_READONLY);
+  IDirect3DVertexBuffer(pActiveVB).Lock(0, 0, {out}TLockData(pVBData), D3DLOCK_READONLY);
 
   // print out stream data
   if Assigned(dbgVertices) then // Dxbx addition

@@ -20,6 +20,8 @@ unit uPixelShader;
 
 interface
 
+{$INCLUDE Dxbx.inc}
+
 uses
   // Delphi
   Windows,
@@ -33,8 +35,6 @@ uses
   uEmuD3D8Types,
   uEmuD3D8Utils,
   uEmu;
-
-{$INCLUDE Dxbx.inc}
 
 // From PixelShader.h :
 

@@ -2497,7 +2497,7 @@ begin
         [BackBuffer]);
 
 
-{ unsafe, somehow  -- MARKED OUT BY CXBX --
+(* unsafe, somehow  -- MARKED OUT BY CXBX --
     HRESULT hRet := D3D_OK;
 
     X_D3DSurface *pBackBuffer := new X_D3DSurface();
@@ -2531,8 +2531,8 @@ begin
      end;
 
     if (BackBuffer <> -1) then
-        hRet := g_pD3DDevice.GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, @(pBackBuffer.Emu.Surface));
-}
+        hRet := g_pD3DDevice.GetBackBuffer({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} BackBuffer, D3DBACKBUFFER_TYPE_MONO, @(pBackBuffer.Emu.Surface));
+*)
 
   if pBackBuffer = nil then // Dxbx addition, to initialize this 'static' var only once
     New({var PX_D3DSurface}pBackBuffer);
@@ -3614,7 +3614,7 @@ begin
           Result := g_pD3DDevice.CreatePixelShader(
             ID3DXBuffer(pShader).GetBufferPointer(),
 {$IFDEF DXBX_USE_D3D9}
-            PIDirect3DPixelShader9(dwHandle) {$MESSAGE 'fixme'} // @dwHandle?
+            PIDirect3DPixelShader9(@dwHandle) {$MESSAGE 'fixme'} // @dwHandle?
 {$ELSE}
             {out}dwHandle
 {$ENDIF}
@@ -3640,7 +3640,7 @@ begin
     end;
 
     if (not FAILED(Result)) then
-      Result := g_pD3DDevice.SetPixelShader(dwHandle);
+      Result := g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}IDirect3DPixelShader9{$MESSAGE 'fixme'}{$ENDIF}(dwHandle));
 
     if (FAILED(Result)) then
       EmuWarning('Could not set pixel shader!');
@@ -3651,7 +3651,7 @@ begin
   // Fixed Pipeline, or Recompiled Programmable Pipeline
   else if (Handle = HNULL) then
   begin
-    g_pD3DDevice.SetPixelShader(Handle);
+    g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}nil{$ELSE}Handle{$ENDIF});
   end;
 
   if FAILED(Result) then
@@ -4077,7 +4077,7 @@ begin
   begin
     pData := NULL;
 
-    IDirect3DIndexBuffer(ppIndexBuffer^.Emu.IndexBuffer).Lock(0, Length, {out PByte}pData, 0);
+    IDirect3DIndexBuffer(ppIndexBuffer^.Emu.IndexBuffer).Lock(0, Length, {out} TLockData(pData), 0);
 
     ppIndexBuffer^.Data := DWORD(pData);
 
@@ -4167,13 +4167,13 @@ begin
     pIndexBuffer := pIndexData.Emu.IndexBuffer;
     DxbxUnlockD3DResource(pIndexData); // Dxbx addition
     if (pIndexData.Emu.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
-      Result := g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer), BaseVertexIndex);
+      Result := g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer){$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, BaseVertexIndex{$ENDIF});
   end
   else
   begin
     g_pIndexBuffer := nil;
 
-    Result := g_pD3DDevice.SetIndices(nil, BaseVertexIndex);
+    Result := g_pD3DDevice.SetIndices(nil{$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, BaseVertexIndex{$ENDIF});
   end;
 
 fail:
@@ -4417,7 +4417,7 @@ begin
   // make adjustments to parameters to make sense with windows d3d
   begin
     pPCMode := PD3DDISPLAYMODE(pMode);
-    Result := g_pD3DDevice.GetDisplayMode({out}pPCMode^);
+    Result := g_pD3DDevice.GetDisplayMode({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} {out}pPCMode^);
 
     // Convert Format (PC->Xbox)
     pMode.Format := EmuPC2XB_D3DFormat(pPCMode.Format);
@@ -4964,7 +4964,7 @@ begin
 
   // release back buffer lock
   begin
-    if g_pD3DDevice.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, @pBackBuffer) = D3D_OK then
+    if g_pD3DDevice.GetBackBuffer({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} 0, D3DBACKBUFFER_TYPE_MONO, @pBackBuffer) = D3D_OK then
     begin
       IDirect3DSurface(pBackBuffer).UnlockRect();
       IDirect3DSurface(pBackBuffer)._Release;
@@ -5147,7 +5147,7 @@ begin
 
         pData := nil;
 
-        hRet := IDirect3DVertexBuffer(pResource.Emu.VertexBuffer).Lock(0, 0, {out}pData, 0);
+        hRet := IDirect3DVertexBuffer(pResource.Emu.VertexBuffer).Lock(0, 0, {out}TLockData(pData), 0);
 
         if FAILED(hRet) then
           DxbxKrnlCleanup('VertexBuffer Lock Failed!');
@@ -5199,7 +5199,7 @@ begin
 
           pData := nil;
 
-          hRet := IDirect3DIndexBuffer(pResource.Emu.IndexBuffer).Lock(0, dwSize, {out}pData, 0);
+          hRet := IDirect3DIndexBuffer(pResource.Emu.IndexBuffer).Lock(0, dwSize, {out}TLockData(pData), 0);
 
           if (FAILED(hRet)) then
             DxbxKrnlCleanup('IndexBuffer Lock Failed!');
@@ -5829,7 +5829,7 @@ begin
       DxbxKrnlCleanup('EmuGet2DSurfaceDesc: pDesc->Type > 7');
 
     pDesc.Usage := SurfaceDesc.Usage;
-    pDesc.Size := SurfaceDesc.Size;
+    pDesc.Size := GetSurfaceSize(@SurfaceDesc);
     pDesc.MultiSampleType := EmuPC2XB_D3DMultiSampleFormat(SurfaceDesc.MultiSampleType);
     pDesc.Width := SurfaceDesc.Width;
     pDesc.Height := SurfaceDesc.Height;
@@ -5906,7 +5906,7 @@ begin
         DxbxKrnlCleanup('EmuIDirect3DSurface_GetDesc: pDesc->Type > 7');
 
       pDesc.Usage := SurfaceDesc.Usage;
-      pDesc.Size := SurfaceDesc.Size;
+      pDesc.Size := GetSurfaceSize(@SurfaceDesc);
       pDesc.MultiSampleType := EmuPC2XB_D3DMultiSampleFormat(SurfaceDesc.MultiSampleType);
       pDesc.Width  := SurfaceDesc.Width;
       pDesc.Height := SurfaceDesc.Height;
@@ -6598,7 +6598,7 @@ begin
       // TODO -oCXBX: dont assume X8R8G8B8 ?
       pBackBuffer := nil;
 
-      hRet := g_pD3DDevice.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, @pBackBuffer);
+      hRet := g_pD3DDevice.GetBackBuffer({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} 0, D3DBACKBUFFER_TYPE_MONO, @pBackBuffer);
 
       // if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
       if (hRet = D3D_OK) and (IDirect3DSurface(pBackBuffer).LockRect({out}LockedRectDest, NULL, 0) = D3D_OK) then
@@ -6850,7 +6850,11 @@ begin
         #13#10');',
       [Stage, Value]);
 
+{$IFDEF DXBX_USE_D3D9}
+  g_pD3DDevice.SetSamplerState(Stage, D3DSAMP_BORDERCOLOR, Value);
+{$ELSE}
   g_pD3DDevice.SetTextureStageState(Stage, D3DTSS_BORDERCOLOR, Value);
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -7007,7 +7011,18 @@ begin
         #13#10');',
       [Value]);
 
+{$IFDEF DXBX_USE_D3D9}
+  // TODO -oDxbx : We need to calculate the sloped scale depth bias, here's what I know :
+  // (see http://blog.csdn.net/qq283397319/archive/2009/02/14/3889014.aspx)
+  //   bias = (max * D3DRS_SLOPESCALEDEPTHBIAS) + D3DRS_DEPTHBIAS (which is Value here)
+  // > bias - Value = max * D3DRS_SLOPESCALEDEPTHBIAS
+  // > D3DRS_SLOPESCALEDEPTHBIAS = (bias - Value) / max
+  // TODO : So, what should we use as bias and max?
+  g_pD3DDevice.SetRenderState(D3DRS_SLOPESCALEDEPTHBIAS, F2DW(1.0)); // For now.
+  g_pD3DDevice.SetRenderState(D3DRS_DEPTHBIAS, Value);
+{$ELSE}
   g_pD3DDevice.SetRenderState(D3DRS_ZBIAS, Value);
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -7027,7 +7042,11 @@ begin
         #13#10');',
       [Value]);
 
+{$IFDEF DXBX_USE_D3D9}
+  // TODO -oDxbx : What can we do to support this?
+{$ELSE}
   g_pD3DDevice.SetRenderState(D3DRS_EDGEANTIALIAS, Value);
+{$ENDIF}
 
   // TODO -oCXBX: Analyze performance and compatibility (undefined behavior on PC with triangles or points)
 
@@ -7723,7 +7742,7 @@ begin
 
   State := EmuXB2PC_D3DTS(State);
 
-  Result := g_pD3DDevice.SetTransform(State, pMatrix);
+  Result := g_pD3DDevice.SetTransform(State, pMatrix{$IFDEF DXBX_USE_D3D9}^{$ENDIF});
 
   EmuSwapFS(fsXbox);
 end;
@@ -7778,7 +7797,7 @@ begin
 
   pVertexBuffer := ppVertexBuffer.Emu.VertexBuffer;
 
-  hRet := IDirect3DVertexBuffer(pVertexBuffer).Lock(OffsetToLock, SizeToLock, {out}ppbData^, Flags);
+  hRet := IDirect3DVertexBuffer(pVertexBuffer).Lock(OffsetToLock, SizeToLock, {out}TLockData(ppbData^), Flags);
   (*DbgPrintf('VertexBuffer 0x%08X was locked: 0x%x - 0x%x, hRet = 0x%08x', [
         pVertexBuffer,
         OffsetToLock,
@@ -7816,7 +7835,7 @@ begin
   pVertexBuffer := ppVertexBuffer^.Emu.VertexBuffer;
   pbData := NULL;
 
-  {Dxbx unused hRet :=} IDirect3DVertexBuffer(pVertexBuffer).Lock(0, 0, {out}pbData, EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
+  {Dxbx unused hRet :=} IDirect3DVertexBuffer(pVertexBuffer).Lock(0, 0, {out}TLockData(pbData), EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
 
   if MayLog(lfUnit) then
   begin
@@ -7839,6 +7858,9 @@ function XTL_EmuIDirect3DDevice_GetStreamSource2
 ): PX_D3DVertexBuffer; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
+{$IFDEF DXBX_USE_D3D9}
+  OffsetInBytes: DWORD;
+{$ENDIF}
   pVertexBuffer: PX_D3DVertexBuffer;
 begin
   EmuSwapFS(fsWindows);
@@ -7855,6 +7877,9 @@ begin
   {ignore HRESULT?}g_pD3DDevice.GetStreamSource(
     StreamNumber,
     {ppVertexBuffer=}@pVertexBuffer,
+{$IFDEF DXBX_USE_D3D9}
+    {out pOffsetInBytes=}OffsetInBytes, // Ignored?
+{$ENDIF}
     {out}pStride^);
 
   EmuSwapFS(fsXbox);
@@ -8175,7 +8200,7 @@ begin
 
     pData := nil;
 
-    hRet := IDirect3DIndexBuffer(g_pIndexBuffer.Emu.IndexBuffer).Lock(0, dwSize, {out}pData, 0);
+    hRet := IDirect3DIndexBuffer(g_pIndexBuffer.Emu.IndexBuffer).Lock(0, dwSize, {out}TLockData(pData), 0);
 
     if (FAILED(hRet)) then
       DxbxKrnlCleanup('IndexBuffer Lock Failed!');
@@ -8186,7 +8211,7 @@ begin
 
     g_pIndexBuffer.Data := ULONG(pData);
 
-    hRet := g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(g_pIndexBuffer.Emu.IndexBuffer), g_dwBaseVertexIndex);
+    hRet := g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(g_pIndexBuffer.Emu.IndexBuffer){$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, g_dwBaseVertexIndex{$ENDIF});
 
     if (FAILED(hRet)) then
       DxbxKrnlCleanup('SetIndices Failed!');
@@ -8250,7 +8275,7 @@ begin
 
       pbData := nil;
 
-      IDirect3DIndexBuffer(pIndexBuffer).Lock(0, 0, {out}pbData, 0);
+      IDirect3DIndexBuffer(pIndexBuffer).Lock(0, 0, {out}TLockData(pbData), 0);
 
       if (pbData = nil) then
         DxbxKrnlCleanup('Could not lock index buffer!');
@@ -8259,7 +8284,7 @@ begin
 
       IDirect3DIndexBuffer(pIndexBuffer).Unlock();
 
-      g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer), g_dwBaseVertexIndex);
+      g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer){$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, g_dwBaseVertexIndex{$ENDIF});
 
       uiNumVertices := VertexCount;
       uiStartIndex := 0;
@@ -8296,7 +8321,7 @@ begin
 
     if(not bActiveIB) then
     begin
-      g_pD3DDevice.SetIndices(nil, 0);
+      g_pD3DDevice.SetIndices(nil{$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, 0{$ENDIF});
       IDirect3DIndexBuffer(pIndexBuffer)._Release();
       pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
     end;
