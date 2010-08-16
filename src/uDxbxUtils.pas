@@ -247,7 +247,7 @@ type
     // compilers pass all floating-point values as 8-byte floats.
     function ReadDouble: Double;
     function ReadExtended: Extended;
-    function ReadPChar: PChar;
+    function ReadPAnsiChar: PAnsiChar;
     procedure ReadArg(var Arg; Size: Integer);
   end;
 
@@ -1474,9 +1474,9 @@ begin
   ReadArg(Result, SizeOf(Extended));
 end;
 
-function RVarArgsReader.ReadPChar: PChar;
+function RVarArgsReader.ReadPAnsiChar: PAnsiChar;
 begin
-  ReadArg(Result, SizeOf(PChar));
+  ReadArg(Result, SizeOf(PAnsiChar));
 end;
 
 procedure RVarArgsReader.ReadArg(var Arg; Size: Integer);
