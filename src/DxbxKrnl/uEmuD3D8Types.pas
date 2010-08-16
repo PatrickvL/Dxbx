@@ -69,6 +69,76 @@ type
   PD3DLIGHT = PD3DLIGHT9;
 
   TLockData = Pointer;
+
+  _D3DVSD_TOKENTYPE = (
+    D3DVSD_TOKEN_NOP        = 0,    // NOP or extension
+    D3DVSD_TOKEN_STREAM,            // stream selector
+    D3DVSD_TOKEN_STREAMDATA,        // stream data definition (map to vertex input memory)
+    D3DVSD_TOKEN_TESSELLATOR,       // vertex input memory from tessellator
+    D3DVSD_TOKEN_CONSTMEM,          // constant memory from shader
+    D3DVSD_TOKEN_EXT,               // extension
+    D3DVSD_TOKEN_END        = 7     // end-of-array (requires all DWORD bits to be 1)
+
+  );
+
+  TD3DVSDTokenType = _D3DVSD_TOKENTYPE;
+
+const
+  D3DVSD_TOKENTYPESHIFT         = 29;
+  D3DVSD_TOKENTYPEMASK          = (7 shl D3DVSD_TOKENTYPESHIFT);
+
+  D3DVSD_STREAMNUMBERSHIFT      = 0;
+  D3DVSD_STREAMNUMBERMASK       = ($F shl D3DVSD_STREAMNUMBERSHIFT);
+
+  D3DVSD_DATALOADTYPESHIFT      = 28;
+  D3DVSD_DATALOADTYPEMASK       = ($1 shl D3DVSD_DATALOADTYPESHIFT);
+
+  D3DVSD_DATATYPESHIFT          = 16;
+  D3DVSD_DATATYPEMASK           = ($F shl D3DVSD_DATATYPESHIFT);
+
+  D3DVSD_SKIPCOUNTSHIFT         = 16;
+  D3DVSD_SKIPCOUNTMASK          = ($F shl D3DVSD_SKIPCOUNTSHIFT);
+
+  D3DVSD_VERTEXREGSHIFT         = 0;
+  D3DVSD_VERTEXREGMASK          = ($1F shl D3DVSD_VERTEXREGSHIFT);
+
+  D3DVSD_VERTEXREGINSHIFT       = 20;
+  D3DVSD_VERTEXREGINMASK        = ($F shl D3DVSD_VERTEXREGINSHIFT);
+
+  D3DVSD_CONSTCOUNTSHIFT        = 25;
+  D3DVSD_CONSTCOUNTMASK         = ($F shl D3DVSD_CONSTCOUNTSHIFT);
+
+  D3DVSD_CONSTADDRESSSHIFT      = 0;
+  D3DVSD_CONSTADDRESSMASK       = ($7F shl D3DVSD_CONSTADDRESSSHIFT);
+
+  D3DVSD_CONSTRSSHIFT           = 16;
+  D3DVSD_CONSTRSMASK            = ($1FFF shl D3DVSD_CONSTRSSHIFT);
+
+  D3DVSD_EXTCOUNTSHIFT          = 24;
+  D3DVSD_EXTCOUNTMASK           = ($1F shl D3DVSD_EXTCOUNTSHIFT);
+
+  D3DVSD_EXTINFOSHIFT           = 0;
+  D3DVSD_EXTINFOMASK            = ($FFFFFF shl D3DVSD_EXTINFOSHIFT);
+
+
+  D3DVSD_STREAMTESSSHIFT        = 28;
+  D3DVSD_STREAMTESSMASK         = (1 shl D3DVSD_STREAMTESSSHIFT);
+
+  D3DVSDT_FLOAT1      = $00;    // 1D float expanded to (value; 0.; 0.; 1.)
+  D3DVSDT_FLOAT2      = $01;    // 2D float expanded to (value; value; 0.; 1.)
+  D3DVSDT_FLOAT3      = $02;    // 3D float expanded to (value; value; value; 1.)
+  D3DVSDT_FLOAT4      = $03;    // 4D float
+  D3DVSDT_D3DCOLOR    = $04;    // 4D packed unsigned bytes mapped to 0. to 1. range
+                                // Input is in D3DCOLOR format (ARGB) expanded to (R; G; B; A)
+  D3DVSDT_UBYTE4      = $05;    // 4D unsigned byte
+  D3DVSDT_SHORT2      = $06;    // 2D signed short expanded to (value; value; 0.; 1.)
+  D3DVSDT_SHORT4      = $07;    // 4D signed short
+
+function D3DVSD_SKIP(_DWORDCount: DWord): DWord;
+function D3DVSD_REG(_VertexRegister, _Type: DWord): DWord;
+function D3DVSD_TESSUV(_VertexRegister: DWord): DWord;
+function D3DVSD_TESSNORMAL(_VertexRegisterIn, _VertexRegisterOut: DWord): DWord;
+
 {$ELSE}
   IDirect3D = IDirect3D8;
   IDirect3DBaseTexture = IDirect3DBaseTexture8;
@@ -109,6 +179,7 @@ const
   D3DSAMP_ADDRESSU = D3DTSS_ADDRESSU;
   D3DSAMP_ADDRESSV = D3DTSS_ADDRESSV;
   D3DSAMP_ADDRESSW = D3DTSS_ADDRESSW;
+  D3DSAMP_BORDERCOLOR = D3DTSS_BORDERCOLOR;
   D3DSAMP_MAGFILTER = D3DTSS_MAGFILTER;
   D3DSAMP_MINFILTER = D3DTSS_MINFILTER;
   D3DSAMP_MIPFILTER = D3DTSS_MIPFILTER;
@@ -1122,6 +1193,36 @@ end;
 //  X_D3DVSDE_TEXCOORD2    = 11;
 //  X_D3DVSDE_TEXCOORD3    = 12;
 //  X_D3DVSDE_VERTEX       = $FFFFFFFF; // Xbox extension for Begin/End drawing
+
+{$IFDEF DXBX_USE_D3D9}
+function D3DVSD_MAKETOKENTYPE(tokenType: TD3DVSDTokenType): DWord;
+begin
+  Result:= ((DWord(tokenType) shl D3DVSD_TOKENTYPESHIFT) and D3DVSD_TOKENTYPEMASK);
+end;
+
+function D3DVSD_SKIP(_DWORDCount: DWord): DWord;
+begin
+  Result:= D3DVSD_MAKETOKENTYPE(D3DVSD_TOKEN_STREAMDATA) or $10000000 or (_DWORDCount shl D3DVSD_SKIPCOUNTSHIFT);
+end;
+
+function D3DVSD_REG( _VertexRegister, _Type: DWord): DWord;
+begin
+  Result:= D3DVSD_MAKETOKENTYPE(D3DVSD_TOKEN_STREAMDATA) or ((_Type shl D3DVSD_DATATYPESHIFT) or _VertexRegister);
+end;
+
+function D3DVSD_TESSUV(_VertexRegister: DWord): DWord;
+begin
+  Result:= D3DVSD_MAKETOKENTYPE(D3DVSD_TOKEN_TESSELLATOR) or $10000000 or
+           ($01 shl D3DVSD_DATATYPESHIFT) or _VertexRegister;
+end;
+
+function D3DVSD_TESSNORMAL(_VertexRegisterIn, _VertexRegisterOut: DWord): DWord;
+begin
+  Result:= D3DVSD_MAKETOKENTYPE(D3DVSD_TOKEN_TESSELLATOR) or
+           (_VertexRegisterIn shl D3DVSD_VERTEXREGINSHIFT) or
+           ($02 shl D3DVSD_DATATYPESHIFT) or _VertexRegisterOut;
+end;
+{$ENDIF}
 
 end.
 

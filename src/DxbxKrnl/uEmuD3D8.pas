@@ -416,15 +416,19 @@ end;
 // A wrapper for Present() with an extra safeguard to restore 'device lost' errors :
 function DxbxPresent(pSourceRect: PRECT; pDestRect: PRECT; pDummy1: HWND; pDummy2: PVOID): UINT;
 begin
+{$IFDEF DXBX_USE_D3D9}
   // end scene
   IDirect3DDevice9(g_pD3DDevice).EndScene();
+{$ENDIF}
 
   g_bIsBusy := BOOL_TRUE;
   Result := g_pD3DDevice.Present(pSourceRect, pDestRect, pDummy1, pDummy2);
   g_bIsBusy := BOOL_FALSE;
 
+{$IFDEF DXBX_USE_D3D9}
   // begin scene
   IDirect3DDevice9(g_pD3DDevice).BeginScene();
+{$ENDIF}
 
   if Result = D3D_OK then
     Exit;
@@ -3138,7 +3142,11 @@ begin
     else
     begin
 {$IFDEF DXBX_USE_D3D9}
-  {$MESSAGE 'fixme'}
+      hRet := g_pD3DDevice.CreateVertexShader
+      (
+          pRecompiledFunction,
+          PIDirect3DVertexShader9(Handle)
+      );
 {$ELSE}
       hRet := g_pD3DDevice.CreateVertexShader
       (
@@ -3174,7 +3182,11 @@ begin
         {ppCompilationErrors}NULL);
       if not (FAILED(hRet)) then // Dxbx addition
 {$IFDEF DXBX_USE_D3D9}
-        ; {$MESSAGE 'fixme'}
+        hRet := g_pD3DDevice.CreateVertexShader
+        (
+            PDWORD(ID3DXBuffer(pRecompiledBuffer).GetBufferPointer()),
+            PIDirect3DVertexShader9(Handle)
+        );
 {$ELSE}
         hRet := g_pD3DDevice.CreateVertexShader
         (
@@ -6857,11 +6869,7 @@ begin
         #13#10');',
       [Stage, Value]);
 
-{$IFDEF DXBX_USE_D3D9}
-  g_pD3DDevice.SetSamplerState(Stage, D3DSAMP_BORDERCOLOR, Value);
-{$ELSE}
-  g_pD3DDevice.SetTextureStageState(Stage, D3DTSS_BORDERCOLOR, Value);
-{$ENDIF}
+  IDirect3DDevice_SetSamplerState(g_pD3DDevice, Stage, D3DSAMP_BORDERCOLOR, Value);
 
   EmuSwapFS(fsXbox);
 end;

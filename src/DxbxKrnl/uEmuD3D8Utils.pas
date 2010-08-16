@@ -71,7 +71,7 @@ function IDirect3DDevice_SetSamplerState(const aDirect3DDevice: IDirect3DDevice;
 
 function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;
 
-function F2DW(const aValue: Float): DWORD;
+function F2DW(const aValue: Float): DWORD; inline;
 
 implementation
 

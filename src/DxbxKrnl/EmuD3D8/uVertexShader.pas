@@ -1893,7 +1893,6 @@ begin
   Result := DWORD(PCRegisterType);
 end; // Xb2PCRegisterType
 
-{$IFNDEF DXBX_USE_D3D9}
 function VshGetTokenType(Token: DWORD): DWORD; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
@@ -2309,7 +2308,6 @@ begin
 
   Result := Step;
 end; // VshRecompileToken
-{$ENDIF}
 
 // recompile xbox vertex shader declaration
 function XTL_EmuRecompileVshDeclaration
@@ -2328,7 +2326,6 @@ var
   Step: DWORD;
   StreamsSize: DWORD;
 begin
-{$IFNDEF DXBX_USE_D3D9}
   // First of all some info:
   // We have to figure out which flags are set and then
   // we have to patch their params
@@ -2367,7 +2364,6 @@ begin
   memcpy(pVertexDynamicPatch.pStreamPatches,
          @(PatchData.StreamPatchData.pStreamPatches[0]),
          StreamsSize);
-{$ENDIF}
 
   Result := D3D_OK;
 end; // XTL_EmuRecompileVshDeclaration
