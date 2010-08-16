@@ -35,7 +35,8 @@ uses
   uTypes,
   uConvert,
   uDxbxUtils, // iif
-  uDxbxKrnlUtils;
+  uDxbxKrnlUtils,
+  uEmuD3D8Utils;
 
 procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
 function VersionAdjust_D3DTSS(const NewValue: DWORD): DWORD; {NOPATCH}
@@ -213,7 +214,7 @@ begin
         if (X_D3DTSS = 5) then
           DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ADDRESSU, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_ADDRESSU, X_D3DTSS);
       end;
 
       X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_ADDRESSV)];
@@ -222,7 +223,7 @@ begin
         if (X_D3DTSS = 5) then
           DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ADDRESSV, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_ADDRESSV, X_D3DTSS);
       end;
 
       X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_ADDRESSW)];
@@ -231,7 +232,7 @@ begin
         if (X_D3DTSS = 5) then
           DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ADDRESSW, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_ADDRESSW, X_D3DTSS);
       end;
 
       X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_MAGFILTER)];
@@ -240,7 +241,7 @@ begin
         if (X_D3DTSS = 4) then
           DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_MAGFILTER, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MAGFILTER, X_D3DTSS);
       end;
 
       X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_MINFILTER)];
@@ -249,7 +250,7 @@ begin
         if (X_D3DTSS = 4) then
           DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_MINFILTER, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MINFILTER, X_D3DTSS);
       end;
 
       X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_MIPFILTER)];
@@ -258,20 +259,20 @@ begin
         if (X_D3DTSS = 4) then
           DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_MIPFILTER, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MIPFILTER, X_D3DTSS);
       end;
 
       X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_MIPMAPLODBIAS)];
       if (X_D3DTSS <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_MIPMAPLODBIAS, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MIPMAPLODBIAS, X_D3DTSS);
 
       X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_MAXMIPLEVEL)];
       if (X_D3DTSS <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_MAXMIPLEVEL, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MAXMIPLEVEL, X_D3DTSS);
 
       X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_MAXANISOTROPY)];
       if (X_D3DTSS <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_MAXANISOTROPY, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MAXANISOTROPY, X_D3DTSS);
 
       // TODO -oDxbx : Emulate X_D3DTSS_COLORKEYOP (Xbox ext.)
       // TODO -oDxbx : Emulate X_D3DTSS_COLORSIGN (Xbox ext.)

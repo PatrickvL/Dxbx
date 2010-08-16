@@ -8252,7 +8252,7 @@ begin
     begin
       BaseIndex := 0;
 
-      g_pD3DDevice.GetIndices(@pIndexBuffer, {out}BaseIndex);
+      g_pD3DDevice.GetIndices(@pIndexBuffer{$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, {out}BaseIndex{$ENDIF});
 
       if (pIndexBuffer <> nil) then
       begin
@@ -8300,7 +8300,14 @@ begin
     begin
       g_pD3DDevice.DrawIndexedPrimitive
       (
-        EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
+        EmuPrimitiveType(VPDesc.PrimitiveType),
+{$IFDEF DXBX_USE_D3D9}
+        {BaseVertexIndex=}0,
+{$ENDIF}
+        {MinVertexIndex=}0,
+        uiNumVertices,
+        uiStartIndex,
+        VPDesc.dwPrimitiveCount
       );
       (* Cxbx has this commented out :
       if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
@@ -8314,7 +8321,14 @@ begin
       begin
         g_pD3DDevice.DrawIndexedPrimitive
         (
-          EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
+          EmuPrimitiveType(VPDesc.PrimitiveType),
+{$IFDEF DXBX_USE_D3D9}
+          {BaseVertexIndex=}0,
+{$ENDIF}
+          {MinVertexIndex=}0,
+          uiNumVertices,
+          uiStartIndex,
+          VPDesc.dwPrimitiveCount
         );
       end; *)
     end;
@@ -8413,7 +8427,7 @@ end;
 function XTL_EmuIDirect3DDevice_SetLight
 (
   Index: DWORD;
-  pLight: PD3DLIGHT8
+  pLight: PD3DLIGHT
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -8540,7 +8554,12 @@ begin
       [ pRenderTarget, pRenderTarget_EmuSurface,
         pNewZStencil,  pNewZStencil_EmuSurface]);
 
+{$IFDEF DXBX_USE_D3D9}
+  Result := g_pD3DDevice.SetRenderTarget({RenderTargetIndex=}0, IDirect3DSurface(pPCRenderTarget));
+  IDirect3DDevice9(g_pD3DDevice).SetDepthStencilSurface(IDirect3DSurface9(pPCNewZStencil));
+{$ELSE}
   Result := g_pD3DDevice.SetRenderTarget(IDirect3DSurface(pPCRenderTarget), IDirect3DSurface(pPCNewZStencil));
+{$ENDIF}
 
   if FAILED(Result) then
     EmuWarning('SetRenderTarget failed!' +
@@ -8769,7 +8788,7 @@ begin
         #13#10');',
       [Handle]);
 
-  RealHandle := 0;
+  Result := D3D_OK;
 
   if (VshHandleIsVertexShader(Handle)) then
   begin
@@ -8788,9 +8807,13 @@ begin
 
     DxbxFree(pVertexShader);
     DxbxFree(pD3DVertexShader);
-  end;
 
-  Result := g_pD3DDevice.DeleteVertexShader(RealHandle);
+{$IFDEF DXBX_USE_D3D9}
+    IDirect3DVertexShader9(RealHandle)._Release; // TODO -oDxbx : Is this correctly done instead of DeleteVertexShader() ?
+{$ELSE}
+    Result := g_pD3DDevice.DeleteVertexShader(RealHandle);
+{$ENDIF}
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -8890,10 +8913,18 @@ begin
   if g_BuildVersion <= 4361 then
     Inc(Register_, X_VSCM_CORRECTION{=96});
 
+{$IFDEF DXBX_USE_D3D9}
+  Result := g_pD3DDevice.GetVertexShaderConstantF
+{$ELSE}
   Result := g_pD3DDevice.GetVertexShaderConstant
+{$ENDIF}
     (
     Register_,
+{$IFDEF DXBX_USE_D3D9}
+    PSingle(pConstantData),
+{$ELSE}
     {out}pConstantData^,
+{$ENDIF}
     ConstantCount
     );
 
@@ -9270,6 +9301,9 @@ begin
     PCSurfaceFormat,
     Windowed <> BOOL_FALSE,
     PCMultiSampleType
+{$IFDEF DXBX_USE_D3D9}
+    , {pQualityLevels=}nil
+{$ENDIF}
     );
 
   EmuSwapFS(fsXbox);
@@ -9571,7 +9605,11 @@ begin
   // blueshogun96 10/1/07
   // I'm assuming this is the same as the PC version...
 
+{$IFDEF DXBX_USE_D3D9}
+  Result := g_pD3DDevice.CreateStateBlock(Type_, PIDirect3DStateBlock9(pToken));
+{$ELSE}
   Result := g_pD3DDevice.CreateStateBlock(Type_, {out}pToken^);
+{$ENDIF}
 
   if (FAILED(Result)) then
     EmuWarning('CreateStateBlock failed!');
@@ -10063,7 +10101,11 @@ begin
       _(Token, 'Token').
     LogEnd();
 
+{$IFDEF DXBX_USE_D3D9}
+  Result := IDirect3DStateBlock9(Token)._Release;
+{$ELSE}
   Result := g_pD3DDevice.DeleteStateBlock(Token);
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -10180,7 +10222,7 @@ end;
 function XTL_EmuIDirect3DDevice_GetLight
 (
   Index: DWORD;
-  pLight: PD3DLIGHT8
+  pLight: PD3DLIGHT
 ): HRESULT; stdcall;
 // Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
@@ -10319,7 +10361,7 @@ begin
       _(pRasterStatus, 'pRasterStatus').
     LogEnd();
 
-  Result := g_pD3DDevice.GetRasterStatus({out}pRasterStatus^);
+  Result := g_pD3DDevice.GetRasterStatus({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} {out}pRasterStatus^);
 
   EmuSwapFS(fsXbox);
 end;
@@ -10820,7 +10862,12 @@ begin
       _(ConstantCount, 'ConstantCount').
     LogEnd();
 
+{$IFDEF DXBX_USE_D3D9}
+  g_pD3DDevice.GetPixelShaderConstantF(Register_, pConstantData, ConstantCount);
+{$ELSE}
   g_pD3DDevice.GetPixelShaderConstant(Register_, pConstantData, ConstantCount);
+{$ENDIF}
+
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);

@@ -585,7 +585,7 @@ begin
       begin
         m_pStreams[uiStream].pOriginalStream := pOrigVertexBuffer;
         m_pStreams[uiStream].uiOrigStride := uiStride;
-        g_pD3DDevice.SetStreamSource(uiStream, IDirect3DVertexBuffer(pCachedStream_.Stream.pPatchedStream), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0{$ENDIF} pCachedStream_.Stream.uiNewStride);
+        g_pD3DDevice.SetStreamSource(uiStream, IDirect3DVertexBuffer(pCachedStream_.Stream.pPatchedStream), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0, {$ENDIF} pCachedStream_.Stream.uiNewStride);
         IDirect3DVertexBuffer(pCachedStream_.Stream.pPatchedStream)._AddRef();
         IDirect3DVertexBuffer(pCachedStream_.Stream.pOriginalStream)._AddRef();
         m_pStreams[uiStream].pPatchedStream := pCachedStream_.Stream.pPatchedStream;
@@ -654,6 +654,9 @@ var
   pNewVertexBuffer: XTL_PIDirect3DVertexBuffer8;
   pOrigData: Puint08;
   pNewData: Puint08;
+{$IFDEF DXBX_USE_D3D9}
+  uiOffsetInBytes: UINT;
+{$ENDIF}
   uiStride: UINT;
   Desc: D3DVERTEXBUFFER_DESC;
   pStreamPatch: PSTREAM_DYNAMIC_PATCH;
@@ -916,7 +919,7 @@ begin
     if Assigned(pOrigVertexBuffer) then // Dxbx addition
       IDirect3DVertexBuffer(pOrigVertexBuffer).Unlock();
 
-    if (FAILED(g_pD3DDevice.SetStreamSource(uiStream, IDirect3DVertexBuffer(pNewVertexBuffer), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0{$ENDIF} pStreamPatch.ConvertedStride))) then
+    if (FAILED(g_pD3DDevice.SetStreamSource(uiStream, IDirect3DVertexBuffer(pNewVertexBuffer), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0, {$ENDIF} pStreamPatch.ConvertedStride))) then
     begin
       DxbxKrnlCleanup('Failed to set the type patched buffer as the new stream source!');
     end;
@@ -1103,7 +1106,7 @@ begin
   begin
     IDirect3DVertexBuffer(pNewVertexBuffer).Unlock();
 
-    if (FAILED(g_pD3DDevice.SetStreamSource(uiStream, IDirect3DVertexBuffer(pNewVertexBuffer), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0{$ENDIF} uiStride))) then
+    if (FAILED(g_pD3DDevice.SetStreamSource(uiStream, IDirect3DVertexBuffer(pNewVertexBuffer), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0, {$ENDIF} uiStride))) then
     begin
       DxbxKrnlCleanup('Failed to set the texcoord patched FVF buffer as the new stream source.');
     end;
@@ -1379,7 +1382,7 @@ begin
     if (pStream.pPatchedStream <> nil) then // Dxbx addition - release the lock we got earlier
       IDirect3DVertexBuffer(pStream.pPatchedStream).Unlock();
 
-    g_pD3DDevice.SetStreamSource(0, IDirect3DVertexBuffer(pStream.pPatchedStream), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0{$ENDIF} pStream.uiNewStride);
+    g_pD3DDevice.SetStreamSource(0, IDirect3DVertexBuffer(pStream.pPatchedStream), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0, {$ENDIF} pStream.uiNewStride);
   end;
 
   pPatchDesc.uiVertexStreamZeroStride := pStream.uiNewStride; // Only usefull if changed (which it isn't)
@@ -1447,7 +1450,7 @@ begin
   begin
     if (m_pStreams[uiStream].pOriginalStream <> NULL) and (m_pStreams[uiStream].pPatchedStream <> NULL) then
     begin
-      g_pD3DDevice.SetStreamSource(0, IDirect3DVertexBuffer(m_pStreams[uiStream].pOriginalStream), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0{$ENDIF} m_pStreams[uiStream].uiOrigStride);
+      g_pD3DDevice.SetStreamSource(0, IDirect3DVertexBuffer(m_pStreams[uiStream].pOriginalStream), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0, {$ENDIF} m_pStreams[uiStream].uiOrigStride);
     end;
 
     if (m_pStreams[uiStream].pOriginalStream <> NULL) then
