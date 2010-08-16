@@ -103,16 +103,63 @@ end;
 function {008} xboxkrnl_DbgPrint(
   Format: PCCH
   ): ULONG; cdecl; // varargs;
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:1
-//var
-//  va: RVarArgsReader;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:75
+var
+  va: RVarArgsReader;
+  cp: PAnsiChar;
+  ResultStr: AnsiString;
 begin
   EmuSwapFS(fsWindows);
-  // TODO : Either parse the varargs, or somehow call into a
-  // 'varargs'-version of sprintf and use the resulting string.
-  //
-  //  va.Create(Format, SizeOf(Format));
-  Result := Unimplemented('DbgPrint');
+
+  // Parse the varargs :
+  va.Create(@Format, SizeOf(Format));
+
+  cp := PAnsiChar(Format);
+  ResultStr := '';
+  while True do
+  begin
+    case cp^ of
+      #0: Break;
+      '%':
+      begin
+        // Skip the '%' (and any intermediate number for now) :
+        repeat
+          Inc(cp);
+        until not (cp^ in ['+','-','.',',','0'..'9']);
+
+        // Handle the various types of input :
+        case cp^ of
+          'i', 'd', 'u',
+          'I', 'D', 'U':
+            ResultStr := ResultStr + IntToStr(va.ReadInt32);
+          'f',
+          'F':
+            ResultStr := ResultStr + FloatToStr(va.ReadDouble);
+          's',
+          'S':
+            ResultStr := ResultStr + AnsiString(va.ReadPAnsiChar);
+          'x',
+          'X':
+            ResultStr := ResultStr + IntToHex(va.ReadInt32, 8);
+        else
+          ResultStr := ResultStr + '!DXBX WARNING:UNSUPPORTED INPUT!';
+        end;
+      end;
+    else
+      // Add the character (could be done faster, but suffices for now) :
+      ResultStr := ResultStr + cp^;
+    end;
+
+    Inc(cp);
+  end;
+
+  // Return the length of the string (if that's what we're supposed to do?) :
+  Result := Length(ResultStr);
+
+  // Write it to our log :
+  if MayLog(lfKernel or lfDebug) then
+    DbgPrintf('EmuKrnl : ' + string(ResultStr));
+
   EmuSwapFS(fsXbox);
 end;
 
