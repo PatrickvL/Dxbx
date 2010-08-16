@@ -416,9 +416,16 @@ end;
 // A wrapper for Present() with an extra safeguard to restore 'device lost' errors :
 function DxbxPresent(pSourceRect: PRECT; pDestRect: PRECT; pDummy1: HWND; pDummy2: PVOID): UINT;
 begin
+  // end scene
+  IDirect3DDevice9(g_pD3DDevice).EndScene();
+
   g_bIsBusy := BOOL_TRUE;
   Result := g_pD3DDevice.Present(pSourceRect, pDestRect, pDummy1, pDummy2);
   g_bIsBusy := BOOL_FALSE;
+
+  // begin scene
+  IDirect3DDevice9(g_pD3DDevice).BeginScene();
+
   if Result = D3D_OK then
     Exit;
 
