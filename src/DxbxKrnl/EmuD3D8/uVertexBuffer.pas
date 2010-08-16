@@ -68,6 +68,9 @@ type _VertexPatchDesc = record
     uiVertexStreamZeroStride: UINT;
     // The current vertex shader, used to identify the streams
     hVertexShader: DWORD;
+{$IFDEF DXBX_USE_D3D9}
+    uiOffsetInBytes: UINT;
+{$ENDIF}
     procedure VertexPatchDesc();
   end; // size = 28 (as in Cxbx)
   VertexPatchDesc = _VertexPatchDesc;
@@ -80,6 +83,9 @@ type _PATCHEDSTREAM = record
     uiOrigStride: UINT;
     uiNewStride: UINT;
     bUsedCached: _bool;
+{$IFDEF DXBX_USE_D3D9}
+    uiOffsetInBytes: UINT;
+{$ENDIF}
   end; // size = 20 (as in Cxbx)
   PATCHEDSTREAM = _PATCHEDSTREAM;
   PPATCHEDSTREAM = ^PATCHEDSTREAM;
@@ -375,7 +381,7 @@ begin
     begin
       DxbxKrnlCleanup('Could not retrieve original buffer size');
     end;
-    if (FAILED(IDirect3DVertexBuffer(pOrigVertexBuffer).Lock(0, 0, {out}PByte(pCalculateData), 0))) then
+    if (FAILED(IDirect3DVertexBuffer(pOrigVertexBuffer).Lock(0, 0, {out}TLockData(pCalculateData), 0))) then
     begin
       DxbxKrnlCleanup('Couldn''t lock the original buffer');
     end;
@@ -454,6 +460,9 @@ function VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc;
                                          pbFatalError: P_bool): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
+{$IFDEF DXBX_USE_D3D9}
+  uiOffsetInBytes: UINT;
+{$ENDIF}
   uiStride: UINT;
   pOrigVertexBuffer: XTL_PIDirect3DVertexBuffer8;
   Desc: D3DVERTEXBUFFER_DESC;
@@ -471,7 +480,14 @@ begin
 
   if (nil=pPatchDesc.pVertexStreamZeroData) then
   begin
-    g_pD3DDevice.GetStreamSource(uiStream, PIDirect3DVertexBuffer(@pOrigVertexBuffer), {out}uiStride);
+    g_pD3DDevice.GetStreamSource(
+      uiStream,
+      PIDirect3DVertexBuffer(@pOrigVertexBuffer),
+{$IFDEF DXBX_USE_D3D9}
+      {out}uiOffsetInBytes,
+{$ENDIF}
+      {out}uiStride);
+
     if (nil=pOrigVertexBuffer) then
     begin
       (*if(nil=g_pVertexBuffer) or (nil=g_pVertexBuffer.Emu.VertexBuffer) then
@@ -501,6 +517,9 @@ begin
     begin
       DxbxKrnlCleanup('Trying to find a cached Draw..UP with more than stream zero!');
     end;
+{$IFDEF DXBX_USE_D3D9}
+    uiOffsetInBytes := pPatchDesc.uiOffsetInBytes;
+{$ENDIF}
     uiStride := pPatchDesc.uiVertexStreamZeroStride;
     pCalculateData := Puint08(pPatchDesc.pVertexStreamZeroData);
     // TODO -oCXBX: This is sometimes the number of indices, which isn't too good
@@ -521,7 +540,7 @@ begin
     begin
       if (nil=pPatchDesc.pVertexStreamZeroData) then
       begin
-        if (FAILED(IDirect3DVertexBuffer(pOrigVertexBuffer).Lock(0, 0, {out}PByte(pCalculateData), 0))) then
+        if (FAILED(IDirect3DVertexBuffer(pOrigVertexBuffer).Lock(0, 0, {out}TLockData(pCalculateData), 0))) then
         begin
           DxbxKrnlCleanup('Couldn''t lock the original buffer');
         end;
@@ -675,7 +694,13 @@ begin
 
   if (nil=pPatchDesc.pVertexStreamZeroData) then
   begin
-    g_pD3DDevice.GetStreamSource(uiStream, PIDirect3DVertexBuffer(@pOrigVertexBuffer), {out}uiStride);
+    g_pD3DDevice.GetStreamSource(
+      uiStream,
+      PIDirect3DVertexBuffer(@pOrigVertexBuffer),
+{$IFDEF DXBX_USE_D3D9}
+      {out}uiOffsetInBytes,
+{$ENDIF}
+      {out}uiStride);
     if (FAILED(IDirect3DVertexBuffer(pOrigVertexBuffer).GetDesc({out}Desc))) then
     begin
       DxbxKrnlCleanup('Could not retrieve original buffer size');
@@ -684,12 +709,12 @@ begin
     pPatchDesc.dwVertexCount := Desc.Size div uiStride;
     dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
 
-    if (FAILED(IDirect3DVertexBuffer(pOrigVertexBuffer).Lock(0, 0, {out}PByte(pOrigData), 0))) then
+    if (FAILED(IDirect3DVertexBuffer(pOrigVertexBuffer).Lock(0, 0, {out}TLockData(pOrigData), 0))) then
     begin
       DxbxKrnlCleanup('Couldn''t lock the original buffer');
     end;
     g_pD3DDevice.CreateVertexBuffer(dwNewSize, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer(@pNewVertexBuffer){$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF});
-    if (FAILED(IDirect3DVertexBuffer(pNewVertexBuffer).Lock(0, 0, {out}PByte(pNewData), 0))) then
+    if (FAILED(IDirect3DVertexBuffer(pNewVertexBuffer).Lock(0, 0, {out}TLockData(pNewData), 0))) then
     begin
       DxbxKrnlCleanup('Couldn''t lock the new buffer');
     end;
@@ -935,6 +960,9 @@ var
   pStream: PPATCHEDSTREAM;
   pData: Puint08;
   pUVData: Puint08;
+{$IFDEF DXBX_USE_D3D9}
+  uiOffsetInBytes: uint;
+{$ENDIF}
   uiStride: uint;
   uiVertexCount: uint;
 
@@ -976,6 +1004,9 @@ begin
     // In-place patching of inline buffer.
     pNewVertexBuffer := nil;
     pData := Puint08(pPatchDesc.pVertexStreamZeroData);
+{$IFDEF DXBX_USE_D3D9}
+    uiOffsetInBytes := pPatchDesc.uiOffsetInBytes; // Ignored?
+{$ENDIF}
     uiStride := pPatchDesc.uiVertexStreamZeroStride;
     uiVertexCount := pPatchDesc.dwVertexCount;
   end
@@ -983,7 +1014,13 @@ begin
   begin
     // Copy stream for patching and caching.
 
-    g_pD3DDevice.GetStreamSource(uiStream, PIDirect3DVertexBuffer(@pOrigVertexBuffer), {out}uiStride);
+    g_pD3DDevice.GetStreamSource(
+      uiStream,
+      PIDirect3DVertexBuffer(@pOrigVertexBuffer),
+{$IFDEF DXBX_USE_D3D9}
+      {out}uiOffsetInBytes, // Ignored?
+{$ENDIF}
+      {out}uiStride);
 
     if (nil=pOrigVertexBuffer) or (FAILED(IDirect3DVertexBuffer(pOrigVertexBuffer).GetDesc({out}Desc))) then
     begin
@@ -991,12 +1028,12 @@ begin
     end;
     uiVertexCount := Desc.Size div uiStride;
 
-    if(FAILED(IDirect3DVertexBuffer(pOrigVertexBuffer).Lock(0, 0, {out}pOrigData, 0))) then
+    if(FAILED(IDirect3DVertexBuffer(pOrigVertexBuffer).Lock(0, 0, {out}TLockData(pOrigData), 0))) then
     begin
       DxbxKrnlCleanup('Couldn''t lock original FVF buffer.');
     end;
     g_pD3DDevice.CreateVertexBuffer(Desc.Size, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer(@pNewVertexBuffer){$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF});
-    if(FAILED(IDirect3DVertexBuffer(pNewVertexBuffer).Lock(0, 0, {out}PByte(pData), 0))) then
+    if(FAILED(IDirect3DVertexBuffer(pNewVertexBuffer).Lock(0, 0, {out}TLockData(pData), 0))) then
     begin
       DxbxKrnlCleanup('Couldn''t lock new FVF buffer.');
     end;
@@ -1176,7 +1213,13 @@ begin
 
   if (pPatchDesc.pVertexStreamZeroData = nil) then
   begin
-    g_pD3DDevice.GetStreamSource(0, PIDirect3DVertexBuffer(@(pStream.pOriginalStream)), {out}pStream.uiOrigStride);
+    g_pD3DDevice.GetStreamSource(
+      0,
+      PIDirect3DVertexBuffer(@(pStream.pOriginalStream)),
+{$IFDEF DXBX_USE_D3D9}
+      {out}pStream.uiOffsetInBytes,
+{$ENDIF}
+      {out}pStream.uiOrigStride);
   end
   else
   begin
@@ -1226,12 +1269,12 @@ begin
 
     if (pStream.pOriginalStream <> nil) then
     begin
-      IDirect3DVertexBuffer(pStream.pOriginalStream).Lock(0, 0, {out}pOrigVertexData, 0);
+      IDirect3DVertexBuffer(pStream.pOriginalStream).Lock(0, 0, {out}TLockData(pOrigVertexData), 0);
     end;
 
     if (pStream.pPatchedStream <> nil) then
     begin
-      IDirect3DVertexBuffer(pStream.pPatchedStream).Lock(0, 0, {out}pPatchedVertexData, 0);
+      IDirect3DVertexBuffer(pStream.pPatchedStream).Lock(0, 0, {out}TLockData(pPatchedVertexData), 0);
     end;
   end
   else

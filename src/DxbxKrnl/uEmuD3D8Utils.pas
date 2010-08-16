@@ -69,6 +69,8 @@ function IDirect3DDevice_CreateVolumeTexture(const aDirect3DDevice: IDirect3DDev
 
 function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;
 
+function F2DW(const aValue: Float): DWORD;
+
 implementation
 
 function iif(AValue: Boolean; const ATrue: TD3DDevType; const AFalse: TD3DDevType): TD3DDevType; overload;
@@ -213,6 +215,11 @@ begin
   Result.m[3,1] := a.m[0,1]*b.m[3,0] + a.m[1,1]*b.m[3,1] + a.m[2,1]*b.m[3,2] + a.m[3,1]*b.m[3,3];
   Result.m[3,2] := a.m[0,2]*b.m[3,0] + a.m[1,2]*b.m[3,1] + a.m[2,2]*b.m[3,2] + a.m[3,2]*b.m[3,3];
   Result.m[3,3] := a.m[0,3]*b.m[3,0] + a.m[1,3]*b.m[3,1] + a.m[2,3]*b.m[3,2] + a.m[3,3]*b.m[3,3];
+end;
+
+function F2DW(const aValue: Float): DWORD;
+begin
+  Result := PDWORD(@aValue)^;
 end;
 
 end.
