@@ -9448,15 +9448,23 @@ function XTL_EmuIDirect3DResource_SetPrivateData
   SizeOfData: DWORD;
   Flags: DWORD
 ): HRESULT; stdcall;
-// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirect3DResource_SetPrivateData');
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DResource_SetPrivateData').
+      _(pThis, 'pThis').
+      _(refguid, 'refguid').
+      _(pData, 'pData').
+      _(SizeOfData, 'SizeOfData').
+      _(Flags, 'Flags').
+    LogEnd();
+
+  IDirect3DResource(pThis).SetPrivateData(refGuid^, pData, SizeOfData, Flags);
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
-
-  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DResource_GetPrivateData
@@ -9464,29 +9472,43 @@ function XTL_EmuIDirect3DResource_GetPrivateData
   pThis: PX_D3DResource;
   refguid: REFGUID;
   pData: Pvoid;
-  SizeOfData: PDWORD
+  PSizeOfData: PDWORD
 ): HRESULT; stdcall;
-// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirect3DResource_GetPrivateData');
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DResource_GetPrivateData').
+      _(pThis, 'pThis').
+      _(refguid, 'refguid').
+      _(pData, 'pData').
+      _(PSizeOfData, 'PSizeOfData').
+    LogEnd();
+
+  IDirect3DResource(pThis).GetPrivateData(refguid^, pData, pSizeOfData^);
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
-
-  Result := D3D_OK;
 end;
 
-procedure XTL_EmuIDirect3DResource_FreePrivateData
+function XTL_EmuIDirect3DResource_FreePrivateData
 (
   pThis: PX_D3DResource;
   refguid: REFGUID
-); stdcall;
-// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirect3DResource_FreePrivateData');
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DResource_FreePrivateData').
+      _(pThis, 'pThis').
+      _(refguid, 'refguid').
+    LogEnd();
+
+  IDirect3DResource(pThis).FreePrivateData(refguid^);
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10866,7 +10888,7 @@ begin
 end;
 
 
-function XTL_EmuIDirect3DDevice_GetGetPixelShader
+function XTL_EmuIDirect3DDevice_GetPixelShader
 (
   Value: DWord
 ): HRESULT; stdcall;
@@ -10875,7 +10897,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuIDirect3DDevice_GetGetPixelShader').
+    LogBegin('EmuIDirect3DDevice_GetPixelShader').
       _(Value, 'Value').
     LogEnd();
 
@@ -10928,7 +10950,7 @@ begin
       _(pData, 'pData').
     LogEnd();
 
-//  g_pD3DDevice.GetPixelShaderFunction(Handle, pData);
+//  g_pD3DDevice.GetPixelShaderFunction(Handle, pData, ???);
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
@@ -10940,7 +10962,7 @@ exports
 
   XTL_EmuIDevice3D_KickOff name PatchPrefix + '?KickOff@CDevice@D3D@@QAEXXZ',
 
-//  XTL_EmuIDirect3D_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8', // better for dxbx logging
+  // XTL_EmuIDirect3D_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8', // No need to patch, as our kernel implements MmAllocateContiguousMemory(Ex) already
   XTL_EmuIDirect3D_CheckDeviceFormat name PatchPrefix + 'Direct3D_CheckDeviceFormat',
   XTL_EmuIDirect3D_CheckDeviceMultiSampleType name PatchPrefix + 'Direct3D_CheckDeviceMultiSampleType',
   XTL_EmuIDirect3D_CreateDevice name PatchPrefix + 'Direct3D_CreateDevice',
@@ -11015,7 +11037,7 @@ exports
   XTL_EmuIDirect3DDevice_GetModelView name PatchPrefix + 'D3DDevice_GetModelView', // ??
   XTL_EmuIDirect3DDevice_GetOverlayUpdateStatus name PatchPrefix + 'D3DDevice_GetOverlayUpdateStatus',
   XTL_EmuIDirect3DDevice_GetPixelShaderFunction name PatchPrefix + 'D3DDevice_GetPixelShaderFunction',
-  XTL_EmuIDirect3DDevice_GetGetPixelShader name PatchPrefix + 'D3DDevice_GetPixelShader',
+  XTL_EmuIDirect3DDevice_GetPixelShader name PatchPrefix + 'D3DDevice_GetPixelShader',
   XTL_EmuIDirect3DDevice_GetPixelShaderConstant name PatchPrefix + 'D3DDevice_GetPixelShaderConstant',
   XTL_EmuIDirect3DDevice_GetProjectionViewportMatrix name PatchPrefix + 'D3DDevice_GetProjectionViewportMatrix',
   XTL_EmuIDirect3DDevice_GetPushDistance name PatchPrefix + 'D3DDevice_GetPushDistance',
