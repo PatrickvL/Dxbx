@@ -4904,6 +4904,23 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+procedure XTL_EmuIDirect3DDevice_GetPushBufferOffset(
+  pOffset: PDWORD
+  ); stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:1
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3D8 : EmuIDirect3DDevice_GetPushBufferOffset').
+      _(pOffset, 'pOffset').
+    LogEnd();
+
+  pOffset^ := 0; // TODO
+
+  EmuSwapFS(fsXbox);
+end;
+
 function XTL_EmuIDirect3DDevice_Clear
 (
     Count: DWORD;
@@ -11023,7 +11040,7 @@ exports
   XTL_EmuIDirect3DDevice_DrawVerticesUP name PatchPrefix + 'D3DDevice_DrawVerticesUP@16',
   XTL_EmuIDirect3DDevice_EnableOverlay name PatchPrefix + 'D3DDevice_EnableOverlay@4',
   XTL_EmuIDirect3DDevice_End name PatchPrefix + 'D3DDevice_End',
-  XTL_EmuIDirect3DDevice_EndPush name PatchPrefix + 'D3DDevice_EndPushBuffer@0', // ??
+  XTL_EmuIDirect3DDevice_EndPush name PatchPrefix + 'D3DDevice_EndPush',
   XTL_EmuIDirect3DDevice_EndPushBuffer name PatchPrefix + 'D3DDevice_EndPushBuffer', // ??
   XTL_EmuIDirect3DDevice_EndStateBlock name PatchPrefix + 'D3DDevice_EndStateBlock',
   XTL_EmuIDirect3DDevice_EndVisibilityTest name PatchPrefix + 'D3DDevice_EndVisibilityTest@4',
@@ -11043,19 +11060,20 @@ exports
   XTL_EmuIDirect3DDevice_GetMaterial name PatchPrefix + 'D3DDevice_GetMaterial',
   XTL_EmuIDirect3DDevice_GetModelView name PatchPrefix + 'D3DDevice_GetModelView', // ??
   XTL_EmuIDirect3DDevice_GetOverlayUpdateStatus name PatchPrefix + 'D3DDevice_GetOverlayUpdateStatus',
-  XTL_EmuIDirect3DDevice_GetPixelShaderFunction name PatchPrefix + 'D3DDevice_GetPixelShaderFunction',
   XTL_EmuIDirect3DDevice_GetPixelShader name PatchPrefix + 'D3DDevice_GetPixelShader',
   XTL_EmuIDirect3DDevice_GetPixelShaderConstant name PatchPrefix + 'D3DDevice_GetPixelShaderConstant',
+  XTL_EmuIDirect3DDevice_GetPixelShaderFunction name PatchPrefix + 'D3DDevice_GetPixelShaderFunction',
   XTL_EmuIDirect3DDevice_GetProjectionViewportMatrix name PatchPrefix + 'D3DDevice_GetProjectionViewportMatrix',
+  XTL_EmuIDirect3DDevice_GetPushBufferOffset name PatchPrefix + 'D3DDevice_GetPushBufferOffset',
   XTL_EmuIDirect3DDevice_GetPushDistance name PatchPrefix + 'D3DDevice_GetPushDistance',
   XTL_EmuIDirect3DDevice_GetRasterStatus name PatchPrefix + 'D3DDevice_GetRasterStatus',
+  XTL_EmuIDirect3DDevice_GetRenderState name PatchPrefix + 'D3DDevice_GetRenderState',
   XTL_EmuIDirect3DDevice_GetRenderTarget name PatchPrefix + 'D3DDevice_GetRenderTarget',
   XTL_EmuIDirect3DDevice_GetRenderTarget2 name PatchPrefix + 'D3DDevice_GetRenderTarget2',
-  XTL_EmuIDirect3DDevice_GetTextureStageState name PatchPrefix + 'D3DDevice_GetTextureStageState',
-  XTL_EmuIDirect3DDevice_GetRenderState name PatchPrefix + 'D3DDevice_GetRenderState',
   XTL_EmuIDirect3DDevice_GetShaderConstantMode name PatchPrefix + 'D3DDevice_GetShaderConstantMode',
   XTL_EmuIDirect3DDevice_GetStreamSource2 name PatchPrefix + 'D3DDevice_GetStreamSource2',
   XTL_EmuIDirect3DDevice_GetTexture2 name PatchPrefix + 'D3DDevice_GetTexture2',
+  XTL_EmuIDirect3DDevice_GetTextureStageState name PatchPrefix + 'D3DDevice_GetTextureStageState',
   XTL_EmuIDirect3DDevice_GetTile name PatchPrefix + 'D3DDevice_GetTile',
   XTL_EmuIDirect3DDevice_GetTransform name PatchPrefix + 'D3DDevice_GetTransform',
   XTL_EmuIDirect3DDevice_GetVertexShader name PatchPrefix + 'D3DDevice_GetVertexShader',
@@ -11092,13 +11110,13 @@ exports
   XTL_EmuIDirect3DDevice_SetLight name PatchPrefix + 'D3DDevice_SetLight',
   XTL_EmuIDirect3DDevice_SetMaterial name PatchPrefix + 'D3DDevice_SetMaterial',
   XTL_EmuIDirect3DDevice_SetModelView name PatchPrefix + 'D3DDevice_SetModelView', // ??
-  XTL_EmuIDirect3DDevice_SetVertexBlendModelView name PatchPrefix + 'D3DDevice_SetVertexBlendModelView', // ??
   XTL_EmuIDirect3DDevice_SetPalette name PatchPrefix + 'D3DDevice_SetPalette',
   XTL_EmuIDirect3DDevice_SetPixelShader name PatchPrefix + 'D3DDevice_SetPixelShader',
   XTL_EmuIDirect3DDevice_SetPixelShaderConstant name PatchPrefix + 'D3DDevice_SetPixelShaderConstant',
   XTL_EmuIDirect3DDevice_SetPixelShaderProgram name PatchPrefix + 'D3DDevice_SetPixelShaderProgram',
   XTL_EmuIDirect3DDevice_SetRenderState_BackFillMode name PatchPrefix + 'D3DDevice_SetRenderState_BackFillMode',
   XTL_EmuIDirect3DDevice_SetRenderState_CullMode name PatchPrefix + 'D3DDevice_SetRenderState_CullMode',
+  XTL_EmuIDirect3DDevice_SetVertexBlendModelView name PatchPrefix + 'D3DDevice_SetVertexBlendModelView', // ??
 //  XTL_EmuIDirect3DDevice_SetRenderState_Deferred name PatchPrefix + 'D3DDevice_SetRenderState_Deferred', Dxbx note : Disabled, as we DO have EmuD3DDeferredRenderState pin-pointed correctly
   XTL_EmuIDirect3DDevice_SetRenderState_DoNotCullUncompressed name PatchPrefix + 'D3DDevice_SetRenderState_DoNotCullUncompressed',
   XTL_EmuIDirect3DDevice_SetRenderState_Dxt1NoiseEnable name PatchPrefix + 'D3DDevice_SetRenderState_Dxt1NoiseEnable',
@@ -11112,13 +11130,13 @@ exports
   XTL_EmuIDirect3DDevice_SetRenderState_MultiSampleMask name PatchPrefix + 'D3DDevice_SetRenderState_MultiSampleMask',
   XTL_EmuIDirect3DDevice_SetRenderState_MultiSampleMode name PatchPrefix + 'D3DDevice_SetRenderState_MultiSampleMode',
   XTL_EmuIDirect3DDevice_SetRenderState_MultiSampleRenderTargetMode name PatchPrefix + 'D3DDevice_SetRenderState_MultiSampleRenderTargetMode',
-  XTL_EmuIDirect3DDevice_SetRenderState_SetRenderStateNotInline name PatchPrefix + 'D3DDevice_SetRenderState_SetRenderStateNotInline',
   XTL_EmuIDirect3DDevice_SetRenderState_NormalizeNormals name PatchPrefix + 'D3DDevice_SetRenderState_NormalizeNormals',
   XTL_EmuIDirect3DDevice_SetRenderState_OcclusionCullEnable name PatchPrefix + 'D3DDevice_SetRenderState_OcclusionCullEnable',
   XTL_EmuIDirect3DDevice_SetRenderState_PSTextureModes name PatchPrefix + 'D3DDevice_SetRenderState_PSTextureModes',
   XTL_EmuIDirect3DDevice_SetRenderState_RopZCmpAlwaysRead name PatchPrefix + 'D3DDevice_SetRenderState_RopZCmpAlwaysRead',
   XTL_EmuIDirect3DDevice_SetRenderState_RopZRead name PatchPrefix + 'D3DDevice_SetRenderState_RopZRead',
   XTL_EmuIDirect3DDevice_SetRenderState_SampleAlpha name PatchPrefix + 'D3DDevice_SetRenderState_SampleAlpha',
+  XTL_EmuIDirect3DDevice_SetRenderState_SetRenderStateNotInline name PatchPrefix + 'D3DDevice_SetRenderState_SetRenderStateNotInline',
   XTL_EmuIDirect3DDevice_SetRenderState_ShadowFunc name PatchPrefix + 'D3DDevice_SetRenderState_ShadowFunc',
   XTL_EmuIDirect3DDevice_SetRenderState_Simple name PatchPrefix + 'D3DDevice_SetRenderState_Simple',
   XTL_EmuIDirect3DDevice_SetRenderState_StencilCullEnable name PatchPrefix + 'D3DDevice_SetRenderState_StencilCullEnable',
@@ -11144,8 +11162,8 @@ exports
   XTL_EmuIDirect3DDevice_SetTextureState_BumpEnv name PatchPrefix + 'D3DDevice_SetTextureState_BumpEnv',
   XTL_EmuIDirect3DDevice_SetTextureState_ColorKeyColor name PatchPrefix + 'D3DDevice_SetTextureState_ColorKeyColor',
   XTL_EmuIDirect3DDevice_SetTextureState_TexCoordIndex name PatchPrefix + 'D3DDevice_SetTextureState_TexCoordIndex',
-  XTL_EmuIDirect3DDevice_SetTextureState_TwoSidedLighting name PatchPrefix + 'D3DDevice_SetTextureState_TwoSidedLighting',
   XTL_EmuIDirect3DDevice_SetTextureState_TwoSidedLighting name PatchPrefix + 'D3DDevice_SetRenderState_TwoSidedLighting', // Cxbx:Beware of the typo Dxbx:Use patch for both!
+  XTL_EmuIDirect3DDevice_SetTextureState_TwoSidedLighting name PatchPrefix + 'D3DDevice_SetTextureState_TwoSidedLighting',
   XTL_EmuIDirect3DDevice_SetTileNoWait name PatchPrefix + '?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z',
   XTL_EmuIDirect3DDevice_SetTileNoWait name PatchPrefix + 'D3DDevice_SetTile', // Dxbx note : SetTileNoWait is applied to SetTile in Cxbx 4361 OOPVA's!
   XTL_EmuIDirect3DDevice_SetTransform name PatchPrefix + 'D3DDevice_SetTransform',
@@ -11173,17 +11191,15 @@ exports
   XTL_EmuIDirect3DPalette_Lock2 name PatchPrefix + 'D3DPalette_Lock2',
 
   XTL_EmuIDirect3DResource_AddRef name PatchPrefix + 'D3DResource_AddRef',
-  XTL_EmuIDirect3DResource_IsBusy name PatchPrefix + 'D3DResource_IsBusy',
-  XTL_EmuIDirect3DResource_GetDevice name PatchPrefix + 'D3DResource_GetDevice',
-  XTL_EmuIDirect3DResource_Register name PatchPrefix + 'D3DResource_Register',
   XTL_EmuIDirect3DResource_BlockUntilNotBusy name PatchPrefix + 'D3DResource_BlockUntilNotBusy',
-  XTL_EmuIDirect3DResource_SetPrivateData name PatchPrefix + 'D3DResource_SetPrivateData',
-  XTL_EmuIDirect3DResource_GetPrivateData name PatchPrefix + 'D3DResource_GetPrivateData',
   XTL_EmuIDirect3DResource_FreePrivateData name PatchPrefix + 'D3DResource_FreePrivateData',
-
+  XTL_EmuIDirect3DResource_GetDevice name PatchPrefix + 'D3DResource_GetDevice',
+  XTL_EmuIDirect3DResource_GetPrivateData name PatchPrefix + 'D3DResource_GetPrivateData',
   XTL_EmuIDirect3DResource_GetType name PatchPrefix + 'D3DResource_GetType',
+  XTL_EmuIDirect3DResource_IsBusy name PatchPrefix + 'D3DResource_IsBusy',
+  XTL_EmuIDirect3DResource_Register name PatchPrefix + 'D3DResource_Register',
   XTL_EmuIDirect3DResource_Release name PatchPrefix + 'D3DResource_Release',
-
+  XTL_EmuIDirect3DResource_SetPrivateData name PatchPrefix + 'D3DResource_SetPrivateData',
 
   XTL_EmuIDirect3DSurface_GetDesc name PatchPrefix + 'D3DSurface_GetDesc',
 (*  XTL_EmuIDirect3DSurface_GetContainer2 name PatchPrefix + 'D3DSurface_GetContainer2', *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
@@ -11222,10 +11238,6 @@ exports
   XTL_EmuIDirect3DVolumeTexture_LockBox name PatchPrefix + 'D3DVolumeTexture_LockBox',
 
   XTL_EmuLock2DSurface name PatchPrefix + 'Lock2DSurface';
-
-
-
-
 
 //  XTL_EmuXMETAL_StartPush name PatchPrefix + 'XMETAL_StartPush';  // DXBX - MARKED OUT 4x4 EVO 2
 
