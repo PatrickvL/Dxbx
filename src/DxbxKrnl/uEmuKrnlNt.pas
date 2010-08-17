@@ -521,9 +521,13 @@ begin
       DbgPrintf('  Org:"%s"', [OriginalPath]);
 
       if StartsWithText(NativePath, DxbxBasePath) then
-        DbgPrintf('  New:"$DxbxPath\EmuDisk%s%s"', [Copy(NativePath, Length(DxbxBasePath), MaxInt), RelativePath])
+      begin
+        if MayLog(lfUnit) then
+          DbgPrintf('  New:"$DxbxPath\EmuDisk%s%s"', [Copy(NativePath, Length(DxbxBasePath), MaxInt), RelativePath])
+      end
       else
-        DbgPrintf('  New:"$XbePath\%s"', [RelativePath]);
+        if MayLog(lfUnit) then
+          DbgPrintf('  New:"$XbePath\%s"', [RelativePath]);
     end;
   end
   else
@@ -826,17 +830,18 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('EmuKrnl : NtCreateIoCompletion' +
-      #13#10'(' +
-      #13#10'   FileHandle          : 0x%.08X' +
-      #13#10'   DesiredAccess       : 0x%.08X (%s)' +
-      #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
-      #13#10'   Count               : 0x%.08X' +
-      #13#10');',
-      [FileHandle,
-      DesiredAccess, AccessMaskToString(DesiredAccess),
-      ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
-      Count]);
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : NtCreateIoCompletion' +
+        #13#10'(' +
+        #13#10'   FileHandle          : 0x%.08X' +
+        #13#10'   DesiredAccess       : 0x%.08X (%s)' +
+        #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
+        #13#10'   Count               : 0x%.08X' +
+        #13#10');',
+        [FileHandle,
+        DesiredAccess, AccessMaskToString(DesiredAccess),
+        ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
+        Count]);
 
   // initialize object attributes
   Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes);
@@ -1319,7 +1324,8 @@ begin
     if (Result <> STATUS_SUCCESS) then
       EmuWarning('NtOpenFile failed! (%s)', [NTStatusToString(Result)])
     else
-      DbgPrintf('EmuKrnl : NtOpenFile FileHandle^ = 0x%.08X', [FileHandle^]);
+      if MayLog(lfUnit) then
+        DbgPrintf('EmuKrnl : NtOpenFile FileHandle^ = 0x%.08X', [FileHandle^]);
   end;
 
   EmuSwapFS(fsXbox);
@@ -1357,7 +1363,8 @@ begin
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtOpenSymbolicLinkObject failed! (%s)', [NTStatusToString(Result)])
   else
-    DbgPrintf('EmuKrnl : NtOpenSymbolicLinkObject LinkHandle^ = 0x%.08X', [LinkHandle^]);
+    if MayLog(lfUnit) then
+      DbgPrintf('EmuKrnl : NtOpenSymbolicLinkObject LinkHandle^ = 0x%.08X', [LinkHandle^]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1909,7 +1916,8 @@ begin
       Buffer.Type_ := 262144;
 
       Result := STATUS_SUCCESS;
-      DbgPrintf('EmuKrnl : NtQueryVirtualMemory : Applied fix for "Forza Motorsport" !');
+      if MayLog(lfUnit) then
+        DbgPrintf('EmuKrnl : NtQueryVirtualMemory : Applied fix for "Forza Motorsport" !');
     end;
   end;
 
@@ -2364,7 +2372,8 @@ begin
   if IsEmuHandle(SignalHandle) then
   begin
     Result := WAIT_FAILED;
-    DbgPrintf('WaitFor EmuHandle not supported!');
+    if MayLog(lfUnit) then
+      DbgPrintf('WaitFor EmuHandle not supported!');
   end
   else
   begin
@@ -2492,7 +2501,8 @@ begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    DbgPrintf('EmuKrnl : NtUserIoApcDispatcher Completed');
+    if MayLog(lfUnit) then
+      DbgPrintf('EmuKrnl : NtUserIoApcDispatcher Completed');
     if bWasXboxFS then // Dxbx addition : Swap back only here, if necessary
     EmuSwapFS(fsXbox);
   end;
@@ -2520,7 +2530,8 @@ begin
   if IsEmuHandle(Handle) then
   begin
     Result := WAIT_FAILED;
-    DbgPrintf('WaitFor EmuHandle not supported!');
+    if MayLog(lfUnit) then
+      DbgPrintf('WaitFor EmuHandle not supported!');
   end
   else
   begin
@@ -2563,7 +2574,8 @@ begin
   if IsEmuHandle(Handle_) then
   begin
     Result := WAIT_FAILED;
-    DbgPrintf('WaitFor EmuHandle not supported!');
+    if MayLog(lfUnit) then
+      DbgPrintf('WaitFor EmuHandle not supported!');
   end
   else
   begin
@@ -2622,7 +2634,8 @@ begin
 
     if IsEmuHandle(Handle_) then
     begin
-      DbgPrintf('WaitFor EmuHandle not supported!');
+      if MayLog(lfUnit) then
+        DbgPrintf('WaitFor EmuHandle not supported!');
       Result := WAIT_FAILED;
       Break;
     end;
@@ -2727,8 +2740,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfExtreme) then
+  begin
     // Cxbx NOTE: this eats up the debug log far too quickly
     DbgPrintf('EmuKrnl : NtYieldExecution();');
+  end;
 
   JwaNative.NtYieldExecution();
 

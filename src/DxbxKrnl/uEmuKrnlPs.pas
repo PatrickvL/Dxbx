@@ -144,7 +144,8 @@ begin
       if not Assigned(pfnNotificationRoutine) then
         continue;
 
-      DbgPrintf('EmKrnl : Calling pfnNotificationRoutine[%d] (0x%.08X)', [g_iThreadNotificationCount, Addr(pfnNotificationRoutine)]);
+      if MayLog(lfUnit) then
+        DbgPrintf('EmKrnl : Calling pfnNotificationRoutine[%d] (0x%.08X)', [g_iThreadNotificationCount, Addr(pfnNotificationRoutine)]);
 
       EmuSwapFS(fsXbox);
 
@@ -190,7 +191,8 @@ callComplete:
       EmuSwapFS(fsWindows);
       // TODO -oDXBX: How do we intercept ntdll.ZwRaiseException here ?
       //      EmuException(E);
-      DbgPrintf('EmuKrnl : PCSTProxy : Catched an exception : ' + E.Message);
+      if MayLog(lfUnit) then
+        DbgPrintf('EmuKrnl : PCSTProxy : Catched an exception : ' + E.Message);
 {$IFDEF DXBX_USE_JCLDEBUG}
       DbgPrintf(JclLastExceptStackListToString(False));
 {$ENDIF}
@@ -218,8 +220,9 @@ callComplete:
       if not Assigned(pfnNotificationRoutine) then
         continue;
 
-      DbgPrintf('EmKrnl : Calling pfnNotificationRoutine[%d] (0x%.08X)',
-        [g_iThreadNotificationCount, Addr(pfnNotificationRoutine)]);
+      if MayLog(lfUnit) then
+        DbgPrintf('EmKrnl : Calling pfnNotificationRoutine[%d] (0x%.08X)',
+          [g_iThreadNotificationCount, Addr(pfnNotificationRoutine)]);
 
       EmuSwapFS(fsXbox);
 
@@ -454,7 +457,8 @@ begin
       if not Assigned(pfnNotificationRoutine) then
         continue;
 
-      DbgPrintf('EmKrnl : Calling pfnNotificationRoutine[%d] (0x%.08X)', [g_iThreadNotificationCount, Addr(pfnNotificationRoutine)]);
+      if MayLog(lfUnit) then
+        DbgPrintf('EmKrnl : Calling pfnNotificationRoutine[%d] (0x%.08X)', [g_iThreadNotificationCount, Addr(pfnNotificationRoutine)]);
 
       EmuSwapFS(fsXbox);
 

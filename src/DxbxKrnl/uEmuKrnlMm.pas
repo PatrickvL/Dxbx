@@ -572,7 +572,8 @@ begin
     begin
       BaseAddress := PVOID((g_HaloHack[0] + ($80366000 - $80061000)));
 
-      DbgPrintf('EmuKrnl : Halo Access Adjust 3 was applied! (0x%.08X)', [BaseAddress]);
+      if MayLog(lfUnit) then
+        DbgPrintf('EmuKrnl : Halo Access Adjust 3 was applied! (0x%.08X)', [BaseAddress]);
     end;
   end;
 

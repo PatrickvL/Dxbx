@@ -1335,17 +1335,18 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('EmuKrnl : RtlMultiByteToUnicodeN' +
-           #13#10'(' +
-           #13#10'   UnicodeString          : 0x%.08X' +
-           #13#10'   MaxBytesInUnicodeString: 0x%.08X' +
-           #13#10'   BytesInUnicodeString   : 0x%.08X' +
-           #13#10'   MultiByteString        : 0x%.08X' +// ("%s")' +
-           #13#10'   BytesInMultiByteString : 0x%.08X' +
-           #13#10');',
-           [Pointer(UnicodeString), MaxBytesInUnicodeString,
-            BytesInUnicodeString,
-            Pointer(MultiByteString), {AnsiString(MultiByteString), }BytesInMultiByteString]);
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : RtlMultiByteToUnicodeN' +
+             #13#10'(' +
+             #13#10'   UnicodeString          : 0x%.08X' +
+             #13#10'   MaxBytesInUnicodeString: 0x%.08X' +
+             #13#10'   BytesInUnicodeString   : 0x%.08X' +
+             #13#10'   MultiByteString        : 0x%.08X' +// ("%s")' +
+             #13#10'   BytesInMultiByteString : 0x%.08X' +
+             #13#10');',
+             [Pointer(UnicodeString), MaxBytesInUnicodeString,
+              BytesInUnicodeString,
+              Pointer(MultiByteString), {AnsiString(MultiByteString), }BytesInMultiByteString]);
 
   MaxChars := MaxBytesInUnicodeString div SizeOf(WideChar);
   if MaxChars > BytesInMultiByteString then
@@ -1377,14 +1378,15 @@ function xboxkrnl_RtlMultiByteToUnicodeSize(
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('EmuKrnl : RtlMultiByteToUnicodeN' +
-           #13#10'(' +
-           #13#10'   BytesInUnicodeString   : 0x%.08X' +
-           #13#10'   MultiByteString        : 0x%.08X' +// ("%s")' +
-           #13#10'   BytesInMultiByteString : 0x%.08X' +
-           #13#10');',
-           [BytesInUnicodeString,
-            Pointer(MultiByteString), {AnsiString(MultiByteString), }BytesInMultiByteString]);
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : RtlMultiByteToUnicodeN' +
+             #13#10'(' +
+             #13#10'   BytesInUnicodeString   : 0x%.08X' +
+             #13#10'   MultiByteString        : 0x%.08X' +// ("%s")' +
+             #13#10'   BytesInMultiByteString : 0x%.08X' +
+             #13#10');',
+             [BytesInUnicodeString,
+              Pointer(MultiByteString), {AnsiString(MultiByteString), }BytesInMultiByteString]);
 
   BytesInUnicodeString^ := BytesInMultiByteString * SizeOf(WideChar);
 
@@ -1591,17 +1593,18 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('EmuKrnl : RtlUnicodeToMultiByteN' +
-      #13#10'(' +
-      #13#10'   MultiByteString          : 0x%.08X' +
-      #13#10'   MaxBytesInMultiByteString: 0x%.08X' +
-      #13#10'   BytesInMultiByteString   : 0x%.08X' +
-      #13#10'   UnicodeString            : 0x%.08X' +// ("%s")' +
-      #13#10'   BytesInUnicodeString     : 0x%.08X' +
-      #13#10');',
-      [Pointer(MultiByteString), MaxBytesInMultiByteString,
-       BytesInMultiByteString,
-       Pointer(UnicodeString), {WideString(UnicodeString), }BytesInUnicodeString]);
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : RtlUnicodeToMultiByteN' +
+        #13#10'(' +
+        #13#10'   MultiByteString          : 0x%.08X' +
+        #13#10'   MaxBytesInMultiByteString: 0x%.08X' +
+        #13#10'   BytesInMultiByteString   : 0x%.08X' +
+        #13#10'   UnicodeString            : 0x%.08X' +// ("%s")' +
+        #13#10'   BytesInUnicodeString     : 0x%.08X' +
+        #13#10');',
+        [Pointer(MultiByteString), MaxBytesInMultiByteString,
+         BytesInMultiByteString,
+         Pointer(UnicodeString), {WideString(UnicodeString), }BytesInUnicodeString]);
 
   MaxChars := BytesInUnicodeString div SizeOf(WideChar);
   if MaxChars > MaxBytesInMultiByteString then
