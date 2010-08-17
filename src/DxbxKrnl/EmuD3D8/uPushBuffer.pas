@@ -90,6 +90,8 @@ uses
 
 // From PushBuffer.cpp :
 
+const lfUnit = lfCxbx or lfPushBuffer;
+
 procedure XTL_EmuExecutePushBuffer
 (
     pPushBuffer: PX_D3DPushBuffer; 
@@ -201,9 +203,8 @@ begin
         end;
       end;
 
-{$IFDEF DEBUG}
-      DbgPrintf('Active texture was unswizzled');
-{$ENDIF}
+      if MayLog(lfUnit) then
+        DbgPrintf('Active texture was unswizzled');
     end;
 
     // Dxbx note : Only set this _after_ processing all levels :
@@ -282,12 +283,13 @@ begin
   begin
     g_PBTrackShowOnce.remove(pdwPushData);
 
-{$IFDEF DEBUG}
-    DbgPrintf('');
-    DbgPrintf('');
-    DbgPrintf('  PushBuffer@0x%.08X...', [pdwPushData]);
-    DbgPrintf('');
-{$ENDIF}
+    if MayLog(lfUnit) then
+    begin
+      DbgPrintf('');
+      DbgPrintf('');
+      DbgPrintf('  PushBuffer@0x%.08X...', [pdwPushData]);
+      DbgPrintf('');
+    end;
 
     bShowPB := true;
   end;
@@ -629,15 +631,16 @@ begin
 
         // print out stream data
         begin
-{$IFDEF DEBUG}
-          DbgPrintf('');
-          DbgPrintf('  Vertex Stream Data (0x%.08X)...', [pActiveVB]);
-          DbgPrintf('');
-          DbgPrintf('  Format : %d', [Ord(VBDesc.Format)]);
-          DbgPrintf('  Size   : %d bytes', [VBDesc.Size]);
-          DbgPrintf('  FVF    : 0x%.08X', [VBDesc.FVF]);
-          DbgPrintf('');
-{$ENDIF}
+          if MayLog(lfUnit) then
+          begin
+            DbgPrintf('');
+            DbgPrintf('  Vertex Stream Data (0x%.08X)...', [pActiveVB]);
+            DbgPrintf('');
+            DbgPrintf('  Format : %d', [Ord(VBDesc.Format)]);
+            DbgPrintf('  Size   : %d bytes', [VBDesc.Size]);
+            DbgPrintf('  FVF    : 0x%.08X', [VBDesc.FVF]);
+            DbgPrintf('');
+          end;
         end;
 
         // release ptr

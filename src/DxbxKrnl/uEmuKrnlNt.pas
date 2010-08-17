@@ -1100,13 +1100,12 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuKrnl : NtDuplicateObject').
-    _(SourceHandle, 'SourceHandle').
-    _(TargetHandle, 'TargetHandle').
-    _(Options, 'Options').
-    LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : NtDuplicateObject').
+      _(SourceHandle, 'SourceHandle').
+      _(TargetHandle, 'TargetHandle').
+      _(Options, 'Options').
+      LogEnd();
 
   DesiredAccess := 0; // TODO -oDxbx : Should be set if Options <> DUPLICATE_SAME_ACCESS
   Attributes := 0; // TODO -oDxbx : Should be set if Options <> DUPLICATE_SAME_ATTRIBUTES
@@ -1148,12 +1147,11 @@ function xboxkrnl_NtFlushBuffersFile
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuKrnl : NtFlushBuffersFile').
-    _(FileHandle, 'FileHandle').
-    _(IoStatusBlock, 'IoStatusBlock').
-    LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : NtFlushBuffersFile').
+      _(FileHandle, 'FileHandle').
+      _(IoStatusBlock, 'IoStatusBlock').
+      LogEnd();
 
   Result := JwaNative.NtFlushBuffersFile(FileHandle, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock));
 
@@ -1177,13 +1175,12 @@ function xboxkrnl_NtFreeVirtualMemory
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuKrnl : NtFreeVirtualMemory').
-    _(BaseAddress, 'BaseAddress').
-    _(FreeSize, 'FreeSize').
-    _(FreeType, 'FreeType').
-    LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : NtFreeVirtualMemory').
+      _(BaseAddress, 'BaseAddress').
+      _(FreeSize, 'FreeSize').
+      _(FreeType, 'FreeType').
+      LogEnd();
 
   Result := JwaNative.NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
 
@@ -1317,12 +1314,13 @@ begin
     );
   end;
 
-{$IFDEF DEBUG}
-  if (Result <> STATUS_SUCCESS) then
-    EmuWarning('NtOpenFile failed! (%s)', [NTStatusToString(Result)])
-  else
-    DbgPrintf('EmuKrnl : NtOpenFile FileHandle^ = 0x%.08X', [FileHandle^]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+  begin
+    if (Result <> STATUS_SUCCESS) then
+      EmuWarning('NtOpenFile failed! (%s)', [NTStatusToString(Result)])
+    else
+      DbgPrintf('EmuKrnl : NtOpenFile FileHandle^ = 0x%.08X', [FileHandle^]);
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1337,14 +1335,13 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtOpenSymbolicLinkObject' +
-    #13#10'(' +
-    #13#10'   LinkHandle          : 0x%.08X' +
-    #13#10'   ObjectAttributes    : 0x%.08X ("%s")' + // "\??\E:"
-    #13#10');',
-    [LinkHandle, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : NtOpenSymbolicLinkObject' +
+      #13#10'(' +
+      #13#10'   LinkHandle          : 0x%.08X' +
+      #13#10'   ObjectAttributes    : 0x%.08X ("%s")' + // "\??\E:"
+      #13#10');',
+      [LinkHandle, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
 
   // Find the TEmuNtSymbolicLinkObject via the name in ObjectAttributes :
   EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByName(POBJECT_ATTRIBUTES_String(ObjectAttributes));
@@ -1416,18 +1413,14 @@ function xboxkrnl_NtQueueApcThread
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtQueueApcThread' +
-      #13#10'(' +
-      #13#10'   ThreadHandle         : 0x%.08X' +
-      #13#10'   ApcRoutine           : 0x%.08X' +
-      #13#10'   ApcRoutineContext    : 0x%.08X' +
-      #13#10'   ApcStatusBlock       : 0x%.08X' +
-      #13#10'   ApcReserved          : 0x%.08X' +
-      #13#10');',
-      [ThreadHandle, Addr(ApcRoutine), ApcRoutineContext,
-       ApcStatusBlock, ApcReserved]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('NtQueueApcThread').
+      _(ThreadHandle, 'ThreadHandle').
+      _(Addr(ApcRoutine), 'ApcRoutine').
+      _(ApcRoutineContext, 'ApcRoutineContext').
+      _(ApcStatusBlock, 'ApcStatusBlock').
+      _(ApcReserved, 'ApcReserved').
+    LogEnd();
 
   // TODO -oCXBX: Not too sure how this one works.  If there's any special *magic* that needs to be
   //     done, let me know!
@@ -1469,26 +1462,25 @@ begin
 
   szBuffer := PSTRING_String(FileMask);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
-      #13#10'(' +
-      #13#10'   FileHandle           : 0x%.08X' +
-      #13#10'   Event                : 0x%.08X' +
-      #13#10'   ApcRoutine           : 0x%.08X' +
-      #13#10'   ApcContext           : 0x%.08X' +
-      #13#10'   IoStatusBlock        : 0x%.08X' +
-      #13#10'   FileInformation      : 0x%.08X' +
-      #13#10'   Length               : 0x%.08X' +
-      #13#10'   FileInformationClass : 0x%.08X (%s)' +
-      #13#10'   FileMask             : 0x%.08X ("%s")' +
-      #13#10'   RestartScan          : 0x%.08X' +
-      #13#10');',
-      [FileHandle, Event, Addr(ApcRoutine), ApcContext, IoStatusBlock,
-       FileInformation, Length,
-       Ord(FileInformationClass), FileInformationClassToString(FileInformationClass),
-       FileMask, szBuffer,
-       RestartScan]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
+        #13#10'(' +
+        #13#10'   FileHandle           : 0x%.08X' +
+        #13#10'   Event                : 0x%.08X' +
+        #13#10'   ApcRoutine           : 0x%.08X' +
+        #13#10'   ApcContext           : 0x%.08X' +
+        #13#10'   IoStatusBlock        : 0x%.08X' +
+        #13#10'   FileInformation      : 0x%.08X' +
+        #13#10'   Length               : 0x%.08X' +
+        #13#10'   FileInformationClass : 0x%.08X (%s)' +
+        #13#10'   FileMask             : 0x%.08X ("%s")' +
+        #13#10'   RestartScan          : 0x%.08X' +
+        #13#10');',
+        [FileHandle, Event, Addr(ApcRoutine), ApcContext, IoStatusBlock,
+         FileInformation, Length,
+         Ord(FileInformationClass), FileInformationClassToString(FileInformationClass),
+         FileMask, szBuffer,
+         RestartScan]);
 
   // initialize FileMask
   begin
@@ -1610,14 +1602,13 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtQueryFullAttributesFile' +
-     #13#10'(' +
-     #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
-     #13#10'   FileInformation     : 0x%.08X' +
-     #13#10');',
-     [ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes), FileInformation]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : NtQueryFullAttributesFile' +
+       #13#10'(' +
+       #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
+       #13#10'   FileInformation     : 0x%.08X' +
+       #13#10');',
+       [ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes), FileInformation]);
 
   // initialize object attributes
   Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtQueryFullAttributesFile');
@@ -1691,10 +1682,11 @@ begin
 
     if (FileInfo = FileNetworkOpenInformation) and (pInfo.AllocationSize.LowPart = 57344) then
     begin
-{$IFDEF DEBUG}
-      DbgPrintf('pInfo.AllocationSize : %d', pInfo.AllocationSize.LowPart);
-      DbgPrintf('pInfo.EndOfFile      : %d', pInfo.EndOfFile.LowPart);
-{$ENDIF}
+      if MayLog(lfUnit) then
+      begin
+        DbgPrintf('pInfo.AllocationSize : %d', pInfo.AllocationSize.LowPart);
+        DbgPrintf('pInfo.EndOfFile      : %d', pInfo.EndOfFile.LowPart);
+     end;
 
       pInfo.EndOfFile.LowPart := $1000;
       pInfo.AllocationSize.LowPart := $1000;
@@ -1808,13 +1800,12 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuKrnl : NtQuerySymbolicLinkObject').
-    _(LinkHandle, 'LinkHandle').
-    _(LinkTarget, 'LinkTarget').
-    _(ReturnedLength, 'ReturnedLength').
-    LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : NtQuerySymbolicLinkObject').
+      _(LinkHandle, 'LinkHandle').
+      _(LinkTarget, 'LinkTarget').
+      _(ReturnedLength, 'ReturnedLength').
+      LogEnd();
 
   // Check that we actually got an EmuHandle :
   Result := STATUS_INVALID_HANDLE;
