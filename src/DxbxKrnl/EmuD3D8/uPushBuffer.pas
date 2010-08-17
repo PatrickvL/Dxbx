@@ -88,9 +88,23 @@ uses
   , uState
   , uVertexShader;
 
-// From PushBuffer.cpp :
+const D3DPUSH_METHOD_MASK = $3FFFF;
+const D3DPUSH_COUNT_SHIFT = 18;
+const D3DPUSH_NOINCREMENT_FLAG = $40000000;
+const D3DPUSH_MAX_COUNT = 2047;
+
+const D3DPUSH_NO_OPERATION                = $00000100; // Parameter must be zero
+const D3DPUSH_SET_BEGIN_END               = $000017fc; // Parameter is D3DPRIMITIVETYPE or 0 to end
+const D3DPUSH_INLINE_ARRAY                = $00001818; // Use NOINCREMENT_FLAG
+const D3DPUSH_SET_TRANSFORM_CONSTANT_LOAD = $00001ea4; // Add 96 to constant index parameter
+const D3DPUSH_SET_TRANSFORM_CONSTANT      = $00000b80; // Can't use NOINCREMENT_FLAG, maximum of 32 writes
+
+const NVPB_InlineIndexArray = $1800;
+const NVPB_FixLoop = $1808;
 
 const lfUnit = lfCxbx or lfPushBuffer;
+
+// From PushBuffer.cpp :
 
 procedure XTL_EmuExecutePushBuffer
 (
@@ -304,55 +318,51 @@ begin
 
   while(true) do
   begin
-    dwCount := (pdwPushData^ shr 18);
-    dwMethod := (pdwPushData^ and $3FFFF);
+    bInc := (pdwPushData^ and D3DPUSH_NOINCREMENT_FLAG) > 0;
+    dwMethod := (pdwPushData^ and D3DPUSH_METHOD_MASK);
+    dwCount := ((pdwPushData^ and (not D3DPUSH_NOINCREMENT_FLAG)) shr D3DPUSH_COUNT_SHIFT);
+    Inc(pdwPushData);
+
     DbgPrintf('  Method: 0x%.08X      Count: 0x%.08X', [dwMethod, dwCount]);
 
     // Interpret GPU Instruction
-    if (dwMethod = $000017FC) then  // NVPB_SetBeginEnd
+    if (dwMethod = D3DPUSH_SET_BEGIN_END) then
     begin
-      Inc(pdwPushData);
-
-      {$ifdef _DEBUG_TRACK_PB}
+{$ifdef _DEBUG_TRACK_PB}
       if (bShowPB) then
       begin
         DbgPrintf('  NVPB_SetBeginEnd(');
       end;
-      {$endif}
+{$endif}
 
       if (pdwPushData^ = 0) then
       begin
-        {$ifdef _DEBUG_TRACK_PB}
+{$ifdef _DEBUG_TRACK_PB}
         if (bShowPB) then
         begin
           DbgPrintf('DONE)');
         end;
-        {$endif}
+{$endif}
         break;  // done?
       end
       else
       begin
-        {$IFDEF _DEBUG_TRACK_PB}
+{$IFDEF _DEBUG_TRACK_PB}
         if (bShowPB) then
         begin
           DbgPrintf('PrimitiveType := %d)', [pdwPushData^]);
         end;
-        {$endif}
+{$endif}
 
         XBPrimitiveType := X_D3DPRIMITIVETYPE(pdwPushData^);
         PCPrimitiveType := EmuPrimitiveType(XBPrimitiveType);
       end;
+
+      Inc(pdwPushData);
     end
-    else if (dwMethod = $1818) then  // NVPB_InlineVertexArray
+    else if (dwMethod = D3DPUSH_INLINE_ARRAY) then
     begin
-      bInc := (pdwPushData^ and $40000000) > 0;
-
-      if (bInc) then
-      begin
-        dwCount := (pdwPushData^ - ($40000000 or $00001818)) shr 18;
-      end;
-
-      Inc(pdwPushData); pVertexData := pdwPushData;
+      pVertexData := pdwPushData;
 
       Inc(pdwPushData, dwCount);
 
@@ -410,14 +420,14 @@ begin
       end;
       *)
 
-      {$ifdef _DEBUG_TRACK_PB}
+{$ifdef _DEBUG_TRACK_PB}
       if (bShowPB) then
       begin
         DbgPrintf('NVPB_InlineVertexArray(...)');
         DbgPrintf('  dwCount : %d', [dwCount]);
         DbgPrintf('  dwVertexShader : 0x%08X', [dwVertexShader]);
       end;
-      {$endif}
+{$endif}
 
       EmuUnswizzleActiveTexture();
 
@@ -451,19 +461,17 @@ begin
 
         VertPatch.Restore();
       end;
-
-      Dec(pdwPushData);
     end
-    else if (dwMethod = $1808) then  // NVPB_FixLoop
+    else if (dwMethod = NVPB_FixLoop) then
     begin
-      {$ifdef _DEBUG_TRACK_PB}
+{$ifdef _DEBUG_TRACK_PB}
       if (bShowPB) then
       begin
         DbgPrintf('  NVPB_FixLoop(%d)', [dwCount]);
         DbgPrintf('');
         DbgPrintf('  Index Array Data...');
 
-        pwVal := PWORDs(pdwPushData + 1); // TODO -oDXBX: Do older Delphi's add 4 bytes too?
+        pwVal := PWORDs(pdwPushData); // TODO -oDXBX: Do older Delphi's add 4 bytes too?
 
         if dwCount > 0 then // Dxbx addition, to prevent underflow
         for s := 0 to dwCount - 1 do
@@ -476,10 +484,9 @@ begin
         printf(#13#10);
         DbgPrintf('');
       end;
-      {$endif}
+{$endif}
 
-
-      pwVal := PWORDs(pdwPushData + 1); // TODO -oDXBX: Do older Delphi's add 4 bytes too?
+      pwVal := PWORDs(pdwPushData); // TODO -oDXBX: Do older Delphi's add 4 bytes too?
       if dwCount > 0 then // Dxbx addition, to prevent underflow
       for mi := 0 to dwCount - 1 do
       begin
@@ -541,33 +548,29 @@ begin
 
           g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer){$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, 0{$ENDIF});
 
-          {$ifdef _DEBUG_TRACK_PB}
+{$ifdef _DEBUG_TRACK_PB}
           if ( not g_PBTrackDisable.exists(pdwOrigPushData)) then
+{$endif}
           begin
-          {$endif}
-
-          if (not g_bPBSkipPusher) then
-          begin
-            if (IsValidCurrentShader()) then
+            if (not g_bPBSkipPusher) then
             begin
-              g_pD3DDevice.DrawIndexedPrimitive
-              (
-                  PCPrimitiveType,
-{$IFDEF DXBX_USE_D3D9}
-                  {BaseVertexIndex=}0,
-{$ENDIF}
-                  {MinVertexIndex=}0,
-                  8*1024*1024,
-                  0,
-                  PrimitiveCount
-                  // Dxbx : Why not this : EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, 0, VPDesc.dwPrimitiveCount
-              );
+              if (IsValidCurrentShader()) then
+              begin
+                g_pD3DDevice.DrawIndexedPrimitive
+                (
+                    PCPrimitiveType,
+  {$IFDEF DXBX_USE_D3D9}
+                    {BaseVertexIndex=}0,
+  {$ENDIF}
+                    {MinVertexIndex=}0,
+                    8*1024*1024,
+                    0,
+                    PrimitiveCount
+                    // Dxbx : Why not this : EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, 0, VPDesc.dwPrimitiveCount
+                );
+              end;
             end;
           end;
-
-          {$ifdef _DEBUG_TRACK_PB}
-          end;
-          {$endif}
 
           VertPatch.Restore();
 
@@ -577,18 +580,14 @@ begin
 
       Inc(pdwPushData, dwCount);
     end
-    else if (dwMethod = $1800) then  // NVPB_InlineIndexArray
+    else if (dwMethod = NVPB_InlineIndexArray) then
     begin
-      bInc := (pdwPushData^ and $40000000) > 0;
+      if bInc then
+        dwCount := dwCount * 2 + 2;
 
-      if (bInc) then
-      begin
-        dwCount := ((pdwPushData^ - ($40000000 or $00001818)) shr 18)*2 + 2;
-      end;
+      pIndexData := pdwPushData;
 
-      Inc(pdwPushData); pIndexData := pdwPushData;
-
-      {$ifdef _DEBUG_TRACK_PB}
+{$ifdef _DEBUG_TRACK_PB}
       if (bShowPB) then
       begin
         DbgPrintf('  NVPB_InlineIndexArray(0x%.08X, %d)...', [pIndexData, dwCount]);
@@ -648,7 +647,7 @@ begin
 
         DbgDumpMesh(PWORD(pIndexData), dwCount);
       end;
-      {$endif}
+{$endif}
 
       Inc(pdwPushData, (dwCount div 2) - DWord(iif(bInc, 0, 2)));
 
@@ -717,55 +716,45 @@ begin
 
           g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer){$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, 0{$ENDIF});
 
-          {$ifdef _DEBUG_TRACK_PB}
+{$ifdef _DEBUG_TRACK_PB}
           if (not g_PBTrackDisable.exists(pdwOrigPushData)) then
+{$endif}
           begin
-          {$endif}
-
-          if (not g_bPBSkipPusher) and IsValidCurrentShader() then
-          begin
-            g_pD3DDevice.DrawIndexedPrimitive
-            (
-                PCPrimitiveType,
+            if (not g_bPBSkipPusher) and IsValidCurrentShader() then
+            begin
+              g_pD3DDevice.DrawIndexedPrimitive
+              (
+                  PCPrimitiveType,
 {$IFDEF DXBX_USE_D3D9}
-                {BaseVertexIndex=}0,
+                  {BaseVertexIndex=}0,
 {$ENDIF}
-                {MinVertexIndex=}0,
-                (*dwCount*2*)8*1024*1024,
-                0,
-                PrimitiveCount
-                // Dxbx : Why not this : EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, 0, VPDesc.dwPrimitiveCount
-            );
+                  {MinVertexIndex=}0,
+                  (*dwCount*2*)8*1024*1024,
+                  0,
+                  PrimitiveCount
+                  // Dxbx : Why not this : EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, 0, VPDesc.dwPrimitiveCount
+              );
+            end;
           end;
-
-          {$ifdef _DEBUG_TRACK_PB}
-          end;
-          {$endif}
 
           VertPatch.Restore();
 
           g_pD3DDevice.SetIndices(nil{$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, 0{$ENDIF});
         end;
       end;
-
-      Dec(pdwPushData);
     end
     else
     begin
       EmuWarning('Unknown PushBuffer Operation (0x%.04X, %d)', [dwMethod, dwCount]);
       Exit;
     end;
-
-    Inc(pdwPushData);
   end;
 
 {$ifdef _DEBUG_TRACK_PB}
   if (bShowPB) then
   begin
-{$IFDEF DEBUG}
     DbgPrintf('');
     DbgPrintf('DxbxDbg> ');
-{$ENDIF}
     fflush(stdout);
   end;
 {$endif}
