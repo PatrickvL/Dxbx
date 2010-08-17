@@ -434,13 +434,14 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('EmuKrnl : ExReadWriteRefurbInfo' +
-         #13#10'(' +
-         #13#10'   pRefurbInfo         : 0x%.08X' +
-         #13#10'   dwBufferSize        : 0x%.08X' +
-         #13#10'   aIsWriteMode        : 0x%.08X' +
-         #13#10');',
-         [pRefurbInfo, dwBufferSize, aIsWriteMode]);
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : ExReadWriteRefurbInfo' +
+           #13#10'(' +
+           #13#10'   pRefurbInfo         : 0x%.08X' +
+           #13#10'   dwBufferSize        : 0x%.08X' +
+           #13#10'   aIsWriteMode        : 0x%.08X' +
+           #13#10');',
+           [pRefurbInfo, dwBufferSize, aIsWriteMode]);
 
   if Assigned(pRefurbInfo) then
   begin

@@ -1643,7 +1643,8 @@ begin
 
   Result := BOOL(GetOverlappedResult(hFile, lpOverlapped^, {var}lpNumberOfBytesTransferred^, JwaWinType.BOOL(bWait)));
 
-  DbgPrintf('EmuXapi : EmuGetOverlappedResult lpNumberOfBytesTransferred^ = 0x%.08X', [lpNumberOfBytesTransferred^]);
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuGetOverlappedResult lpNumberOfBytesTransferred^ = 0x%.08X', [lpNumberOfBytesTransferred^]);
 //  if (bWait = BOOL_TRUE) then
 //    Result := BOOL_TRUE; // Sucker...
 
