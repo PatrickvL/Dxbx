@@ -10479,26 +10479,36 @@ begin
 end; *)
 
 
-(*function XTL_EmuIDirect3DVolume_GetDesc
+function XTL_EmuIDirect3DVolume_GetDesc
 (
   pThis: PX_D3DVolume;
   pDesc: PD3DVOLUME_DESC
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
 var
-  pVolumeTexture: XTL_PIDirect3DVolumeTexture8;
+  pVolume: XTL_PIDirect3DVolume8;
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirect3DVolume_GetDesc');
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DVolume_GetDesc').
+      _(pThis, 'pThis').
+      _(pDesc, 'pDesc').
+    LogEnd();
+
+  EmuVerifyResourceIsRegistered(pThis);
+  pVolume := pThis.Emu.Volume;
+
+  IDirect3DVolume(pVolume).GetDesc(pDesc^);
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
-end; *)
+end;
 
-(*procedure XTL_EmuIDirect3DVolume_GetContainer2
+(* procedure XTL_EmuIDirect3DVolume_GetContainer2
 (
-  pThis: PD3DVolume;
-  ppBaseTexture: PPD3DBaseTexture;
+  pThis: PX_D3DVolume;
+  ppBaseTexture: PPX_D3DBaseTexture
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
 begin
@@ -10509,7 +10519,7 @@ begin
   EmuSwapFS(fsXbox);
 end; *)
 
-(*
+
 function XTL_EmuIDirect3DVolume_LockBox
 (
   pThis: PX_D3DVolume;
@@ -10523,27 +10533,25 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-//  Unimplemented('XTL_EmuIDirect3DVolume_LockBox');
-
-  LogBegin('EmuD3D8 : EmuIDirect3DVolume_LockBox').
-    _(pThis, 'pThis').
-    _(pLockedVolume, 'pLockedVolume').
-    _(pBox, 'pBox').
-    _(Flags, 'Flags').
-  LogEnd();
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DVolume_LockBox').
+      _(pThis, 'pThis').
+      _(pLockedVolume, 'pLockedVolume').
+      _(pBox, 'pBox').
+      _(Flags, 'Flags').
+    LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
 
-  pVolume := pThis.Emu.Volume8;
+  pVolume := pThis.Emu.Volume;
 
-  Result := IDirect3DVolume(pVolume).LockBox({out}pLockedVolume^, pBox, Flags);
+  IDirect3DVolume(pVolume).LockBox({out}pLockedVolume^, pBox, Flags);
 
-  if (FAILED(Result)) then
-    EmuWarning('LockBox Failed!');
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
-*)
+
 
 (*function XTL_EmuIDirect3DDevice_CreateSurface
 (
@@ -11158,9 +11166,9 @@ exports
   XTL_EmuIDirect3DVertexBuffer_Lock name PatchPrefix + 'D3DVertexBuffer_Lock',
   XTL_EmuIDirect3DVertexBuffer_Lock2 name PatchPrefix + 'D3DVertexBuffer_Lock2',
 
-(* XTL_EmuIDirect3DVolume_GetDesc name PatchPrefix + 'D3DVolume_GetDesc', // TODO -oDXBX: NOT YET IMPLEMENTED YET
-   XTL_EmuIDirect3DVolume_GetContainer2 name PatchPrefix + 'GetContainer2', // TODO -oDXBX: NOT YET IMPLEMENTED YET
-   XTL_EmuIDirect3DVolume_LockBox name PatchPrefix + 'D3DVolume_LockBox', *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
+  XTL_EmuIDirect3DVolume_GetDesc name PatchPrefix + 'D3DVolume_GetDesc',
+(*   XTL_EmuIDirect3DVolume_GetContainer2 name PatchPrefix + 'GetContainer2',*) // TODO -oDXBX: NOT YET IMPLEMENTED YET
+  XTL_EmuIDirect3DVolume_LockBox name PatchPrefix + 'D3DVolume_LockBox',
 
 
   XTL_EmuIDirect3DVolumeTexture_GetLevelDesc name PatchPrefix + 'D3DVolumeTexture_GetLevelDesc',
