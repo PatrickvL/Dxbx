@@ -3145,7 +3145,7 @@ begin
       hRet := g_pD3DDevice.CreateVertexShader
       (
           pRecompiledFunction,
-          PIDirect3DVertexShader9(Handle)
+          PIDirect3DVertexShader9(@Handle)
       );
 {$ELSE}
       hRet := g_pD3DDevice.CreateVertexShader
@@ -5960,9 +5960,8 @@ begin
 
   hRet := 0; // Dxbx : Prevent 'not initialized' compiler warning
 
-{$IFDEF DXBX_DEBUG}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DSurface_LockRect (pThis->Surface = 0x%8.8X)', [pThis.Emu.Surface]);
-{$ENDIF}
+  if MayLog(lfUnit or lfDebug) then
+    DbgPrintf('EmuD3D8 : EmuIDirect3DSurface_LockRect (pThis->Surface = 0x%8.8X)', [pThis.Emu.Surface]);
 
   // Cxbx (shogun) commented this :
   //if(nil=pThis.Emu.Surface) or (pThis.Emu.Surface = IDirect3DSurface($00000004)) then
@@ -6477,7 +6476,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-Function XTL_EmuIDirect3DDevice_UpdateOverlay
+function XTL_EmuIDirect3DDevice_UpdateOverlay
 (
   pSurface: PX_D3DSurface;
   SrcRect: PRECT;
@@ -9357,12 +9356,11 @@ function XTL_EmuIDirect3D_SetPushBufferSize
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
-  LogBegin('EmuD3D8 : EmuIDirect3D_SetPushBufferSize').
-    _(PushBufferSize, 'PushBufferSize').
-    _(KickOffSize, 'KickOffSize').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit or lfDebug) then
+    LogBegin('EmuD3D8 : EmuIDirect3D_SetPushBufferSize').
+      _(PushBufferSize, 'PushBufferSize').
+      _(KickOffSize, 'KickOffSize').
+    LogEnd();
 
   Result := D3D_OK; // This is a Xbox extension, meaning there is no pc counterpart.
   
@@ -9774,7 +9772,7 @@ begin
 end;
 //#pragma warning(default:4244)
 
-Function XTL_EmuIDirect3DDevice_GetPushDistance
+function XTL_EmuIDirect3DDevice_GetPushDistance
 (
   Handle_: DWORD
 ): Dword;
@@ -9787,6 +9785,8 @@ begin
     LogEnd();
 
   DxbxKrnlCleanup('XTL_EmuIDirect3DDevice_GetPushDistance is not implemented');
+
+  Result := D3D_OK;
 
   EmuSwapFs(fsXbox);
 end;
@@ -10763,7 +10763,7 @@ function XTL_EmuIDirect3DPushBuffer_SetRenderState
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirect3DPushBuffer_SetRenderState');
+  Result := Unimplemented('XTL_EmuIDirect3DPushBuffer_SetRenderState');
 
   EmuSwapFS(fsXbox);
 end;
@@ -10771,14 +10771,14 @@ end;
 function XTL_EmuIDirect3DPushBuffer_CopyRects
 (
   Offset: DWORD;
-  pSourceSurface: PIDirect3DSurface8;
-  pDestinationSurface: PIDirect3DSurface8
+  pSourceSurface: PIDirect3DSurface;
+  pDestinationSurface: PIDirect3DSurface
 ): HRESULT; stdcall
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirect3DPushBuffer_CopyRects');
+  Result := Unimplemented('XTL_EmuIDirect3DPushBuffer_CopyRects');
 
   EmuSwapFS(fsXbox);
 end;
@@ -10890,7 +10890,7 @@ end;
 
 function XTL_EmuIDirect3DDevice_GetPixelShader
 (
-  Value: DWord
+  Value: PDWORD
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:Shadow_Tj  Done:100
 begin
@@ -10901,7 +10901,14 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  g_pD3DDevice.GetPixelShader(Value);
+  g_pD3DDevice.GetPixelShader(
+{$IFDEF DXBX_USE_D3D9}
+    PIDirect3DPixelShader9(Value)
+{$ELSE}
+    {out}Value^
+{$ENDIF}
+    );
+
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);

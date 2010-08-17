@@ -22,8 +22,6 @@
 // Dxbx specific compiler directives :
 
 // DEBUG = Build setting. Enables DbgPrintf calls, just like in Cxbx
-{$DEFINE _DEBUG_TRACE} // Enable DbgPrintf tracing calls, just like in Cxbx
-{.$DEFINE ONLY_CXBX_LOGGING} // Disables the additional Dxbx logging, for logfile-comparisons
 
 {$IFDEF ONLY_CXBX_LOGGING}
   // Don't set any Dxbx logging define, we do only Cxbx-compatible logging in this mode.
@@ -35,8 +33,6 @@
   {$ENDIF}
 
   {$IFDEF _DEBUG_TRACE}
-    {$DEFINE DXBX_DEBUG_TRACE} // Additional Dxbx DbgPrintf traces
-    {.$DEFINE DXBX_EXTREME_LOGGING}
     {.$DEFINE DXBX_EXTENSIVE_CALLSTACK_LOGGING}
   {$ENDIF}
 {$ENDIF}

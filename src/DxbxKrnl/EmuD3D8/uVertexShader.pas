@@ -2128,7 +2128,7 @@ begin
 
   DbgVshPrintf(', ');
 
-  DataType := (pToken^ shr D3DVSD_DATATYPESHIFT) and $FF;
+  DataType := (pToken^ shr X_D3DVSD_DATATYPESHIFT) and $FF;
   NewDataType := 0;
 
   // save patching information
