@@ -47,21 +47,22 @@ implementation
 uses
   DxLibraryAPIScanning;
 
+const lfUnit = lfCxbx or lfKernel;
+
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBEIMAGE_HEADER);
  begin
   // initialize openxdk emulation (TODO)
   if pLibraryVersion = nil then
   begin
-{$IFDEF DXBX_DEBUG}
-    DbgPrintf('DxbxHLE: Detected no libraries at all... cannot patch!');
-{$ENDIF}
+    if MayLog(lfDxbx) then
+      DbgPrintf('DxbxHLE: Detected no libraries at all... cannot patch!');
+
     Exit;
   end;
 
   // initialize Microsoft XDK emulation
-{$IFDEF DEBUG}
-  DbgPrintf('DxbxHLE: Detected Microsoft XDK application...');
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('DxbxHLE: Detected Microsoft XDK application...');
 
   SymbolManager.DxbxScanForLibraryAPIs(pLibraryVersion, pXbeHeader);
 

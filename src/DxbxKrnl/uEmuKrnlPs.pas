@@ -81,6 +81,8 @@ var g_iThreadNotificationCount: int = 0;
 
 implementation
 
+const lfUnit = lfCxbx or lfKernel;
+
 // PsCreateSystemThread proxy parameters
 type PCSTProxyParam = record
     StartAddress: PKSTART_ROUTINE;
@@ -117,15 +119,14 @@ begin
   StartRoutine := Parameter.StartRoutine;
   StartSuspended := Parameter.StartSuspended;
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : PCSTProxy' +
-    #13#10'(' +
-    #13#10'   StartAddress        : 0x%.08x' +
-    #13#10'   StartContext        : 0x%.08x' +
-    #13#10'   StartRoutine        : 0x%.08x' +
-    #13#10');',
-    [Addr(StartAddress), StartContext, Addr(StartRoutine)]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : PCSTProxy' +
+      #13#10'(' +
+      #13#10'   StartAddress        : 0x%.08x' +
+      #13#10'   StartContext        : 0x%.08x' +
+      #13#10'   StartRoutine        : 0x%.08x' +
+      #13#10');',
+      [Addr(StartAddress), StartContext, Addr(StartRoutine)]);
 
   if(StartSuspended = TRUE) then
     SuspendThread(GetCurrentThread());
@@ -274,18 +275,17 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : PsCreateSystemThread >>' +
-    #13#10'(' +
-    #13#10'   ThreadHandle        : 0x%.08x' +
-    #13#10'   ThreadId            : 0x%.08x' +
-    #13#10'   StartAddress        : 0x%.08x' +
-    #13#10'   StartContext        : 0x%.08x' +
-    #13#10'   DebugStack          : 0x%.08x' +
-    #13#10');',
-    [ThreadHandle, ThreadId, Addr(StartAddress), StartContext,
-    Ord(DebugStack)]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : PsCreateSystemThread >>' +
+      #13#10'(' +
+      #13#10'   ThreadHandle        : 0x%.08x' +
+      #13#10'   ThreadId            : 0x%.08x' +
+      #13#10'   StartAddress        : 0x%.08x' +
+      #13#10'   StartContext        : 0x%.08x' +
+      #13#10'   DebugStack          : 0x%.08x' +
+      #13#10');',
+      [ThreadHandle, ThreadId, Addr(StartAddress), StartContext,
+      Ord(DebugStack)]);
 
   ThreadExtraSize := 0;
   KernelStackSize := KERNEL_STACK_SIZE;
@@ -344,23 +344,22 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : PsCreateSystemThreadEx' +
-    #13#10'(' +
-    #13#10'   ThreadHandle        : 0x%.08x' +
-    #13#10'   ThreadExtraSize     : 0x%.08x' +
-    #13#10'   KernelStackSize     : 0x%.08x' +
-    #13#10'   TlsDataSize         : 0x%.08x' +
-    #13#10'   ThreadId            : 0x%.08x' +
-    #13#10'   StartAddress        : 0x%.08x' +
-    #13#10'   StartContext        : 0x%.08x' +
-    #13#10'   CreateSuspended     : 0x%.08x' +
-    #13#10'   DebugStack          : 0x%.08x' +
-    #13#10'   StartRoutine        : 0x%.08x' +
-    #13#10');',
-    [pThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, pThreadId,
-    Addr(StartAddress), StartContext, CreateSuspended, DebugStack, Addr(pStartRoutine)]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : PsCreateSystemThreadEx' +
+      #13#10'(' +
+      #13#10'   ThreadHandle        : 0x%.08x' +
+      #13#10'   ThreadExtraSize     : 0x%.08x' +
+      #13#10'   KernelStackSize     : 0x%.08x' +
+      #13#10'   TlsDataSize         : 0x%.08x' +
+      #13#10'   ThreadId            : 0x%.08x' +
+      #13#10'   StartAddress        : 0x%.08x' +
+      #13#10'   StartContext        : 0x%.08x' +
+      #13#10'   CreateSuspended     : 0x%.08x' +
+      #13#10'   DebugStack          : 0x%.08x' +
+      #13#10'   StartRoutine        : 0x%.08x' +
+      #13#10');',
+      [pThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, pThreadId,
+      Addr(StartAddress), StartContext, CreateSuspended, DebugStack, Addr(pStartRoutine)]);
 
   // create thread, using our special proxy technique
   begin
@@ -378,9 +377,8 @@ begin
 
     WaitForSingleObject(iPCSTProxyParam.hStartedEvent, 1000);
 
-{$IFDEF DEBUG}
-    DbgPrintf('EmuKrnl : pThreadHandle^ : 0x%.04x, ThreadId : 0x%.04x', [pThreadHandle^, dwThreadId]);
-{$ENDIF}
+    if MayLog(lfUnit) then
+      DbgPrintf('EmuKrnl : pThreadHandle^ : 0x%.04x, ThreadId : 0x%.04x', [pThreadHandle^, dwThreadId]);
 
     // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
     begin
@@ -388,9 +386,8 @@ begin
 
       if not DuplicateHandle(GetCurrentProcess(), pThreadHandle^, GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
       begin
-{$IFDEF DEBUG}
-        DbgPrintf('EmuKrnl : PsCreateSystemThreadEx - Couldn''t duplicate handle!');
-{$ENDIF}
+        if MayLog(lfUnit) then
+          DbgPrintf('EmuKrnl : PsCreateSystemThreadEx - Couldn''t duplicate handle!');
       end;
 
       DxbxKrnlRegisterThread(hDupHandle);
@@ -439,11 +436,12 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('EmuKrnl : PsTerminateSystemThread' +
-      #13#10'(' +
-      #13#10'   ExitStatus          : 0x%.08X' +
-      #13#10');',
-      [ExitStatus]);
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : PsTerminateSystemThread' +
+        #13#10'(' +
+        #13#10'   ExitStatus          : 0x%.08X' +
+        #13#10');',
+        [ExitStatus]);
 
   // call thread notification routine(s)
   if (g_iThreadNotificationCount <> 0) then

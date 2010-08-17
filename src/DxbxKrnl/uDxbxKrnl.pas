@@ -108,6 +108,8 @@ uses
   uXboxLibraryUtils;
 {$ENDIF}
 
+const lfUnit = lfCxbx or lfKernel;
+
 procedure DxbxKrnlInit(
   hwndParent: HWND;
   pTLSData: PVOID;
@@ -143,9 +145,8 @@ begin
   // debug console allocation (if configured)
   CreateLogs(DbgMode, string(szDebugFileName)); // Initialize logging interface
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuInit : Dxbx Version ' + _DXBX_VERSION);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('EmuInit : Dxbx Version ' + _DXBX_VERSION);
 
   // update caches
   DxbxKrnl_TLS := pTLS;
@@ -223,37 +224,37 @@ begin
 
 {$ENDIF LOG_STRUCT_SIZES}
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuMain : Debug Trace Enabled.');
+  if MayLog(lfUnit or lfTrace) then
+  begin
+    DbgPrintf('EmuMain : Debug Trace Enabled.');
 
-  DbgPrintf('EmuMain : 0x%.8x : DxbxKrnlInit' +
-    #13#10'(' +
-    #13#10'   hwndParent          : 0x%.8x' +
-    #13#10'   pTLSData            : 0x%.8x' +
-    #13#10'   pTLS                : 0x%.8x' +
-    #13#10'   pLibraryVersion     : 0x%.8x' +
-    #13#10'   DebugConsole        : 0x%.8x' +
-    #13#10'   DebugFileName       : 0x%.8x (%s)' +
-    #13#10'   pXBEHeader          : 0x%.8x' +
-    #13#10'   dwXBEHeaderSize     : 0x%.8x' +
-    #13#10'   Entry               : 0x%.8x' +
-    #13#10');', [
-      @DxbxKrnlInit,
-      hwndParent,
-      pTLSData,
-      pTLS,
-      pLibraryVersion,
-      Ord(DbgMode),
-      Pointer(szDebugFileName), AnsiString(szDebugFileName),
-      pXbeHeader,
-      dwXbeHeaderSize,
-      Addr(Entry)
-    ]);
-{$ELSE}
- {$IFDEF DEBUG}
-  DbgPrintf('EmuMain : Debug Trace Disabled.');
- {$ENDIF}
-{$ENDIF}
+    DbgPrintf('EmuMain : 0x%.8x : DxbxKrnlInit' +
+      #13#10'(' +
+      #13#10'   hwndParent          : 0x%.8x' +
+      #13#10'   pTLSData            : 0x%.8x' +
+      #13#10'   pTLS                : 0x%.8x' +
+      #13#10'   pLibraryVersion     : 0x%.8x' +
+      #13#10'   DebugConsole        : 0x%.8x' +
+      #13#10'   DebugFileName       : 0x%.8x (%s)' +
+      #13#10'   pXBEHeader          : 0x%.8x' +
+      #13#10'   dwXBEHeaderSize     : 0x%.8x' +
+      #13#10'   Entry               : 0x%.8x' +
+      #13#10');', [
+        @DxbxKrnlInit,
+        hwndParent,
+        pTLSData,
+        pTLS,
+        pLibraryVersion,
+        Ord(DbgMode),
+        Pointer(szDebugFileName), AnsiString(szDebugFileName),
+        pXbeHeader,
+        dwXbeHeaderSize,
+        Addr(Entry)
+      ]);
+  end;
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuMain : Debug Trace Disabled.');
 
   // Duplicate process handle in order to retain Suspend/Resume thread rights from a remote thread
   begin
@@ -294,9 +295,8 @@ begin
     end;
   end;
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuMain : Determining CPU affinity.');
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuMain : Determining CPU affinity.');
 
   // Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
   // this will better aproximate the environment with regard to multi-threading) :
@@ -316,15 +316,13 @@ begin
     SetThreadAffinityMask(GetCurrentThreadID(), g_CPUXbox);
   end;
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuMain : Intercepting functions.');
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuMain : Intercepting functions.');
 
   EmuHLEIntercept(pLibraryVersion, pXbeHeader);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuMain : Initializing devices.');
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuMain : Initializing devices.');
 
   // Initialize devices :
   begin
@@ -355,9 +353,8 @@ begin
     DxbxRegisterDeviceNativePath(DeviceHarddisk0Partition7, DxbxBasePath + 'Partition7');
   end;
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuMain : Creating default symbolic links.');
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuMain : Creating default symbolic links.');
 
   // Create default symbolic links :
   begin
@@ -382,15 +379,13 @@ begin
       DxbxMountUtilityDrive({fFormatClean=}DxbxKrnl_XbeHeader.dwInitFlags[0] and XBE_INIT_FLAG_FormatUtilityDrive);
   end;
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuMain : Initializing Direct3D.');
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuMain : Initializing Direct3D.');
 
   XTL_EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuMain : Initial thread starting.');
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuMain : Initial thread starting.');
 
   // Re-route unhandled exceptions to our emulation-exception handler :
   OldExceptionFilter := SetUnhandledExceptionFilter(TFNTopLevelExceptionFilter(@EmuException));
@@ -431,23 +426,23 @@ begin
     on E: Exception do
     begin
       EmuSwapFS(fsWindows);
-{$IFDEF DEBUG}
-      DbgPrintf('EmuMain : Catched an exception : ' + E.Message);
-{$IFDEF DXBX_USE_JCLDEBUG}
-      DbgPrintf(JclLastExceptStackListToString);
-{$ENDIF}
-//    on(EmuException(GetExceptionInformation())) :
-//      printf('Emu: WARNING!! Problem with ExceptionFilter');
-{$ENDIF}
+      if MayLog(lfUnit) then
+      begin
+        DbgPrintf('EmuMain : Catched an exception : ' + E.Message);
+  {$IFDEF DXBX_USE_JCLDEBUG}
+        DbgPrintf(JclLastExceptStackListToString);
+  {$ENDIF}
+  //    on(EmuException(GetExceptionInformation())) :
+  //      printf('Emu: WARNING!! Problem with ExceptionFilter');
+      end;
     end;
   end;
 
   // Restore original exception filter :
   SetUnhandledExceptionFilter(OldExceptionFilter);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuMain : Initial thread ended.');
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuMain : Initial thread ended.');
 
 //  fflush(stdout);
 
@@ -472,15 +467,15 @@ begin
   if szErrorMessage <> '' then
   begin
     szBuffer1 := {Format} 'DxbxKrnlCleanup : Received Fatal Message ->'#13#10#13#10 + szErrorMessage;
-{$IFDEF DEBUG}
-    DbgPrintf(szBuffer1);
-{$ENDIF}
+    if MayLog(lfUnit) then
+      DbgPrintf(szBuffer1);
+
     MessageBox(0, @(szBuffer1[1]), 'DxbxKrnl', MB_OK or MB_ICONSTOP);
   end;
 
-{$IFDEF DEBUG}
-  DbgPrintf('DxbxKrnl: Terminating Process');
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('DxbxKrnl: Terminating Process');
+
   fflush(stdout);
 
   // Cleanup debug output
