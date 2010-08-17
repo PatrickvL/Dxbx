@@ -9378,7 +9378,6 @@ begin
     DbgPrintf('EmuD3D8 : EmuIDirect3DDevice_InsertFence();');
 
   // TODO -oCXBX: Actually implement this
-
   Result := $8000BEEF;
 
   EmuSwapFS(fsXbox);
@@ -9753,6 +9752,23 @@ begin
 end;
 //#pragma warning(default:4244)
 
+Function XTL_EmuIDirect3DDevice_GetPushDistance
+(
+  Handle_: DWORD
+): Dword;
+begin
+  EmuSwapFs(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DDevice_GetPushDistance').
+      _(Handle_, 'Handle').
+    LogEnd();
+
+  DxbxKrnlCleanup('XTL_EmuIDirect3DDevice_GetPushDistance is not implemented');
+
+  EmuSwapFs(fsXbox);
+end;
+
 function XTL_EmuIDirect3DDevice_BackFillMode
 (
   Value: DWORD
@@ -9762,7 +9778,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuIDirect3DDevice_BackFillMode').
+    LogBegin('EmuIDirect3DDevice_BackFillMode').
       _(Value, 'Value').
     LogEnd();
 
@@ -10715,8 +10731,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-(*function XTL_EmuIDirect3DPushBuffer_SetRenderState
+function XTL_EmuIDirect3DPushBuffer_SetRenderState
 (
+  Offset: DWORD;
+  State: D3DRENDERSTATETYPE;
+  Value: DWORD
 ): HRESULT; stdcall
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
 begin
@@ -10725,10 +10744,13 @@ begin
   Unimplemented('XTL_EmuIDirect3DPushBuffer_SetRenderState');
 
   EmuSwapFS(fsXbox);
-end; *)
+end;
 
-(*function XTL_EmuIDirect3DPushBuffer_CopyRects
+function XTL_EmuIDirect3DPushBuffer_CopyRects
 (
+  Offset: DWORD;
+  pSourceSurface: PIDirect3DSurface8;
+  pDestinationSurface: PIDirect3DSurface8
 ): HRESULT; stdcall
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
 begin
@@ -10737,7 +10759,7 @@ begin
   Unimplemented('XTL_EmuIDirect3DPushBuffer_CopyRects');
 
   EmuSwapFS(fsXbox);
-end; *)
+end;
 
 function XTL_EmuIDirect3DDevice_SetRenderState_SetRenderStateNotInline
 (
@@ -10844,29 +10866,24 @@ begin
 end;
 
 
-(*function XTL_EmuIDirect3DDevice_GetPushDistance
+function XTL_EmuIDirect3DDevice_GetGetPixelShader
 (
+  Value: DWord
 ): HRESULT; stdcall;
-// Branch:DXBX  Translator:Shadow_Tj  Done:0
+// Branch:DXBX  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirect3DDevice_GetPushDistance');
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DDevice_GetGetPixelShader').
+      _(Value, 'Value').
+    LogEnd();
+
+  g_pD3DDevice.GetPixelShader(Value);
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
-end; *)
-
-(*function XTL_EmuIDirect3DDevice_GetGetPixelShader
-(
-): HRESULT; stdcall;
-// Branch:DXBX  Translator:Shadow_Tj  Done:0
-begin
-  EmuSwapFS(fsWindows);
-
-  Unimplemented('XTL_EmuIDirect3DDevice_GetGetPixelShader');
-
-  EmuSwapFS(fsXbox);
-end; *)
+end;
 
 function XTL_EmuIDirect3DDevice_GetPixelShaderConstant
 (
@@ -10879,7 +10896,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuIDirect3DDevice_GetPixelShaderConstant').
+    LogBegin('EmuIDirect3DDevice_GetPixelShaderConstant').
       _(Register_, 'Register').
       _(pConstantData, 'pConstantData').
       _(ConstantCount, 'ConstantCount').
@@ -10998,10 +11015,10 @@ exports
   XTL_EmuIDirect3DDevice_GetModelView name PatchPrefix + 'D3DDevice_GetModelView', // ??
   XTL_EmuIDirect3DDevice_GetOverlayUpdateStatus name PatchPrefix + 'D3DDevice_GetOverlayUpdateStatus',
   XTL_EmuIDirect3DDevice_GetPixelShaderFunction name PatchPrefix + 'D3DDevice_GetPixelShaderFunction',
-(*  XTL_EmuIDirect3DDevice_GetGetPixelShader PatchPrefix + 'D3DDevice_GetPixelShader', *) // TODO -oDXBX: NOT YET IMPLEMENTED
+  XTL_EmuIDirect3DDevice_GetGetPixelShader name PatchPrefix + 'D3DDevice_GetPixelShader',
   XTL_EmuIDirect3DDevice_GetPixelShaderConstant name PatchPrefix + 'D3DDevice_GetPixelShaderConstant',
   XTL_EmuIDirect3DDevice_GetProjectionViewportMatrix name PatchPrefix + 'D3DDevice_GetProjectionViewportMatrix',
-(*  XTL_EmuIDirect3DDevice_D3DDevice_GetPushDistance name PatchPrefix + 'D3DDevice_D3DDevice_GetPushDistance', *) // TODO -oDXBX: NOT YET IMPLEMENTED
+  XTL_EmuIDirect3DDevice_GetPushDistance name PatchPrefix + 'D3DDevice_GetPushDistance',
   XTL_EmuIDirect3DDevice_GetRasterStatus name PatchPrefix + 'D3DDevice_GetRasterStatus',
   XTL_EmuIDirect3DDevice_GetRenderTarget name PatchPrefix + 'D3DDevice_GetRenderTarget',
   XTL_EmuIDirect3DDevice_GetRenderTarget2 name PatchPrefix + 'D3DDevice_GetRenderTarget2',
@@ -11158,8 +11175,8 @@ exports
 (*  XTL_EmuIDirect3DPushBuffer_SetVertexShaderInputDirect name PatchPrefix + 'D3DPushBuffer_SetVertexShaderInputDirect', *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
   XTL_EmuIDirect3DPushBuffer_SetPalette name PatchPrefix + 'D3DPushBuffer_SetPalette',
   XTL_EmuIDirect3DPushBuffer_SetVertexShaderConstant name PatchPrefix + 'D3DPushBuffer_SetVertexShaderConstant',
-(*  XTL_EmuIDirect3DPushBuffer_SetRenderState name PatchPrefix + 'D3DPushBuffer_SetRenderState', // TODO -oDXBX: NOT YET IMPLEMENTED YET
-  XTL_EmuIDirect3DPushBuffer_CopyRects name PatchPrefix + 'D3DPushBuffer_CopyRects', *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
+  XTL_EmuIDirect3DPushBuffer_SetRenderState name PatchPrefix + 'D3DPushBuffer_SetRenderState',
+  XTL_EmuIDirect3DPushBuffer_CopyRects name PatchPrefix + 'D3DPushBuffer_CopyRects',
 
 
   XTL_EmuIDirect3DVertexBuffer_GetDesc name PatchPrefix + 'D3DVertexBuffer_GetDesc',
