@@ -293,9 +293,9 @@ begin
 
   g_PBTrackTotal.insert(pdwPushData);
 
-  if (g_PBTrackShowOnce.exists(pdwPushData)) then
+  if (not g_PBTrackShowOnce.exists(pdwPushData)) then
   begin
-    g_PBTrackShowOnce.remove(pdwPushData);
+    g_PBTrackShowOnce.insert(pdwPushData);
 
     if MayLog(lfUnit) then
     begin
@@ -368,7 +368,12 @@ begin
 
       // retrieve vertex shader
 {$IFDEF DXBX_USE_D3D9}
-      g_pD3DDevice.GetVertexShader({out}PIDirect3DVertexShader9(dwVertexShader));
+      // For Direct3D9, try to retrieve the vertex shader interface :
+      dwVertexShader := 0;
+      g_pD3DDevice.GetVertexShader({out}PIDirect3DVertexShader9(@dwVertexShader));
+      // If that didn't work, get the active FVF :
+      if dwVertexShader = 0 then
+        g_pD3DDevice.GetFVF({out}dwVertexShader);
 {$ELSE}
       g_pD3DDevice.GetVertexShader({out}dwVertexShader);
 {$ENDIF}
@@ -791,7 +796,7 @@ var
   a: DWORD;
   b: DWORD;
   c: DWORD;
-  la, lb, lc: DWORD;
+//  la, lb, lc: DWORD;
   i: uint;
 begin
   if (not IsValidCurrentShader() or (dwCount = 0)) then
@@ -810,7 +815,7 @@ begin
 {$ENDIF}
     {out}uiStride);
 
-  sprintf(@szFileName[0], DxbxDebugFolder +'\DxbxMesh-0x%.08X.x', [pIndexData]);
+  sprintf(@szFileName[0], AnsiString(DxbxDebugFolder +'\DxbxMesh-0x%.08X.x'), [pIndexData]);
   dbgVertices := fopen(szFileName, 'wt');
 
   // retrieve stream desc
@@ -893,7 +898,7 @@ begin
     b := pwVal^; Inc(pwVal);
     c := pwVal^; Inc(pwVal);
 
-    la := a; lb := b; lc := c;
+//    la := a; lb := b; lc := c;
 
     if max > 0 then // Dxbx addition, to prevent underflow
     for i := 2 to max - 1 do
@@ -905,9 +910,9 @@ begin
       b := c;
       c := pwVal^; Inc(pwVal);
 
-      la := a;
-      lb := b;
-      lc := c;
+//      la := a;
+//      lb := b;
+//      lc := c;
     end;
 
     fprintf(dbgVertices, '    }'#13#10);

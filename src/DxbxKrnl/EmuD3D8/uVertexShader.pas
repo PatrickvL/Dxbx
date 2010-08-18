@@ -52,6 +52,12 @@ type Dxbx4Booleans = array [0..4-1] of boolean;
 
 // Types from VertexShader.h :
 
+const
+  VSH_XBOX_MAX_A_REGISTER_COUNT = 1;
+  VSH_XBOX_MAX_C_REGISTER_COUNT = 96;
+  VSH_XBOX_MAX_R_REGISTER_COUNT = 12 + 1; // Use r12 to read back the current value of oPos, allows to treat oPos as a thirteenth temporary register.
+  VSH_XBOX_MAX_V_REGISTER_COUNT = 16;
+
 // nv2a microcode header
 type _VSH_SHADER_HEADER = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -59,6 +65,7 @@ type _VSH_SHADER_HEADER = record
     Version: uint08;
     NumInst: uint08;
     Unknown0: uint08;
+    RegVUsage: array [0..VSH_XBOX_MAX_V_REGISTER_COUNT-1] of Boolean; // Dxbx addition, to support D3D9
   end; // size = 4 (as in Cxbx)
   VSH_SHADER_HEADER = _VSH_SHADER_HEADER;
   PVSH_SHADER_HEADER = ^VSH_SHADER_HEADER;
@@ -77,6 +84,7 @@ const VERSION_VS =                      $F0;  // vs.1.1, not an official value
 const VERSION_XVS =                     $20;  // Xbox vertex shader
 const VERSION_XVSS =                    $73;  // Xbox vertex state shader
 const VERSION_XVSW =                    $77;  // Xbox vertex read/write shader
+
 const VSH_XBOX_MAX_INSTRUCTION_COUNT =  136;  // The maximum Xbox shader instruction count
 const VSH_MAX_INTERMEDIATE_COUNT =      1024; // The maximum number of intermediate format slots
 
@@ -669,6 +677,7 @@ begin
   // First get the instruction(s).
   pInstruction.ILU := VSH_ILU(VshGetField(pShaderToken, FLD_ILU));
   pInstruction.MAC := VSH_MAC(VshGetField(pShaderToken, FLD_MAC));
+
   // Get parameter A
   pInstruction.A.ParameterType := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_A_MUX));
 
@@ -683,7 +692,7 @@ begin
       pInstruction.A.Address := ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
 
   else
-    EmuWarning('Invalid instruction, parameter A type unknown %d', [Ord(pInstruction.A.ParameterType)]);
+    DbgVshPrintf('Invalid instruction, parameter A type unknown %d'#13#10, [Ord(pInstruction.A.ParameterType)]);
     Exit;
   end;
 
@@ -692,6 +701,7 @@ begin
   pInstruction.A.Swizzle[1] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_A_SWZ_Y));
   pInstruction.A.Swizzle[2] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_A_SWZ_Z));
   pInstruction.A.Swizzle[3] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_A_SWZ_W));
+
   // Get parameter B
   pInstruction.B.ParameterType := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_B_MUX));
 
@@ -715,25 +725,23 @@ begin
   pInstruction.B.Swizzle[1] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_B_SWZ_Y));
   pInstruction.B.Swizzle[2] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_B_SWZ_Z));
   pInstruction.B.Swizzle[3] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_B_SWZ_W));
+
   // Get parameter C
   pInstruction.C.ParameterType := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_C_MUX));
 
   case pInstruction.C.ParameterType of
-    PARAM_R: begin
-        pInstruction.C.Address := (VshGetField(pShaderToken, FLD_C_R_HIGH) shl 2) or
+    PARAM_R:
+      pInstruction.C.Address := (VshGetField(pShaderToken, FLD_C_R_HIGH) shl 2) or
                                    VshGetField(pShaderToken, FLD_C_R_LOW);
-      end;
-    PARAM_V: begin
-        pInstruction.C.Address := VshGetField(pShaderToken, FLD_V);
-      end;
-    PARAM_C: begin
-        pInstruction.C.Address := ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
-      end;
+    PARAM_V:
+      pInstruction.C.Address := VshGetField(pShaderToken, FLD_V);
 
-    else begin
-        DbgVshPrintf('Invalid instruction, parameter C type unknown %d'#13#10, [Ord(pInstruction.C.ParameterType)]);
-        Exit;
-    end;
+    PARAM_C:
+      pInstruction.C.Address := ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
+
+  else
+    DbgVshPrintf('Invalid instruction, parameter C type unknown %d'#13#10, [Ord(pInstruction.C.ParameterType)]);
+    Exit;
   end;
 
   pInstruction.C.Neg := Boolean(VshGetField(pShaderToken, FLD_C_NEG) > 0);
@@ -741,7 +749,9 @@ begin
   pInstruction.C.Swizzle[1] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_Y));
   pInstruction.C.Swizzle[2] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_Z));
   pInstruction.C.Swizzle[3] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_W));
+
   // Get output
+
   // Output register
   pInstruction.Output.OutputType := VSH_OUTPUT_TYPE(VshGetField(pShaderToken, FLD_OUT_ORB));
 
@@ -758,18 +768,21 @@ begin
   pInstruction.Output.OutputMask[1] := Boolean(VshGetField(pShaderToken, FLD_OUT_O_MASK_Y) > 0);
   pInstruction.Output.OutputMask[2] := Boolean(VshGetField(pShaderToken, FLD_OUT_O_MASK_Z) > 0);
   pInstruction.Output.OutputMask[3] := Boolean(VshGetField(pShaderToken, FLD_OUT_O_MASK_W) > 0);
+
   // MAC output
   pInstruction.Output.MACRMask[0] := Boolean(VshGetField(pShaderToken, FLD_OUT_MAC_MASK_X) > 0);
   pInstruction.Output.MACRMask[1] := Boolean(VshGetField(pShaderToken, FLD_OUT_MAC_MASK_Y) > 0);
   pInstruction.Output.MACRMask[2] := Boolean(VshGetField(pShaderToken, FLD_OUT_MAC_MASK_Z) > 0);
   pInstruction.Output.MACRMask[3] := Boolean(VshGetField(pShaderToken, FLD_OUT_MAC_MASK_W) > 0);
   pInstruction.Output.MACRAddress := VshGetField(pShaderToken, FLD_OUT_R);
+
   // ILU output
   pInstruction.Output.ILURMask[0] := Boolean(VshGetField(pShaderToken, FLD_OUT_ILU_MASK_X) > 0);
   pInstruction.Output.ILURMask[1] := Boolean(VshGetField(pShaderToken, FLD_OUT_ILU_MASK_Y) > 0);
   pInstruction.Output.ILURMask[2] := Boolean(VshGetField(pShaderToken, FLD_OUT_ILU_MASK_Z) > 0);
   pInstruction.Output.ILURMask[3] := Boolean(VshGetField(pShaderToken, FLD_OUT_ILU_MASK_W) > 0);
   pInstruction.Output.ILURAddress := VshGetField(pShaderToken, FLD_OUT_R);
+
   // Finally, get a0.x indirect constant addressing
   pInstruction.a0x := Boolean(VshGetField(pShaderToken, FLD_A0X) > 0);
 end;
@@ -883,13 +896,16 @@ end; // VshWriteParameter
 
 procedure VshWriteShader(pShader: PVSH_XBOX_SHADER;
                          pDisassembly: P_char;
-                         Truncate: boolean);
+                         IsConverted: boolean);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   DisassemblyPos: uint32;
   i, j: int;
   pIntermediate: PVSH_INTERMEDIATE_FORMAT;
   pParameter: PVSH_IMD_PARAMETER;
+{$IFDEF DXBX_USE_D3D9}
+  DclStr: AnsiString;
+{$ENDIF}
 begin
   DisassemblyPos := 0;
   case pShader.ShaderHeader.Version of
@@ -903,8 +919,47 @@ begin
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'xvsw.1.1'#13#10));
   end;
 
+{$IFDEF DXBX_USE_D3D9}
+  if IsConverted then
+  begin
+    for i := 0 to VSH_XBOX_MAX_V_REGISTER_COUNT - 1 do
+    begin
+      // Test if this v-register is actually used :
+      if pShader.ShaderHeader.RegVUsage[i] then
+      begin
+        case i of
+          0: DclStr := 'dcl_position';
+          1: DclStr := 'dcl_blendweight';
+          2: DclStr := 'dcl_normal';
+          3: DclStr := 'dcl_color'; // This is Xbox 'Diffuse', is it correctly mapped?
+  //        Specular 4
+          5: DclStr := 'dcl_fog';
+  //      7: ; // Back Diffuse - Xbox ext.
+  //      8: ; // Back Specular - Xbox ext.
+          9: DclStr := 'dcl_texcoord0';
+          10: DclStr := 'dcl_texcoord1';
+          11: DclStr := 'dcl_texcoord2';
+          12: DclStr := 'dcl_texcoord3';
+
+  // Available in Direct3D9, but unmapped to Xbox :
+  //       0: DclStr := 'dcl_blendindices';
+  //       0: DclStr := 'dcl_psize';
+  //       0: DclStr := 'dcl_tangent';
+  //       0: DclStr := 'dcl_binormal';
+  //       0: DclStr := 'dcl_tessfactor';
+  //       0: DclStr := 'dcl_depth';
+  //       0: DclStr := 'dcl_sample';
+        else
+          DclStr := '; dcl_unknown';
+        end;
+        Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s v%d'#13#10, [DclStr, i]));
+      end;
+    end;
+  end;
+{$ENDIF}
+
   // Dxbx note : Translated 'for' to 'while', because loop condition is a complex expression :
-  i := 0; while (i < pShader.IntermediateCount) and ((i < 128) or (not Truncate)) do
+  i := 0; while (i < pShader.IntermediateCount) and ((i < 128) or (not IsConverted)) do
   begin
     pIntermediate := @(pShader.Intermediate[i]);
 
@@ -1474,7 +1529,7 @@ function VshConvertShader(pShader: PVSH_XBOX_SHADER;
                           bNoReservedConstants: boolean): boolean;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
-  RUsage: array [0..13-1] of boolean;
+  RUsage: array [0..VSH_XBOX_MAX_R_REGISTER_COUNT-1] of boolean;
   i: int;
   j: int;
   k: int;
@@ -1485,19 +1540,11 @@ var
   outRegister: int;
   swizzle: int;
 begin
-  RUsage[0] := FALSE;
-  RUsage[1] := FALSE;
-  RUsage[2] := FALSE;
-  RUsage[3] := FALSE;
-  RUsage[4] := FALSE;
-  RUsage[5] := FALSE;
-  RUsage[6] := FALSE;
-  RUsage[7] := FALSE;
-  RUsage[8] := FALSE;
-  RUsage[9] := FALSE;
-  RUsage[10] := FALSE;
-  RUsage[11] := FALSE;
-  RUsage[12] := FALSE;
+  for i := 0 to VSH_XBOX_MAX_R_REGISTER_COUNT - 1 do
+    RUsage[i] := FALSE;
+
+  for i := 0 to VSH_XBOX_MAX_V_REGISTER_COUNT - 1 do
+    pShader.ShaderHeader.RegVUsage[i] := FALSE;
 
   // TODO -oCXBX: What about state shaders and such?
   pShader.ShaderHeader.Version := VERSION_VS;
@@ -1551,11 +1598,16 @@ begin
           // Dxbx fix : Here, Active does seem to apply :
           if (pIntermediate.Parameters[j].Active) then
             RUsage[pIntermediate.Parameters[j].Parameter.Address] := TRUE;
-        end;
-        // Make constant registers range from 0 to 191 instead of -96 to 95
+        end else
         if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_C) then
         begin
+          // Make constant registers range from 0 to 191 instead of -96 to 95
           Inc(pIntermediate.Parameters[j].Parameter.Address, X_VSCM_CORRECTION{=96});
+        end else
+        if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_V) then
+        begin
+          if (pIntermediate.Parameters[j].Active) then
+            pShader.ShaderHeader.RegVUsage[pIntermediate.Parameters[j].Parameter.Address] := TRUE;
         end;
       end;
     end;
@@ -2471,7 +2523,7 @@ begin
 {$IFDEF DXBX_USE_D3D9}
         {pDefines=}nil,
         {pInclude=}nil,
-        {Flags=}D3DXSHADER_SKIPVALIDATION,
+        {Flags=}0,//D3DXSHADER_SKIPVALIDATION, // TODO -oDxbx : Restore this once everything works again
 {$ELSE}
         {Flags=}D3DXASM_SKIPVALIDATION,
         {ppConstants=}NULL,
@@ -2482,7 +2534,7 @@ begin
     if (FAILED(hRet)) then
     begin
       EmuWarning('Couldn''t assemble recompiled vertex shader');
-      //EmuWarning(string(AnsiString(PAnsiChar(ID3DXBuffer(pErrors).GetBufferPointer)))); // Dxbx addition
+      EmuWarning(string(AnsiString(PAnsiChar(ID3DXBuffer(pErrors).GetBufferPointer)))); // Dxbx addition
     end;
 
     // Dxbx addition : Release interface reference manually :

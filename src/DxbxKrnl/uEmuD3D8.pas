@@ -10542,7 +10542,7 @@ function XTL_EmuIDirect3DVolume_GetDesc
 // Branch:DXBX  Translator:PatrickvL  Done:100
 var
   pVolume: XTL_PIDirect3DVolume8;
-  PCDesc: TD3DVolumeDesc;
+  VolumeDesc: TD3DVolumeDesc;
 begin
   EmuSwapFS(fsWindows);
 
@@ -10570,25 +10570,25 @@ begin
   begin
     pVolume := pThis.Emu.Volume;
 
-    ZeroMemory(@PCDesc, sizeof(PCDesc));
+    ZeroMemory(@VolumeDesc, sizeof(VolumeDesc));
 
-    Result := IDirect3DVolume(pVolume).GetDesc(PCDesc);
+    Result := IDirect3DVolume(pVolume).GetDesc({out}VolumeDesc);
 
     // rearrange into xbox format (remove D3DPOOL)
     if SUCCEEDED(Result) then
     begin
       // Convert Format (PC->Xbox)
-      pDesc.Format := EmuPC2XB_D3DFormat(PCDesc.Format);
-      pDesc.Type_ :=  X_D3DRESOURCETYPE(PCDesc._Type);
+      pDesc.Format := EmuPC2XB_D3DFormat(VolumeDesc.Format);
+      pDesc.Type_ :=  X_D3DRESOURCETYPE(VolumeDesc._Type);
 
       if (Ord(pDesc.Type_) > 7) then
         DxbxKrnlCleanup('EmuIDirect3DVolume_GetDesc: pDesc->Type > 7');
 
-      pDesc.Usage := PCDesc.Usage;
-      pDesc.Size := PCDesc.Size;
-      pDesc.Width := PCDesc.Width;
-      pDesc.Height := PCDesc.Height;
-      pDesc.Depth := PCDesc.Depth;
+      pDesc.Usage := VolumeDesc.Usage;
+      pDesc.Size := GetVolumeSize(@VolumeDesc);
+      pDesc.Width := VolumeDesc.Width;
+      pDesc.Height := VolumeDesc.Height;
+      pDesc.Depth := VolumeDesc.Depth;
     end;
   end;
 

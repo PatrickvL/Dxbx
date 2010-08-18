@@ -797,7 +797,6 @@ end;
 function EmuXB2PC_D3DCULL(Value: DWORD): D3DCULL;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  // TODO -oCXBX: XDK-Specific Tables? So far they are the same
   case (Value) of
     X_D3DCULL_NONE: // 0
       Result := D3DCULL_NONE;
