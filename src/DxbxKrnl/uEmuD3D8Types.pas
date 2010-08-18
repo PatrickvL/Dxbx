@@ -1173,27 +1173,12 @@ const
   X_D3DCOLORWRITEENABLE_ALPHA = (1 shl 24);
   X_D3DCOLORWRITEENABLE_ALL   = $01010101; // Xbox ext.
 
-function GetSurfaceSize(const aSurface: PD3DSURFACE_DESC): LongWord;
-
 implementation
 
 function IsSpecialResource(x: DWORD): Boolean;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
  Result := (x and X_D3DRESOURCE_DATA_FLAG_SPECIAL) = X_D3DRESOURCE_DATA_FLAG_SPECIAL;
-end;
-
-// Returns size of the surface, in bytes.
-function GetSurfaceSize(const aSurface: PD3DSURFACE_DESC): LongWord;
-begin
-{$IFDEF DXBX_USE_D3D9}
-  Result := aSurface.Height * aSurface.Width; // Calculate size in pixels
-  Result := Result * 1; // TODO : Determine BytesPerPixel based on format!
-  // if aSurface is CubeTexture then
-  //   Result := Result * 6; // Faces
-{$ELSE}
-  Result := aSurface.Size;
-{$ENDIF}
 end;
 
 //function

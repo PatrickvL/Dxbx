@@ -73,6 +73,9 @@ function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;
 
 function F2DW(const aValue: Float): DWORD; inline;
 
+function GetSurfaceSize(const aSurface: PD3DSurfaceDesc): LongWord;
+function GetVolumeSize(const aVolume: PD3DVolumeDesc): LongWord;
+
 implementation
 
 function iif(AValue: Boolean; const ATrue: TD3DDevType; const AFalse: TD3DDevType): TD3DDevType; overload;
@@ -232,6 +235,30 @@ end;
 function F2DW(const aValue: Float): DWORD;
 begin
   Result := PDWORD(@aValue)^;
+end;
+
+// Returns size of the surface, in bytes.
+function GetSurfaceSize(const aSurface: PD3DSurfaceDesc): LongWord;
+begin
+{$IFDEF DXBX_USE_D3D9}
+  Result := aSurface.Height * aSurface.Width; // Calculate size in pixels
+  Result := Result * 1; // TODO : Determine BytesPerPixel based on format!
+  // if aSurface is CubeTexture then
+  //   Result := Result * 6; // Faces
+{$ELSE}
+  Result := aSurface.Size;
+{$ENDIF}
+end;
+
+// Returns size of the volume, in bytes.
+function GetVolumeSize(const aVolume: PD3DVolumeDesc): LongWord;
+begin
+{$IFDEF DXBX_USE_D3D9}
+  Result := aVolume.Height * aVolume.Width; // Calculate size in pixels
+  Result := Result * aVolume.Depth; // TODO : Determine BytesPerPixel based on format?
+{$ELSE}
+  Result := aVolume.Size;
+{$ENDIF}
 end;
 
 end.
