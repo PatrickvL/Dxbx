@@ -5781,7 +5781,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuGet2DSurfaceDesc
+procedure XTL_EmuGet2DSurfaceDesc // TODO -oDxbx : Same as XTL_EmuIDirect3DSurface_GetDesc ?
 (
     pPixelContainer: PX_D3DPixelContainer;
     dwLevel: DWORD;
@@ -5893,7 +5893,7 @@ begin
   Xtl_EmuGet2DSurfaceDesc(pPixelContainer, $FEFEFEFE, pDesc);
 end;
 
-function XTL_EmuIDirect3DSurface_GetDesc
+function XTL_EmuIDirect3DSurface_GetDesc // TODO -oDxbx : Same as XTL_EmuGet2DSurfaceDesc ?
 (
   pThis: PX_D3DResource;
   pDesc: PX_D3DSURFACE_DESC
@@ -5931,6 +5931,8 @@ begin
 
     Result := IDirect3DSurface(pSurface).GetDesc({out}SurfaceDesc);
 
+    // rearrange into xbox format (remove D3DPOOL)
+    if SUCCEEDED(Result) then
     begin
       // Convert Format (PC->Xbox)
       pDesc.Format := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
@@ -10550,7 +10552,7 @@ begin
       _(pDesc, 'pDesc').
     LogEnd();
 
-  ZeroMemory(@PCDesc, sizeof(PCDesc));
+  EmuVerifyResourceIsRegistered(pThis);
 
   if IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0) then
   begin
@@ -10566,8 +10568,9 @@ begin
   end
   else
   begin
-    EmuVerifyResourceIsRegistered(pThis);
     pVolume := pThis.Emu.Volume;
+
+    ZeroMemory(@PCDesc, sizeof(PCDesc));
 
     Result := IDirect3DVolume(pVolume).GetDesc(PCDesc);
 
@@ -10577,6 +10580,10 @@ begin
       // Convert Format (PC->Xbox)
       pDesc.Format := EmuPC2XB_D3DFormat(PCDesc.Format);
       pDesc.Type_ :=  X_D3DRESOURCETYPE(PCDesc._Type);
+
+      if (Ord(pDesc.Type_) > 7) then
+        DxbxKrnlCleanup('EmuIDirect3DVolume_GetDesc: pDesc->Type > 7');
+
       pDesc.Usage := PCDesc.Usage;
       pDesc.Size := PCDesc.Size;
       pDesc.Width := PCDesc.Width;
