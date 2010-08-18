@@ -10537,7 +10537,7 @@ end; *)
 function XTL_EmuIDirect3DVolume_GetDesc
 (
   pThis: PX_D3DVolume;
-  pDesc: PD3DVOLUME_DESC
+  pDesc: PD3DVOLUME_DESC // TODO -oDxbx : Make this an PX_D3DVOLUME_DESC
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
 var
@@ -10555,6 +10555,8 @@ begin
   pVolume := pThis.Emu.Volume;
 
   IDirect3DVolume(pVolume).GetDesc(pDesc^);
+  // TODO -oDxbx : Convert PC to Xbox here
+
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
@@ -11228,7 +11230,7 @@ exports
   XTL_EmuIDirect3DVertexBuffer_Lock name PatchPrefix + 'D3DVertexBuffer_Lock',
   XTL_EmuIDirect3DVertexBuffer_Lock2 name PatchPrefix + 'D3DVertexBuffer_Lock2',
 
-  XTL_EmuIDirect3DVolume_GetDesc name PatchPrefix + 'D3DVolume_GetDesc',
+  //XTL_EmuIDirect3DVolume_GetDesc name PatchPrefix + 'D3DVolume_GetDesc', // TODO -oDxbx:Current implementation crahes Rayman Arena
 (*   XTL_EmuIDirect3DVolume_GetContainer2 name PatchPrefix + 'GetContainer2',*) // TODO -oDXBX: NOT YET IMPLEMENTED YET
   XTL_EmuIDirect3DVolume_LockBox name PatchPrefix + 'D3DVolume_LockBox',
 
