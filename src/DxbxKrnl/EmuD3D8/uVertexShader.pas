@@ -65,7 +65,6 @@ type _VSH_SHADER_HEADER = record
     Version: uint08;
     NumInst: uint08;
     Unknown0: uint08;
-    RegVUsage: array [0..VSH_XBOX_MAX_V_REGISTER_COUNT-1] of Boolean; // Dxbx addition, to support D3D9
   end; // size = 4 (as in Cxbx)
   VSH_SHADER_HEADER = _VSH_SHADER_HEADER;
   PVSH_SHADER_HEADER = ^VSH_SHADER_HEADER;
@@ -355,6 +354,11 @@ type _VSH_XBOX_SHADER = record
   end; // size = 139272 (as in Cxbx)
   VSH_XBOX_SHADER = _VSH_XBOX_SHADER;
   PVSH_XBOX_SHADER = ^VSH_XBOX_SHADER;
+
+{$IFDEF DXBX_USE_D3D9}
+var // TODO -oDxbx : Make this threadsafe (not global) !
+  RegVUsage: array [0..VSH_XBOX_MAX_V_REGISTER_COUNT-1] of Boolean; // Dxbx addition, to support D3D9
+{$ENDIF}
 
 // Local constants
 const g_FieldMapping: array [VSH_FIELD_NAME] of VSH_FIELDMAPPING = 
@@ -925,7 +929,7 @@ begin
     for i := 0 to VSH_XBOX_MAX_V_REGISTER_COUNT - 1 do
     begin
       // Test if this v-register is actually used :
-      if pShader.ShaderHeader.RegVUsage[i] then
+      if RegVUsage[i] then
       begin
         case i of
           0: DclStr := 'dcl_position';
@@ -1543,8 +1547,10 @@ begin
   for i := 0 to VSH_XBOX_MAX_R_REGISTER_COUNT - 1 do
     RUsage[i] := FALSE;
 
+{$IFDEF DXBX_USE_D3D9}
   for i := 0 to VSH_XBOX_MAX_V_REGISTER_COUNT - 1 do
-    pShader.ShaderHeader.RegVUsage[i] := FALSE;
+    RegVUsage[i] := FALSE;
+{$ENDIF}
 
   // TODO -oCXBX: What about state shaders and such?
   pShader.ShaderHeader.Version := VERSION_VS;
@@ -1590,25 +1596,24 @@ begin
 
     for j := 0 to 3-1 do
     begin
-      // Dxbx fix : PARAM_C correction shouldn't depend on Active :
-//      if (pIntermediate.Parameters[j].Active) then
+      if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_R) then
       begin
-        if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_R) then
-        begin
-          // Dxbx fix : Here, Active does seem to apply :
-          if (pIntermediate.Parameters[j].Active) then
-            RUsage[pIntermediate.Parameters[j].Parameter.Address] := TRUE;
-        end else
-        if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_C) then
-        begin
-          // Make constant registers range from 0 to 191 instead of -96 to 95
-          Inc(pIntermediate.Parameters[j].Parameter.Address, X_VSCM_CORRECTION{=96});
-        end else
-        if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_V) then
-        begin
-          if (pIntermediate.Parameters[j].Active) then
-            pShader.ShaderHeader.RegVUsage[pIntermediate.Parameters[j].Parameter.Address] := TRUE;
-        end;
+        // Dxbx fix : Here, Active does seem to apply :
+        if (pIntermediate.Parameters[j].Active) then
+          RUsage[pIntermediate.Parameters[j].Parameter.Address] := TRUE;
+      end else
+      if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_C) then
+      begin
+        // Dxbx fix : PARAM_C correction shouldn't depend on Active!
+        // Make constant registers range from 0 to 191 instead of -96 to 95
+        Inc(pIntermediate.Parameters[j].Parameter.Address, X_VSCM_CORRECTION{=96});
+      end else
+      if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_V) then
+      begin
+{$IFDEF DXBX_USE_D3D9}
+        if (pIntermediate.Parameters[j].Active) then
+          RegVUsage[pIntermediate.Parameters[j].Parameter.Address] := TRUE;
+{$ENDIF}
       end;
     end;
 
