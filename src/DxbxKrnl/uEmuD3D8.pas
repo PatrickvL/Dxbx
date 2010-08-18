@@ -96,28 +96,28 @@ function XTL_EmuIDirect3DDevice_GetVertexShader({CONST} pHandle: PDWORD): HRESUL
 procedure XTL_EmuIDirect3DResource_Register(pThis: PX_D3DResource;
   pBase: PVOID); stdcall;
 function XTL_EmuIDirect3DDevice_CreateTexture(Width: UINT; Height: UINT;
-    Levels: UINT; Usage: DWORD; Format: X_D3DFORMAT; Pool: D3DPOOL; ppTexture: PPX_D3DTexture): HRESULT; stdcall;
+    Levels: UINT; Usage: DWORD; Format: X_D3DFORMAT; Pool: X_D3DPOOL; ppTexture: PPX_D3DTexture): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice_CreateVolumeTexture(Width: UINT; Height: UINT;
     Depth: UINT; Levels: UINT; Usage: DWORD; Format: X_D3DFORMAT;
-    Pool: D3DPOOL; ppVolumeTexture: PPX_D3DVolumeTexture): HRESULT; stdcall;
+    Pool: X_D3DPOOL; ppVolumeTexture: PPX_D3DVolumeTexture): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice_CreateCubeTexture(
     EdgeLength: UINT;
     Levels: UINT;
     Usage: DWORD;
     Format: X_D3DFORMAT;
-    Pool: D3DPOOL;
+    Pool: X_D3DPOOL;
     ppCubeTexture: PPX_D3DCubeTexture): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice_CreateVertexBuffer(
     Length: UINT;
     Usage: DWORD;
     FVF: DWORD;
-    Pool: D3DPOOL;
+    Pool: X_D3DPOOL;
     ppVertexBuffer: PPX_D3DVertexBuffer): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice_CreateIndexBuffer(
     Length: UINT;
     Usage: DWORD;
     Format: X_D3DFORMAT;
-    Pool: D3DPOOL;
+    Pool: X_D3DPOOL;
     ppIndexBuffer: PPX_D3DIndexBuffer): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice_CreatePalette(
     Size: X_D3DPALETTESIZE;
@@ -3754,7 +3754,7 @@ function XTL_EmuIDirect3DDevice_CreateTexture
   Levels: UINT;
   Usage: DWORD;
   Format: X_D3DFORMAT;
-  Pool: D3DPOOL;
+  Pool: X_D3DPOOL;
   ppTexture: PPX_D3DTexture
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -3767,17 +3767,15 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice_CreateTexture' +
-        #13#10'(' +
-        #13#10'   Width                     : 0x%.08X' +
-        #13#10'   Height                    : 0x%.08X' +
-        #13#10'   Levels                    : 0x%.08X' +
-        #13#10'   Usage                     : 0x%.08X' +
-        #13#10'   Format                    : 0x%.08X' +
-        #13#10'   Pool                      : 0x%.08X' +
-        #13#10'   ppTexture                 : 0x%.08X' +
-        #13#10');',
-       [Width, Height, Levels, Usage, Ord(Format), Ord(Pool), ppTexture]);
+    LogBegin('EmuIDirect3DDevice_CreateTexture').
+      _(Width, 'Width').
+      _(Height, 'Height').
+      _(Levels, 'Levels').
+      _(Usage, 'Usage').
+      _(Format, 'Format').
+      _(Ord(Pool), 'Pool'). // TODO : Add override for X_D3DPOOL
+      _(ppTexture, 'ppTexture').
+    LogEnd();
 
   // Convert Format (Xbox->PC)
   PCFormat := EmuXB2PC_D3DFormat(Format);
@@ -3910,7 +3908,7 @@ function XTL_EmuIDirect3DDevice_CreateVolumeTexture
     Levels: UINT; 
     Usage: DWORD;
     Format: X_D3DFORMAT;
-    Pool: D3DPOOL; 
+    Pool: X_D3DPOOL;
     ppVolumeTexture: PPX_D3DVolumeTexture
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -3994,7 +3992,7 @@ function XTL_EmuIDirect3DDevice_CreateCubeTexture
     Levels: UINT;
     Usage: DWORD;
     Format: X_D3DFORMAT;
-    Pool: D3DPOOL;
+    Pool: X_D3DPOOL;
     ppCubeTexture: PPX_D3DCubeTexture
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -4059,7 +4057,7 @@ function XTL_EmuIDirect3DDevice_CreateIndexBuffer
   Length: UINT;
   Usage: DWORD;
   Format: X_D3DFORMAT;
-  Pool: D3DPOOL;
+  Pool: X_D3DPOOL;
   ppIndexBuffer: PPX_D3DIndexBuffer
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -5917,7 +5915,7 @@ begin
 
   if IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0) then
   begin
-    pDesc.Format := X_D3DFMT_YUY2; // EmuPC2XB_D3DFormat(D3DFMT_YUY2);
+    pDesc.Format := X_D3DFMT_YUY2; // = EmuPC2XB_D3DFormat(D3DFMT_YUY2);
     pDesc.Type_ := X_D3DRTYPE_SURFACE;
     pDesc.Usage := 0;
     pDesc.Size := g_dwOverlayP * g_dwOverlayH;
@@ -6352,7 +6350,7 @@ function XTL_EmuIDirect3DDevice_CreateVertexBuffer
   Length: UINT;
   Usage: DWORD;
   FVF: DWORD;
-  Pool: D3DPOOL;
+  Pool: X_D3DPOOL;
   ppVertexBuffer: PPX_D3DVertexBuffer
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -10537,11 +10535,12 @@ end; *)
 function XTL_EmuIDirect3DVolume_GetDesc
 (
   pThis: PX_D3DVolume;
-  pDesc: PD3DVOLUME_DESC // TODO -oDxbx : Make this an PX_D3DVOLUME_DESC
+  pDesc: PX_D3DVOLUME_DESC
 ): HRESULT; stdcall;
-// Branch:DXBX  Translator:Shadow_Tj  Done:0
+// Branch:DXBX  Translator:PatrickvL  Done:100
 var
   pVolume: XTL_PIDirect3DVolume8;
+  PCDesc: TD3DVolumeDesc;
 begin
   EmuSwapFS(fsWindows);
 
@@ -10551,13 +10550,40 @@ begin
       _(pDesc, 'pDesc').
     LogEnd();
 
-  EmuVerifyResourceIsRegistered(pThis);
-  pVolume := pThis.Emu.Volume;
+  ZeroMemory(@PCDesc, sizeof(PCDesc));
 
-  IDirect3DVolume(pVolume).GetDesc(pDesc^);
-  // TODO -oDxbx : Convert PC to Xbox here
+  if IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0) then
+  begin
+    pDesc.Format := X_D3DFMT_YUY2; // = EmuPC2XB_D3DFormat(D3DFMT_YUY2);
+    pDesc.Type_ := X_D3DRTYPE_VOLUME;
+    pDesc.Usage := 0;
+    pDesc.Size := g_dwOverlayP * g_dwOverlayH;
+    pDesc.Height := g_dwOverlayH;
+    pDesc.Width := g_dwOverlayW;
+    pDesc.Depth := 4; //??
 
-  Result := D3D_OK;
+    Result := D3D_OK;
+  end
+  else
+  begin
+    EmuVerifyResourceIsRegistered(pThis);
+    pVolume := pThis.Emu.Volume;
+
+    Result := IDirect3DVolume(pVolume).GetDesc(PCDesc);
+
+    // rearrange into xbox format (remove D3DPOOL)
+    if SUCCEEDED(Result) then
+    begin
+      // Convert Format (PC->Xbox)
+      pDesc.Format := EmuPC2XB_D3DFormat(PCDesc.Format);
+      pDesc.Type_ :=  X_D3DRESOURCETYPE(PCDesc._Type);
+      pDesc.Usage := PCDesc.Usage;
+      pDesc.Size := PCDesc.Size;
+      pDesc.Width := PCDesc.Width;
+      pDesc.Height := PCDesc.Height;
+      pDesc.Depth := PCDesc.Depth;
+    end;
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -11230,7 +11256,7 @@ exports
   XTL_EmuIDirect3DVertexBuffer_Lock name PatchPrefix + 'D3DVertexBuffer_Lock',
   XTL_EmuIDirect3DVertexBuffer_Lock2 name PatchPrefix + 'D3DVertexBuffer_Lock2',
 
-  //XTL_EmuIDirect3DVolume_GetDesc name PatchPrefix + 'D3DVolume_GetDesc', // TODO -oDxbx:Current implementation crahes Rayman Arena
+  XTL_EmuIDirect3DVolume_GetDesc name PatchPrefix + 'D3DVolume_GetDesc',
 (*   XTL_EmuIDirect3DVolume_GetContainer2 name PatchPrefix + 'GetContainer2',*) // TODO -oDXBX: NOT YET IMPLEMENTED YET
   XTL_EmuIDirect3DVolume_LockBox name PatchPrefix + 'D3DVolume_LockBox',
 

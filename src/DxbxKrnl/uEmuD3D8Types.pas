@@ -269,6 +269,7 @@ type
 type X_D3DMULTISAMPLE_TYPE = DWORD;
 type X_D3DSWAPEFFECT = D3DSWAPEFFECT; // Same as on Windows Direct3D
 type X_D3DFORMAT = DWORD;
+type X_D3DPOOL = D3DPOOL; // alias
 type X_D3DBLENDOP = DWORD;
 type X_D3DBLEND = (
   X_D3DBLEND_ZERO               = 0,
@@ -401,6 +402,18 @@ type _X_D3DSURFACE_DESC = record
   end; // size = 28 (as in Cxbx)
   X_D3DSURFACE_DESC = _X_D3DSURFACE_DESC;
   PX_D3DSURFACE_DESC = ^X_D3DSURFACE_DESC;
+
+type _X_D3DVOLUME_DESC = record
+    Format: X_D3DFORMAT;
+    Type_: X_D3DRESOURCETYPE;
+    Usage: DWORD;
+    Size: UINT;
+    Width: UINT;
+    Height: UINT;
+    Depth: UINT;
+  end;
+  X_D3DVOLUME_DESC = _X_D3DVOLUME_DESC;
+  PX_D3DVOLUME_DESC = ^X_D3DVOLUME_DESC;
 
 type _X_D3DPRESENT_PARAMETERS = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
