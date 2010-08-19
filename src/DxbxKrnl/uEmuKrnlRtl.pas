@@ -1529,7 +1529,6 @@ begin
 
   Result := JwaNative.RtlUlongByteSwap(Source);
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function xboxkrnl_RtlUnicodeStringToAnsiString
@@ -1811,7 +1810,6 @@ begin
 
   Result := JwaNative.RtlUshortByteSwap(Source);
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function xboxkrnl_RtlWalkFrameChain(

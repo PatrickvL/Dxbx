@@ -3440,7 +3440,6 @@ begin
 
   // Dxbx note: Shouldn't we return the result of this call?
   XTL_EmuIDirect3DDevice_SetVertexShaderConstant(Register_, pConstantData, ConstantCount div 4);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 procedure XTL_EmuIDirect3DDevice_DeletePixelShader
@@ -4133,7 +4132,7 @@ begin
     chk := 0; // Dxbx : this should become a writeable const
     if (chk++ = 0) then
     begin
-      asm int 3 end;
+     //  asm int 3 end;  NO ASM IN 3 THIS CRASH
     end;
   end;
   }
@@ -4397,7 +4396,6 @@ begin
   end;
 
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function XTL_EmuIDirect3DDevice_GetDisplayMode
@@ -6778,8 +6776,8 @@ begin
         #13#10');',
       [Addr(pCallback)]); // Dxbx: Check this causes no call!
 
-  if IsValidAddress(@pCallback) then
-    g_pVBCallback := pCallback
+  if IsValidAddress(Addr(pCallback)) then
+    g_pVBCallback := Addr(pCallback)
   else
     // Dxbx note : Zapper passes the Handle of a previously created thread here... wierd!
     EmuWarning('SetVerticalBlankCallback ignored invalid Callback address');
@@ -9836,7 +9834,6 @@ begin
   // to determine what is calling this function if it's something other
   // than IDirect3DDevice_KickPushBuffer() itself.
 
-//  asm int 3 end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10138,7 +10135,6 @@ begin
   }
 
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 *)
 
@@ -10266,10 +10262,6 @@ begin
       _(Unknown, 'Unknown').
     LogEnd();
 
-  // This function is too low level to actually emulate
-  // Only use for debugging.
-  asm int 3 end;
-
   EmuSwapFS(fsXbox);
 end;
 
@@ -10299,7 +10291,7 @@ function XTL_EmuIDirect3DDevice_GetLightEnable
   Index: DWORD;
   pEnable: PBOOL
 ): HRESULT; stdcall;
-// Branch:Dxbx  Translator:Shadow_tj  Done:50
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 

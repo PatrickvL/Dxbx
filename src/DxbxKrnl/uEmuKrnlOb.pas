@@ -215,7 +215,6 @@ begin
   EmuSwapFS(fsWindows);
   Unimplemented('ObfDereferenceObject');
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 procedure xboxkrnl_ObfReferenceObject(
@@ -228,7 +227,6 @@ begin
   EmuSwapFS(fsWindows);
   Unimplemented('ObfReferenceObject');
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 end.

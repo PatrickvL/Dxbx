@@ -363,7 +363,6 @@ begin
 
   Result := InterlockedCompareExchange({var}Destination^, Exchange, Comparand);
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {052} xboxkrnl_InterlockedDecrement(
@@ -384,7 +383,6 @@ begin
 
   Result := InterlockedDecrement({var}Addend^);
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {053} xboxkrnl_InterlockedIncrement(
@@ -405,7 +403,6 @@ begin
 
   Result := InterlockedIncrement({var}Addend^);
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {054} xboxkrnl_InterlockedExchange(
@@ -427,7 +424,6 @@ begin
 
   Result := InterlockedExchange({var}Destination^, Value);
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {055} xboxkrnl_InterlockedExchangeAdd(
@@ -449,7 +445,6 @@ begin
 
   Result := InterlockedExchangeAdd({var}Addend^, Value);
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 // Dxbx Note : The Xbox1 SINGLE_LIST strucures are the same as in WinNT
@@ -471,7 +466,6 @@ begin
 
   Result := InterlockedFlushSList(ListHead);
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {057} xboxkrnl_InterlockedPopEntrySList(
@@ -492,7 +486,6 @@ begin
 
   Result := InterlockedPopEntrySList(ListHead);
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {058} xboxkrnl_InterlockedPushEntrySList(
@@ -514,7 +507,6 @@ begin
 
   Result := InterlockedPushEntrySList(ListHead, ListEntry);
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 // Raises the hardware priority (irql)
