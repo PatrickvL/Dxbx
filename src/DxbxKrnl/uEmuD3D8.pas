@@ -867,11 +867,6 @@ begin
 
   SetFocus(g_hEmuWindow);
 
-  { TODO -oDXBX: Need to be translated to delphi }
-  (*
-  DbgConsole *dbgConsole := new DbgConsole();
-  *)
-
   // message processing loop
   begin
     ZeroMemory(@msg, sizeof(msg));
@@ -892,22 +887,11 @@ begin
       else
       begin
         UpdateTimer.Wait;
-
-        // if we've just switched back to display off, clear buffer & display prompt
-        if not g_bPrintfOn and lPrintfOn then
-          { TODO -oDXBX: Need to be translated to delphi }
-          ; // dbgConsole.Reset();
-
         lPrintfOn := g_bPrintfOn;
-
-        (*dbgConsole.Process();
-        *)
       end;
     end;
 
     g_bRenderWindowActive := false;
-
-//        delete dbgConsole;
 
     DxbxKrnlCleanup('');
   end;
@@ -10313,7 +10297,7 @@ end;
 function XTL_EmuIDirect3DDevice_GetLightEnable
 (
   Index: DWORD;
-  Enable: BOOL
+  pEnable: PBOOL
 ): HRESULT; stdcall;
 // Branch:Dxbx  Translator:Shadow_tj  Done:50
 begin
@@ -10322,10 +10306,10 @@ begin
   if MayLog(lfUnit) then
     LogBegin('EmuIDirect3DDevice_GetLightEnable').
       _(Index, 'Index').
-      _(Enable, 'Enable').
+      _(pEnable, 'Enable').
     LogEnd();
 
-  //TODO -DXBX: g_pD3DDevice.GetLightEnable(Index, @Enable);
+  g_pD3DDevice.GetLightEnable(Index, pEnable^);
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
@@ -10552,7 +10536,7 @@ begin
       _(pDesc, 'pDesc').
     LogEnd();
 
-  EmuVerifyResourceIsRegistered(pThis);
+//  EmuVerifyResourceIsRegistered(pThis);
 
   if IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0) then
   begin
@@ -10595,7 +10579,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-(* procedure XTL_EmuIDirect3DVolume_GetContainer2
+function XTL_EmuIDirect3DVolume_GetContainer2
 (
   pThis: PX_D3DVolume;
   ppBaseTexture: PPX_D3DBaseTexture
@@ -10607,8 +10591,7 @@ begin
   Unimplemented('XTL_EmuIDirect3DVolume_GetContainer2');
 
   EmuSwapFS(fsXbox);
-end; *)
-
+end;
 
 function XTL_EmuIDirect3DVolume_LockBox
 (
@@ -11264,7 +11247,7 @@ exports
   XTL_EmuIDirect3DVertexBuffer_Lock2 name PatchPrefix + 'D3DVertexBuffer_Lock2',
 
   XTL_EmuIDirect3DVolume_GetDesc name PatchPrefix + 'D3DVolume_GetDesc',
-(*   XTL_EmuIDirect3DVolume_GetContainer2 name PatchPrefix + 'GetContainer2',*) // TODO -oDXBX: NOT YET IMPLEMENTED YET
+  XTL_EmuIDirect3DVolume_GetContainer2 name PatchPrefix + 'GetContainer2',
   XTL_EmuIDirect3DVolume_LockBox name PatchPrefix + 'D3DVolume_LockBox',
 
 
