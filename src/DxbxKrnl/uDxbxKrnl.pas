@@ -398,7 +398,7 @@ begin
     // _USE_XGMATH Disabled in mesh :[
     // halo : dword_0_2E2D18
     // halo : 1744F0 (bink)
-    // asm int 3 end;
+    // asm int 3 end;   // NO ASM IN 3  THIS CRASH
 {$ENDIF}
 
     (* Marked out by cxbx

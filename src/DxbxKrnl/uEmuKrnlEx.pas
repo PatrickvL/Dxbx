@@ -257,7 +257,6 @@ begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExInterlockedAddLargeStatistic');
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {021} xboxkrnl_ExInterlockedCompareExchange64(
@@ -272,7 +271,6 @@ begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExInterlockedCompareExchange64');
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {023} xboxkrnl_ExQueryPoolBlockSize(
@@ -547,7 +545,6 @@ begin
   Unimplemented('ExfInterlockedInsertHeadList');
   Result := nil;
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {033} xboxkrnl_ExfInterlockedInsertTailList(
@@ -562,7 +559,6 @@ begin
   Unimplemented('ExfInterlockedInsertTailList');
   Result := nil;
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
@@ -576,7 +572,6 @@ begin
   Unimplemented('ExfInterlockedRemoveHeadList');
   Result := nil;
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 end.

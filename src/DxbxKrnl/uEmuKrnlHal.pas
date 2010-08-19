@@ -182,7 +182,6 @@ begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalClearSoftwareInterrupt');
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {039} xboxkrnl_HalDisableSystemInterrupt(
@@ -286,7 +285,6 @@ begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalRequestSoftwareInterrupt');
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 procedure {049} xboxkrnl_HalReturnToFirmware
