@@ -1741,6 +1741,29 @@ begin
   EmuSwapFS(fsXbox);
 end; // XTL_EmuD3DDevice_GetCreationParameters
 
+
+procedure XTL_EmuD3DDevice_GetDepthClipPlanes
+(
+  pNear: Pfloat;
+  pFar: Pfloat;
+  Flags: DWORD
+); stdcall;
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_GetDepthClipPlanes').
+      _(pNear, 'pNear').
+      _(pFar, 'pFar').
+      _(Flags, 'Flags').
+    LogEnd();
+
+//  g_pD3DDevice.GetDepthClipPlanes
+  Unimplemented('XTL_EmuD3DDevice_GetDepthClipPlanes');
+
+  EmuSwapFS(fsXbox);
+end;
+
 function XTL_EmuIDirect3D_CheckDeviceFormat
 (
   Adapter: UINT;
@@ -8602,6 +8625,25 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+function XTL_EmuD3DDevice_SetTextureStageStateNotInline
+(
+  Stage: DWORD;
+  Type_: D3DTEXTURESTAGESTATETYPE;
+  Value: DWORD
+): HRESULT; stdcall;
+begin
+  EmuSwapFS(fsWindows);
+
+
+(*  D3DDIRTY_TEXTURESTATE(Stage, Type);
+  D3DDevice_SetTextureStageStateNotInline(Stage, Type, Value); *)
+
+  Unimplemented('XTL_EmuD3DDevice_SetTextureStageStateNotInline');
+  Result := D3D_OK;
+
+  EmuSwapFS(fsWindows);
+end;
+
 function XTL_EmuD3DDevice_SetRenderTarget
 (
   pRenderTarget: PX_D3DSurface;
@@ -11165,6 +11207,7 @@ exports
   XTL_EmuD3DDevice_GetBackBuffer2 name PatchPrefix + 'D3DDevice_GetBackBuffer2@4',
   XTL_EmuD3DDevice_GetBackMaterial,
   XTL_EmuD3DDevice_GetCreationParameters,
+  XTL_EmuD3DDevice_GetDepthClipPlanes,
   XTL_EmuD3DDevice_GetDepthStencilSurface,
   XTL_EmuD3DDevice_GetDepthStencilSurface2,
   XTL_EmuD3DDevice_GetDeviceCaps,
@@ -11263,6 +11306,7 @@ exports
   XTL_EmuD3DDevice_SetRenderState_YuvEnable,
   XTL_EmuD3DDevice_SetRenderState_ZBias,
   XTL_EmuD3DDevice_SetRenderState_ZEnable,
+  XTL_EmuD3DDevice_SetTextureStageStateNotInline,
   XTL_EmuD3DDevice_SetRenderTarget,
   XTL_EmuD3DDevice_SetScissors,
   XTL_EmuD3DDevice_SetScreenSpaceOffset,
