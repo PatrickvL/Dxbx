@@ -850,6 +850,93 @@ const X_D3DRS_DEFERRED_SIZE_5933 = 44;
 
 // X_D3DRENDERSTATETYPE values :
 
+// TODO -oDxbx : Verify these are the same across all SDK versions :
+const X_D3DRS_PSALPHAINPUTS0                = 0;
+const X_D3DRS_PSALPHAINPUTS1                = 1;
+const X_D3DRS_PSALPHAINPUTS2                = 2;
+const X_D3DRS_PSALPHAINPUTS3                = 3;
+const X_D3DRS_PSALPHAINPUTS4                = 4;
+const X_D3DRS_PSALPHAINPUTS5                = 5;
+const X_D3DRS_PSALPHAINPUTS6                = 6;
+const X_D3DRS_PSALPHAINPUTS7                = 7;
+const X_D3DRS_PSFINALCOMBINERINPUTSABCD     = 8;
+const X_D3DRS_PSFINALCOMBINERINPUTSEFG      = 9;
+const X_D3DRS_PSCONSTANT0_0                 = 10;
+const X_D3DRS_PSCONSTANT0_1                 = 11;
+const X_D3DRS_PSCONSTANT0_2                 = 12;
+const X_D3DRS_PSCONSTANT0_3                 = 13;
+const X_D3DRS_PSCONSTANT0_4                 = 14;
+const X_D3DRS_PSCONSTANT0_5                 = 15;
+const X_D3DRS_PSCONSTANT0_6                 = 16;
+const X_D3DRS_PSCONSTANT0_7                 = 17;
+const X_D3DRS_PSCONSTANT1_0                 = 18;
+const X_D3DRS_PSCONSTANT1_1                 = 19;
+const X_D3DRS_PSCONSTANT1_2                 = 20;
+const X_D3DRS_PSCONSTANT1_3                 = 21;
+const X_D3DRS_PSCONSTANT1_4                 = 22;
+const X_D3DRS_PSCONSTANT1_5                 = 23;
+const X_D3DRS_PSCONSTANT1_6                 = 24;
+const X_D3DRS_PSCONSTANT1_7                 = 25;
+const X_D3DRS_PSALPHAOUTPUTS0               = 26;
+const X_D3DRS_PSALPHAOUTPUTS1               = 27;
+const X_D3DRS_PSALPHAOUTPUTS2               = 28;
+const X_D3DRS_PSALPHAOUTPUTS3               = 29;
+const X_D3DRS_PSALPHAOUTPUTS4               = 30;
+const X_D3DRS_PSALPHAOUTPUTS5               = 31;
+const X_D3DRS_PSALPHAOUTPUTS6               = 32;
+const X_D3DRS_PSALPHAOUTPUTS7               = 33;
+const X_D3DRS_PSRGBINPUTS0                  = 34;
+const X_D3DRS_PSRGBINPUTS1                  = 35;
+const X_D3DRS_PSRGBINPUTS2                  = 36;
+const X_D3DRS_PSRGBINPUTS3                  = 37;
+const X_D3DRS_PSRGBINPUTS4                  = 38;
+const X_D3DRS_PSRGBINPUTS5                  = 39;
+const X_D3DRS_PSRGBINPUTS6                  = 40;
+const X_D3DRS_PSRGBINPUTS7                  = 41;
+const X_D3DRS_PSCOMPAREMODE                 = 42;
+const X_D3DRS_PSFINALCOMBINERCONSTANT0      = 43;
+const X_D3DRS_PSFINALCOMBINERCONSTANT1      = 44;
+const X_D3DRS_PSRGBOUTPUTS0                 = 45;
+const X_D3DRS_PSRGBOUTPUTS1                 = 46;
+const X_D3DRS_PSRGBOUTPUTS2                 = 47;
+const X_D3DRS_PSRGBOUTPUTS3                 = 48;
+const X_D3DRS_PSRGBOUTPUTS4                 = 49;
+const X_D3DRS_PSRGBOUTPUTS5                 = 50;
+const X_D3DRS_PSRGBOUTPUTS6                 = 51;
+const X_D3DRS_PSRGBOUTPUTS7                 = 52;
+const X_D3DRS_PSCOMBINERCOUNT               = 53;
+const X_D3DRS_PSDOTMAPPING                  = 55;
+const X_D3DRS_PSINPUTTEXTURE                = 56;
+
+
+const X_D3DRS_ZFUNC                         = 57;
+const X_D3DRS_ALPHAFUNC                     = 58;
+const X_D3DRS_ALPHABLENDENABLE              = 59;
+const X_D3DRS_ALPHATESTENABLE               = 60;
+const X_D3DRS_ALPHAREF                      = 61;
+const X_D3DRS_SRCBLEND                      = 62;
+const X_D3DRS_DESTBLEND                     = 63;
+const X_D3DRS_ZWRITEENABLE                  = 64;
+const X_D3DRS_DITHERENABLE                  = 65;
+const X_D3DRS_SHADEMODE                     = 66;
+const X_D3DRS_COLORWRITEENABLE              = 67;
+const X_D3DRS_STENCILZFAIL                  = 68;
+const X_D3DRS_STENCILPASS                   = 69;
+const X_D3DRS_STENCILFUNC                   = 70;
+const X_D3DRS_STENCILREF                    = 71;
+const X_D3DRS_STENCILMASK                   = 72;
+const X_D3DRS_STENCILWRITEMASK              = 73;
+const X_D3DRS_BLENDOP                       = 74;
+const X_D3DRS_BLENDCOLOR                    = 75;  // Xbox ext.
+const X_D3DRS_SWATHWIDTH                    = 76;  // Xbox ext.
+const X_D3DRS_POLYGONOFFSETZSLOPESCALE      = 77;  // Xbox ext.
+const X_D3DRS_POLYGONOFFSETZOFFSET          = 78;  // Xbox ext.
+const X_D3DRS_POINTOFFSETENABLE             = 79;  // Xbox ext.
+const X_D3DRS_WIREFRAMEOFFSETENABLE         = 80;  // Xbox ext.
+const X_D3DRS_SOLIDOFFSETENABLE             = 81;  // Xbox ext.
+const X_D3DRS_DEPTHCLIPCONTROL              = 82;  // Xbox ext.
+const X_D3DRS_STIPPLEENABLE                 = 83;  // Xbox ext.
+
 // The following constants are offsets into XTL_EmuD3DDeferredRenderState,
 // which is determined by offsetting _D3D__RenderState with the SDK-version
 // dependant X_D3DRS_DEFERRED_START_* constant (which we remember in the

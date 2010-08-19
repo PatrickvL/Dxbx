@@ -1544,14 +1544,6 @@ begin
 //      XTL_EmuD3DComplexRenderState := XTL_EmuD3DDeferredRenderState;
 //      Inc(UIntPtr(XTL_EmuD3DComplexRenderState), XTL_EmuD3DDeferredRenderState_Size * 4);
 
-      // Initialize the Xbox RenderState structure with default values :
-      for v := 0 to XTL_EmuD3DDeferredRenderState_Size - 1 do
-        XTL_EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
-
-      XTL_EmuD3DRenderState[X_D3DRS_ZENABLE + XTL_EmuD3DRenderState_ComplexCorrection] := 2; // 1?
-
-      // TODO -oDxbx: Set all other not-zero render states here too! (!!!!)
-
 {$IFDEF DEBUG}
       DbgPrintf('HLE: $%.08X -> EmuD3DDeferredRenderState', [XTL_EmuD3DDeferredRenderState]);
 {$ENDIF}
