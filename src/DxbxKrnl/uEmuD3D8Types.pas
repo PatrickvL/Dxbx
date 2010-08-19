@@ -34,8 +34,8 @@ uses
   // Dxbx
   uTypes;
 
-type
 {$IFDEF DXBX_USE_D3D9}
+type
   IDirect3D = IDirect3D9;
   IDirect3DBaseTexture = IDirect3DBaseTexture9;
   IDirect3DCubeTexture = IDirect3DCubeTexture9;
@@ -126,22 +126,49 @@ const
   D3DVSD_STREAMTESSSHIFT        = 28;
   D3DVSD_STREAMTESSMASK         = (1 shl D3DVSD_STREAMTESSSHIFT);
 
-  D3DVSDT_FLOAT1      = $00;    // 1D float expanded to (value; 0.; 0.; 1.)
-  D3DVSDT_FLOAT2      = $01;    // 2D float expanded to (value; value; 0.; 1.)
-  D3DVSDT_FLOAT3      = $02;    // 3D float expanded to (value; value; value; 1.)
-  D3DVSDT_FLOAT4      = $03;    // 4D float
-  D3DVSDT_D3DCOLOR    = $04;    // 4D packed unsigned bytes mapped to 0. to 1. range
-                                // Input is in D3DCOLOR format (ARGB) expanded to (R; G; B; A)
-  D3DVSDT_UBYTE4      = $05;    // 4D unsigned byte
-  D3DVSDT_SHORT2      = $06;    // 2D signed short expanded to (value; value; 0.; 1.)
-  D3DVSDT_SHORT4      = $07;    // 4D signed short
+  D3DVSDT_FLOAT1      = D3DDECLTYPE_FLOAT1;    // 1D float expanded to (value; 0.; 0.; 1.)
+  D3DVSDT_FLOAT2      = D3DDECLTYPE_FLOAT2;    // 2D float expanded to (value; value; 0.; 1.)
+  D3DVSDT_FLOAT3      = D3DDECLTYPE_FLOAT3;    // 3D float expanded to (value; value; value; 1.)
+  D3DVSDT_FLOAT4      = D3DDECLTYPE_FLOAT4;    // 4D float
+  D3DVSDT_D3DCOLOR    = D3DDECLTYPE_D3DCOLOR;  // 4D packed unsigned bytes mapped to 0. to 1. range
+                                               // Input is in D3DCOLOR format (ARGB) expanded to (R; G; B; A)
+  D3DVSDT_UBYTE4      = D3DDECLTYPE_UBYTE4;    // 4D unsigned byte
+  D3DVSDT_SHORT2      = D3DDECLTYPE_SHORT2;    // 2D signed short expanded to (value; value; 0.; 1.)
+  D3DVSDT_SHORT4      = D3DDECLTYPE_SHORT4;    // 4D signed short
+
+  // Xbox extensions that are unsupported in D3D8, but have a mapping to D3D9 (with vertex shaders >= 2.0) :
+  D3DVSDT_NORMSHORT2  = D3DDECLTYPE_SHORT2N;    // 2D signed, normalized short expanded to (value, value, 0., 1.)
+  D3DVSDT_NORMSHORT4  = D3DDECLTYPE_SHORT4N;    // 4D signed, normalized short expanded to (value, value, value, value)
+  D3DVSDT_NONE        = D3DDECLTYPE_UNUSED;    // No stream data
 
 function D3DVSD_SKIP(_DWORDCount: DWord): DWord;
 function D3DVSD_REG(_VertexRegister, _Type: DWord): DWord;
 function D3DVSD_TESSUV(_VertexRegister: DWord): DWord;
 function D3DVSD_TESSNORMAL(_VertexRegisterIn, _VertexRegisterOut: DWord): DWord;
 
+const
+  // Dxbx note : Dirty little hack : Map the old D3DVSDE values to new D3DDECLUSAGE values,
+  // to ease the implementation of Xb2PCRegisterType (which also determines an index for D3D9)
+  D3DVSDE_POSITION = D3DDECLUSAGE_POSITION;
+  D3DVSDE_BLENDWEIGHT = D3DDECLUSAGE_BLENDWEIGHT;
+  D3DVSDE_NORMAL = D3DDECLUSAGE_NORMAL;
+  D3DVSDE_DIFFUSE = D3DDECLUSAGE_COLOR; // Mapped to index 0 in D3D9
+  D3DVSDE_SPECULAR = D3DDECLUSAGE_COLOR; // Mapped to index 1 in D3D9
+  D3DVSDE_FOG = D3DDECLUSAGE_FOG; // Doesn't exist in D3D8
+  D3DVSDE_TEXCOORD0 = D3DDECLUSAGE_TEXCOORD; // Mapped to index 0 in D3D9
+  D3DVSDE_TEXCOORD1 = D3DDECLUSAGE_TEXCOORD; // Mapped to index 1 in D3D9
+  D3DVSDE_TEXCOORD2 = D3DDECLUSAGE_TEXCOORD; // Mapped to index 2 in D3D9
+  D3DVSDE_TEXCOORD3 = D3DDECLUSAGE_TEXCOORD; // Mapped to index 3 in D3D9
+
 {$ELSE}
+const
+  UNSUPPORTED = DWORD(-1); // Doesn't exist in D3D8
+
+  D3DVSDE_FOG = UNSUPPORTED;
+
+type
+  D3DDECLUSAGE = DWORD;
+
   IDirect3D = IDirect3D8;
   IDirect3DBaseTexture = IDirect3DBaseTexture8;
   IDirect3DCubeTexture = IDirect3DCubeTexture8;
