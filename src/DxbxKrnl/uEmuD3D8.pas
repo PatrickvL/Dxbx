@@ -1460,14 +1460,14 @@ begin
         New({var X_D3DSurface:}g_pCachedRenderTarget);
         g_pCachedRenderTarget.Common := 0;
         g_pCachedRenderTarget.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DREND;
-        D3DDevice_GetRenderTarget(g_pD3DDevice, @(g_pCachedRenderTarget.Emu.Surface));
+        IDirect3DDevice_GetRenderTarget(g_pD3DDevice, @(g_pCachedRenderTarget.Emu.Surface));
 
         // update z-stencil surface cache
         Dispose({var}g_pCachedZStencilSurface); // Dxbx addition : Prevent memory leaks
         New({var}g_pCachedZStencilSurface);
         g_pCachedZStencilSurface.Common := 0;
         g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
-        if D3DDevice_GetDepthStencilSurface(g_pD3DDevice, @(g_pCachedZStencilSurface.Emu.Surface)) = D3D_OK then
+        if IDirect3DDevice_GetDepthStencilSurface(g_pD3DDevice, @(g_pCachedZStencilSurface.Emu.Surface)) = D3D_OK then
           // Dxbx addition : Test if a ZBuffer exists, to fix invalid arguments to XTL_EmuD3DDevice_Clear :
           DxbxFix_HasZBuffer := True
         else
@@ -2408,7 +2408,7 @@ begin
 
   PCFormat := EmuXB2PC_D3DFormat(Format);
 
-  Result := D3DDevice_CreateImageSurface(g_pD3DDevice,
+  Result := IDirect3DDevice_CreateImageSurface(g_pD3DDevice,
     Width,
     Height,
     PCFormat,
@@ -2423,7 +2423,7 @@ begin
   begin
     EmuWarning('CreateImageSurface: D3DFMT_LIN_D24S8 -> D3DFMT_A8R8G8B8');
 
-    Result := D3DDevice_CreateImageSurface(g_pD3DDevice,
+    Result := IDirect3DDevice_CreateImageSurface(g_pD3DDevice,
       Width,
       Height,
       D3DFMT_A8R8G8B8,
@@ -3858,7 +3858,7 @@ begin
         'Height: 0 -> 256');
     end;
 
-    Result := D3DDevice_CreateTexture
+    Result := IDirect3DDevice_CreateTexture
     (g_pD3DDevice,
       Width, Height, Levels,
       PCUsage, // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
@@ -3973,7 +3973,7 @@ begin
   begin
     EmuAdjustPower2(@Width, @Height);
 
-    hRet := D3DDevice_CreateVolumeTexture(g_pD3DDevice,
+    hRet := IDirect3DDevice_CreateVolumeTexture(g_pD3DDevice,
         Width, Height, Depth, Levels,
         0,  // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
         PCFormat, D3DPOOL_MANAGED, @(ppVolumeTexture^.Emu.VolumeTexture));
@@ -4041,7 +4041,7 @@ begin
 
   New({var PX_D3DCubeTexture}ppCubeTexture^);
 
-  Result := D3DDevice_CreateCubeTexture(g_pD3DDevice,
+  Result := IDirect3DDevice_CreateCubeTexture(g_pD3DDevice,
       EdgeLength, Levels,
       0,  // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
       PCFormat, D3DPOOL_MANAGED, @(ppCubeTexture^.Emu.CubeTexture)
@@ -4082,7 +4082,7 @@ begin
 
   New({var PX_D3DIndexBuffer}ppIndexBuffer^);
 
-  hRet := D3DDevice_CreateIndexBuffer(g_pD3DDevice,
+  hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice,
       Length, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
       @(ppIndexBuffer^.Emu.IndexBuffer));
 
@@ -5225,7 +5225,7 @@ begin
         end
         else
         begin
-          hRet := D3DDevice_CreateIndexBuffer
+          hRet := IDirect3DDevice_CreateIndexBuffer
           (g_pD3DDevice,
             dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
             @(pIndexBuffer.Emu.IndexBuffer)
@@ -5333,7 +5333,7 @@ begin
         // create the happy little texture
         if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
         begin
-          hRet := D3DDevice_CreateImageSurface(g_pD3DDevice,
+          hRet := IDirect3DDevice_CreateImageSurface(g_pD3DDevice,
             dwWidth,
             dwHeight,
             PCFormat,
@@ -5388,7 +5388,7 @@ begin
               DbgPrintf('CreateCubeTexture(%d,%d, 0,%d, D3DPOOL_MANAGED, 0x%.08X)',
                 [dwWidth, dwMipMapLevels, Ord(PCFormat), pResource.Emu.Texture]);
 
-            hRet := D3DDevice_CreateCubeTexture(g_pD3DDevice,
+            hRet := IDirect3DDevice_CreateCubeTexture(g_pD3DDevice,
               dwWidth, dwMipMapLevels, 0, PCFormat,
               D3DPOOL_MANAGED, @(pResource.Emu.CubeTexture));
 
@@ -5404,7 +5404,7 @@ begin
               DbgPrintf('CreateTexture(%d,%d,%d, 0,%d, D3DPOOL_MANAGED, 0x%.08X)',
                 [dwWidth, dwHeight, dwMipMapLevels, Ord(PCFormat), @(pResource.Emu.Texture)]);
 
-            hRet := D3DDevice_CreateTexture(g_pD3DDevice,
+            hRet := IDirect3DDevice_CreateTexture(g_pD3DDevice,
               dwWidth, dwHeight, dwMipMapLevels, 0, PCFormat,
               D3DPOOL_MANAGED, @(pResource.Emu.Texture)
               );
@@ -6888,7 +6888,7 @@ begin
         #13#10');',
       [Stage, Value]);
 
-  D3DDevice_SetSamplerState(g_pD3DDevice, Stage, D3DSAMP_BORDERCOLOR, Value);
+  IDirect3DDevice_SetSamplerState(g_pD3DDevice, Stage, D3DSAMP_BORDERCOLOR, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8225,7 +8225,7 @@ begin
   begin
     dwSize := VertexCount * SizeOf(Word);   // 16-bit indices
 
-    hRet := D3DDevice_CreateIndexBuffer
+    hRet := IDirect3DDevice_CreateIndexBuffer
     (g_pD3DDevice,
         dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
         @(g_pIndexBuffer.Emu.IndexBuffer)
@@ -8304,7 +8304,7 @@ begin
     // TODO -oCXBX: caching (if it becomes noticably slow to recreate the buffer each time)
     if(not bActiveIB) then
     begin
-      D3DDevice_CreateIndexBuffer(g_pD3DDevice, VertexCount*SizeOf(Word), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
+      IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, VertexCount*SizeOf(Word), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
 
       if (pIndexBuffer = nil) then
           DxbxKrnlCleanup('Could not create index buffer! (%d bytes)', [VertexCount*SizeOf(Word)]);
