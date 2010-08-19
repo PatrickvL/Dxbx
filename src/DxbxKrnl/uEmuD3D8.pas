@@ -1993,6 +1993,7 @@ begin
   begin
     pVertexShader := PVERTEX_SHADER(VshHandleGetVertexShader(Handle).Handle);
 {$IFDEF DXBX_USE_D3D9}
+    g_pD3DDevice.SetVertexDeclaration(IDirect3DVertexDeclaration9(pVertexShader.pDeclaration));
     g_pD3DDevice.SetVertexShader(IDirect3DVertexShader(pVertexShader.Handle));
 {$ELSE}
     g_pD3DDevice.SetVertexShader(pVertexShader.Handle);
@@ -2014,6 +2015,7 @@ begin
     if (pVertexShader2 <> NULL) then
     begin
 {$IFDEF DXBX_USE_D3D9}
+      g_pD3DDevice.SetVertexDeclaration(IDirect3DVertexDeclaration9(PVERTEX_SHADER(pVertexShader2.Handle).pDeclaration));
       g_pD3DDevice.SetVertexShader(IDirect3DVertexShader(PVERTEX_SHADER(pVertexShader2.Handle).Handle));
 {$ELSE}
       g_pD3DDevice.SetVertexShader(PVERTEX_SHADER(pVertexShader2.Handle).Handle);
@@ -3042,6 +3044,9 @@ var
   VertexShaderSize: DWORD;
   DeclarationSize: DWORD;
   Handle: DWORD;
+{$IFDEF DXBX_USE_D3D9}
+  pDecl: Pointer; // PIDirect3DVertexDeclaration9;
+{$ENDIF}
 
 {$ifdef _DEBUG_TRACK_VS}
   pFileName: array [0..30-1] of _char;
@@ -3126,11 +3131,18 @@ begin
     else
     begin
 {$IFDEF DXBX_USE_D3D9}
-      hRet := g_pD3DDevice.CreateVertexShader
-      (
+// TODO -oDxbx : Enable this, once pRecompiledDeclaration is an array of D3DVertexElement9's!
+//      hRet := g_pD3DDevice.CreateVertexDeclaration
+//      (
+//        {pVertexElements=}PD3DVertexElement9(pRecompiledDeclaration),
+//        {ppDecl=}PIDirect3DVertexDeclaration9(@pDecl)
+//      );
+//      if SUCCEEDED(hRet) then
+        hRet := g_pD3DDevice.CreateVertexShader
+        (
           pRecompiledFunction,
           PIDirect3DVertexShader9(@Handle)
-      );
+        );
 {$ELSE}
       hRet := g_pD3DDevice.CreateVertexShader
       (
@@ -3165,12 +3177,20 @@ begin
         {ppCompiledShader}@pRecompiledBuffer,
         {ppCompilationErrors}NULL);
       if not (FAILED(hRet)) then // Dxbx addition
+      begin
 {$IFDEF DXBX_USE_D3D9}
-        hRet := g_pD3DDevice.CreateVertexShader
-        (
+// TODO -oDxbx : What declaration should we use in this case?
+//        hRet := g_pD3DDevice.CreateVertexDeclaration
+//        (
+//          {pVertexElements=}PD3DVertexElement9(pRecompiledDeclaration),
+//          {ppDecl=}PIDirect3DVertexDeclaration9(@pDecl)
+//        );
+//        if SUCCEEDED(hRet) then
+          hRet := g_pD3DDevice.CreateVertexShader
+          (
             PDWORD(ID3DXBuffer(pRecompiledBuffer).GetBufferPointer()),
             PIDirect3DVertexShader9(Handle)
-        );
+          );
 {$ELSE}
         hRet := g_pD3DDevice.CreateVertexShader
         (
@@ -3180,6 +3200,7 @@ begin
             g_dwVertexShaderUsage
         );
 {$ENDIF}
+      end;
     end;
     //*/
   end;
@@ -7966,6 +7987,7 @@ function XTL_EmuIDirect3DDevice_SetVertexShader
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
+  pVertexShader: PVERTEX_SHADER;
   RealHandle: DWORD;
 const
   vScale: TD3DXVECTOR4 = (x: 2.0 / 640; y: -2.0 / 480; z: 0.0; w: 0.0);
@@ -8003,12 +8025,13 @@ begin
 
   if (VshHandleIsVertexShader(Handle)) then
   begin
-    RealHandle := PVERTEX_SHADER(VshHandleGetVertexShader(Handle).Handle).Handle;
+    pVertexShader := PVERTEX_SHADER(VshHandleGetVertexShader(Handle).Handle);
 
 {$IFDEF DXBX_USE_D3D9}
-    Result := g_pD3DDevice.SetVertexShader(IDirect3DVertexShader(RealHandle));
+    g_pD3DDevice.SetVertexDeclaration(IDirect3DVertexDeclaration9(pVertexShader.pDeclaration));
+    Result := g_pD3DDevice.SetVertexShader(IDirect3DVertexShader(pVertexShader.Handle));
 {$ELSE}
-    Result := g_pD3DDevice.SetVertexShader(RealHandle);
+    Result := g_pD3DDevice.SetVertexShader(pVertexShader.Handle);
 {$ENDIF}
   end
   else
@@ -10580,7 +10603,7 @@ function XTL_EmuIDirect3DVolume_GetContainer2
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirect3DVolume_GetContainer2');
+  Result := Unimplemented('XTL_EmuIDirect3DVolume_GetContainer2');
 
   EmuSwapFS(fsXbox);
 end;

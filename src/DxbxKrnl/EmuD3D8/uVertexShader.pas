@@ -555,21 +555,29 @@ end;
 function VshHandleIsFVF(aHandle: DWORD): boolean; // inline
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  Result := (aHandle and $80000000) = 0;
+  // Dxbx note : On Xbox, a FVF is recognizable when the handle <= 0x0000FFFF
+  // (as all values above are allocated addresses). But since we patch all
+  // not-FVF handles (which are actual vertex shaders) bu setting their sign bit
+  // we can suffice by testing that :
+  Result := IntPtr(aHandle) >= 0; // A test on the sign bit is faster like this
+//  Result := (aHandle and $80000000) = 0; // this was the previous (slower) test
 end;
 
 function VshHandleIsVertexShader(aHandle: DWORD): boolean; // inline
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  Result := (aHandle and $80000000) <> 0;
+  Result := IntPtr(aHandle) < 0; // A test on the sign bit is faster like this
+//  Result := (aHandle and $80000000) <> 0; // this was the previous (slower) test
 end;
 
 function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader; // inline
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  Result := PX_D3DVertexShader(aHandle and $7FFFFFFF);
+  Result := PX_D3DVertexShader(aHandle and $7FFFFFFF); // Mask out the sign bit
 end;
 
+// Dxbx note : This tooling function is never used, but clearly illustrates the relation
+// between vertex shader's being passed around, and the actual handle value used on PC.
 function VshHandleGetRealHandle(aHandle: DWORD): DWORD;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
@@ -1809,146 +1817,94 @@ const DEF_VSH_NOP = $00000000;
 
 function VshGetDeclarationSize(pDeclaration: PDWORD): DWORD;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-var
-  Pos: DWORD;
 begin
-  Pos := 0;
-  while PDWord(UIntPtr(pDeclaration) + (Pos * sizeof(DWORD)))^ <> DEF_VSH_END do
-  begin
-    Inc(Pos);
-  end;
-  Result := (Pos + 1) * sizeof(DWORD);
+  Result := 0;
+  while PDWords(pDeclaration)[Result] <> DEF_VSH_END do
+    Inc(Result);
+  Inc(Result);
 end;
 
+{$IFDEF DXBX_USE_D3D9}
+function Xb2PCRegisterType(VertexRegister: DWORD; var D3D9Index: Integer): DWORD;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+{$ELSE}
 function Xb2PCRegisterType(VertexRegister: DWORD): DWORD;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
-{$IFDEF DXBX_USE_D3D9}
-  PCRegisterType: D3DDECLUSAGE;
-{$ELSE}
-  PCRegisterType: DWORD;
+  D3D9Index: Integer; // ignored
+{$HINTS OFF} // Prevent the compiler complaining about "value assigned to 'D3D9Index' never used"
 {$ENDIF}
-begin
-{$IFDEF DXBX_USE_D3D9}
-  case Integer(VertexRegister) of
-  -1: begin
-      DbgVshPrintf('D3DVSDE_VERTEX /* xbox ext. */');
-      PCRegisterType := D3DDECLUSAGE(-1);
-    end;
-  0: begin
-      DbgVshPrintf('D3DVSDE_POSITION');
-      PCRegisterType := D3DDECLUSAGE_POSITION;
-    end;
-  1: begin
-      DbgVshPrintf('D3DVSDE_BLENDWEIGHT');
-      PCRegisterType := D3DDECLUSAGE_BLENDWEIGHT;
-    end;
-  2: begin
-      DbgVshPrintf('D3DVSDE_NORMAL');
-      PCRegisterType := D3DDECLUSAGE_NORMAL;
-    end;
-  3: begin
-      DbgVshPrintf('D3DVSDE_DIFFUSE');
-      PCRegisterType := D3DDECLUSAGE_COLOR{0};//D3DDECLUSAGE_DIFFUSE;
-    end;
-  4: begin
-      DbgVshPrintf('D3DVSDE_SPECULAR');
-      PCRegisterType := D3DDECLUSAGE_COLOR{1};//D3DDECLUSAGE_SPECULAR;
-    end;
-  5: begin
-      DbgVshPrintf('D3DVSDE_FOG /* xbox ext. */');
-      PCRegisterType := D3DDECLUSAGE(-1);
-    end;
-  7: begin
-      DbgVshPrintf('D3DVSDE_BACKDIFFUSE /* xbox ext. */');
-      PCRegisterType := D3DDECLUSAGE(-1);
-    end;
-  8: begin
-      DbgVshPrintf('D3DVSDE_BACKSPECULAR /* xbox ext. */');
-      PCRegisterType := D3DDECLUSAGE(-1);
-    end;
-  9: begin
-      DbgVshPrintf('D3DVSDE_TEXCOORD0');
-      PCRegisterType := D3DDECLUSAGE_TEXCOORD{0};
-    end;
-  10: begin
-      DbgVshPrintf('D3DVSDE_TEXCOORD1');
-      PCRegisterType := D3DDECLUSAGE_TEXCOORD{1};
-    end;
-  11: begin
-      DbgVshPrintf('D3DVSDE_TEXCOORD2');
-      PCRegisterType := D3DDECLUSAGE_TEXCOORD{2};
-    end;
-  12: begin
-      DbgVshPrintf('D3DVSDE_TEXCOORD3');
-      PCRegisterType := D3DDECLUSAGE_TEXCOORD{3};
-    end;
-  else
-    DbgVshPrintf('%d /* unknown register */', [VertexRegister]);
-    PCRegisterType := D3DDECLUSAGE(-1);
-  end;
-{$ELSE}
-  case Integer(VertexRegister) of
-  -1: begin
-      DbgVshPrintf('D3DVSDE_VERTEX /* xbox ext. */');
-      PCRegisterType := DWORD(-1);
-    end;
-  0: begin
-      DbgVshPrintf('D3DVSDE_POSITION');
-      PCRegisterType := D3DVSDE_POSITION;
-    end;
-  1: begin
-      DbgVshPrintf('D3DVSDE_BLENDWEIGHT');
-      PCRegisterType := D3DVSDE_BLENDWEIGHT;
-    end;
-  2: begin
-      DbgVshPrintf('D3DVSDE_NORMAL');
-      PCRegisterType := D3DVSDE_NORMAL;
-    end;
-  3: begin
-      DbgVshPrintf('D3DVSDE_DIFFUSE');
-      PCRegisterType := D3DVSDE_DIFFUSE;
-    end;
-  4: begin
-      DbgVshPrintf('D3DVSDE_SPECULAR');
-      PCRegisterType := D3DVSDE_SPECULAR;
-    end;
-  5: begin
-      DbgVshPrintf('D3DVSDE_FOG /* xbox ext. */');
-      PCRegisterType := DWORD(-1);
-    end;
-  7: begin
-      DbgVshPrintf('D3DVSDE_BACKDIFFUSE /* xbox ext. */');
-      PCRegisterType := DWORD(-1);
-    end;
-  8: begin
-      DbgVshPrintf('D3DVSDE_BACKSPECULAR /* xbox ext. */');
-      PCRegisterType := DWORD(-1);
-    end;
-  9: begin
-      DbgVshPrintf('D3DVSDE_TEXCOORD0');
-      PCRegisterType := D3DVSDE_TEXCOORD0;
-    end;
-  10: begin
-      DbgVshPrintf('D3DVSDE_TEXCOORD1');
-      PCRegisterType := D3DVSDE_TEXCOORD1;
-    end;
-  11: begin
-      DbgVshPrintf('D3DVSDE_TEXCOORD2');
-      PCRegisterType := D3DVSDE_TEXCOORD2;
-    end;
-  12: begin
-      DbgVshPrintf('D3DVSDE_TEXCOORD3');
-      PCRegisterType := D3DVSDE_TEXCOORD3;
-    end;
-  else
-    DbgVshPrintf('%d /* unknown register */', [VertexRegister]);
-    PCRegisterType := DWORD(-1);
-  end;
-{$ENDIF}
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 
-  Result := DWORD(PCRegisterType);
-end; // Xb2PCRegisterType
+var
+  PCRegister: {$IFDEF DXBX_USE_D3D9}D3DDECLUSAGE{$ELSE}DWORD{$ENDIF};
+begin
+  D3D9Index := 0; // Default, each register maps to index 0
+
+  PInteger(@PCRegister)^ := -1;
+
+  case VertexRegister of
+  X_D3DVSDE_VERTEX:
+      DbgVshPrintf('D3DVSDE_VERTEX /* xbox ext. */');
+
+  X_D3DVSDE_POSITION: begin
+      DbgVshPrintf('D3DVSDE_POSITION');
+      PCRegister := D3DVSDE_POSITION;
+    end;
+  X_D3DVSDE_BLENDWEIGHT: begin
+      DbgVshPrintf('D3DVSDE_BLENDWEIGHT');
+      PCRegister := D3DVSDE_BLENDWEIGHT;
+    end;
+  X_D3DVSDE_NORMAL: begin
+      DbgVshPrintf('D3DVSDE_NORMAL');
+      PCRegister := D3DVSDE_NORMAL;
+    end;
+  X_D3DVSDE_DIFFUSE: begin
+      DbgVshPrintf('D3DVSDE_DIFFUSE');
+      PCRegister := D3DVSDE_DIFFUSE;
+    end;
+  X_D3DVSDE_SPECULAR: begin
+      DbgVshPrintf('D3DVSDE_SPECULAR');
+      PCRegister := D3DVSDE_SPECULAR;
+      D3D9Index := 1;
+    end;
+  X_D3DVSDE_FOG: begin
+      DbgVshPrintf('D3DVSDE_FOG /* xbox ext. */');
+      PCRegister := D3DVSDE_FOG; // Note : Doesn't exist in D3D8, but we define as D3DDECLUSAGE_FOG for D3D9 !
+    end;
+  X_D3DVSDE_BACKDIFFUSE:
+      DbgVshPrintf('D3DVSDE_BACKDIFFUSE /* xbox ext. */');
+  X_D3DVSDE_BACKSPECULAR:
+      DbgVshPrintf('D3DVSDE_BACKSPECULAR /* xbox ext. */');
+
+  X_D3DVSDE_TEXCOORD0: begin
+      DbgVshPrintf('D3DVSDE_TEXCOORD0');
+      PCRegister := D3DVSDE_TEXCOORD0;
+    end;
+  X_D3DVSDE_TEXCOORD1: begin
+      DbgVshPrintf('D3DVSDE_TEXCOORD1');
+      PCRegister := D3DVSDE_TEXCOORD1;
+      D3D9Index := 1;
+    end;
+  X_D3DVSDE_TEXCOORD2: begin
+      DbgVshPrintf('D3DVSDE_TEXCOORD2');
+      PCRegister := D3DVSDE_TEXCOORD2;
+      D3D9Index := 2;
+    end;
+  X_D3DVSDE_TEXCOORD3: begin
+      DbgVshPrintf('D3DVSDE_TEXCOORD3');
+      PCRegister := D3DVSDE_TEXCOORD3;
+      D3D9Index := 3;
+    end;
+  else
+    DbgVshPrintf('%d /* unknown register */', [VertexRegister]);
+  end;
+
+  Result := DWORD(PCRegister);
+  if Integer(Result) = -1 then
+    D3D9Index := -1;
+end;
+{$HINTS ON}
 
 function VshGetTokenType(Token: DWORD): DWORD; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -1974,7 +1930,13 @@ begin
   Result := (Token and D3DVSD_STREAMNUMBERMASK) shr D3DVSD_STREAMNUMBERSHIFT;
 end;
 
-procedure VshConvertToken_NOP(pToken: PDWORD);
+{$IFDEF DXBX_USE_D3D9}
+type PTokenOutput = PD3DVertexElement9;
+{$ELSE}
+type PTokenOutput = PDWORD;
+{$ENDIF}
+
+procedure VshConvertToken_NOP(pToken: PDWORD; pRecompiled: PTokenOutput);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   // D3DVSD_NOP
@@ -1985,7 +1947,7 @@ begin
   DbgVshPrintf(#9'D3DVSD_NOP(),'#13#10);
 end;
 
-function VshConvertToken_CONSTMEM(pToken: PDWORD): DWORD;
+function VshConvertToken_CONSTMEM(pToken: PDWORD; pRecompiled: PTokenOutput): DWORD;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   ConstantAddress: DWORD;
@@ -2009,7 +1971,7 @@ begin
   Result := Count;
 end; // VshConvertToken_CONSTMEM
 
-procedure VshConverToken_TESSELATOR(pToken: PDWORD; 
+procedure VshConverToken_TESSELATOR(pToken: PDWORD; pRecompiled: PTokenOutput;
                                     IsFixedFunction: boolean);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
@@ -2019,6 +1981,9 @@ var
   VertexRegisterOut: DWORD;
   NewVertexRegisterIn: DWORD;
   NewVertexRegisterOut: DWORD;
+{$IFDEF DXBX_USE_D3D9}
+  Index: Integer;
+{$ENDIF}
 begin
   // TODO -oCXBX: Investigate why Xb2PCRegisterType is only used for fixed function vertex shaders
   // D3DVSD_TESSUV
@@ -2031,7 +1996,7 @@ begin
 
     if (IsFixedFunction) then
     begin
-      NewVertexRegister := Xb2PCRegisterType(VertexRegister);
+      NewVertexRegister := Xb2PCRegisterType(VertexRegister{$IFDEF DXBX_USE_D3D9}, {var}Index{$ENDIF});
     end
     else
     begin
@@ -2040,7 +2005,13 @@ begin
 
     DbgVshPrintf('),'#13#10);
 
-    pToken^ := D3DVSD_TESSUV(NewVertexRegister);
+{$IFDEF DXBX_USE_D3D9}
+    // TODO : Expand on the setting of this TESSUV register element :
+    pRecompiled.Usage := D3DDECLUSAGE(NewVertexRegister);
+    pRecompiled.UsageIndex := Index;
+{$ELSE}
+    pRecompiled^ := D3DVSD_TESSUV(NewVertexRegister);
+{$ENDIF}
   end
   // D3DVSD_TESSNORMAL
   else
@@ -2055,18 +2026,23 @@ begin
 
     if (IsFixedFunction) then
     begin
-      NewVertexRegisterIn := Xb2PCRegisterType(VertexRegisterIn);
+      NewVertexRegisterIn := Xb2PCRegisterType(VertexRegisterIn{$IFDEF DXBX_USE_D3D9}, {var}Index{$ENDIF});
     end
     else
     begin
       DbgVshPrintf('%d', [NewVertexRegisterIn]);
     end;
+{$IFDEF DXBX_USE_D3D9}
+    // TODO : Expand on the setting of this TESSNORMAL input register element :
+    pRecompiled.Usage := D3DDECLUSAGE(NewVertexRegisterIn);
+    pRecompiled.UsageIndex := Index;
+{$ENDIF}
 
     DbgVshPrintf(', ');
 
     if (IsFixedFunction) then
     begin
-      NewVertexRegisterOut := Xb2PCRegisterType(VertexRegisterOut);
+      NewVertexRegisterOut := Xb2PCRegisterType(VertexRegisterOut{$IFDEF DXBX_USE_D3D9}, {var}Index{$ENDIF});
     end
     else
     begin
@@ -2074,7 +2050,14 @@ begin
     end;
 
     DbgVshPrintf('),'#13#10);
-    pToken^ := D3DVSD_TESSNORMAL(NewVertexRegisterIn, NewVertexRegisterOut);
+{$IFDEF DXBX_USE_D3D9}
+    // TODO : Expand on the setting of this TESSNORMAL output register element :
+    Inc(pRecompiled);
+    pRecompiled.Usage := D3DDECLUSAGE(NewVertexRegisterOut);
+    pRecompiled.UsageIndex := Index;
+{$ELSE}
+    pRecompiled^ := D3DVSD_TESSNORMAL(NewVertexRegisterIn, NewVertexRegisterOut);
+{$ENDIF}
   end;
 end; // VshConverToken_TESSELATOR
 
@@ -2106,7 +2089,7 @@ begin
   Result := FALSE;
 end; // VshAddStreamPatch
 
-procedure VshConvertToken_STREAM(pToken: PDWORD; 
+procedure VshConvertToken_STREAM(pToken: PDWORD; pRecompiled: PTokenOutput;
                                  pPatchData: PVSH_PATCH_DATA);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
@@ -2123,6 +2106,16 @@ begin
     StreamNumber := VshGetVertexStream(pToken^);
     DbgVshPrintf(#9'D3DVSD_STREAM(%d),'#13#10, [StreamNumber]);
 
+{$IFDEF DXBX_USE_D3D9}
+    Inc(pRecompiled); // Step to next element
+    pRecompiled^.Stream := StreamNumber;
+    pRecompiled^.Offset := 0;
+    pRecompiled^._Type := D3DDECLTYPE_FLOAT3;
+    pRecompiled^.Method := D3DDECLMETHOD(0);// _DEFAULT;
+    pRecompiled^.Usage := D3DDECLUSAGE(0);
+    pRecompiled^.UsageIndex := 0;
+{$ENDIF}
+
     // new stream
     // copy current data to structure
     if (VshAddStreamPatch(pPatchData)) then
@@ -2136,7 +2129,7 @@ begin
   end;
 end; // VshConvertToken_STREAM
 
-procedure VshConvertToken_STREAMDATA_SKIP(pToken: PDWORD);
+procedure VshConvertToken_STREAMDATA_SKIP(pToken: PDWORD; pRecompiled: PTokenOutput);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   SkipCount: DWORD;
@@ -2145,7 +2138,7 @@ begin
   DbgVshPrintf(#9'D3DVSD_SKIP(%d),'#13#10, [SkipCount]);
 end;
 
-procedure VshConvertToken_STREAMDATA_SKIPBYTES(pToken: PDWORD);
+procedure VshConvertToken_STREAMDATA_SKIPBYTES(pToken: PDWORD; pRecompiled: PTokenOutput);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   SkipBytesCount: DWORD;
@@ -2156,10 +2149,13 @@ begin
   begin
     EmuWarning('D3DVSD_SKIPBYTES can''t be converted to D3DVSD_SKIP, not divisble by 4.');
   end;
-  pToken^ := D3DVSD_SKIP(SkipBytesCount div sizeof(DWORD));
+{$IFDEF DXBX_USE_D3D9}
+{$ELSE}
+  pRecompiled^ := D3DVSD_SKIP(SkipBytesCount div sizeof(DWORD));
+{$ENDIF}
 end;
 
-procedure VshConvertToken_STREAMDATA_REG(pToken: PDWORD;
+procedure VshConvertToken_STREAMDATA_REG(pToken: PDWORD; pRecompiled: PTokenOutput;
                                          IsFixedFunction: boolean;
                                          pPatchData: PVSH_PATCH_DATA);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -2167,7 +2163,13 @@ var
   VertexRegister: DWORD;
   NewVertexRegister: DWORD;
   DataType: DWORD;
+{$IFDEF DXBX_USE_D3D9}
+  NewDataType: D3DDECLTYPE;
+  PrevStream: Integer;
+  Index: Integer;
+{$ELSE}
   NewDataType: DWORD;
+{$ENDIF}
 begin
   DbgVshPrintf(#9'D3DVSD_REG(');
 
@@ -2175,7 +2177,7 @@ begin
 
   if (IsFixedFunction) then
   begin
-    NewVertexRegister := Xb2PCRegisterType(VertexRegister);
+    NewVertexRegister := Xb2PCRegisterType(VertexRegister{$IFDEF DXBX_USE_D3D9}, {var}Index{$ENDIF});
   end
   else
   begin
@@ -2186,7 +2188,7 @@ begin
   DbgVshPrintf(', ');
 
   DataType := (pToken^ shr X_D3DVSD_DATATYPESHIFT) and $FF;
-  NewDataType := 0;
+  PDWORD(@NewDataType)^ := 0;
 
   // save patching information
   pPatchData.TypePatchData.Types[pPatchData.TypePatchData.NbrTypes] := DataType;
@@ -2236,9 +2238,13 @@ begin
     end;
     { $21=}X_D3DVSDT_NORMSHORT2: begin
       DbgVshPrintf('D3DVSDT_NORMSHORT2 /* xbox ext. */');
+{$IFDEF DXBX_USE_D3D9}
+      NewDataType := D3DVSDT_NORMSHORT2;
+{$ELSE}
       NewDataType := D3DVSDT_SHORT2;
-      Inc(pPatchData.ConvertedStride, 2*sizeof(SHORT));
       pPatchData.NeedPatching := TRUE;
+{$ENDIF}
+      Inc(pPatchData.ConvertedStride, 2*sizeof(SHORT));
     end;
     { $31=}X_D3DVSDT_NORMSHORT3: begin
       DbgVshPrintf('D3DVSDT_NORMSHORT3 /* xbox ext. nsp */');
@@ -2248,13 +2254,17 @@ begin
     end;
     { $41=}X_D3DVSDT_NORMSHORT4: begin
       DbgVshPrintf('D3DVSDT_NORMSHORT4 /* xbox ext. */');
+{$IFDEF DXBX_USE_D3D9}
+      NewDataType := D3DVSDT_NORMSHORT4;
+{$ELSE}
       NewDataType := D3DVSDT_SHORT4;
-      Inc(pPatchData.ConvertedStride, 4*sizeof(SHORT));
       pPatchData.NeedPatching := TRUE;
+{$ENDIF}
+      Inc(pPatchData.ConvertedStride, 4*sizeof(SHORT));
     end;
     { $16=}X_D3DVSDT_NORMPACKED3: begin
       DbgVshPrintf('D3DVSDT_NORMPACKED3 /* xbox ext. nsp */');
-      NewDataType := D3DVSDT_FLOAT3;//$FF; //32bit
+      NewDataType := D3DVSDT_FLOAT3;
       Inc(pPatchData.ConvertedStride, 3*sizeof(FLOAT));
       pPatchData.NeedPatching := TRUE;
     end;
@@ -2301,23 +2311,37 @@ begin
     end;
     { $02=}X_D3DVSDT_NONE: begin
       DbgVshPrintf('D3DVSDT_NONE /* xbox ext. nsp */');
+{$IFDEF DXBX_USE_D3D9}
+      NewDataType := D3DVSDT_NONE;
+{$ENDIF}
       // TODO -oDxbx: Use D3DVSD_NOP ?
-      NewDataType := $FF;
+      PDWORD(@NewDataType)^ := $FF;
     end;
   else // default:
     DbgVshPrintf('Unknown data type for D3DVSD_REG: 0x%02X'#13#10, [DataType]);
   end;
-  pToken^ := D3DVSD_REG(NewVertexRegister, NewDataType);
+{$IFDEF DXBX_USE_D3D9}
+  PrevStream := pRecompiled^.Stream;
+  Inc(pRecompiled); // Step to next element
+  pRecompiled^.Stream := PrevStream;
+  pRecompiled^.Offset := 0;
+  pRecompiled^._Type := NewDataType;
+  pRecompiled^.Method := D3DDECLMETHOD(0);
+  pRecompiled^.Usage := D3DDECLUSAGE(NewVertexRegister);
+  pRecompiled^.UsageIndex := Index;
+{$ELSE}
+  pRecompiled^ := D3DVSD_REG(NewVertexRegister, NewDataType);
+{$ENDIF}
 
   DbgVshPrintf('),'#13#10);
 
-  if (NewDataType = $FF) then
+  if (DWORD(NewDataType) = $FF) then
   begin
     EmuWarning('/* WARNING: Fatal type mismatch, no fitting type! */');
   end;
 end; // VshConvertToken_STREAMDATA_REG
 
-procedure VshConvertToken_STREAMDATA(pToken: PDWORD;
+procedure VshConvertToken_STREAMDATA(pToken: PDWORD; pRecompiled: PTokenOutput;
                                      IsFixedFunction: boolean;
                                      pPatchData: PVSH_PATCH_DATA);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -2325,21 +2349,21 @@ begin
   // D3DVSD_SKIP
   if (pToken^ and $10000000) > 0 then
   begin
-    VshConvertToken_STREAMDATA_SKIP(pToken);
+    VshConvertToken_STREAMDATA_SKIP(pToken, pRecompiled);
   end
   // D3DVSD_SKIPBYTES
   else if (pToken^ and $18000000) > 0 then
   begin
-    VshConvertToken_STREAMDATA_SKIPBYTES(pToken);
+    VshConvertToken_STREAMDATA_SKIPBYTES(pToken, pRecompiled);
   end
   // D3DVSD_REG
   else
   begin
-    VshConvertToken_STREAMDATA_REG(pToken, IsFixedFunction, pPatchData);
+    VshConvertToken_STREAMDATA_REG(pToken, pRecompiled, IsFixedFunction, pPatchData);
   end;
 end; // VshConvertToken_STREAMDATA
 
-function VshRecompileToken(pToken: PDWORD; 
+function VshRecompileToken(pToken: PDWORD; pRecompiled: PTokenOutput;
                            IsFixedFunction: boolean; 
                            pPatchData: PVSH_PATCH_DATA): DWORD;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -2350,15 +2374,15 @@ begin
 
   case TD3DVSDTokenType(VshGetTokenType(pToken^)) of
     D3DVSD_TOKEN_NOP:
-      VshConvertToken_NOP(pToken);
+      VshConvertToken_NOP(pToken, pRecompiled);
     D3DVSD_TOKEN_STREAM:
-      VshConvertToken_STREAM(pToken, pPatchData);
+      VshConvertToken_STREAM(pToken, pRecompiled, pPatchData);
     D3DVSD_TOKEN_STREAMDATA:
-      VshConvertToken_STREAMDATA(pToken, IsFixedFunction, pPatchData);
+      VshConvertToken_STREAMDATA(pToken, pRecompiled, IsFixedFunction, pPatchData);
     D3DVSD_TOKEN_TESSELLATOR:
-      VshConverToken_TESSELATOR(pToken, IsFixedFunction);
+      VshConverToken_TESSELATOR(pToken, pRecompiled, IsFixedFunction);
     D3DVSD_TOKEN_CONSTMEM:
-      Step := VshConvertToken_CONSTMEM(pToken);
+      Step := VshConvertToken_CONSTMEM(pToken, pRecompiled);
   else
     DbgVshPrintf('Unknown token type: %d'#13#10, [VshGetTokenType(pToken^)]);
   end;
@@ -2378,7 +2402,7 @@ function XTL_EmuRecompileVshDeclaration
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   DeclarationSize: DWORD;
-  pRecompiled: PDWORD;
+  pRecompiled: PTokenOutput;
   PatchData: VSH_PATCH_DATA;
   Step: DWORD;
   StreamsSize: DWORD;
@@ -2393,8 +2417,16 @@ begin
 
   // Calculate size of declaration
   DeclarationSize := VshGetDeclarationSize(pDeclaration);
+{$IFDEF DXBX_USE_D3D9}
+  // For Direct3D9, we need to reserve at least twice the number of elements, as one token can generate two registers (in and out) :
+  DeclarationSize := DeclarationSize * SizeOf(TD3DVertexElement9) * 2;
+{$ELSE}
+  // For Direct3D8, tokens are the same size as on Xbox (DWORD) and are translated in-place :
+  DeclarationSize := DeclarationSize * SizeOf(DWORD);
+{$ENDIF}
   ppRecompiledDeclaration^ := PDWORD(DxbxMalloc(DeclarationSize));
-  pRecompiled := ppRecompiledDeclaration^;
+
+  pRecompiled := PTokenOutput(ppRecompiledDeclaration^);
   memcpy(pRecompiled, pDeclaration, DeclarationSize);
   pDeclarationSize^ := DeclarationSize;
 
@@ -2403,10 +2435,11 @@ begin
 
   DbgVshPrintf('DWORD dwVSHDecl[] ='#13#10'{'#13#10);
 
-  while pRecompiled^ <> DEF_VSH_END do
+  while pDeclaration^ <> DEF_VSH_END do
   begin
-    Step := VshRecompileToken(pRecompiled, IsFixedFunction, @PatchData);
-    Inc(pRecompiled, Step); // Older Delphi's might need : Inc(UIntPtr(pRecompiled), Step * SizeOf(DWord));
+    Step := VshRecompileToken(pDeclaration, pRecompiled, IsFixedFunction, @PatchData);
+    Inc(pDeclaration, Step);
+    Inc(pRecompiled, Step);
   end;
   DbgVshPrintf(#9'D3DVSD_END()'#13#10'};'#13#10);
 
