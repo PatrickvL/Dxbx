@@ -1502,13 +1502,15 @@ begin
 
   // locate D3DDeferredRenderState
   begin
+    XTL_EmuD3DRenderState := nil;
     XTL_EmuD3DDeferredRenderState := nil;
+
     // Just search for _D3D__RenderState itself !
     Symbol := FindSymbol('_D3D__RenderState');
     if Assigned(Symbol) then
-      XTL_EmuD3DDeferredRenderState := Symbol.Address;
+      XTL_EmuD3DRenderState := Symbol.Address;
 
-    if Assigned(XTL_EmuD3DDeferredRenderState) then
+    if Assigned(XTL_EmuD3DRenderState) then
     begin
       // Calculate the location of D3DDeferredRenderState via an XDK-dependent offset to _D3D__RenderState :
       // Dxbx note : XTL_EmuD3DDeferredRenderState:PDWORDs cast to UIntPtr to avoid incrementing with that many array-sizes!
@@ -1535,10 +1537,20 @@ begin
         XTL_EmuD3DDeferredRenderState_Size := X_D3DRS_DEFERRED_SIZE_5933;
       end;
 
-      XTL_EmuD3DRenderState_ComplexCorrection := (XTL_EmuD3DDeferredRenderState_Start + XTL_EmuD3DDeferredRenderState_Size) - X_D3DRS_PSTEXTUREMODES;
+      XTL_EmuD3DDeferredRenderState := XTL_EmuD3DRenderState;
       Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), XTL_EmuD3DDeferredRenderState_Start * 4);
+
+      XTL_EmuD3DRenderState_ComplexCorrection := (XTL_EmuD3DDeferredRenderState_Start + XTL_EmuD3DDeferredRenderState_Size) - X_D3DRS_PSTEXTUREMODES;
+//      XTL_EmuD3DComplexRenderState := XTL_EmuD3DDeferredRenderState;
+//      Inc(UIntPtr(XTL_EmuD3DComplexRenderState), XTL_EmuD3DDeferredRenderState_Size * 4);
+
+      // Initialize the Xbox RenderState structure with default values :
       for v := 0 to XTL_EmuD3DDeferredRenderState_Size - 1 do
         XTL_EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
+
+      XTL_EmuD3DRenderState[X_D3DRS_ZENABLE + XTL_EmuD3DRenderState_ComplexCorrection] := 2; // 1?
+
+      // TODO -oDxbx: Set all other not-zero render states here too! (!!!!)
 
 {$IFDEF DEBUG}
       DbgPrintf('HLE: $%.08X -> EmuD3DDeferredRenderState', [XTL_EmuD3DDeferredRenderState]);

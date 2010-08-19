@@ -41,12 +41,15 @@ uses
 procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
 function VersionAdjust_D3DTSS(const NewValue: DWORD): DWORD; {NOPATCH}
 
-// deferred state lookup tables
-var XTL_EmuD3DDeferredRenderState: PDWORDs;
+// state lookup tables
+var XTL_EmuD3DRenderState: PDWORDs = nil;
+var XTL_EmuD3DDeferredRenderState: PDWORDs = nil;
+//var XTL_EmuD3DComplexRenderState: PDWORDs = nil;
 var XTL_EmuD3DDeferredTextureState: PDWORDs;
 
 var XTL_EmuD3DDeferredRenderState_Start: DWord; // Dxbx addition, to allow for SDK version dependant shifting
 var XTL_EmuD3DDeferredRenderState_Size: DWord; // Dxbx addition
+
 var XTL_EmuD3DRenderState_ComplexCorrection: Integer; // Dxbx addition, to allow for SDK version dependant shifting
 
 const DEFAULT_XDK_VERSION = 4627; // TODO -oDxbx : Make this configurable
