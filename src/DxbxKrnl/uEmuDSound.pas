@@ -623,12 +623,8 @@ var
 begin
   for v := 0 to SOUNDSTREAM_CACHE_SIZE-1 do
   begin
-    if (g_pDSoundStreamCache[v] = nil) or (g_pDSoundStreamCache[v].EmuBuffer = nil) then
+    if (g_pDSoundStreamCache[v] = nil) or (g_pDSoundStreamCache[v].EmuDirectSoundBuffer8 = nil) then
       continue;
-
-
-
-
 
     hRet := IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).Lock(0, g_pDSoundStreamCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
 
