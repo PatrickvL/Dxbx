@@ -465,6 +465,22 @@ type _X_D3DPRIMITIVETYPE =
 );
 X_D3DPRIMITIVETYPE = _X_D3DPRIMITIVETYPE;
 
+type X_D3DTRANSFORMSTATETYPE = (
+  X_D3DTS_VIEW          = 0,
+  X_D3DTS_PROJECTION    = 1,
+  X_D3DTS_TEXTURE0      = 2,
+  X_D3DTS_TEXTURE1      = 3,
+  X_D3DTS_TEXTURE2      = 4,
+  X_D3DTS_TEXTURE3      = 5,
+  X_D3DTS_WORLD         = 6,
+  X_D3DTS_WORLD1        = 7,
+  X_D3DTS_WORLD2        = 8,
+  X_D3DTS_WORLD3        = 9,
+
+  X_D3DTS_MAX           = 10, // Unused on Xbox
+  X_D3DTS_FORCE_DWORD   = $7fffffff
+);
+
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type _X_D3DRESOURCETYPE =
 (

@@ -50,6 +50,7 @@ procedure DxbxInitializeDefaultRenderStates(const aParameters: PX_D3DPRESENT_PAR
 
 function DxbxVersionAdjust_D3DRS(const Value: X_D3DRENDERSTATETYPE): X_D3DRENDERSTATETYPE; {NOPATCH}
 function DxbxVersionAdjust_D3DTSS(const NewValue: DWORD): DWORD; {NOPATCH}
+function DxbxTransferRenderState(const aD3DRenderState: X_D3DRENDERSTATETYPE): HResult;
 
 procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
 
@@ -73,10 +74,13 @@ implementation
 
 uses
   uEmuD3D8; // g_BuildVersion
+type
+  TXB2PCFunc = function(Value: DWORD): DWORD;
 
 var
   DxbxMapActiveVersionToMostRecent: array [X_D3DRS_FIRST..X_D3DRS_LAST] of X_D3DRENDERSTATETYPE;
   DxbxMapMostRecentToActiveVersion: array [X_D3DRS_FIRST..X_D3DRS_LAST] of X_D3DRENDERSTATETYPE;
+  DxbxRenderStateXB2PCCallback: array [X_D3DRS_FIRST..X_D3DRS_LAST] of TXB2PCFunc;
 
 // Returns the XDK version since which a render state was introduced (using the 5911 declarations as a base).
 function DxbxRenderStateIntroducedAtVersion(const aRenderState: X_D3DRENDERSTATETYPE): uint32;
@@ -233,11 +237,17 @@ begin
   end;
 end;
 
+function DxbxXB2PC_NOP(Value: DWORD): DWORD;
+begin
+  Result := Value;
+end;
+
 procedure DxbxBuildRenderStateMappingTable(const aD3DRenderState: PDWORDs); {NOPATCH}
 var
   State: X_D3DRENDERSTATETYPE;
   State_VersionDependent: X_D3DRENDERSTATETYPE;
   XTL_EmuD3DDeferredRenderState: PDWORDs;
+  i: Integer;
 begin
   if not Assigned(aD3DRenderState) then
     Exit;
@@ -274,6 +284,43 @@ begin
     Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), DxbxMapMostRecentToActiveVersion[X_D3DRS_DEFERRED_FIRST] * 4);
     DbgPrintf('HLE: $%.08X -> EmuD3DDeferredRenderState', [XTL_EmuD3DDeferredRenderState]);
   end;
+
+  // Build a table with converter functions for all renderstates :
+  for i := X_D3DRS_FIRST to X_D3DRS_LAST do
+    DxbxRenderStateXB2PCCallback[i] := @DxbxXB2PC_NOP;
+
+  // For all render states that need a specific converter, assign the one handling the underlying type :
+  DxbxRenderStateXB2PCCallback[X_D3DRS_WRAP0] := @EmuXB2PC_D3DWRAP;
+  DxbxRenderStateXB2PCCallback[X_D3DRS_WRAP1] := @EmuXB2PC_D3DWRAP;
+  DxbxRenderStateXB2PCCallback[X_D3DRS_WRAP2] := @EmuXB2PC_D3DWRAP;
+  DxbxRenderStateXB2PCCallback[X_D3DRS_WRAP3] := @EmuXB2PC_D3DWRAP;
+  DxbxRenderStateXB2PCCallback[X_D3DRS_FILLMODE] := @EmuXB2PC_D3DFILLMODE;
+  DxbxRenderStateXB2PCCallback[X_D3DRS_BACKFILLMODE] := @EmuXB2PC_D3DFILLMODE;
+  DxbxRenderStateXB2PCCallback[X_D3DRS_SHADEMODE] := @EmuXB2PC_D3DSHADEMODE;
+  DxbxRenderStateXB2PCCallback[X_D3DRS_SRCBLEND] := @EmuXB2PC_D3DBLEND;
+  DxbxRenderStateXB2PCCallback[X_D3DRS_DESTBLEND] := @EmuXB2PC_D3DBLEND;
+  DxbxRenderStateXB2PCCallback[X_D3DRS_ZFUNC] := @EmuXB2PC_D3DCMPFUNC;
+  DxbxRenderStateXB2PCCallback[X_D3DRS_ALPHAFUNC] := @EmuXB2PC_D3DCMPFUNC;
+//  DxbxRenderStateXB2PCCallback[X_D3DRS_FOGTABLEMODE] := @EmuXB2PC_D3DFOGMODE; // No conversion needed; Xbox = PC
+  DxbxRenderStateXB2PCCallback[X_D3DRS_STENCILFAIL] := @EmuXB2PC_D3DSTENCILOP;
+  DxbxRenderStateXB2PCCallback[X_D3DRS_STENCILZFAIL] := @EmuXB2PC_D3DSTENCILOP;
+  DxbxRenderStateXB2PCCallback[X_D3DRS_STENCILPASS] := @EmuXB2PC_D3DSTENCILOP;
+  DxbxRenderStateXB2PCCallback[X_D3DRS_STENCILFUNC] := @EmuXB2PC_D3DCMPFUNC;
+//  DxbxRenderStateXB2PCCallback[X_D3DRS_DIFFUSEMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // No conversion needed; Xbox = PC
+//  DxbxRenderStateXB2PCCallback[X_D3DRS_BACKDIFFUSEMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // Never used; Xbox ext.
+//  DxbxRenderStateXB2PCCallback[X_D3DRS_SPECULARMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // No conversion needed; Xbox = PC
+//  DxbxRenderStateXB2PCCallback[X_D3DRS_BACKSPECULARMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // Never used; Xbox ext.
+//  DxbxRenderStateXB2PCCallback[X_D3DRS_AMBIENTMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // No conversion needed; Xbox = PC
+//  DxbxRenderStateXB2PCCallback[X_D3DRS_BACKAMBIENTMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // Never used; Xbox ext.
+//  DxbxRenderStateXB2PCCallback[X_D3DRS_EMISSIVEMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // No conversion needed; Xbox = PC
+//  DxbxRenderStateXB2PCCallback[X_D3DRS_BACKEMISSIVEMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // Never used; Xbox ext.
+  DxbxRenderStateXB2PCCallback[X_D3DRS_VERTEXBLEND] := @EmuXB2PC_D3DVERTEXBLENDFLAGS;
+//  DxbxRenderStateXB2PCCallback[X_D3DRS_SWAPFILTER] := @EmuXB2PC_D3DMULTISAMPLE_TYPE; // Never used; Xbox ext.
+  DxbxRenderStateXB2PCCallback[X_D3DRS_COLORWRITEENABLE] := @EmuXB2PC_D3DCOLORWRITEENABLE; // No conversion needed; Xbox = PC
+  DxbxRenderStateXB2PCCallback[X_D3DRS_BLENDOP] := @EmuXB2PC_D3DBLENDOP;
+//  DxbxRenderStateXB2PCCallback[X_D3DRS_SWATHWIDTH] := @EmuXB2PC_D3DSWATH; // Never used; Xbox ext.
+//  DxbxRenderStateXB2PCCallback[X_D3DRS_SHADOWFUNC] := @EmuXB2PC_D3DCMPFUNC; // Never used; Xbox ext.
+
 end;
 
 var
@@ -428,120 +475,47 @@ begin
   end;
 end;
 
+function DxbxTransferRenderState(const aD3DRenderState: X_D3DRENDERSTATETYPE): HResult;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  PCRenderState: D3DRENDERSTATETYPE;
+  XboxValue: DWORD;
+  PCValue: DWORD;
+begin
+  // Check if the render state is mapped :
+  if XTL_EmuMappedD3DRenderState[aD3DRenderState] <> DummyRenderState then
+  begin
+    // Read the current Xbox value, and check if it's assigned :
+    XboxValue := XTL_EmuMappedD3DRenderState[aD3DRenderState]^;
+    if XboxValue <> X_D3DRS_UNK then
+    begin
+      // Map the Xbox state to a PC state, and check if it's supported :
+      PCRenderState := EmuXB2PC_D3DRS(aD3DRenderState); // TODO : Speed this up using a lookup table
+      if PCRenderState <> D3DRS_FORCE_DWORD then
+      begin
+        // Convert the value from Xbox format into PC format, and set it locally :
+        PCValue := DxbxRenderStateXB2PCCallback[aD3DRenderState](XboxValue);
+        Result := g_pD3DDevice.SetRenderState(PCRenderState, PCValue);
+        Exit;
+      end;
+    end;
+  end;
+
+  Result := 0; // TODO : What do we return on failure?
+end;
+
 procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
 // Branch:shogun  Revision:163  Translator:PatrickvL  Done:100
 var
-  dwConv: DWORD;
   v: int;
   pCur: PDWORDs;
   X_D3DTSS: DWORD;
   pTexture: XTL_PIDirect3DBaseTexture8;
   dwValue: DWORD;
 begin
-  // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
-  begin
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_FOGENABLE]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_FOGENABLE, XTL_EmuMappedD3DRenderState[X_D3DRS_FOGENABLE]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_FOGTABLEMODE]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_FOGTABLEMODE, XTL_EmuMappedD3DRenderState[X_D3DRS_FOGTABLEMODE]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_FOGSTART]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_FOGSTART, XTL_EmuMappedD3DRenderState[X_D3DRS_FOGSTART]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_FOGEND]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_FOGEND, XTL_EmuMappedD3DRenderState[X_D3DRS_FOGEND]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_FOGDENSITY]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_FOGDENSITY, XTL_EmuMappedD3DRenderState[X_D3DRS_FOGDENSITY]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_RANGEFOGENABLE]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_RANGEFOGENABLE, XTL_EmuMappedD3DRenderState[X_D3DRS_RANGEFOGENABLE]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP0]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_WRAP0, EmuXB2PC_D3DWRAP(XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP0]^));
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP1]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_WRAP1, EmuXB2PC_D3DWRAP(XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP1]^));
-
-    // Dxbx addition :
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP2]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_WRAP2, EmuXB2PC_D3DWRAP(XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP2]^));
-
-    // Dxbx addition :
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP3]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_WRAP3, EmuXB2PC_D3DWRAP(XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP3]^));
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_LIGHTING]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_LIGHTING, XTL_EmuMappedD3DRenderState[X_D3DRS_LIGHTING]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_SPECULARENABLE]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_SPECULARENABLE, XTL_EmuMappedD3DRenderState[X_D3DRS_SPECULARENABLE]^);
-
-    // Dxbx addition :
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_LOCALVIEWER]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_LOCALVIEWER, XTL_EmuMappedD3DRenderState[X_D3DRS_LOCALVIEWER]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_COLORVERTEX]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_COLORVERTEX, XTL_EmuMappedD3DRenderState[X_D3DRS_COLORVERTEX]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_DIFFUSEMATERIALSOURCE]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_DIFFUSEMATERIALSOURCE, XTL_EmuMappedD3DRenderState[X_D3DRS_DIFFUSEMATERIALSOURCE]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_AMBIENTMATERIALSOURCE]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, XTL_EmuMappedD3DRenderState[X_D3DRS_AMBIENTMATERIALSOURCE]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_EMISSIVEMATERIALSOURCE]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_EMISSIVEMATERIALSOURCE, XTL_EmuMappedD3DRenderState[X_D3DRS_EMISSIVEMATERIALSOURCE]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_AMBIENT]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_AMBIENT, XTL_EmuMappedD3DRenderState[X_D3DRS_AMBIENT]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_POINTSIZE, XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MIN]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_POINTSIZE_MIN, XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MIN]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSPRITEENABLE]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_POINTSPRITEENABLE, XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSPRITEENABLE]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALEENABLE]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_POINTSCALEENABLE, XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALEENABLE]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_A]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_POINTSCALE_A, XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_A]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_B]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_POINTSCALE_B, XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_B]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_C]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_POINTSCALE_C, XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_C]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MAX]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_POINTSIZE_MAX, XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MAX]^);
-
-    // Dxbx addition :
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHEDGESTYLE]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_PATCHEDGESTYLE, XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHEDGESTYLE]^);
-
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHSEGMENTS]^ <> X_D3DRS_UNK) then
-      g_pD3DDevice.SetRenderState(D3DRS_PATCHSEGMENTS, XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHSEGMENTS]^);
-
-    (* Cxbx has this disabled :
-    // To check for unhandled RenderStates
-    for(int v=0;v<117-82;v++)
-    begin
-      if (XTL_EmuMappedD3DRenderState[v]^ <> X_D3DRS_UNK) then
-      begin
-        if  (v <>  0) and (v <>  1) and (v <>  2) and (v <>  3) and (v <>  4) and (v <>  5) and (v <>  6) and (v <>  7)
-        and (v <> 10) and (v <> 11) and (v <> 13) and (v <> 19) and (v <> 20) and (v <> 21) and (v <> 23) and (v <> 24)
-        and (v <> 25) and (v <> 26) and (v <> 27) and (v <> 28) and (v <> 29) and (v <> 30) and (v <> 31) and (v <> 33) then
-          EmuWarning('Unhandled RenderState Change @ %d (%d)', [v, v + 82]^);
-      end;
-    end;
-    *)
-  end;
+  // Generic transfer of all Xbox deferred render states to PC :
+  for v := X_D3DRS_DEFERRED_FIRST to X_D3DRS_DEFERRED_LAST - 1 do
+    DxbxTransferRenderState(X_D3DRENDERSTATETYPE(v));
 
   // Certain D3DTS values need to be checked on each Draw[Indexed]^Vertices
   if (XTL_EmuD3DDeferredTextureState <> nil) then
