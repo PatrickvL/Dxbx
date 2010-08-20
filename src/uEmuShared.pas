@@ -197,12 +197,12 @@ begin
   m_XBController.Load(PAnsiChar('Software\Dxbx\XBController'));
   m_XBVideo.Load(PAnsiChar('Software\Dxbx\XBVideo'));
 
-(* TODO -oDxbx : Once we have a configuration interface for these flags,
+(* Now that we have a configuration interface for these flags,
    we can make them available to MayLog (and thus let them influence the
-   logging behaviour) like this :
+   logging behaviour) like this : *)
   uLog.pActiveLogFlags := @m_ActiveLogFlags;
   uLog.pDisabledLogFlags := @m_DisabledLogFlags;
-*)
+
 end;
 
 procedure EmuShared.Save;
