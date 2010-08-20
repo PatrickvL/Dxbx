@@ -1299,7 +1299,7 @@ begin
             g_EmuCDPD.NativePresentationParameters.BackBufferCount := 1;
           end;
 
-          g_EmuCDPD.NativePresentationParameters.MultiSampleType := D3DMULTISAMPLE_NONE;//EmuXB2PC_D3DMultiSampleFormat(g_EmuCDPD.pPresentationParameters.MultiSampleType);
+          g_EmuCDPD.NativePresentationParameters.MultiSampleType := D3DMULTISAMPLE_NONE;//EmuXB2PC_D3DMULTISAMPLE_TYPE(g_EmuCDPD.pPresentationParameters.MultiSampleType);
 
           if (g_XBVideo.GetVSync()) then
             g_EmuCDPD.NativePresentationParameters.SwapEffect := {$IFDEF DXBX_USE_D3D9}D3DSWAPEFFECT_COPY{$ELSE}D3DSWAPEFFECT_COPY_VSYNC{$ENDIF}
@@ -1502,6 +1502,10 @@ begin
         // initially, show a black screen
         g_pD3DDevice.Clear(0, nil, D3DCLEAR_TARGET or D3DCLEAR_ZBUFFER, $FF000000, 1.0, 0);
         DxbxPresent(nil, nil, 0, nil);
+
+        // Transfer the default render states (set above) over to PC side :
+        for v := X_D3DRS_FIRST to X_D3DRS_LAST do
+          DxbxTransferRenderState(X_D3DRENDERSTATETYPE(v));
 
         // signal completion
         g_EmuCDPD.bReady := false;
@@ -5905,7 +5909,7 @@ begin
 
     pDesc.Usage := SurfaceDesc.Usage;
     pDesc.Size := GetSurfaceSize(@SurfaceDesc);
-    pDesc.MultiSampleType := EmuPC2XB_D3DMultiSampleFormat(SurfaceDesc.MultiSampleType);
+    pDesc.MultiSampleType := EmuPC2XB_D3DMULTISAMPLE_TYPE(SurfaceDesc.MultiSampleType);
     pDesc.Width := SurfaceDesc.Width;
     pDesc.Height := SurfaceDesc.Height;
   end;
@@ -5984,7 +5988,7 @@ begin
 
       pDesc.Usage := SurfaceDesc.Usage;
       pDesc.Size := GetSurfaceSize(@SurfaceDesc);
-      pDesc.MultiSampleType := EmuPC2XB_D3DMultiSampleFormat(SurfaceDesc.MultiSampleType);
+      pDesc.MultiSampleType := EmuPC2XB_D3DMULTISAMPLE_TYPE(SurfaceDesc.MultiSampleType);
       pDesc.Width  := SurfaceDesc.Width;
       pDesc.Height := SurfaceDesc.Height;
     end;
@@ -7859,10 +7863,12 @@ end;
 
 function XTL_EmuD3DDevice_SetTransform
 (
-  State: D3DTRANSFORMSTATETYPE;
+  State: X_D3DTRANSFORMSTATETYPE;
   {CONST} pMatrix: PD3DMATRIX
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  PCState: D3DTRANSFORMSTATETYPE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7894,16 +7900,16 @@ begin
   end;
   *)
 
-  State := EmuXB2PC_D3DTS(State);
+  PCState := EmuXB2PC_D3DTS(State);
 
-  Result := g_pD3DDevice.SetTransform(State, pMatrix{$IFDEF DXBX_USE_D3D9}^{$ENDIF});
+  Result := g_pD3DDevice.SetTransform(PCState, pMatrix{$IFDEF DXBX_USE_D3D9}^{$ENDIF});
 
   EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuD3DDevice_GetTransform
 (
-  State: D3DTRANSFORMSTATETYPE;
+  State: X_D3DTRANSFORMSTATETYPE;
   pMatrix: PD3DMATRIX
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -8382,6 +8388,8 @@ begin
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
+if Ord(PrimitiveType) = 6 then
+  VPDesc.PrimitiveType := PrimitiveType else
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
   VPDesc.dwOffset := 0;
@@ -9466,7 +9474,7 @@ begin
     Windowed := BOOL_FALSE;
 
   // Convert MultiSampleType from Xbox to PC :
-  PCMultiSampleType := EmuXB2PC_D3DMultiSampleFormat(MultiSampleType);
+  PCMultiSampleType := EmuXB2PC_D3DMULTISAMPLE_TYPE(MultiSampleType);
 
   // Now call the real CheckDeviceMultiSampleType with the corrected parameters.
   Result := g_pD3D.CheckDeviceMultiSampleType
