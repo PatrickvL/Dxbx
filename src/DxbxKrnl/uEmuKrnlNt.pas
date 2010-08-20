@@ -515,7 +515,7 @@ begin
       // (This file probably needs to be pre-initialized somehow too).
     end;
 
-    if MayLog(lfUnit or lfFile) then
+    if MayLog(lfUnit or lfReturnValue or lfFile) then
     begin
       DbgPrintf('EmuKrnl : %s Corrected path...', [aFileAPIName]);
       DbgPrintf('  Org:"%s"', [OriginalPath]);
@@ -694,7 +694,7 @@ begin
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtCreateDirectoryObject failed! (%s)', [NTStatusToString(Result)])
   else
-    if MayLog(lfUnit or lfFile) then
+    if MayLog(lfUnit or lfReturnValue or lfFile) then
       DbgPrintf('EmuKrnl : NtCreateDirectoryObject DirectoryHandle^ = 0x%.08X', [DirectoryHandle^]);
 
   EmuSwapFS(fsXbox);
@@ -744,7 +744,7 @@ begin
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtCreateEvent failed! (%s)', [NTStatusToString(Result)])
   else
-    if MayLog(lfUnit) then
+    if MayLog(lfUnit or lfReturnValue) then
       DbgPrintf('EmuKrnl : NtCreateEvent EventHandle^ = 0x%.08X', [EventHandle^]);
 
   EmuSwapFS(fsXbox);
@@ -812,7 +812,7 @@ begin
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtCreateFile failed! (%s)', [NTStatusToString(Result)])
   else
-    if MayLog(lfUnit or lfFile) then
+    if MayLog(lfUnit or lfReturnValue or lfFile) then
       DbgPrintf('EmuKrnl : NtCreateFile FileHandle^ = 0x%.08X', [FileHandle^]);
 
   EmuSwapFS(fsXbox);
@@ -859,7 +859,7 @@ begin
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtCreateIoCompletion failed! (%s)', [NTStatusToString(Result)])
   else
-    if MayLog(lfUnit) then
+    if MayLog(lfUnit or lfReturnValue) then
       DbgPrintf('EmuKrnl : NtCreateIoCompletion FileHandle^ = 0x%.08X', [FileHandle^]);
 
   EmuSwapFS(fsXbox);
@@ -902,7 +902,7 @@ begin
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtCreateMutant failed! (%s)', [NTStatusToString(Result)])
   else
-    if MayLog(lfUnit) then
+    if MayLog(lfUnit or lfReturnValue) then
       DbgPrintf('EmuKrnl : NtCreateMutant MutantHandle^ = 0x%.08X', [MutantHandle^]);
 
   EmuSwapFS(fsXbox);
@@ -956,7 +956,7 @@ begin
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtCreateSemaphore failed! (%s)', [NTStatusToString(Result)])
   else
-    if MayLog(lfUnit) then
+    if MayLog(lfUnit or lfReturnValue) then
       DbgPrintf('EmuKrnl : NtCreateSemaphore SemaphoreHandle^ = 0x%.08X', [SemaphoreHandle^]);
 
   EmuSwapFS(fsXbox);
@@ -996,7 +996,7 @@ begin
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtCreateTimer failed! (%s)', [NTStatusToString(Result)])
   else
-    if MayLog(lfUnit) then
+    if MayLog(lfUnit or lfReturnValue) then
       DbgPrintf('EmuKrnl : NtCreateTimer TimerHandle^ = 0x%.08X', [TimerHandle^]);
 
   EmuSwapFS(fsXbox);
@@ -1271,7 +1271,7 @@ begin
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtOpenDirectoryObject failed! (%s)', [NTStatusToString(Result)])
   else
-    if MayLog(lfUnit or lfFile) then
+    if MayLog(lfUnit or lfReturnValue or lfFile) then
       DbgPrintf('EmuKrnl : NtOpenDirectoryObject DirectoryHandle^ = 0x%.08X', [DirectoryHandle^]);
 
   EmuSwapFS(fsXbox);
@@ -1324,7 +1324,7 @@ begin
     if (Result <> STATUS_SUCCESS) then
       EmuWarning('NtOpenFile failed! (%s)', [NTStatusToString(Result)])
     else
-      if MayLog(lfUnit) then
+      if MayLog(lfUnit or lfReturnValue) then
         DbgPrintf('EmuKrnl : NtOpenFile FileHandle^ = 0x%.08X', [FileHandle^]);
   end;
 
@@ -1363,7 +1363,7 @@ begin
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtOpenSymbolicLinkObject failed! (%s)', [NTStatusToString(Result)])
   else
-    if MayLog(lfUnit) then
+    if MayLog(lfUnit or lfReturnValue) then
       DbgPrintf('EmuKrnl : NtOpenSymbolicLinkObject LinkHandle^ = 0x%.08X', [LinkHandle^]);
 
   EmuSwapFS(fsXbox);
