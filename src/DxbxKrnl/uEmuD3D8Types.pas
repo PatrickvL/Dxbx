@@ -297,7 +297,18 @@ type X_D3DMULTISAMPLE_TYPE = DWORD;
 type X_D3DSWAPEFFECT = D3DSWAPEFFECT; // Same as on Windows Direct3D
 type X_D3DFORMAT = DWORD;
 type X_D3DPOOL = D3DPOOL; // alias
-type X_D3DBLENDOP = DWORD;
+
+type X_D3DSHADEMODE = (
+  X_D3DSHADE_FLAT               = $1d00,
+  X_D3DSHADE_GOURAUD            = $1d01,
+  X_D3DSHADE_FORCE_DWORD        = $7fffffff
+);
+type X_D3DFILLMODE = (
+  X_D3DFILL_POINT              = $1b00,
+  X_D3DFILL_WIREFRAME          = $1b01,
+  X_D3DFILL_SOLID              = $1b02,
+  X_D3DFILL_FORCE_DWORD        = $7fffffff
+);
 type X_D3DBLEND = (
   X_D3DBLEND_ZERO               = 0,
   X_D3DBLEND_ONE                = 1,
@@ -316,9 +327,42 @@ type X_D3DBLEND = (
   X_D3DBLEND_INVCONSTANTALPHA   = $8004,
   X_D3DBLEND_FORCE_DWORD        = $7fffffff
 );
-type X_D3DCMPFUNC = DWORD;
-type X_D3DFILLMODE = DWORD;
-type X_D3DSHADEMODE = DWORD;
+type X_D3DBLENDOP = (
+  X_D3DBLENDOP_ADD              = $8006,
+  X_D3DBLENDOP_SUBTRACT         = $800a,
+  X_D3DBLENDOP_REVSUBTRACT      = $800b,
+  X_D3DBLENDOP_MIN              = $8007,
+  X_D3DBLENDOP_MAX              = $8008,
+  X_D3DBLENDOP_ADDSIGNED        = $f006,       // Xbox ext.
+  X_D3DBLENDOP_REVSUBTRACTSIGNED= $f005,       // Xbox ext.
+  X_D3DBLENDOP_FORCE_DWORD      = $7fffffff
+);
+
+type X_D3DCULL = (
+  X_D3DCULL_NONE                = 0,    // No culling
+  X_D3DCULL_CW                  = $900, // Clockwise culling
+  X_D3DCULL_CCW                 = $901, // Cull counter clockwise triangles
+  X_D3DCULL_FORCE_DWORD         = $7fffffff
+);
+
+type X_D3DFRONT = ( // Xbox ext.
+  X_D3DFRONT_CW                 = $900,
+  X_D3DFRONT_CCW                = $901,
+  X_D3DFRONT_FORCE_DWORD        = $7fffffff
+);
+
+type X_D3DCMPFUNC = (
+  X_D3DCMP_NEVER                = $200,
+  X_D3DCMP_LESS                 = $201,
+  X_D3DCMP_EQUAL                = $202,
+  X_D3DCMP_LESSEQUAL            = $203,
+  X_D3DCMP_GREATER              = $204,
+  X_D3DCMP_NOTEQUAL             = $205,
+  X_D3DCMP_GREATEREQUAL         = $206,
+  X_D3DCMP_ALWAYS               = $207,
+  X_D3DCMP_FORCE_DWORD          = $7fffffff
+);
+
 type X_D3DSTENCILOP = (
   X_D3DSTENCILOP_ZERO           = 0,
   X_D3DSTENCILOP_KEEP           = $1e00,
@@ -330,23 +374,74 @@ type X_D3DSTENCILOP = (
   X_D3DSTENCILOP_DECR           = $8508,
   X_D3DSTENCILOP_FORCE_DWORD    = $7fffffff
 );
+
+type X_D3DSWATHWIDTH = ( // Xbox ext
+  X_D3DSWATH_8                  = 0,
+  X_D3DSWATH_16                 = 1,
+  X_D3DSWATH_32                 = 2,
+  X_D3DSWATH_64                 = 3,
+  X_D3DSWATH_128                = 4,
+  X_D3DSWATH_OFF                = $f,
+  X_D3DSWATH_FORCE_DWORD        = $7fffffff
+);
+
+type X_D3DFOGMODE = (
+  X_D3DFOG_NONE                 = 0,
+  X_D3DFOG_EXP                  = 1,
+  X_D3DFOG_EXP2                 = 2,
+  X_D3DFOG_LINEAR               = 3,
+  X_D3DFOG_FORCE_DWORD          = $7fffffff
+);
+
+type X_D3DLOGICOP = ( // Xbox ext.
+  X_D3DLOGICOP_NONE             = 0,
+  X_D3DLOGICOP_CLEAR            = $1500,
+  X_D3DLOGICOP_AND              = $1501,
+  X_D3DLOGICOP_AND_REVERSE      = $1502,
+  X_D3DLOGICOP_COPY             = $1503,
+  X_D3DLOGICOP_AND_INVERTED     = $1504,
+  X_D3DLOGICOP_NOOP             = $1505,
+  X_D3DLOGICOP_XOR              = $1506,
+  X_D3DLOGICOP_OR               = $1507,
+  X_D3DLOGICOP_NOR              = $1508,
+  X_D3DLOGICOP_EQUIV            = $1509,
+  X_D3DLOGICOP_INVERT           = $150a,
+  X_D3DLOGICOP_OR_REVERSE       = $150b,
+  X_D3DLOGICOP_COPY_INVERTED    = $150c,
+  X_D3DLOGICOP_OR_INVERTED      = $150d,
+  X_D3DLOGICOP_NAND             = $150e,
+  X_D3DLOGICOP_SET              = $150f,
+  X_D3DLOGICOP_FORCE_DWORD      = $7fffffff
+);
+
 type X_D3DTEXTURESTAGESTATETYPE = DWORD;
 type X_D3DTEXTUREOP = DWORD;
 type X_D3DRENDERSTATETYPE = DWORD;
 type X_D3DCOLORWRITEENABLE = DWORD;
 type X_D3DCALLBACK = PVOID;
 
-const
-  X_D3DVSD_DATATYPESHIFT = 16;
+// Values for material source
+type X_D3DMATERIALCOLORSOURCE = (
+  X_D3DMCS_MATERIAL         = 0,            // Color from material is used
+  X_D3DMCS_COLOR1           = 1,            // Diffuse vertex color is used
+  X_D3DMCS_COLOR2           = 2,            // Specular vertex color is used
+  X_D3DMCS_FORCE_DWORD      = $7fffffff
+);
+
+// Values for D3DRS_DEPTHCLIPCONTROL renderstate (Xbox ext.)
+const X_D3DDCC_CULLPRIMITIVE = $001;
+const X_D3DDCC_CLAMP         = $010;
+const X_D3DDCC_IGNORE_W_SIGN = $100;
+
+type X_D3DMULTISAMPLEMODE = (
+  X_D3DMULTISAMPLEMODE_1X          = 0,
+  X_D3DMULTISAMPLEMODE_2X          = 1,
+  X_D3DMULTISAMPLEMODE_4X          = 2,
+  X_D3DMULTISAMPLEMODE_FORCE_DWORD = $7fffffff
+);
 
 const
-  X_D3DBLENDOP_ADD              = $8006;
-  X_D3DBLENDOP_SUBTRACT         = $800a;
-  X_D3DBLENDOP_REVSUBTRACT      = $800b;
-  X_D3DBLENDOP_MIN              = $8007;
-  X_D3DBLENDOP_MAX              = $8008;
-  X_D3DBLENDOP_ADDSIGNED        = $f006;       // Xbox extension
-  X_D3DBLENDOP_REVSUBTRACTSIGNED= $f005;       // Xbox extension
+  X_D3DVSD_DATATYPESHIFT = 16;
 
 // Primitives supported by draw-primitive API
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -1257,12 +1352,6 @@ const
   X_D3DCLEAR_TARGET  = $000000f0;
 
   X_D3DCLEAR_ALL_SUPPORTED = X_D3DCLEAR_ZBUFFER or X_D3DCLEAR_STENCIL or X_D3DCLEAR_TARGET;
-
-const
-  // D3DRS_CULLMODE value
-  X_D3DCULL_NONE = 0; // No culling
-  X_D3DCULL_CW   = $900; // Clockwise culling
-  X_D3DCULL_CCW  = $901; // Cull counter clockwise triangles
 
 const // vertex input registers for fixed function vertex shader
   X_D3DVSDE_POSITION     = 0;

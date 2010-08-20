@@ -1473,12 +1473,12 @@ begin
         else
           DxbxFix_HasZBuffer := False;
 
-        // Initialize the Xbox RenderState structure with default values :
-        DxbxInitializeDefaultRenderStates();
-
 //        // Dxbx addition : Put the DepthStencilSurface in the PresentParameters structure too :
 //        if Assigned(g_pCachedZStencilSurface.Emu.Surface) then
 //          PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).DepthStencilSurface := g_pCachedZStencilSurface;
+
+        // Initialize the Xbox RenderState structure with default values :
+        DxbxInitializeDefaultRenderStates(g_EmuCDPD.pPresentationParameters);
 
         g_pD3DDevice.CreateVertexBuffer
         (
@@ -7151,7 +7151,7 @@ end;
 
 procedure XTL_EmuD3DDevice_SetRenderState_FillMode
 (
-  Value: DWORD
+  Value: X_D3DFILLMODE
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
@@ -7164,10 +7164,10 @@ begin
         #13#10'(' +
         #13#10'   Value                   : 0x%.08X' +
         #13#10');',
-      [Value]);
+      [Ord(Value)]);
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_FILLMODE]^ := Value;
+  XTL_EmuMappedD3DRenderState[X_D3DRS_FILLMODE]^ := DWORD(Value);
 
   case g_iWireframe of
     0: dwFillMode := EmuXB2PC_D3DFILLMODE(Value);
@@ -7296,14 +7296,14 @@ begin
 
     D3DRS_SHADEMODE:
       begin
-        Value := EmuXB2PC_D3DSHADEMODE(Value);
+        Value := EmuXB2PC_D3DSHADEMODE(X_D3DSHADEMODE(Value));
         if MayLog(lfUnit) then
           DbgPrintf('D3DRS_SHADEMODE := 0x%.08X', [Value]);
       end;
 
     D3DRS_BLENDOP:
       begin
-        Value := EmuXB2PC_D3DBLENDOP(Value);
+        Value := EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP(Value));
         if MayLog(lfUnit) then
           DbgPrintf('D3DRS_BLENDOP := 0x%.08X', [Value]);
       end;
@@ -7324,14 +7324,14 @@ begin
 
     D3DRS_ZFUNC:
       begin
-        Value := EmuXB2PC_D3DCMPFUNC(Value);
+        Value := EmuXB2PC_D3DCMPFUNC(X_D3DCMPFUNC(Value));
         if MayLog(lfUnit) then
           DbgPrintf('D3DRS_ZFUNC := 0x%.08X', [Value]);
       end;
 
     D3DRS_ALPHAFUNC:
       begin
-        Value := EmuXB2PC_D3DCMPFUNC(Value);
+        Value := EmuXB2PC_D3DCMPFUNC(X_D3DCMPFUNC(Value));
         if MayLog(lfUnit) then
           DbgPrintf('D3DRS_ALPHAFUNC := 0x%.08X', [Value]);
       end;
@@ -7382,7 +7382,7 @@ begin
 
     D3DRS_STENCILFUNC:
       begin
-        Value := EmuXB2PC_D3DCMPFUNC(Value);
+        Value := EmuXB2PC_D3DCMPFUNC(X_D3DCMPFUNC(Value));
         if MayLog(lfUnit) then
           DbgPrintf('D3DRS_STENCILFUNC := 0x%.08X', [Value]);
       end;
@@ -7467,9 +7467,11 @@ end;
 
 procedure XTL_EmuD3DDevice_SetRenderState_CullMode
 (
-  Value: DWORD
+  Value: X_D3DCULL
 ); stdcall;
 // Branch:shogun  Revision:162  Translator:Shadow_Tj  Done:100
+var
+  PCValue: D3DCULL;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7478,17 +7480,17 @@ begin
         #13#10'(' +
         #13#10'   Value                   : 0x%.08X' +
         #13#10');',
-      [Value]);
+      [Ord(Value)]);
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_CULLMODE]^ := Value;
+  XTL_EmuMappedD3DRenderState[X_D3DRS_CULLMODE]^ := DWORD(Value);
 
   // convert from Xbox D3D to PC D3D enumeration
-  Value := EmuXB2PC_D3DCULL(Value);
+  PCValue := EmuXB2PC_D3DCULL(Value);
 
-  DbgPrintf('D3DRS_CULLMODE := 0x%.08X', [Value]); // Dxbx addition
+  DbgPrintf('D3DRS_CULLMODE := 0x%.08X', [PCValue]); // Dxbx addition
 
-  g_pD3DDevice.SetRenderState(D3DRS_CULLMODE, Value);
+  g_pD3DDevice.SetRenderState(D3DRS_CULLMODE, PCValue);
 
   EmuSwapFS(fsXbox);
 end;
@@ -10952,7 +10954,7 @@ begin
     X_D3DRS_BACKFILLMODE:
       XTL_EmuD3DDevice_SetRenderState_BackFillMode(Value);
     X_D3DRS_CULLMODE:
-      XTL_EmuD3DDevice_SetRenderState_CullMode(Value);
+      XTL_EmuD3DDevice_SetRenderState_CullMode(X_D3DCULL(Value));
     X_D3DRS_DONOTCULLUNCOMPRESSED:
       XTL_EmuD3DDevice_SetRenderState_DoNotCullUncompressed(Value);
     X_D3DRS_DXT1NOISEENABLE:
@@ -10960,7 +10962,7 @@ begin
     X_D3DRS_EDGEANTIALIAS:
       XTL_EmuD3DDevice_SetRenderState_EdgeAntiAlias(Value);
     X_D3DRS_FILLMODE:
-      XTL_EmuD3DDevice_SetRenderState_FillMode(Value);
+      XTL_EmuD3DDevice_SetRenderState_FillMode(X_D3DFILLMODE(Value));
     X_D3DRS_FOGCOLOR:
       XTL_EmuD3DDevice_SetRenderState_FogColor(Value);
     X_D3DRS_FRONTFACE:

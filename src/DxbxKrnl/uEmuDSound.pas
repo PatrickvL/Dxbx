@@ -587,22 +587,28 @@ var
 begin
   for v := 0 to SOUNDBUFFER_CACHE_SIZE-1 do
   begin
-    if (g_pDSoundBufferCache[v] = nil) or (g_pDSoundBufferCache[v].EmuBuffer = nil) then
+    if (g_pDSoundBufferCache[v] = nil)
+    or (g_pDSoundBufferCache[v].EmuDirectSoundBuffer8 = nil) then
       continue;
 
     // unlock existing lock
     if (g_pDSoundBufferCache[v].EmuLockPtr1 <> nil) then
-        IDirectSoundBuffer(g_pDSoundBufferCache[v].EmuDirectSoundBuffer8).Unlock(g_pDSoundBufferCache[v].EmuLockPtr1, g_pDSoundBufferCache[v].EmuLockBytes1, g_pDSoundBufferCache[v].EmuLockPtr2, g_pDSoundBufferCache[v].EmuLockBytes2);
+        IDirectSoundBuffer(g_pDSoundBufferCache[v].EmuDirectSoundBuffer8).
+          Unlock(g_pDSoundBufferCache[v].EmuLockPtr1, g_pDSoundBufferCache[v].EmuLockBytes1, g_pDSoundBufferCache[v].EmuLockPtr2, g_pDSoundBufferCache[v].EmuLockBytes2);
 
-    hRet := IDirectSoundBuffer(g_pDSoundBufferCache[v].EmuDirectSoundBuffer8).Lock(0, g_pDSoundBufferCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
+    hRet := IDirectSoundBuffer(g_pDSoundBufferCache[v].EmuDirectSoundBuffer8).
+      Lock(0, g_pDSoundBufferCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
 
     if (SUCCEEDED(hRet)) then
     begin
-      if (pAudioPtr <> nil) then
-        memcpy(pAudioPtr, g_pDSoundBufferCache[v].EmuBuffer, dwAudioBytes);
+      if (g_pDSoundBufferCache[v].EmuBuffer <> nil) then // Dxbx addition
+      begin
+        if (pAudioPtr <> nil) then
+          memcpy(pAudioPtr, g_pDSoundBufferCache[v].EmuBuffer, dwAudioBytes);
 
-      if (pAudioPtr2 <> nil) then
-        memcpy(pAudioPtr2, PVOID(DWORD(g_pDSoundBufferCache[v].EmuBuffer)+dwAudioBytes), dwAudioBytes2);
+        if (pAudioPtr2 <> nil) then
+          memcpy(pAudioPtr2, PVOID(DWORD(g_pDSoundBufferCache[v].EmuBuffer)+dwAudioBytes), dwAudioBytes2);
+      end;
 
       IDirectSoundBuffer(g_pDSoundBufferCache[v].EmuDirectSoundBuffer8).Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
     end;
@@ -623,18 +629,25 @@ var
 begin
   for v := 0 to SOUNDSTREAM_CACHE_SIZE-1 do
   begin
-    if (g_pDSoundStreamCache[v] = nil) or (g_pDSoundStreamCache[v].EmuDirectSoundBuffer8 = nil) then
+    if (g_pDSoundStreamCache[v] = nil)
+    or (g_pDSoundStreamCache[v].EmuDirectSoundBuffer8 = nil) then
       continue;
 
-    hRet := IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).Lock(0, g_pDSoundStreamCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
+    // TODO : Unlock existing lock (on what?)
+
+    hRet := IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).
+      Lock(0, g_pDSoundStreamCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
 
     if (SUCCEEDED(hRet)) then
     begin
-      if (pAudioPtr <> nil) then
-        memcpy(pAudioPtr, g_pDSoundStreamCache[v].EmuBuffer, dwAudioBytes);
+      if (g_pDSoundStreamCache[v].EmuBuffer <> nil) then // Dxbx addition
+      begin
+        if (pAudioPtr <> nil) then
+          memcpy(pAudioPtr, g_pDSoundStreamCache[v].EmuBuffer, dwAudioBytes);
 
-      if (pAudioPtr2 <> nil) then
-        memcpy(pAudioPtr2, PVOID(DWORD(g_pDSoundStreamCache[v].EmuBuffer)+dwAudioBytes), dwAudioBytes2);
+        if (pAudioPtr2 <> nil) then
+          memcpy(pAudioPtr2, PVOID(DWORD(g_pDSoundStreamCache[v].EmuBuffer)+dwAudioBytes), dwAudioBytes2);
+      end;
 
       IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
     end;
