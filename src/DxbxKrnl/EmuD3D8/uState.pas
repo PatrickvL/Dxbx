@@ -40,7 +40,7 @@ uses
   uEmuD3D8Types,
   uEmuD3D8Utils;
 
-function DxbxRenderStateIntroducedAtVersion(const aRenderState: X_D3DRENDERSTATETYPE): Integer; {NOPATCH}
+function DxbxRenderStateIntroducedAtVersion(const aRenderState: X_D3DRENDERSTATETYPE): uint32; {NOPATCH}
 function DxbxRenderStateIsXboxExtension(const Value: X_D3DRENDERSTATETYPE): Boolean; {NOPATCH}
 
 function EmuXB2PC_D3DRS(Value: X_D3DRENDERSTATETYPE): D3DRENDERSTATETYPE;
@@ -79,7 +79,7 @@ var
   DxbxMapMostRecentToActiveVersion: array [X_D3DRS_FIRST..X_D3DRS_LAST] of X_D3DRENDERSTATETYPE;
 
 // Returns the XDK version since which a render state was introduced (using the 5911 declarations as a base).
-function DxbxRenderStateIntroducedAtVersion(const aRenderState: X_D3DRENDERSTATETYPE): Integer;
+function DxbxRenderStateIntroducedAtVersion(const aRenderState: X_D3DRENDERSTATETYPE): uint32;
 begin
   case aRenderState of
     X_D3DRS_DEPTHCLIPCONTROL..X_D3DRS_SIMPLE_UNUSED1:
@@ -251,7 +251,7 @@ begin
     begin
       // If it is available, register this offset in the various mapping tables we use :
       DxbxMapActiveVersionToMostRecent[State_VersionDependent] := State;
-      DxbxMapMostRecentToActiveVersion[State_VersionDependent] := State_VersionDependent;
+      DxbxMapMostRecentToActiveVersion[State] := State_VersionDependent;
       XTL_EmuMappedD3DRenderState[State] := @(aD3DRenderState[State_VersionDependent]);
       // Step to the next offset :
       Inc(State_VersionDependent);
@@ -260,8 +260,9 @@ begin
     begin
       // When unavailable, apply a dummy pointer, and *don't* increate the version dependent state,
       // so the mapping table will correspond to the actual (version dependent) layout :
+      // DxbxMapActiveVersionToMostRecent shouldn't be set here, as there's no element for this state!
+      DxbxMapMostRecentToActiveVersion[State] := X_D3DRS_UNSUPPORTED;
       XTL_EmuMappedD3DRenderState[State] := DummyRenderState;
-      DxbxMapMostRecentToActiveVersion[State_VersionDependent] := X_D3DRS_UNSUPPORTED; // Unsupported
     end;
   end;
 
