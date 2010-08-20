@@ -28,11 +28,12 @@ uses
   // DirectX
   , DirectDraw
   // Dxbx
+  , uLog
   , ufrm_About // GetJPEGResource
   , uTypes
   , uXBController
   , uXbVideo
-  , uEmuShared
+  , uEmuShared, ImgList
   ;
 
 // The Xbox controller image is borrowed from http://halo.wikia.com/wiki/Halo_Controls
@@ -44,6 +45,21 @@ uses
 // It's okay for keyboard control, but joystick and mouse control needs space for a wider description.
 
 type
+  lsStatus = (lsEnabled, lsIgnored, lsDisabled);
+
+  TLogStatus = class(TObject)
+  Private
+    FName: String;
+    FStatus: lsStatus;
+    FLogFlags: TLogFlags;
+  Public
+    constructor Create(aName: String; aStatus: lsStatus; aLogFlags: TLogFlags);
+
+    property Name: String read FName;
+    property Status: lsStatus read FStatus write FStatus;
+    property LogGlags: TLogFlags read FLogFlags;
+  end;
+
   TfmConfiguration = class(TForm)
     TreeView1: TTreeView;
     btnOk: TButton;
@@ -89,6 +105,9 @@ type
     chk_FullScreen: TCheckBox;
     chk_VSync: TCheckBox;
     chk_HardwareYUV: TCheckBox;
+    GroupBox2: TGroupBox;
+    lstLogging: TListView;
+    ImageList1: TImageList;
     procedure FormCreate(Sender: TObject);
     procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
     procedure btnOkClick(Sender: TObject);
@@ -96,12 +115,20 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure btnCancelClick(Sender: TObject);
     procedure ChangeClick(Sender: TObject);
+    procedure PageControl1Change(Sender: TObject);
+    procedure lstLoggingDrawItem(Sender: TCustomListView; Item: TListItem;
+      Rect: TRect; State: TOwnerDrawState);
+    procedure lstLoggingDblClick(Sender: TObject);
   private
     MyDirectDraw: IDirectDraw7;
     FXBVideo : XBVideo;
     FXBController: XBController;
     FHasChanges: Boolean;
     FBusyConfiguring: Boolean;
+    procedure RefreshItem(Item: TListItem);
+
+    procedure AddAllLogItems;
+    procedure AddLogItem(aName: String; aLogStatus: lsStatus; aLogFlags: TLogFlags);
     procedure Apply;
     procedure ConfigureControllerInput(Sender: TObject);
     procedure SetHasChanges(aValue: Boolean);
@@ -151,7 +178,6 @@ procedure TfmConfiguration.FormCreate(Sender: TObject);
   begin
     aPanel.Tag := Ord(aXBCtrlObject);
     aPanel.OnClick := ConfigureControllerInput;
-//    aPanel.Caption := FXBController.?[aXBCtrlObject]?.? CharString
   end;
 
 var
@@ -159,6 +185,7 @@ var
 
   tempDirectDraw: IDirectDraw;
   VideoResolutionIndex: Integer;
+
 begin
   // Read settings from shared memory :
   Assert(Assigned(g_EmuShared));
@@ -232,8 +259,51 @@ begin
   // Activate the first tab :
   TreeView1.Select(TreeView1.TopItem);
 
+  AddAllLogItems;
+
   // Reset changes flag
   HasChanges := False;
+end;
+
+procedure TfmConfiguration.lstLoggingDblClick(Sender: TObject);
+begin
+  if lstLogging.Selected.Selected then
+  begin
+    case TLogStatus(lstLogging.Selected.Data).Status of
+      lsEnabled : TLogStatus(lstLogging.Selected.Data).Status := lsIgnored;
+      lsIgnored : TLogStatus(lstLogging.Selected.Data).Status := lsDisabled;
+      lsDisabled : TLogStatus(lstLogging.Selected.Data).Status := lsEnabled;
+    end;
+    RefreshItem(lstLogging.Selected);
+  end;
+end;
+
+procedure TfmConfiguration.lstLoggingDrawItem(Sender: TCustomListView;
+  Item: TListItem; Rect: TRect; State: TOwnerDrawState);
+begin
+  Item.ImageIndex := -1;
+
+  Item.SubItemImages[0] := -1;
+  Item.SubItemImages[1] := -1;
+  Item.SubItemImages[2] := -1;
+
+  Item.SubItemImages[Ord(TLogStatus(Item.Data).Status)] := Ord(TLogStatus(Item.Data).Status);
+end;
+
+procedure TfmConfiguration.PageControl1Change(Sender: TObject);
+begin
+  TreeView1.Items[PageControl1.ActivePageIndex].Selected := True;
+end;
+
+procedure TfmConfiguration.RefreshItem(Item: TListItem);
+begin
+  Item.ImageIndex := -1;
+
+  Item.SubItemImages[0] := -1;
+  Item.SubItemImages[1] := -1;
+  Item.SubItemImages[2] := -1;
+
+  Item.SubItemImages[Ord(TLogStatus(Item.Data).Status)] := Ord(TLogStatus(Item.Data).Status);
 end;
 
 procedure TfmConfiguration.SetHasChanges(aValue: Boolean);
@@ -324,6 +394,49 @@ begin
   end;
 end;
 
+procedure TfmConfiguration.AddAllLogItems;
+begin
+  AddLogItem('Debug', lsEnabled, lfDebug);
+  AddLogItem('Trace', lsDisabled, lfTrace);
+  AddLogItem('Extreme', lsDisabled, lfExtreme);
+  AddLogItem('Cxbx', lsIgnored, lfCxbx);
+  AddLogItem('Dxbx', lsEnabled, lfDxbx);
+  AddLogItem('Kernel', lsEnabled, lfKernel);
+  AddLogItem('Patch', lsDisabled, lfPatch);
+  AddLogItem('SymbolScan', lsEnabled, lfSymbolScan);
+  AddLogItem('PixelShader', lsEnabled, lfPixelShader);
+  AddLogItem('VertexShader', lsEnabled, lfVertexShader);
+  AddLogItem('PushBuffer', lsEnabled, lfPushBuffer);
+  AddLogItem('Invalid', lsDisabled, lfInvalid);
+  AddLogItem('Heap', lsIgnored, lfHeap);
+  AddLogItem('File', lsIgnored, lfFile);
+  AddLogItem('Sound', lsEnabled, lfSound);
+  AddLogItem('Graphics', lsEnabled, lfGraphics);
+  AddLogItem('Threading', lsEnabled, lfThreading);
+  AddLogItem('Online', lsEnabled, lfXOnline);
+  AddLogItem('Xapi', lsEnabled, lfXapi);
+  AddLogItem('Memory', lsEnabled, lfMemory);
+end;
+
+procedure TfmConfiguration.AddLogItem(
+  aName: String;
+  aLogStatus: lsStatus;
+  aLogFlags: TLogFlags
+);
+var
+  ListItem: TListItem;
+begin
+  ListItem := lstLogging.Items.Add;
+  ListItem.Caption := aName;
+  ListItem.Data := TLogStatus.Create(aName, aLogStatus, aLogFlags);
+  ListItem.ImageIndex := -1;
+  ListItem.SubItems.Add('');
+  ListItem.SubItems.Add('');
+  ListItem.SubItems.Add('');
+
+  ListItem.SubItemImages[Ord(aLogStatus)] := Ord(aLogStatus);
+end;
+
 procedure TfmConfiguration.Apply;
 begin
   // Read the controls back into the XBVideo structure :
@@ -393,6 +506,16 @@ end;
 procedure TfmConfiguration.btnCancelClick(Sender: TObject);
 begin
   Close;
+end;
+
+{ TLogStatus }
+
+constructor TLogStatus.Create(aName: String; aStatus: lsStatus; aLogFlags: TLogFlags);
+begin
+  inherited Create;
+  FName := aName;
+  FStatus := aStatus;
+  FLogFlags := aLogFlags;
 end;
 
 end.
