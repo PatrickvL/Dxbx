@@ -432,11 +432,12 @@ object fmConfiguration: TfmConfiguration
               Width = 75
             end>
           LargeImages = ImageList1
+          ReadOnly = True
           RowSelect = True
           SmallImages = ImageList1
           TabOrder = 0
           ViewStyle = vsReport
-          OnDblClick = lstLoggingDblClick
+          OnClick = lstLoggingClick
           OnDrawItem = lstLoggingDrawItem
         end
       end

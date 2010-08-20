@@ -48,16 +48,16 @@ type
   lsStatus = (lsEnabled, lsIgnored, lsDisabled);
 
   TLogStatus = class(TObject)
-  Private
-    FName: String;
+  private
+    FName: string;
     FStatus: lsStatus;
-    FLogFlags: TLogFlags;
-  Public
-    constructor Create(aName: String; aStatus: lsStatus; aLogFlags: TLogFlags);
+    FLogFlag: TLogFlags;
+  public
+    constructor Create(aName: string; aStatus: lsStatus; aLogFlag: TLogFlags);
 
-    property Name: String read FName;
+    property Name: string read FName;
     property Status: lsStatus read FStatus write FStatus;
-    property LogGlags: TLogFlags read FLogFlags;
+    property LogFlag: TLogFlags read FLogFlag;
   end;
 
   TfmConfiguration = class(TForm)
@@ -118,7 +118,7 @@ type
     procedure PageControl1Change(Sender: TObject);
     procedure lstLoggingDrawItem(Sender: TCustomListView; Item: TListItem;
       Rect: TRect; State: TOwnerDrawState);
-    procedure lstLoggingDblClick(Sender: TObject);
+    procedure lstLoggingClick(Sender: TObject);
   private
     MyDirectDraw: IDirectDraw7;
     FXBVideo : XBVideo;
@@ -128,7 +128,7 @@ type
     procedure RefreshItem(Item: TListItem);
 
     procedure AddAllLogItems;
-    procedure AddLogItem(aName: String; aLogStatus: lsStatus; aLogFlags: TLogFlags);
+    procedure AddLogItem(aName: string; aLogStatus: lsStatus; aLogFlag: TLogFlags);
     procedure Apply;
     procedure ConfigureControllerInput(Sender: TObject);
     procedure SetHasChanges(aValue: Boolean);
@@ -265,18 +265,25 @@ begin
   HasChanges := False;
 end;
 
-procedure TfmConfiguration.lstLoggingDblClick(Sender: TObject);
+procedure TfmConfiguration.lstLoggingClick(Sender: TObject);
+var
+  SelectedLogStatus: TLogStatus;
 begin
-  if lstLogging.Selected.Selected then
-  begin
-    case TLogStatus(lstLogging.Selected.Data).Status of
-      lsEnabled : TLogStatus(lstLogging.Selected.Data).Status := lsIgnored;
-      lsIgnored : TLogStatus(lstLogging.Selected.Data).Status := lsDisabled;
-      lsDisabled : TLogStatus(lstLogging.Selected.Data).Status := lsEnabled;
-    end;
-    RefreshItem(lstLogging.Selected);
-    HasChanges := True;
+  if not Assigned(lstLogging.Selected) then
+    Exit;
+
+  SelectedLogStatus := TLogStatus(lstLogging.Selected.Data);
+  if SelectedLogStatus = nil then
+    Exit;
+
+  case SelectedLogStatus.Status of
+    lsEnabled: SelectedLogStatus.Status := lsIgnored;
+    lsIgnored: SelectedLogStatus.Status := lsDisabled;
+    lsDisabled: SelectedLogStatus.Status := lsEnabled;
   end;
+
+  RefreshItem(lstLogging.Selected);
+  HasChanges := True;
 end;
 
 procedure TfmConfiguration.lstLoggingDrawItem(Sender: TCustomListView;
@@ -397,56 +404,51 @@ end;
 
 procedure TfmConfiguration.AddAllLogItems;
 
-  function GetStatus(Flags: TLogFlags): lsStatus;
+  function _GetLogStatus(const Flag: TLogFlags): lsStatus;
   begin
-    Result := lsIgnored;
-    if (Flags and g_EmuShared.m_ActiveLogFlags) > 0 then
-    begin
-      Result := lsEnabled;
-      Exit;
-    end;
-
-    if (Flags and g_EmuShared.m_DisabledLogFlags) > 0 then
-    begin
+    if (Flag and g_EmuShared.m_ActiveLogFlags) > 0 then
+      Result := lsEnabled
+    else if (Flag and g_EmuShared.m_DisabledLogFlags) = 0 then
+      Result := lsIgnored
+    else
       Result := lsDisabled;
-      Exit;
-    end;
   end;
 
 begin
-  AddLogItem('Debug', GetStatus(lfDebug), lfDebug);
-  AddLogItem('Trace', GetStatus(lfTrace), lfTrace);
-  AddLogItem('Extreme', GetStatus(lfExtreme), lfExtreme);
-  AddLogItem('Cxbx', GetStatus(lfCxbx), lfCxbx);
-  AddLogItem('Dxbx', GetStatus(lfDxbx), lfDxbx);
-  AddLogItem('Kernel', GetStatus(lfKernel), lfKernel);
-  AddLogItem('Patch', GetStatus(lfPatch), lfPatch);
-  AddLogItem('SymbolScan', GetStatus(lfSymbolScan), lfSymbolScan);
-  AddLogItem('PixelShader', GetStatus(lfPixelShader), lfPixelShader);
-  AddLogItem('VertexShader', GetStatus(lfVertexShader), lfVertexShader);
-  AddLogItem('PushBuffer', GetStatus(lfPushBuffer), lfPushBuffer);
-  AddLogItem('Invalid', GetStatus(lfInvalid), lfInvalid);
-  AddLogItem('Heap', GetStatus(lfHeap), lfHeap);
-  AddLogItem('File', GetStatus(lfFile), lfFile);
-  AddLogItem('Sound', GetStatus(lfSound), lfSound);
-  AddLogItem('Graphics', GetStatus(lfGraphics), lfGraphics);
-  AddLogItem('Threading', GetStatus(lfThreading), lfThreading);
-  AddLogItem('Online', GetStatus(lfXOnline), lfXOnline);
-  AddLogItem('Xapi', GetStatus(lfXapi), lfXapi);
-  AddLogItem('Memory', GetStatus(lfMemory), lfMemory);
+  AddLogItem('Debug', _GetLogStatus(lfDebug), lfDebug);
+  AddLogItem('Trace', _GetLogStatus(lfTrace), lfTrace);
+  AddLogItem('Extreme', _GetLogStatus(lfExtreme), lfExtreme);
+  AddLogItem('Cxbx', _GetLogStatus(lfCxbx), lfCxbx);
+  AddLogItem('Dxbx', _GetLogStatus(lfDxbx), lfDxbx);
+  AddLogItem('Kernel', _GetLogStatus(lfKernel), lfKernel);
+  AddLogItem('Patch', _GetLogStatus(lfPatch), lfPatch);
+  AddLogItem('SymbolScan', _GetLogStatus(lfSymbolScan), lfSymbolScan);
+  AddLogItem('PixelShader', _GetLogStatus(lfPixelShader), lfPixelShader);
+  AddLogItem('VertexShader', _GetLogStatus(lfVertexShader), lfVertexShader);
+  AddLogItem('VertexBuffer', _GetLogStatus(lfVertexBuffer), lfVertexBuffer);
+  AddLogItem('PushBuffer', _GetLogStatus(lfPushBuffer), lfPushBuffer);
+  AddLogItem('Invalid', _GetLogStatus(lfInvalid), lfInvalid);
+  AddLogItem('Heap', _GetLogStatus(lfHeap), lfHeap);
+  AddLogItem('File', _GetLogStatus(lfFile), lfFile);
+  AddLogItem('Sound', _GetLogStatus(lfSound), lfSound);
+  AddLogItem('Graphics', _GetLogStatus(lfGraphics), lfGraphics);
+  AddLogItem('Threading', _GetLogStatus(lfThreading), lfThreading);
+  AddLogItem('Online', _GetLogStatus(lfXOnline), lfXOnline);
+  AddLogItem('Xapi', _GetLogStatus(lfXapi), lfXapi);
+  AddLogItem('Memory', _GetLogStatus(lfMemory), lfMemory);
 end;
 
 procedure TfmConfiguration.AddLogItem(
-  aName: String;
+  aName: string;
   aLogStatus: lsStatus;
-  aLogFlags: TLogFlags
+  aLogFlag: TLogFlags
 );
 var
   ListItem: TListItem;
 begin
   ListItem := lstLogging.Items.Add;
   ListItem.Caption := aName;
-  ListItem.Data := TLogStatus.Create(aName, aLogStatus, aLogFlags);
+  ListItem.Data := TLogStatus.Create(aName, aLogStatus, aLogFlag);
   ListItem.ImageIndex := -1;
   ListItem.SubItems.Add('');
   ListItem.SubItems.Add('');
@@ -458,6 +460,7 @@ end;
 procedure TfmConfiguration.Apply;
 var
   lIndex: Integer;
+  LogStatus: TLogStatus;
 begin
   // Read the controls back into the XBVideo structure :
   FXBVideo.SetDisplayAdapter(edt_DisplayAdapter.ItemIndex);
@@ -477,12 +480,15 @@ begin
   // Set Active and Disabled LogFlags
   g_EmuShared.m_ActiveLogFlags := 0;
   g_EmuShared.m_DisabledLogFlags := 0;
+
   for lIndex := 0 to lstLogging.Items.Count - 1 do
   begin
-    if TLogStatus(lstLogging.Items[lIndex].Data).FStatus = lsEnabled then
-      g_EmuShared.m_ActiveLogFlags := g_EmuShared.m_ActiveLogFlags or TLogStatus(lstLogging.Items[lIndex].Data).FLogFlags;
-    if TLogStatus(lstLogging.Items[lIndex].Data).FStatus = lsDisabled then
-      g_EmuShared.m_DisabledLogFlags := g_EmuShared.m_DisabledLogFlags or TLogStatus(lstLogging.Items[lIndex].Data).FLogFlags;
+    LogStatus := TLogStatus(lstLogging.Items[lIndex].Data);
+
+    if LogStatus.Status = lsEnabled then
+      g_EmuShared.m_ActiveLogFlags := g_EmuShared.m_ActiveLogFlags or LogStatus.LogFlag;
+    if LogStatus.Status = lsDisabled then
+      g_EmuShared.m_DisabledLogFlags := g_EmuShared.m_DisabledLogFlags or LogStatus.LogFlag;
   end;
 
   // Persist all settings to the registry :
@@ -541,12 +547,13 @@ end;
 
 { TLogStatus }
 
-constructor TLogStatus.Create(aName: String; aStatus: lsStatus; aLogFlags: TLogFlags);
+constructor TLogStatus.Create(aName: string; aStatus: lsStatus; aLogFlag: TLogFlags);
 begin
   inherited Create;
+
   FName := aName;
   FStatus := aStatus;
-  FLogFlags := aLogFlags;
+  FLogFlag := aLogFlag;
 end;
 
 end.

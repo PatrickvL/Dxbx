@@ -55,6 +55,8 @@ type EmuShared = object(Mutex)
     procedure Load;
     procedure Save;
 
+    procedure ActivateLogFlags;
+
     // Each process needs to call this to initialize shared memory
     class function Init(): Boolean;
 
@@ -161,6 +163,8 @@ begin
     g_EmuShared.Create; // call constructor
   end;
 
+  g_EmuShared.ActivateLogFlags;
+
   Inc(g_EmuSharedRefCount);
 end; // Init
 
@@ -196,13 +200,15 @@ procedure EmuShared.Load;
 begin
   m_XBController.Load(PAnsiChar('Software\Dxbx\XBController'));
   m_XBVideo.Load(PAnsiChar('Software\Dxbx\XBVideo'));
+end;
 
+procedure EmuShared.ActivateLogFlags;
+begin
 (* Now that we have a configuration interface for these flags,
    we can make them available to MayLog (and thus let them influence the
    logging behaviour) like this : *)
   uLog.pActiveLogFlags := @m_ActiveLogFlags;
   uLog.pDisabledLogFlags := @m_DisabledLogFlags;
-
 end;
 
 procedure EmuShared.Save;
