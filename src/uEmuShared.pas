@@ -200,6 +200,11 @@ procedure EmuShared.Load;
 begin
   m_XBController.Load(PAnsiChar('Software\Dxbx\XBController'));
   m_XBVideo.Load(PAnsiChar('Software\Dxbx\XBVideo'));
+
+  // 'load' the default logflags :
+  m_ActiveLogFlags := g_ActiveLogFlags;
+  m_DisabledLogFlags := g_DisabledLogFlags;
+  // TODO -oDxbx : Use a real persistence mechanism for the logflags (including presets)
 end;
 
 procedure EmuShared.ActivateLogFlags;
