@@ -4202,8 +4202,9 @@ begin
 
   Result := D3D_OK;
 
-  if (pIndexData <> NULL) then
-    DbgPrintf('EmuD3DDevice_SetIndices(): pIndexData->EmuIndexBuffer8:= 0x%.08X', [pIndexData.Emu.IndexBuffer]);
+  if MayLog(lfUnit) then
+    if (pIndexData <> NULL) then
+      DbgPrintf('EmuD3DDevice_SetIndices(): pIndexData->EmuIndexBuffer8:= 0x%.08X', [pIndexData.Emu.IndexBuffer]);
 
   g_dwBaseVertexIndex := BaseVertexIndex;
 
@@ -5013,7 +5014,9 @@ begin
   else
     Result := D3D_OK;
 
-  DbgPrintf('EmuD3D8 : EmuD3DDevice_Clear returns 0x%.08X', [Result]);
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuD3D8 : EmuD3DDevice_Clear returns 0x%.08X', [Result]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -7179,7 +7182,9 @@ begin
   else dwFillMode := D3DFILL_POINT;
   end;
 
-  DbgPrintf('D3DRS_FILLMODE := 0x%.08X', [dwFillMode]); // Dxbx addition
+  if MayLog(lfUnit) then
+    DbgPrintf('D3DRS_FILLMODE := 0x%.08X', [dwFillMode]); // Dxbx addition
+
   g_pD3DDevice.SetRenderState(D3DRS_FILLMODE, dwFillMode);
 
   EmuSwapFS(fsXbox);
@@ -7439,7 +7444,9 @@ begin
 
   Value := EmuXB2PC_D3DVERTEXBLENDFLAGS(X_D3DVERTEXBLENDFLAGS(Value));
 
-  DbgPrintf('D3DRS_VERTEXBLEND := 0x%.08X', [Value]); // Dxbx addition
+  if MayLog(lfUnit) then
+    DbgPrintf('D3DRS_VERTEXBLEND := 0x%.08X', [Value]); // Dxbx addition
+
   g_pD3DDevice.SetRenderState(D3DRS_VERTEXBLEND, Value);
 
   EmuSwapFS(fsXbox);
@@ -7492,7 +7499,8 @@ begin
   // convert from Xbox D3D to PC D3D enumeration
   PCValue := EmuXB2PC_D3DCULL(Value);
 
-  DbgPrintf('D3DRS_CULLMODE := 0x%.08X', [PCValue]); // Dxbx addition
+  if MayLog(lfUnit) then
+    DbgPrintf('D3DRS_CULLMODE := 0x%.08X', [PCValue]); // Dxbx addition
 
   g_pD3DDevice.SetRenderState(D3DRS_CULLMODE, PCValue);
 
@@ -7872,12 +7880,11 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('EmuD3D8 : EmuD3DDevice_SetTransform' +
-      #13#10'(' +
-      #13#10'   State                 : 0x%.08X' +
-      #13#10'   pMatrix               : 0x%.08X' +
-      #13#10');',
-    [Ord(State), pMatrix]);
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3D8 : EmuD3DDevice_SetTransform').
+      _(int(State), 'State').
+      _(pMatrix, 'pMatrix').
+    LogEnd();
 
   (* Commented by CXBX
   DbgPrintf('pMatrix (%d)', [Ord(State)]);
@@ -8727,15 +8734,18 @@ begin
  end;
 
   // TODO -oCXBX: Follow that stencil!
-  if Assigned(pRenderTarget) then pRenderTarget_EmuSurface := pRenderTarget.Emu.Surface else pRenderTarget_EmuSurface := nil;
-  if Assigned(pNewZStencil) then pNewZStencil_EmuSurface := pNewZStencil.Emu.Surface else pNewZStencil_EmuSurface := nil;
-  DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderTarget' +
+  if MayLog(lfUnit) then
+  begin
+    if Assigned(pRenderTarget) then pRenderTarget_EmuSurface := pRenderTarget.Emu.Surface else pRenderTarget_EmuSurface := nil;
+    if Assigned(pNewZStencil) then pNewZStencil_EmuSurface := pNewZStencil.Emu.Surface else pNewZStencil_EmuSurface := nil;
+    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderTarget' +
       #13#10'(' +
       #13#10'   pRenderTarget     : 0x%.08X (0x%.08X)' +
       #13#10'   pNewZStencil      : 0x%.08X (0x%.08X)' +
       #13#10');',
       [ pRenderTarget, pRenderTarget_EmuSurface,
         pNewZStencil,  pNewZStencil_EmuSurface]);
+  end;
 
 {$IFDEF DXBX_USE_D3D9}
   Result := g_pD3DDevice.SetRenderTarget({RenderTargetIndex=}0, IDirect3DSurface(pPCRenderTarget));
