@@ -436,6 +436,7 @@ begin
   AddLogItem('Online', _GetLogStatus(lfXOnline), lfXOnline);
   AddLogItem('Xapi', _GetLogStatus(lfXapi), lfXapi);
   AddLogItem('Memory', _GetLogStatus(lfMemory), lfMemory);
+  AddLogItem('ReturnValue', _GetLogStatus(lfReturnValue), lfReturnValue);
 end;
 
 procedure TfmConfiguration.AddLogItem(

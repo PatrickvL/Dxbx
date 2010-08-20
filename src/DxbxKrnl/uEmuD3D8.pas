@@ -2871,7 +2871,7 @@ begin
 
   ppRenderTarget^ := g_pCachedRenderTarget;
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : RenderTarget := 0x%.08X', [pSurface]);
 
   // TODO -oDXBX: Should we nil-out pSurface ?
@@ -2895,7 +2895,7 @@ begin
 
   IDirect3DSurface(pSurface)._AddRef();
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : RenderTarget := 0x%.08X', [pSurface]);
 
   EmuSwapFS(fsXbox);
@@ -2983,7 +2983,7 @@ begin
 
   ppZStencilSurface^ := g_pCachedZStencilSurface;
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : DepthStencilSurface := 0x%.08X', [pSurface]);
 
   EmuSwapFS(fsXbox);
@@ -3006,7 +3006,7 @@ begin
   if (pSurface <> nil) then
     IDirect3DSurface(pSurface)._AddRef();
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : DepthStencilSurface := 0x%.08X', [pSurface]);
 
   EmuSwapFS(fsXbox);
@@ -3939,7 +3939,7 @@ begin
       end;
     end;
 
-    if MayLog(lfUnit) then
+    if MayLog(lfUnit or lfReturnValue) then
       DbgPrintf('EmuD3D8 : Created Texture: 0x%.08X (0x%.08X)', [ppTexture^, ppTexture^.Emu.Texture]);
   end;
 
@@ -4023,7 +4023,7 @@ begin
     if (FAILED(hRet)) then
         EmuWarning('CreateVolumeTexture Failed! (0x%.08X)', [hRet]);
 
-    if MayLog(lfUnit) then
+    if MayLog(lfUnit or lfReturnValue) then
       DbgPrintf('EmuD3D8 : Created Volume Texture: 0x%.08X (0x%.08X)', [@ppVolumeTexture, ppVolumeTexture^.Emu.VolumeTexture]);
   end;
 
@@ -4089,7 +4089,7 @@ begin
       PCFormat, D3DPOOL_MANAGED, @(ppCubeTexture^.Emu.CubeTexture)
   );
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : Created Cube Texture: 0x%.08X (0x%.08X)', [ppCubeTexture^, ppCubeTexture^.Emu.CubeTexture]);
 
   if (FAILED(Result)) then
@@ -4128,7 +4128,7 @@ begin
       Length, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
       @(ppIndexBuffer^.Emu.IndexBuffer));
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : EmuIndexBuffer8 := 0x%.08X', [ppIndexBuffer^.Emu.IndexBuffer]);
 
   if (FAILED(hRet)) then
@@ -4202,7 +4202,7 @@ begin
 
   Result := D3D_OK;
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfReturnValue) then
     if (pIndexData <> NULL) then
       DbgPrintf('EmuD3DDevice_SetIndices(): pIndexData->EmuIndexBuffer8:= 0x%.08X', [pIndexData.Emu.IndexBuffer]);
 
@@ -5014,7 +5014,7 @@ begin
   else
     Result := D3D_OK;
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : EmuD3DDevice_Clear returns 0x%.08X', [Result]);
 
   EmuSwapFS(fsXbox);
@@ -5247,7 +5247,7 @@ begin
 
     X_D3DCOMMON_TYPE_INDEXBUFFER:
     begin
-      if MayLog(lfUnit) then
+      if MayLog(lfUnit or lfReturnValue) then
         DbgPrintf('EmuIDirect3DResource_Register :-> IndexBuffer...');
 
       pIndexBuffer := pX_D3DIndexBuffer(pResource);
@@ -5292,7 +5292,7 @@ begin
 
           pResource.Data := ULONG(pData);
 
-          if MayLog(lfUnit) then
+          if MayLog(lfUnit or lfReturnValue) then
             DbgPrintf('EmuIDirect3DResource_Register: Successfully Created IndexBuffer (0x%.08X)', [pResource.Emu.IndexBuffer]);
         end;
       end;
@@ -5321,7 +5321,7 @@ begin
           pResource.Data := ULONG(pBase);
       end;
 
-      if MayLog(lfUnit) then
+      if MayLog(lfUnit or lfReturnValue) then
         DbgPrintf('EmuIDirect3DResource_Register: Successfully Created PushBuffer (0x%.08X, 0x%.08X, 0x%.08X)', [pResource.Data, pPushBuffer.Size, pPushBuffer.AllocationSize]);
     end;
 
@@ -5388,7 +5388,7 @@ begin
           if (FAILED(hRet)) then
             DxbxKrnlCleanup('CreateImageSurface Failed!');
 
-          if MayLog(lfUnit) then
+          if MayLog(lfUnit or lfReturnValue) then
           begin
             DbgPrintf('EmuIDirect3DResource_Register: Successfully Created ImageSurface(0x%.08X, 0x%.08X)', [pResource, pResource.Emu.Surface]);
             DbgPrintf('EmuIDirect3DResource_Register: Width:%d, Height:%d, Format:%d', [dwWidth, dwHeight, Ord(PCFormat)]);
@@ -5440,7 +5440,7 @@ begin
             if (FAILED(hRet)) then
               DxbxKrnlCleanup('CreateCubeTexture Failed!');
 
-            if MayLog(lfUnit) then
+            if MayLog(lfUnit or lfReturnValue) then
               DbgPrintf('EmuIDirect3DResource_Register: Successfully Created CubeTexture(0x%.08X, 0x%.08X)', [pResource, pResource.Emu.CubeTexture]);
           end
           else
@@ -5457,7 +5457,7 @@ begin
             if (FAILED(hRet)) then
               DxbxKrnlCleanup('CreateTexture Failed!');
 
-            if MayLog(lfUnit) then
+            if MayLog(lfUnit or lfReturnValue) then
               DbgPrintf('EmuIDirect3DResource_Register: Successfully Created Texture (0x%.08X, 0x%.08X)', [pResource, pResource.Emu.Texture]);
           end;
         end;
@@ -6277,7 +6277,7 @@ begin
     end
     else
     begin
-      if MayLog(lfUnit) then
+      if MayLog(lfUnit or lfReturnValue) then
         DbgPrintf('EmuD3D8 : EmuIDirect3DTexture_GetSurfaceLevel := 0x%.08X', [ppSurfaceLevel^.Emu.Surface]);
     end;
   end;
@@ -7182,7 +7182,7 @@ begin
   else dwFillMode := D3DFILL_POINT;
   end;
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('D3DRS_FILLMODE := 0x%.08X', [dwFillMode]); // Dxbx addition
 
   g_pD3DDevice.SetRenderState(D3DRS_FILLMODE, dwFillMode);
@@ -7299,118 +7299,118 @@ begin
     D3DRS_COLORWRITEENABLE:
       begin
         Value := EmuXB2PC_D3DCOLORWRITEENABLE(Value);
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_COLORWRITEENABLE := 0x%.08X', [Value]);
       end;
 
     D3DRS_SHADEMODE:
       begin
         Value := EmuXB2PC_D3DSHADEMODE(X_D3DSHADEMODE(Value));
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_SHADEMODE := 0x%.08X', [Value]);
       end;
 
     D3DRS_BLENDOP:
       begin
         Value := EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP(Value));
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_BLENDOP := 0x%.08X', [Value]);
       end;
 
     D3DRS_SRCBLEND:
       begin
         Value := EmuXB2PC_D3DBLEND(X_D3DBLEND(Value));
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_SRCBLEND := 0x%.08X', [Value]);
       end;
 
     D3DRS_DESTBLEND:
       begin
         Value := EmuXB2PC_D3DBLEND(X_D3DBLEND(Value));
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_DESTBLEND := 0x%.08X', [Value]);
       end;
 
     D3DRS_ZFUNC:
       begin
         Value := EmuXB2PC_D3DCMPFUNC(X_D3DCMPFUNC(Value));
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_ZFUNC := 0x%.08X', [Value]);
       end;
 
     D3DRS_ALPHAFUNC:
       begin
         Value := EmuXB2PC_D3DCMPFUNC(X_D3DCMPFUNC(Value));
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_ALPHAFUNC := 0x%.08X', [Value]);
       end;
 
     D3DRS_ALPHATESTENABLE:
       begin
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_ALPHATESTENABLE := 0x%.08X', [Value]);
       end;
 
     D3DRS_ALPHABLENDENABLE:
       begin
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_ALPHABLENDENABLE := 0x%.08X', [Value]);
       end;
 
     D3DRS_ALPHAREF:
       begin
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_ALPHAREF := %d', [Value]);
       end;
 
     D3DRS_ZWRITEENABLE:
       begin
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_ZWRITEENABLE := 0x%.08X', [Value]);
       end;
 
     D3DRS_DITHERENABLE:
       begin
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_DITHERENABLE := 0x%.08X', [Value]);
       end;
 
     D3DRS_STENCILZFAIL:
       begin
         Value := EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP(Value));
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_STENCILZFAIL := 0x%.08X', [Value]);
       end;
 
     D3DRS_STENCILPASS:
       begin
         Value := EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP(Value));
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_STENCILPASS := 0x%.08X', [Value]);
       end;
 
     D3DRS_STENCILFUNC:
       begin
         Value := EmuXB2PC_D3DCMPFUNC(X_D3DCMPFUNC(Value));
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_STENCILFUNC := 0x%.08X', [Value]);
       end;
 
     D3DRS_STENCILREF:
       begin
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_STENCILREF := 0x%.08X', [Value]);
       end;
 
     D3DRS_STENCILMASK:
       begin
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_STENCILMASK := 0x%.08X', [Value]);
       end;
 
     D3DRS_STENCILWRITEMASK:
       begin
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfReturnValue) then
           DbgPrintf('D3DRS_STENCILWRITEMASK := 0x%.08X', [Value]);
       end;
 
@@ -7444,7 +7444,7 @@ begin
 
   Value := EmuXB2PC_D3DVERTEXBLENDFLAGS(X_D3DVERTEXBLENDFLAGS(Value));
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('D3DRS_VERTEXBLEND := 0x%.08X', [Value]); // Dxbx addition
 
   g_pD3DDevice.SetRenderState(D3DRS_VERTEXBLEND, Value);
@@ -7499,7 +7499,7 @@ begin
   // convert from Xbox D3D to PC D3D enumeration
   PCValue := EmuXB2PC_D3DCULL(Value);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('D3DRS_CULLMODE := 0x%.08X', [PCValue]); // Dxbx addition
 
   g_pD3DDevice.SetRenderState(D3DRS_CULLMODE, PCValue);
@@ -8004,7 +8004,7 @@ begin
 
   {Dxbx unused hRet :=} IDirect3DVertexBuffer(pVertexBuffer).Lock(0, 0, {out}TLockData(pbData), EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfReturnValue) then
   begin
     (*DbgPrintf('VertexBuffer 0x%08X was locked (2): hRet = 0x%08x', [
           pVertexBuffer,
@@ -8033,7 +8033,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-  DbgPrintf('EmuD3D8 : EmuD3DDevice_GetStreamSource2' +
+    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetStreamSource2' +
       #13#10'(' +
       #13#10'   StreamNumber            : 0x%.08X' +
       #13#10'   pStride                 : 0x%.08X' +
@@ -9391,7 +9391,7 @@ begin
     Result := PVOID(dwRet);
   end;
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : EmuIDirect3D_AllocContiguousMemory returned 0x%.08X', [Result]);
 
   EmuSwapFS(fsXbox);

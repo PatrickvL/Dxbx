@@ -91,7 +91,8 @@ const
     lfThreading     = $00040000; //
     lfXOnline       = $00080000;
     lfXapi          = $00100000;
-    lfMemory        = $00200000;
+    lfMemory        = $00200000; // ... for the Mm api's
+    lfReturnValue   = $00400000;
 
 // Note : Some units declare (and use) lfUnit, a variable that best describes the logging in these units.
 
