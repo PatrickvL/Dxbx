@@ -41,7 +41,7 @@ uses
   uStoredTrieTypes,
   uXboxLibraryUtils,
   uEmuD3D8Types,// X_D3DRS_UNK
-  uState, // XTL_EmuD3DDeferredRenderState and XTL_EmuD3DDeferredTextureState
+  uState, // XTL_EmuD3DDeferredTextureState
   uEmu, // EmuWarning
   uEmuXapi, // XTL_EmuXapiProcessHeap
   uEmuExe; // ReinitXbeImageHeader, ReinitExeImageHeader
@@ -1500,54 +1500,13 @@ begin
       EmuWarning('EmuD3DDeferredTextureState was not found!');
   end;
 
-  // locate D3DDeferredRenderState
+  // Locate the RenderState structure, and map all it's variables XSK version-independently :
   begin
-    XTL_EmuD3DRenderState := nil;
-    XTL_EmuD3DDeferredRenderState := nil;
-
     // Just search for _D3D__RenderState itself !
     Symbol := FindSymbol('_D3D__RenderState');
     if Assigned(Symbol) then
-      XTL_EmuD3DRenderState := Symbol.Address;
-
-    if Assigned(XTL_EmuD3DRenderState) then
-    begin
-      // Calculate the location of D3DDeferredRenderState via an XDK-dependent offset to _D3D__RenderState :
-      // Dxbx note : XTL_EmuD3DDeferredRenderState:PDWORDs cast to UIntPtr to avoid incrementing with that many array-sizes!
-      if g_BuildVersion <= 3925 then
-      begin
-        XTL_EmuD3DDeferredRenderState_Start := X_D3DRS_DEFERRED_START_3925;
-        XTL_EmuD3DDeferredRenderState_Size := X_D3DRS_DEFERRED_SIZE_3925;
-      end
-      else if g_BuildVersion <= 4361 then
-      begin
-        XTL_EmuD3DDeferredRenderState_Start := X_D3DRS_DEFERRED_START_4361;
-        XTL_EmuD3DDeferredRenderState_Size := X_D3DRS_DEFERRED_SIZE_4361;
-      end
-      else if g_BuildVersion <= 4432 then
-      begin
-        XTL_EmuD3DDeferredRenderState_Start := X_D3DRS_DEFERRED_START_4432;
-        XTL_EmuD3DDeferredRenderState_Size := X_D3DRS_DEFERRED_SIZE_4432;
-      end
-      else
-      begin
-        Assert(g_BuildVersion <= 5933);
-
-        XTL_EmuD3DDeferredRenderState_Start := X_D3DRS_DEFERRED_START_5933;
-        XTL_EmuD3DDeferredRenderState_Size := X_D3DRS_DEFERRED_SIZE_5933;
-      end;
-
-      XTL_EmuD3DDeferredRenderState := XTL_EmuD3DRenderState;
-      Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), XTL_EmuD3DDeferredRenderState_Start * 4);
-
-      XTL_EmuD3DRenderState_ComplexCorrection := (XTL_EmuD3DDeferredRenderState_Start + XTL_EmuD3DDeferredRenderState_Size) - X_D3DRS_PSTEXTUREMODES;
-//      XTL_EmuD3DComplexRenderState := XTL_EmuD3DDeferredRenderState;
-//      Inc(UIntPtr(XTL_EmuD3DComplexRenderState), XTL_EmuD3DDeferredRenderState_Size * 4);
-
-{$IFDEF DEBUG}
-      DbgPrintf('HLE: $%.08X -> EmuD3DDeferredRenderState', [XTL_EmuD3DDeferredRenderState]);
-{$ENDIF}
-    end
+      // Build up a mapping table based on this :
+      DxbxBuildRenderStateMappingTable(Symbol.Address)
     else
       EmuWarning('EmuD3DDeferredRenderState was not found!');
   end;
