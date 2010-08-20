@@ -275,6 +275,7 @@ begin
       lsDisabled : TLogStatus(lstLogging.Selected.Data).Status := lsEnabled;
     end;
     RefreshItem(lstLogging.Selected);
+    HasChanges := True;
   end;
 end;
 
@@ -395,27 +396,44 @@ begin
 end;
 
 procedure TfmConfiguration.AddAllLogItems;
+
+  function GetStatus(Flags: TLogFlags): lsStatus;
+  begin
+    Result := lsIgnored;
+    if (Flags and g_EmuShared.m_ActiveLogFlags) > 0 then
+    begin
+      Result := lsEnabled;
+      Exit;
+    end;
+
+    if (Flags and g_EmuShared.m_DisabledLogFlags) > 0 then
+    begin
+      Result := lsDisabled;
+      Exit;
+    end;
+  end;
+
 begin
-  AddLogItem('Debug', lsEnabled, lfDebug);
-  AddLogItem('Trace', lsDisabled, lfTrace);
-  AddLogItem('Extreme', lsDisabled, lfExtreme);
-  AddLogItem('Cxbx', lsIgnored, lfCxbx);
-  AddLogItem('Dxbx', lsEnabled, lfDxbx);
-  AddLogItem('Kernel', lsEnabled, lfKernel);
-  AddLogItem('Patch', lsDisabled, lfPatch);
-  AddLogItem('SymbolScan', lsEnabled, lfSymbolScan);
-  AddLogItem('PixelShader', lsEnabled, lfPixelShader);
-  AddLogItem('VertexShader', lsEnabled, lfVertexShader);
-  AddLogItem('PushBuffer', lsEnabled, lfPushBuffer);
-  AddLogItem('Invalid', lsDisabled, lfInvalid);
-  AddLogItem('Heap', lsIgnored, lfHeap);
-  AddLogItem('File', lsIgnored, lfFile);
-  AddLogItem('Sound', lsEnabled, lfSound);
-  AddLogItem('Graphics', lsEnabled, lfGraphics);
-  AddLogItem('Threading', lsEnabled, lfThreading);
-  AddLogItem('Online', lsEnabled, lfXOnline);
-  AddLogItem('Xapi', lsEnabled, lfXapi);
-  AddLogItem('Memory', lsEnabled, lfMemory);
+  AddLogItem('Debug', GetStatus(lfDebug), lfDebug);
+  AddLogItem('Trace', GetStatus(lfTrace), lfTrace);
+  AddLogItem('Extreme', GetStatus(lfExtreme), lfExtreme);
+  AddLogItem('Cxbx', GetStatus(lfCxbx), lfCxbx);
+  AddLogItem('Dxbx', GetStatus(lfDxbx), lfDxbx);
+  AddLogItem('Kernel', GetStatus(lfKernel), lfKernel);
+  AddLogItem('Patch', GetStatus(lfPatch), lfPatch);
+  AddLogItem('SymbolScan', GetStatus(lfSymbolScan), lfSymbolScan);
+  AddLogItem('PixelShader', GetStatus(lfPixelShader), lfPixelShader);
+  AddLogItem('VertexShader', GetStatus(lfVertexShader), lfVertexShader);
+  AddLogItem('PushBuffer', GetStatus(lfPushBuffer), lfPushBuffer);
+  AddLogItem('Invalid', GetStatus(lfInvalid), lfInvalid);
+  AddLogItem('Heap', GetStatus(lfHeap), lfHeap);
+  AddLogItem('File', GetStatus(lfFile), lfFile);
+  AddLogItem('Sound', GetStatus(lfSound), lfSound);
+  AddLogItem('Graphics', GetStatus(lfGraphics), lfGraphics);
+  AddLogItem('Threading', GetStatus(lfThreading), lfThreading);
+  AddLogItem('Online', GetStatus(lfXOnline), lfXOnline);
+  AddLogItem('Xapi', GetStatus(lfXapi), lfXapi);
+  AddLogItem('Memory', GetStatus(lfMemory), lfMemory);
 end;
 
 procedure TfmConfiguration.AddLogItem(
@@ -438,6 +456,8 @@ begin
 end;
 
 procedure TfmConfiguration.Apply;
+var
+  lIndex: Integer;
 begin
   // Read the controls back into the XBVideo structure :
   FXBVideo.SetDisplayAdapter(edt_DisplayAdapter.ItemIndex);
@@ -453,6 +473,17 @@ begin
 
   // Publish the Controller settings via shared memory :
   g_EmuShared.SetXBController(@FXBController);
+
+  // Set Active and Disabled LogFlags
+  g_EmuShared.m_ActiveLogFlags := 0;
+  g_EmuShared.m_DisabledLogFlags := 0;
+  for lIndex := 0 to lstLogging.Items.Count - 1 do
+  begin
+    if TLogStatus(lstLogging.Items[lIndex].Data).FStatus = lsEnabled then
+      g_EmuShared.m_ActiveLogFlags := g_EmuShared.m_ActiveLogFlags or TLogStatus(lstLogging.Items[lIndex].Data).FLogFlags;
+    if TLogStatus(lstLogging.Items[lIndex].Data).FStatus = lsDisabled then
+      g_EmuShared.m_DisabledLogFlags := g_EmuShared.m_DisabledLogFlags or TLogStatus(lstLogging.Items[lIndex].Data).FLogFlags;
+  end;
 
   // Persist all settings to the registry :
   g_EmuShared.Save;

@@ -402,7 +402,6 @@ object fmConfiguration: TfmConfiguration
     object TabSheet3: TTabSheet
       Caption = 'Logging'
       ImageIndex = 2
-      ExplicitLeft = 0
       object GroupBox2: TGroupBox
         Left = 3
         Top = 0
