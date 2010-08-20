@@ -61,7 +61,7 @@ function EmuXB2PC_D3DCOLORWRITEENABLE(Value: X_D3DCOLORWRITEENABLE): DWORD;
 function EmuXB2PC_D3DTEXTUREOP(Value: X_D3DTEXTUREOP): DWORD;
 function EmuXB2PC_D3DCLEAR_FLAGS(Value: DWORD): DWORD;
 function EmuXB2PC_D3DWRAP(Value: DWORD): DWORD;
-function EmuXB2PC_D3DCULL(Value: DWORD): D3DCULL;
+function EmuXB2PC_D3DCULL(Value: X_D3DCULL): D3DCULL;
 
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT; inline;
 function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; PrimitiveCount: int): int; inline;
@@ -606,7 +606,7 @@ begin
     end;
   else
 
-    DxbxKrnlCleanup('Unknown D3DBLENDOP (0x%.08X)', [Value]);
+    DxbxKrnlCleanup('Unknown D3DBLENDOP (0x%.08X)', [Ord(Value)]);
 
     Result := D3DBLENDOP(Value);
   end;
@@ -648,24 +648,28 @@ end;
 function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  Result := D3DCMPFUNC((Value and $F) + 1);
+  Result := D3DCMPFUNC((Ord(Value) and $F) + 1);
 end;
 
 // convert from xbox to pc fill modes
 function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  if ((Value and $FF00) = $1B00) then
-    Result := D3DFILLMODE((Value and $F) + 1)
-  else
+  case Value of
+    X_D3DFILL_POINT:
+      Result := D3DFILL_POINT;
+    X_D3DFILL_WIREFRAME:
+      Result := D3DFILL_WIREFRAME;
+  else // X_D3DFILL_SOLID:
     Result := D3DFILL_SOLID;
+  end;
 end;
 
 // convert from xbox to pc shade modes
 function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  Result := D3DSHADEMODE((Value and $3) + 1);
+  Result := D3DSHADEMODE((Ord(Value) and $3) + 1);
 end;
 
 // convert from xbox to pc stencilop modes
@@ -794,7 +798,7 @@ begin
   if (Value and X_D3DWRAP_W) > 0 then Result := Result or D3DWRAP_W;
 end;
 
-function EmuXB2PC_D3DCULL(Value: DWORD): D3DCULL;
+function EmuXB2PC_D3DCULL(Value: X_D3DCULL): D3DCULL;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   case (Value) of
@@ -805,7 +809,7 @@ begin
     X_D3DCULL_CCW: // $901
       Result := D3DCULL_CCW;
   else
-    DxbxKrnlCleanup('Unknown Cullmode (%d)', [Value]);
+    DxbxKrnlCleanup('Unknown Cullmode (%d)', [Ord(Value)]);
     Result := D3DCULL(Value);
   end;
 end;

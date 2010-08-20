@@ -46,7 +46,7 @@ function DxbxRenderStateIsXboxExtension(const Value: X_D3DRENDERSTATETYPE): Bool
 function EmuXB2PC_D3DRS(Value: X_D3DRENDERSTATETYPE): D3DRENDERSTATETYPE;
 
 procedure DxbxBuildRenderStateMappingTable(const aD3DRenderState: PDWORDs); {NOPATCH}
-procedure DxbxInitializeDefaultRenderStates; {NOPATCH}
+procedure DxbxInitializeDefaultRenderStates(const aParameters: PX_D3DPRESENT_PARAMETERS); {NOPATCH}
 
 function DxbxVersionAdjust_D3DRS(const Value: X_D3DRENDERSTATETYPE): X_D3DRENDERSTATETYPE; {NOPATCH}
 function DxbxVersionAdjust_D3DTSS(const NewValue: DWORD): DWORD; {NOPATCH}
@@ -279,7 +279,7 @@ end;
 var
   DummyRenderStateValue: X_D3DRENDERSTATETYPE;
 
-procedure DxbxInitializeDefaultRenderStates; {NOPATCH}
+procedure DxbxInitializeDefaultRenderStates(const aParameters: PX_D3DPRESENT_PARAMETERS); {NOPATCH}
 var
   i: Integer;
 begin
@@ -295,36 +295,105 @@ begin
   for i := X_D3DRS_DEFERRED_FIRST to X_D3DRS_DEFERRED_LAST do
     XTL_EmuMappedD3DRenderState[i]^ := X_D3DRS_UNK;
 
-  // Assign default values :
+  // Assign all Xbox default render states values :
   begin
     if DxbxFix_HasZBuffer then
       XTL_EmuMappedD3DRenderState[X_D3DRS_ZENABLE]^ := D3DZB_TRUE
     else
       XTL_EmuMappedD3DRenderState[X_D3DRS_ZENABLE]^ := D3DZB_FALSE;
 
-    // TODO -oDxbx: Check that all the following default values are using the Xbox format!
-
-    XTL_EmuMappedD3DRenderState[X_D3DRS_FILLMODE]^ := D3DFILL_SOLID;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_BACKFILLMODE]^ := D3DFILL_SOLID;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_FILLMODE]^ := DWORD(X_D3DFILL_SOLID);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_BACKFILLMODE]^ := DWORD(X_D3DFILL_SOLID);
     XTL_EmuMappedD3DRenderState[X_D3DRS_TWOSIDEDLIGHTING]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_SHADEMODE]^ := D3DSHADE_GOURAUD;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_SHADEMODE]^ := DWORD(X_D3DSHADE_GOURAUD);
     XTL_EmuMappedD3DRenderState[X_D3DRS_ZWRITEENABLE]^ := BOOL_TRUE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_ALPHATESTENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_SRCBLEND]^ := DWORD(X_D3DBLEND_ONE);
     XTL_EmuMappedD3DRenderState[X_D3DRS_DESTBLEND]^ := DWORD(X_D3DBLEND_ZERO);
-//  XTL_EmuMappedD3DRenderState[X_D3DRS_FRONTFACE]^ := D3DFRONT_CW;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_CULLMODE]^ := X_D3DCULL_CCW;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_ZFUNC]^ := D3DCMP_LESSEQUAL;
-//  XTL_EmuMappedD3DRenderState[X_D3DRS_ALPHAREF]^ := 0; // ??
-    XTL_EmuMappedD3DRenderState[X_D3DRS_ALPHAFUNC]^ := D3DCMP_ALWAYS;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_FRONTFACE]^ := DWORD(X_D3DFRONT_CW);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_CULLMODE]^ := DWORD(X_D3DCULL_CCW);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_ZFUNC]^ := DWORD(X_D3DCMP_LESSEQUAL);
+//  XTL_EmuMappedD3DRenderState[X_D3DRS_ALPHAREF]^ := 0; // Unknown default
+    XTL_EmuMappedD3DRenderState[X_D3DRS_ALPHAFUNC]^ := DWORD(X_D3DCMP_ALWAYS);
     XTL_EmuMappedD3DRenderState[X_D3DRS_DITHERENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_ALPHABLENDENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_FOGENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_SPECULARENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_FOGCOLOR]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGTABLEMODE]^ := D3DFOG_NONE;
-
-    // TODO -oDxbx: Set all other default render states values here too!
+    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGTABLEMODE]^ := DWORD(X_D3DFOG_NONE);
+//    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGSTART]^ := F2DW(0.0); // Unknown default
+//    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGEND]^ := F2DW(1.0); // Unknown default
+    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGDENSITY]^ := F2DW(1.0);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_EDGEANTIALIAS]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_ZBIAS]^ := 0;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_RANGEFOGENABLE]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILENABLE]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILFAIL]^ := DWORD(X_D3DSTENCILOP_KEEP);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILZFAIL]^ := DWORD(X_D3DSTENCILOP_KEEP);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILPASS]^ := DWORD(X_D3DSTENCILOP_KEEP);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILFUNC]^ := DWORD(X_D3DCMP_ALWAYS);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILREF]^ := 0;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILMASK]^ := $FFFFFFFF;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILWRITEMASK]^ := $FFFFFFFF;
+//    XTL_EmuMappedD3DRenderState[X_D3DRS_TEXTUREFACTOR]^ := 0; // Unknown default
+    XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP0]^ := 0;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP1]^ := 0;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP2]^ := 0;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP3]^ := 0;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_LIGHTING]^ := BOOL_TRUE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_AMBIENT]^ := 0;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_BACKAMBIENT]^ := 0;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_COLORVERTEX]^ := BOOL_TRUE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_LOCALVIEWER]^ := BOOL_TRUE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_NORMALIZENORMALS]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_DIFFUSEMATERIALSOURCE]^ := DWORD(X_D3DMCS_COLOR1);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_BACKDIFFUSEMATERIALSOURCE]^ := DWORD(X_D3DMCS_COLOR1);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_SPECULARMATERIALSOURCE]^ := DWORD(X_D3DMCS_COLOR2);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_BACKSPECULARMATERIALSOURCE]^ := DWORD(X_D3DMCS_COLOR2);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_AMBIENTMATERIALSOURCE]^ := DWORD(X_D3DMCS_COLOR2);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_BACKAMBIENTMATERIALSOURCE]^ := DWORD(X_D3DMCS_COLOR2);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_EMISSIVEMATERIALSOURCE]^ := DWORD(X_D3DMCS_MATERIAL);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_BACKEMISSIVEMATERIALSOURCE]^ := DWORD(X_D3DMCS_MATERIAL);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_VERTEXBLEND]^ := DWORD(X_D3DVBF_DISABLE);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE]^ := F2DW(1.0);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MIN]^ := F2DW(1.0);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSPRITEENABLE]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALEENABLE]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_A]^ := F2DW(1.0);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_B]^ := F2DW(0.0);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_C]^ := F2DW(0.0);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEANTIALIAS]^ := BOOL_TRUE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEMASK]^ := $FFFFFFFF;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEMODE]^ := aParameters.MultiSampleType;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLERENDERTARGETMODE]^ := DWORD(X_D3DMULTISAMPLEMODE_1X);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_SWAPFILTER]^ := aParameters.MultiSampleType;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_PRESENTATIONINTERVAL]^ := aParameters.FullScreen_PresentationInterval;
+//    XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHEDGESTYLE]^ := 0; // Unknown default
+//    XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHSEGMENTS]^ := 0; // Unknown default
+//    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MAX]^ := between D3DCAPS8.MaxPointSize and D3DRS_POINTSIZE_MIN (including)
+    XTL_EmuMappedD3DRenderState[X_D3DRS_COLORWRITEENABLE]^ := X_D3DCOLORWRITEENABLE_ALL;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_BLENDOP]^ := DWORD(X_D3DBLENDOP_ADD);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_BLENDCOLOR]^ := 0;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_SWATHWIDTH]^ := DWORD(X_D3DSWATH_128);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_DXT1NOISEENABLE]^ := BOOL_TRUE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_YUVENABLE]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_OCCLUSIONCULLENABLE]^ := BOOL_TRUE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILCULLENABLE]^ := BOOL_TRUE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_ROPZCMPALWAYSREAD]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_ROPZREAD]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_DONOTCULLUNCOMPRESSED]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POLYGONOFFSETZSLOPESCALE]^ := F2DW(0.0);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POLYGONOFFSETZOFFSET]^ := F2DW(0.0);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_SOLIDOFFSETENABLE]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_DEPTHCLIPCONTROL]^ := X_D3DDCC_CULLPRIMITIVE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_STIPPLEENABLE]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTOFFSETENABLE]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_WIREFRAMEOFFSETENABLE]^ := BOOL_FALSE;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_SHADOWFUNC]^ := DWORD(X_D3DCMP_NEVER);
+    XTL_EmuMappedD3DRenderState[X_D3DRS_LINEWIDTH]^ := F2DW(1.0); // Unknown default
+    XTL_EmuMappedD3DRenderState[X_D3DRS_SAMPLEALPHA]^ := 0; // Unknown default
+//    XTL_EmuMappedD3DRenderState[X_D3DSAMPLEALPHA_TOONE]^ := 0; // Unknown default
+    XTL_EmuMappedD3DRenderState[X_D3DRS_LOGICOP]^ := DWORD(X_D3DLOGICOP_NONE);
   end;
 end;
 
