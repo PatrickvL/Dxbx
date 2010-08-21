@@ -63,7 +63,7 @@ implementation
 const lfUnit = lfCxbx or lfKernel;
 
 
-var xboxkrnl_AvSavedDataAddress: PVOID = PVOID($F0040000);
+var xboxkrnl_AvSavedDataAddress: PVOID = nil;//PVOID($F0040000);
 // TODO -oDXBX: Take shogun's NULL ?
 
 function {001} xboxkrnl_AvGetSavedDataAddress()

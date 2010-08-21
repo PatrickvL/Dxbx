@@ -214,6 +214,8 @@ implementation
 uses
   uEmuD3D8;
 
+const lfUnit = lfCxbx or lfVertexBuffer;
+
 var crctab: array [0..256-1] of uint;
 
 {static}var bFirstTime: boolean = true;
@@ -347,9 +349,9 @@ begin
         // First, check if there is an 'expired' stream in the cache (not recently used)
         if (DWord(PCACHEDSTREAM(pNode.pResource).lLastUsed) < (clock() + MAX_STREAM_NOT_USED_TIME)) then
         begin
-{$IFDEF DEBUG}
-          DbgPrintf('!!!Found an old stream, %2.2f', [{FLOAT}((clock() + MAX_STREAM_NOT_USED_TIME) - DWord(PCACHEDSTREAM(pNode.pResource).lLastUsed)) / {FLOAT}(CLOCKS_PER_SEC)]);
-{$ENDIF}
+          if MayLog(lfUnit or lfDebug) then
+            DbgPrintf('!!!Found an old stream, %2.2f', [{FLOAT}((clock() + MAX_STREAM_NOT_USED_TIME) - DWord(PCACHEDSTREAM(pNode.pResource).lLastUsed)) / {FLOAT}(CLOCKS_PER_SEC)]);
+
           uiKey := pNode.uiKey;
           break;
         end;
@@ -364,9 +366,9 @@ begin
     end;
     if (uiKey <> 0) then
     begin
-{$IFDEF DEBUG}
-      DbgPrintf('!!!Removing stream');
-{$ENDIF}
+      if MayLog(lfUnit or lfDebug) then
+        DbgPrintf('!!!Removing stream');
+
       FreeCachedStream(Pvoid(uiKey));
     end;
   end;
@@ -1562,7 +1564,8 @@ begin
     dwCurFVF := g_IVBFVF;
   end;
 
-  DbgPrintf('g_IVBTblOffs := %d', [g_IVBTblOffs]);
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('g_IVBTblOffs := %d', [g_IVBTblOffs]);
 
   // Dxbx note : Do this once, not inside the for-loop :
   dwPos := dwCurFVF and D3DFVF_POSITION_MASK;
@@ -1578,7 +1581,8 @@ begin
       PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOAT(pdwVB));
       PFLOATs(pdwVB)[0] := g_IVBTable[v].Rhw;        Inc(PFLOAT(pdwVB));
 
-      DbgPrintf('IVB Position := {%f, %f, %f, %f}', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Position.z, g_IVBTable[v].Rhw]);
+      if MayLog(lfUnit or lfTrace) then
+        DbgPrintf('IVB Position := {%f, %f, %f, %f}', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Position.z, g_IVBTable[v].Rhw]);
     end
     else // XYZRHW cannot be combined with NORMAL, but the other XYZ formats can :
     begin
@@ -1588,8 +1592,8 @@ begin
         PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOAT(pdwVB));
         PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOAT(pdwVB));
 
-        DbgPrintf('IVB Position := {%f, %f, %f}', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z]);
-
+        if MayLog(lfUnit or lfTrace) then
+          DbgPrintf('IVB Position := {%f, %f, %f}', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z]);
       end
       else if(dwPos = D3DFVF_XYZB1) then
       begin
@@ -1598,7 +1602,8 @@ begin
         PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOAT(pdwVB));
         PFLOATs(pdwVB)[0] := g_IVBTable[v].Blend1;     Inc(PFLOAT(pdwVB));
 
-        DbgPrintf('IVB Position := {%f, %f, %f, %f', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Blend1]);
+        if MayLog(lfUnit or lfTrace) then
+          DbgPrintf('IVB Position := {%f, %f, %f, %f', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Blend1]);
       end
       else
       begin
@@ -1611,7 +1616,8 @@ begin
         PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.y; Inc(PFLOAT(pdwVB));
         PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.z; Inc(PFLOAT(pdwVB));
 
-        DbgPrintf('IVB Normal := {%f, %f, %f}', [g_IVBTable[v].Normal.x, g_IVBTable[v].Normal.y, g_IVBTable[v].Normal.z]);
+        if MayLog(lfUnit or lfTrace) then
+          DbgPrintf('IVB Normal := {%f, %f, %f}', [g_IVBTable[v].Normal.x, g_IVBTable[v].Normal.y, g_IVBTable[v].Normal.z]);
       end;
     end;
 
@@ -1619,14 +1625,16 @@ begin
     begin
       PDWORDs(pdwVB)[0] := g_IVBTable[v].dwDiffuse; Inc(PDWORD(pdwVB));
 
-      DbgPrintf('IVB Diffuse := 0x%.08X', [g_IVBTable[v].dwDiffuse]);
+      if MayLog(lfUnit or lfTrace) then
+        DbgPrintf('IVB Diffuse := 0x%.08X', [g_IVBTable[v].dwDiffuse]);
     end;
 
     if(dwCurFVF and D3DFVF_SPECULAR) > 0 then
     begin
       PDWORDs(pdwVB)[0] := g_IVBTable[v].dwSpecular; Inc(PDWORD(pdwVB));
 
-      DbgPrintf('IVB Specular := 0x%.08X', [g_IVBTable[v].dwSpecular]);
+      if MayLog(lfUnit or lfTrace) then
+        DbgPrintf('IVB Specular := 0x%.08X', [g_IVBTable[v].dwSpecular]);
     end;
 
     if(dwTexN >= 1) then
@@ -1634,7 +1642,8 @@ begin
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord1.x; Inc(PFLOAT(pdwVB));
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord1.y; Inc(PFLOAT(pdwVB));
 
-      DbgPrintf('IVB TexCoord1 := {%f, %f}', [g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y]);
+      if MayLog(lfUnit or lfTrace) then
+        DbgPrintf('IVB TexCoord1 := {%f, %f}', [g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y]);
 //    end;
 
     if(dwTexN >= 2) then
@@ -1642,7 +1651,8 @@ begin
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord2.x; Inc(PFLOAT(pdwVB));
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord2.y; Inc(PFLOAT(pdwVB));
 
-      DbgPrintf('IVB TexCoord2 := {%f, %f}', [g_IVBTable[v].TexCoord2.x, g_IVBTable[v].TexCoord2.y]);
+      if MayLog(lfUnit or lfTrace) then
+        DbgPrintf('IVB TexCoord2 := {%f, %f}', [g_IVBTable[v].TexCoord2.x, g_IVBTable[v].TexCoord2.y]);
 //    end;
 
     if(dwTexN >= 3) then
@@ -1650,7 +1660,8 @@ begin
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord3.x; Inc(PFLOAT(pdwVB));
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord3.y; Inc(PFLOAT(pdwVB));
 
-      DbgPrintf('IVB TexCoord3 := {%f, %f}', [g_IVBTable[v].TexCoord3.x, g_IVBTable[v].TexCoord3.y]);
+      if MayLog(lfUnit or lfTrace) then
+        DbgPrintf('IVB TexCoord3 := {%f, %f}', [g_IVBTable[v].TexCoord3.x, g_IVBTable[v].TexCoord3.y]);
 //    end;
 
     if(dwTexN >= 4) then
@@ -1658,7 +1669,8 @@ begin
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord4.x; Inc(PFLOAT(pdwVB));
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord4.y; Inc(PFLOAT(pdwVB));
 
-      DbgPrintf('IVB TexCoord4 := {%f, %f}', [g_IVBTable[v].TexCoord4.x, g_IVBTable[v].TexCoord4.y]);
+      if MayLog(lfUnit or lfTrace) then
+        DbgPrintf('IVB TexCoord4 := {%f, %f}', [g_IVBTable[v].TexCoord4.x, g_IVBTable[v].TexCoord4.y]);
     end;
     end;
     end;

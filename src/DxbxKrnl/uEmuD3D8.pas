@@ -4618,14 +4618,15 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  LogBegin('EmuD3D8 : EmuD3DDevice_SetVertexData4f').
-    _(Register_, 'Register').
-    _(a, 'a').
-    _(b, 'b').
-    _(c, 'c').
-    _(d, 'd').
-//    _(g_IVBTblOffs, '## g_IVBTblOffs ##'). // test - show counter
-  LogEnd();
+  if MayLog(lfUnit or lfTrace) then
+    LogBegin('EmuD3D8 : EmuD3DDevice_SetVertexData4f').
+      _(Register_, 'Register').
+      _(a, 'a').
+      _(b, 'b').
+      _(c, 'c').
+      _(d, 'd').
+  //    _(g_IVBTblOffs, '## g_IVBTblOffs ##'). // test - show counter
+    LogEnd();
 
   hRet := D3D_OK;
 
@@ -5892,7 +5893,8 @@ begin
     if FAILED(hRet) then
       EmuWarning('IDirect3DTexture::GetSurfaceDesc failed!');
 
-    DbgPrintf('Okay');
+    if MayLog(lfUnit) then
+      DbgPrintf('Okay');
 
     (* marked by cxbx
     int dwDumpTexture := 0;
