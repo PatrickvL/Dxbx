@@ -136,8 +136,8 @@ function XTL_EmuD3DDevice_UpdateOverlay(pSurface: PX_D3DSurface;
   ColorKey: D3DCOLOR): HRESULT; stdcall;
 function XTL_EmuD3DDevice_CreateVertexBuffer2(Length: UINT): PX_D3DVertexBuffer; stdcall;
 procedure XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
-  State: D3DRenderStateType;
-  Value: DWORD
+  XboxRenderState: X_D3DRenderStateType;
+  XboxValue: DWORD
   ); {NOPATCH}
 
 var
@@ -2920,7 +2920,10 @@ begin
       _(pValue, 'pValue').
     LogEnd();
 
-  g_pD3DDevice.GetTextureStageState(Stage, Type_, pValue^);
+  // TODO -oDxbx : For the Xbox extensions, read the value from the
+  // XTL_EmuD3DDeferredTextureState array, just like GetRenderState
+
+  g_pD3DDevice.GetTextureStageState(Stage, Type_, {out}pValue^);
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
@@ -6871,6 +6874,10 @@ begin
   if (Value > $00030000) then
     DxbxKrnlCleanup('EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', [Value]);
 
+  // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
+  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(X_D3DTSS_TEXCOORDINDEX)] := Value;
+  // TODO -oDxbx : Update the D3D DirtyFlags too?
+
   g_pD3DDevice.SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
 
   EmuSwapFS(fsXbox);
@@ -6894,7 +6901,7 @@ begin
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_TWOSIDEDLIGHTING]^ := Value;
 
-  EmuWarning('TwoSidedLighting is not supported!');
+  EmuWarning('SetRenderState_TwoSidedLighting is not supported!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -6917,7 +6924,7 @@ begin
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_BACKFILLMODE]^ := Value;
 
-  EmuWarning('BackFillMode is not supported!');
+  EmuWarning('SetRenderState_BackFillMode is not supported!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -6938,6 +6945,10 @@ begin
         #13#10'   Value                     : 0x%.08X' +
         #13#10');',
       [Stage, Value]);
+
+  // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
+  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(X_D3DTSS_BORDERCOLOR)] := Value;
+  // TODO -oDxbx : Update the D3D DirtyFlags too?
 
   IDirect3DDevice_SetSamplerState(g_pD3DDevice, Stage, D3DSAMP_BORDERCOLOR, Value);
 
@@ -6960,6 +6971,10 @@ begin
         #13#10'   Value                     : 0x%.08X' +
         #13#10');',
       [Stage, Value]);
+
+  // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
+  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(X_D3DTSS_COLORKEYCOLOR)] := Value;
+  // TODO -oDxbx : Update the D3D DirtyFlags too?
 
   EmuWarning('SetTextureState_ColorKeyColor is not supported!');
 
@@ -6984,6 +6999,10 @@ begin
         #13#10'   Value                     : 0x%.08X' +
         #13#10');',
            [Stage, Type_, Value]);
+
+  // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
+  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + Ord(Type_)] := Value;
+  // TODO -oDxbx : Update the D3D DirtyFlags too?
 
   case DxbxVersionAdjust_D3DTSS(Type_) of
     X_D3DTSS_BUMPENVMAT00:
@@ -7019,7 +7038,7 @@ begin
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_FRONTFACE]^ := Value;
 
-  EmuWarning('SetRenderState_FrontFace not supported!');
+  EmuWarning('SetRenderState_FrontFace is not supported!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -7231,7 +7250,7 @@ begin
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_DXT1NOISEENABLE]^ := Value;
 
-  EmuWarning('SetRenderState_Dxt1NoiseEnable not supported!');
+  EmuWarning('SetRenderState_Dxt1NoiseEnable is not supported!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -7243,7 +7262,7 @@ procedure XTL_EmuD3DDevice_SetRenderState_Simple(
   ); register; // VALIDATED fastcall simulation - See Translation guide
 // Branch:shogun  Revision:20100412  Translator:Shadow_Tj  Done:100
 var
-  State: D3DRenderStateType;//int;
+  XboxRenderState: X_D3DRenderStateType;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7255,173 +7274,40 @@ begin
         #13#10');',
       [Method, Value]);
 
-  // Dxbx note : Let the compiler sort this out, should be much quicker :
-  case Method of
-    $040300: State := D3DRS_ALPHATESTENABLE;
-    $040304: State := D3DRS_ALPHABLENDENABLE;
-    $040310: State := D3DRS_DITHERENABLE;
-    $04033c: State := D3DRS_ALPHAFUNC;
-    $040340: State := D3DRS_ALPHAREF;
-    $040344: State := D3DRS_SRCBLEND;
-    $040348: State := D3DRS_DESTBLEND;
-    $040350: State := D3DRS_BLENDOP;
-    $040354: State := D3DRS_ZFUNC;
-    $040358: State := D3DRS_COLORWRITEENABLE;
-    $04035c: State := D3DRS_ZWRITEENABLE;
-    $040360: State := D3DRS_STENCILWRITEMASK;
-    $040364: State := D3DRS_STENCILFUNC;
-    $040368: State := D3DRS_STENCILREF;
-    $04036c: State := D3DRS_STENCILMASK;
-    $040374: State := D3DRS_STENCILZFAIL;
-    $040378: State := D3DRS_STENCILPASS;
-    $04037c: State := D3DRS_SHADEMODE;
-  else
-    int(State) := -1;
-  end;
-
-  if (int(State) = -1) then
-    EmuWarning('RenderState_Simple(0x%.08X, 0x%.08X) is unsupported!', [Method, Value])
+  XboxRenderState := DxbxXboxMethodToRenderState(Method);
+  // Dxbx note : Methods are already version-independant
+  if (int(XboxRenderState) = -1) then
+    EmuWarning('SetRenderState_Simple({Method=}0x%.08X, {Value=}0x%.08X) - unsupported method!', [Method, Value])
   else
     // Use a helper for the simple render states, as SetRenderStateNotInline
     // needs to be able to call it too :
-    XTL_EmuD3DDevice_SetRenderState_Simple_Internal(State, Value);
+    XTL_EmuD3DDevice_SetRenderState_Simple_Internal(XboxRenderState, {Xbox}Value);
 
   EmuSwapFS(fsXbox);
 end;
 
 procedure XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
-  State: D3DRenderStateType;
-  Value: DWORD
+  XboxRenderState: X_D3DRenderStateType;
+  XboxValue: DWORD
   ); {NOPATCH}
-// Branch:Dxbx  Translator:Shadow_Tj  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  PCRenderState: D3DRenderStateType;
+  PCValue: DWORD;
 begin
-  case State of
-    D3DRS_COLORWRITEENABLE:
-      begin
-        Value := EmuXB2PC_D3DCOLORWRITEENABLE(Value);
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_COLORWRITEENABLE := 0x%.08X', [Value]);
-      end;
+  // Map the Xbox state to a PC state, and check if it's supported :
+  PCRenderState := EmuXB2PC_D3DRS(XboxRenderState); // TODO : Speed this up using a lookup table
+  if PCRenderState <> D3DRS_FORCE_DWORD then
+  begin
+    // Convert the value from Xbox format into PC format, and set it locally :
+    PCValue := DxbxRenderStateXB2PCCallback[XboxRenderState](XboxValue);
+    g_pD3DDevice.SetRenderState(PCRenderState, PCValue);
 
-    D3DRS_SHADEMODE:
-      begin
-        Value := EmuXB2PC_D3DSHADEMODE(X_D3DSHADEMODE(Value));
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_SHADEMODE := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_BLENDOP:
-      begin
-        Value := EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP(Value));
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_BLENDOP := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_SRCBLEND:
-      begin
-        Value := EmuXB2PC_D3DBLEND(X_D3DBLEND(Value));
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_SRCBLEND := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_DESTBLEND:
-      begin
-        Value := EmuXB2PC_D3DBLEND(X_D3DBLEND(Value));
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_DESTBLEND := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_ZFUNC:
-      begin
-        Value := EmuXB2PC_D3DCMPFUNC(X_D3DCMPFUNC(Value));
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_ZFUNC := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_ALPHAFUNC:
-      begin
-        Value := EmuXB2PC_D3DCMPFUNC(X_D3DCMPFUNC(Value));
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_ALPHAFUNC := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_ALPHATESTENABLE:
-      begin
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_ALPHATESTENABLE := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_ALPHABLENDENABLE:
-      begin
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_ALPHABLENDENABLE := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_ALPHAREF:
-      begin
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_ALPHAREF := %d', [Value]);
-      end;
-
-    D3DRS_ZWRITEENABLE:
-      begin
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_ZWRITEENABLE := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_DITHERENABLE:
-      begin
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_DITHERENABLE := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_STENCILZFAIL:
-      begin
-        Value := EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP(Value));
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_STENCILZFAIL := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_STENCILPASS:
-      begin
-        Value := EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP(Value));
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_STENCILPASS := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_STENCILFUNC:
-      begin
-        Value := EmuXB2PC_D3DCMPFUNC(X_D3DCMPFUNC(Value));
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_STENCILFUNC := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_STENCILREF:
-      begin
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_STENCILREF := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_STENCILMASK:
-      begin
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_STENCILMASK := 0x%.08X', [Value]);
-      end;
-
-    D3DRS_STENCILWRITEMASK:
-      begin
-        if MayLog(lfUnit or lfReturnValue) then
-          DbgPrintf('D3DRS_STENCILWRITEMASK := 0x%.08X', [Value]);
-      end;
-
+    if MayLog(lfUnit or lfReturnValue) then
+      DbgPrintf('%s := 0x%.08X (Xbox used 0x%.08X)', [DxbxRenderStateXB2String[XboxRenderState], PCValue, XboxValue]);
+  end
   else
-    begin
-      DxbxKrnlCleanup('Unsupported RenderState (0x%.08X)', [int(State)]);
-    end;
-  end;
-
-  // TODO -oCXBX: verify these params as you add support for them!
-  g_pD3DDevice.SetRenderState({D3DRENDERSTATETYPE}(State), Value);
+    DxbxKrnlCleanup('Unsupported RenderState (0x%.08X)', [int(XboxRenderState)]);
 end;
 
 procedure XTL_EmuD3DDevice_SetRenderState_VertexBlend
@@ -7573,7 +7459,7 @@ begin
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_OCCLUSIONCULLENABLE]^ := Value;
 
-  EmuWarning('SetRenderState_OcclusionCullEnable not supported!');
+  EmuWarning('SetRenderState_OcclusionCullEnable is not supported!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -7596,7 +7482,7 @@ begin
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILCULLENABLE]^ := Value;
 
-  EmuWarning('SetRenderState_StencilCullEnable not supported!');
+  EmuWarning('SetRenderState_StencilCullEnable is not supported!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -7619,7 +7505,7 @@ begin
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_ROPZCMPALWAYSREAD]^ := Value;
 
-  EmuWarning('SetRenderState_RopZCmpAlwaysRead not supported!');
+  EmuWarning('SetRenderState_RopZCmpAlwaysRead is not supported!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -7642,7 +7528,7 @@ begin
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_ROPZREAD]^ := Value;
 
-  EmuWarning('SetRenderState_RopZRead not supported!');
+  EmuWarning('SetRenderState_RopZRead is not supported!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -7665,7 +7551,7 @@ begin
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_DONOTCULLUNCOMPRESSED]^ := Value;
 
-  EmuWarning('SetRenderState_DoNotCullUncompressed not supported!');
+  EmuWarning('SetRenderState_DoNotCullUncompressed is not supported!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -7779,7 +7665,7 @@ begin
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEMODE]^ := Value;
 
-  EmuWarning('SetRenderState_MultiSampleMode is not supported!'); // TODO -oDxbx : Use D3DMULTISAMPLE_TYPE somewhere for this?
+  EmuWarning('SetRenderState_MultiSampleMode is not supported!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -8660,17 +8546,39 @@ end;
 function XTL_EmuD3DDevice_SetTextureStageStateNotInline
 (
   Stage: DWORD;
-  Type_: D3DTEXTURESTAGESTATETYPE;
+  Type_: X_D3DTEXTURESTAGESTATETYPE;
   Value: DWORD
 ): HRESULT; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3D8 : EmuD3DDevice_SetTextureStageStateNotInline >>').
+      _(Stage, 'Stage').
+      _(Ord(Type_), 'Type_').
+      _(Value, 'Value').
+    LogEnd();
 
-(*  D3DDIRTY_TEXTURESTATE(Stage, Type);
-  D3DDevice_SetTextureStageStateNotInline(Stage, Type, Value); *)
+  if (Type_ < X_D3DTSS_DEFERRED_TEXTURE_STATE_MAX) then
+  begin
+    // TODO -oDxbx : Update the D3D DirtyFlags too
+    XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + Ord(Type_)] := Value;
+  end
+  else if (Type_ < X_D3DTSS_DEFERRED_MAX) then
+  begin
+    // TODO -oDxbx : Update the D3D DirtyFlags too
+    XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + Ord(Type_)] := Value;
+  end
+  else if (Type_ = X_D3DTSS_TEXCOORDINDEX) then
+    XTL_EmuD3DDevice_SetTextureState_TexCoordIndex(Stage, Value)
+  else if (Type_ = X_D3DTSS_BORDERCOLOR) then
+    XTL_EmuD3DDevice_SetTextureState_BorderColor(Stage, Value)
+  else if (Type_ = X_D3DTSS_COLORKEYCOLOR) then
+    XTL_EmuD3DDevice_SetTextureState_ColorKeyColor(Stage, Value)
+  else if ((Type_ >= X_D3DTSS_BUMPENVMAT00) and (Type_ <= X_D3DTSS_BUMPENVLOFFSET)) then
+    XTL_EmuD3DDevice_SetTextureState_BumpEnv(Stage, Type_, Value);
 
-  Unimplemented('XTL_EmuD3DDevice_SetTextureStageStateNotInline');
   Result := D3D_OK;
 
   EmuSwapFS(fsWindows);
@@ -10238,7 +10146,7 @@ begin
 
   // TODO -oCXBX: Implement?
 
-  EmuWarning('SetRenderState_SampleAlpha not supported!');
+  EmuWarning('SetRenderState_SampleAlpha is not supported!');
 
   EmuSwapFS(fsXbox);
 
@@ -10933,7 +10841,7 @@ function XTL_EmuD3DDevice_SetRenderStateNotInline
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:PatrickvL  Done:100
 var
-  State_VersionIndependent: X_D3DRENDERSTATETYPE;
+  XboxRenderState_VersionIndependent: X_D3DRENDERSTATETYPE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -10943,23 +10851,23 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  State_VersionIndependent := DxbxVersionAdjust_D3DRS(State);
+  XboxRenderState_VersionIndependent := DxbxVersionAdjust_D3DRS(State);
 
   Result := D3D_OK;
-  if (State_VersionIndependent <= X_D3DRS_SIMPLE_LAST) then
+  if (XboxRenderState_VersionIndependent <= X_D3DRS_SIMPLE_LAST) then
   begin
     // Pixel & Simple render states - Just pass them on to our helper :
-    XTL_EmuD3DDevice_SetRenderState_Simple_Internal(EmuXB2PC_D3DRS(State_VersionIndependent), Value);
+    XTL_EmuD3DDevice_SetRenderState_Simple_Internal(XboxRenderState_VersionIndependent, Value);
     EmuSwapFS(fsXbox);
     Exit;
   end;
 
-  if  (State_VersionIndependent >= X_D3DRS_DEFERRED_FIRST)
-  and (State_VersionIndependent <= X_D3DRS_DEFERRED_LAST) then
+  if  (XboxRenderState_VersionIndependent >= X_D3DRS_DEFERRED_FIRST)
+  and (XboxRenderState_VersionIndependent <= X_D3DRS_DEFERRED_LAST) then
   begin
     // Deferred states - Since XTL_EmuD3DDevice_SetRenderState_Deferred
     // is not patched anymore, we'll set the DeferredRenderState here ourselves :
-    XTL_EmuMappedD3DRenderState[State_VersionIndependent]^ := Value;
+    XTL_EmuMappedD3DRenderState[XboxRenderState_VersionIndependent]^ := Value;
     EmuSwapFS(fsXbox);
     Exit;
   end;
@@ -10968,27 +10876,41 @@ begin
   // (which are patches, so switch back to Xbox FS first) :
   EmuSwapFS(fsXbox);
 
-  case State_VersionIndependent of // TODO -oDxbx: Verify all complex render states are handled
-    X_D3DRS_BACKFILLMODE:
-      XTL_EmuD3DDevice_SetRenderState_BackFillMode(Value);
-    X_D3DRS_CULLMODE:
-      XTL_EmuD3DDevice_SetRenderState_CullMode(X_D3DCULL(Value));
-    X_D3DRS_DONOTCULLUNCOMPRESSED:
-      XTL_EmuD3DDevice_SetRenderState_DoNotCullUncompressed(Value);
-    X_D3DRS_DXT1NOISEENABLE:
-      XTL_EmuD3DDevice_SetRenderState_Dxt1NoiseEnable(Value);
-    X_D3DRS_EDGEANTIALIAS:
-      XTL_EmuD3DDevice_SetRenderState_EdgeAntiAlias(Value);
-    X_D3DRS_FILLMODE:
-      XTL_EmuD3DDevice_SetRenderState_FillMode(X_D3DFILLMODE(Value));
+  // Dxbx note : All complex render states (up to 5911) are handled.
+  // Dxbx note2 : The value is converted from Xbox to PC format inside each patch.
+  case XboxRenderState_VersionIndependent of
+    X_D3DRS_PSTEXTUREMODES:
+      XTL_EmuD3DDevice_SetRenderState_PSTextureModes(Value);
+    X_D3DRS_VERTEXBLEND:
+      XTL_EmuD3DDevice_SetRenderState_VertexBlend(Value);
     X_D3DRS_FOGCOLOR:
       XTL_EmuD3DDevice_SetRenderState_FogColor(Value);
+    X_D3DRS_FILLMODE:
+      XTL_EmuD3DDevice_SetRenderState_FillMode(X_D3DFILLMODE(Value));
+    X_D3DRS_BACKFILLMODE:
+      XTL_EmuD3DDevice_SetRenderState_BackFillMode(Value);
+    X_D3DRS_TWOSIDEDLIGHTING:
+      XTL_EmuD3DDevice_SetTextureState_TwoSidedLighting(Value);
+    X_D3DRS_NORMALIZENORMALS:
+      XTL_EmuD3DDevice_SetRenderState_NormalizeNormals(Value);
+    X_D3DRS_ZENABLE:
+      XTL_EmuD3DDevice_SetRenderState_ZEnable(Value);
+    X_D3DRS_STENCILENABLE:
+      XTL_EmuD3DDevice_SetRenderState_StencilEnable(Value);
+    X_D3DRS_STENCILFAIL:
+      XTL_EmuD3DDevice_SetRenderState_StencilFail(Value);
     X_D3DRS_FRONTFACE:
       XTL_EmuD3DDevice_SetRenderState_FrontFace(Value);
-    X_D3DRS_LINEWIDTH:
-      XTL_EmuD3DDevice_SetRenderState_LineWidth(Value);
+    X_D3DRS_CULLMODE:
+      XTL_EmuD3DDevice_SetRenderState_CullMode(X_D3DCULL(Value));
+    X_D3DRS_TEXTUREFACTOR:
+      XTL_EmuD3DDevice_SetRenderState_TextureFactor(Value);
+    X_D3DRS_ZBIAS:
+      XTL_EmuD3DDevice_SetRenderState_ZBias(Value);
     X_D3DRS_LOGICOP:
       XTL_EmuD3DDevice_SetRenderState_LogicOp(Value);
+    X_D3DRS_EDGEANTIALIAS:
+      XTL_EmuD3DDevice_SetRenderState_EdgeAntiAlias(Value);
     X_D3DRS_MULTISAMPLEANTIALIAS:
       XTL_EmuD3DDevice_SetRenderState_MultiSampleAntiAlias(Value);
     X_D3DRS_MULTISAMPLEMASK:
@@ -10997,38 +10919,26 @@ begin
       XTL_EmuD3DDevice_SetRenderState_MultiSampleMode(Value);
     X_D3DRS_MULTISAMPLERENDERTARGETMODE:
       XTL_EmuD3DDevice_SetRenderState_MultiSampleRenderTargetMode(Value);
-    X_D3DRS_NORMALIZENORMALS:
-      XTL_EmuD3DDevice_SetRenderState_NormalizeNormals(Value);
+    X_D3DRS_SHADOWFUNC:
+      XTL_EmuD3DDevice_SetRenderState_ShadowFunc(Value);
+    X_D3DRS_LINEWIDTH:
+      XTL_EmuD3DDevice_SetRenderState_LineWidth(Value);
+    X_D3DRS_SAMPLEALPHA:
+      XTL_EmuD3DDevice_SetRenderState_SampleAlpha(Value);
+    X_D3DRS_DXT1NOISEENABLE:
+      XTL_EmuD3DDevice_SetRenderState_Dxt1NoiseEnable(Value);
+    X_D3DRS_YUVENABLE:
+      XTL_EmuD3DDevice_SetRenderState_YuvEnable(Value);
     X_D3DRS_OCCLUSIONCULLENABLE:
       XTL_EmuD3DDevice_SetRenderState_OcclusionCullEnable(Value);
-    X_D3DRS_PSTEXTUREMODES:
-      XTL_EmuD3DDevice_SetRenderState_PSTextureModes(Value);
+    X_D3DRS_STENCILCULLENABLE:
+      XTL_EmuD3DDevice_SetRenderState_StencilCullEnable(Value);
     X_D3DRS_ROPZCMPALWAYSREAD:
       XTL_EmuD3DDevice_SetRenderState_RopZCmpAlwaysRead(Value);
     X_D3DRS_ROPZREAD:
       XTL_EmuD3DDevice_SetRenderState_RopZRead(Value);
-    X_D3DRS_SAMPLEALPHA:
-      XTL_EmuD3DDevice_SetRenderState_SampleAlpha(Value);
-    X_D3DRS_SHADOWFUNC:
-      XTL_EmuD3DDevice_SetRenderState_ShadowFunc(Value);
-    X_D3DRS_STENCILCULLENABLE:
-      XTL_EmuD3DDevice_SetRenderState_StencilCullEnable(Value);
-    X_D3DRS_STENCILENABLE:
-      XTL_EmuD3DDevice_SetRenderState_StencilEnable(Value);
-    X_D3DRS_STENCILFAIL:
-      XTL_EmuD3DDevice_SetRenderState_StencilFail(Value);
-    X_D3DRS_TEXTUREFACTOR:
-      XTL_EmuD3DDevice_SetRenderState_TextureFactor(Value);
-    X_D3DRS_VERTEXBLEND:
-      XTL_EmuD3DDevice_SetRenderState_VertexBlend(Value);
-    X_D3DRS_YUVENABLE:
-      XTL_EmuD3DDevice_SetRenderState_YuvEnable(Value);
-    X_D3DRS_ZBIAS:
-      XTL_EmuD3DDevice_SetRenderState_ZBias(Value);
-    X_D3DRS_ZENABLE:
-      XTL_EmuD3DDevice_SetRenderState_ZEnable(Value);
-    X_D3DRS_TWOSIDEDLIGHTING:
-      XTL_EmuD3DDevice_SetTextureState_TwoSidedLighting(Value);
+    X_D3DRS_DONOTCULLUNCOMPRESSED:
+      XTL_EmuD3DDevice_SetRenderState_DoNotCullUncompressed(Value);
   else
     Result := E_FAIL;
   end;

@@ -518,7 +518,7 @@ var
   DummyStr: string;
 begin
   Result := Drives.D.OpenImage(aFileName, {out}DummyStr)
-//        and SameText(ExtractFileExt(Drives.D.FileSystem.SelectedFile), '.xbe');;
+//        and SameText(ExtractFileExt(Drives.D.FileSystem.SelectedFile), '.xbe');
 end;
 
 constructor TXbe.Create(const aFileName: string);
