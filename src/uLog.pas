@@ -158,6 +158,8 @@ procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); inline; overlo
 procedure Log(const aFlags: TLogFlags; const aLogMsg: string); inline; overload;
 procedure Log(const aFlags: TLogFlags; const aLogMsg: string; Args: array of const); overload;
 
+var g_bPrintfOn: _boolean = true;
+
 implementation
 
 {$IFDEF DXBX_DLL}
@@ -233,7 +235,8 @@ var
 function MayLog(const aFlags: TLogFlags): Boolean; // inline;
 begin
   Result := ((aFlags or pActiveLogFlags^) > 0)
-        and ((aFlags and pDisabledLogFlags^) = 0);
+        and ((aFlags and pDisabledLogFlags^) = 0)
+        and g_bPrintfOn
 end;
 
 procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); // inline;
@@ -978,7 +981,7 @@ end;
 procedure RLogStack.LogEnd();
 var
   Loop: PLogStack;
-  Str: string;
+  Str: string; // TODO : Retrieve a StringBuilder from a (thread-safe) pool to save on reallocating concatenations
   NameWidth: Integer;
 begin
   // This LogStackEntry won't be processed, but instead it prints the entire stack :

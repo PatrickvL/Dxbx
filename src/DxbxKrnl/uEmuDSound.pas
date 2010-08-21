@@ -2482,8 +2482,10 @@ begin
          #13#10');',
          [Self, dwFrequency]);
 
-  Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetFrequency(dwFrequency); // TODO -oDxbx : Test this!
-//  Result := DS_OK;
+  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetFrequency(dwFrequency) // TODO -oDxbx : Test this!
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;

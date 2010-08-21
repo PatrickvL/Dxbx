@@ -3919,7 +3919,9 @@ begin
     begin
       // Dxbx addition : Request how many where created (as Levels could be 0) :
       Levels := IDirect3DTexture(ppTexture^.Emu.Texture).GetLevelCount();
-      DbgPrintf('Texture created @ 0x%08X [hRet = 0x%08X]: %dx%d, %d levels, usage = 0x%08X, format = 0x%08X', [
+
+      if MayLog(lfUnit or lfReturnValue) then
+        DbgPrintf('Texture created @ 0x%08X [hRet = 0x%08X]: %dx%d, %d levels, usage = 0x%08X, format = 0x%08X', [
             ppTexture^.Emu.Texture, Result, Width, Height, Levels, Ord(PCUsage), Ord(PCFormat)]);
 
       // Dxbx addition : Register all levels :
@@ -7279,9 +7281,14 @@ begin
   if (int(XboxRenderState) = -1) then
     EmuWarning('SetRenderState_Simple({Method=}0x%.08X, {Value=}0x%.08X) - unsupported method!', [Method, Value])
   else
+  begin
+    // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
+    XTL_EmuMappedD3DRenderState[XboxRenderState]^ := DWORD(Value);
+
     // Use a helper for the simple render states, as SetRenderStateNotInline
     // needs to be able to call it too :
     XTL_EmuD3DDevice_SetRenderState_Simple_Internal(XboxRenderState, {Xbox}Value);
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -7301,10 +7308,16 @@ begin
   begin
     // Convert the value from Xbox format into PC format, and set it locally :
     PCValue := DxbxRenderStateXB2PCCallback[XboxRenderState](XboxValue);
+
     g_pD3DDevice.SetRenderState(PCRenderState, PCValue);
 
     if MayLog(lfUnit or lfReturnValue) then
-      DbgPrintf('%s := 0x%.08X (Xbox used 0x%.08X)', [DxbxRenderStateXB2String[XboxRenderState], PCValue, XboxValue]);
+    begin
+      if PCValue <> XboxValue then
+        DbgPrintf('%s := 0x%.08X (converted from Xbox value 0x%.08X)', [DxbxRenderStateXB2String[XboxRenderState], PCValue, XboxValue])
+      else
+        DbgPrintf('%s := 0x%.08X', [DxbxRenderStateXB2String[XboxRenderState], PCValue]);
+    end
   end
   else
     DxbxKrnlCleanup('Unsupported RenderState (0x%.08X)', [int(XboxRenderState)]);

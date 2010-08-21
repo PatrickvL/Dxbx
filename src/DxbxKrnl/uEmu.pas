@@ -62,7 +62,6 @@ var dbgCritical: CRITICAL_SECTION;
 // global flags specifying current emulation state
 var g_bEmuException: _bool = false;
 var g_bEmuSuspended: _bool = false;
-var g_bPrintfOn: _boolean = true;
 
 // global exception patching address
 var g_HaloHack: array [0..4-1] of uint32; // = {0};
