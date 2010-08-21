@@ -1015,6 +1015,7 @@ const X_D3DRS_PSRGBOUTPUTS5               = 50;
 const X_D3DRS_PSRGBOUTPUTS6               = 51;
 const X_D3DRS_PSRGBOUTPUTS7               = 52;
 const X_D3DRS_PSCOMBINERCOUNT             = 53;
+const X_D3DRS_PS_RESERVED                 = 54;
 const X_D3DRS_PSDOTMAPPING                = 55;
 const X_D3DRS_PSINPUTTEXTURE              = 56;
 // End of "pixel-shader" render states, continuing with "simple" render states :

@@ -863,7 +863,7 @@ begin
     fprintf(dbgVertices, '    1.000000,0.000000,0.000000,0.000000,'#13#10);
     fprintf(dbgVertices, '    0.000000,1.000000,0.000000,0.000000,'#13#10);
     fprintf(dbgVertices, '    0.000000,0.000000,1.000000,0.000000,'#13#10);
-    fprintf(dbgVertices, '    0.000000,0.000000,0.000000,1.000000;;'#13#10);
+    fprintf(dbgVertices, '    0.000000,0.000000,0.000000,1.000000;'#13#10);
     fprintf(dbgVertices, '  }'#13#10);
     fprintf(dbgVertices, ''#13#10);
     fprintf(dbgVertices, '  Frame Turok1 {'#13#10);
@@ -872,7 +872,7 @@ begin
     fprintf(dbgVertices, '      1.000000,0.000000,0.000000,0.000000,'#13#10);
     fprintf(dbgVertices, '      0.000000,1.000000,0.000000,0.000000,'#13#10);
     fprintf(dbgVertices, '      0.000000,0.000000,1.000000,0.000000,'#13#10);
-    fprintf(dbgVertices, '      0.000000,0.000000,0.000000,1.000000;;'#13#10);
+    fprintf(dbgVertices, '      0.000000,0.000000,0.000000,1.000000;'#13#10);
     fprintf(dbgVertices, '    }#13#10');
     fprintf(dbgVertices, ''#13#10);
     fprintf(dbgVertices, '    Mesh {'#13#10);
