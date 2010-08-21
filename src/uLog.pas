@@ -102,7 +102,7 @@ type TLogFlags = DWORD; // 'set of TLogFlag' prevents inlining of MayLog
 
 var
   // This field indicates all logging flags that are currently active :
-  g_ActiveLogFlags: TLogFlags = lfAlways or lfDebug or lfCxbx or lfDxbx or lfKernel or lfPatch or lfSymbolScan;
+  g_ActiveLogFlags: TLogFlags = lfAlways or lfSymbolScan or lfDebug or lfCxbx or lfDxbx or lfKernel or lfPatch or lfReturnValue;
   g_DisabledLogFlags: TLogFlags = lfHeap or lfExtreme;
 
   pActiveLogFlags: PLogFlags = @g_ActiveLogFlags;
@@ -848,7 +848,10 @@ end;
 function RLogStack._(const aValue: SHORT; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'SHORT');
-  SetValue('0x' + IntToHex(aValue, SizeOf(aValue) * NIBBLES_PER_BYTE), IntToStr(aValue));
+  if (aValue < 0) or (aValue > 9) then // Only add decimal representation when that's different from hexadecimal
+    SetValue('0x' + IntToHex(aValue, SizeOf(aValue) * NIBBLES_PER_BYTE), IntToStr(aValue))
+  else
+    SetValue('0x' + IntToHex(aValue, SizeOf(aValue) * NIBBLES_PER_BYTE));
 end;
 
 function RLogStack._(const aValue: WORD; const aName: string): PlogStack;

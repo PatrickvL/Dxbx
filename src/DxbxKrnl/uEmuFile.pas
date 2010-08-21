@@ -179,6 +179,9 @@ procedure CleanupSymbolicLinks;
 
 implementation
 
+const
+  lfUnit = lfDxbx or lfFile;
+
 (*
 var
   // Array of EmuHandles in the system
@@ -616,11 +619,12 @@ begin
     // Convert the WideChar string to Ansi :
     wcstombs(mbstr, wcstr, StrLen);
 
-    DbgPrintf('DxbxPC2XB_FS_INFORMATION, %s : %d bytes copied, converted "%s" (%d bytes)', [
-      FsInformationClassToString(FsInformationClass),
-      CopySize,
-      PCharToString(mbstr, StrLen),
-      PInteger(MathPtr(FileInformation) + StringLengthOffset)^]);
+    if MayLog(lfUnit) then
+      DbgPrintf('DxbxPC2XB_FS_INFORMATION, %s : %d bytes copied, converted "%s" (%d bytes)', [
+        FsInformationClassToString(FsInformationClass),
+        CopySize,
+        PCharToString(mbstr, StrLen),
+        PInteger(MathPtr(FileInformation) + StringLengthOffset)^]);
   end;
 end;
 
@@ -650,11 +654,12 @@ begin
     // Convert the WideChar string to Ansi :
     wcstombs(mbstr, wcstr, StrLen);
 
-    DbgPrintf('DxbxPC2XB_FILE_INFORMATION, %s : %d bytes copied, converted "%s" (%d bytes)', [
-      FileInformationClassToString(FileInformationClass),
-      CopySize,
-      PCharToString(mbstr, StrLen),
-      PInteger(MathPtr(FileInformation) + StringLengthOffset)^]);
+    if MayLog(lfUnit) then
+      DbgPrintf('DxbxPC2XB_FILE_INFORMATION, %s : %d bytes copied, converted "%s" (%d bytes)', [
+        FileInformationClassToString(FileInformationClass),
+        CopySize,
+        PCharToString(mbstr, StrLen),
+        PInteger(MathPtr(FileInformation) + StringLengthOffset)^]);
   end;
 end;
 
@@ -766,7 +771,8 @@ begin
         else
         begin
           NtSymbolicLinkObjects[DriveLetter] := Self;
-          DbgPrintf('EmuMain : Linked "%s" to "%s" (residing at "%s")', [aSymbolicLinkName, aFullPath, Self.NativePath]);
+          if MayLog(lfUnit) then
+            DbgPrintf('EmuMain : Linked "%s" to "%s" (residing at "%s")', [aSymbolicLinkName, aFullPath, Self.NativePath]);
         end;
       end;
     end;
