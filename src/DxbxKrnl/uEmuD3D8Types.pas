@@ -141,6 +141,9 @@ const
   D3DVSDT_NORMSHORT4  = D3DDECLTYPE_SHORT4N;    // 4D signed, normalized short expanded to (value, value, value, value)
   D3DVSDT_NONE        = D3DDECLTYPE_UNUSED;    // No stream data
 
+
+  D3DRS_FORCE_DWORD = D3DRenderStateType($7fffffff);
+
 function D3DVSD_SKIP(_DWORDCount: DWord): DWord;
 function D3DVSD_REG(_VertexRegister, _Type: DWord): DWord;
 function D3DVSD_TESSUV(_VertexRegister: DWord): DWord;
@@ -1170,7 +1173,6 @@ const X_D3DTSS_MAXANISOTROPY = 8;
 const X_D3DTSS_COLORKEYOP = 9; // Xbox ext.
 const X_D3DTSS_COLORSIGN = 10; // Xbox ext.
 const X_D3DTSS_ALPHAKILL = 11; // Xbox ext.
-{}const X_D3DTSS_DEFERRED_TEXTURE_STATE_MAX = 12;
 const X_D3DTSS_COLOROP = 12;
 const X_D3DTSS_COLORARG0 = 13;
 const X_D3DTSS_COLORARG1 = 14;
@@ -1181,7 +1183,6 @@ const X_D3DTSS_ALPHAARG1 = 18;
 const X_D3DTSS_ALPHAARG2 = 19;
 const X_D3DTSS_RESULTARG = 20;
 const X_D3DTSS_TEXTURETRANSFORMFLAGS = 21;
-{}const X_D3DTSS_DEFERRED_MAX = 22;
 const X_D3DTSS_BUMPENVMAT00 = 22;
 const X_D3DTSS_BUMPENVMAT01 = 23;
 const X_D3DTSS_BUMPENVMAT11 = 24;
@@ -1191,6 +1192,9 @@ const X_D3DTSS_BUMPENVLOFFSET = 27;
 const X_D3DTSS_TEXCOORDINDEX = 28;
 const X_D3DTSS_BORDERCOLOR = 29;
 const X_D3DTSS_COLORKEYCOLOR = 30; // Xbox ext.
+
+const X_D3DTSS_DEFERRED_FIRST = X_D3DTSS_ADDRESSU;
+const X_D3DTSS_DEFERRED_LAST = X_D3DTSS_TEXTURETRANSFORMFLAGS;
 
 const X_D3DTS_STAGECOUNT = 4; // Dxbx addition
 const X_D3DTS_STAGESIZE = 32; // Dxbx addition
