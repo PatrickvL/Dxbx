@@ -119,6 +119,7 @@ begin
   XTL_EmuExecutePushBufferRaw(PDWORD(pPushBuffer.Data));
 end;
 
+// TODO -oDxbx: Find out why EmuUnswizzleActiveTexture messes up the callers stack (like in Cubemap sample)
 procedure EmuUnswizzleActiveTexture(); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -149,13 +150,17 @@ begin
     pPixelContainer := PX_D3DPixelContainer(g_EmuD3DActiveTexture[Stage]);
 
     if (pPixelContainer = NULL) or (0 = (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
-      Exit;
+      Continue;
+
+// Dxbx addition, doesn't help in fixing EmuUnswizzleActiveTexture...
+//    if IsSpecialResource(pPixelContainer.Data) then
+//      Continue;
 
     XBFormat := (pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
     dwBPP := 0;
 
     if (not EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
-      Exit;
+      Continue;
 
     // TODO -oCXBX: potentially CRC to see if this surface was actually modified..
 
@@ -171,6 +176,7 @@ begin
       if dwLevelCount > 0 then // Dxbx addition, to prevent underflow
       for v := 0 to dwLevelCount - 1 do
       begin
+// Dxbx note : The code in this block makes Cubemap crash (this somehow overwrited the callers stack)
         // Dxbx addition : Remove lock for each level separately :
         IDirect3DTexture(pTexture).UnlockRect(v);
 
