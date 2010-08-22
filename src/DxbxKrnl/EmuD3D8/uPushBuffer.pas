@@ -323,7 +323,8 @@ begin
     dwCount := ((pdwPushData^ and (not D3DPUSH_NOINCREMENT_FLAG)) shr D3DPUSH_COUNT_SHIFT);
     Inc(pdwPushData);
 
-    DbgPrintf('  Method: 0x%.08X      Count: 0x%.08X', [dwMethod, dwCount]);
+    if MayLog(lfUnit) then
+      DbgPrintf('  Method: 0x%.08X      Count: 0x%.08X', [dwMethod, dwCount]);
 
     // Interpret GPU Instruction
     if (dwMethod = D3DPUSH_SET_BEGIN_END) then
