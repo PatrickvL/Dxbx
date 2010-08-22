@@ -4363,31 +4363,6 @@ begin
 //  Result := g_pD3DDevice.SetTexture(Stage, IDirect3DBaseTexture(iif((g_iWireframe = 0), pBaseTexture, nil)));
   Result := g_pD3DDevice.SetTexture(Stage, IDirect3DBaseTexture(pBaseTexture));
 
-  // TODO -oDxbx: There's a problem in Sokoban - on the first frame we get a textured floor,
-  // a textured wall and seemingly correct z-ordering. On all following frames, the textures
-  // disappear, giving only solid filled triangles, and the z-ordering seems to be strangely
-  // inverted, as the floor extends into the depth, but covering the wall...
-  // [Apart from that, there's also an issue with the fonts -
-  // On Nvidia chipsets, if we disable the bFVF hack, Sokoban draws the letters of the font
-  //  with the correct texture, but most vertices jump around erratically.
-  //  The font texture doesn't disappear though, while the wall and floor textures do disappear.
-  //  If we enable the bFVF hack on NVidia, the jumping of the vertices is fixed, but the
-  //  texture disappears, making the letters invisible (unless we go wireframe mode).
-  // On ATI chipsets, if we disable the bFVF hack, Sokoban draws the letters of the font
-  //  with the correct texture, and the vertices are stable.
-  //  The font texture doesn't disappear, while the wall and floor textures do disappear.
-  //  If we enable the bFVF hack on ATI, the texture disappears, making the letters invisible
-  //  (unless we go wireframe mode).
-  //
-  // This behaviour has to relate to this code, as no other SetTexture calls are being hit by it!!!!
-  // Here's what we do know :
-  // - no automatic reference-counting is inserted by Delphi (not here at least)
-  // - the call doesn't fail in the first, nor following frames.
-  // - all drawing is in stage 0
-  // - the log output of subsequent frames is binary identical
-  // Somehow however, the texture is lost after the first frame...
-  // Could it be render-state related somehow????
-
   if FAILED(Result) then
   begin
     EmuWarning('SetTextureFailed!\n');
@@ -8289,15 +8264,23 @@ begin
 
   XTL_EmuUpdateDeferredStates();
 
-  EmuUnswizzleActiveTexture();
+//  if(PrimitiveType < X_D3DPT_POINTLIST) or (PrimitiveType >= X_D3DPT_MAX) then
+//  begin
+//    DxbxKrnlCleanup('Unknown primitive type: 0x%.02X', [Ord(PrimitiveType)]);
+//  end;
+//  EmuUnswizzleActiveTexture(); // This messes up the PrimitiveType stackvalue (overwrite?!) in Cubemap sample
+// If EmuUnswizzleActiveTexture was called, the above test would fail :
+//  if(PrimitiveType < X_D3DPT_POINTLIST) or (PrimitiveType >= X_D3DPT_MAX) then
+//  begin
+//    DxbxKrnlCleanup('Unknown primitive type: 0x%.02X', [Ord(PrimitiveType)]);
+//  end;
+
 
   if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
     EmuWarning('Unsupported PrimitiveType! (%d)', [DWORD(PrimitiveType)]);
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
-if Ord(PrimitiveType) = 6 then
-  VPDesc.PrimitiveType := PrimitiveType else
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
   VPDesc.dwOffset := 0;

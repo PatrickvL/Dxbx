@@ -971,7 +971,7 @@ var // TODO : Make these thread-safe :
 
 function PSRegToStr(const aPSReg: PS_REGISTER): AnsiString;
 begin
-  case aPSReg of
+  case PS_REGISTER(Ord(aPSReg) and $0f) of
     PS_REGISTER_C0: Result := 'c0';
     PS_REGISTER_C1: Result := 'c1';
 //    PS_REGISTER_FOG',      // 0x03L, // r
@@ -987,12 +987,31 @@ begin
 //    PS_REGISTER_EF_PROD
   else
     Result := '';
+    Exit;
+  end;
+
+  case PS_INPUTMAPPING(Ord(aPSReg) and $e0) of
+//    PS_INPUTMAPPING_UNSIGNED_IDENTITY:
+//      Result := Result + '_sat';
+    PS_INPUTMAPPING_UNSIGNED_INVERT: // 1-x
+      Result := '1-' + Result;
+    PS_INPUTMAPPING_EXPAND_NORMAL: // (2*x) - 1
+      Result := Result + '_bx2';
+    PS_INPUTMAPPING_EXPAND_NEGATE: // 1 - (2*x)
+      Result := '1-' + Result + '_x2';
+//    PS_INPUTMAPPING_HALFBIAS_NORMAL=   $80, // max(0,x) - 1/2   invalid for final combiner
+//    PS_INPUTMAPPING_HALFBIAS_NEGATE=   $a0, // 1/2 - max(0,x)   invalid for final combiner
+    PS_INPUTMAPPING_SIGNED_IDENTITY: ; // x
+    PS_INPUTMAPPING_SIGNED_NEGATE: // -x
+      Result := '-' + Result;
   end;
 end;
 
 function CombineStageInputDot(const InputA, InputB: DWORD; const OutputReg: PS_REGISTER; const OutputWriteMask: AnsiString): AnsiString;
 begin
-  Result := Result + 'dp3' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputReg) + OutputWriteMask + ' ...'; // TODO : Complete this
+  Result := Result + 'dp3' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputReg) + OutputWriteMask + ', ' +
+    PSRegToStr(PS_REGISTER(InputA)) + ', ' +
+    PSRegToStr(PS_REGISTER(InputB));
 end;
 
 function CombineStageInputMul(const InputA, InputB: DWORD; const OutputReg: PS_REGISTER; const OutputWriteMask: AnsiString): AnsiString;
@@ -1156,26 +1175,26 @@ begin
           if  ((InputB and PS_NoChannelMask) = Ord(PS_REGISTER_ONE))
           and ((InputD and PS_NoChannelMask) = Ord(PS_REGISTER_ONE)) then
             Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
-              PSRegToStr(PS_REGISTER(InputA and $F)) + ', ' +
-              PSRegToStr(PS_REGISTER(InputC and $F)) + #13#10
+              PSRegToStr(PS_REGISTER(InputA)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputC)) + #13#10
           else
           if  ((InputA and PS_NoChannelMask) = Ord(PS_REGISTER_ONE))
           and ((InputD and PS_NoChannelMask) = Ord(PS_REGISTER_ONE)) then
             Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
-              PSRegToStr(PS_REGISTER(InputB and $F)) + ', ' +
-              PSRegToStr(PS_REGISTER(InputC and $F)) + #13#10
+              PSRegToStr(PS_REGISTER(InputB)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputC)) + #13#10
           else
           if  ((InputB and PS_NoChannelMask) = Ord(PS_REGISTER_ONE))
           and ((InputC and PS_NoChannelMask) = Ord(PS_REGISTER_ONE)) then
             Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
-              PSRegToStr(PS_REGISTER(InputA and $F)) + ', ' +
-              PSRegToStr(PS_REGISTER(InputD and $F)) + #13#10
+              PSRegToStr(PS_REGISTER(InputA)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputD)) + #13#10
           else
           if  ((InputA and PS_NoChannelMask) = Ord(PS_REGISTER_ONE))
           and ((InputC and PS_NoChannelMask) = Ord(PS_REGISTER_ONE)) then
             Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
-              PSRegToStr(PS_REGISTER(InputB and $F)) + ', ' +
-              PSRegToStr(PS_REGISTER(InputD and $F)) + #13#10
+              PSRegToStr(PS_REGISTER(InputB)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputD)) + #13#10
           else
             // TODO :
             Result := Result + '; Can''t mux when both AB and CD discarded (no PS_REGISTER_ONE''s present)!'#13#10;
@@ -1209,41 +1228,66 @@ begin
         if (OutputCD = PS_REGISTER_DISCARD) then
         begin
           // AB and CD are discarded, but we still have to calculate "sum = (A * B) + (C * D)"
+          // First, check if there are effectively 2 input (when both are multiplied by one) :
+          if  ((InputB and PS_NoChannelMask) = Ord(PS_REGISTER_ONE))
+          and ((InputD and PS_NoChannelMask) = Ord(PS_REGISTER_ONE)) then
+            Result := Result + 'add' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+              PSRegToStr(PS_REGISTER(InputA)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputC)) + #13#10
+          else
+          if  ((InputA and PS_NoChannelMask) = Ord(PS_REGISTER_ONE))
+          and ((InputD and PS_NoChannelMask) = Ord(PS_REGISTER_ONE)) then
+            Result := Result + 'add' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+              PSRegToStr(PS_REGISTER(InputB)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputC)) + #13#10
+          else
+          if  ((InputB and PS_NoChannelMask) = Ord(PS_REGISTER_ONE))
+          and ((InputC and PS_NoChannelMask) = Ord(PS_REGISTER_ONE)) then
+            Result := Result + 'add' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+              PSRegToStr(PS_REGISTER(InputA)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputD)) + #13#10
+          else
+          if  ((InputA and PS_NoChannelMask) = Ord(PS_REGISTER_ONE))
+          and ((InputC and PS_NoChannelMask) = Ord(PS_REGISTER_ONE)) then
+            Result := Result + 'add' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+              PSRegToStr(PS_REGISTER(InputB)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputD)) + #13#10
+          else
           // The problem is, there's no instruction for that. Luckily, we do have 'mad' to our disposal,
           // which can do "output = (input1 * input2) + input3", but if we want to use that, we must check
           // if one of the inputs is 1, so that it can be ignored (as "A * 1" equals "A") :
           if (InputA and PS_NoChannelMask) = Ord(PS_REGISTER_ONE) then
             Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
-              PSRegToStr(PS_REGISTER(InputC and $F)) + ', ' +
-              PSRegToStr(PS_REGISTER(InputD and $F)) + ', ' +
-              PSRegToStr(PS_REGISTER(InputB and $F)) + #13#10
+              PSRegToStr(PS_REGISTER(InputC)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputD)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputB)) + #13#10
           else
           if (InputB and PS_NoChannelMask) = Ord(PS_REGISTER_ONE) then
             Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
-              PSRegToStr(PS_REGISTER(InputC and $F)) + ', ' +
-              PSRegToStr(PS_REGISTER(InputD and $F)) + ', ' +
-              PSRegToStr(PS_REGISTER(InputA and $F)) + #13#10
+              PSRegToStr(PS_REGISTER(InputC)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputD)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputA)) + #13#10
           else
           if (InputC and PS_NoChannelMask) = Ord(PS_REGISTER_ONE) then
             Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
-              PSRegToStr(PS_REGISTER(InputA and $F)) + ', ' +
-              PSRegToStr(PS_REGISTER(InputB and $F)) + ', ' +
-              PSRegToStr(PS_REGISTER(InputD and $F)) + #13#10
+              PSRegToStr(PS_REGISTER(InputA)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputB)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputD)) + #13#10
           else
           if (InputD and PS_NoChannelMask) = Ord(PS_REGISTER_ONE) then
             Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
-              PSRegToStr(PS_REGISTER(InputA and $F)) + ', ' +
-              PSRegToStr(PS_REGISTER(InputB and $F)) + ', ' +
-              PSRegToStr(PS_REGISTER(InputC and $F)) + #13#10
+              PSRegToStr(PS_REGISTER(InputA)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputB)) + ', ' +
+              PSRegToStr(PS_REGISTER(InputC)) + #13#10
           else
           begin
-            if  ((InputA and $F) = (InputD and $F))
+            if  ((InputA) = (InputD))
             and True{InputA is inverse of InputD PS_INPUTMAPPING_UNSIGNED_INVERT } then
             begin
               Result := Result + 'lrp' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
-                PSRegToStr(PS_REGISTER(InputA and $F)) + ', ' +
-                PSRegToStr(PS_REGISTER(InputB and $F)) + ', ' +
-                PSRegToStr(PS_REGISTER(InputC and $F)) + #13#10
+                PSRegToStr(PS_REGISTER(InputA)) + ', ' +
+                PSRegToStr(PS_REGISTER(InputB)) + ', ' +
+                PSRegToStr(PS_REGISTER(InputC)) + #13#10
             end
             else
               // TODO : Unsupported for now, maybe try to use a temp register?
@@ -1254,8 +1298,8 @@ begin
         begin
           // Only AB is discarded, but we still have to calculate "sum = (A * B) + (C * D)"
           Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
-            PSRegToStr(PS_REGISTER(InputA and $F)) + ', ' +
-            PSRegToStr(PS_REGISTER(InputB and $F)) + ', ' +
+            PSRegToStr(PS_REGISTER(InputA)) + ', ' +
+            PSRegToStr(PS_REGISTER(InputB)) + ', ' +
             PSRegToStr(OutputCD) + #13#10
         end;
       end
@@ -1265,8 +1309,8 @@ begin
         begin
           // Only CD is discarded, but we still have to calculate "sum = (A * B) + (C * D)"
           Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
-            PSRegToStr(PS_REGISTER(InputC and $F)) + ', ' +
-            PSRegToStr(PS_REGISTER(InputD and $F)) + ', ' +
+            PSRegToStr(PS_REGISTER(InputC)) + ', ' +
+            PSRegToStr(PS_REGISTER(InputD)) + ', ' +
             PSRegToStr(OutputAB) + #13#10;
         end
         else
