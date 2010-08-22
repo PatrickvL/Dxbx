@@ -6879,7 +6879,7 @@ begin
     DxbxKrnlCleanup('EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', [Value]);
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
-  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(X_D3DTSS_TEXCOORDINDEX)] := Value;
+  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(DxbxFromNewVersion_D3DTSS(X_D3DTSS_TEXCOORDINDEX))] := Value;
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
   g_pD3DDevice.SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
@@ -6887,7 +6887,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3DDevice_SetTextureState_TwoSidedLighting
+procedure XTL_EmuD3DDevice_SetRenderState_TwoSidedLighting
 (
   Value: DWORD
 ); stdcall;
@@ -6951,7 +6951,7 @@ begin
       [Stage, Value]);
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
-  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(X_D3DTSS_BORDERCOLOR)] := Value;
+  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(DxbxFromNewVersion_D3DTSS(X_D3DTSS_BORDERCOLOR))] := Value;
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
   IDirect3DDevice_SetSamplerState(g_pD3DDevice, Stage, D3DSAMP_BORDERCOLOR, Value);
@@ -6977,7 +6977,7 @@ begin
       [Stage, Value]);
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
-  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(X_D3DTSS_COLORKEYCOLOR)] := Value;
+  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(DxbxFromNewVersion_D3DTSS(X_D3DTSS_COLORKEYCOLOR))] := Value;
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
   EmuWarning('SetTextureState_ColorKeyColor is not supported!');
@@ -7008,7 +7008,7 @@ begin
   XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + Ord(Type_)] := Value;
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
-  case DxbxVersionAdjust_D3DTSS(Type_) of
+  case DxbxFromOldVersion_D3DTSS(Type_) of
     X_D3DTSS_BUMPENVMAT00:
       g_pD3DDevice.SetTextureStageState(Stage, D3DTSS_BUMPENVMAT00, Value);
     X_D3DTSS_BUMPENVMAT01:
@@ -8565,6 +8565,8 @@ function XTL_EmuD3DDevice_SetTextureStageStateNotInline
   Value: DWORD
 ): HRESULT; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  Type_VersionIndependent: X_D3DTEXTURESTAGESTATETYPE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -8575,24 +8577,20 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  if (Type_ < X_D3DTSS_DEFERRED_TEXTURE_STATE_MAX) then
-  begin
-    // TODO -oDxbx : Update the D3D DirtyFlags too
-    XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + Ord(Type_)] := Value;
-  end
-  else if (Type_ < X_D3DTSS_DEFERRED_MAX) then
-  begin
-    // TODO -oDxbx : Update the D3D DirtyFlags too
-    XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + Ord(Type_)] := Value;
-  end
-  else if (Type_ = X_D3DTSS_TEXCOORDINDEX) then
-    XTL_EmuD3DDevice_SetTextureState_TexCoordIndex(Stage, Value)
-  else if (Type_ = X_D3DTSS_BORDERCOLOR) then
-    XTL_EmuD3DDevice_SetTextureState_BorderColor(Stage, Value)
-  else if (Type_ = X_D3DTSS_COLORKEYCOLOR) then
-    XTL_EmuD3DDevice_SetTextureState_ColorKeyColor(Stage, Value)
-  else if ((Type_ >= X_D3DTSS_BUMPENVMAT00) and (Type_ <= X_D3DTSS_BUMPENVLOFFSET)) then
-    XTL_EmuD3DDevice_SetTextureState_BumpEnv(Stage, Type_, Value);
+  Type_VersionIndependent := DxbxFromOldVersion_D3DTSS(Type_);
+  case Type_VersionIndependent of
+    X_D3DTSS_DEFERRED_FIRST..X_D3DTSS_DEFERRED_LAST:
+      // TODO -oDxbx : Update the D3D DirtyFlags too
+      XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + Ord(Type_)] := Value;
+    X_D3DTSS_BUMPENVMAT00..X_D3DTSS_BUMPENVLOFFSET:
+      XTL_EmuD3DDevice_SetTextureState_BumpEnv(Stage, Type_, Value);
+    X_D3DTSS_TEXCOORDINDEX:
+      XTL_EmuD3DDevice_SetTextureState_TexCoordIndex(Stage, Value);
+    X_D3DTSS_BORDERCOLOR:
+      XTL_EmuD3DDevice_SetTextureState_BorderColor(Stage, Value);
+    X_D3DTSS_COLORKEYCOLOR:
+      XTL_EmuD3DDevice_SetTextureState_ColorKeyColor(Stage, Value);
+  end;
 
   Result := D3D_OK;
 
@@ -10905,7 +10903,7 @@ begin
     X_D3DRS_BACKFILLMODE:
       XTL_EmuD3DDevice_SetRenderState_BackFillMode(Value);
     X_D3DRS_TWOSIDEDLIGHTING:
-      XTL_EmuD3DDevice_SetTextureState_TwoSidedLighting(Value);
+      XTL_EmuD3DDevice_SetRenderState_TwoSidedLighting(Value);
     X_D3DRS_NORMALIZENORMALS:
       XTL_EmuD3DDevice_SetRenderState_NormalizeNormals(Value);
     X_D3DRS_ZENABLE:
@@ -11172,7 +11170,6 @@ exports
   XTL_EmuD3DDevice_SetPixelShaderProgram,
   XTL_EmuD3DDevice_SetRenderState_BackFillMode,
   XTL_EmuD3DDevice_SetRenderState_CullMode,
-  XTL_EmuD3DDevice_SetVertexBlendModelView, // ??
 //  XTL_EmuD3DDevice_SetRenderState_Deferred, Dxbx note : Disabled, as we DO have EmuD3DDeferredRenderState pin-pointed correctly
   XTL_EmuD3DDevice_SetRenderState_DoNotCullUncompressed,
   XTL_EmuD3DDevice_SetRenderState_Dxt1NoiseEnable,
@@ -11192,18 +11189,18 @@ exports
   XTL_EmuD3DDevice_SetRenderState_RopZCmpAlwaysRead,
   XTL_EmuD3DDevice_SetRenderState_RopZRead,
   XTL_EmuD3DDevice_SetRenderState_SampleAlpha,
-  XTL_EmuD3DDevice_SetRenderStateNotInline,
   XTL_EmuD3DDevice_SetRenderState_ShadowFunc,
   XTL_EmuD3DDevice_SetRenderState_Simple,
   XTL_EmuD3DDevice_SetRenderState_StencilCullEnable,
   XTL_EmuD3DDevice_SetRenderState_StencilEnable,
   XTL_EmuD3DDevice_SetRenderState_StencilFail,
   XTL_EmuD3DDevice_SetRenderState_TextureFactor,
+  XTL_EmuD3DDevice_SetRenderState_TwoSidedLighting,
   XTL_EmuD3DDevice_SetRenderState_VertexBlend,
   XTL_EmuD3DDevice_SetRenderState_YuvEnable,
   XTL_EmuD3DDevice_SetRenderState_ZBias,
   XTL_EmuD3DDevice_SetRenderState_ZEnable,
-  XTL_EmuD3DDevice_SetTextureStageStateNotInline,
+  XTL_EmuD3DDevice_SetRenderStateNotInline,
   XTL_EmuD3DDevice_SetRenderTarget,
   XTL_EmuD3DDevice_SetScissors,
   XTL_EmuD3DDevice_SetScreenSpaceOffset,
@@ -11215,15 +11212,15 @@ exports
   XTL_EmuD3DDevice_SetStreamSource,
   XTL_EmuD3DDevice_SetSwapCallback,
   XTL_EmuD3DDevice_SetTexture,
+  XTL_EmuD3DDevice_SetTextureStageStateNotInline,
   XTL_EmuD3DDevice_SetTextureState_BorderColor,
   XTL_EmuD3DDevice_SetTextureState_BumpEnv,
   XTL_EmuD3DDevice_SetTextureState_ColorKeyColor,
   XTL_EmuD3DDevice_SetTextureState_TexCoordIndex,
-  XTL_EmuD3DDevice_SetTextureState_TwoSidedLighting name PatchPrefix + 'D3DDevice_SetRenderState_TwoSidedLighting', // Cxbx:Beware of the typo Dxbx:Use patch for both!
-  XTL_EmuD3DDevice_SetTextureState_TwoSidedLighting name PatchPrefix + 'D3DDevice_SetTextureState_TwoSidedLighting',
   XTL_EmuD3DDevice_SetTileNoWait name PatchPrefix + '?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z',
   XTL_EmuD3DDevice_SetTileNoWait name PatchPrefix + 'D3DDevice_SetTile', // Dxbx note : SetTileNoWait is applied to SetTile in Cxbx 4361 OOPVA's!
   XTL_EmuD3DDevice_SetTransform,
+  XTL_EmuD3DDevice_SetVertexBlendModelView, // ??
   XTL_EmuD3DDevice_SetVertexData2f,
   XTL_EmuD3DDevice_SetVertexData2s,
   XTL_EmuD3DDevice_SetVertexData4f,

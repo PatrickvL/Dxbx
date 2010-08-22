@@ -50,7 +50,8 @@ procedure DxbxBuildRenderStateMappingTable(const aD3DRenderState: PDWORDs); {NOP
 procedure DxbxInitializeDefaultRenderStates(const aParameters: PX_D3DPRESENT_PARAMETERS); {NOPATCH}
 
 function DxbxVersionAdjust_D3DRS(const Value: X_D3DRENDERSTATETYPE): X_D3DRENDERSTATETYPE; {NOPATCH}
-function DxbxVersionAdjust_D3DTSS(const NewValue: DWORD): DWORD; {NOPATCH}
+function DxbxFromOldVersion_D3DTSS(const OldValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
+function DxbxFromNewVersion_D3DTSS(const NewValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
 function DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE): HResult;
 
 procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
@@ -441,6 +442,7 @@ begin
     X_D3DRS_STENCILMASK                 : Result := D3DRS_STENCILMASK;
     X_D3DRS_STENCILWRITEMASK            : Result := D3DRS_STENCILWRITEMASK;
     X_D3DRS_BLENDOP                     : Result := D3DRS_BLENDOP;
+
     X_D3DRS_FOGENABLE                   : Result := D3DRS_FOGENABLE;
     X_D3DRS_FOGTABLEMODE                : Result := D3DRS_FOGTABLEMODE;
     X_D3DRS_FOGSTART                    : Result := D3DRS_FOGSTART;
@@ -479,8 +481,8 @@ begin
     X_D3DRS_STENCILFAIL                 : Result := D3DRS_STENCILFAIL;
     X_D3DRS_CULLMODE                    : Result := D3DRS_CULLMODE;
     X_D3DRS_TEXTUREFACTOR               : Result := D3DRS_TEXTUREFACTOR;
-    X_D3DRS_ZBIAS                       : Result := D3DRS_ZBIAS;
-    X_D3DRS_EDGEANTIALIAS               : Result := D3DRS_EDGEANTIALIAS;
+    X_D3DRS_ZBIAS                       : Result := {$IFDEF DXBX_USE_D3D9}D3DRS_DEPTHBIAS{$ELSE}D3DRS_ZBIAS{$ENDIF};
+    X_D3DRS_EDGEANTIALIAS               : Result := {$IFDEF DXBX_USE_D3D9}D3DRS_ANTIALIASEDLINEENABLE{$ELSE}D3DRS_EDGEANTIALIAS{$ENDIF};
     X_D3DRS_MULTISAMPLEANTIALIAS        : Result := D3DRS_MULTISAMPLEANTIALIAS;
     X_D3DRS_MULTISAMPLEMASK             : Result := D3DRS_MULTISAMPLEMASK;
 
@@ -501,6 +503,41 @@ begin
     D3DRS_TWEENFACTOR
     D3DRS_POSITIONORDER
     D3DRS_NORMALORDER
+
+ Direct3D9 states unused :
+    D3DRS_SCISSORTESTENABLE         = 174,
+    D3DRS_SLOPESCALEDEPTHBIAS       = 175,
+    D3DRS_ANTIALIASEDLINEENABLE     = 176,
+    D3DRS_MINTESSELLATIONLEVEL      = 178,
+    D3DRS_MAXTESSELLATIONLEVEL      = 179,
+    D3DRS_ADAPTIVETESS_X            = 180,
+    D3DRS_ADAPTIVETESS_Y            = 181,
+    D3DRS_ADAPTIVETESS_Z            = 182,
+    D3DRS_ADAPTIVETESS_W            = 183,
+    D3DRS_ENABLEADAPTIVETESSELLATION = 184,
+    D3DRS_TWOSIDEDSTENCILMODE       = 185,   // BOOL enable/disable 2 sided stenciling
+    D3DRS_CCW_STENCILFAIL           = 186,   // D3DSTENCILOP to do if ccw stencil test fails
+    D3DRS_CCW_STENCILZFAIL          = 187,   // D3DSTENCILOP to do if ccw stencil test passes and Z test fails
+    D3DRS_CCW_STENCILPASS           = 188,   // D3DSTENCILOP to do if both ccw stencil and Z tests pass
+    D3DRS_CCW_STENCILFUNC           = 189,   // D3DCMPFUNC fn.  ccw Stencil Test passes if ((ref & mask) stencilfn (stencil & mask)) is true
+    D3DRS_COLORWRITEENABLE1         = 190,   // Additional ColorWriteEnables for the devices that support D3DPMISCCAPS_INDEPENDENTWRITEMASKS
+    D3DRS_COLORWRITEENABLE2         = 191,   // Additional ColorWriteEnables for the devices that support D3DPMISCCAPS_INDEPENDENTWRITEMASKS
+    D3DRS_COLORWRITEENABLE3         = 192,   // Additional ColorWriteEnables for the devices that support D3DPMISCCAPS_INDEPENDENTWRITEMASKS
+    D3DRS_BLENDFACTOR               = 193,   // D3DCOLOR used for a constant blend factor during alpha blending for devices that support D3DPBLENDCAPS_BLENDFACTOR
+    D3DRS_SRGBWRITEENABLE           = 194,   // Enable rendertarget writes to be DE-linearized to SRGB (for formats that expose D3DUSAGE_QUERY_SRGBWRITE)
+    D3DRS_DEPTHBIAS                 = 195,
+    D3DRS_WRAP8                     = 198,   // Additional wrap states for vs_3_0+ attributes with D3DDECLUSAGE_TEXCOORD
+    D3DRS_WRAP9                     = 199,
+    D3DRS_WRAP10                    = 200,
+    D3DRS_WRAP11                    = 201,
+    D3DRS_WRAP12                    = 202,
+    D3DRS_WRAP13                    = 203,
+    D3DRS_WRAP14                    = 204,
+    D3DRS_WRAP15                    = 205,
+    D3DRS_SEPARATEALPHABLENDENABLE  = 206,  // TRUE to enable a separate blending function for the alpha channel
+    D3DRS_SRCBLENDALPHA             = 207,  // SRC blend factor for the alpha channel when D3DRS_SEPARATEDESTALPHAENABLE is TRUE
+    D3DRS_DESTBLENDALPHA            = 208,  // DST blend factor for the alpha channel when D3DRS_SEPARATEDESTALPHAENABLE is TRUE
+    D3DRS_BLENDOPALPHA              = 209   // Blending operation for the alpha channel when D3DRS_SEPARATEDESTALPHAENABLE is TRUE
 *)
   else
     Result := D3DRS_FORCE_DWORD; // Unsupported
@@ -538,7 +575,7 @@ begin
     end
     else
     begin
-      // When unavailable, apply a dummy pointer, and *don't* increate the version dependent state,
+      // When unavailable, apply a dummy pointer, and *don't* increment the version dependent state,
       // so the mapping table will correspond to the actual (version dependent) layout :
       // DxbxMapActiveVersionToMostRecent shouldn't be set here, as there's no element for this state!
       DxbxMapMostRecentToActiveVersion[State] := X_D3DRS_UNSUPPORTED;
@@ -720,16 +757,16 @@ begin
   Result := DxbxMapActiveVersionToMostRecent[Value];
 end;
 
-// For 3925, the actual D3DTSS flags have different values.
-// This function maps new indexes to old ones, so that we
-// can read a specific member from the emulated XBE's
-// XTL_EmuD3DDeferredTextureState buffer.
-function DxbxVersionAdjust_D3DTSS(const NewValue: DWORD): DWORD;
 const
   OLD_X_D3DTSS_COLOROP = 0;
   OLD_X_D3DTSS_TEXTURETRANSFORMFLAGS = 9;
   OLD_X_D3DTSS_ADDRESSU = 10;
   OLD_X_D3DTSS_ALPHAKILL = 21;
+// For 3925, the actual D3DTSS flags have different values.
+// This function maps new indexes to old ones, so that we
+// can read a specific member from the emulated XBE's
+// XTL_EmuD3DDeferredTextureState buffer.
+function DxbxFromNewVersion_D3DTSS(const NewValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
 begin
   Result := NewValue;
   if g_BuildVersion <= 3925 then
@@ -742,6 +779,22 @@ begin
         Inc(Result, OLD_X_D3DTSS_ADDRESSU)
       else
         Dec(Result, {NEW}X_D3DTSS_COLOROP);
+  end;
+end;
+
+function DxbxFromOldVersion_D3DTSS(const OldValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
+begin
+  Result := OldValue;
+  if g_BuildVersion <= 3925 then
+  begin
+    // In SDK 3925 (or at somewhere else between 3911 and 4361), the deferred texture states where switched;
+    // D3DTSS_COLOROP ..D3DTSS_TEXTURETRANSFORMFLAGS ranged  0.. 9 which has become 12..21
+    // D3DTSS_ADDRESSU..D3DTSS_ALPHAKILL             ranged 10..21 which has become  0..11
+    if (OldValue <= OLD_X_D3DTSS_ALPHAKILL) then
+      if (OldValue <= OLD_X_D3DTSS_TEXTURETRANSFORMFLAGS) then
+        Inc(Result, 12)
+      else
+        Dec(Result, 10);
   end;
 end;
 
@@ -779,7 +832,7 @@ procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
 var
   v: int;
   pCur: PDWORDs;
-  X_D3DTSS: DWORD;
+  XboxValue: DWORD;
   pTexture: XTL_PIDirect3DBaseTexture8;
   dwValue: DWORD;
 begin
@@ -794,115 +847,115 @@ begin
     begin
       pCur := @(XTL_EmuD3DDeferredTextureState[v*X_D3DTS_STAGESIZE]);
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_ADDRESSU)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ADDRESSU)];
+      if (XboxValue <> X_D3DTSS_UNK) then
       begin
-        if (X_D3DTSS = 5) then
+        if (XboxValue = 5) then
           DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_ADDRESSU, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_ADDRESSU, XboxValue);
       end;
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_ADDRESSV)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ADDRESSV)];
+      if (XboxValue <> X_D3DTSS_UNK) then
       begin
-        if (X_D3DTSS = 5) then
+        if (XboxValue = 5) then
           DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_ADDRESSV, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_ADDRESSV, XboxValue);
       end;
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_ADDRESSW)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ADDRESSW)];
+      if (XboxValue <> X_D3DTSS_UNK) then
       begin
-        if (X_D3DTSS = 5) then
+        if (XboxValue = 5) then
           DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_ADDRESSW, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_ADDRESSW, XboxValue);
       end;
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_MAGFILTER)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_MAGFILTER)];
+      if (XboxValue <> X_D3DTSS_UNK) then
       begin
-        if (X_D3DTSS = 4) then
+        if (XboxValue = 4) then
           DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MAGFILTER, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MAGFILTER, XboxValue);
       end;
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_MINFILTER)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_MINFILTER)];
+      if (XboxValue <> X_D3DTSS_UNK) then
       begin
-        if (X_D3DTSS = 4) then
+        if (XboxValue = 4) then
           DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MINFILTER, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MINFILTER, XboxValue);
       end;
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_MIPFILTER)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_MIPFILTER)];
+      if (XboxValue <> X_D3DTSS_UNK) then
       begin
-        if (X_D3DTSS = 4) then
+        if (XboxValue = 4) then
           DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MIPFILTER, X_D3DTSS);
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MIPFILTER, XboxValue);
       end;
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_MIPMAPLODBIAS)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MIPMAPLODBIAS, X_D3DTSS);
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_MIPMAPLODBIAS)];
+      if (XboxValue <> X_D3DTSS_UNK) then
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MIPMAPLODBIAS, XboxValue);
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_MAXMIPLEVEL)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MAXMIPLEVEL, X_D3DTSS);
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_MAXMIPLEVEL)];
+      if (XboxValue <> X_D3DTSS_UNK) then
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MAXMIPLEVEL, XboxValue);
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_MAXANISOTROPY)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MAXANISOTROPY, X_D3DTSS);
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_MAXANISOTROPY)];
+      if (XboxValue <> X_D3DTSS_UNK) then
+        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MAXANISOTROPY, XboxValue);
 
       // TODO -oDxbx : Emulate X_D3DTSS_COLORKEYOP (Xbox ext.)
       // TODO -oDxbx : Emulate X_D3DTSS_COLORSIGN (Xbox ext.)
       // TODO -oDxbx : Emulate X_D3DTSS_ALPHAKILL (Xbox ext.)
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_COLOROP)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLOROP, EmuXB2PC_D3DTEXTUREOP(X_D3DTSS));
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_COLOROP)];
+      if (XboxValue <> X_D3DTSS_UNK) then
+        g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLOROP, EmuXB2PC_D3DTEXTUREOP(XboxValue));
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_COLORARG0)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLORARG0, X_D3DTSS);
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_COLORARG0)];
+      if (XboxValue <> X_D3DTSS_UNK) then
+        g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLORARG0, XboxValue);
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_COLORARG1)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLORARG1, X_D3DTSS);
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_COLORARG1)];
+      if (XboxValue <> X_D3DTSS_UNK) then
+        g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLORARG1, XboxValue);
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_COLORARG2)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLORARG2, X_D3DTSS);
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_COLORARG2)];
+      if (XboxValue <> X_D3DTSS_UNK) then
+        g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLORARG2, XboxValue);
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_ALPHAOP)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAOP, EmuXB2PC_D3DTEXTUREOP(X_D3DTSS));
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ALPHAOP)];
+      if (XboxValue <> X_D3DTSS_UNK) then
+        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAOP, EmuXB2PC_D3DTEXTUREOP(XboxValue));
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_ALPHAARG0)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAARG0, X_D3DTSS);
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ALPHAARG0)];
+      if (XboxValue <> X_D3DTSS_UNK) then
+        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAARG0, XboxValue);
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_ALPHAARG1)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAARG1, X_D3DTSS);
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ALPHAARG1)];
+      if (XboxValue <> X_D3DTSS_UNK) then
+        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAARG1, XboxValue);
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_ALPHAARG2)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAARG2, X_D3DTSS);
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ALPHAARG2)];
+      if (XboxValue <> X_D3DTSS_UNK) then
+        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAARG2, XboxValue);
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_RESULTARG)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_RESULTARG, X_D3DTSS);
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_RESULTARG)];
+      if (XboxValue <> X_D3DTSS_UNK) then
+        g_pD3DDevice.SetTextureStageState(v, D3DTSS_RESULTARG, XboxValue);
 
-      X_D3DTSS := pCur[DxbxVersionAdjust_D3DTSS(X_D3DTSS_TEXTURETRANSFORMFLAGS)];
-      if (X_D3DTSS <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, X_D3DTSS);
+      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_TEXTURETRANSFORMFLAGS)];
+      if (XboxValue <> X_D3DTSS_UNK) then
+        g_pD3DDevice.SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, XboxValue);
 
       // Cxbx note : D3DTSS_BORDERCOLOR is NOT a deferred texture state!
 
