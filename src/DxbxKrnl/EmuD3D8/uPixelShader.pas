@@ -1188,7 +1188,7 @@ begin
             Result := Result + 'mad' + SumOutputString +
               PSRegToStr(InputC) + ', ' +
               PSRegToStr(InputD) + ', ' +
-              PSRegToStr(InputSUM) + #13#10;
+              PSRegToStr(OutputSUM) + #13#10;
           end;
         end
         else
@@ -1289,7 +1289,7 @@ begin
               Result := Result + 'mad' + SumOutputString +
                 PSRegToStr(InputC) + ', ' +
                 PSRegToStr(InputD) + ', ' +
-                PSRegToStr(InputSUM) + #13#10;
+                PSRegToStr(OutputSUM) + #13#10;
           end;
         end
         else
