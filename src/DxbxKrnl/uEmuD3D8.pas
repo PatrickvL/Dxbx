@@ -4907,11 +4907,11 @@ begin
   Result := D3D_OK;
 end;
 
-procedure XTL_EmuD3DDevice_RunPushBuffer
+function XTL_EmuD3DDevice_RunPushBuffer
 (
     pPushBuffer: PX_D3DPushBuffer;
     pFixup: PX_D3DFixup
-); stdcall;
+): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -4925,13 +4925,14 @@ begin
       [pPushBuffer, pFixup]);
 
   XTL_EmuExecutePushBuffer(pPushBuffer, pFixup);
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3DDevice_GetPushBufferOffset(
+function XTL_EmuD3DDevice_GetPushBufferOffset(
   pOffset: PDWORD
-  ); stdcall;
+  ): HRESULT; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:1
 begin
   EmuSwapFS(fsWindows);
@@ -4941,7 +4942,10 @@ begin
       _(pOffset, 'pOffset').
     LogEnd();
 
+//  D3DDevice_GetPushBufferOffset(pOffset);
   pOffset^ := 0; // TODO
+
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -6824,8 +6828,8 @@ begin
         #13#10');',
       [Addr(pCallback)]); // Dxbx: Check this causes no call!
 
-  if IsValidAddress(Addr(pCallback)) then
-    g_pVBCallback := Addr(pCallback)
+  if Addr(pCallback) <> Null then
+    g_pVBCallback := pCallback
   else
     // Dxbx note : Zapper passes the Handle of a previously created thread here... wierd!
     EmuWarning('SetVerticalBlankCallback ignored invalid Callback address');
