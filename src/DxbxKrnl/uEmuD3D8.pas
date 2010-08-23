@@ -6816,7 +6816,7 @@ end;
 procedure XTL_EmuD3DDevice_SetVerticalBlankCallback
 (
   pCallback: D3DVBLANKCALLBACK
-);
+); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
