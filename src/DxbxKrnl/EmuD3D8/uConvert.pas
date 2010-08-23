@@ -38,8 +38,10 @@ uses
   , uEmuD3D8Types
   , uEmu;
 
-function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord): BOOL_;
-function EmuXBFormatIsLinear(Format: X_D3DFORMAT): BOOL_;
+function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
+function EmuXBFormatIsYUV(Format: X_D3DFORMAT): BOOL_;
+function EmuXBFormatIsCompressed(Format: X_D3DFORMAT): BOOL_;
+function EmuXBFormatIsLinear(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
 
 function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT;
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
@@ -107,106 +109,10 @@ EmuPrimitiveTypeLookup: array [0..Ord(X_D3DPT_POLYGON)] of D3DPRIMITIVETYPE = (
     D3DPT_TRIANGLEFAN      // X_D3DPT_POLYGON        = 10, Xbox
 );
 
-(* Dxbx note : Not used anymore, replaced by a switch in XTL_EmuIDirect3DDevice_SetRenderState_Simple()
-// render state conversion table
-CONST {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWORD = (
-// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-    // WARNING: This lookup table strongly binds us to an SDK with these
-    // specific #define values for D3DRS_*. Make VERY sure that you have
-    // the correct lookup values;
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 0
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 2
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 4
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 6
-    X_D3DRSSE_UNK,  $0004037c,      // 8  - , D3DRS_SHADEMODE
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 10
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 12
-    $0004035c,      $00040300,      // 14 - D3DRS_ZWRITEENABLE, D3DRS_ALPHATESTENABLE
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 16
-    X_D3DRSSE_UNK,  $00040344,      // 18 - , D3DRS_SRCBLEND
-    $00040348,      X_D3DRSSE_UNK,  // 20 - D3DRS_DESTBLEND
-    X_D3DRSSE_UNK,  $00040354,      // 22 - , D3DRS_ZFUNC
-    $00040340,      $0004033c,      // 24 - D3DRS_ALPHAREF, D3DRS_ALPHAFUNC
-    $00040310,      $00040304,      // 26 - D3DRS_DITHERENABLE, D3DRS_ALPHABLENDENABLE
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 28
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 30
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 32
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 34
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 36
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 38
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 40
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 42
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 44
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 46
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 48
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 50
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 52
-    $00040374,      $00040378,      // 54 - D3DRS_STENCILZFAIL, D3DRS_STENCILPASS
-    $00040364,      $00040368,      // 56 - D3DRS_STENCILFUNC, D3DRS_STENCILREF
-    $0004036c,      $00040360,      // 58 - D3DRS_STENCILMASK, D3DRS_STENCILWRITEMASK
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 60
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 62
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 64
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 66
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 68
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 70
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 72
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 74
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 76
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 78
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 80
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 82
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 84
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 86
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 88
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 90
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 92
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 94
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 96
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 98
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 100
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 102
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 104
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 106
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 108
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 110
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 112
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 114
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 116
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 118
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 120
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 122
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 124
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 126
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 128
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 130
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 132
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 134
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 136
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 138
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 140
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 142
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 144
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 146
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 148
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 150
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 152
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 154
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 156
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 158
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 160
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 162
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 164
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 166
-    $00040358,      X_D3DRSSE_UNK,  // 168 - D3DRS_COLORWRITEENABLE
-    X_D3DRSSE_UNK,  $00040350,      // 170
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK   // 172
-  );
-*)
 implementation
 
 // is this format swizzled, and if so - how many BPP?
-function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord): BOOL_;
+function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   Result := TRUE;
@@ -216,7 +122,8 @@ begin
     X_D3DFMT_AL8,      // 0x01
     X_D3DFMT_P8,       // 0x0B
     X_D3DFMT_A8:       // 0x19
-      pBPP^ := 1;
+      if Assigned(pBPP) then
+        pBPP^ := 1;
 
     X_D3DFMT_A1R5G5B5, // 0x02
     X_D3DFMT_X1R5G5B5, // 0x03
@@ -231,7 +138,8 @@ begin
     X_D3DFMT_L16,      // 0x32 Added by Dxbx
     X_D3DFMT_R5G5B5A1, // 0x38 Added by Dxbx
     X_D3DFMT_R4G4B4A4: // 0x39 Added by Dxbx
-      pBPP^ := 2;
+      if Assigned(pBPP) then
+        pBPP^ := 2;
 
     X_D3DFMT_A8R8G8B8, // 0x06
     X_D3DFMT_X8R8G8B8, // 0x07
@@ -241,46 +149,83 @@ begin
     X_D3DFMT_A8B8G8R8, // 0x3A Added by Dxbx
     X_D3DFMT_B8G8R8A8, // 0x3B Added by Dxbx
     X_D3DFMT_R8G8B8A8: // 0x3C Added by Dxbx
-
-      pBPP^ := 4;
-
-  // TODO -oDXBX: Where do we put X_D3DFMT_YUY2 (0x24) and X_D3DFMT_UYVY (0x25) ?
+      if Assigned(pBPP) then
+        pBPP^ := 4;
 
   else
     Result := FALSE;
   end;
 end;
 
+// is this format yuv?
+function EmuXBFormatIsYUV(Format: X_D3DFORMAT): BOOL_;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  case Format of
+    X_D3DFMT_YUY2,     // 0x24
+    X_D3DFMT_UYVY:     // 0x25
+      Result := TRUE;
+  else
+    Result := FALSE;
+  end;
+end;
+
+// is this format compressed?
+function EmuXBFormatIsCompressed(Format: X_D3DFORMAT): BOOL_;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  case Format of
+    X_D3DFMT_DXT1,     // 0x0C
+    X_D3DFMT_DXT3,     // 0x0E
+    X_D3DFMT_DXT5:     // 0x0F
+      Result := TRUE;
+  else
+    Result := FALSE;
+  end;
+end;
+
 // is this format linear?
-function EmuXBFormatIsLinear(Format: X_D3DFORMAT): BOOL_;
+function EmuXBFormatIsLinear(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
+  Result := TRUE;
   case (Format) of
+    X_D3DFMT_LIN_L8,       // 0x13 Added by Dxbx
+    X_D3DFMT_LIN_A8:       // 0x1F Added by Dxbx
+      if Assigned(pBPP) then
+        pBPP^ := 1;
+
     X_D3DFMT_LIN_A1R5G5B5, // 0x10
     X_D3DFMT_LIN_R5G6B5,   // 0x11
-    X_D3DFMT_LIN_A8R8G8B8, // 0x12
-    X_D3DFMT_LIN_L8,       // 0x13 Added by Dxbx
     X_D3DFMT_LIN_R8B8,     // 0x16
     X_D3DFMT_LIN_G8B8,     // 0x17
     X_D3DFMT_LIN_AL8,      // 0x1B Added by Dxbx
     X_D3DFMT_LIN_X1R5G5B5, // 0x1C Added by Dxbx
     X_D3DFMT_LIN_A4R4G4B4, // 0x1D
-    X_D3DFMT_LIN_X8R8G8B8, // 0x1E
-    X_D3DFMT_LIN_A8,       // 0x1F Added by Dxbx
     X_D3DFMT_LIN_A8L8,     // 0x20 Added by Dxbx
-    X_D3DFMT_LIN_D24S8,    // 0x2E
-    X_D3DFMT_LIN_F24S8,    // 0x2F Added by Dxbx
     X_D3DFMT_LIN_D16,      // 0x30
     X_D3DFMT_LIN_F16,      // 0x31 Added by Dxbx
     X_D3DFMT_LIN_L16,      // 0x35 Added by Dxbx
-    X_D3DFMT_LIN_V16U16,   // 0x36 Added by Dxbx
     X_D3DFMT_LIN_R6G5B5,   // 0x37 Added by Dxbx
     X_D3DFMT_LIN_R5G5B5A1, // 0x3D Added by Dxbx
     X_D3DFMT_LIN_R4G4B4A4, // 0x3E Added by Dxbx
+    X_D3DFMT_INDEX16:      // 101 Added by Dxbx
+      if Assigned(pBPP) then
+        pBPP^ := 2;
+
+    X_D3DFMT_LIN_A8R8G8B8, // 0x12
+    X_D3DFMT_LIN_X8R8G8B8, // 0x1E
+    X_D3DFMT_LIN_D24S8,    // 0x2E
+    X_D3DFMT_LIN_F24S8,    // 0x2F Added by Dxbx
+    X_D3DFMT_LIN_V16U16,   // 0x36 Added by Dxbx
     X_D3DFMT_LIN_A8B8G8R8, // 0x3F
     X_D3DFMT_LIN_B8G8R8A8, // 0x40 Added by Dxbx
     X_D3DFMT_LIN_R8G8B8A8: // 0x41 Added by Dxbx
-      Result := TRUE;
+      if Assigned(pBPP) then
+        pBPP^ := 4;
+
+    X_D3DFMT_VERTEXDATA:   // 100 Added by Dxbx
+      ; // pBPP?
   else
     Result := FALSE;
   end;
@@ -417,6 +362,7 @@ end;
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
+  // TODO -oDxbx: Complete this, and add a switch to prefer swizzled over linear formats (could be relevant)
   case aFormat of
     D3DFMT_YUY2:
       Result := X_D3DFMT_YUY2;
@@ -471,6 +417,10 @@ begin
 
     D3DFMT_VERTEXDATA:
       Result := X_D3DFMT_VERTEXDATA;
+
+    D3DFMT_INDEX16:
+      Result := X_D3DFMT_INDEX16;
+
   else
     DxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (0x%.08X)', [Ord(aFormat)]);
     Result := X_D3DFORMAT(aFormat);
