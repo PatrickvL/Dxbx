@@ -974,7 +974,7 @@ begin
   case PS_REGISTER(Ord(aPSReg) and $0f) of
     PS_REGISTER_C0: Result := 'c0';
     PS_REGISTER_C1: Result := 'c1';
-//    PS_REGISTER_FOG',      // 0x03L, // r
+    PS_REGISTER_FOG: Result := 'fog';
     PS_REGISTER_V0: Result := 'v0';
     PS_REGISTER_V1: Result := 'v1';
     PS_REGISTER_T0: Result := 't0';
@@ -1391,6 +1391,82 @@ begin
   Result := Result + #13#10;
 end;
 
+function ProcessFinalCombiner(pPSDef: PX_D3DPIXELSHADERDEF): AnsiString;
+var
+  A, B, C, D, E, F, G: PS_REGISTER;
+  flags: PS_FINALCOMBINERSETTING;
+  EFReg: PS_REGISTER;
+  TmpReg: PS_REGISTER;
+begin
+  Result := '';
+
+  A := PS_REGISTER((pPSDef.PSFinalCombinerInputsABCD shr 24) and $FF);
+  B := PS_REGISTER((pPSDef.PSFinalCombinerInputsABCD shr 16) and $FF);
+  C := PS_REGISTER((pPSDef.PSFinalCombinerInputsABCD shr  8) and $FF);
+  D := PS_REGISTER((pPSDef.PSFinalCombinerInputsABCD shr  0) and $FF);
+  E := PS_REGISTER((pPSDef.PSFinalCombinerInputsEFG shr 24) and $FF);
+  F := PS_REGISTER((pPSDef.PSFinalCombinerInputsEFG shr 16) and $FF);
+  G := PS_REGISTER((pPSDef.PSFinalCombinerInputsEFG shr  8) and $FF);
+  flags := PS_FINALCOMBINERSETTING((pPSDef.PSFinalCombinerInputsEFG shr 0) and $FF);
+
+//  The final combiner performs the following operations :
+//
+//    prod register = E*F                // PS_REGISTER_EF_PROD, useable in A,B,C,D,G
+//
+//    rgbout        = A*B + (1-A)*C + D  // lrp tmp.rgb, A, B, C       // Note : tmp can be r0 if [A,B,C,D] * r0 = []
+//                                       // add r0.rgb, tmp.rgb, D.rgb // Otherwise use a writable register from A,B or C
+//
+//    alphaout      = G.a                // mov r0.a, G.a              // Not necessary if G = r0
+//
+//    (also the final combiner can read PS_REGISTER_V1R0_SUM, which is equal to v1 + r0)
+//  Normal optimizations apply, like when A = PS_REGISTER_ZERO, all we have left is C + D (add r0.rgb, C.rgb, D.rgb)
+//  Also, if D = PS_REGISTER_ZERO, the add can be changed into a mov (if the result isn't already in r0.rgb)
+
+  if (E > PS_REGISTER_ZERO) or (F > PS_REGISTER_ZERO) then
+  begin
+    if (PS_REGISTER(Ord(E) and $f) = PS_REGISTER_R0)
+    or (PS_REGISTER(Ord(F) and $f) = PS_REGISTER_R0) then
+      EFReg := PS_REGISTER_R0
+    else
+      ;// find another temp for E*F
+
+    Result := Result + 'mul ' + PSRegToStr(EFReg) + ', '+ PSRegToStr(E) + ', ' + PSRegToStr(F) + #13#10;
+
+    // All registers that use E*F, must use the EF result register instead :
+    if (PS_REGISTER(Ord(A) and $f) = PS_REGISTER_EF_PROD) then A := EFReg;
+    if (PS_REGISTER(Ord(B) and $f) = PS_REGISTER_EF_PROD) then B := EFReg;
+    if (PS_REGISTER(Ord(C) and $f) = PS_REGISTER_EF_PROD) then C := EFReg;
+    if (PS_REGISTER(Ord(D) and $f) = PS_REGISTER_EF_PROD) then D := EFReg;
+  end;
+
+  // TODO : Handle PS_REGISTER_V1R0_SUM too
+
+  if  ((A = PS_REGISTER_ZERO) or (A = PS_REGISTER_R0))
+  and ((B = PS_REGISTER_ZERO) or (B = PS_REGISTER_R0))
+  and ((C = PS_REGISTER_ZERO) or (C = PS_REGISTER_R0)) then
+    // do nothing
+  else
+  begin
+    TmpReg := PS_REGISTER_R0; // TODO : Check if r0 is usable
+    Result := Result + 'lrp ' + PSRegToStr(TmpReg) + ', ' + PSRegToStr(A) + ', ' + PSRegToStr(B) + ', ' + PSRegToStr(C) + #13#10;
+  end;
+
+  if (TmpReg = PS_REGISTER_ZERO) or (TmpReg = PS_REGISTER_R0) then
+  begin
+    if (D = PS_REGISTER_ZERO) or (D = PS_REGISTER_R0) then
+      // do nothing
+    else
+      Result := Result + 'mov r0.rgb, ' + PSRegToStr(D) + #13#10;
+  end
+  else
+  begin
+    if D = PS_REGISTER_ZERO then
+      Result := Result + 'mov r0.rgb, ' + PSRegToStr(TmpReg) + #13#10
+    else
+      Result := Result + 'add r0.rgb, ' + PSRegToStr(TmpReg) + ', ' + PSRegToStr(D) + #13#10;
+  end;
+end;
+
 function XTL_EmuRecompilePshDef(pPSDef: PX_D3DPIXELSHADERDEF): AnsiString;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -1481,30 +1557,7 @@ begin
   // Check if there's a final combiner
   if (pPSDef.PSFinalCombinerInputsABCD > 0)
   or (pPSDef.PSFinalCombinerInputsEFG > 0) then
-  begin
-    // TODO : Implement this
-//  A := (pPSDef.PSFinalCombinerInputsABCD shr 24) and $FF;
-//  B := (pPSDef.PSFinalCombinerInputsABCD shr 16) and $FF;
-//  C := (pPSDef.PSFinalCombinerInputsABCD shr  8) and $FF;
-//  D := (pPSDef.PSFinalCombinerInputsABCD shr  0) and $FF;
-//  E := (pPSDef.PSFinalCombinerInputsEFG shr 24) and $FF;
-//  F := (pPSDef.PSFinalCombinerInputsEFG shr 16) and $FF;
-//  G := (pPSDef.PSFinalCombinerInputsEFG shr  8) and $FF;
-//  flags := PS_FINALCOMBINERSETTING((pPSDef.PSFinalCombinerInputsEFG shr 0) and $FF);
-//
-//  The final combiner performs the following operations :
-//
-//    prod register = E*F                // PS_REGISTER_EF_PROD, useable in A,B,C,D,G
-//
-//    rgbout        = A*B + (1-A)*C + D  // lrp tmp.rgb, A, B, C       // Note : tmp can be r0 if [A,B,C,D] * r0 = []
-//                                       // add r0.rgb, tmp.rgb, D.rgb // Otherwise use a writable register from A,B or C
-//
-//    alphaout      = G.a                // mov r0.a, G.a              // Not necessary if G = r0
-//
-//    (also the final combiner can read PS_REGISTER_V1R0_SUM, which is equal to v1 + r0)
-//  Normal optimizations apply, like when A = PS_REGISTER_ZERO, all we have left is C + D (add r0.rgb, C.rgb, D.rgb)
-//  Also, is D = PS_REGISTER_ZERO, the add can be changed into a mov (if the result isn't already in r0.rgb)
-  end;
+    Result := Result + ProcessFinalCombiner(pPSDef);
 
   // Note : The end result (rgba) should be in r0 (output register) now!
 
