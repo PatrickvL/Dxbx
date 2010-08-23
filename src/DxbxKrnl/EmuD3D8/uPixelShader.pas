@@ -1078,6 +1078,7 @@ var
   OutputFlags: DWORD; // Actually PS_COMBINEROUTPUT, but easier to handle as DWORD
   InputA, InputB, InputC, InputD: PS_REGISTER;
   InputAReg, InputBReg, InputCReg, InputDReg: PS_REGISTER;
+  SumOutputString: AnsiString;
 begin
   Result := '';
 
@@ -1146,6 +1147,7 @@ begin
   // Do we need to calculate SUM ?
   if OutputSUM > PS_REGISTER_DISCARD then
   begin
+    SumOutputString := InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ';
     if OutputFlags and Ord(PS_COMBINEROUTPUT_AB_CD_MUX) > 0 then
     begin
       // Handle PS_COMBINEROUTPUT_AB_CD_MUX, output is MUX(AB,CD) based on R0.a :
@@ -1156,30 +1158,38 @@ begin
         begin
           if  (InputBReg = PS_REGISTER_ONE)
           and (InputDReg = PS_REGISTER_ONE) then
-            Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
+            Result := Result + 'cnd' + SumOutputString + 'r0.a, ' +
               PSRegToStr(InputA) + ', ' +
               PSRegToStr(InputC) + #13#10
           else
           if  (InputAReg = PS_REGISTER_ONE)
           and (InputDReg = PS_REGISTER_ONE) then
-            Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
+            Result := Result + 'cnd' + SumOutputString + 'r0.a, ' +
               PSRegToStr(InputB) + ', ' +
               PSRegToStr(InputC) + #13#10
           else
           if  (InputBReg = PS_REGISTER_ONE)
           and (InputCReg = PS_REGISTER_ONE) then
-            Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
+            Result := Result + 'cnd' + SumOutputString + 'r0.a, ' +
               PSRegToStr(InputA) + ', ' +
               PSRegToStr(InputD) + #13#10
           else
           if  (InputAReg = PS_REGISTER_ONE)
           and (InputCReg = PS_REGISTER_ONE) then
-            Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
+            Result := Result + 'cnd' + SumOutputString + 'r0.a, ' +
               PSRegToStr(InputB) + ', ' +
               PSRegToStr(InputD) + #13#10
           else
-            // TODO :
-            Result := Result + '; Can''t mux when both AB and CD discarded (no PS_REGISTER_ONE''s present)!'#13#10;
+          begin
+            // TODO : We use Sum register as a temp, which could pose a problem if one or more of the inputs use the same register!
+            Result := Result + 'mul' + SumOutputString +
+              PSRegToStr(InputA) + ', ' +
+              PSRegToStr(InputB) + #13#10;
+            Result := Result + 'mad' + SumOutputString +
+              PSRegToStr(InputC) + ', ' +
+              PSRegToStr(InputD) + ', ' +
+              PSRegToStr(InputSUM) + #13#10;
+          end;
         end
         else
           // TODO :
@@ -1194,7 +1204,7 @@ begin
         end
         else
         begin
-          Result := Result + 'cnd' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', r0.a, ' +
+          Result := Result + 'cnd' + SumOutputString + 'r0.a, ' +
             PSRegToStr(OutputAB) + ', ' +
             PSRegToStr(OutputCD) + #13#10;
         end;
@@ -1213,25 +1223,25 @@ begin
           // First, check if there are effectively 2 input (when both are multiplied by one) :
           if  (InputBReg = PS_REGISTER_ONE)
           and (InputDReg = PS_REGISTER_ONE) then
-            Result := Result + 'add' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+            Result := Result + 'add' + SumOutputString +
               PSRegToStr(InputA) + ', ' +
               PSRegToStr(InputC) + #13#10
           else
           if  (InputAReg = PS_REGISTER_ONE)
           and (InputDReg = PS_REGISTER_ONE) then
-            Result := Result + 'add' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+            Result := Result + 'add' + SumOutputString +
               PSRegToStr(InputB) + ', ' +
               PSRegToStr(InputC) + #13#10
           else
           if  (InputBReg = PS_REGISTER_ONE)
           and (InputCReg = PS_REGISTER_ONE) then
-            Result := Result + 'add' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+            Result := Result + 'add' + SumOutputString +
               PSRegToStr(InputA) + ', ' +
               PSRegToStr(InputD) + #13#10
           else
           if  (InputAReg = PS_REGISTER_ONE)
           and (InputCReg = PS_REGISTER_ONE) then
-            Result := Result + 'add' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+            Result := Result + 'add' + SumOutputString +
               PSRegToStr(InputB) + ', ' +
               PSRegToStr(InputD) + #13#10
           else
@@ -1239,25 +1249,25 @@ begin
           // which can do "output = (input1 * input2) + input3", but if we want to use that, we must check
           // if one of the inputs is 1, so that it can be ignored (as "A * 1" equals "A") :
           if (InputAReg = PS_REGISTER_ONE) then
-            Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+            Result := Result + 'mad' + SumOutputString +
               PSRegToStr(InputC) + ', ' +
               PSRegToStr(InputD) + ', ' +
               PSRegToStr(InputB) + #13#10
           else
           if (InputBReg = PS_REGISTER_ONE) then
-            Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+            Result := Result + 'mad' + SumOutputString +
               PSRegToStr(InputC) + ', ' +
               PSRegToStr(InputD) + ', ' +
               PSRegToStr(InputA) + #13#10
           else
           if (InputCReg = PS_REGISTER_ONE) then
-            Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+            Result := Result + 'mad' + SumOutputString +
               PSRegToStr(InputA) + ', ' +
               PSRegToStr(InputB) + ', ' +
               PSRegToStr(InputD) + #13#10
           else
           if (InputDReg = PS_REGISTER_ONE) then
-            Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+            Result := Result + 'mad' + SumOutputString +
               PSRegToStr(InputA) + ', ' +
               PSRegToStr(InputB) + ', ' +
               PSRegToStr(InputC) + #13#10
@@ -1266,20 +1276,26 @@ begin
             if  (InputA = InputD)
             and True{InputA is inverse of InputD PS_INPUTMAPPING_UNSIGNED_INVERT } then
             begin
-              Result := Result + 'lrp' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+              Result := Result + 'lrp' + SumOutputString +
                 PSRegToStr(InputA) + ', ' +
                 PSRegToStr(InputB) + ', ' +
                 PSRegToStr(InputC) + #13#10
             end
             else
-              // TODO : Unsupported for now, maybe try to use a temp register?
-              Result := Result + '; Can''t sum when both AB and CD discarded (no PS_REGISTER_ONE present)!'#13#10;
+              // TODO : We use Sum register as a temp, which could pose a problem if one or more of the inputs use the same register!
+              Result := Result + 'mul' + SumOutputString +
+                PSRegToStr(InputA) + ', ' +
+                PSRegToStr(InputB) + #13#10;
+              Result := Result + 'mad' + SumOutputString +
+                PSRegToStr(InputC) + ', ' +
+                PSRegToStr(InputD) + ', ' +
+                PSRegToStr(InputSUM) + #13#10;
           end;
         end
         else
         begin
           // Only AB is discarded, but we still have to calculate "sum = (A * B) + (C * D)"
-          Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+          Result := Result + 'mad' + SumOutputString +
             PSRegToStr(InputA) + ', ' +
             PSRegToStr(InputB) + ', ' +
             PSRegToStr(OutputCD) + #13#10
@@ -1290,14 +1306,15 @@ begin
         if (OutputCD = PS_REGISTER_DISCARD) then
         begin
           // Only CD is discarded, but we still have to calculate "sum = (A * B) + (C * D)"
-          Result := Result + 'mad' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
+          Result := Result + 'mad' + SumOutputString +
             PSRegToStr(InputC) + ', ' +
             PSRegToStr(InputD) + ', ' +
             PSRegToStr(OutputAB) + #13#10;
         end
         else
-          Result := Result + 'add' + InstructionOutputCombiner + ' ' + PSRegToStr(OutputSUM) + OutputWriteMask + ', ' +
-            PSRegToStr(OutputAB) + ', ' + PSRegToStr(OutputCD) + #13#10;
+          Result := Result + 'add' + SumOutputString +
+            PSRegToStr(OutputAB) + ', ' +
+            PSRegToStr(OutputCD) + #13#10;
       end;
     end;
   end;
@@ -1314,6 +1331,7 @@ function ProcessTextureMode(const aStage: int; const aDotMapping: PS_DOTMAPPING;
 begin
   Result := '';
   // TODO : Handle the parameters to all other texture-addressing methods (than 'tex') here too
+  // TODO : Apply conversions when PS_GLOBALFLAGS_TEXMODE_ADJUST is set (but ... how to check the texture type? read D3DRS_PSTEXTUREMODES?)
 
   // Convert the texture mode to a texture addressing instruction :
   case aTextureMode of

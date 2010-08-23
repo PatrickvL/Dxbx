@@ -1753,6 +1753,48 @@ begin
   bSwizzled := FALSE; bCompressed := FALSE; dwCompressedSize := 0;
 
   // Interpret Width/Height/BPP
+  bSwizzled := EmuXBFormatIsSwizzled(X_Format, @dwBPP);
+  if bSwizzled then
+  begin
+    dwWidth := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
+    dwHeight := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
+    dwMipMapLevels := (pPixelContainer.Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
+    dwDepth := 1;// HACK? 1 shl ((pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT);
+    dwPitch := dwWidth * dwBPP;
+  end
+  else
+  begin
+    bCompressed := EmuXBFormatIsCompressed(X_Format);
+    if bCompressed then
+    begin
+      dwWidth  := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
+      dwHeight := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
+      dwDepth  := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT);
+      dwMipMapLevels := (pPixelContainer.Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
+
+      // D3DFMT_DXT2...D3DFMT_DXT5 : 128bits per block/per 16 texels
+      dwCompressedSize := dwWidth * dwHeight;
+
+      if (X_Format = X_D3DFMT_DXT1) then // 64bits per block/per 16 texels
+        dwCompressedSize := dwCompressedSize div 2;
+
+      dwBPP := 1;
+    end
+    else
+    begin
+      if EmuXBFormatIsYUV(X_Format) then
+        dwBPP := 4
+      else
+        // Linear
+        if not EmuXBFormatIsLinear(X_Format, @dwBPP) then
+          DxbxKrnlCleanup('0x%.08X is not a supported format!', [X_Format]);
+
+      dwWidth := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
+      dwHeight := ((pPixelContainer.Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
+      dwPitch := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
+    end;
+  end;
+(*
   if (X_Format = X_D3DFMT_X8R8G8B8) or (X_Format = X_D3DFMT_A8R8G8B8) then
   begin
     bSwizzled := TRUE;
@@ -1811,7 +1853,7 @@ begin
     dwPitch := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
     dwBPP := 2;
   end
-  else if (X_Format = X_D3DFMT_DXT1) or (X_Format = X_D3DFMT_DXT3) or (X_Format = X_D3DFMT_DXT5) then
+  else if EmuXBFormatIsCompressed(X_Format) then
   begin
     bCompressed := TRUE;
 
@@ -1840,7 +1882,7 @@ begin
   begin
     DxbxKrnlCleanup('0x%.08X is not a supported format!', [X_Format]);
   end;
-
+*)
   // TODO -oDxbx : Cxbx doesn't do the following for X_D3DCOMMON_TYPE_SURFACE resources, so
   // we should determine if it harms us having this here, and make it conditional if needed:
   if (bSwizzled or bCompressed) then

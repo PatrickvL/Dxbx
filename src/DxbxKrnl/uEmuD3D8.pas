@@ -3717,7 +3717,7 @@ begin
     g_bFakePixelShaderLoaded := TRUE;
   end
   // Fixed Pipeline, or Recompiled Programmable Pipeline
-  else if (Handle = HNULL) then
+  else
   begin
     g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}nil{$ELSE}Handle{$ENDIF});
   end;
