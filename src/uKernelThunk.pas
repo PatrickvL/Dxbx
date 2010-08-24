@@ -50,6 +50,7 @@ uses
   uEmuKrnlXe;
 
 var
+  // Dxbx note : Thunks reviewed using http://www.remnantmods.com/archive/applications/Halo%202%20Xbox%20Apps/Yelo%20Debugger/Yelo%20Debugger/YeloDebug/XboxKernel.cs
   KernelThunkTable: array [0..NUMBER_OF_THUNKS - 1] of Pointer = (
     {000}@xboxkrnl_UnknownAPI000,
     {001}@xboxkrnl_AvGetSavedDataAddress,
@@ -91,7 +92,7 @@ var
     {037}@xboxkrnl_FscSetCacheSize,
     {038}@xboxkrnl_HalClearSoftwareInterrupt,
     {039}@xboxkrnl_HalDisableSystemInterrupt,
-    {040}@xboxkrnl_HalDiskCachePartitionCount, // variable
+    {040}@xboxkrnl_HalDiskCachePartitionCount, // variable. A.k.a. "IdexDiskPartitionPrefixBuffer"
     {041}@xboxkrnl_HalDiskModelNumber, // variable
     {042}@xboxkrnl_HalDiskSerialNumber, // variable
     {043}@xboxkrnl_HalEnableSystemInterrupt,
@@ -118,7 +119,6 @@ var
     {064}@xboxkrnl_IoCompletionObjectType, // variable
     {065}@xboxkrnl_IoCreateDevice,
     {066}@xboxkrnl_IoCreateFile,
-// TODO -oDXBX: Review all below, except these finished prefixes : Av, Dbg, Ex, Fs, Hal, Kd, Kf, Ps and Xe
     {067}@xboxkrnl_IoCreateSymbolicLink,
     {068}@xboxkrnl_IoDeleteDevice,
     {069}@xboxkrnl_IoDeleteSymbolicLink,
@@ -427,7 +427,7 @@ var
     {372}@xboxkrnl_UnknownAPI372,
     {373}@xboxkrnl_UnknownAPI373,
     {374}@xboxkrnl_MmDbgAllocateMemory,
-    {375}@xboxkrnl_MmDbgFreeMemory,
+    {375}@xboxkrnl_MmDbgFreeMemory, // Returns number of pages released.
     {376}@xboxkrnl_MmDbgQueryAvailablePages,
     {377}@xboxkrnl_MmDbgReleaseAddress,
     {378}@xboxkrnl_MmDbgWriteCheck
