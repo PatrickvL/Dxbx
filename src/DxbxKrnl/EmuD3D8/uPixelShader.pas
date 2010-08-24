@@ -1321,7 +1321,7 @@ begin
 end;
 
 function ProcessTextureMode(const aStage: int; const aDotMapping: PS_DOTMAPPING;
-  const aTextureMode: PS_TEXTUREMODES; const aInputStage: int): AnsiString;
+  const aTextureMode: PS_TEXTUREMODES; const aInputStage: int; NextIs2D: Boolean = False): AnsiString;
 
   function TStr(const t: int): AnsiString;
   begin
@@ -1344,14 +1344,18 @@ begin
     PS_TEXTUREMODES_BUMPENVMAP_LUM: Result := 'texbemi';
 //    PS_TEXTUREMODES_BRDF: Result := 'texbrdf'; // Note : Not supported by Direct3D8 ?
     PS_TEXTUREMODES_DOT_ST: Result := 'texm3x2tex';
-    PS_TEXTUREMODES_DOT_ZW: Result := 'texm3x2depth';
+    PS_TEXTUREMODES_DOT_ZW: Result := 'texm3x2depth'; // Note : requires ps.1.3 and a preceding texm3x2pad
 //    PS_TEXTUREMODES_DOT_RFLCT_DIFF: Result := 'texm3x3diff'; // Note : Not supported by Direct3D8 ?
     PS_TEXTUREMODES_DOT_RFLCT_SPEC: Result := 'texm3x3vspec';
     PS_TEXTUREMODES_DOT_STR_3D: Result := 'texm3x3tex'; // Note : Uses a 3d texture
     PS_TEXTUREMODES_DOT_STR_CUBE: Result := 'texm3x3tex'; // Note : Uses a cube texture
     PS_TEXTUREMODES_DPNDNT_AR: Result := 'texreg2ar';
     PS_TEXTUREMODES_DPNDNT_GB: Result := 'texreg2gb';
-    PS_TEXTUREMODES_DOTPRODUCT: Result := 'texm3x3pad';
+    PS_TEXTUREMODES_DOTPRODUCT:
+      if NextIs2D then
+        Result := 'texm3x2pad'
+      else
+        Result := 'texm3x3pad';
     PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST: Result := 'texm3x3spec'; // Note : Needs 3 arguments!
   end;
 
@@ -1386,9 +1390,48 @@ begin
   // Add the third argument :
   if aTextureMode in [
     PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST] then
-    Result := Result + ', c0 ; Dxbx guess'; // TODO : Where do we get the 3rd argument to
+    Result := Result + ', ' + PSC0Mapping + ' ; Dxbx guess'; // TODO : Where do we get the 3rd argument to this?
 
   Result := Result + #13#10;
+end;
+
+function ProcessTextureModes(pPSDef: PX_D3DPIXELSHADERDEF): AnsiString;
+var
+  DotMappings: array[0..X_D3DTS_STAGECOUNT-1] of PS_DOTMAPPING;
+  TextureModes: array[0..X_D3DTS_STAGECOUNT-1] of PS_TEXTUREMODES;
+  InputStages: array[0..X_D3DTS_STAGECOUNT-1] of int;
+  Stage: int;
+
+  function _NextIs2D(Stage: int): Boolean;
+  begin
+    if Stage < 3 then
+      Result := TextureModes[Stage + 1] = PS_TEXTUREMODES_DOT_ZW
+    else
+      Result := False;
+  end;
+
+begin
+  Result := '';
+
+  DotMappings[0] := PS_DOTMAPPING(0);
+  TextureModes[0] := PS_TEXTUREMODES((pPSDef.PSTextureModes shr  0) and $1F);
+  InputStages[0] := -1; // Stage 0 has no predecessors
+
+  DotMappings[1] := PS_DOTMAPPING((pPSDef.PSDotMapping shr 0) and 7);
+  TextureModes[1] := PS_TEXTUREMODES((pPSDef.PSTextureModes shr  5) and $1F);
+  InputStages[1] := 0; // Stage 1 can only use stage 0
+
+  DotMappings[2] := PS_DOTMAPPING((pPSDef.PSDotMapping shr 4) and 7);
+  TextureModes[2] := PS_TEXTUREMODES((pPSDef.PSTextureModes shr 10) and $1F);
+  InputStages[2] := (pPSDef.PSInputTexture shr 16) and $1; // Stage 2 can use stage 0 or 1
+
+  DotMappings[3] := PS_DOTMAPPING((pPSDef.PSDotMapping shr 8) and 7);
+  TextureModes[3] := PS_TEXTUREMODES((pPSDef.PSTextureModes shr 15) and $1F);
+  InputStages[3] := (pPSDef.PSInputTexture shr 20) and $3; // Stage 3 can only use stage 0, 1 or 2
+
+  Result := '';
+  for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
+    Result := Result + ProcessTextureMode(Stage, DotMappings[Stage], TextureModes[Stage], InputStages[Stage], _NextIs2D(Stage));
 end;
 
 function ProcessFinalCombiner(pPSDef: PX_D3DPIXELSHADERDEF): AnsiString;
@@ -1555,9 +1598,9 @@ begin
     XTL_PrintPixelShaderDefContents(pPSDef);
 
   // First things first, set the pixel shader version
-  // TODO -oCXBX: ps.1.1 might be a better idea...
-  //Result := 'ps.1.0'#13#10;
-  Result := 'ps.1.1'#13#10; // 1.1 allows reading from 2 textures (which we use in 'cnd')
+  // 1.1 allows reading from 2 textures (which we use in 'cnd') and reading from the .b (blue) channel
+  // 1.3 allows the use of texm3x2depth (which can occur sometimes)
+  Result := 'ps.1.3'#13#10;
 
   for i := 0 to 8-1 do
   begin
@@ -1572,14 +1615,7 @@ begin
   end;
 
   // Handle Texture declarations :
-  Result := Result + ProcessTextureMode(0, PS_DOTMAPPING(0),
-    PS_TEXTUREMODES((pPSDef.PSTextureModes shr  0) and $1F), -1); // Stage 0 has no predecessors
-  Result := Result + ProcessTextureMode(1, PS_DOTMAPPING((pPSDef.PSDotMapping shr 0) and 7),
-    PS_TEXTUREMODES((pPSDef.PSTextureModes shr  5) and $1F), 0); // Stage 1 can only use stage 0
-  Result := Result + ProcessTextureMode(2, PS_DOTMAPPING((pPSDef.PSDotMapping shr 4) and 7),
-    PS_TEXTUREMODES((pPSDef.PSTextureModes shr 10) and $1F), (pPSDef.PSInputTexture shr 16) and $1);
-  Result := Result + ProcessTextureMode(3, PS_DOTMAPPING((pPSDef.PSDotMapping shr 8) and 7),
-    PS_TEXTUREMODES((pPSDef.PSTextureModes shr 15) and $1F), (pPSDef.PSInputTexture shr 20) and $3);
+  Result := Result + ProcessTextureModes(pPSDef);
 
   // On the Xbox, the alpha portion of the R0 register is initialized to
   // the alpha component of texture 0 if texturing is enabled for texture 0 :
