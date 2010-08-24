@@ -1423,13 +1423,14 @@ begin
   // Handle PS_REGISTER_EF_PROD :
   if (E > PS_REGISTER_ZERO) or (F > PS_REGISTER_ZERO) then
   begin
+    Result := Result + '; final combiner - E*F'#13#10;
     if (PS_REGISTER(Ord(E) and $f) = PS_REGISTER_R0)
     or (PS_REGISTER(Ord(F) and $f) = PS_REGISTER_R0) then
       EFReg := PS_REGISTER_R0
     else
       EFReg := PS_REGISTER_R1; // TODO : Find another temp than R0 for E*F
 
-    Result := Result + 'mul ' + PSRegToStr(EFReg) + ', '+ PSRegToStr(E) + ', ' + PSRegToStr(F) + #13#10;
+    Result := Result + 'mul ' + PSRegToStr(EFReg) + ', ' + PSRegToStr(E) + ', ' + PSRegToStr(F) + #13#10;
 
     // All registers that use E*F, must use the EF result register instead :
     if (PS_REGISTER(Ord(A) and $f) = PS_REGISTER_EF_PROD) then A := EFReg;
@@ -1446,6 +1447,7 @@ begin
   or (PS_REGISTER(Ord(D) and $f) = PS_REGISTER_V1R0_SUM)
   or (PS_REGISTER(Ord(G) and $f) = PS_REGISTER_V1R0_SUM) then
   begin
+    Result := Result + '; final combiner - V1+R0'#13#10;
     TmpReg := PS_REGISTER_R0; // TODO : Find a temporary register
 
     // TODO : Handle the settings :
@@ -1462,6 +1464,8 @@ begin
     if (PS_REGISTER(Ord(G) and $f) = PS_REGISTER_EF_PROD) then G := TmpReg;
   end;
 
+  Result := Result + '; final combiner - r0 = A*B + (1-A)*C + D'#13#10;
+
   // Handle the lerp
   if  ((A = PS_REGISTER_ZERO) or (A = PS_REGISTER_R0))
   and ((B = PS_REGISTER_ZERO) or (B = PS_REGISTER_R0))
@@ -1470,7 +1474,28 @@ begin
   else
   begin
     TmpReg := PS_REGISTER_R0; // TODO : Check if r0 is usable
-    Result := Result + 'lrp ' + PSRegToStr(TmpReg) + ', ' + PSRegToStr(A) + ', ' + PSRegToStr(B) + ', ' + PSRegToStr(C) + #13#10;
+
+    if C = PS_REGISTER_ZERO then
+    begin
+      if (A = PS_REGISTER_ONE) then
+      begin
+        // TODO
+      end
+      else if (B = PS_REGISTER_ONE) then
+      begin
+        // TODO
+      end
+      else
+      begin
+        // r0 = A*B + D
+        Result := Result + 'mad ' + PSRegToStr(PS_REGISTER_R0) + ', ' + PSRegToStr(A) + ', ' + PSRegToStr(B) + ', ' + PSRegToStr(D) + #13#10;
+        // Reset D - already handled :
+        D := PS_REGISTER_ZERO;
+      end;
+    end
+    else
+      // r0 = A*B + (1-A)*C + D
+      Result := Result + 'lrp ' + PSRegToStr(TmpReg) + ', ' + PSRegToStr(A) + ', ' + PSRegToStr(B) + ', ' + PSRegToStr(C) + #13#10;
   end;
 
   if (TmpReg = PS_REGISTER_ZERO) or (TmpReg = PS_REGISTER_R0) then
@@ -1492,7 +1517,10 @@ begin
   if (g = PS_REGISTER_ONE) or (G = PS_REGISTER_R0) then
     // Do nothing if G = 1 or r0
   else
+  begin
+    Result := Result + '; final combiner - alphaout'#13#10;
     Result := Result + 'mov r0.a, ' + PSRegToStr(G) + #13#10;
+  end;
 end;
 
 function XTL_EmuRecompilePshDef(pPSDef: PX_D3DPIXELSHADERDEF): AnsiString;
@@ -1505,7 +1533,8 @@ var
   RGBOutput: DWORD;
   AlphaInput: DWORD;
   AlphaOutput: DWORD;
-  AlphaAdd: AnsiString;
+  StageOutputStrRGB: AnsiString;
+  StageOutputStrAlpha: AnsiString;
 begin
   // Azurik likes to create and destroy the same shader every frame! O_o
   LogFlags := lfUnit;
@@ -1565,6 +1594,7 @@ begin
     RGBOutput := pPSDef.PSRGBOutputs[i];
     AlphaOutput := pPSDef.PSAlphaOutputs[i];
 
+    Result := Result + '; combine stage ' + IntToStr(i) + #13#10;
     // Check if RGB and Alpha are handled identical :
     if  (RGBOutput = AlphaOutput)
     and ((RGBInput and PS_NoChannelsMask) = (AlphaInput and PS_NoChannelsMask))
@@ -1575,10 +1605,17 @@ begin
     else
     begin
       // Else, handle rgb separately from alpha :
-      Result := Result + CombineStage(RGBInput, RGBOutput, '.rgb');
-      AlphaAdd := CombineStage(AlphaInput, AlphaOutput, '.a');
-      if AlphaAdd <> '' then
-        Result := Result + '+ ' + AlphaAdd;
+      StageOutputStrRGB := CombineStage(RGBInput, RGBOutput, '.rgb');
+      StageOutputStrAlpha := CombineStage(AlphaInput, AlphaOutput, '.a');
+
+      Result := Result + StageOutputStrRGB;
+      if StageOutputStrAlpha <> '' then
+      begin
+        if StageOutputStrRGB <> '' then
+          Result := Result + '+ ';
+
+        Result := Result + StageOutputStrAlpha;
+      end;
     end;
   end;
 
