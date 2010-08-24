@@ -3340,7 +3340,10 @@ begin
         #13#10');',
       [Register_, pConstantData, ConstantCount]);
 
-// Dxbx note : Is this what's needed?
+  // TODO -oDxbx: This forwards the values to the native pixel shader, but we should also pack them
+  // and place them into X_D3DRS_PSCONSTANT* render state registers (using the PS_CONSTANTMAPPING macro)!
+  // It would probably be better to send these values to the native pixel shader later, at drawing time.
+
 {$IFDEF DXBX_USE_D3D9}
   g_pD3DDevice.SetPixelShaderConstantF
   (
@@ -7280,9 +7283,22 @@ procedure XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
   ); {NOPATCH}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
+  RenderStateValue: TD3DColorValue;
   PCRenderState: D3DRenderStateType;
   PCValue: DWORD;
 begin
+  // Handle the pixel shader constants first :
+  if (X_D3DRS_PSCONSTANT0_0 <= XboxRenderState) and (XboxRenderState <= X_D3DRS_PSCONSTANT1_7) then
+  begin
+    RenderStateValue.r := ((XboxValue shr 16) and $FF) / 255.0;
+    RenderStateValue.g := ((XboxValue shr  8) and $FF) / 255.0;
+    RenderStateValue.b := ((XboxValue shr  0) and $FF) / 255.0;
+    RenderStateValue.a := ((XboxValue shr 24) and $FF) / 255.0;
+    // TODO -oDxbx: Make this work (as the Explosion sample shows it doesn't work yet...)
+    g_pD3DDevice.SetPixelShaderConstant(EmuXB2PC_PSConstant(XboxRenderState), RenderStateValue, 1);
+    Exit;
+  end;
+
   // Map the Xbox state to a PC state, and check if it's supported :
   PCRenderState := EmuXB2PC_D3DRS(XboxRenderState); // TODO : Speed this up using a lookup table
   if PCRenderState <> D3DRS_FORCE_DWORD then
@@ -9680,32 +9696,19 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetPixelShaderProgram').
+    LogBegin('EmuD3D8 : EmuD3DDevice_SetPixelShaderProgram >>').
       _(pPSDef, 'pPSDef').
     LogEnd();
 
-  Result := E_FAIL;
-  dwHandle := 0;
-
-  // Redirect this call to windows Direct3D
-  {hRet := g_pD3DDevice.CreatePixelShader(
-        PDWORD(pPSDef),
-        pHandle
-    );}
-
-  if (FAILED(Result)) then
-  begin
-    dwHandle := X_PIXELSHADER_FAKE_HANDLE;
-
-    EmuWarning('We''re lying about the creation of a pixel shader!');
-  end;
-
-  // Now, redirect this to Xbox Direct3D
   EmuSwapFS(fsXbox);
 
-  {hRet := }XTL_EmuD3DDevice_SetPixelShader(dwHandle);
+  // Redirect the creation and activation to the other patches we already have :
+  dwHandle := 0;
+  Result := XTL_EmuD3DDevice_CreatePixelShader(pPSDef, @dwHandle);
+  if (FAILED(Result)) then
+    dwHandle := X_PIXELSHADER_FAKE_HANDLE;
 
-  Result := D3D_OK;
+  Result := XTL_EmuD3DDevice_SetPixelShader(dwHandle);
 end;
 
 function XTL_EmuD3DDevice_CreateStateBlock

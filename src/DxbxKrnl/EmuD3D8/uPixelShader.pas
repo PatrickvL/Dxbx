@@ -965,13 +965,15 @@ end;
 
 var // TODO : Make these thread-safe :
   InstructionOutputCombiner: AnsiString;
-  SourceRegisterModifier: AnsiString ;
+  SourceRegisterModifier: AnsiString;
+  PSC0Mapping: AnsiString = 'c0';
+  PSC1Mapping: AnsiString = 'c1';
 
 function PSRegToStr(const aPSReg: PS_REGISTER): AnsiString;
 begin
   case PS_REGISTER(Ord(aPSReg) and $0f) of
-    PS_REGISTER_C0: Result := 'c0';
-    PS_REGISTER_C1: Result := 'c1';
+    PS_REGISTER_C0: Result := PSC0Mapping;
+    PS_REGISTER_C1: Result := PSC1Mapping;
     PS_REGISTER_FOG: Result := 'fog'; // Not supported, but makes pixel shader assembly more readable
     PS_REGISTER_V0: Result := 'v0';
     PS_REGISTER_V1: Result := 'v1';
@@ -1407,6 +1409,9 @@ begin
   G := PS_REGISTER((pPSDef.PSFinalCombinerInputsEFG shr  8) and $FF);
   flags := PS_FINALCOMBINERSETTING((pPSDef.PSFinalCombinerInputsEFG shr 0) and $FF);
 
+  PSC0Mapping := 'c' + AnsiString(IntToStr((pPSDef.PSFinalCombinerConstants shr 0) and $F));
+  PSC1Mapping := 'c' + AnsiString(IntToStr((pPSDef.PSFinalCombinerConstants shr 4) and $F));
+
 //  The final combiner performs the following operations :
 //
 //    prod register = E*F                // PS_REGISTER_EF_PROD, useable in A,B,C,D,G
@@ -1529,6 +1534,7 @@ var
   LogFlags: TLogFlags;
   i: Integer;
   dwPSCCNumCombiners: DWORD;
+  Stage: Integer;
   RGBInput: DWORD;
   RGBOutput: DWORD;
   AlphaInput: DWORD;
@@ -1584,17 +1590,20 @@ begin
   // Loop over all stages :
   dwPSCCNumCombiners := (pPSDef.PSCombinerCount shr 0) and $F;
   if dwPSCCNumCombiners > 0 then
-  for i := 0 to dwPSCCNumCombiners-1 do // Loop over all  combiner stages
+  for Stage := 0 to dwPSCCNumCombiners-1 do // Loop over all  combiner stages
   begin
     // Convert each stage's output-from-input mappings, back to PC-compatible pixel shader instructions :
 
-    RGBInput := pPSDef.PSRGBInputs[i];
-    AlphaInput := pPSDef.PSAlphaInputs[i];
+    RGBInput := pPSDef.PSRGBInputs[Stage];
+    AlphaInput := pPSDef.PSAlphaInputs[Stage];
 
-    RGBOutput := pPSDef.PSRGBOutputs[i];
-    AlphaOutput := pPSDef.PSAlphaOutputs[i];
+    RGBOutput := pPSDef.PSRGBOutputs[Stage];
+    AlphaOutput := pPSDef.PSAlphaOutputs[Stage];
 
-    Result := Result + '; combine stage ' + IntToStr(i) + #13#10;
+    PSC0Mapping := 'c' + AnsiString(IntToStr((pPSDef.PSC0Mapping shr (Stage * 4)) and $F));
+    PSC1Mapping := 'c' + AnsiString(IntToStr((pPSDef.PSC1Mapping shr (Stage * 4)) and $F));
+
+    Result := Result + '; combine stage ' + AnsiString(IntToStr(Stage)) + #13#10;
     // Check if RGB and Alpha are handled identical :
     if  (RGBOutput = AlphaOutput)
     and ((RGBInput and PS_NoChannelsMask) = (AlphaInput and PS_NoChannelsMask))

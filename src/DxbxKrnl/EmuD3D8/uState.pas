@@ -821,6 +821,7 @@ begin
         Result := g_pD3DDevice.SetRenderState(PCRenderState, PCValue);
         Exit;
       end;
+      // TODO -oDxbx: Forward pixel shader constants too?
     end;
   end;
 
