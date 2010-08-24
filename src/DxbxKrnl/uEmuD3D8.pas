@@ -7294,7 +7294,7 @@ begin
     RenderStateValue.g := ((XboxValue shr  8) and $FF) / 255.0;
     RenderStateValue.b := ((XboxValue shr  0) and $FF) / 255.0;
     RenderStateValue.a := ((XboxValue shr 24) and $FF) / 255.0;
-    // TODO -oDxbx: Make this work (as the Explosion sample shows it doesn't work yet...)
+
     g_pD3DDevice.SetPixelShaderConstant(EmuXB2PC_PSConstant(XboxRenderState), RenderStateValue, 1);
     Exit;
   end;
@@ -10859,6 +10859,9 @@ begin
   Result := D3D_OK;
   if (XboxRenderState_VersionIndependent <= X_D3DRS_SIMPLE_LAST) then
   begin
+    // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
+    XTL_EmuMappedD3DRenderState[XboxRenderState_VersionIndependent]^ := DWORD(Value);
+
     // Pixel & Simple render states - Just pass them on to our helper :
     XTL_EmuD3DDevice_SetRenderState_Simple_Internal(XboxRenderState_VersionIndependent, Value);
     EmuSwapFS(fsXbox);
