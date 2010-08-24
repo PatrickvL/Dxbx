@@ -176,7 +176,7 @@ begin
       if dwLevelCount > 0 then // Dxbx addition, to prevent underflow
       for v := 0 to dwLevelCount - 1 do
       begin
-// Dxbx note : The code in this block makes Cubemap crash (this somehow overwrited the callers stack)
+// Dxbx note : The code in this block makes Cubemap crash (this somehow overwrites the callers stack)
         // Dxbx addition : Remove lock for each level separately :
         IDirect3DTexture(pTexture).UnlockRect(v);
 
