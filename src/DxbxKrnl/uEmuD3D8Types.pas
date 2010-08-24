@@ -963,6 +963,16 @@ type D3DSWAPCALLBACK = procedure (const pData: PD3DSWAPDATA); cdecl;
 // And we read via the same mapping (do note, that missing elements all point to the same dummy) :
 //   Result := XTL_EmuMappedD3DRenderState[{X_D3DRENDERSTATETYPE}]^;
 
+// Dxbx note : The PS* render states map 1-on-1 to the X_D3DPIXELSHADERDEF record,
+// which leds me (PatrickvL) to suspect that SetPixelShader actually pushes the definition
+// into these render state slots - if that's the case, we would be better of to use these
+// render states as the source of the pixel shader definition, so alterations made via calls
+// to SetRenderState can effect our emulation too.  TODO : See if SetPixelShader does this.
+//
+// For this to happen, we will have to use a cache of already processed pixel shaders, as each
+// change could result in a different local shader. Also, the recompilation must be postponed
+// until the drawing phase (that is, in our DrawRectPatch and Draw*Vertices* patches).
+
 // The set starts out with "pixel-shader" render states (all Xbox extensions) :
 const X_D3DRS_PSALPHAINPUTS0              = 0;
 const X_D3DRS_PSALPHAINPUTS1              = 1;
@@ -1018,7 +1028,7 @@ const X_D3DRS_PSRGBOUTPUTS5               = 50;
 const X_D3DRS_PSRGBOUTPUTS6               = 51;
 const X_D3DRS_PSRGBOUTPUTS7               = 52;
 const X_D3DRS_PSCOMBINERCOUNT             = 53;
-const X_D3DRS_PS_RESERVED                 = 54;
+const X_D3DRS_PS_RESERVED                 = 54; // Dxbx note : This takes the slot of X_D3DPIXELSHADERDEF.PSTextureModes
 const X_D3DRS_PSDOTMAPPING                = 55;
 const X_D3DRS_PSINPUTTEXTURE              = 56;
 // End of "pixel-shader" render states, continuing with "simple" render states :

@@ -329,10 +329,8 @@ const
 type PS_FINALCOMBINERSETTING =
 (
     PS_FINALCOMBINERSETTING_CLAMP_SUM=     $80, // V1+R0 sum clamped to [0,1]
-
     PS_FINALCOMBINERSETTING_COMPLEMENT_V1= $40, // unsigned invert mapping  (1 - v1) is used as an input to the sum rather than v1
-
-    PS_FINALCOMBINERSETTING_COMPLEMENT_R0= $20  // unsigned invert mapping  (1 - r1) is used as an input to the sum rather than r1
+    PS_FINALCOMBINERSETTING_COMPLEMENT_R0= $20  // unsigned invert mapping  (1 - r0) is used as an input to the sum rather than r0
 );
 
 // =========================================================================================================
@@ -1108,7 +1106,7 @@ begin
     Ord(PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS): SourceRegisterModifier    := '_bias_x2'; // y = (x - 0.5)*2
     Ord(PS_COMBINEROUTPUT_SHIFTLEFT_2):      InstructionOutputCombiner := '_x4';   // y = x*4
     Ord(PS_COMBINEROUTPUT_SHIFTRIGHT_1):     InstructionOutputCombiner := '_d2';   // y = x/2
-  end;   //
+  end;
 
   // Do we need to calculate AB ?
   if OutputAB > PS_REGISTER_DISCARD then
@@ -1450,7 +1448,12 @@ begin
   begin
     TmpReg := PS_REGISTER_R0; // TODO : Find a temporary register
 
-    Result := Result + 'add ' + PSRegToStr(TmpReg) + ', V1, R0'#13#10;
+    // TODO : Handle the settings :
+    // PS_FINALCOMBINERSETTING_CLAMP_SUM : V1+R0 sum clamped to [0,1]
+    // PS_FINALCOMBINERSETTING_COMPLEMENT_V1 : unsigned invert mapping  (1 - v1) is used as an input to the sum rather than v1
+    // PS_FINALCOMBINERSETTING_COMPLEMENT_R0 : unsigned invert mapping  (1 - r0) is used as an input to the sum rather than r0
+
+    Result := Result + 'add ' + PSRegToStr(TmpReg) + ', ' + PSRegToStr(PS_REGISTER_V1) + ', ' + PSRegToStr(PS_REGISTER_R0) + #13#10;
 
     if (PS_REGISTER(Ord(A) and $f) = PS_REGISTER_EF_PROD) then A := TmpReg;
     if (PS_REGISTER(Ord(B) and $f) = PS_REGISTER_EF_PROD) then B := TmpReg;
