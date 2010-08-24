@@ -51,20 +51,96 @@ procedure xboxkrnl_XcSHAFinal(
   pbSHAContext: PUCHAR;
   pbDigest: PUCHAR
   ); stdcall;
-function xboxkrnl_XcRC4Key(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XcRC4Crypt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XcHMAC(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XcPKEncPublic(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XcPKDecPrivate(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XcPKGetKeyLen(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XcVerifyPKCS1Signature(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XcModExp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XcDESKeyParity(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XcKeyTable(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XcBlockCrypt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XcBlockCryptCBC(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XcCryptService(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XcUpdateCrypto(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_XcRC4Key(
+    pbKeyStruct: PUCHAR;
+    dwKeyLength: ULONG;
+    pbKey: PUCHAR
+); stdcall;
+
+procedure xboxkrnl_XcRC4Crypt(
+    pbKeyStruct: PUCHAR;
+    dwInputLength: ULONG;
+    pbInput: PUCHAR
+); stdcall;
+
+procedure xboxkrnl_XcHMAC(
+    pbKeyMaterial: PBYTE;
+    cbKeyMaterial: ULONG;
+    pbData: PBYTE;
+    cbData: ULONG;
+    pbData2: PBYTE;
+    {OUT}cbData2: ULONG;
+    {OUT}HmacData: PBYTE  // length must be A_SHA_DIGEST_LEN
+); stdcall;
+
+function xboxkrnl_XcPKEncPublic(
+    pbPubKey: PUCHAR;
+    pbInput: PUCHAR;
+    {OUT}pbOutput:  PUCHAR
+): ULONG; stdcall;
+
+function xboxkrnl_XcPKDecPrivate(
+    pbPrvKey: PUCHAR;
+    pbInput: PUCHAR;
+    {OUT}pbOutput: PUCHAR
+): ULONG; stdcall;
+
+function xboxkrnl_XcPKGetKeyLen(
+    pbPubKey: PUCHAR
+): ULONG; stdcall;
+
+function xboxkrnl_XcVerifyPKCS1Signature(
+    pbSig: PUCHAR;
+    pbPubKey: PUCHAR;
+    pbDigest: PUCHAR
+): BOOL; stdcall;
+
+function xboxkrnl_XcModExp(
+    {OUT} pA: PULONG;
+    pB: PULONG;
+    pC: PULONG;
+    pD: PULONG;
+    dwN: ULONG
+): ULONG; stdcall;
+
+procedure xboxkrnl_XcDESKeyParity(
+    {OUT}pbKey: PUCHAR;
+    dwKeyLength: ULONG
+); stdcall;
+
+procedure xboxkrnl_XcKeyTable(
+    dwCipher: ULONG;
+    {OUT}pbKeyTable: PUCHAR;
+    pbKey: PUCHAR
+); stdcall;
+
+procedure xboxkrnl_XcBlockCrypt(
+    dwCipher: ULONG;
+    {OUT}pbOutput: PUCHAR;
+    pbInput: PUCHAR;
+    pbKeyTable: PUCHAR;
+    dwOp: ULONG
+); stdcall;
+
+procedure xboxkrnl_XcBlockCryptCBC(
+	dwCipher: ULONG;
+	dwInputLength: ULONG;
+	{OUT}pbOutput: PUCHAR;
+	pbInput: PUCHAR;
+	pbKeyTable: PUCHAR;
+	dwOp: ULONG;
+	pbFeedback: PUCHAR
+); stdcall;
+
+function xboxkrnl_XcCryptService(
+    dwOp: ULONG;
+    pArgs: Pvoid
+): ULONG; stdcall;
+
+procedure xboxkrnl_XcUpdateCrypto(
+    (*pNewVector: PCRYPTO_VECTOR;
+    {OUT}pROMVector: OPTIONAL PCRYPTO_VECTOR *)
+); stdcall;
 
 implementation
 
@@ -126,31 +202,57 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcRC4Key(): NTSTATUS; stdcall;
+procedure xboxkrnl_XcRC4Key(
+    pbKeyStruct: PUCHAR;
+    dwKeyLength: ULONG;
+    pbKey: PUCHAR
+); stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('XcRC4Key');
+
+  Unimplemented('XcRC4Key');
+
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcRC4Crypt(): NTSTATUS; stdcall;
+procedure xboxkrnl_XcRC4Crypt(
+    pbKeyStruct: PUCHAR;
+    dwInputLength: ULONG;
+    pbInput: PUCHAR
+); stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('XcRC4Crypt');
+
+  Unimplemented('XcRC4Crypt');
+
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcHMAC(): NTSTATUS; stdcall;
+procedure xboxkrnl_XcHMAC(
+    pbKeyMaterial: PBYTE;
+    cbKeyMaterial: ULONG;
+    pbData: PBYTE;
+    cbData: ULONG;
+    pbData2: PBYTE;
+    {OUT}cbData2: ULONG;
+    {OUT}HmacData: PBYTE  // length must be A_SHA_DIGEST_LEN
+); stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('XcHMAC');
+
+  Unimplemented('XcHMAC');
+
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcPKEncPublic(): NTSTATUS; stdcall;
+function xboxkrnl_XcPKEncPublic(
+    pbPubKey: PUCHAR;
+    pbInput: PUCHAR;
+    {OUT}pbOutput:  PUCHAR
+): ULONG; stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -158,7 +260,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcPKDecPrivate(): NTSTATUS; stdcall;
+function xboxkrnl_XcPKDecPrivate(
+    pbPrvKey: PUCHAR;
+    pbInput: PUCHAR;
+    {OUT}pbOutput: PUCHAR
+): ULONG; stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -166,7 +272,9 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcPKGetKeyLen(): NTSTATUS; stdcall;
+function xboxkrnl_XcPKGetKeyLen(
+    pbPubKey: PUCHAR
+): ULONG; stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -174,67 +282,121 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcVerifyPKCS1Signature(): NTSTATUS; stdcall;
+function xboxkrnl_XcVerifyPKCS1Signature(
+    pbSig: PUCHAR;
+    pbPubKey: PUCHAR;
+    pbDigest: PUCHAR
+): BOOL; stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('XcVerifyPKCS1Signature');
+
+  Unimplemented('XcVerifyPKCS1Signature');
+  Result := BOOL_FALSE;
+
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcModExp(): NTSTATUS; stdcall;
+function xboxkrnl_XcModExp(
+    {OUT} pA: PULONG;
+    pB: PULONG;
+    pC: PULONG;
+    pD: PULONG;
+    dwN: ULONG
+): ULONG; stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
   Result := Unimplemented('XcModExp');
+
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcDESKeyParity(): NTSTATUS; stdcall;
+procedure xboxkrnl_XcDESKeyParity(
+    {OUT}pbKey: PUCHAR;
+    dwKeyLength: ULONG
+); stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('XcDESKeyParity');
+
+  Unimplemented('XcDESKeyParity');
+
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcKeyTable(): NTSTATUS; stdcall;
+procedure xboxkrnl_XcKeyTable(
+    dwCipher: ULONG;
+    {OUT}pbKeyTable: PUCHAR;
+    pbKey: PUCHAR
+); stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('XcKeyTable');
+
+  Unimplemented('XcKeyTable');
+
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcBlockCrypt(): NTSTATUS; stdcall;
+procedure xboxkrnl_XcBlockCrypt(
+    dwCipher: ULONG;
+    {OUT}pbOutput: PUCHAR;
+    pbInput: PUCHAR;
+    pbKeyTable: PUCHAR;
+    dwOp: ULONG
+); stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('XcBlockCrypt');
+
+  Unimplemented('XcBlockCrypt');
+
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcBlockCryptCBC(): NTSTATUS; stdcall;
+procedure xboxkrnl_XcBlockCryptCBC(
+	dwCipher: ULONG;
+	dwInputLength: ULONG;
+	{OUT}pbOutput: PUCHAR;
+	pbInput: PUCHAR;
+	pbKeyTable: PUCHAR;
+	dwOp: ULONG;
+	pbFeedback: PUCHAR
+); stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('XcBlockCryptCBC');
+
+  Unimplemented('XcBlockCryptCBC');
+
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcCryptService(): NTSTATUS; stdcall;
+function xboxkrnl_XcCryptService(
+    dwOp: ULONG;
+    pArgs: Pvoid
+): ULONG; stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
   Result := Unimplemented('XcCryptService');
+
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_XcUpdateCrypto(): NTSTATUS; stdcall;
+procedure xboxkrnl_XcUpdateCrypto(
+    (*pNewVector: PCRYPTO_VECTOR;
+    {OUT}pROMVector: OPTIONAL PCRYPTO_VECTOR *)
+); stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('XcUpdateCrypto');
+
+  Unimplemented('XcUpdateCrypto');
+
   EmuSwapFS(fsXbox);
 end;
 
