@@ -377,7 +377,7 @@ begin
     $041e58: Result := X_D3DRS_PSRGBOUTPUTS6;
     $041e5c: Result := X_D3DRS_PSRGBOUTPUTS7;
     $041e60: Result := X_D3DRS_PSCOMBINERCOUNT;
-    $040100: Result := X_D3DRS_PS_RESERVED; // From XDK 3424, while 3911 onwards uses $041d90 - TODO : What to do?
+    $040100: Result := X_D3DRS_PS_RESERVED; // XDK 3424 uses $040100, while 3911 onwards uses $041d90 - TODO : What to do?
     $041e74: Result := X_D3DRS_PSDOTMAPPING;
     $041e78: Result := X_D3DRS_PSINPUTTEXTURE;
     $040354: Result := X_D3DRS_ZFUNC;
@@ -675,8 +675,8 @@ begin
     XTL_EmuMappedD3DRenderState[X_D3DRS_SPECULARENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_FOGCOLOR]^ := 0;
     XTL_EmuMappedD3DRenderState[X_D3DRS_FOGTABLEMODE]^ := DWORD(X_D3DFOG_NONE);
-//    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGSTART]^ := F2DW(0.0); // Unknown default
-//    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGEND]^ := F2DW(1.0); // Unknown default
+    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGSTART]^ := F2DW(0.0); // Unknown default
+    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGEND]^ := F2DW(1.0); // Unknown default
     XTL_EmuMappedD3DRenderState[X_D3DRS_FOGDENSITY]^ := F2DW(1.0);
     XTL_EmuMappedD3DRenderState[X_D3DRS_EDGEANTIALIAS]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_ZBIAS]^ := 0;
