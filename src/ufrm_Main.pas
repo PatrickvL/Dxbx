@@ -178,8 +178,9 @@ type
     ApplicationDir: string;
     EnabledItems: array of TXbeInfo;
     procedure UpdateFilter;
-    function InsertXBEInfo(const aXbeInfo: TXBEInfo{; const aPreventDuplicates: Boolean}): Boolean;
-    function LoadXBEList(aImportFilePath: string = ''; aUseImportDialog: Boolean = False): Integer;
+    function InsertXBEInfo(const aXbeInfo: TXBEInfo; const aPreventDuplicates: Boolean = True): Boolean;
+    function LoadXBEListByFile(aImportFilePath: string = ''; aUseImportDialog: Boolean = False): Integer;
+    function LoadXBEListByXml(aXml: String): Integer;
   private
     m_Xbe: TXbe;
 
@@ -426,7 +427,7 @@ begin
 
   MyXBEList := TStringList.Create;
   MyXBEList.CaseSensitive := False;
-  if LoadXBEList(FApplicationDir + cXDK_TRACKER_DATA_FILE) > 0 then
+  if LoadXBEListByFile(FApplicationDir + cXDK_TRACKER_DATA_FILE) > 0 then
     UpdateFilter;
 
   PEmuShared(nil).Init;
@@ -921,24 +922,15 @@ var
 begin
   Result := TXBEInfo.Create;
   Result.FileName := XML_ReadString(XBEInfoNode, 'FileName');
-  if Result.FileName = '' then
-  begin
-    // Old-style 'Name' values are read here :
-    Result.Title := XML_ReadString(XBEInfoNode, 'Name');
-    Result.DumpInfo := '';
-    Result.GameRegion := 0;
-  end
-  else
-  begin
-    Result.Title := XML_ReadString(XBEInfoNode, 'Title');
-    GameRegion := XML_ReadString(XBEInfoNode, 'GameRegion');
-    if GameRegion[1] = '-' then
-      Result.GameRegion := 0
-    else
-      Result.GameRegion := StrToIntDef(GameRegion, 0);
 
-    Result.DumpInfo := XML_ReadString(XBEInfoNode, 'DumpInfo');
-  end;
+  Result.Title := XML_ReadString(XBEInfoNode, 'Title');
+  GameRegion := XML_ReadString(XBEInfoNode, 'GameRegion');
+  if (GameRegion = '') or (GameRegion[1] = '-') then
+    Result.GameRegion := 0
+  else
+    Result.GameRegion := StrToIntDef(GameRegion, 0);
+
+  Result.DumpInfo := XML_ReadString(XBEInfoNode, 'DumpInfo');
 
   XDKNode := XBEInfoNode.ChildNodes.FindNode('XDKVersions');
   if Assigned(XDKNode) then
@@ -1469,6 +1461,11 @@ var
   TempItem: TMenuItem;
   i: Integer;
 begin
+  // If file does not exists, for example game has been deleted
+  // then do not insert him into the recent xbe list
+  if not FileExists(aFileName) then
+    Exit;
+
   for i := 0 to mnu_RecentXbefiles.Count - 1 do
   begin
     if mnu_RecentXbefiles.Items[i].Hint = aFileName then
@@ -1495,6 +1492,7 @@ var
   i: Integer;
   LibName: string;
   Version: string;
+  XbeXml: string;
 begin
   if Assigned(m_XBE) and m_XBE.ExportLogoBitmap(ImageLogo.Picture.Bitmap) then
     ImageLogo.Show
@@ -1549,6 +1547,10 @@ begin
       lblXbeInformation.Caption := lblXbeInformation.Caption + #13#13'Cannot start this XBE!'#13#10 + LibName;
       // TODO : Set a Disabled state in imgLaunchButton.Tag
     end;
+
+    DxbxXml.CreateXmlXbeDumpAsText(XbeXml, m_Xbe);
+    LoadXBEListByXml(XbeXml);
+    UpdateFilter;
   end
   else
   begin
@@ -1572,6 +1574,7 @@ begin
     StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle])
   else
     StatusBar.SimpleText := 'DXBX: No Xbe Loaded...';
+
 
   AdjustMenu;
 end; // UpdateTitleInformation
@@ -1610,15 +1613,15 @@ begin
   end;
 end; // _ReadXBEInfoFromNode
 
-function Tfrm_Main.InsertXBEInfo(const aXBEInfo: TXBEInfo{; const aPreventDuplicates: Boolean}): Boolean;
-(*var
-  i: Integer;*)
+function Tfrm_Main.InsertXBEInfo(const aXBEInfo: TXBEInfo; const aPreventDuplicates: Boolean = True): Boolean;
+var
+  i: Integer;
 begin
   Result := False;
   if not Assigned(aXBEInfo) then
     Exit;
 
-(*
+
   if aPreventDuplicates then
     i := FindDuplicate(aXbeInfo)
   else
@@ -1632,13 +1635,13 @@ begin
     MyXBEList.Strings[i] := aXBEInfo.Title;
   end
   else
-*)
+
     MyXBEList.AddObject(aXBEInfo.Title, aXBEInfo);
 
   Result := True;
 end; // TfrmMain.InsertXBEInfo
 
-function Tfrm_Main.LoadXBEList(aImportFilePath: string = '';
+function Tfrm_Main.LoadXBEListByFile(aImportFilePath: string = '';
   aUseImportDialog: Boolean = False): Integer;
 var
   XMLRootNode: IXMLNode;
@@ -1715,7 +1718,39 @@ begin
   finally
     FreeAndNil({var}XBEImportList);
   end;
-end; // Tfrm_Main.LoadXBEList
+end;
+
+function Tfrm_Main.LoadXBEListByXml(aXml: String): Integer;
+var
+  XMLRootNode: IXMLNode;
+begin
+  Result := 0;
+  if aXml = '' then
+    Exit;
+
+  XmlDocument.Active := False;
+  XmlDocument.LoadFromXML(aXml);
+  try
+    XmlDocument.Active := True;
+  except
+    on E: EDOMParseError do
+    begin
+      MessageDlg('Error parsing the file!', mtError, [mbOk], -1);
+      XmlDocument.Active := False;
+    end
+    else
+      XmlDocument.Active := False;
+  end;
+
+  if not XmlDocument.Active then
+    Exit;
+
+  XMLRootNode := XMLDocument.DocumentElement;
+  InsertXBEInfo(TXBEInfo(_ReadXBEInfoFromNode(XMLRootNode)));
+  MyXBEList.Sort;
+end;
+
+// Tfrm_Main.LoadXBEList
 
 function Tfrm_Main.SendCommandToXdkTracker: Boolean;
 var
