@@ -1226,10 +1226,18 @@ begin
 end;
 
 procedure Tfrm_Main.actOpenXbeExecute(Sender: TObject);
+var
+  XbeXml: string;
 begin
 //  XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
   if XbeOpenDialog.Execute then
+  begin
     LoadXbe(XbeOpenDialog.FileName);
+
+    DxbxXml.CreateXmlXbeDumpAsText(XbeXml, m_Xbe, XbeOpenDialog.FileName);
+    LoadXBEListByXml(XbeXml);
+    UpdateFilter;
+  end;
 end;
 
 procedure Tfrm_Main.actCloseXbeExecute(Sender: TObject);
@@ -1452,14 +1460,13 @@ begin
     MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
     Exit;
   end;
-
-  UpdateTitleInformation;
 end; // ReopenXbe
 
 procedure Tfrm_Main.RecentXbeAdd(aFileName: string);
 var
   TempItem: TMenuItem;
   i: Integer;
+  XbeXml: string;
 begin
   // If file does not exists, for example game has been deleted
   // then do not insert him into the recent xbe list
@@ -1492,7 +1499,6 @@ var
   i: Integer;
   LibName: string;
   Version: string;
-  XbeXml: string;
 begin
   if Assigned(m_XBE) and m_XBE.ExportLogoBitmap(ImageLogo.Picture.Bitmap) then
     ImageLogo.Show
@@ -1547,10 +1553,6 @@ begin
       lblXbeInformation.Caption := lblXbeInformation.Caption + #13#13'Cannot start this XBE!'#13#10 + LibName;
       // TODO : Set a Disabled state in imgLaunchButton.Tag
     end;
-
-    DxbxXml.CreateXmlXbeDumpAsText(XbeXml, m_Xbe);
-    LoadXBEListByXml(XbeXml);
-    UpdateFilter;
   end
   else
   begin
