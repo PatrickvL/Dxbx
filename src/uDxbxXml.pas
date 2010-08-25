@@ -37,6 +37,7 @@ type
   TDxbxXml = class(TDataModule)
     XMLDocument: TXMLDocument;
   public
+    procedure CreateXmlXbeDumpAsText(var aText: String; aXbe: TXbe);
     procedure CreateXmlXbeDump(aFileName: string; aXbe: TXbe);
   end;
 
@@ -104,6 +105,38 @@ var
 begin
   SubNode := aXMLNode.AddChild(aElementName);
   SubNode.Text := aString;
+end;
+
+procedure TDxbxXml.CreateXmlXbeDumpAsText(var aText: String; aXbe: TXbe);
+var
+  XmlRootNode: IXmlNode;
+  XbeLibraryVersion: PXbeLibraryVersion;
+  i: Integer;
+  LibName: string;
+  Version: string;
+begin
+  XMLDocument.Active := False;
+  XMLDocument.Active := True;
+  XmlRootNode := XMLDocument.AddChild('XBEINFO');
+
+  XML_WriteString(XmlRootNode, 'DumpInfo', DumpToolString);
+  XML_WriteString(XmlRootNode, 'Title', m_szAsciiTitle);
+
+  XmlRootNode := XmlRootNode.AddChild('XDKVersions');
+
+  XbeLibraryVersion := PXbeLibraryVersion(@(aXbe.RawData[aXbe.m_Header.dwLibraryVersionsAddr - aXbe.m_Header.dwBaseAddr]));
+  for i := 0 to aXbe.m_Header.dwLibraryVersions - 1 do
+  begin
+    LibName := string(Copy(XbeLibraryVersion.szName, 1, XBE_LIBRARYNAME_MAXLENGTH));
+    Version := IntToStr(XbeLibraryVersion.wMajorVersion) + '.' +
+      IntToStr(XbeLibraryVersion.wMinorVersion) + '.' +
+      IntToStr(XbeLibraryVersion.wBuildVersion);
+    Inc(XbeLibraryVersion);
+
+    XML_WriteString(XmlRootNode, LibName, Version);
+  end;
+
+  XMLDocument.SaveToXML(aText);
 end;
 
 end.
