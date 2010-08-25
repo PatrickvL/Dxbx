@@ -405,7 +405,7 @@ object fmConfiguration: TfmConfiguration
       object GroupBox2: TGroupBox
         Left = 3
         Top = 0
-        Width = 534
+        Width = 542
         Height = 409
         Caption = 'Logging configuration '
         TabOrder = 0
@@ -413,11 +413,11 @@ object fmConfiguration: TfmConfiguration
           Left = 16
           Top = 24
           Width = 433
-          Height = 377
+          Height = 369
           Columns = <
             item
-              AutoSize = True
               Caption = 'Name'
+              Width = 204
             end
             item
               Caption = 'Enabled'
@@ -428,8 +428,8 @@ object fmConfiguration: TfmConfiguration
               Width = 75
             end
             item
+              AutoSize = True
               Caption = 'Disabled'
-              Width = 75
             end>
           LargeImages = ImageList1
           ReadOnly = True
@@ -439,6 +439,24 @@ object fmConfiguration: TfmConfiguration
           ViewStyle = vsReport
           OnClick = lstLoggingClick
           OnDrawItem = lstLoggingDrawItem
+        end
+        object btnLoadLogConfig: TButton
+          Left = 455
+          Top = 24
+          Width = 75
+          Height = 25
+          Caption = 'Load Config'
+          TabOrder = 1
+          OnClick = btnLoadLogConfigClick
+        end
+        object btnSaveLogConfig: TButton
+          Left = 455
+          Top = 55
+          Width = 75
+          Height = 25
+          Caption = 'Save Config'
+          TabOrder = 2
+          OnClick = btnSaveLogConfigClick
         end
       end
     end
@@ -584,5 +602,13 @@ object fmConfiguration: TfmConfiguration
       000F000080000000000700000000000000078002000000000003800000000000
       0001C00100010000EF01C003000F0000CF01C00F80030000FF87C30F80030000
       FFFFC21FCE0F0000FFFFFF9FFE1F0000}
+  end
+  object OpenDialog1: TOpenDialog
+    Left = 400
+    Top = 24
+  end
+  object SaveDialog1: TSaveDialog
+    Left = 472
+    Top = 25
   end
 end

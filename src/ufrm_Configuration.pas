@@ -24,7 +24,7 @@ interface
 uses
   // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComCtrls, ExtCtrls, jpeg
+  Dialogs, StdCtrls, ComCtrls, ExtCtrls, jpeg, IniFiles
   // DirectX
   , DirectDraw
   // Dxbx
@@ -108,6 +108,10 @@ type
     GroupBox2: TGroupBox;
     lstLogging: TListView;
     ImageList1: TImageList;
+    btnLoadLogConfig: TButton;
+    btnSaveLogConfig: TButton;
+    OpenDialog1: TOpenDialog;
+    SaveDialog1: TSaveDialog;
     procedure FormCreate(Sender: TObject);
     procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
     procedure btnOkClick(Sender: TObject);
@@ -119,6 +123,8 @@ type
     procedure lstLoggingDrawItem(Sender: TCustomListView; Item: TListItem;
       Rect: TRect; State: TOwnerDrawState);
     procedure lstLoggingClick(Sender: TObject);
+    procedure btnLoadLogConfigClick(Sender: TObject);
+    procedure btnSaveLogConfigClick(Sender: TObject);
   private
     MyDirectDraw: IDirectDraw7;
     FXBVideo : XBVideo;
@@ -126,6 +132,9 @@ type
     FHasChanges: Boolean;
     FBusyConfiguring: Boolean;
     procedure RefreshItem(Item: TListItem);
+
+    procedure SaveLogConfig;
+    procedure LoadLogConfig;
 
     procedure AddAllLogItems;
     procedure AddLogItem(aName: string; aLogStatus: lsStatus; aLogFlag: TLogFlags);
@@ -265,6 +274,27 @@ begin
   HasChanges := False;
 end;
 
+procedure TfmConfiguration.LoadLogConfig;
+var
+  IniFile: TIniFile;
+  lIndex: Integer;
+  LogStatus: TLogStatus;
+begin
+  if OpenDialog1.Execute then
+  begin
+    IniFile := TIniFile.Create(OpenDialog1.FileName);
+
+    for lIndex := 0 to lstLogging.Items.Count -1 do
+    begin
+      LogStatus := TLogStatus(lstLogging.Items[lIndex].Data);
+      LogStatus.Status := lsStatus(IniFile.ReadInteger('Logging', LogStatus.Name, Ord(lsIgnored)));
+      RefreshItem(lstLogging.Items[lIndex]);
+    end;
+
+    HasChanges := True;
+  end;
+end;
+
 procedure TfmConfiguration.lstLoggingClick(Sender: TObject);
 var
   SelectedLogStatus: TLogStatus;
@@ -312,6 +342,29 @@ begin
   Item.SubItemImages[2] := -1;
 
   Item.SubItemImages[Ord(TLogStatus(Item.Data).Status)] := Ord(TLogStatus(Item.Data).Status);
+end;
+
+procedure TfmConfiguration.SaveLogConfig;
+var
+  IniFile: TIniFile;
+  lIndex: Integer;
+  LogStatus: TLogStatus;
+begin
+  if SaveDialog1.Execute then
+  begin
+    IniFile := TIniFile.Create(SaveDialog1.FileName);
+    try
+      for lIndex := 0 to lstLogging.Items.Count -1 do
+      begin
+        LogStatus := TLogStatus(lstLogging.Items[lIndex].Data);
+        IniFile.WriteInteger('Logging', LogStatus.Name, ord(LogStatus.Status));
+      end;
+
+    finally
+      FreeAndNil(IniFile);
+    end;
+
+  end;
 end;
 
 procedure TfmConfiguration.SetHasChanges(aValue: Boolean);
@@ -541,9 +594,19 @@ begin
   Close;
 end;
 
+procedure TfmConfiguration.btnSaveLogConfigClick(Sender: TObject);
+begin
+  SaveLogConfig;
+end;
+
 procedure TfmConfiguration.btnCancelClick(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TfmConfiguration.btnLoadLogConfigClick(Sender: TObject);
+begin
+  LoadLogConfig;
 end;
 
 { TLogStatus }
