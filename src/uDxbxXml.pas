@@ -37,7 +37,7 @@ type
   TDxbxXml = class(TDataModule)
     XMLDocument: TXMLDocument;
   public
-    procedure CreateXmlXbeDumpAsText(var aText: String; aXbe: TXbe);
+    procedure CreateXmlXbeDumpAsText(var aText: String; aXbe: TXbe; aFileName: string);
     procedure CreateXmlXbeDump(aFileName: string; aXbe: TXbe);
   end;
 
@@ -107,7 +107,7 @@ begin
   SubNode.Text := aString;
 end;
 
-procedure TDxbxXml.CreateXmlXbeDumpAsText(var aText: String; aXbe: TXbe);
+procedure TDxbxXml.CreateXmlXbeDumpAsText(var aText: String; aXbe: TXbe; aFileName: string);
 var
   XmlRootNode: IXmlNode;
   XbeLibraryVersion: PXbeLibraryVersion;
@@ -120,6 +120,7 @@ begin
   XmlRootNode := XMLDocument.AddChild('XBEINFO');
 
   XML_WriteString(XmlRootNode, 'DumpInfo', DumpToolString);
+  XML_WriteString(XmlRootNode, 'FileName', aFileName);
   XML_WriteString(XmlRootNode, 'Title', m_szAsciiTitle);
 
   XmlRootNode := XmlRootNode.AddChild('XDKVersions');
