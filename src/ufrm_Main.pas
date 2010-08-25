@@ -180,6 +180,8 @@ type
     procedure UpdateFilter;
     function InsertXBEInfo(const aXbeInfo: TXBEInfo; const aPreventDuplicates: Boolean = True): Boolean;
     function LoadXBEListByFile(aImportFilePath: string = ''; aUseImportDialog: Boolean = False): Integer;
+    procedure SaveXBEListByFile(const aFilePath, aPublishedBy: string);
+
     function LoadXBEListByXml(aXml: String): Integer;
   private
     m_Xbe: TXbe;
@@ -478,6 +480,7 @@ end; // FormCreate
 procedure Tfrm_Main.FormDestroy(Sender: TObject);
 begin
   WriteSettingsIni();
+  SaveXBEListByFile(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aPublishedBy=}'');
   CloseXbe();
   CloseLogs();
 end;
@@ -887,7 +890,49 @@ begin
   end;
 
   XMLDocument.SaveToFile(aFilePath);
-end; // TfrmMain.SaveXBEList
+end;
+
+procedure Tfrm_Main.SaveXBEListByFile(const aFilePath, aPublishedBy: string);
+var
+  XMLRootNode: IXMLNode;
+  PublishedNode: IXMLNode;
+  GameListNode: IXMLNode;
+  XBEInfoNode: IXMLNode;
+  XDKnode: IXMLNode;
+  i, j: Integer;
+  XBEInfo: TXBEInfo;
+begin
+  if not XMLDocument.Active then
+    XMLDocument.Active := True;
+
+  XMLDocument.ChildNodes.Clear;
+  XMLRootNode := XMLDocument.AddChild('XBEInfo');
+  XMLRootNode.SetAttribute('Version', cXDk_TRACKER_XML_VERSION);
+
+  PublishedNode := XMLRootNode.AddChild('PublishedInfo');
+  XML_WriteString(PublishedNode, 'PublishedBy', aPublishedBy);
+
+  GameListNode := XMLRootNode.AddChild('GameList');
+
+  for i := 0 to MyXBEList.Count - 1 do
+  begin
+    XBEInfo := TXBEInfo(MyXBEList.Objects[i]);
+    XBEInfoNode := GameListNode.AddChild('Game');
+
+    XML_WriteString(XBEInfoNode, 'FileName', XBEInfo.FileName);
+    XML_WriteString(XBEInfoNode, 'Title', XBEInfo.Title);
+    XML_WriteString(XBEInfoNode, 'GameRegion', IntToStr(XBEInfo.GameRegion));
+    XML_WriteString(XBEInfoNode, 'DumpInfo', XBEInfo.DumpInfo);
+    XDKnode := XBEInfoNode.AddChild('XDKVersions');
+
+    for j := 0 to XBEInfo.LibVersions.Count - 1 do
+      XML_WriteString(XDKnode, XBEInfo.LibVersions.Names[j], XBEInfo.LibVersions.ValueFromIndex[j]);
+  end;
+
+  XMLDocument.SaveToFile(aFilePath);
+end;
+
+// TfrmMain.SaveXBEList
 
 procedure Tfrm_Main.actExportGameListExecute(Sender: TObject);
 begin
