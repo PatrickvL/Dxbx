@@ -3565,7 +3565,7 @@ begin
       [pPSDef, pHandle]);
 
   // Attempt to recompile PixelShader
-  ConvertedPixelShader := XTL_EmuRecompilePshDef(pPSDef);
+  ConvertedPixelShader := AnsiString(XTL_EmuRecompilePshDef(pPSDef));
 
   // assemble the shader
   pShader := nil;
