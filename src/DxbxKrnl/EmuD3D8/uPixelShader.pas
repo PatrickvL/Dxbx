@@ -434,9 +434,9 @@ type
     SourceRegisterModifier: string;
     Stage: int;
     OutputWriteMask: string;
-    // Mappings for C0 and C1 :
-    PSC0Mapping: string;
-    PSC1Mapping: string;
+    // Mapped rendering for C0 and C1 :
+    C0RegStr: string;
+    C1RegStr: string;
     // Final combiner registers :
     FogReg: PS_REGISTER;
     V1R0Reg: PS_REGISTER;
@@ -493,8 +493,8 @@ type
     RGB: RPSCombinerStageChannel;
     Alpha: RPSCombinerStageChannel;
 
-    PSConstant0: DWORD; // C0 for each stage
-    PSConstant1: DWORD; // C1 for each stage
+    MappedC0: DWORD; // C0 for each stage
+    MappedC1: DWORD; // C1 for each stage
 
     function Disassemble(const aScope: PPSDisassembleScope): string;
   end;
@@ -510,8 +510,8 @@ type
 
     FinalCombinerFlags: PS_FINALCOMBINERSETTING;
 
-    dwOffsetC0: DWORD;
-    dwOffsetC1: DWORD;
+    FinalCombinerC0: DWORD;
+    FinalCombinerC1: DWORD;
 
     dwPS_GLOBALFLAGS: DWORD;
     procedure Decode(const PSFinalCombinerInputsABCD, PSFinalCombinerInputsEFG: DWORD);
@@ -783,8 +783,8 @@ begin
   Assert((PS_REGISTER_C0 <= aReg) and (aReg <= PS_REGISTER_EF_PROD));
 
   case aReg of
-    PS_REGISTER_C0: Result := aScope.PSC0Mapping;
-    PS_REGISTER_C1: Result := aScope.PSC1Mapping;
+    PS_REGISTER_C0: Result := aScope.C0RegStr;
+    PS_REGISTER_C1: Result := aScope.C1RegStr;
     PS_REGISTER_FOG: Result := PSRegToStr(aScope, aScope.FogReg); // Emulated using a constant
     PS_REGISTER_V0: Result := 'v0';
     PS_REGISTER_V1: Result := 'v1';
@@ -1019,7 +1019,11 @@ begin
   if Result <> '' then
     Exit;
 
-  Result := Result + 'mul' + OutputStr + InputA.Disassemble(aScope) + InputAReadMask + ', ' + InputB.Disassemble(aScope) + InputBReadMask;
+  if (InputA.Reg = PS_REGISTER_ZERO) or (InputB.Reg = PS_REGISTER_ZERO) then
+    // Ouput := ZERO * something = zero, which can be simulated by subtracting a (guaranteed) register from itself :
+    Result := Result + 'sub' + OutputStr + 'v0, v0'
+  else
+    Result := Result + 'mul' + OutputStr + InputA.Disassemble(aScope) + InputAReadMask + ', ' + InputB.Disassemble(aScope) + InputBReadMask;
 end;
 
 { RPSCombinerStageChannel }
@@ -1304,8 +1308,8 @@ var
   StageOutputStrRGB: string;
   StageOutputStrAlpha: string;
 begin
-  aScope.PSC0Mapping := 'c' + IntToStr(PSConstant0);
-  aScope.PSC1Mapping := 'c' + IntToStr(PSConstant1);
+  aScope.C0RegStr := 'c' + IntToStr(MappedC0);
+  aScope.C1RegStr := 'c' + IntToStr(MappedC1);
 
   Result := '; combine stage ' + IntToStr(aScope.Stage) + #13#10;
 
@@ -1361,8 +1365,8 @@ begin
   Result := '';
   AlreadyHandled_D := False;
 
-  aScope.PSC0Mapping := 'c' + IntToStr(dwOffsetC0);
-  aScope.PSC1Mapping := 'c' + IntToStr(dwOffsetC1);
+  aScope.C0RegStr := 'c' + IntToStr(FinalCombinerC0);
+  aScope.C1RegStr := 'c' + IntToStr(FinalCombinerC1);
 
 //  The final combiner performs the following operations :
 //
@@ -1475,7 +1479,11 @@ begin
   else
   begin
     Result := Result + '; final combiner - alphaout'#13#10;
-    Result := Result + 'mov r0.a, ' + InputG.Disassemble(aScope) + #13#10;
+    if InputG.Reg = PS_REGISTER_ZERO then
+      // R0.A := 0, can be simulated by subtracting a (guaranteed) register from itself :
+      Result := Result + 'sub r0.a, v0, v0'#13#10
+    else
+      Result := Result + 'mov r0.a, ' + InputG.Disassemble(aScope) + #13#10;
   end;
 end;
 
@@ -1566,21 +1574,22 @@ begin
     Combiners[i].RGB.Decode(pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i]);
     Combiners[i].Alpha.Decode(pPSDef.PSAlphaInputs[i], pPSDef.PSAlphaOutputs[i], {IsAlpha=}True);
 
+    // Decode & map the C0 and C1 registers :
     if (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C0) > 0 then
-      Combiners[i].PSConstant0 := (pPSDef.PSConstant0[i] shr (i * 4)) and $f
+      Combiners[i].MappedC0 := (pPSDef.PSC0Mapping shr (i * 4)) and $f
     else
-      Combiners[i].PSConstant0 := 0;
+      Combiners[i].MappedC0 := 0;
 
     if (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C1) > 0 then
-      Combiners[i].PSConstant1 := (pPSDef.PSConstant1[i] shr (i * 4)) and $f
+      Combiners[i].MappedC1 := (pPSDef.PSC1Mapping shr (i * 4)) and $f
     else
-      Combiners[i].PSConstant1 := 1;
+      Combiners[i].MappedC1 := 1;
   end;
 
   FinalCombiner.Decode(pPSDef.PSFinalCombinerInputsABCD, pPSDef.PSFinalCombinerInputsEFG);
 
-  FinalCombiner.dwOffsetC0 := (pPSDef.PSFinalCombinerConstants shr 0) and $F;
-  FinalCombiner.dwOffsetC1 := (pPSDef.PSFinalCombinerConstants shr 4) and $F;
+  FinalCombiner.FinalCombinerC0 := (pPSDef.PSFinalCombinerConstants shr 0) and $F;
+  FinalCombiner.FinalCombinerC1 := (pPSDef.PSFinalCombinerConstants shr 4) and $F;
   FinalCombiner.dwPS_GLOBALFLAGS := (pPSDef.PSFinalCombinerConstants shr 8) and $1;
 end;
 
@@ -1708,8 +1717,8 @@ begin
   PSC1Mapping: DWORD,                      // Mapping of c1 regs to D3D constants
 *)
   _Add(#13#10'PSFinalCombinerConstants ->'); // // Final combiner constant mapping
-  _Add('Offset of D3D constant for C0: %d', [FinalCombiner.dwOffsetC0]);
-  _Add('Offset of D3D constant for C1: %d', [FinalCombiner.dwOffsetC1]);
+  _Add('Offset of D3D constant for C0: %d', [FinalCombiner.FinalCombinerC0]);
+  _Add('Offset of D3D constant for C1: %d', [FinalCombiner.FinalCombinerC1]);
 
   _Add('Adjust texture flag: %s', [PS_GlobalFlagsStr[PS_GLOBALFLAGS(FinalCombiner.dwPS_GLOBALFLAGS)]]);
 
@@ -1785,7 +1794,7 @@ begin
   // Add the third argument :
   if PSTextureModes[aScope.Stage] in [
     PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST] then
-    Result := Result + ', ' + aScope.PSC0Mapping + ' ; Dxbx guess'; // TODO : Where do we get the 3rd argument to this?
+    Result := Result + ', ' + aScope.C0RegStr + ' ; Dxbx guess'; // TODO : Where do we get the 3rd argument to this?
 
   Result := Result + #13#10;
 end;
@@ -1855,7 +1864,8 @@ begin
 
   // On the Xbox, the alpha portion of the R0 register is initialized to
   // the alpha component of texture 0 if texturing is enabled for texture 0 :
-  if PSTextureModes[0] > PS_TEXTUREMODES_NONE then
+  if (PSTextureModes[0] > PS_TEXTUREMODES_NONE)
+  and not (PSTextureModes[0] in [PS_TEXTUREMODES_CLIPPLANE, PS_TEXTUREMODES_DOT_ZW, PS_TEXTUREMODES_DOTPRODUCT]) then
     // TODO : Move this over to where r0.a is first read (if ever)
     Result := Result + 'mov r0.a, t0.a'#13#10;
 
