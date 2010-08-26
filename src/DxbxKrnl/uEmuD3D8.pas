@@ -93,7 +93,7 @@ function XTL_EmuD3DDevice_SetVertexData4f(Register_: Integer;
   a, b, c, d: FLOAT): HRESULT; stdcall; // forward
 function XTL_EmuD3DDevice_GetVertexShader({CONST} pHandle: PDWORD): HRESULT; stdcall; // forward
 
-procedure XTL_EmuIDirect3DResource_Register(pThis: PX_D3DResource;
+procedure XTL_EmuD3DResource_Register(pThis: PX_D3DResource;
   pBase: PVOID); stdcall;
 function XTL_EmuD3DDevice_CreateTexture(Width: UINT; Height: UINT;
     Levels: UINT; Usage: DWORD; Format: X_D3DFORMAT; Pool: X_D3DPOOL; ppTexture: PPX_D3DTexture): HRESULT; stdcall;
@@ -126,7 +126,7 @@ function XTL_EmuIDirect3DTexture_GetSurfaceLevel(pThis: PX_D3DTexture;
     Level: UINT;
     ppSurfaceLevel: PPX_D3DSurface): HRESULT; stdcall;
 
-function XTL_EmuIDirect3DPalette_Lock2(pThis: PX_D3DPalette; Flags: DWORD): PD3DCOLOR; stdcall;
+function XTL_EmuD3DPalette_Lock2(pThis: PX_D3DPalette; Flags: DWORD): PD3DCOLOR; stdcall;
 function XTL_EmuD3DDevice_CreatePalette2(Size: X_D3DPALETTESIZE): PX_D3DPalette; stdcall;
 function XTL_EmuD3DDevice_EnableOverlay(Enable: BOOL): HRESULT; stdcall;
 function XTL_EmuD3DDevice_UpdateOverlay(pSurface: PX_D3DSurface;
@@ -1585,7 +1585,7 @@ begin
     end;
 
   EmuSwapFS(fsXbox);
-  XTL_EmuIDirect3DResource_Register(pResource, nil(*PVOID(pResource.Data)*));
+  XTL_EmuD3DResource_Register(pResource, nil(*PVOID(pResource.Data)*));
   EmuSwapFS(fsWindows);
 
   if (pResource.Emu.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
@@ -2715,6 +2715,20 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+function XTL_EmuD3DDevice_Suspend(): HRESULT;
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuD3D8 : EmuD3DDevice_Suspend');
+
+  Unimplemented('XTL_EmuD3DDevice_Suspend');
+//  D3DDevice_Suspend();
+  Result := D3D_OK;
+
+  EmuSwapFS(fsXbox);
+end;
+
 function XTL_EmuD3DDevice_GetViewport
 (
   pViewport: PD3DVIEWPORT
@@ -2843,6 +2857,26 @@ begin
   DumpPresentationParameters(pPresentationParameters);
 
   EmuWarning('Device Reset is being utterly ignored');
+
+  EmuSwapFS(fsXbox);
+  Result := D3D_OK;
+end;
+
+function XTL_EmuD3DDevice_Resume
+(
+  Reset: BOOL
+): HRESULT; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_Resume').
+      _(Reset, 'Reset').
+    LogEnd();
+
+//  D3DDevice_Resume(Reset);
+  Unimplemented('XTL_EmuD3DDevice_Resume');
 
   EmuSwapFS(fsXbox);
   Result := D3D_OK;
@@ -3042,6 +3076,50 @@ begin
   Result := D3D_OK;
 end;
 
+procedure XTL_EmuD3DDevice_GetTileCompressionTagBits(
+  Partition: DWORD;
+  Address: DWORD;
+  pData: PDWORD;
+  Count: DWORD
+);
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_GetTileCompressionTagBits').
+      _(Partition, 'Partition').
+      _(Address, 'Address').
+      _(pData, 'pData').
+      _(Count, 'Count').
+    LogEnd();
+
+//  D3DDevice_GetTileCompressionTagBits(Partition, Address, pData, Count);
+  Unimplemented('XTL_EmuD3DDevice_GetTileCompressionTags');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuD3DDevice_GetTileCompressionTags(
+  ZStartTag: DWORD;
+  ZEndTag: DWORD
+): DWORD;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_GetTileCompressionTags').
+      _(ZStartTag, 'ZStartTag').
+      _(ZEndTag, 'ZEndTag').
+    LogEnd();
+
+//  return D3DDevice_GetTileCompressionTags(ZStartTag, ZEndTag);
+  Result := Unimplemented('XTL_EmuD3DDevice_GetTileCompressionTags');
+
+  EmuSwapFS(fsXbox);
+end;
+
 function XTL_EmuD3DDevice_SetTileNoWait
 (
   Index: DWORD;
@@ -3065,6 +3143,29 @@ begin
   EmuSwapFS(fsXbox);
 
   Result := D3D_OK;
+end;
+
+procedure XTL_EmuD3DDevice_SetTileCompressionTagBits(
+  Partition: DWORD;
+  Address: DWORD;
+  pData: PDWORD;
+  Count: DWORD
+);
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_SetTileCompressionTagBits').
+      _(Partition, 'Partition').
+      _(Address, 'Address').
+      _(pData, 'pData').
+      _(Count, 'Count').
+    LogEnd();
+
+  //D3DDevice_SetTileCompressionTagBits(Partition, Address, pData, Count);
+  Unimplemented('XTL_EmuD3DDevice_SetTileCompressionTagBits');
+
+  EmuSwapFS(fsXbox);
 end;
 
 {$ifdef _DEBUG_TRACK_VS}
@@ -5101,7 +5202,7 @@ begin
   Result := XTL_EmuD3DDevice_Present(nil, nil, 0, nil);
 end;
 
-procedure XTL_EmuIDirect3DResource_Register
+procedure XTL_EmuD3DResource_Register
 (
     pThis: PX_D3DResource;
     pBase: PVOID
@@ -5545,7 +5646,7 @@ begin
 //  Result := hRet;
 end;
 
-function XTL_EmuIDirect3DResource_AddRef
+function XTL_EmuD3DResource_AddRef
 (
   pThis: PX_D3DResource
 ): ULONG; stdcall;
@@ -5594,7 +5695,7 @@ begin
   Result := uRet;
 end;
 
-function XTL_EmuIDirect3DResource_Release(
+function XTL_EmuD3DResource_Release(
   pThis: PX_D3DResource
 ): ULONG; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -5716,7 +5817,7 @@ begin
   Result := uRet;
 end;
 
-function XTL_EmuIDirect3DResource_IsBusy
+function XTL_EmuD3DResource_IsBusy
 (
     pThis: PX_D3DResource
 ): BOOL; stdcall;
@@ -5741,7 +5842,7 @@ begin
   Result := g_bIsBusy;
 end;
 
-procedure XTL_EmuIDirect3DResource_GetDevice
+procedure XTL_EmuD3DResource_GetDevice
 (
   pThis: PX_D3DResource;
   ppDevice: XTL_PPIDirect3DDevice8 // PPD3DDevice ?
@@ -5763,7 +5864,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DResource_GetType
+function XTL_EmuD3DResource_GetType
 (
     pThis: PX_D3DResource
 ): X_D3DRESOURCETYPE; stdcall;
@@ -7832,7 +7933,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuIDirect3DVertexBuffer_Lock
+procedure XTL_EmuD3DVertexBuffer_Lock
 (
   ppVertexBuffer: PX_D3DVertexBuffer;
   OffsetToLock: UINT;
@@ -7874,7 +7975,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DVertexBuffer_Lock2
+function XTL_EmuD3DVertexBuffer_Lock2
 (
   ppVertexBuffer: PX_D3DVertexBuffer;
   Flags: DWORD
@@ -8804,7 +8905,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DPalette_Lock
+function XTL_EmuD3DPalette_Lock
 (
   pThis: PX_D3DPalette;
   ppColors: PPD3DCOLOR;
@@ -8814,7 +8915,7 @@ function XTL_EmuIDirect3DPalette_Lock
 begin
   // Dxbx note : No EmuSwapFS needed here
 
-  ppColors^ := XTL_EmuIDirect3DPalette_Lock2(pThis, Flags);
+  ppColors^ := XTL_EmuD3DPalette_Lock2(pThis, Flags);
   (*DbgPrintf('Pallete 0x%08X was locked: return = 0x%08x', [
         pThis,
         ppColors^
@@ -8823,7 +8924,7 @@ begin
   Result := D3D_OK;
 end;
 
-function XTL_EmuIDirect3DPalette_Lock2
+function XTL_EmuD3DPalette_Lock2
 (
   pThis: PX_D3DPalette;
   Flags: DWORD
@@ -8841,6 +8942,26 @@ begin
            [pThis, Flags]);
 
   Result := PD3DCOLOR(pThis.Data);
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuD3DPalette_GetSize(
+  pThis: PX_D3DPalette
+): X_D3DPALETTESIZE;
+// Branch:Dxbx  Translator:Shadow_tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuD3D8 : EmuIDirect3DPalette_GetSize' +
+        #13#10'(' +
+        #13#10'   pThis             : 0x%.08X' +
+        #13#10');',
+           [pThis]);
+
+  //return D3DPalette_GetSize(pThis);
+  Unimplemented('XTL_EmuIDirect3DPushBuffer_SetPalette');
 
   EmuSwapFS(fsXbox);
 end;
@@ -9166,6 +9287,20 @@ begin
   DbgPrintf('NOT YET IMPLEMENTED!');
 
   EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuD3DDevice_Nop(): HRESULT;
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('EmuD3D8 : EmuD3DDevice_Nop');
+
+  //D3DDevice_Nop();
+  DbgPrintf('NOT YET IMPLEMENTED!');
+
+  EmuSwapFS(fsXbox);
+  Result := D3D_OK;
 end;
 
 procedure XTL_EmuD3DDevice_GetVertexShaderType
@@ -9522,7 +9657,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuIDirect3DResource_BlockUntilNotBusy
+procedure XTL_EmuD3DResource_BlockUntilNotBusy
 (
   pThis: PX_D3DResource
 ); stdcall;
@@ -9541,7 +9676,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DResource_SetPrivateData
+function XTL_EmuD3DResource_SetPrivateData
 (
   pThis: PX_D3DResource;
   refguid: REFGUID;
@@ -9568,7 +9703,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DResource_GetPrivateData
+function XTL_EmuD3DResource_GetPrivateData
 (
   pThis: PX_D3DResource;
   refguid: REFGUID;
@@ -9593,7 +9728,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DResource_FreePrivateData
+function XTL_EmuD3DResource_FreePrivateData
 (
   pThis: PX_D3DResource;
   refguid: REFGUID
@@ -9614,7 +9749,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DVertexBuffer_GetDesc
+function XTL_EmuD3DVertexBuffer_GetDesc
 (
   pThis: PX_D3DVertexBuffer;
   pDesc: PD3DVERTEXBUFFER_DESC
@@ -10174,7 +10309,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_DeleteStateBlock').
+    LogBegin('EmuD3DDevice_DeleteStateBlock').
       _(Token, 'Token').
     LogEnd();
 
@@ -10198,7 +10333,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetModelView').
+    LogBegin('EmuD3DDevice_SetModelView').
       _(pModelView, 'pModelView').
       _(pInverseModelView, 'pInverseModelView').
       _(pComposite, 'pComposite').
@@ -10210,6 +10345,23 @@ begin
   EmuSwapFS(fsXbox);
 
   Result := D3D_OK;
+end;
+
+procedure XTL_EmuD3DDevice_SetOverscanColor(
+  Color: D3DCOLOR
+);
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_SetOverscanColor').
+      _(Color, 'Color').
+    LogEnd();
+
+  //D3DDevice_SetOverscanColor(Color);
+  Unimplemented('XTL_EmuD3DDevice_SetOverscanColor');
+
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuD3DDevice_SetVertexBlendModelView
@@ -10537,7 +10689,7 @@ begin
 end; *)
 
 
-function XTL_EmuIDirect3DVolume_GetDesc
+function XTL_EmuD3DVolume_GetDesc
 (
   pThis: PX_D3DVolume;
   pDesc: PX_D3DVOLUME_DESC
@@ -10598,7 +10750,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DVolume_GetContainer2
+function XTL_EmuD3DVolume_GetContainer2
 (
   pThis: PX_D3DVolume;
   ppBaseTexture: PPX_D3DBaseTexture
@@ -10612,7 +10764,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DVolume_LockBox
+function XTL_EmuD3DVolume_LockBox
 (
   pThis: PX_D3DVolume;
   pLockedVolume: PD3DLOCKED_BOX;
@@ -10643,6 +10795,11 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
+
+(*function XTL_EmuD3DVolume_LockBox();
+begin
+
+end; *)
 
 
 (*function XTL_EmuD3DDevice_CreateSurface
@@ -10696,10 +10853,11 @@ begin
 
   EmuVerifyResourceIsRegistered(pThis);
   pSurface := pThis.Emu.Surface;
-  Result := IDirect3DSurface(pSurface).GetContainer(pThis, {out}ppBaseTexture);
+//  Result := IDirect3DSurface(pSurface).GetContainer(pThis, {out}ppBaseTexture);
+  Result := Unimplemented('XTL_EmuD3DDevice_CreateSurface2');
 
   EmuSwapFS(fsXbox);
-end; *)
+end;*)
 
 function XTL_EmuIDirect3DPushBuffer_SetModelView
 (
@@ -11122,6 +11280,8 @@ exports
   XTL_EmuD3DDevice_GetTexture2,
   XTL_EmuD3DDevice_GetTextureStageState,
   XTL_EmuD3DDevice_GetTile,
+  XTL_EmuD3DDevice_GetTileCompressionTagBits,
+  XTL_EmuD3DDevice_GetTileCompressionTags,
   XTL_EmuD3DDevice_GetTransform,
   XTL_EmuD3DDevice_GetVertexShader,
   XTL_EmuD3DDevice_GetVertexShaderConstant,
@@ -11140,11 +11300,13 @@ exports
   XTL_EmuD3DDevice_LightEnable,
   XTL_EmuD3DDevice_LoadVertexShader,
   XTL_EmuD3DDevice_LoadVertexShaderProgram,
+  XTL_EmuD3DDevice_Nop,
   XTL_EmuD3DDevice_PersistDisplay,
   XTL_EmuD3DDevice_Present,
   XTL_EmuD3DDevice_PrimeVertexCache,
   XTL_EmuD3DDevice_Release,
   XTL_EmuD3DDevice_Reset,
+(*  XTL_EmuD3DDevice_Resume,*) // TODO -oDXBX: NOT YET IMPLEMENTED YET
   XTL_EmuD3DDevice_RunPushBuffer,
   XTL_EmuD3DDevice_RunVertexStateShader,
   XTL_EmuD3DDevice_SelectVertexShader,
@@ -11157,6 +11319,7 @@ exports
   XTL_EmuD3DDevice_SetLight,
   XTL_EmuD3DDevice_SetMaterial,
   XTL_EmuD3DDevice_SetModelView, // ??
+  XTL_EmuD3DDevice_SetOverscanColor,
   XTL_EmuD3DDevice_SetPalette,
   XTL_EmuD3DDevice_SetPixelShader,
   XTL_EmuD3DDevice_SetPixelShaderConstant,
@@ -11212,6 +11375,7 @@ exports
   XTL_EmuD3DDevice_SetTextureState_TexCoordIndex,
   XTL_EmuD3DDevice_SetTileNoWait name PatchPrefix + '?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z',
   XTL_EmuD3DDevice_SetTileNoWait name PatchPrefix + 'D3DDevice_SetTile', // Dxbx note : SetTileNoWait is applied to SetTile in Cxbx 4361 OOPVA's!
+  XTL_EmuD3DDevice_SetTileCompressionTagBits,
   XTL_EmuD3DDevice_SetTransform,
   XTL_EmuD3DDevice_SetVertexBlendModelView, // ??
   XTL_EmuD3DDevice_SetVertexData2f,
@@ -11229,27 +11393,29 @@ exports
   XTL_EmuD3DDevice_SetVertexShaderInputDirect,
   XTL_EmuD3DDevice_SetVerticalBlankCallback,
   XTL_EmuD3DDevice_SetViewport,
+  XTL_EmuD3DDevice_Suspend,
   XTL_EmuD3DDevice_Swap,
   XTL_EmuD3DDevice_SwitchTexture,
   XTL_EmuD3DDevice_Unknown1 name PatchPrefix + 'D3DDevice_Unknown', // TODO -oDXBX: Fix wrong prefix!
   XTL_EmuD3DDevice_UpdateOverlay,
 
-  XTL_EmuIDirect3DPalette_Lock name PatchPrefix + 'D3DPalette_Lock',
-  XTL_EmuIDirect3DPalette_Lock2 name PatchPrefix + 'D3DPalette_Lock2',
+  XTL_EmuD3DPalette_Lock,
+  XTL_EmuD3DPalette_Lock2,
+  XTL_EmuD3DPalette_GetSize,
 
-  XTL_EmuIDirect3DResource_AddRef name PatchPrefix + 'D3DResource_AddRef',
-  XTL_EmuIDirect3DResource_BlockUntilNotBusy name PatchPrefix + 'D3DResource_BlockUntilNotBusy',
-  XTL_EmuIDirect3DResource_FreePrivateData name PatchPrefix + 'D3DResource_FreePrivateData',
-  XTL_EmuIDirect3DResource_GetDevice name PatchPrefix + 'D3DResource_GetDevice',
-  XTL_EmuIDirect3DResource_GetPrivateData name PatchPrefix + 'D3DResource_GetPrivateData',
-  XTL_EmuIDirect3DResource_GetType name PatchPrefix + 'D3DResource_GetType',
-  XTL_EmuIDirect3DResource_IsBusy name PatchPrefix + 'D3DResource_IsBusy',
-  XTL_EmuIDirect3DResource_Register name PatchPrefix + 'D3DResource_Register',
-  XTL_EmuIDirect3DResource_Release name PatchPrefix + 'D3DResource_Release',
-  XTL_EmuIDirect3DResource_SetPrivateData name PatchPrefix + 'D3DResource_SetPrivateData',
+  XTL_EmuD3DResource_AddRef,
+  XTL_EmuD3DResource_BlockUntilNotBusy,
+  XTL_EmuD3DResource_FreePrivateData,
+  XTL_EmuD3DResource_GetDevice,
+  XTL_EmuD3DResource_GetPrivateData,
+  XTL_EmuD3DResource_GetType,
+  XTL_EmuD3DResource_IsBusy,
+  XTL_EmuD3DResource_Register,
+  XTL_EmuD3DResource_Release,
+  XTL_EmuD3DResource_SetPrivateData,
 
   XTL_EmuIDirect3DSurface_GetDesc name PatchPrefix + 'D3DSurface_GetDesc',
-(*  XTL_EmuIDirect3DSurface_GetContainer2 name PatchPrefix + 'D3DSurface_GetContainer2', *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
+(*  XTL_EmuIDirect3DSurface_GetContainer2 name PatchPrefix + 'D3DSurface_GetContainer2',*)
   XTL_EmuIDirect3DSurface_LockRect name PatchPrefix + 'D3DSurface_LockRect@16',
 
   XTL_EmuIDirect3DCubeTexture_GetLevelDesc name PatchPrefix + 'D3DCubeTexture_GetLevelDesc',
@@ -11271,14 +11437,16 @@ exports
   XTL_EmuIDirect3DPushBuffer_CopyRects name PatchPrefix + 'D3DPushBuffer_CopyRects',
 
 
-  XTL_EmuIDirect3DVertexBuffer_GetDesc name PatchPrefix + 'D3DVertexBuffer_GetDesc',
-  XTL_EmuIDirect3DVertexBuffer_Lock name PatchPrefix + 'D3DVertexBuffer_Lock',
-  XTL_EmuIDirect3DVertexBuffer_Lock2 name PatchPrefix + 'D3DVertexBuffer_Lock2',
+  XTL_EmuD3DVertexBuffer_GetDesc,
+  XTL_EmuD3DVertexBuffer_Lock,
+  XTL_EmuD3DVertexBuffer_Lock2,
 
-  XTL_EmuIDirect3DVolume_GetDesc name PatchPrefix + 'D3DVolume_GetDesc',
-  XTL_EmuIDirect3DVolume_GetContainer2 name PatchPrefix + 'GetContainer2',
-  XTL_EmuIDirect3DVolume_LockBox name PatchPrefix + 'D3DVolume_LockBox',
+(*  D3DIndexBuffer_GetDesc, *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
 
+  XTL_EmuD3DVolume_GetDesc,
+  XTL_EmuD3DVolume_GetContainer2,
+  XTL_EmuD3DVolume_LockBox,
+(*  XTL_EmuD3DVolume_GetDesc, *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
 
   XTL_EmuIDirect3DVolumeTexture_GetLevelDesc name PatchPrefix + 'D3DVolumeTexture_GetLevelDesc',
 (*  XTL_EmuIDirect3DVolumeTexture_GetVolumeLevel2 name PatchPrefix + 'D3DVolumeTexture_GetVolumeLevel2', *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
