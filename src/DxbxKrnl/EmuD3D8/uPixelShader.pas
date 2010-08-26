@@ -444,29 +444,36 @@ type
   end;
   PPSDisassembleScope = ^RPSDisassembleScope;
 
+  PPSOutputRegister = ^RPSOutputRegister;
   RPSOutputRegister = object
     IsAlpha: Boolean;
     Reg: PS_REGISTER;
     procedure Decode(Value: Byte; aIsAlpha: Boolean);
+    function IsSameAsAlpha(const Alpha: PPSOutputRegister): Boolean;
     function IntermediateToString(): string;
     function Disassemble(const aScope: PPSDisassembleScope): string;
   end;
 
+  PPSInputRegister = ^RPSInputRegister;
   RPSInputRegister = object(RPSOutputRegister)
     Channel: PS_CHANNEL;
     InputMapping: PS_INPUTMAPPING;
     procedure Decode(Value: Byte; aIsAlpha: Boolean);
+    function IsSameAsAlpha(const Alpha: PPSInputRegister): Boolean;
     function IntermediateToString(): string;
     function Disassemble(const aScope: PPSDisassembleScope): string;
   end;
 
+  PPSCombinerOutput = ^RPSCombinerOutput;
   RPSCombinerOutput = object(RPSOutputRegister)
     DotProduct: Boolean; // False=Multiply, True=DotProduct
     BlueToAlpha: Boolean; // False=Alpha-to-Alpha, True=Blue-to-Alpha
+    function IsSameAsAlpha(const Alpha: PPSCombinerOutput): Boolean;
     function CombineStageInputDot(const aScope: PPSDisassembleScope; const InputA, InputB: RPSInputRegister): string;
     function CombineStageInputMul(const aScope: PPSDisassembleScope; const InputA, InputB: RPSInputRegister): string;
   end;
 
+  PPSCombinerStageChannel = ^RPSCombinerStageChannel;
   RPSCombinerStageChannel = record
     InputA: RPSInputRegister;
     InputB: RPSInputRegister;
@@ -478,9 +485,9 @@ type
     CombinerOutputFlags: PS_COMBINEROUTPUT;
     AB_CD_MUX: Boolean; // False=AB+CD, True=MUX(AB;CD) based on R0.a
     procedure Decode(PSInputs, PSOutputs: DWORD; IsAlpha: Boolean = False);
+    function IsSameAsAlpha(const Alpha: PPSCombinerStageChannel): Boolean;
     function DisassembleCombinerStage(const aScope: PPSDisassembleScope): string;
   end;
-  PRPSCombinerStageChannel = ^RPSCombinerStageChannel;
 
   RPSCombinerStage = record
     RGB: RPSCombinerStageChannel;
@@ -803,6 +810,11 @@ begin
   Reg := PS_REGISTER(Value);
 end;
 
+function RPSOutputRegister.IsSameAsAlpha(const Alpha: PPSOutputRegister): Boolean;
+begin
+  Result := (Reg = Alpha.Reg);
+end;
+
 function RPSOutputRegister.IntermediateToString(): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
@@ -826,6 +838,13 @@ begin
 
   Channel := PS_CHANNEL(Value and PS_ChannelMask);
   InputMapping := PS_INPUTMAPPING(Value and $e0);
+end;
+
+function RPSInputRegister.IsSameAsAlpha(const Alpha: PPSInputRegister): Boolean;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  Result := (Reg = Alpha.Reg)
+        and (InputMapping = Alpha.InputMapping);
 end;
 
 (*
@@ -920,10 +939,18 @@ end;
 
 { RPSCombinerOutput }
 
+function RPSCombinerOutput.IsSameAsAlpha(const Alpha: PPSCombinerOutput): Boolean;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  Result := (Reg = Alpha.Reg)
+        and (DotProduct = Alpha.DotProduct)
+        and (BlueToAlpha = Alpha.BlueToAlpha);
+end;
+
 function RPSCombinerOutput.CombineStageInputDot(const aScope: PPSDisassembleScope; const InputA, InputB: RPSInputRegister): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  Result := Result + 'dp3' + aScope.InstructionOutputCombiner + ' ' +
+  Result := 'dp3' + aScope.InstructionOutputCombiner + ' ' +
     Self.Disassemble(aScope) + aScope.OutputWriteMask + ', ' +
     InputA.Disassemble(aScope) + ', ' +
     InputB.Disassemble(aScope);
@@ -1014,6 +1041,19 @@ begin
   OutputCD.BlueToAlpha := (CombinerOutputFlags and PS_COMBINEROUTPUT_CD_BLUE_TO_ALPHA) > 0; // False=Alpha-to-Alpha, True=Blue-to-Alpha
 
   AB_CD_MUX := (CombinerOutputFlags and PS_COMBINEROUTPUT_AB_CD_MUX) > 0; // False=AB+CD, True=MUX(AB,CD) based on R0.a
+end;
+
+// Checks if this (RGB) stage is identical to the Alhpa stage.
+function RPSCombinerStageChannel.IsSameAsAlpha(const Alpha: PPSCombinerStageChannel): Boolean;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  Result := OutputAB.IsSameAsAlpha(@(Alpha.OutputAB))
+        and OutputCD.IsSameAsAlpha(@(Alpha.OutputCD))
+        and OutputSUM.IsSameAsAlpha(@(Alpha.OutputSUM))
+        and InputA.IsSameAsAlpha(@(Alpha.InputA))
+        and InputB.IsSameAsAlpha(@(Alpha.InputB))
+        and InputC.IsSameAsAlpha(@(Alpha.InputC))
+        and InputD.IsSameAsAlpha(@(Alpha.InputD));
 end;
 
 function RPSCombinerStageChannel.DisassembleCombinerStage(const aScope: PPSDisassembleScope): string;
@@ -1260,16 +1300,16 @@ begin
   aScope.PSC0Mapping := 'c' + IntToStr(PSConstant0);
   aScope.PSC1Mapping := 'c' + IntToStr(PSConstant1);
 
-  Result := Result + '; combine stage ' + IntToStr(aScope.Stage) + #13#10;
-//  // Check if RGB and Alpha are handled identical :
-//  if  (RGBOutput = AlphaOutput)
-//  and ((RGBInput and PS_NoChannelsMask) = (AlphaInput and PS_NoChannelsMask))
-//  and ((RGBInput and PS_AlphaChannelsMask) = 0)
-//  and ((AlphaInput and PS_AlphaChannelsMask) = PS_AlphaChannelsMask) then
-//    // In that case, we combine both channels in one go without Output Write Masks (which defaults to '.rgba') :
-//    aScope.OutputWriteMask := '.';
-//    Result := Result + RGB.DisassembleCombinerStage(aScope)
-//  else
+  Result := '; combine stage ' + IntToStr(aScope.Stage) + #13#10;
+
+  // Check if RGB and Alpha are handled identical :
+  if  RGB.IsSameAsAlpha(@Alpha) then
+  begin
+    // In that case, we combine both channels in one go without Output Write Masks (which defaults to '.rgba') :
+    aScope.OutputWriteMask := '';
+    Result := Result + RGB.DisassembleCombinerStage(aScope);
+  end
+  else
   begin
     // Else, handle rgb separately from alpha :
     aScope.OutputWriteMask := '.rgb';
@@ -1374,15 +1414,14 @@ begin
     Result := Result + 'add ' + PSRegToStr(aScope, aScope.V1R0Reg) + ', ' + PSRegToStr(aScope, PS_REGISTER_V1) + ', ' + PSRegToStr(aScope, PS_REGISTER_R0) + #13#10;
   end;
 
-  Result := Result + '; final combiner - r0 = A*B + (1-A)*C + D'#13#10;
-
-  // Handle the lerp
+  // Handle the final combiner's linear interpolation :
   if  ((InputA.Reg = PS_REGISTER_ZERO) or (InputA.Reg = PS_REGISTER_R0))
   and ((InputB.Reg = PS_REGISTER_ZERO) or (InputB.Reg = PS_REGISTER_R0))
   and ((InputC.Reg = PS_REGISTER_ZERO) or (InputC.Reg = PS_REGISTER_R0)) then
     // do nothing
   else
   begin
+    Result := Result + '; final combiner - r0 = A*B + (1-A)*C + D'#13#10;
     TmpReg := PS_REGISTER_R0; // TODO : Check if r0 is usable
 
     if InputC.Reg = PS_REGISTER_ZERO then
@@ -1536,12 +1575,12 @@ function RPSIntermediate.IntermediateToString(): string;
 
   procedure _Add(const aStr: string); overload;
   begin
-    Result := Result + aStr;
+    Result := Result + aStr + #13#10;
   end;
 
   procedure _Add(const aStr: string; Args: array of const); overload;
   begin
-    Result := Result + DxbxFormat(aStr, Args);
+    _Add(DxbxFormat(aStr, Args));
   end;
 
 var
@@ -1805,10 +1844,13 @@ begin
     // TODO : Move this over to where r0.a is first read (if ever)
     Result := Result + 'mov r0.a, t0.a'#13#10;
 
-  // Loop over all stages :
+  // Loop over all combiner stages :
   if NumberOfCombiners > 0 then
   for i := 0 to NumberOfCombiners-1 do // Loop over all  combiner stages
+  begin
+    Scope.Stage := i;
     Result := Result + Combiners[i].Disassemble(@Scope);
+  end;
 
   // Check if there's a final combiner
   if (Original.PSFinalCombinerInputsABCD > 0)
