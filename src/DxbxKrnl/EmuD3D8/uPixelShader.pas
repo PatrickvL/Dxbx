@@ -324,12 +324,11 @@ const
   PS_AlphaChannelsMask = DWORD(PS_ChannelMask or (PS_ChannelMask shl 8) or (PS_ChannelMask shl 16) or (PS_ChannelMask shl 24));
   PS_NoChannelsMask = DWORD(not PS_AlphaChannelsMask);
 
-type PS_FINALCOMBINERSETTING =
-(
-    PS_FINALCOMBINERSETTING_CLAMP_SUM=     $80, // V1+R0 sum clamped to [0,1]
-    PS_FINALCOMBINERSETTING_COMPLEMENT_V1= $40, // unsigned invert mapping  (1 - v1) is used as an input to the sum rather than v1
-    PS_FINALCOMBINERSETTING_COMPLEMENT_R0= $20  // unsigned invert mapping  (1 - r0) is used as an input to the sum rather than r0
-);
+type PS_FINALCOMBINERSETTING = DWORD;
+const
+    PS_FINALCOMBINERSETTING_CLAMP_SUM=     $80; // V1+R0 sum clamped to [0,1]
+    PS_FINALCOMBINERSETTING_COMPLEMENT_V1= $40; // unsigned invert mapping  (1 - v1) is used as an input to the sum rather than v1
+    PS_FINALCOMBINERSETTING_COMPLEMENT_R0= $20; // unsigned invert mapping  (1 - r0) is used as an input to the sum rather than r0
 
 // =========================================================================================================
 // PSRGBOutputs[0-7]
@@ -851,38 +850,6 @@ begin
         and (InputMapping = Alpha.InputMapping);
 end;
 
-(*
-function PSCombinerInputToStr(const dwPSFCI: DWORD, IsAlpha: Boolean = False): string;
-// Branch:Dxbx  Translator:PatrickvL  Done:100
-begin
-  if dwPSFCI = Ord(PS_REGISTER_ZERO) then
-    Result := PS_RegisterStr[0]
-  else
-  begin
-    // First, render the channel as a string :
-    Result := PS_ChannelStr[iif((dwPSFCI and Ord(PS_CHANNEL_ALPHA)) > 0, {Alpha}2, iif(IsAlpha, {Blue}1, {RGB}0))];
-
-    // See if there's a special combination of flags (disregarding the channel bit) :
-    case dwPSFCI and PS_NoChannelMask of
-      Ord(PS_REGISTER_ONE):
-        Result := PS_RegisterStr[$11] + ' | ' + Result;
-      Ord(PS_REGISTER_NEGATIVE_ONE):
-        Result := PS_RegisterStr[$12] + ' | ' + Result;
-      Ord(PS_REGISTER_ONE_HALF):
-        Result := PS_RegisterStr[$13] + ' | ' + Result;
-      Ord(PS_REGISTER_NEGATIVE_ONE_HALF):
-        Result := PS_RegisterStr[$14] + ' | ' + Result;
-    else
-      // Else, just render each part (including the previously determined channel) :
-      Result := Format('%s | %s | %s', [
-        PS_RegisterStr[(dwPSFCI and $F) + 1];
-        Result;
-        PS_InputMappingStr[(dwPSFCI shr 5) and 7]
-        ]);
-    end;
-  end;
-end;
-*)
 function RPSInputRegister.IntermediateToString(): string; // Was PSCombinerInputToStr
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
@@ -1402,7 +1369,11 @@ begin
     or (InputF.Reg = PS_REGISTER_R0) then
       aScope.EFReg := PS_REGISTER_R0
     else
-      aScope.EFReg := PS_REGISTER_R1; // TODO : Find another temp than R0 for E*F
+      if (InputE.Reg = PS_REGISTER_R1)
+      or (InputF.Reg = PS_REGISTER_R1) then
+        aScope.EFReg := PS_REGISTER_R1
+      else
+        ; // TODO : See if R0 or R1 is available - use it for E*F or stop
 
     Result := Result + 'mul ' + PSRegToStr(aScope, aScope.EFReg) + ', ' + InputE.Disassemble(aScope) + ', ' + InputF.Disassemble(aScope) + #13#10;
   end;
@@ -1417,12 +1388,24 @@ begin
     Result := Result + '; final combiner - V1+R0'#13#10;
     aScope.V1R0Reg := PS_REGISTER_R0; // TODO : Find a temporary register
 
-    // TODO : Handle the settings :
-    // PS_FINALCOMBINERSETTING_CLAMP_SUM : V1+R0 sum clamped to [0,1]
-    // PS_FINALCOMBINERSETTING_COMPLEMENT_V1 : unsigned invert mapping  (1 - v1) is used as an input to the sum rather than v1
-    // PS_FINALCOMBINERSETTING_COMPLEMENT_R0 : unsigned invert mapping  (1 - r0) is used as an input to the sum rather than r0
+    // Handle the V1R0 flags :
+    if (FinalCombinerFlags and PS_FINALCOMBINERSETTING_CLAMP_SUM) > 0 then
+      // V1+R0 sum clamped to [0,1]
+      Result := Result + 'add_sat '
+    else
+      Result := Result + 'add ';
 
-    Result := Result + 'add ' + PSRegToStr(aScope, aScope.V1R0Reg) + ', ' + PSRegToStr(aScope, PS_REGISTER_V1) + ', ' + PSRegToStr(aScope, PS_REGISTER_R0) + #13#10;
+    Result := Result + PSRegToStr(aScope, aScope.V1R0Reg) + ', ';
+
+    if (FinalCombinerFlags and PS_FINALCOMBINERSETTING_COMPLEMENT_V1) > 0 then
+      // unsigned invert mapping  (1 - v1) is used as an input to the sum rather than v1
+      Result := Result + '1-';
+    Result := Result + PSRegToStr(aScope, PS_REGISTER_V1) + ', ';
+
+    if (FinalCombinerFlags and PS_FINALCOMBINERSETTING_COMPLEMENT_R0) > 0 then
+      // unsigned invert mapping  (1 - r0) is used as an input to the sum rather than r0
+      Result := Result + '1-';
+    Result := Result + PSRegToStr(aScope, PS_REGISTER_R0) + #13#10;
   end;
 
   // Handle the final combiner's linear interpolation :
