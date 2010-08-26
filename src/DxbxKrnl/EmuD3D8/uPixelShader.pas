@@ -427,20 +427,6 @@ type PS_GLOBALFLAGS =
 );
 
 type
-  // Work variables for the Disassemble* methods
-  RPSDisassembleScope = record
-    InstructionOutputCombiner: string;
-    SourceRegisterModifier: string;
-    Stage: int;
-    OutputWriteMask: string;
-    // Mapped rendering for C0 and C1 :
-    C0RegStr: string;
-    C1RegStr: string;
-    // Final combiner registers :
-    FogReg: PS_REGISTER;
-    V1R0Reg: PS_REGISTER;
-    EFReg: PS_REGISTER;
-  end;
   PPSDisassembleScope = ^RPSDisassembleScope;
 
   PPSOutputRegister = ^RPSOutputRegister;
@@ -517,6 +503,23 @@ type
     function Disassemble(const aScope: PPSDisassembleScope): string;
   end;
 
+  // Work variables for the Disassemble* methods
+  RPSDisassembleScope = record
+    InstructionOutputCombiner: string;
+    SourceRegisterModifier: string;
+    Stage: int;
+    OutputWriteMask: string;
+    // Mapped rendering for C0 and C1 :
+    C0RegStr: string;
+    C1RegStr: string;
+    // Final combiner registers :
+    FogReg: PS_REGISTER;
+    V1R0Reg: PS_REGISTER;
+    EFReg: PS_REGISTER;
+
+    function DisassembleToMad(const aOutput: PPSOutputRegister; const InputA, InputB: PPSInputRegister): string;
+  end;
+
   RPSIntermediate = record
     Original: X_D3DPIXELSHADERDEF;
 
@@ -528,9 +531,9 @@ type
     NumberOfCombiners: DWORD;
     CombinerCountFlags: DWORD; // For PS_COMBINERCOUNTFLAGS
 
-    dwPSCCMux: DWORD; // Read from CombinerCountFlags
-    dwPSCCC0: DWORD;
-    dwPSCCC1: DWORD;
+    CombinerMuxesOnMsb: Boolean; // Read from CombinerCountFlags
+    CombinerHasUniqueC0: Boolean;
+    CombinerHasUniqueC1: Boolean;
 
     Combiners: array [0..8-1] of RPSCombinerStage;
 
@@ -838,9 +841,17 @@ begin
   Channel := PS_CHANNEL(Value and Ord(PS_CHANNEL_ALPHA));
   InputMapping := PS_INPUTMAPPING(Value and $e0);
 
-  // If the input Register isn't ZERO, remove the InputMapping flags :
-  if (PS_REGISTER(Ord(Reg) and $f) <> PS_REGISTER_ZERO) then
-    Reg := PS_REGISTER(Ord(Reg) and $f);
+  // Remove the above flags from the register :
+  Reg := PS_REGISTER(Ord(Reg) and $f);
+
+  // Check if the input Register is ZERO, in which case we want to allow the extended registers :
+  if  (Reg = PS_REGISTER_ZERO)
+  and (PS_REGISTER(InputMapping) in [
+    PS_REGISTER_ONE, PS_REGISTER_NEGATIVE_ONE, PS_REGISTER_ONE_HALF, PS_REGISTER_NEGATIVE_ONE_HALF]) then
+  begin
+    // Keep the extended register in 'Reg', so we can check for them :
+    Reg := PS_REGISTER(InputMapping);
+  end;
 end;
 
 function RPSInputRegister.IsSameAsAlpha(const Alpha: PPSInputRegister): Boolean;
@@ -850,38 +861,33 @@ begin
         and (InputMapping = Alpha.InputMapping);
 end;
 
-function RPSInputRegister.IntermediateToString(): string; // Was PSCombinerInputToStr
+function RPSInputRegister.IntermediateToString(): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  InputMappingStr: string;
 begin
-  // First, render the channel as a string :
-  Result := PS_ChannelStr[iif(Ord(Channel) > 0, {Alpha}2, iif(IsAlpha, {Blue}1, {RGB}0))];
-
-  // Check if we're handling the special case register (zero) :
-  if (PS_REGISTER(Ord(Reg) and $f) = PS_REGISTER_ZERO) then
-  begin
-    // In this case, we'll use the Input mapping as a selector for a few special registers :
-    case PS_REGISTER(InputMapping) of
-      PS_REGISTER_ZERO:
-        // If there's no input mapping, the only thing we'll print is zero itself :
-        Result := PS_RegisterStr[0];
-      PS_REGISTER_ONE:
-        Result := PS_RegisterStr[$11] + ' | ' + Result;
-      PS_REGISTER_NEGATIVE_ONE:
-        Result := PS_RegisterStr[$12] + ' | ' + Result;
-      PS_REGISTER_ONE_HALF:
-        Result := PS_RegisterStr[$13] + ' | ' + Result;
-      PS_REGISTER_NEGATIVE_ONE_HALF:
-        Result := PS_RegisterStr[$14] + ' | ' + Result;
-    else
-      Result := '??'; // PS_REGISTER_DISCARD ?
+  InputMappingStr := '';
+  case Reg of
+    PS_REGISTER_ZERO:
+    begin
+      Result := PS_RegisterStr[0];
+      Exit;
     end;
-
-    Exit;
+    PS_REGISTER_ONE:
+      Result := PS_RegisterStr[$11];
+    PS_REGISTER_NEGATIVE_ONE:
+      Result := PS_RegisterStr[$12];
+    PS_REGISTER_ONE_HALF:
+      Result := PS_RegisterStr[$13];
+    PS_REGISTER_NEGATIVE_ONE_HALF:
+      Result := PS_RegisterStr[$14];
+  else
+    Result := inherited IntermediateToString();
+    InputMappingStr := ' | ' + PS_InputMappingStr[(Ord(InputMapping) shr 5) and 7];
   end;
 
-  Result := inherited IntermediateToString()
-          + ' | ' + Result
-          + ' | ' + PS_InputMappingStr[(Ord(InputMapping) shr 5) and 7];
+  // Render the channel as a string :
+  Result := Result + ' | ' + PS_ChannelStr[iif(Ord(Channel) > 0, {Alpha}2, iif(IsAlpha, {Blue}1, {RGB}0))] + InputMappingStr;
 end;
 
 function RPSInputRegister.Disassemble(const aScope: PPSDisassembleScope): string;
@@ -890,6 +896,13 @@ begin
   Result := inherited Disassemble(aScope);
   if Result = '' then
     Exit;
+
+  // Check if only the alpha channel is read :
+  if (Channel = PS_CHANNEL_ALPHA) then
+    // Because if we're in an RGB channel :
+    if not IsAlpha then
+      // we need to add the alpha channel selector :
+      Result := Result + '.a';
 
   case InputMapping of
 //    PS_INPUTMAPPING_UNSIGNED_IDENTITY:
@@ -907,6 +920,8 @@ begin
       Result := '-' + Result;
   end;
 end;
+
+    function DisassembleToMad(const aOutput: PPSOutputRegister; const InputA, InputB: PPSInputRegister): string;
 
 { RPSCombinerOutput }
 
@@ -952,17 +967,26 @@ begin
     InputBReadMask := '';
   end;
 
-  Result := '';
   OutputStr := aScope.InstructionOutputCombiner + ' ' + Self.Disassemble(aScope) + aScope.OutputWriteMask + ', ';
 
+  if (InputA.Reg = PS_REGISTER_ZERO) or (InputB.Reg = PS_REGISTER_ZERO) then
+  begin
+    // Ouput := ZERO * something = zero, which can be simulated by subtracting a (guaranteed) register from itself :
+    Result := Result + 'sub' + OutputStr + 'v0, v0';
+    Exit;
+  end;
+
   // Check for cases where InputA doesn't matter :
+  Result := '';
   case InputA.Reg of
     PS_REGISTER_ONE: // = input * 1.0 = input
     begin
-      if InputB.Reg = PS_REGISTER_ONE then // When InputB = PS_REGISTER_ONE, skip this
-        Exit;
-
-      Result := Result + 'mov' + OutputStr + InputB.Disassemble(aScope) + InputBReadMask;
+      if InputB.Reg = PS_REGISTER_ONE then
+        // Handle 1 * 1 = 1, simulated by calculating 1 via a (guaranteed) register :
+        // We follow this for now : (1-v0) - (-v0) = (1-v0) + v0 = 1
+        Result := Result + 'sub' + OutputStr + '1-v0, -v0' // TODO : Should we use InputBReadMask?
+      else
+        Result := Result + 'mov' + OutputStr + InputB.Disassemble(aScope) + InputBReadMask;
     end;
     PS_REGISTER_NEGATIVE_ONE: // = input * -1.0 = - input
       Result := Result + 'mov' + OutputStr + '-' + InputB.Disassemble(aScope) + InputBReadMask;
@@ -975,7 +999,7 @@ begin
 
   // Check for cases where InputB doesn't matter :
   case InputB.Reg of
-    PS_REGISTER_ONE: // = input * 1.0 = input
+    PS_REGISTER_ONE: // = input * 1.0 = input (InputA = ONE is already handled above)
       Result := Result + 'mov' + OutputStr + InputA.Disassemble(aScope) + InputAReadMask;
     PS_REGISTER_NEGATIVE_ONE: // = input * -1.0 = - input
       Result := Result + 'mov' + OutputStr + '-' + InputA.Disassemble(aScope) + InputAReadMask;
@@ -986,11 +1010,7 @@ begin
   if Result <> '' then
     Exit;
 
-  if (InputA.Reg = PS_REGISTER_ZERO) or (InputB.Reg = PS_REGISTER_ZERO) then
-    // Ouput := ZERO * something = zero, which can be simulated by subtracting a (guaranteed) register from itself :
-    Result := Result + 'sub' + OutputStr + 'v0, v0'
-  else
-    Result := Result + 'mul' + OutputStr + InputA.Disassemble(aScope) + InputAReadMask + ', ' + InputB.Disassemble(aScope) + InputBReadMask;
+  Result := Result + 'mul' + OutputStr + InputA.Disassemble(aScope) + InputAReadMask + ', ' + InputB.Disassemble(aScope) + InputBReadMask;
 end;
 
 { RPSCombinerStageChannel }
@@ -1066,9 +1086,11 @@ begin
     if Result <> '' then
       Result := Result + #13#10;
 
-    // The blue-to-alpha flag is only valid for RGB, so the '+' extend syntax if free to use :
+    // Handle blue-to-alpha flag (only valid for RGB) :
     if OutputAB.BlueToAlpha then
-      Result := Result + '+ mov ' + OutputAB.Disassemble(aScope) + '.a, ' + OutputAB.Disassemble(aScope) + '.b'#13#10;
+      // Note : We can't use the '+ ' prefix, as the blue channel is not determined yet!
+      // Note 2: Pixel shader 1.1-1.3 'blue replicate' on source, uses an alpha destination write mask.
+      Result := Result + '+ mov ' + OutputAB.Disassemble(aScope) + ', ' + OutputAB.Disassemble(aScope) + '.b'#13#10;
   end;
 
   // Do we need to calculate CD ?
@@ -1083,9 +1105,11 @@ begin
     if Result <> '' then
       Result := Result + #13#10;
 
-    // The blue-to-alpha flag is only valid for RGB, so the '+' extend syntax if free to use :
+    // Handle blue-to-alpha flag (only valid for RGB) :
     if OutputCD.BlueToAlpha then
-      Result := Result + '+ mov ' + OutputCD.Disassemble(aScope) + '.a, ' + OutputCD.Disassemble(aScope) + '.b'#13#10;
+      // Note : We can't use the '+ ' prefix, as the blue channel is not determined yet!
+      // Note 2: Pixel shader 1.1-1.3 'blue replicate' on source, uses an alpha destination write mask.
+      Result := Result + '+ mov ' + OutputCD.Disassemble(aScope) + ', ' + OutputCD.Disassemble(aScope) + '.b'#13#10;
   end;
 
   // Do we need to calculate SUM ?
@@ -1095,11 +1119,13 @@ begin
     if AB_CD_MUX then
     begin
       // Handle PS_COMBINEROUTPUT_AB_CD_MUX, output is MUX(AB,CD) based on R0.a :
+      // TODO : For all cnd comparisons, handle CombinerMuxesOnMsb=False too!
 
       if (OutputAB.Reg = PS_REGISTER_DISCARD) then
       begin
         if (OutputCD.Reg = PS_REGISTER_DISCARD) then
         begin
+
           if  (InputB.Reg = PS_REGISTER_ONE)
           and (InputD.Reg = PS_REGISTER_ONE) then
             Result := Result + 'cnd' + SumOutputString + 'r0.a, ' +
@@ -1552,18 +1578,22 @@ begin
   NumberOfCombiners := (pPSDef.PSCombinerCount shr 0) and $F;
   CombinerCountFlags := (pPSDef.PSCombinerCount shr 8);
 
+  CombinerMuxesOnMsb := (CombinerCountFlags and PS_COMBINERCOUNT_MUX_MSB) > 0;
+  CombinerHasUniqueC0 := (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C0) > 0;
+  CombinerHasUniqueC1 := (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C1) > 0;
+
   for i := 0 to 8 - 1 do
   begin
     Combiners[i].RGB.Decode(pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i]);
     Combiners[i].Alpha.Decode(pPSDef.PSAlphaInputs[i], pPSDef.PSAlphaOutputs[i], {IsAlpha=}True);
 
     // Decode & map the C0 and C1 registers :
-    if (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C0) > 0 then
+    if CombinerHasUniqueC0 then
       Combiners[i].MappedC0 := (pPSDef.PSC0Mapping shr (i * 4)) and $f
     else
       Combiners[i].MappedC0 := 0;
 
-    if (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C1) > 0 then
+    if CombinerHasUniqueC1 then
       Combiners[i].MappedC1 := (pPSDef.PSC1Mapping shr (i * 4)) and $f
     else
       Combiners[i].MappedC1 := 1;
@@ -1593,8 +1623,9 @@ function RPSIntermediate.IntermediateToString(): string;
 var
   i: int;
 begin
+  Result := '';
   // Show the contents to the user
-  Result := #13#10'-----PixelShader Def Contents-----';
+  _Add(#13#10'-----PixelShader Def Contents-----');
   _Add(OriginalToString());
 
   if (Original.PSTextureModes > 0) then
