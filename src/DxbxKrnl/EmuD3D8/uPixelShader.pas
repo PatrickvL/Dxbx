@@ -836,8 +836,12 @@ procedure RPSInputRegister.Decode(Value: Byte; aIsAlpha: Boolean);
 begin
   inherited Decode(Value and PS_NoChannelMask, aIsAlpha);
 
-  Channel := PS_CHANNEL(Value and PS_ChannelMask);
+  Channel := PS_CHANNEL(Value and Ord(PS_CHANNEL_ALPHA));
   InputMapping := PS_INPUTMAPPING(Value and $e0);
+
+  // If the input Register isn't ZERO, remove the InputMapping flags :
+  if (PS_REGISTER(Ord(Reg) and $f) <> PS_REGISTER_ZERO) then
+    Reg := PS_REGISTER(Ord(Reg) and $f);
 end;
 
 function RPSInputRegister.IsSameAsAlpha(const Alpha: PPSInputRegister): Boolean;
@@ -963,9 +967,7 @@ var
   InputAReadMask: string;
   InputBReadMask: string;
 begin
-  InputAReadMask := '';
-  InputBReadMask := '';
-  if aScope.OutputWriteMask = '.a' then
+  if IsAlpha then
   begin
     if (InputA.Channel = PS_CHANNEL_BLUE) then
       InputAReadMask := '.b'
@@ -976,6 +978,11 @@ begin
       InputBReadMask := '.b'
     else
       InputBReadMask := '.a';
+  end
+  else
+  begin
+    InputAReadMask := '';
+    InputBReadMask := '';
   end;
 
   Result := '';
@@ -1558,8 +1565,16 @@ begin
   begin
     Combiners[i].RGB.Decode(pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i]);
     Combiners[i].Alpha.Decode(pPSDef.PSAlphaInputs[i], pPSDef.PSAlphaOutputs[i], {IsAlpha=}True);
-    Combiners[i].PSConstant0 := pPSDef.PSConstant0[i];
-    Combiners[i].PSConstant1 := pPSDef.PSConstant1[i];
+
+    if (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C0) > 0 then
+      Combiners[i].PSConstant0 := (pPSDef.PSConstant0[i] shr (i * 4)) and $f
+    else
+      Combiners[i].PSConstant0 := 0;
+
+    if (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C1) > 0 then
+      Combiners[i].PSConstant1 := (pPSDef.PSConstant1[i] shr (i * 4)) and $f
+    else
+      Combiners[i].PSConstant1 := 1;
   end;
 
   FinalCombiner.Decode(pPSDef.PSFinalCombinerInputsABCD, pPSDef.PSFinalCombinerInputsEFG);
@@ -1826,7 +1841,7 @@ begin
   begin
     // Define constants directly after the version instruction and before any other instruction :
     if Original.PSConstant0[i] > 0 then
-      Result := Result + Format('def c%d, %fF, %fF, %fF, %ff'#13#10, [i,
+      Result := Result + Format('def c%d, %ff, %ff, %ff, %ff'#13#10, [i,
         {R}((Original.PSConstant0[i] shr 16) and $FF) / 255.0,
         {G}((Original.PSConstant0[i] shr  8) and $FF) / 255.0,
         {B}((Original.PSConstant0[i] shr  0) and $FF) / 255.0,
