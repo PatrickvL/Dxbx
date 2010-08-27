@@ -107,7 +107,9 @@ object frm_Main: Tfrm_Main
     ParentColor = True
     TabOrder = 1
     OnClick = dgXbeInfosClick
+    OnDblClick = dgXbeInfosDblClick
     OnDrawCell = dgXbeInfosDrawCell
+    OnKeyDown = dgXbeInfosKeyDown
   end
   object cbFreeTextFilter: TComboBox
     Left = 133

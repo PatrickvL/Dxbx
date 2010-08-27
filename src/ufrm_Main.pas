@@ -156,6 +156,8 @@ type
     procedure actStopEmulationExecute(Sender: TObject);
     procedure actImportGameListExecute(Sender: TObject);
     procedure actExportGameListExecute(Sender: TObject);
+    procedure dgXbeInfosDblClick(Sender: TObject);
+    procedure dgXbeInfosKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   protected
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
     procedure WndProc(var Message: TMessage); override;
@@ -500,6 +502,7 @@ procedure Tfrm_Main.WMDROPFILES(var Msg: TMessage);
 var
   pcFileName: PChar;
   i, iSize, iFileCount: Integer;
+  XbeXml: string;
 begin
   pcFileName := ''; // to avoid compiler warning message
   iFileCount := DragQueryFile(Msg.wParam, $FFFFFFFF, pcFileName, 255);
@@ -510,11 +513,17 @@ begin
     try
       DragQueryFile(Msg.wParam, i, pcFileName, iSize);
       if LoadXbe(pcFileName) then
-        Break;
+      begin
+        DxbxXml.CreateXmlXbeDumpAsText(XbeXml, m_Xbe, pcFileName);
+        LoadXBEListByXml(XbeXml);
+        Application.ProcessMessages; // Just to stay responsive with large drops
+      end;
     finally
       StrDispose(pcFileName);
     end;
   end;
+
+  UpdateFilter;
 
   DragFinish(Msg.wParam);
 end; // WMDROPFILES
@@ -615,7 +624,7 @@ var
   Row: Integer;
 begin
   Row := dgXbeInfos.Row - 1;
-  if Row < Length(EnabledItems) then
+  if (Row >= 0) and (Row < Length(EnabledItems)) then
     ShowXbeInfo(EnabledItems[Row]);
 end;
 
@@ -657,6 +666,11 @@ begin
   end;
 end;
 
+procedure Tfrm_Main.dgXbeInfosDblClick(Sender: TObject);
+begin
+  actStartEmulationExecute(Sender);
+end;
+
 procedure Tfrm_Main.dgXbeInfosDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
 var
   Where: TRect;
@@ -682,6 +696,36 @@ begin
     Format := DT_LEFT;
   DrawText(TDrawGrid(Sender).Canvas.Handle, PChar(GetCellText(aCol, aRow)), -1, Where, Format or DT_RTLREADING);
 end; // dgXbeInfosDrawCell
+
+procedure Tfrm_Main.dgXbeInfosKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  i: Integer;
+begin
+  case Key of
+    VK_RETURN: // Enter means Launch:
+    begin
+      actStartEmulationExecute(Sender);
+      Key := 0;
+    end;
+    VK_DELETE: // Delete key means : ask to remove active xbe from list
+    begin
+      Key := 0;
+      if Assigned(m_Xbe) then
+      begin
+        i := FindByFileName(m_Xbe.XbePath);
+        if i >= 0 then
+        begin
+          if MessageDlg('Remove title from list?', mtConfirmation, [mbYes, mbNo], -1) = mrYes then
+          begin
+            MyXBEList.Objects[i].Free;
+            MyXBEList.Delete(i);
+            UpdateFilter;
+          end;
+        end;
+      end
+    end;
+  end;
+end;
 
 procedure Tfrm_Main.cbFreeTextFilterKeyPress(Sender: TObject; var Key: Char);
 var
@@ -1517,7 +1561,6 @@ procedure Tfrm_Main.RecentXbeAdd(aFileName: string);
 var
   TempItem: TMenuItem;
   i: Integer;
-  XbeXml: string;
 begin
   // If file does not exists, for example game has been deleted
   // then do not insert him into the recent xbe list
@@ -1674,7 +1717,6 @@ begin
   if not Assigned(aXBEInfo) then
     Exit;
 
-
   if aPreventDuplicates then
     i := FindDuplicate(aXbeInfo)
   else
@@ -1688,7 +1730,6 @@ begin
     MyXBEList.Strings[i] := aXBEInfo.Title;
   end
   else
-
     MyXBEList.AddObject(aXBEInfo.Title, aXBEInfo);
 
   Result := True;
