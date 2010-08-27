@@ -648,7 +648,13 @@ begin
   // All this will render XdkTracker obsolete, and might one day
   // even function as a complete database of everything related to
   // Xbox1 emulation!
-  LoadXbe(aXbeInfo.FileName);
+  if FileExists(aXbeInfo.FileName) then
+    LoadXbe(aXbeInfo.FileName)
+  else
+  begin
+    m_Xbe := nil;
+    UpdateTitleInformation;
+  end;
 end;
 
 procedure Tfrm_Main.dgXbeInfosDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
