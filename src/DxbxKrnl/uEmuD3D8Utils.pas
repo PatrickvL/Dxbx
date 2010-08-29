@@ -66,7 +66,9 @@ function IDirect3DDevice_CreateCubeTexture(const aDirect3DDevice: IDirect3DDevic
 function IDirect3DDevice_CreateVolumeTexture(const aDirect3DDevice: IDirect3DDevice;
   Width, Height, Depth, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppVolumeTexture: PIDirect3DVolumeTexture): HResult;
-function IDirect3DDevice_SetSamplerState(const aDirect3DDevice: IDirect3DDevice;
+function IDirect3DDevice_GetTextureStageState(const aDirect3DDevice: IDirect3DDevice;
+  Sampler: DWORD; _Type: TD3DSamplerStateType; out Value: DWORD): HResult;
+function IDirect3DDevice_SetTextureStageState(const aDirect3DDevice: IDirect3DDevice;
   Sampler: DWORD; _Type: TD3DSamplerStateType; Value: DWORD): HResult;
 
 function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;
@@ -197,14 +199,28 @@ begin
 {$ENDIF}
 end;
 
-function IDirect3DDevice_SetSamplerState(const aDirect3DDevice: IDirect3DDevice;
+function IDirect3DDevice_GetTextureStageState(const aDirect3DDevice: IDirect3DDevice;
+  Sampler: DWORD; _Type: TD3DSamplerStateType; out Value: DWORD): HResult;
+begin
+{$IFDEF DXBX_USE_D3D9}
+  // For Direct3D9, everything below D3DSAMP_MAXANISOTROPY needs to call SetSamplerState :
+  if Sampler <= D3DSAMP_MAXANISOTROPY then
+    Result := aDirect3DDevice.GetSamplerState(DWORD(Sampler), _Type, {out}Value)
+  else
+{$ENDIF}
+    Result := aDirect3DDevice.GetTextureStageState(Sampler, _Type, {out}Value);
+end;
+
+function IDirect3DDevice_SetTextureStageState(const aDirect3DDevice: IDirect3DDevice;
   Sampler: DWORD; _Type: TD3DSamplerStateType; Value: DWORD): HResult;
 begin
 {$IFDEF DXBX_USE_D3D9}
-  Result := aDirect3DDevice.SetSamplerState(DWORD(Sampler), _Type, Value);
-{$ELSE}
-  Result := aDirect3DDevice.SetTextureStageState(Sampler, _Type, Value);
+  // For Direct3D9, everything below D3DSAMP_MAXANISOTROPY needs to call SetSamplerState :
+  if Sampler <= D3DSAMP_MAXANISOTROPY then
+    Result := aDirect3DDevice.SetSamplerState(DWORD(Sampler), _Type, Value)
+  else
 {$ENDIF}
+    Result := aDirect3DDevice.SetTextureStageState(Sampler, _Type, Value);
 end;
 
 function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;

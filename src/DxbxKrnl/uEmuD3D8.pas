@@ -2940,10 +2940,12 @@ end;
 function XTL_EmuD3DDevice_GetTextureStageState
 (
   Stage: DWORD;
-  Type_: D3DTEXTURESTAGESTATETYPE;
+  Type_: X_D3DTEXTURESTAGESTATETYPE;
   pValue: PDWORD
 ): HRESULT; stdcall;
 // Branch:Dxbx  Translator:Shadow_Tj  Done:100
+var
+  Type_VersionIndependent: X_D3DTEXTURESTAGESTATETYPE;
 begin
   EmuSwapFs(fsWindows);
 
@@ -2954,10 +2956,16 @@ begin
       _(pValue, 'pValue').
     LogEnd();
 
-  // TODO -oDxbx : For the Xbox extensions, read the value from the
-  // XTL_EmuD3DDeferredTextureState array, just like GetRenderState
+  if Assigned(PValue) then
+  begin
+    Type_VersionIndependent := DxbxFromOldVersion_D3DTSS(Type_);
+    // Check if this is an Xbox extension  :
+    if DxbxTextureStageStateIsXboxExtension(Type_VersionIndependent) then
+      PValue^ := XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(Type_)]
+    else
+      IDirect3DDevice_GetTextureStageState(g_pD3DDevice, Stage, EmuXB2PC_D3DTSS(Type_VersionIndependent), {out}pValue^);
+  end;
 
-  g_pD3DDevice.GetTextureStageState(Stage, Type_, {out}pValue^);
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
@@ -6965,7 +6973,7 @@ begin
   XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(DxbxFromNewVersion_D3DTSS(X_D3DTSS_TEXCOORDINDEX))] := Value;
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
-  g_pD3DDevice.SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
+  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, D3DTSS_TEXCOORDINDEX, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7037,7 +7045,7 @@ begin
   XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(DxbxFromNewVersion_D3DTSS(X_D3DTSS_BORDERCOLOR))] := Value;
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
-  IDirect3DDevice_SetSamplerState(g_pD3DDevice, Stage, D3DSAMP_BORDERCOLOR, Value);
+  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, D3DSAMP_BORDERCOLOR, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7079,30 +7087,21 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetTextureState_BumpEnv' +
-        #13#10'(' +
-        #13#10'   Stage                     : 0x%.08X' +
-        #13#10'   Type                      : 0x%.08X' +
-        #13#10'   Value                     : 0x%.08X' +
-        #13#10');',
-           [Stage, Type_, Value]);
+    LogBegin('EmuD3D8 : EmuD3DDevice_SetTextureState_BumpEnv').
+      _(Stage, 'Stage').
+      _(Type_, 'Type').
+      _(Value, 'Value').
+      _(DWToF(Value), 'Value (as Float)').
+    LogEnd();
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
   XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + Ord(Type_)] := Value;
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
-  case DxbxFromOldVersion_D3DTSS(Type_) of
-    X_D3DTSS_BUMPENVMAT00:
-      g_pD3DDevice.SetTextureStageState(Stage, D3DTSS_BUMPENVMAT00, Value);
-    X_D3DTSS_BUMPENVMAT01:
-      g_pD3DDevice.SetTextureStageState(Stage, D3DTSS_BUMPENVMAT01, Value);
-    X_D3DTSS_BUMPENVMAT11:
-      g_pD3DDevice.SetTextureStageState(Stage, D3DTSS_BUMPENVMAT11, Value);
-    X_D3DTSS_BUMPENVMAT10:
-      g_pD3DDevice.SetTextureStageState(Stage, D3DTSS_BUMPENVMAT10, Value);
-    X_D3DTSS_BUMPENVLSCALE:
-      g_pD3DDevice.SetTextureStageState(Stage, D3DTSS_BUMPENVLSCALE, Value);
-  end;
+  // Dxbx Note : The BumpEnv values don't need a XB2PC conversion
+  // Dxbx Note : The BumpEnv types all have a PC counterpart (so no -1 test needed)
+
+  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, EmuXB2PC_D3DTSS(DxbxFromOldVersion_D3DTSS(Type_)), Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8682,6 +8681,9 @@ begin
     LogEnd();
 
   Type_VersionIndependent := DxbxFromOldVersion_D3DTSS(Type_);
+
+  EmuSwapFS(fsXbox);
+
   case Type_VersionIndependent of
     X_D3DTSS_DEFERRED_FIRST..X_D3DTSS_DEFERRED_LAST:
       // TODO -oDxbx : Update the D3D DirtyFlags too
@@ -8697,8 +8699,6 @@ begin
   end;
 
   Result := D3D_OK;
-
-  EmuSwapFS(fsWindows);
 end;
 
 function XTL_EmuD3DDevice_SetRenderTarget
@@ -11368,7 +11368,7 @@ exports
   XTL_EmuD3DDevice_SetStreamSource,
   XTL_EmuD3DDevice_SetSwapCallback,
   XTL_EmuD3DDevice_SetTexture,
-  XTL_EmuD3DDevice_SetTextureStageStateNotInline,
+  XTL_EmuD3DDevice_SetTextureStageStateNotInline, //?? name PatchPrefix + '_D3DDevice_SetTextureStageStateNotInline@12',
   XTL_EmuD3DDevice_SetTextureState_BorderColor,
   XTL_EmuD3DDevice_SetTextureState_BumpEnv,
   XTL_EmuD3DDevice_SetTextureState_ColorKeyColor,

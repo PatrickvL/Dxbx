@@ -1143,6 +1143,7 @@ const X_D3DRS_STENCILCULLENABLE           = 162; // [3911+] Xbox ext.
 const X_D3DRS_ROPZCMPALWAYSREAD           = 163; // [3911+] Xbox ext.
 const X_D3DRS_ROPZREAD                    = 164; // [3911+] Xbox ext.
 const X_D3DRS_DONOTCULLUNCOMPRESSED       = 165; // [3911+] Xbox ext.
+// End of "complex" render states.
 
 // Render state boundaries :
 
@@ -1171,6 +1172,7 @@ const X_D3DWRAP_W = $00100000;
 
 // X_D3DTEXTURESTAGESTATETYPE values :
 // Dxbx note : See DxbxVersionAdjust_D3DTSS(), as these might need correction for older SDK versions!
+// The set starts out with "deferred" texture states :
 const X_D3DTSS_ADDRESSU = 0;
 const X_D3DTSS_ADDRESSV = 1;
 const X_D3DTSS_ADDRESSW = 2;
@@ -1193,6 +1195,7 @@ const X_D3DTSS_ALPHAARG1 = 18;
 const X_D3DTSS_ALPHAARG2 = 19;
 const X_D3DTSS_RESULTARG = 20;
 const X_D3DTSS_TEXTURETRANSFORMFLAGS = 21;
+// End of "deferred" texture states, continuing with the rest :
 const X_D3DTSS_BUMPENVMAT00 = 22;
 const X_D3DTSS_BUMPENVMAT01 = 23;
 const X_D3DTSS_BUMPENVMAT11 = 24;
@@ -1202,6 +1205,9 @@ const X_D3DTSS_BUMPENVLOFFSET = 27;
 const X_D3DTSS_TEXCOORDINDEX = 28;
 const X_D3DTSS_BORDERCOLOR = 29;
 const X_D3DTSS_COLORKEYCOLOR = 30; // Xbox ext.
+// End of texture states.
+
+// Texture state boundaries :
 
 const X_D3DTSS_DEFERRED_FIRST = X_D3DTSS_ADDRESSU;
 const X_D3DTSS_DEFERRED_LAST = X_D3DTSS_TEXTURETRANSFORMFLAGS;
