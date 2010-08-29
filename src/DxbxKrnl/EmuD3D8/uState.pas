@@ -42,7 +42,7 @@ uses
 
 function DxbxRenderStateIntroducedAtVersion(const aRenderState: X_D3DRENDERSTATETYPE): uint32; {NOPATCH}
 function DxbxRenderStateIsXboxExtension(const Value: X_D3DRENDERSTATETYPE): Boolean; {NOPATCH}
-function DxbxXboxMethodToRenderState(const aMethod: DWORD): X_D3DRenderStateType;
+function DxbxXboxMethodToRenderState(const aMethod: DWORD): X_D3DRenderStateType; {NOPATCH}
 
 function EmuXB2PC_D3DRS(Value: X_D3DRENDERSTATETYPE): D3DRENDERSTATETYPE;
 
@@ -50,9 +50,12 @@ procedure DxbxBuildRenderStateMappingTable(const aD3DRenderState: PDWORDs); {NOP
 procedure DxbxInitializeDefaultRenderStates(const aParameters: PX_D3DPRESENT_PARAMETERS); {NOPATCH}
 
 function DxbxVersionAdjust_D3DRS(const Value: X_D3DRENDERSTATETYPE): X_D3DRENDERSTATETYPE; {NOPATCH}
+function DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE): HResult;
+
+function DxbxTextureStageStateIsXboxExtension(const Value: X_D3DTEXTURESTAGESTATETYPE): Boolean; {NOPATCH}
 function DxbxFromOldVersion_D3DTSS(const OldValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
 function DxbxFromNewVersion_D3DTSS(const NewValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
-function DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE): HResult;
+function EmuXB2PC_D3DTSS(Value: X_D3DTEXTURESTAGESTATETYPE): D3DTEXTURESTAGESTATETYPE;
 
 procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
 
@@ -319,7 +322,7 @@ begin
 end;
 
 // Convert a 'method' DWORD into it's associated 'pixel-shader' or 'simple' render state.
-function DxbxXboxMethodToRenderState(const aMethod: DWORD): X_D3DRenderStateType;
+function DxbxXboxMethodToRenderState(const aMethod: DWORD): X_D3DRenderStateType; {NOPATCH}
 begin
   // Dxbx note : Let the compiler sort this out, should be much quicker :
   case aMethod of
@@ -753,6 +756,7 @@ end;
 
 // Converts the input render state from a version-dependent into a version-neutral value.
 function DxbxVersionAdjust_D3DRS(const Value: X_D3DRENDERSTATETYPE): X_D3DRENDERSTATETYPE; {NOPATCH}
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   Result := DxbxMapActiveVersionToMostRecent[Value];
 end;
@@ -767,6 +771,7 @@ const
 // can read a specific member from the emulated XBE's
 // XTL_EmuD3DDeferredTextureState buffer.
 function DxbxFromNewVersion_D3DTSS(const NewValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   Result := NewValue;
   if g_BuildVersion <= 3925 then
@@ -782,7 +787,59 @@ begin
   end;
 end;
 
+function DxbxTextureStageStateIsXboxExtension(const Value: X_D3DTEXTURESTAGESTATETYPE): Boolean; {NOPATCH}
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  case Value of
+    X_D3DTSS_COLORKEYOP,
+    X_D3DTSS_COLORSIGN,
+    X_D3DTSS_ALPHAKILL,
+    X_D3DTSS_COLORKEYCOLOR:
+      Result := True;
+  else
+    Result := False;
+  end;
+end;
+
+// convert from xbox to pc texture stage state
+function EmuXB2PC_D3DTSS(Value: X_D3DTEXTURESTAGESTATETYPE): D3DTEXTURESTAGESTATETYPE;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  case (Value) of
+    X_D3DTSS_ADDRESSU                   : Result := D3DSAMP_ADDRESSU;
+    X_D3DTSS_ADDRESSV                   : Result := D3DSAMP_ADDRESSV;
+    X_D3DTSS_ADDRESSW                   : Result := D3DSAMP_ADDRESSW;
+    X_D3DTSS_MAGFILTER                  : Result := D3DSAMP_MAGFILTER;
+    X_D3DTSS_MINFILTER                  : Result := D3DSAMP_MINFILTER;
+    X_D3DTSS_MIPFILTER                  : Result := D3DSAMP_MIPFILTER;
+    X_D3DTSS_MIPMAPLODBIAS              : Result := D3DSAMP_MIPMAPLODBIAS;
+    X_D3DTSS_MAXMIPLEVEL                : Result := D3DSAMP_MAXMIPLEVEL;
+    X_D3DTSS_MAXANISOTROPY              : Result := D3DSAMP_MAXANISOTROPY;
+    X_D3DTSS_COLOROP                    : Result := D3DTSS_COLOROP;
+    X_D3DTSS_COLORARG0                  : Result := D3DTSS_COLORARG0;
+    X_D3DTSS_COLORARG1                  : Result := D3DTSS_COLORARG1;
+    X_D3DTSS_COLORARG2                  : Result := D3DTSS_COLORARG2;
+    X_D3DTSS_ALPHAOP                    : Result := D3DTSS_ALPHAOP;
+    X_D3DTSS_ALPHAARG0                  : Result := D3DTSS_ALPHAARG0;
+    X_D3DTSS_ALPHAARG1                  : Result := D3DTSS_ALPHAARG1;
+    X_D3DTSS_ALPHAARG2                  : Result := D3DTSS_ALPHAARG2;
+    X_D3DTSS_RESULTARG                  : Result := D3DTSS_RESULTARG;
+    X_D3DTSS_TEXTURETRANSFORMFLAGS      : Result := D3DTSS_TEXTURETRANSFORMFLAGS;
+    X_D3DTSS_BUMPENVMAT00               : Result := D3DTSS_BUMPENVMAT00;
+    X_D3DTSS_BUMPENVMAT01               : Result := D3DTSS_BUMPENVMAT01;
+    X_D3DTSS_BUMPENVMAT10               : Result := D3DTSS_BUMPENVMAT10;
+    X_D3DTSS_BUMPENVMAT11               : Result := D3DTSS_BUMPENVMAT11;
+    X_D3DTSS_BUMPENVLSCALE              : Result := D3DTSS_BUMPENVLSCALE;
+    X_D3DTSS_BUMPENVLOFFSET             : Result := D3DTSS_BUMPENVLOFFSET;
+    X_D3DTSS_TEXCOORDINDEX              : Result := D3DTSS_TEXCOORDINDEX;
+    X_D3DTSS_BORDERCOLOR                : Result := D3DSAMP_BORDERCOLOR;
+  else
+    Result := D3DTEXTURESTAGESTATETYPE(-1); // Unsupported
+  end;
+end;
+
 function DxbxFromOldVersion_D3DTSS(const OldValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   Result := OldValue;
   if g_BuildVersion <= 3925 then
@@ -831,162 +888,60 @@ end;
 procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
 // Branch:shogun  Revision:163  Translator:PatrickvL  Done:100
 var
-  v: int;
+  State: int;
+  Stage: int;
   pCur: PDWORDs;
   XboxValue: DWORD;
+  PCValue: DWORD;
+  PCState: D3DTEXTURESTAGESTATETYPE;
   pTexture: XTL_PIDirect3DBaseTexture8;
-  dwValue: DWORD;
 begin
   // Generic transfer of all Xbox deferred render states to PC :
-  for v := X_D3DRS_DEFERRED_FIRST to X_D3DRS_DEFERRED_LAST - 1 do
-    DxbxTransferRenderState(X_D3DRENDERSTATETYPE(v));
+  for State := X_D3DRS_DEFERRED_FIRST to X_D3DRS_DEFERRED_LAST do
+    DxbxTransferRenderState(X_D3DRENDERSTATETYPE(State));
 
   // Certain D3DTS values need to be checked on each Draw[Indexed]^Vertices
   if (XTL_EmuD3DDeferredTextureState <> nil) then
   begin
-    for v := 0 to X_D3DTS_STAGECOUNT-1 do
+    for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
     begin
-      pCur := @(XTL_EmuD3DDeferredTextureState[v*X_D3DTS_STAGESIZE]);
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ADDRESSU)];
-      if (XboxValue <> X_D3DTSS_UNK) then
+      pCur := @(XTL_EmuD3DDeferredTextureState[Stage * X_D3DTS_STAGESIZE]);
+      for State := X_D3DTSS_DEFERRED_FIRST to X_D3DTSS_DEFERRED_LAST do
       begin
-        if (XboxValue = 5) then
-          DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
+        XboxValue := pCur[DxbxFromNewVersion_D3DTSS(State)];
+        if (XboxValue = X_D3DTSS_UNK) then
+          Continue;
 
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_ADDRESSU, XboxValue);
-      end;
+        // Convert Xbox value to PC value for a few differing texture stage state :
+        PCValue := XboxValue;
+        case State of
+          X_D3DTSS_ADDRESSU,
+          X_D3DTSS_ADDRESSV,
+          X_D3DTSS_ADDRESSW:
+            if (XboxValue = 5) then
+              DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ADDRESSV)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-      begin
-        if (XboxValue = 5) then
-          DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
+          X_D3DTSS_MAGFILTER,
+          X_D3DTSS_MINFILTER,
+          X_D3DTSS_MIPFILTER:
+            if (XboxValue = 4) then
+              DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_ADDRESSV, XboxValue);
-      end;
+          X_D3DTSS_COLOROP,
+          X_D3DTSS_ALPHAOP:
+            PCValue := EmuXB2PC_D3DTEXTUREOP(XboxValue);
 
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ADDRESSW)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-      begin
-        if (XboxValue = 5) then
-          DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
-
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_ADDRESSW, XboxValue);
-      end;
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_MAGFILTER)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-      begin
-        if (XboxValue = 4) then
-          DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
-
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MAGFILTER, XboxValue);
-      end;
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_MINFILTER)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-      begin
-        if (XboxValue = 4) then
-          DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
-
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MINFILTER, XboxValue);
-      end;
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_MIPFILTER)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-      begin
-        if (XboxValue = 4) then
-          DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
-
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MIPFILTER, XboxValue);
-      end;
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_MIPMAPLODBIAS)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MIPMAPLODBIAS, XboxValue);
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_MAXMIPLEVEL)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MAXMIPLEVEL, XboxValue);
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_MAXANISOTROPY)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-        IDirect3DDevice_SetSamplerState(g_pD3DDevice, v, D3DSAMP_MAXANISOTROPY, XboxValue);
-
-      // TODO -oDxbx : Emulate X_D3DTSS_COLORKEYOP (Xbox ext.)
-      // TODO -oDxbx : Emulate X_D3DTSS_COLORSIGN (Xbox ext.)
-      // TODO -oDxbx : Emulate X_D3DTSS_ALPHAKILL (Xbox ext.)
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_COLOROP)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLOROP, EmuXB2PC_D3DTEXTUREOP(XboxValue));
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_COLORARG0)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLORARG0, XboxValue);
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_COLORARG1)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLORARG1, XboxValue);
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_COLORARG2)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLORARG2, XboxValue);
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ALPHAOP)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAOP, EmuXB2PC_D3DTEXTUREOP(XboxValue));
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ALPHAARG0)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAARG0, XboxValue);
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ALPHAARG1)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAARG1, XboxValue);
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_ALPHAARG2)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAARG2, XboxValue);
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_RESULTARG)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_RESULTARG, XboxValue);
-
-      XboxValue := pCur[DxbxFromNewVersion_D3DTSS(X_D3DTSS_TEXTURETRANSFORMFLAGS)];
-      if (XboxValue <> X_D3DTSS_UNK) then
-        g_pD3DDevice.SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, XboxValue);
-
-      // Cxbx note : D3DTSS_BORDERCOLOR is NOT a deferred texture state!
-
-      (* Cxbx has this disabled :
-      // To check for unhandled texture stage state changes
-      for(int r=0;r<X_D3DTS_STAGESIZE;r++)
-      begin
-        static const int unchecked[]^ =
-        begin
-          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 29, 30, 31
+          // Xbox extensions :
+          X_D3DTSS_COLORKEYOP,
+          X_D3DTSS_COLORSIGN,
+          X_D3DTSS_ALPHAKILL,
+          X_D3DTSS_COLORKEYCOLOR:
+            // TODO -oDxbx : Emulate these Xbox extensions somehow
+            Continue;
         end;
 
-        if (pCur[r]^ <> X_D3DTSS_UNK) then
-        begin
-          _bool pass := true;
-
-          for(int q=0;q<sizeof(unchecked)/sizeof(int);q++)
-          begin
-            if (r = unchecked[q]^) then
-            begin
-              pass := false;
-              break;
-            end;
-          end;
-
-          if (pass) then
-            EmuWarning('Unhandled TextureState Change @ %d.%d', [v, r]^);
-        end;
+        IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, EmuXB2PC_D3DTSS(State), PCValue);
       end;
-      *)
     end;
 
     // if point sprites are enabled, copy stage 3 over to 0
@@ -1001,16 +956,22 @@ begin
       // TODO -oDXBX: Should we clear the pTexture interface (and how)?
 
       // disable all other stages
-      g_pD3DDevice.SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-      g_pD3DDevice.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
 
-      // in that case we have to copy over the stage by hand
-      for v := 0 to X_D3DTS_STAGESIZE-1 do
+      // copy over the stage
+      for State := 0 to X_D3DTS_STAGESIZE-1 do
       begin
-        if (pCur[v] <> X_D3DTSS_UNK) then
+        PCState := EmuXB2PC_D3DTSS(State);
+        if int(PCState) >= 0 then
         begin
-          g_pD3DDevice.GetTextureStageState(3, D3DTEXTURESTAGESTATETYPE(v), {Out}dwValue);
-          g_pD3DDevice.SetTextureStageState(0, D3DTEXTURESTAGESTATETYPE(v), dwValue);
+          XboxValue := pCur[DxbxFromNewVersion_D3DTSS(State)];
+          if (XboxValue <> X_D3DTSS_UNK) then
+          begin
+            PCValue := XboxValue; // TODO : Use registry of callbacks to do this conversion.
+            IDirect3DDevice_GetTextureStageState(g_pD3DDevice, 3, PCState, {out}PCValue);
+            IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 0, PCState, PCValue);
+          end;
         end;
       end;
     end;
@@ -1033,13 +994,13 @@ begin
     (* Cxbx has this disabled :
     for v:=0 to 4-1 do
     begin
-      g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLOROP,   D3DTOP_MODULATE);
-      g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-      g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLORARG2, D3DTA_CURRENT);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, D3DTSS_COLOROP,   D3DTOP_MODULATE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, D3DTSS_COLORARG2, D3DTA_CURRENT);
 
-      g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAOP,   D3DTOP_MODULATE);
-      g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-      g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, D3DTSS_ALPHAOP,   D3DTOP_MODULATE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
     end;
 
     g_pD3DDevice.SetRenderState(D3DRS_NORMALIZENORMALS, BOOL_TRUE);
