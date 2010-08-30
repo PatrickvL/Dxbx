@@ -50,6 +50,7 @@ procedure DxbxBuildRenderStateMappingTable(const aD3DRenderState: PDWORDs); {NOP
 procedure DxbxInitializeDefaultRenderStates(const aParameters: PX_D3DPRESENT_PARAMETERS); {NOPATCH}
 
 function DxbxVersionAdjust_D3DRS(const Value: X_D3DRENDERSTATETYPE): X_D3DRENDERSTATETYPE; {NOPATCH}
+function Dxbx_SetRenderState(const XboxRenderState: X_D3DRenderStateType; const XboxValue: DWORD): DWORD; {NOPATCH}
 function DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE): HResult;
 
 function DxbxTextureStageStateIsXboxExtension(const Value: X_D3DTEXTURESTAGESTATETYPE): Boolean; {NOPATCH}
@@ -65,6 +66,9 @@ var XTL_EmuMappedD3DRenderState: array [X_D3DRS_FIRST..X_D3DRS_LAST+1] of PDWORD
 // Dxbx addition : Dummy value (and pointer to that) to transparently ignore unsupported render states :
 const X_D3DRS_UNSUPPORTED = X_D3DRS_LAST+1;
 var DummyRenderState: PDWORD = @(XTL_EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED]); // Unsupported states share this pointer value
+
+// Dxbx indicator of an unsupported render state (returned when processing an Xbox extension) :
+const D3DRS_UNSUPPORTED = D3DRS_FORCE_DWORD;
 
 // Texture state lookup table
 var XTL_EmuD3DDeferredTextureState: PDWORDs;
@@ -543,7 +547,7 @@ begin
     D3DRS_BLENDOPALPHA              = 209   // Blending operation for the alpha channel when D3DRS_SEPARATEDESTALPHAENABLE is TRUE
 *)
   else
-    Result := D3DRS_FORCE_DWORD; // Unsupported
+    Result := D3DRS_UNSUPPORTED;
   end;
 end;
 
@@ -650,10 +654,14 @@ begin
 
   // Now set the "deferred" states to 'unknown' :
   for i := X_D3DRS_DEFERRED_FIRST to X_D3DRS_DEFERRED_LAST do
-    XTL_EmuMappedD3DRenderState[i]^ := X_D3DRS_UNK;
+    XTL_EmuMappedD3DRenderState[i]^ := 0;
 
   // Assign all Xbox default render states values :
   begin
+    // Make up a few pixel shader colors here (we really should find&use the actual defaults!) :
+    for i := X_D3DRS_PSCONSTANT0_0 to X_D3DRS_PSCONSTANT1_7 do
+      XTL_EmuMappedD3DRenderState[i]^ := (X_D3DRS_PSCONSTANT1_7 - i) * $01010101;
+
     if DxbxFix_HasZBuffer then
       XTL_EmuMappedD3DRenderState[X_D3DRS_ZENABLE]^ := D3DZB_TRUE
     else
@@ -855,34 +863,69 @@ begin
   end;
 end;
 
+function Dxbx_SetRenderState(const XboxRenderState: X_D3DRenderStateType; const XboxValue: DWORD): DWORD; {NOPATCH}
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  RenderStateValue: TD3DColorValue;
+  PCRenderState: D3DRenderStateType;
+  PCValue: DWORD;
+begin
+  Result := XboxValue;
+
+  // Handle the pixel shader constants first :
+  if (X_D3DRS_PSCONSTANT0_0 <= XboxRenderState) and (XboxRenderState <= X_D3DRS_PSCONSTANT1_7) then
+  begin
+    // Convert color DWORD to a D3DColor :
+    RenderStateValue.r := ((XboxValue shr 16) and $FF) / 255.0;
+    RenderStateValue.g := ((XboxValue shr  8) and $FF) / 255.0;
+    RenderStateValue.b := ((XboxValue shr  0) and $FF) / 255.0;
+    RenderStateValue.a := ((XboxValue shr 24) and $FF) / 255.0;
+
+    // Convert Xbox render state to Pixel shader constant number :
+    PCValue := EmuXB2PC_PSConstant(XboxRenderState);
+
+    // Safeguard against overflowing native pixel shader constant count :
+    if PCValue >= 8 then
+      Exit;
+
+    // Set the constant locally :
+{$IFDEF DXBX_USE_D3D9}
+    g_pD3DDevice.SetPixelShaderConstantF(PCValue, PSingle(@RenderStateValue), 1);
+{$ELSE}
+    g_pD3DDevice.SetPixelShaderConstant(PCValue, {untyped const}RenderStateValue, 1);
+{$ENDIF}
+
+    Exit;
+  end;
+
+  // Check if the render state is mapped :
+  if XTL_EmuMappedD3DRenderState[XboxRenderState] <> DummyRenderState then
+  begin
+    // Map the Xbox state to a PC state, and check if it's supported :
+    PCRenderState := EmuXB2PC_D3DRS(XboxRenderState); // TODO : Speed this up using a lookup table
+    if PCRenderState <> D3DRS_UNSUPPORTED then
+    begin
+      // Convert the value from Xbox format into PC format, and set it locally :
+      Result := DxbxRenderStateXB2PCCallback[XboxRenderState](XboxValue);
+
+      g_pD3DDevice.SetRenderState(PCRenderState, {PCValue=}Result);
+    end
+    else
+      ; // TODO : What do we return when the render state is not supported?
+  end
+  else
+    DxbxKrnlCleanup('Unsupported RenderState (0x%.08X)', [int(XboxRenderState)]);
+end;
+
 function DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE): HResult;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   XboxValue: DWORD;
-  PCRenderState: D3DRENDERSTATETYPE;
-  PCValue: DWORD;
 begin
-  // Check if the render state is mapped :
-  if XTL_EmuMappedD3DRenderState[XboxRenderState] <> DummyRenderState then
-  begin
-    // Read the current Xbox value, and check if it's assigned :
-    XboxValue := XTL_EmuMappedD3DRenderState[XboxRenderState]^;
-    if XboxValue <> X_D3DRS_UNK then
-    begin
-      // Map the Xbox state to a PC state, and check if it's supported :
-      PCRenderState := EmuXB2PC_D3DRS(XboxRenderState); // TODO : Speed this up using a lookup table
-      if PCRenderState <> D3DRS_FORCE_DWORD then
-      begin
-        // Convert the value from Xbox format into PC format, and set it locally :
-        PCValue := DxbxRenderStateXB2PCCallback[XboxRenderState](XboxValue);
-        Result := g_pD3DDevice.SetRenderState(PCRenderState, PCValue);
-        Exit;
-      end;
-      // TODO -oDxbx: Forward pixel shader constants too?
-    end;
-  end;
-
-  Result := 0; // TODO : What do we return on failure?
+  // Read the current Xbox value, and set it locally :
+  XboxValue := XTL_EmuMappedD3DRenderState[XboxRenderState]^;
+  Dxbx_SetRenderState(XboxRenderState, XboxValue);
+  Result := D3D_OK;
 end;
 
 procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}

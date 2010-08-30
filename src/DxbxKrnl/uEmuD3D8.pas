@@ -3452,6 +3452,13 @@ begin
   // TODO -oDxbx: This forwards the values to the native pixel shader, but we should also pack them
   // and place them into X_D3DRS_PSCONSTANT* render state registers (using the PS_CONSTANTMAPPING macro)!
   // It would probably be better to send these values to the native pixel shader later, at drawing time.
+  //
+  // for i := 0 to ConstantCount - 1 do
+  // begin
+  //   R := pConstantData[i * 4]; // also G B A
+  //   PSValue := ((Trunc(R * 255.0) and $FF) shl 16) or G .. or B .. or A;
+  //   XTL_EmuMappedD3DRenderState[EmuPC2XB_PSConstant(Register_ + i)]^ := PSValue;
+  // end;
 
 {$IFDEF DXBX_USE_D3D9}
   g_pD3DDevice.SetPixelShaderConstantF
@@ -7383,41 +7390,17 @@ procedure XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
   ); {NOPATCH}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
-  RenderStateValue: TD3DColorValue;
-  PCRenderState: D3DRenderStateType;
   PCValue: DWORD;
 begin
-  // Handle the pixel shader constants first :
-  if (X_D3DRS_PSCONSTANT0_0 <= XboxRenderState) and (XboxRenderState <= X_D3DRS_PSCONSTANT1_7) then
-  begin
-    RenderStateValue.r := ((XboxValue shr 16) and $FF) / 255.0;
-    RenderStateValue.g := ((XboxValue shr  8) and $FF) / 255.0;
-    RenderStateValue.b := ((XboxValue shr  0) and $FF) / 255.0;
-    RenderStateValue.a := ((XboxValue shr 24) and $FF) / 255.0;
+  PCValue := Dxbx_SetRenderState(XboxRenderState, XboxValue);
 
-    g_pD3DDevice.SetPixelShaderConstant(EmuXB2PC_PSConstant(XboxRenderState), RenderStateValue, 1);
-    Exit;
+  if MayLog(lfUnit or lfReturnValue) then
+  begin
+    if PCValue <> XboxValue then
+      DbgPrintf('%s := 0x%.08X (converted from Xbox value 0x%.08X)', [DxbxRenderStateXB2String[XboxRenderState], PCValue, XboxValue])
+    else
+      DbgPrintf('%s := 0x%.08X', [DxbxRenderStateXB2String[XboxRenderState], PCValue]);
   end;
-
-  // Map the Xbox state to a PC state, and check if it's supported :
-  PCRenderState := EmuXB2PC_D3DRS(XboxRenderState); // TODO : Speed this up using a lookup table
-  if PCRenderState <> D3DRS_FORCE_DWORD then
-  begin
-    // Convert the value from Xbox format into PC format, and set it locally :
-    PCValue := DxbxRenderStateXB2PCCallback[XboxRenderState](XboxValue);
-
-    g_pD3DDevice.SetRenderState(PCRenderState, PCValue);
-
-    if MayLog(lfUnit or lfReturnValue) then
-    begin
-      if PCValue <> XboxValue then
-        DbgPrintf('%s := 0x%.08X (converted from Xbox value 0x%.08X)', [DxbxRenderStateXB2String[XboxRenderState], PCValue, XboxValue])
-      else
-        DbgPrintf('%s := 0x%.08X', [DxbxRenderStateXB2String[XboxRenderState], PCValue]);
-    end
-  end
-  else
-    DxbxKrnlCleanup('Unsupported RenderState (0x%.08X)', [int(XboxRenderState)]);
 end;
 
 procedure XTL_EmuD3DDevice_SetRenderState_VertexBlend
