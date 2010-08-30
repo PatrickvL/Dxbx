@@ -71,16 +71,19 @@ begin
 
   XmlRootNode := XmlRootNode.AddChild('XDKVersions');
 
-  XbeLibraryVersion := PXbeLibraryVersion(@(aXbe.RawData[aXbe.m_Header.dwLibraryVersionsAddr - aXbe.m_Header.dwBaseAddr]));
-  for i := 0 to aXbe.m_Header.dwLibraryVersions - 1 do
+  if aXbe.m_Header.dwLibraryVersionsAddr > aXbe.m_Header.dwBaseAddr then
   begin
-    LibName := string(Copy(XbeLibraryVersion.szName, 1, XBE_LIBRARYNAME_MAXLENGTH));
-    Version := IntToStr(XbeLibraryVersion.wMajorVersion) + '.' +
-      IntToStr(XbeLibraryVersion.wMinorVersion) + '.' +
-      IntToStr(XbeLibraryVersion.wBuildVersion);
-    Inc(XbeLibraryVersion);
+    XbeLibraryVersion := PXbeLibraryVersion(@(aXbe.RawData[aXbe.m_Header.dwLibraryVersionsAddr - aXbe.m_Header.dwBaseAddr]));
+    for i := 0 to aXbe.m_Header.dwLibraryVersions - 1 do
+    begin
+      LibName := string(Copy(XbeLibraryVersion.szName, 1, XBE_LIBRARYNAME_MAXLENGTH));
+      Version := IntToStr(XbeLibraryVersion.wMajorVersion) + '.' +
+        IntToStr(XbeLibraryVersion.wMinorVersion) + '.' +
+        IntToStr(XbeLibraryVersion.wBuildVersion);
+      Inc(XbeLibraryVersion);
 
-    XML_WriteString(XmlRootNode, LibName, Version);
+      XML_WriteString(XmlRootNode, Trim(LibName), Version);
+    end;
   end;
 
   XMLDocument.SaveToFile(aFileName);
@@ -125,16 +128,19 @@ begin
 
   XmlRootNode := XmlRootNode.AddChild('XDKVersions');
 
-  XbeLibraryVersion := PXbeLibraryVersion(@(aXbe.RawData[aXbe.m_Header.dwLibraryVersionsAddr - aXbe.m_Header.dwBaseAddr]));
-  for i := 0 to aXbe.m_Header.dwLibraryVersions - 1 do
+  if aXbe.m_Header.dwLibraryVersionsAddr > aXbe.m_Header.dwBaseAddr then
   begin
-    LibName := string(Copy(XbeLibraryVersion.szName, 1, XBE_LIBRARYNAME_MAXLENGTH));
-    Version := IntToStr(XbeLibraryVersion.wMajorVersion) + '.' +
-      IntToStr(XbeLibraryVersion.wMinorVersion) + '.' +
-      IntToStr(XbeLibraryVersion.wBuildVersion);
-    Inc(XbeLibraryVersion);
+    XbeLibraryVersion := PXbeLibraryVersion(@(aXbe.RawData[aXbe.m_Header.dwLibraryVersionsAddr - aXbe.m_Header.dwBaseAddr]));
+    for i := 0 to aXbe.m_Header.dwLibraryVersions - 1 do
+    begin
+      LibName := string(Copy(XbeLibraryVersion.szName, 1, XBE_LIBRARYNAME_MAXLENGTH));
+      Version := IntToStr(XbeLibraryVersion.wMajorVersion) + '.' +
+        IntToStr(XbeLibraryVersion.wMinorVersion) + '.' +
+        IntToStr(XbeLibraryVersion.wBuildVersion);
+      Inc(XbeLibraryVersion);
 
-    XML_WriteString(XmlRootNode, LibName, Version);
+      XML_WriteString(XmlRootNode, Trim(LibName), Version);
+    end;
   end;
 
   XMLDocument.SaveToXML(aText);
