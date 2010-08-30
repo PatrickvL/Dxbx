@@ -518,6 +518,9 @@ type
 
     FinalCombinerFlags: PS_FINALCOMBINERSETTING;
 
+    FinalCombinerC0Mapping: Byte;
+    FinalCombinerC1Mapping: Byte;
+
     FinalCombinerC0: DWORD;
     FinalCombinerC1: DWORD;
 
@@ -1689,6 +1692,8 @@ begin
   InputF.Decode((PSFinalCombinerInputsEFG  shr 16) and $FF, {IsAlpha=}False);
   InputG.Decode((PSFinalCombinerInputsEFG  shr  8) and $FF, {IsAlpha=}False);
   FinalCombinerFlags := PS_FINALCOMBINERSETTING((PSFinalCombinerInputsEFG shr 0) and $FF);
+  FinalCombinerC0Mapping := (PSFinalCombinerInputsEFG shr 0) and $F;
+  FinalCombinerC1Mapping := (PSFinalCombinerInputsEFG shr 4) and $F;
 end;
 
 function RPSFinalCombiner.DisassembleFinalCombiner(const aScope: PPSDisassembleScope): string;
@@ -2177,6 +2182,16 @@ begin
   end;
 end;
 
+function _EmitConstDef(i, Constant: DWORD): string;
+begin
+  Result := Format('def c%d, %ff, %ff, %ff, %ff'#13#10, [i,
+    {R}((Constant shr 16) and $FF) / 255.0,
+    {G}((Constant shr  8) and $FF) / 255.0,
+    {B}((Constant shr  0) and $FF) / 255.0,
+    {A}((Constant shr 24) and $FF) / 255.0
+    ]);
+end;
+
 function RPSIntermediate.DisassembleIntermediate(): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
@@ -2206,13 +2221,15 @@ begin
   begin
     // Define constants directly after the version instruction and before any other instruction :
     if Original.PSConstant0[i] > 0 then
-      Result := Result + Format('def c%d, %ff, %ff, %ff, %ff'#13#10, [i,
-        {R}((Original.PSConstant0[i] shr 16) and $FF) / 255.0,
-        {G}((Original.PSConstant0[i] shr  8) and $FF) / 255.0,
-        {B}((Original.PSConstant0[i] shr  0) and $FF) / 255.0,
-        {A}((Original.PSConstant0[i] shr 24) and $FF) / 255.0
-        ]);
+      Result := Result + _EmitConstDef(i, Original.PSConstant0[i]);
     // TODO : What indexes are for Original.PSConstant1 ?
+  end;
+
+  if (Original.PSFinalCombinerInputsABCD > 0)
+  or (Original.PSFinalCombinerInputsEFG > 0) then
+  begin
+    Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC0Mapping + FinalCombiner.FinalCombinerC0, Original.PSFinalCombinerConstant0);
+    Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC1Mapping + FinalCombiner.FinalCombinerC1, Original.PSFinalCombinerConstant1);
   end;
 
   // Handle Texture declarations :
@@ -2236,7 +2253,11 @@ begin
   // Check if there's a final combiner
   if (Original.PSFinalCombinerInputsABCD > 0)
   or (Original.PSFinalCombinerInputsEFG > 0) then
+    // TODO : XSokoban looses it's font rendering when the final combiner is emitted,
+    // when disabled, the font reappears (in various colors). This could be because
+    // the constants are not properly set locally...
     Result := Result + FinalCombiner.DisassembleFinalCombiner(@Scope);
+
 
   // Note : The end result (rgba) should be in r0 (output register) now!
 
@@ -2252,6 +2273,10 @@ var
   szPSDef: array [0..32-1] of AnsiChar;
   out_: PFILE;
 begin
+  // Don't dump more than 100 shaders, to prevent cluttering the filesystem :
+  if PshNumber >= 100 then
+    Exit;
+
   sprintf(@szPSDef[0], 'PSDef%.03d.txt', [PshNumber]); Inc(PshNumber);
   out_ := fopen(szPSDeF, 'w');
   if Assigned(out_) then

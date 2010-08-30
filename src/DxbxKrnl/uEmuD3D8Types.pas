@@ -142,8 +142,6 @@ const
   D3DVSDT_NONE        = D3DDECLTYPE_UNUSED;    // No stream data
 
 
-  D3DRS_FORCE_DWORD = D3DRenderStateType($7fffffff);
-
 function D3DVSD_SKIP(_DWORDCount: DWord): DWord;
 function D3DVSD_REG(_VertexRegister, _Type: DWord): DWord;
 function D3DVSD_TESSUV(_VertexRegister: DWord): DWord;
@@ -1161,9 +1159,6 @@ const X_D3DRS_COMPLEX_LAST = X_D3DRS_DONOTCULLUNCOMPRESSED;
 
 const X_D3DRS_FIRST = X_D3DRS_PS_FIRST;
 const X_D3DRS_LAST = X_D3DRS_COMPLEX_LAST;
-
-// deferred render state "unknown" flag
-const X_D3DRS_UNK =  $7fffffff;
 
 
 const X_D3DWRAP_U = $00000010;

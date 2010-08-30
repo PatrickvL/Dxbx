@@ -40,7 +40,7 @@ uses
   uCRC16,
   uStoredTrieTypes,
   uXboxLibraryUtils,
-  uEmuD3D8Types,// X_D3DRS_UNK
+  uEmuD3D8Types,
   uState, // XTL_EmuD3DDeferredTextureState
   uEmu, // EmuWarning
   uEmuXapi, // XTL_EmuXapiProcessHeap
