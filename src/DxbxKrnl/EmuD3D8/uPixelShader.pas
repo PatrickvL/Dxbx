@@ -480,9 +480,9 @@ type
 
     function CombineStageInputSum(const aScope: PPSDisassembleScope): string;
 
-    function TryLerp(const aScope: PPSDisassembleScope; SumOutputString: string): string;
-    function Try4Regs(const aScope: PPSDisassembleScope; SumOutputString: string): string;
-    function Try2Regs_1Reg1Fixed(const aScope: PPSDisassembleScope; const SumOutputString: string;
+    function SumTryLerp(const aScope: PPSDisassembleScope; SumOutputString: string): string;
+    function SumTry4Regs(const aScope: PPSDisassembleScope; SumOutputString: string): string;
+    function SumTry2Regs_1Reg1Fixed(const aScope: PPSDisassembleScope; const SumOutputString: string;
       const Output2Reg, Output1Reg: PPSCombinerOutput): string;
     function CombineStageInputMux(const aScope: PPSDisassembleScope): string;
   end;
@@ -501,8 +501,8 @@ type
     RGB: RPSCombinerStageChannel;
     Alpha: RPSCombinerStageChannel;
 
-    MappedC0: DWORD; // C0 for each stage
-    MappedC1: DWORD; // C1 for each stage
+    C0Mapping: DWORD; // C0 for each stage
+    C1Mapping: DWORD; // C1 for each stage
 
     function DisassembleCombinerStage(const aScope: PPSDisassembleScope): string;
   end;
@@ -521,11 +521,8 @@ type
     FinalCombinerC0Mapping: Byte;
     FinalCombinerC1Mapping: Byte;
 
-    FinalCombinerC0: DWORD;
-    FinalCombinerC1: DWORD;
-
     dwPS_GLOBALFLAGS: DWORD;
-    procedure Decode(const PSFinalCombinerInputsABCD, PSFinalCombinerInputsEFG: DWORD);
+    procedure Decode(const PSFinalCombinerInputsABCD, PSFinalCombinerInputsEFG, PSFinalCombinerConstants: DWORD);
     function DisassembleFinalCombiner(const aScope: PPSDisassembleScope): string;
   end;
 
@@ -544,8 +541,10 @@ type
     EFReg: PS_REGISTER;
     function EmitConstant(const OutputStr: string; const MulResult: int): string;
     function EmitAdd(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
+    function EmitSub(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
     function EmitMul(const DestRegister: PPSRegisterObject; const Input1, Input2: PPSInputRegister): string;
     function EmitMad(const OutputStr: string; const Input1, Input2: PPSInputRegister; const Input3: PPSRegisterObject): string;
+    function EmitLrp(const OutputStr: string; const Input1, Input2, Input3: PPSInputRegister): string;
   end;
 
   RPSIntermediate = record
@@ -590,20 +589,6 @@ function XTL_EmuRecompilePshDef(pPSDef: PX_D3DPIXELSHADERDEF): string;
 implementation
 
 const lfUnit = lfCxbx or lfPixelShader;
-
-procedure DbgPshPrintf(aStr: string); overload;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-begin
-  if (g_bPrintfOn) then // TODO -oDxbx: Remove this once our logging relies on MayLog completely
-  Log(lfUnit, aStr);
-end;
-
-procedure DbgPshPrintf(aStr: string; Args: array of const); overload;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-begin
-  if (g_bPrintfOn) then // TODO -oDxbx: Remove this once our logging relies on MayLog completely
-  Log(lfUnit, aStr, Args);
-end;
 
 // From PixelShader.cpp -----------------------------------------------------------
 
@@ -1063,6 +1048,11 @@ begin
   Result := 'add' + OutputStr + Input1.DisassembleRegister(@Self) + ', ' + Input2.DisassembleRegister(@Self) + #13#10;
 end;
 
+function RPSDisassembleScope.EmitSub(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
+begin
+  Result := 'sub' + OutputStr + Input1.DisassembleRegister(@Self) + ', ' + Input2.DisassembleRegister(@Self) + #13#10;
+end;
+
 function RPSDisassembleScope.EmitMul(const DestRegister: PPSRegisterObject;
   const Input1, Input2: PPSInputRegister): string;
 var
@@ -1127,6 +1117,9 @@ begin
     MULRESULT_MULTIPLY: // A * B
       Result := Result + 'mul' + OutputStr + Input1.DisassembleInputRegister(@Self) + Input1ReadMask + ', ' + Input2.DisassembleInputRegister(@Self) + Input2ReadMask;
   end;
+
+  if Result <> '' then
+    Result := Result + #13#10;
 end;
 
 function RPSDisassembleScope.EmitMad(const OutputStr: string;
@@ -1135,7 +1128,16 @@ begin
   Result := 'mad' + OutputStr
           + Input1.DisassembleInputRegister(@Self) + ', '
           + Input2.DisassembleInputRegister(@Self) + ', '
-          + Input3.DisassembleRegister(@Self);
+          + Input3.DisassembleRegister(@Self) + #13#10;
+end;
+
+function RPSDisassembleScope.EmitLrp(const OutputStr: string;
+  const Input1, Input2, Input3: PPSInputRegister): string;
+begin
+  Result := 'lrp' + OutputStr
+          + Input1.DisassembleInputRegister(@Self) + ', '
+          + Input2.DisassembleInputRegister(@Self) + ', '
+          + Input3.DisassembleInputRegister(@Self) + #13#10;
 end;
 
 { RPSCombinerOutput }
@@ -1191,8 +1193,6 @@ begin
 
   if Result <> '' then
   begin
-    Result := Result + #13#10;
-
     // Handle blue-to-alpha flag (only valid for RGB) :
     if BlueToAlpha then
       // Note : We can't use the '+ ' prefix, as the blue channel is not determined yet!
@@ -1254,10 +1254,7 @@ begin
         Result := Result + 'mul' + SumOutputString +
           OutputAB.Input1.DisassembleInputRegister(aScope) + ', ' +
           OutputAB.Input2.DisassembleInputRegister(aScope) + #13#10;
-        Result := Result + 'mad' + SumOutputString +
-          OutputCD.Input1.DisassembleInputRegister(aScope) + ', ' +
-          OutputCD.Input2.DisassembleInputRegister(aScope) + ', ' +
-          Self.DisassembleRegister(aScope) + #13#10;
+        Result := Result + aScope.EmitMad(SumOutputString, @OutputCD.Input1, @OutputCD.Input2, @Self);
       end;
     end
     else
@@ -1280,7 +1277,7 @@ begin
   end;
 end;
 
-function RPSCombinerOutputMuxSum.TryLerp(const aScope: PPSDisassembleScope; SumOutputString: string): string;
+function RPSCombinerOutputMuxSum.SumTryLerp(const aScope: PPSDisassembleScope; SumOutputString: string): string;
 var
   Src0, Src1, Src2: PPSInputRegister;
 
@@ -1302,17 +1299,12 @@ begin
   or _CanLerp(@OutputAB.Input1, @OutputCD.Input2, @OutputAB.Input2, @OutputCD.Input1)
   or _CanLerp(@OutputAB.Input2, @OutputCD.Input1, @OutputAB.Input1, @OutputCD.Input2)
   or _CanLerp(@OutputAB.Input2, @OutputCD.Input2, @OutputAB.Input1, @OutputCD.Input1) then
-  begin
-    Result := 'lrp' + SumOutputString
-      + Src0.DisassembleInputRegister(aScope) + ', '
-      + Src1.DisassembleInputRegister(aScope) + ', '
-      + Src2.DisassembleInputRegister(aScope) + #13#10;
-  end
+    Result := aScope.EmitLrp(SumOutputString, Src0, Src1, Src2)
   else
     Result := '';
 end;
 
-function RPSCombinerOutputMuxSum.Try4Regs(const aScope: PPSDisassembleScope; SumOutputString: string): string;
+function RPSCombinerOutputMuxSum.SumTry4Regs(const aScope: PPSDisassembleScope; SumOutputString: string): string;
 var
   ABCheck: Boolean;
   CDCheck: Boolean;
@@ -1335,38 +1327,38 @@ begin
   begin
     // AB does read from the SUM output register (so CD doesn't),
     // so calculate AB first via the temp register and "mad" it to C*D :
-    Result := aScope.EmitMul(@Self, @OutputAB.Input1, @OutputAB.Input2) + #13#10;
-    Result := Result + aScope.EmitMad(SumOutputString, @OutputCD.Input1, @OutputCD.Input2, @Self) + #13#10;
+    Result := aScope.EmitMul(@Self, @OutputAB.Input1, @OutputAB.Input2);
+    Result := Result + aScope.EmitMad(SumOutputString, @OutputCD.Input1, @OutputCD.Input2, @Self);
   end
   else
   begin
     // Here, we know AB doesn't read from the SUM output register, so we calculate C*D first
     // (no matter if they read from the SUM output register or not) and "mad" it to A*B :
-    Result := aScope.EmitMul(@Self, @OutputCD.Input1, @OutputCD.Input2) + #13#10;
-    Result := Result + aScope.EmitMad(SumOutputString, @OutputAB.Input1, @OutputAB.Input2, @Self) + #13#10;
+    Result := aScope.EmitMul(@Self, @OutputCD.Input1, @OutputCD.Input2);
+    Result := Result + aScope.EmitMad(SumOutputString, @OutputAB.Input1, @OutputAB.Input2, @Self);
   end;
 end;
 
-function RPSCombinerOutputMuxSum.Try2Regs_1Reg1Fixed(const aScope: PPSDisassembleScope; const SumOutputString: string;
+function RPSCombinerOutputMuxSum.SumTry2Regs_1Reg1Fixed(const aScope: PPSDisassembleScope; const SumOutputString: string;
   const Output2Reg, Output1Reg: PPSCombinerOutput): string;
 begin
-  // Is Input1 a register?
+  // Is A (Output1.Input1) a register?
   if Output1Reg.Input1.MulResult >= MULRESULT_VARIABLE then
-    // Multiply AB and add C using the "mad" opcode :
-    // TODO : D is a constant - handle the multiplication factor that implies!
-    Result := aScope.EmitMad(SumOutputString, @Output2Reg.Input1, @Output2Reg.Input2, @Output1Reg.Input1) + #13#10
+    // Multiply CD and add A using the "mad" opcode :
+    // TODO : B is a fixed value - handle the multiplication factor that implies!
+    Result := aScope.EmitMad(SumOutputString, @Output2Reg.Input1, @Output2Reg.Input2, @Output1Reg.Input1)
   else
-    // Is Input2 a register ?
+    // Is B (Output2.Input2) a register ?
     if Output1Reg.Input2.MulResult >= MULRESULT_VARIABLE then
-      // Multiply AB and add D using the "mad" opcode :
-      // TODO : C is a constant - handle the multiplication factor that implies!
-      Result := aScope.EmitMad(SumOutputString, @Output2Reg.Input1, @Output2Reg.Input2, @Output1Reg.Input2) + #13#10
+      // Multiply CD and add B using the "mad" opcode :
+      // TODO : A is a fixed value - handle the multiplication factor that implies!
+      Result := aScope.EmitMad(SumOutputString, @Output2Reg.Input1, @Output2Reg.Input2, @Output1Reg.Input2)
     else
     begin
-      // CD is a fixed value, so just multiply AB using the "mul" opcode :
-      Result := aScope.EmitMul(@Self, @Output2Reg.Input1, @Output2Reg.Input2) + #13#10;
+      // AB is a fixed value, so just multiply CD using the "mul" opcode :
+      Result := aScope.EmitMul(@Self, @Output2Reg.Input1, @Output2Reg.Input2);
       if Output1Reg.MulResult > MULRESULT_ZERO then
-        ; // TODO : Somehow, incorporate the fixed value (if it's something else than zero)
+        Result := Result + '; Ignored fixed value <> ZERO!'#13#10; // TODO : Somehow, incorporate the fixed value here
     end;
 end;
 
@@ -1395,10 +1387,10 @@ begin
     // Either AB or CD was calculated, check which one it was :
     if ABCheck then
       // If AB is already available, "mad" it to C*D :
-      Result := aScope.EmitMad(SumOutputString, @OutputCD.Input1, @OutputCD.Input2, @OutputAB) + #13#10
+      Result := aScope.EmitMad(SumOutputString, @OutputCD.Input1, @OutputCD.Input2, @OutputAB)
     else
       // CD is already available, "mad" it to A*B :
-      Result := aScope.EmitMad(SumOutputString, @OutputAB.Input1, @OutputAB.Input2, @OutputCD) + #13#10;
+      Result := aScope.EmitMad(SumOutputString, @OutputAB.Input1, @OutputAB.Input2, @OutputCD);
 
     Exit;
   end;
@@ -1444,15 +1436,15 @@ begin
     // AB and CD are using registers for both inputs
 
     // Check for "lerp = (src0 * src1) + ((1-src0) * src2)" :
-    Result := TryLerp(aScope, SumOutputString);
+    Result := SumTryLerp(aScope, SumOutputString);
     if Result <> '' then
       Exit;
 
-    Result := Try4Regs(aScope, SumOutputString);
+    Result := SumTry4Regs(aScope, SumOutputString);
 
     if Result = '' then
       // Note : After these tries, there's no other solution, so output that fact and exit :
-      Result := '; Can''t use SUM register for intermediate result of (A*B)+(C*D)'#13#10;
+      Result := '; Can''t find a register for the intermediate result of (A*B)+(C*D)'#13#10;
 
     Exit;
   end;
@@ -1465,13 +1457,15 @@ begin
     // AB or CD are using registers for both inputs
     if ABCheck then
       // If AB is the side that uses 2 registers, handle it that way :
-      Result := Try2Regs_1Reg1Fixed(aScope, SumOutputString, @OutputAB, @OutputCD)
+      Result := SumTry2Regs_1Reg1Fixed(aScope, SumOutputString, @OutputAB, @OutputCD)
     else
       // Otherwise CD is the side that uses 2 registers, handle it that way :
-      Result := Try2Regs_1Reg1Fixed(aScope, SumOutputString, @OutputCD, @OutputAB);
+      Result := SumTry2Regs_1Reg1Fixed(aScope, SumOutputString, @OutputCD, @OutputAB);
 
     Exit;
   end;
+
+  // Reg*Reg multiplications are handled above, so check the remaining cases :
 
   // Test if the outputs read one variable (not two, that was handled above):
   ABCheck := (OutputAB.MulResult >= MULRESULT_VARIABLE);
@@ -1480,8 +1474,9 @@ begin
   begin
     // Handle cases like this example : sum R0 = (T0*ONE) + (-C0*ONE)
     // TODO : Check where the registers are, and also apply all possible input mappings!
+    // For now, we assume the fixed values are in B and D (so we add registers A and C) :
     if OutputCD.Input1.Multiplier < 0 then
-      Result := 'sub' + SumOutputString + OutputAB.Input1.DisassembleRegister(aScope) + ', ' + OutputCD.Input1.DisassembleRegister(aScope) + #13#10
+      Result := aScope.EmitSub(SumOutputString, @OutputAB.Input1, @OutputCD.Input1)
     else
       Result := aScope.EmitAdd(SumOutputString, @OutputAB.Input1, @OutputCD.Input1);
 
@@ -1497,7 +1492,7 @@ begin
 //    else
 //      // Otherwise CD is the side that uses 2 registers, handle it that way :
 //      Result := Try1Reg1Fixed(aScope, SumOutputString, @OutputCD, @OutputAB);
-
+    Result := '; TODO : Unhandled case : Try1Reg1Fixed'#13#10;
     Exit;
   end;
 
@@ -1508,7 +1503,7 @@ begin
   begin
     // Both outputs are a fixed value - calculate what that amounts to, and generate code
     // that puts that fixed value in the output.
-    Result := aScope.EmitConstant(SumOutputString, OutputAB.MulResult + OutputCD.MulResult);
+    Result := aScope.EmitConstant(SumOutputString, OutputAB.MulResult + OutputCD.MulResult) + #13#10;
     // TODO : The constant can range from -0.5*0.5 = -0.25 up to 1.0*1.0 = 2.0 (which is
     // not even counting the input register modifier!) So it could mean we have to do more
     // that just the above! (Like "add"-ing the result to itself, taking an extra opcode.)
@@ -1534,7 +1529,8 @@ begin
     Exit;
   end;
 
-end;
+  Result := '; TODO : Reached end of CombineStageInputSum without hitting any handling code!'#13#10;
+end; // CombineStageInputSum
 
 { RPSCombinerStageChannel }
 
@@ -1647,8 +1643,8 @@ var
   StageOutputStrRGB: string;
   StageOutputStrAlpha: string;
 begin
-  aScope.C0RegStr := 'c' + IntToStr(MappedC0);
-  aScope.C1RegStr := 'c' + IntToStr(MappedC1);
+  aScope.C0RegStr := 'c' + IntToStr(C0Mapping);
+  aScope.C1RegStr := 'c' + IntToStr(C1Mapping);
 
   Result := '; combine stage ' + IntToStr(aScope.Stage) + #13#10;
 
@@ -1681,19 +1677,22 @@ end;
 
 { RPSFinalCombiner }
 
-procedure RPSFinalCombiner.Decode(const PSFinalCombinerInputsABCD, PSFinalCombinerInputsEFG: DWORD);
+procedure RPSFinalCombiner.Decode(const PSFinalCombinerInputsABCD, PSFinalCombinerInputsEFG, PSFinalCombinerConstants: DWORD);
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   InputA.Decode((PSFinalCombinerInputsABCD shr 24) and $FF, {IsAlpha=}False);
   InputB.Decode((PSFinalCombinerInputsABCD shr 16) and $FF, {IsAlpha=}False);
   InputC.Decode((PSFinalCombinerInputsABCD shr  8) and $FF, {IsAlpha=}False);
   InputD.Decode((PSFinalCombinerInputsABCD shr  0) and $FF, {IsAlpha=}False);
+
   InputE.Decode((PSFinalCombinerInputsEFG  shr 24) and $FF, {IsAlpha=}False);
   InputF.Decode((PSFinalCombinerInputsEFG  shr 16) and $FF, {IsAlpha=}False);
   InputG.Decode((PSFinalCombinerInputsEFG  shr  8) and $FF, {IsAlpha=}False);
   FinalCombinerFlags := PS_FINALCOMBINERSETTING((PSFinalCombinerInputsEFG shr 0) and $FF);
-  FinalCombinerC0Mapping := (PSFinalCombinerInputsEFG shr 0) and $F;
-  FinalCombinerC1Mapping := (PSFinalCombinerInputsEFG shr 4) and $F;
+
+  FinalCombinerC0Mapping := (PSFinalCombinerConstants shr 0) and $F;
+  FinalCombinerC1Mapping := (PSFinalCombinerConstants shr 4) and $F;
+  dwPS_GLOBALFLAGS := (PSFinalCombinerConstants shr 8) and $1;
 end;
 
 function RPSFinalCombiner.DisassembleFinalCombiner(const aScope: PPSDisassembleScope): string;
@@ -1703,10 +1702,10 @@ var
   AlreadyHandled_D: Boolean;
 begin
   Result := '';
-  AlreadyHandled_D := False;
 
-  aScope.C0RegStr := 'c' + IntToStr(FinalCombinerC0);
-  aScope.C1RegStr := 'c' + IntToStr(FinalCombinerC1);
+  aScope.C0RegStr := 'c' + IntToStr(FinalCombinerC0Mapping);
+  aScope.C1RegStr := 'c' + IntToStr(FinalCombinerC1Mapping);
+
 
 //  The final combiner performs the following operations :
 //
@@ -1782,36 +1781,48 @@ begin
   end;
 
   // Handle the final combiner's linear interpolation :
+  Result := Result + '; final combiner - r0 = A*B + (1-A)*C + D'#13#10;
+
+  TmpReg := PS_REGISTER_R0; // TODO : Check if r0 is usable
+  AlreadyHandled_D := True; // Assume D is handled
+
   if  ((InputA.Reg = PS_REGISTER_ZERO) or (InputA.Reg = PS_REGISTER_R0))
   and ((InputB.Reg = PS_REGISTER_ZERO) or (InputB.Reg = PS_REGISTER_R0))
   and ((InputC.Reg = PS_REGISTER_ZERO) or (InputC.Reg = PS_REGISTER_R0)) then
-    // do nothing
+    // do nothing TODO : Is this correct???
   else
   begin
-    Result := Result + '; final combiner - r0 = A*B + (1-A)*C + D'#13#10;
-    TmpReg := PS_REGISTER_R0; // TODO : Check if r0 is usable
-
     if InputC.Reg = PS_REGISTER_ZERO then
     begin
       if (InputA.Reg = PS_REGISTER_ONE) then
       begin
-        // TODO
+        // r0 = B + D
+        Result := Result + 'add ' + PSRegToStr(aScope, TmpReg) + ', ' + InputB.DisassembleInputRegister(aScope) + ', ' + InputD.DisassembleInputRegister(aScope) + #13#10;
       end
       else if (InputB.Reg = PS_REGISTER_ONE) then
       begin
-        // TODO
+        // r0 = A + D
+        Result := Result + 'add ' + PSRegToStr(aScope, TmpReg) + ', ' + InputA.DisassembleInputRegister(aScope) + ', ' + InputD.DisassembleInputRegister(aScope) + #13#10;
       end
       else
       begin
         // r0 = A*B + D
-        Result := Result + 'mad ' + PSRegToStr(aScope, PS_REGISTER_R0) + ', ' + InputA.DisassembleInputRegister(aScope) + ', ' + InputB.DisassembleInputRegister(aScope) + ', ' + InputD.DisassembleInputRegister(aScope) + #13#10;
-        // Reset D - already handled :
-        AlreadyHandled_D := True;
+        Result := Result + 'mad ' + PSRegToStr(aScope, TmpReg) + ', ' + InputA.DisassembleInputRegister(aScope) + ', ' + InputB.DisassembleInputRegister(aScope) + ', ' + InputD.DisassembleInputRegister(aScope) + #13#10;
       end;
     end
     else
+    if InputB.Reg = PS_REGISTER_ZERO then
+    begin
+      // r0 = (1-A)*C + D
+      Result := Result + 'mad ' + PSRegToStr(aScope, TmpReg) + ', 1-' + InputA.DisassembleInputRegister(aScope) + ', ' + InputC.DisassembleInputRegister(aScope) + ', ' + InputD.DisassembleInputRegister(aScope) + #13#10;
+    end
+    else
+    begin
       // r0 = A*B + (1-A)*C + D
       Result := Result + 'lrp ' + PSRegToStr(aScope, TmpReg) + ', ' + InputA.DisassembleInputRegister(aScope) + ', ' + InputB.DisassembleInputRegister(aScope) + ', ' + InputC.DisassembleInputRegister(aScope) + #13#10;
+      // Reset D - already handled :
+      AlreadyHandled_D := False;
+    end;
   end;
 
   if (TmpReg = PS_REGISTER_ZERO) or (TmpReg = PS_REGISTER_R0) then
@@ -1936,21 +1947,17 @@ begin
 
     // Decode & map the C0 and C1 registers :
     if CombinerHasUniqueC0 then
-      Combiners[i].MappedC0 := (pPSDef.PSC0Mapping shr (i * 4)) and $f
+      Combiners[i].C0Mapping := (pPSDef.PSC0Mapping shr (i * 4)) and $f
     else
-      Combiners[i].MappedC0 := 0;
+      Combiners[i].C0Mapping := 0;
 
     if CombinerHasUniqueC1 then
-      Combiners[i].MappedC1 := (pPSDef.PSC1Mapping shr (i * 4)) and $f
+      Combiners[i].C1Mapping := (pPSDef.PSC1Mapping shr (i * 4)) and $f
     else
-      Combiners[i].MappedC1 := 1;
+      Combiners[i].C1Mapping := 1;
   end;
 
-  FinalCombiner.Decode(pPSDef.PSFinalCombinerInputsABCD, pPSDef.PSFinalCombinerInputsEFG);
-
-  FinalCombiner.FinalCombinerC0 := (pPSDef.PSFinalCombinerConstants shr 0) and $F;
-  FinalCombiner.FinalCombinerC1 := (pPSDef.PSFinalCombinerConstants shr 4) and $F;
-  FinalCombiner.dwPS_GLOBALFLAGS := (pPSDef.PSFinalCombinerConstants shr 8) and $1;
+  FinalCombiner.Decode(pPSDef.PSFinalCombinerInputsABCD, pPSDef.PSFinalCombinerInputsEFG, pPSDef.PSFinalCombinerConstants);
 end;
 
 function RPSIntermediate.IntermediateToString(): string;
@@ -2056,6 +2063,9 @@ begin
   if (Original.PSFinalCombinerInputsABCD > 0)
   or (Original.PSFinalCombinerInputsEFG  > 0) then // Final combiner inputs
   begin
+    _AddStr(#13#10'PSFinalCombinerConstant0 : %x', [Original.PSFinalCombinerConstant0]); // C0 in final combiner
+    _AddStr('PSFinalCombinerConstant1 : %x', [Original.PSFinalCombinerConstant1]); // C1 in final combiner
+
     _AddStr(#13#10'PSFinalCombinerInputsABCD ->');
     _AddStr('Input A: %s', [FinalCombiner.InputA.IntermediateToString()]);
     _AddStr('Input B: %s', [FinalCombiner.InputB.IntermediateToString()]);
@@ -2067,21 +2077,19 @@ begin
     _AddStr('Input F: %s', [FinalCombiner.InputF.IntermediateToString()]);
     _AddStr('Input G: %s', [FinalCombiner.InputG.IntermediateToString()]);
     _AddStr('Final combiner setting: %s', [PSFinalCombinerSettingToStr(Ord(FinalCombiner.FinalCombinerFlags))]);
+
+    _AddStr(#13#10'PSFinalCombinerConstants ->'); // Final combiner constant mapping
+    _AddStr('Offset of D3D constant for C0: %d', [FinalCombiner.FinalCombinerC0Mapping]);
+    _AddStr('Offset of D3D constant for C1: %d', [FinalCombiner.FinalCombinerC1Mapping]);
+    _AddStr('Adjust texture flag: %s', [PS_GlobalFlagsStr[PS_GLOBALFLAGS(FinalCombiner.dwPS_GLOBALFLAGS)]]);
   end;
 
 (* TODO :
-  PSFinalCombinerConstant0: DWORD,         // C0 in final combiner
-  PSFinalCombinerConstant1: DWORD,         // C1 in final combiner
-  // These last three DWORDs are used to define how Direct3D8 pixel shader constants map to the constant
+  // These last DWORDs are used to define how Direct3D8 pixel shader constants map to the constant
   // registers in each combiner stage. They are used by the Direct3D run-time software but not by the hardware.
   PSC0Mapping: DWORD,                      // Mapping of c0 regs to D3D constants
   PSC1Mapping: DWORD,                      // Mapping of c1 regs to D3D constants
 *)
-  _AddStr(#13#10'PSFinalCombinerConstants ->'); // // Final combiner constant mapping
-  _AddStr('Offset of D3D constant for C0: %d', [FinalCombiner.FinalCombinerC0]);
-  _AddStr('Offset of D3D constant for C1: %d', [FinalCombiner.FinalCombinerC1]);
-
-  _AddStr('Adjust texture flag: %s', [PS_GlobalFlagsStr[PS_GLOBALFLAGS(FinalCombiner.dwPS_GLOBALFLAGS)]]);
 
   _AddStr(#13#10);
 end;
@@ -2157,6 +2165,10 @@ begin
     PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST] then
     Result := Result + ', ' + aScope.C0RegStr + ' ; Dxbx guess'; // TODO : Where do we get the 3rd argument to this?
 
+  // Warn about unprocessed flag :
+  if (FinalCombiner.dwPS_GLOBALFLAGS and Ord(PS_GLOBALFLAGS_TEXMODE_ADJUST)) > 0 then
+    Result := Result + '; PS_GLOBALFLAGS_TEXMODE_ADJUST unhandled!';
+
   Result := Result + #13#10;
 end;
 
@@ -2228,8 +2240,8 @@ begin
   if (Original.PSFinalCombinerInputsABCD > 0)
   or (Original.PSFinalCombinerInputsEFG > 0) then
   begin
-    Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC0Mapping + FinalCombiner.FinalCombinerC0, Original.PSFinalCombinerConstant0);
-    Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC1Mapping + FinalCombiner.FinalCombinerC1, Original.PSFinalCombinerConstant1);
+    Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC0Mapping, Original.PSFinalCombinerConstant0);
+    Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC1Mapping, Original.PSFinalCombinerConstant1);
   end;
 
   // Handle Texture declarations :
@@ -2299,7 +2311,8 @@ end;
 procedure XTL_PrintPixelShaderDefContents(pPSDef: PX_D3DPIXELSHADERDEF);
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  DbgPshPrintf(XTL_DumpPixelShaderDefToString(pPSDef));
+  if (g_bPrintfOn) then // TODO -oDxbx: Remove this once our logging relies on MayLog completely
+    Log(lfUnit, XTL_DumpPixelShaderDefToString(pPSDef));
 end;
 
 function XTL_EmuRecompilePshDef(pPSDef: PX_D3DPIXELSHADERDEF): string;
