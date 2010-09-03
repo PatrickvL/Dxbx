@@ -236,6 +236,7 @@ type
     StoredLibrariesList: PStoredLibrariesList;
     StoredLibraryFunctionsList: PStoredLibraryFunctionsList;
     StoredSymbolReferencesList: PStoredSymbolReferencesList;
+    RootNode: PStoredTrieNode;
     function GetByteOffset(const aOffset: TByteOffset): PByteOffset;
   public
     procedure LoadFromStream(const aStream: TStream);
@@ -254,6 +255,7 @@ type
   end;
 
 function LibraryVersionNumberToFlag(const aLibraryVersionNumber: Integer): TLibraryVersionFlag;
+function GetNodeNrChildren(const aStoredTrieNode: PStoredTrieNode; out StretchPtr: PByte): Integer;
 
 var
   LibraryVersionFlagToInt: array [TLibraryVersionFlag] of Integer = (
@@ -286,6 +288,7 @@ begin
   StoredLibrariesList := PStoredLibrariesList(GetByteOffset(StoredSignatureTrieHeader.LibraryTable.LibrariesOffset));
   StoredLibraryFunctionsList := PStoredLibraryFunctionsList(GetByteOffset(StoredSignatureTrieHeader.FunctionTable.FunctionsOffset));
   StoredSymbolReferencesList := PStoredSymbolReferencesList(GetByteOffset(StoredSignatureTrieHeader.ReferencesTable.ReferencesOffset));
+  RootNode := GetNode(StoredSignatureTrieHeader.TrieRootNode);
 end;
 
 function TPatternTrieReader.NrOfStrings: Cardinal;
@@ -439,6 +442,18 @@ begin
 {$IFDEF DXBX_RECTYPE}
   Assert(Result.RecType = rtStoredTrieNode, 'StoredTrieNode type mismatch!');
 {$ENDIF}
+end;
+
+function GetNodeNrChildren(const aStoredTrieNode: PStoredTrieNode; out StretchPtr: PByte): Integer;
+begin
+  Result := aStoredTrieNode.NrChildrenByte1;
+  UIntPtr(StretchPtr) := UIntPtr(aStoredTrieNode) + SizeOf(RStoredTrieNode);
+  if Result >= 128 then
+    // Reconstruct the NrChildren value :
+    Result := (Integer(Result and 127) shl 8) or aStoredTrieNode.NrChildrenByte2
+  else
+    // If one byte was sufficient, then the next stretch starts 1 byte earlier :
+    Dec(UIntPtr(StretchPtr), SizeOf({RStoredTrieNode.NrChildrenByte2:}Byte));
 end;
 
 end.

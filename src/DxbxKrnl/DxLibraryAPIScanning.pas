@@ -46,7 +46,42 @@ uses
   uEmuXapi, // XTL_EmuXapiProcessHeap
   uEmuExe; // ReinitXbeImageHeader, ReinitExeImageHeader
 
+// Scanning steps:
+// - scan memory once, byte for byte, noteing only hits on leafs
+// - leafs can be hit more than once so we chain them together
+// - the chain starts with a LeafDetectionInfo record,
+//   and links PatternHitResult records for each hit.
+//
+// There's no ID for leafs, except their offset in the resource, which is inconvenient.
+// But we can take the first function in the leaf (functions appear only once, so they're
+// associated with one leaf only), and use the function offset as a (sparse) leaf number.
+//
+// Once that's done, we loop over MyFunctionsToScanFor (which is sorted big to small)
+// and use it's PatternLeafNodeOffset to get to the leaf (and thus via it's first function
+// to the LeafDetectionInfo record).
+// For all hits chained to this leaf, we test if the address matches the function;
+// We check the CRC, and all it's references - they should stay inside the executable memory,
+// and if they are functions too, they should either be validated at the referenced address
+// already, or they need to be validated.
+
 type
+  PPatternHitResult = ^RPatternHitResult;
+
+  RLeafDetectionInfo = record
+    LeafNode: PFunctionIndex; // A leaf in the resource is nothing more than a list of function ID's
+    NrChildren: Integer; // The number of functions (0 means undetermined, as there are no leafs with zero functions)
+    FirstHit: PPatternHitResult; // A singly-linked list of addresses that match the PatternTrie up to this leaf
+  end;
+
+  RPatternHitResult = record
+    Address: PByte;
+    NextHit: PPatternHitResult;
+  end;
+
+//  RFunctionDetectionInfo = record // One for each function
+//    FunctionIndex: TFunctionIndex;
+//  end;
+
   TSymbolInformation = class; // forward
 
   PPotentialFunctionLocation = ^RPotentialFunctionLocation;
@@ -148,6 +183,15 @@ type
     class function CacheFileName(const pXbeHeader: PXBEIMAGE_HEADER): string;
     function LoadSymbolsFromCache(const aCacheFile: string): Boolean;
     procedure SaveSymbolsToCache(const pXbeHeader: PXBEIMAGE_HEADER; const aCacheFile: string);
+  public // new scanning
+    MyFunctionsToScanFor: TList;
+    AllLeafs: array of RLeafDetectionInfo; // To be indexed with a FunctionID
+    NrHits: Integer;
+    NrHitsLeafs: Integer;
+    procedure AddLeafHit(const aAddress: PByte; const aLeaf: PFunctionIndex; const NrChildren: Integer);
+    procedure DetermineFunctionsToScanFor;
+    procedure ScanForLeafHits(const aTestAddress: PByte);
+    procedure LookupFunctionsInHits();
   end;
 
 var
@@ -296,6 +340,7 @@ constructor TSymbolManager.Create;
 begin
   inherited Create;
 
+  MyFunctionsToScanFor := TList.Create;
   MyFinalLocations := TList.Create;
   MyAddressesScanned := TBits.Create;
   MyAddressesPotentiallyContainingCode := TBits.Create;
@@ -307,6 +352,7 @@ begin
   FreeAndNil(MyFinalLocations);
   FreeAndNil(MyAddressesScanned);
   FreeAndNil(MyAddressesPotentiallyContainingCode);
+  FreeAndNil(MyFunctionsToScanFor);
 
   inherited Destroy;
 end;
@@ -589,6 +635,158 @@ begin
   end;
 end;
 
+type
+  TLeafID = TFunctionIndex;
+
+procedure TSymbolManager.AddLeafHit(const aAddress: PByte; const aLeaf: PFunctionIndex; const NrChildren: Integer);
+var
+  LeafID: TLeafID;
+  NewLength: Integer;
+  Hit: PPatternHitResult;
+begin
+  LeafID := aLeaf^;
+
+  // Make sure we have room for this leaf :
+  begin
+    NewLength := Length(AllLeafs);
+    if NewLength = 0 then
+      NewLength := 16 * 1024;
+
+    while NewLength <= Integer(LeafID) do
+      Inc(NewLength, NewLength);
+
+    if NewLength > Length(AllLeafs) then
+      SetLength(AllLeafs, NewLength);
+  end;
+
+  // Append this address to the chain :
+  begin
+    New(Hit);
+    Inc(NrHits);
+    Hit.Address := aAddress;
+
+    if AllLeafs[LeafID].LeafNode = nil then
+    begin
+      Inc(NrHitsLeafs);
+      AllLeafs[LeafID].LeafNode := aLeaf;
+      AllLeafs[LeafID].NrChildren := NrChildren;
+      Hit.NextHit := AllLeafs[LeafID].FirstHit;
+    end
+    else
+    begin
+      Assert(AllLeafs[LeafID].LeafNode = aLeaf);
+      Assert(AllLeafs[LeafID].NrChildren = NrChildren);
+      Hit.NextHit := nil;
+    end;
+
+    AllLeafs[LeafID].FirstHit := Hit;
+  end;
+end;
+
+procedure TSymbolManager.ScanForLeafHits(const aTestAddress: PByte);
+
+  // TODO : Change recursive to nested search (using a stack)
+  function _TryMatchingNode(aStoredTrieNode: PStoredTrieNode; aAddress: PByte; Depth: Integer): Boolean;
+  var
+    StretchPtr: PByte;
+    StretchHeaderByte: TStretchHeaderByte;
+    More: Boolean;
+    NrFixed, NrWildcards, i: Integer;
+    NextOffset: TByteOffset;
+    NrChildren: Integer;
+  begin
+    Result := False;
+{$IFDEF DXBX_RECTYPE}
+    Assert(aStoredTrieNode.RecType = rtStoredTrieNode, 'StoredTrieNode type mismatch!');
+{$ENDIF}
+    // Calculate the position of the data after this TrieNode (StretchPtr) :
+    NrChildren := GetNodeNrChildren(aStoredTrieNode, {out}StretchPtr);
+
+    // Scan all stretches after this node :
+    repeat
+      StretchHeaderByte := StretchPtr^;
+      Inc(StretchPtr);
+
+      // Determine if there are more stretches after this one :
+      More := (StretchHeaderByte and NODE_FLAG_MORE) > 0;
+      // Determine how many wildcard bytes need to be skipped :
+      NrFixed := StretchHeaderByte shr NODE_NR_FIXED_SHIFT;
+      case StretchHeaderByte and NODE_TYPE_MASK of
+        NODE_5BITFIXED_4WILDCARDS: NrWildcards := 4;
+        NODE_5BITFIXED_8WILDCARDS: NrWildcards := 8;
+        NODE_5BITFIXED_ALLWILDCARDS:
+          if (StretchHeaderByte and NODE_TYPE_MASK_EXTENDED) = NODE_ALLFIXED then
+          begin
+            NrFixed := PATTERNSIZE;
+            NrWildcards := 0;
+            More := False;
+          end
+          else
+            NrWildcards := PATTERNSIZE - (Depth + NrFixed);
+      else // NODE_5BITFIXED_0WILDCARDS:
+        NrWildcards := 0;
+      end;
+
+      // Check if all fixed bytes match :
+      for i := 0 to NrFixed - 1 do
+      begin
+        if aAddress^ <> StretchPtr^ then
+          Exit;
+
+        Inc(aAddress);
+        Inc(StretchPtr);
+      end;
+
+      // If stretch was hit, update depth and search-address for the next stretch :
+      Inc(Depth, NrFixed);
+      Inc(Depth, NrWildcards);
+      Inc(aAddress, NrWildcards);
+
+    until not More;
+
+    // When we're at the end of the pattern :
+    if Depth >= PATTERNSIZE then
+    begin
+      // Remember that the given address results in a hit on this leaf :
+      AddLeafHit(aTestAddress, PFunctionIndex(StretchPtr), NrChildren);
+      // Stop the recursion :
+      Result := True;
+      Exit; // leave _TryMatchingNode
+    end; // if Depth
+
+    // When we're somewhere in the node-trie, try to match one of the child nodes :
+    aStoredTrieNode := Pointer(StretchPtr);
+    while NrChildren > 0 do
+    begin
+      // Try to match pattern on this node, stop if we can't go any deeper :
+      Result := _TryMatchingNode(aStoredTrieNode, aAddress, Depth);
+      if Result then
+        Exit;
+
+      // Try next child, maybe that helps:
+      NextOffset := aStoredTrieNode.NextSiblingOffset;
+      // Sanity-check on next-offset :
+      if (NextOffset <= 0) or (NextOffset > 100*1024*1024) then
+        Break;
+
+      // Jump to next sibling :
+      aStoredTrieNode := PatternTrieReader.GetNode(NextOffset);
+      Dec(NrChildren);
+    end;
+  end; // _TryMatchingNode
+
+begin
+  _TryMatchingNode(PatternTrieReader.RootNode, aTestAddress, {aDepth=}0);
+end; // ScanForLeafHits
+
+function CheckFunctionCRC(const aStoredLibraryFunction: PStoredLibraryFunction; const aAddress: PByte): Boolean;
+begin
+  if aStoredLibraryFunction.CRCLength > 0 then
+    Result := (aStoredLibraryFunction.CRCValue = CalcCRC16(aAddress, aStoredLibraryFunction.CRCLength))
+  else
+    Result := True;
+end;
+
 procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; const DoForwardScan: Boolean = True);
 
   function _MayCheckFunction(const aStoredLibraryFunction: PStoredLibraryFunction): Boolean;
@@ -610,14 +808,6 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
     else
       Result := True;
     end;
-  end;
-
-  function _CountFunctionCRC(const aStoredLibraryFunction: PStoredLibraryFunction; const aAddress: PByte): Boolean;
-  begin
-    if aStoredLibraryFunction.CRCLength > 0 then
-      Result := (aStoredLibraryFunction.CRCValue = CalcCRC16(aAddress, aStoredLibraryFunction.CRCLength))
-    else
-      Result := True;
   end;
 
   function _CheckAndRememberFunctionSymbolReferences(const aSymbol: TSymbolInformation): Boolean;
@@ -744,7 +934,7 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
       if (aStoredLibraryFunction.AvailableInVersions * LibraryVersionsToScan) <> [] then
       if _MayCheckFunction(aStoredLibraryFunction) then
       // Check if the CRC holds :
-      if _CountFunctionCRC(aStoredLibraryFunction, aAddress) then
+      if CheckFunctionCRC(aStoredLibraryFunction, aAddress) then
       // TODO : Include data & test-code for 'trailing bytes' patterns (or extend the CRC-range).
       begin
         Symbol := FindOrAddSymbol(FunctionName, aStoredLibraryFunction);
@@ -794,14 +984,7 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
     Assert(aStoredTrieNode.RecType = rtStoredTrieNode, 'StoredTrieNode type mismatch!');
 {$ENDIF}
     // Calculate the position of the data after this TrieNode (StretchPtr) :
-    NrChildren := aStoredTrieNode.NrChildrenByte1;
-    UIntPtr(StretchPtr) := UIntPtr(aStoredTrieNode) + SizeOf(RStoredTrieNode);
-    if NrChildren >= 128 then
-      // Reconstruct the NrChildren value :
-      NrChildren := (Integer(NrChildren and 127) shl 8) or aStoredTrieNode.NrChildrenByte2
-    else
-      // If one byte was sufficient, then the next stretch starts 1 byte earlier :
-      Dec(UIntPtr(StretchPtr), SizeOf({RStoredTrieNode.NrChildrenByte2:}Byte));
+    NrChildren := GetNodeNrChildren(aStoredTrieNode, {out}StretchPtr);
 
     // Scan all stretches after this node :
     repeat
@@ -876,21 +1059,18 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
     end;
   end; // _TryMatchingNode
 
-var
-  Node: PStoredTrieNode;
 begin
   if not MyAddressesScanned[Integer(aTestAddress)] then
   begin
     MyAddressesScanned[Integer(aTestAddress)] := True;
 
     // Search if this address matches a pattern :
-    Node := PatternTrieReader.GetNode(PatternTrieReader.StoredSignatureTrieHeader.TrieRootNode);
-
-    _TryMatchingNode(Node, aTestAddress, 0);
+    _TryMatchingNode(PatternTrieReader.RootNode, aTestAddress, 0);
   end;
 
   Inc({var}aTestAddress);
 end; // TestAddressUsingPatternTrie
+
 
 procedure TSymbolManager.ScanMemoryRangeForLibraryPatterns(const pXbeHeader: PXBEIMAGE_HEADER);
 var
@@ -1054,6 +1234,7 @@ begin
         // Store the addres we're about to scan, so it can
         // be used in _CheckForwardFunctionSymbolReferences :
         FCurrentTestAddress := PByte(p);
+        ScanForLeafHits({var}PByte(p));
         // Now scan this address, collecting all symbols :
         TestAddressUsingPatternTrie({var}PByte(p));
       except
@@ -1070,6 +1251,92 @@ begin
   // Set of 'potentially code'-addresses is no longer needed :
   MyAddressesPotentiallyContainingCode.Size := 0;
 end; // ScanMemoryRangeForLibraryPatterns
+
+function FunctionCompare(Item1, Item2: Pointer): Integer;
+var
+  StoredLibraryFunction1: PStoredLibraryFunction;
+  StoredLibraryFunction2: PStoredLibraryFunction;
+begin
+  StoredLibraryFunction1 := SymbolManager.PatternTrieReader.GetStoredLibraryFunction(Integer(Item1));
+  StoredLibraryFunction2 := SymbolManager.PatternTrieReader.GetStoredLibraryFunction(Integer(Item2));
+  // First priority : Many references go before less references :
+  Result := Integer(StoredLibraryFunction2.NrOfSymbolReferences) - Integer(StoredLibraryFunction1.NrOfSymbolReferences);
+  if Result = 0 then
+  begin
+    // Second priority : Longer functions go before shorter ones :
+    Result := Integer(StoredLibraryFunction2.FunctionLength) - Integer(StoredLibraryFunction1.FunctionLength);
+    if Result = 0 then
+      // Make the ordering unique :
+      Result := Integer(Item2) - Integer(Item1);
+  end;
+end;
+
+procedure TSymbolManager.DetermineFunctionsToScanFor;
+var
+  f: Integer;
+  sf: PStoredLibraryFunction;
+begin
+  // Collect all function indexes for the active library versions :
+  MyFunctionsToScanFor.Clear;
+  for f := 0 to PatternTrieReader.StoredSignatureTrieHeader.FunctionTable.NrOfFunctions - 1 do
+  begin
+    sf := PatternTrieReader.GetStoredLibraryFunction(f);
+    if (sf.AvailableInVersions * LibraryVersionsToScan) <> [] then
+      MyFunctionsToScanFor.Add(Pointer(f));
+  end;
+
+  // Sort all functions descending from most references and longest code length :
+  MyFunctionsToScanFor.Sort(FunctionCompare);
+end;
+
+procedure TSymbolManager.LookupFunctionsInHits();
+var
+  i: Integer;
+  f: TFunctionIndex;
+  sf: PStoredLibraryFunction;
+(*
+  LeafNode: PStoredTrieNode;
+  ignore_Stretch: PByte;
+  NrFunctionsInLeaf: Integer;
+  CurrentFunctionIndex: PFunctionIndex;
+*)
+  LeafID: TLeafID;
+  CurrentHit: PPatternHitResult;
+begin
+  // Loop over the sorted list of possible functions :
+  for i := 0 to MyFunctionsToScanFor.Count - 1 do
+  begin
+    // Get the function index :
+    f := TFunctionIndex(MyFunctionsToScanFor[i]);
+    // Retrieve the function information record :
+    sf := PatternTrieReader.GetStoredLibraryFunction(f);
+(*
+    // Retrieve the LeafNode in which this function ended up :
+    LeafNode := PatternTrieReader.GetNode(sf.PatternLeafNodeOffset);
+    // Determine how many functions are present in this leaf, and where the first function index starts :
+    NrFunctionsInLeaf := GetNodeNrChildren(LeafNode, {out}PByte(CurrentFunctionIndex));
+    // Loop over all functions in this leaf
+    for j := 0 to NrFunctionsInLeaf - 1 do
+*)
+    begin
+      // 'Convert' the function index to a LeafID:
+      LeafID := f;
+      // Loop over all locations ending up in this leaf (and thus potentially hitting this function :
+      CurrentHit := AllLeafs[LeafID].FirstHit;
+      while Assigned(CurrentHit) do
+      begin
+        // Check the CRC for this function on the given address :
+        if CheckFunctionCRC(sf, CurrentHit.Address + PATTERNSIZE) then
+        begin
+          // TODO : Check the references (recursively)
+          // Register a detected symbols (including it's implicated symbols)
+//        DbgPrintf('Potential hit at 0x%.08x for "%s"', [CurrentHit.Address, PatternTrieReader.GetFunctionName(f)]);
+        end;
+        CurrentHit := CurrentHit.NextHit;
+      end;
+    end;
+  end;
+end;
 
 procedure TSymbolManager.DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
 var
@@ -1555,8 +1822,12 @@ begin
         CacheFileNameStr := ''
       else
       begin
+        DetermineFunctionsToScanFor;
+
         // Scan Patterns using this trie :
         ScanMemoryRangeForLibraryPatterns(pXbeHeader);
+
+        LookupFunctionsInHits();
 
         DetermineFinalLocations();
       end;
