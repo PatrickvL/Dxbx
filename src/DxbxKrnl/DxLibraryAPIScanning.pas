@@ -67,8 +67,10 @@ uses
 type
   PPatternHitResult = ^RPatternHitResult;
 
+  TLeafID = TFunctionIndex;
+
   RLeafDetectionInfo = record
-    LeafNode: PFunctionIndex; // A leaf in the resource is nothing more than a list of function ID's
+    FirstFunctionIndex: PFunctionIndex; // A leaf in the resource is nothing more than a list of function ID's
     NrChildren: Integer; // The number of functions (0 means undetermined, as there are no leafs with zero functions)
     FirstHit: PPatternHitResult; // A singly-linked list of addresses that match the PatternTrie up to this leaf
   end;
@@ -186,7 +188,7 @@ type
     AllLeafs: array of RLeafDetectionInfo; // To be indexed with a FunctionID
     NrHits: Integer;
     NrHitsLeafs: Integer;
-    procedure AddLeafHit(const aAddress: PByte; const aLeaf: PFunctionIndex; const NrChildren: Integer);
+    procedure AddLeafHit(const aAddress: PByte; const aFirstFunctionIndex: PFunctionIndex; const NrChildren: Integer);
     procedure DetermineFunctionsToScanFor;
     procedure ScanForLeafHits(const aTestAddress: PByte);
     procedure LookupFunctionsInHits();
@@ -627,16 +629,62 @@ begin
   end;
 end;
 
-type
-  TLeafID = TFunctionIndex;
+function DecodeStretchHeader(var StretchHeader: PByte; out NrFixed, NrWildcards: Integer): Boolean;
+var
+  StretchHeaderByte: TStretchHeaderByte;
+begin
+  StretchHeaderByte := StretchHeader^;
+  Inc(StretchHeader);
 
-procedure TSymbolManager.AddLeafHit(const aAddress: PByte; const aLeaf: PFunctionIndex; const NrChildren: Integer);
+  // Determine if there are more stretches after this one :
+  Result := (StretchHeaderByte and NODE_FLAG_MORE) > 0;
+  // Determine how many wildcard bytes need to be skipped :
+  NrFixed := StretchHeaderByte shr NODE_NR_FIXED_SHIFT;
+  case StretchHeaderByte and NODE_TYPE_MASK of
+    NODE_5BITFIXED_4WILDCARDS: NrWildcards := 4;
+    NODE_5BITFIXED_8WILDCARDS: NrWildcards := 8;
+    NODE_5BITFIXED_ALLWILDCARDS:
+      if (StretchHeaderByte and NODE_TYPE_MASK_EXTENDED) = NODE_ALLFIXED then
+      begin
+        NrFixed := PATTERNSIZE;
+        NrWildcards := 0;
+        Result := False;
+      end
+      else
+        NrWildcards := -1; // call will see this and calculate "PATTERNSIZE - (Depth + NrFixed)" instead
+  else // NODE_5BITFIXED_0WILDCARDS:
+    NrWildcards := 0;
+  end;
+end;
+
+// 'Convert' the 1st function index in the leaf to a LeafID
+function GetLeafID(const LeafNode: PStoredTrieNode): TLeafID;
+var
+  StretchPtr: PByte;
+  More: Boolean;
+  NrFixed, NrWildcards: Integer;
+begin
+  // Step to the stretch (yeah, a leaf node also contains stretches) :
+  GetNodeNrChildren(LeafNode, {out}StretchPtr);
+
+  // Skip over all stretches :
+  repeat
+    More := DecodeStretchHeader({var}StretchPtr, {out}NrFixed, {out}NrWildcards);
+    Inc(StretchPtr, NrFixed);
+  until More = False;
+
+  // Right after that, is the first function index, return that as a LeafID:
+  Result := TLeafID(PFunctionIndex(StretchPtr)^)
+end;
+
+procedure TSymbolManager.AddLeafHit(const aAddress: PByte; const aFirstFunctionIndex: PFunctionIndex; const NrChildren: Integer);
 var
   LeafID: TLeafID;
   NewLength: Integer;
   Hit: PPatternHitResult;
 begin
-  LeafID := aLeaf^;
+  // Read the first function index, which is what we use as LeafID :
+  LeafID := TLeafID(aFirstFunctionIndex^);
 
   // Make sure we have room for this leaf :
   begin
@@ -658,16 +706,16 @@ begin
     New(Hit);
     Hit.Address := aAddress;
 
-    if AllLeafs[LeafID].LeafNode = nil then
+    if AllLeafs[LeafID].FirstFunctionIndex = nil then
     begin
       Inc(NrHitsLeafs);
-      AllLeafs[LeafID].LeafNode := aLeaf;
+      AllLeafs[LeafID].FirstFunctionIndex := aFirstFunctionIndex;
       AllLeafs[LeafID].NrChildren := NrChildren;
       Hit.NextHit := AllLeafs[LeafID].FirstHit;
     end
     else
     begin
-      Assert(AllLeafs[LeafID].LeafNode = aLeaf);
+      Assert(AllLeafs[LeafID].FirstFunctionIndex = aFirstFunctionIndex);
       Assert(AllLeafs[LeafID].NrChildren = NrChildren);
       Hit.NextHit := nil;
     end;
@@ -683,7 +731,6 @@ procedure TSymbolManager.ScanForLeafHits(const aTestAddress: PByte);
   var
     NrChildren: Integer;
     StretchPtr: PByte;
-    StretchHeaderByte: TStretchHeaderByte;
     More: Boolean;
     NrFixed, NrWildcards, i: Integer;
     NextOffset: TByteOffset;
@@ -697,28 +744,9 @@ procedure TSymbolManager.ScanForLeafHits(const aTestAddress: PByte);
 
     // Scan all stretches after this node :
     repeat
-      StretchHeaderByte := StretchPtr^;
-      Inc(StretchPtr);
-
-      // Determine if there are more stretches after this one :
-      More := (StretchHeaderByte and NODE_FLAG_MORE) > 0;
-      // Determine how many wildcard bytes need to be skipped :
-      NrFixed := StretchHeaderByte shr NODE_NR_FIXED_SHIFT;
-      case StretchHeaderByte and NODE_TYPE_MASK of
-        NODE_5BITFIXED_4WILDCARDS: NrWildcards := 4;
-        NODE_5BITFIXED_8WILDCARDS: NrWildcards := 8;
-        NODE_5BITFIXED_ALLWILDCARDS:
-          if (StretchHeaderByte and NODE_TYPE_MASK_EXTENDED) = NODE_ALLFIXED then
-          begin
-            NrFixed := PATTERNSIZE;
-            NrWildcards := 0;
-            More := False;
-          end
-          else
-            NrWildcards := PATTERNSIZE - (Depth + NrFixed);
-      else // NODE_5BITFIXED_0WILDCARDS:
-        NrWildcards := 0;
-      end;
+      More := DecodeStretchHeader({var}StretchPtr, {out}NrFixed, {out}NrWildcards);
+      if NrWildcards < 0 then
+        NrWildcards := PATTERNSIZE - (Depth + NrFixed);
 
       // Check if all fixed bytes match :
       for i := 0 to NrFixed - 1 do
@@ -740,7 +768,7 @@ procedure TSymbolManager.ScanForLeafHits(const aTestAddress: PByte);
     // When we're at the end of the pattern :
     if Depth >= PATTERNSIZE then
     begin
-      // Remember that the given address results in a hit on this leaf :
+      // Remember the original address, and the leaf which gave a hit :
       AddLeafHit(aTestAddress, PFunctionIndex(StretchPtr), NrChildren);
       // Stop recursion, by returning True :
       Result := True;
@@ -967,7 +995,6 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
   var
     NrChildren: Integer;
     StretchPtr: PByte;
-    StretchHeaderByte: TStretchHeaderByte;
     More: Boolean;
     NrFixed, NrWildcards, i: Integer;
     NextOffset: TByteOffset;
@@ -981,28 +1008,9 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
 
     // Scan all stretches after this node :
     repeat
-      StretchHeaderByte := StretchPtr^;
-      Inc(StretchPtr);
-
-      // Determine if there are more stretches after this one :
-      More := (StretchHeaderByte and NODE_FLAG_MORE) > 0;
-      // Determine how many wildcard bytes need to be skipped :
-      NrFixed := StretchHeaderByte shr NODE_NR_FIXED_SHIFT;
-      case StretchHeaderByte and NODE_TYPE_MASK of
-        NODE_5BITFIXED_4WILDCARDS: NrWildcards := 4;
-        NODE_5BITFIXED_8WILDCARDS: NrWildcards := 8;
-        NODE_5BITFIXED_ALLWILDCARDS:
-          if (StretchHeaderByte and NODE_TYPE_MASK_EXTENDED) = NODE_ALLFIXED then
-          begin
-            NrFixed := PATTERNSIZE;
-            NrWildcards := 0;
-            More := False;
-          end
-          else
-            NrWildcards := PATTERNSIZE - (Depth + NrFixed);
-      else // NODE_5BITFIXED_0WILDCARDS:
-        NrWildcards := 0;
-      end;
+      More := DecodeStretchHeader({var}StretchPtr, {out}NrFixed, {out}NrWildcards);
+      if NrWildcards < 0 then
+        NrWildcards := PATTERNSIZE - (Depth + NrFixed);
 
       // Check if all fixed bytes match :
       for i := 0 to NrFixed - 1 do
@@ -1287,47 +1295,38 @@ var
   i: Integer;
   f: TFunctionIndex;
   sf: PStoredLibraryFunction;
-(*
+//  fn:string;
   LeafNode: PStoredTrieNode;
-  ignore_Stretch: PByte;
-  NrFunctionsInLeaf: Integer;
-  CurrentFunctionIndex: PFunctionIndex;
-*)
   LeafID: TLeafID;
   CurrentHit: PPatternHitResult;
 begin
   // Loop over the sorted list of possible functions :
   for i := 0 to MyFunctionsToScanFor.Count - 1 do
-  begin
+  begin//try
     // Get the function index :
     f := TFunctionIndex(MyFunctionsToScanFor[i]);
     // Retrieve the function information record :
     sf := PatternTrieReader.GetStoredLibraryFunction(f);
-(*
+//    fn := PatternTrieReader.GetFunctionName(f);
     // Retrieve the LeafNode in which this function ended up :
     LeafNode := PatternTrieReader.GetNode(sf.PatternLeafNodeOffset);
-    // Determine how many functions are present in this leaf, and where the first function index starts :
-    NrFunctionsInLeaf := GetNodeNrChildren(LeafNode, {out}PByte(CurrentFunctionIndex));
-    // Loop over all functions in this leaf
-    for j := 0 to NrFunctionsInLeaf - 1 do
-*)
+    // Get the ID from this leaf node :
+    LeafID := GetLeafID(LeafNode);
+    // Loop over all locations ending up in this leaf (and thus potentially hitting this function :
+    CurrentHit := AllLeafs[LeafID].FirstHit;
+    while Assigned(CurrentHit) do
     begin
-      // 'Convert' the function index to a LeafID:
-      LeafID := f;
-      // Loop over all locations ending up in this leaf (and thus potentially hitting this function :
-      CurrentHit := AllLeafs[LeafID].FirstHit;
-      while Assigned(CurrentHit) do
+      // Check the CRC for this function on the given address :
+      if CheckFunctionCRC(sf, CurrentHit.Address + PATTERNSIZE) then
       begin
-        // Check the CRC for this function on the given address :
-        if CheckFunctionCRC(sf, CurrentHit.Address + PATTERNSIZE) then
-        begin
-          // TODO : Check the references (recursively)
-          // Register a detected symbols (including it's implicated symbols)
-//        DbgPrintf('Potential hit at 0x%.08x for "%s"', [CurrentHit.Address, PatternTrieReader.GetFunctionName(f)]);
-        end;
-        CurrentHit := CurrentHit.NextHit;
+        // TODO : Check the references (recursively)
+        // Register a detected symbols (including it's implicated symbols)
+//        DbgPrintf('Potential hit at 0x%.08x for "%s"', [CurrentHit.Address, fn]);
       end;
+      CurrentHit := CurrentHit.NextHit;
     end;
+//  except
+//    DbgPrintf('f=%d sf=%x fn="%s" LeafNode=%x LeafID=%d CurrentHit=%x', [f, sf, fn, LeafNode, LeafID, CurrentHit]);
   end;
 end;
 
