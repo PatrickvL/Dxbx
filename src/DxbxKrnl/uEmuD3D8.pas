@@ -2961,7 +2961,7 @@ begin
     Type_VersionIndependent := DxbxFromOldVersion_D3DTSS(Type_);
     // Check if this is an Xbox extension  :
     if DxbxTextureStageStateIsXboxExtension(Type_VersionIndependent) then
-      PValue^ := XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(Type_)]
+      PValue^ := XTL_EmuD3DDeferredTextureState[Stage, Ord(Type_)]
     else
       IDirect3DDevice_GetTextureStageState(g_pD3DDevice, Stage, EmuXB2PC_D3DTSS(Type_VersionIndependent), {out}pValue^);
   end;
@@ -6977,7 +6977,7 @@ begin
     DxbxKrnlCleanup('EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', [Value]);
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
-  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(DxbxFromNewVersion_D3DTSS(X_D3DTSS_TEXCOORDINDEX))] := Value;
+  XTL_EmuD3DDeferredTextureState[Stage, Ord(DxbxFromNewVersion_D3DTSS(X_D3DTSS_TEXCOORDINDEX))] := Value;
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
   IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, D3DTSS_TEXCOORDINDEX, Value);
@@ -7049,7 +7049,7 @@ begin
       [Stage, Value]);
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
-  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(DxbxFromNewVersion_D3DTSS(X_D3DTSS_BORDERCOLOR))] := Value;
+  XTL_EmuD3DDeferredTextureState[Stage, Ord(DxbxFromNewVersion_D3DTSS(X_D3DTSS_BORDERCOLOR))] := Value;
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
   IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, D3DSAMP_BORDERCOLOR, Value);
@@ -7075,7 +7075,7 @@ begin
       [Stage, Value]);
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
-  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + DWORD(DxbxFromNewVersion_D3DTSS(X_D3DTSS_COLORKEYCOLOR))] := Value;
+  XTL_EmuD3DDeferredTextureState[Stage, Ord(DxbxFromNewVersion_D3DTSS(X_D3DTSS_COLORKEYCOLOR))] := Value;
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
   EmuWarning('SetTextureState_ColorKeyColor is not supported!');
@@ -7102,7 +7102,7 @@ begin
     LogEnd();
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
-  XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + Ord(Type_)] := Value;
+  XTL_EmuD3DDeferredTextureState[Stage, Ord(Type_)] := Value;
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
   // Dxbx Note : The BumpEnv values don't need a XB2PC conversion
@@ -8670,7 +8670,7 @@ begin
   case Type_VersionIndependent of
     X_D3DTSS_DEFERRED_FIRST..X_D3DTSS_DEFERRED_LAST:
       // TODO -oDxbx : Update the D3D DirtyFlags too
-      XTL_EmuD3DDeferredTextureState[(Stage * X_D3DTS_STAGESIZE) + Ord(Type_)] := Value;
+      XTL_EmuD3DDeferredTextureState[Stage, Ord(Type_)] := Value;
     X_D3DTSS_BUMPENVMAT00..X_D3DTSS_BUMPENVLOFFSET:
       XTL_EmuD3DDevice_SetTextureState_BumpEnv(Stage, Type_, Value);
     X_D3DTSS_TEXCOORDINDEX:

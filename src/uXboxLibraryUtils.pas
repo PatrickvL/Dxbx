@@ -62,17 +62,18 @@ implementation
 
 function TransformExportFunctionNameIntoXboxFunctionName(const aValue: string): string;
 begin
-  Result := aValue;
   // Is this exported function a patch (does it start with our prefix) ?
-  if StrLIComp(PChar(Result), PatchPrefix, Length(PatchPrefix)) <> 0 then
+  if StrLIComp(PChar(aValue), PatchPrefix, Length(PatchPrefix)) <> 0 then
   begin
     Result := '';
     Exit;
   end;
 
+  // Remove our prefix :
+  Result := aValue;
   Delete(Result, 1, Length(PatchPrefix));
   
-  // Is this exported function a patch (does it start with our prefix) ?
+  // Is this exported function a patch without a specific name (those don't have "Emu") ?
   if StrLIComp(PChar(Result), 'Emu', 3) = 0 then
     Delete(Result, 1, 3);
 end;
