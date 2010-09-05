@@ -178,8 +178,6 @@ type
 
     procedure Clear;
 
-    function RegisterSpecificFunctionLocation(const aFunctionName: string; const aAddress: PByte): TSymbolInformation;
-
     class function CacheFileName(const pXbeHeader: PXBEIMAGE_HEADER): string;
     function LoadSymbolsFromCache(const aCacheFile: string): Boolean;
     procedure SaveSymbolsToCache(const pXbeHeader: PXBEIMAGE_HEADER; const aCacheFile: string);
@@ -566,12 +564,6 @@ begin
     Result := nil;
 end; // GetReferencedSymbolAddress
 
-function TSymbolManager.RegisterSpecificFunctionLocation(const aFunctionName: string; const aAddress: PByte): TSymbolInformation;
-begin
-  Result := FindOrAddSymbol(aFunctionName, {FoundFunction=}nil);
-  AddPotentialSymbolLocation(aAddress, Result);
-end;
-
 procedure TSymbolManager._Debug(const aSymbol: TSymbolInformation);
 const
   DuplicateString: array [Boolean] of string = ('', ' [Duplicate]');
@@ -661,8 +653,9 @@ begin
 
   // Append this address to the chain :
   begin
-    New(Hit);
     Inc(NrHits);
+
+    New(Hit);
     Hit.Address := aAddress;
 
     if AllLeafs[LeafID].LeafNode = nil then
@@ -681,19 +674,19 @@ begin
 
     AllLeafs[LeafID].FirstHit := Hit;
   end;
-end;
+end; // AddLeafHit
 
 procedure TSymbolManager.ScanForLeafHits(const aTestAddress: PByte);
 
   // TODO : Change recursive to nested search (using a stack)
   function _TryMatchingNode(aStoredTrieNode: PStoredTrieNode; aAddress: PByte; Depth: Integer): Boolean;
   var
+    NrChildren: Integer;
     StretchPtr: PByte;
     StretchHeaderByte: TStretchHeaderByte;
     More: Boolean;
     NrFixed, NrWildcards, i: Integer;
     NextOffset: TByteOffset;
-    NrChildren: Integer;
   begin
     Result := False;
 {$IFDEF DXBX_RECTYPE}
@@ -749,7 +742,7 @@ procedure TSymbolManager.ScanForLeafHits(const aTestAddress: PByte);
     begin
       // Remember that the given address results in a hit on this leaf :
       AddLeafHit(aTestAddress, PFunctionIndex(StretchPtr), NrChildren);
-      // Stop the recursion :
+      // Stop recursion, by returning True :
       Result := True;
       Exit; // leave _TryMatchingNode
     end; // if Depth
@@ -1745,6 +1738,7 @@ var
   s, v: int;
 begin
   DbgPrintf('DxbxHLE : Determining special symbols');
+
   // locate D3DDeferredTextureState
   begin
     XTL_EmuD3DDeferredTextureState := nil;
@@ -1757,7 +1751,7 @@ begin
       for s := 0 to X_D3DTS_STAGECOUNT-1 do
       begin
         for v := 0 to X_D3DTS_STAGESIZE-1 do
-          XTL_EmuD3DDeferredTextureState[(s*X_D3DTS_STAGESIZE)+v] := X_D3DTSS_UNK;
+          XTL_EmuD3DDeferredTextureState[s, v] := X_D3DTSS_UNK;
       end;
 
       DbgPrintf('HLE: $%.08X -> EmuD3DDeferredTextureState',
@@ -1767,7 +1761,7 @@ begin
       EmuWarning('EmuD3DDeferredTextureState was not found!');
   end;
 
-  // Locate the RenderState structure, and map all it's variables XSK version-independently :
+  // Locate the RenderState structure, and map all it's variables XDK version-independently :
   begin
     // Just search for _D3D__RenderState itself !
     Symbol := FindSymbol('_D3D__RenderState');
@@ -1895,7 +1889,7 @@ begin
       Addr := Pointer(Symbols.Objects[i]);
       if Assigned(Addr) then
       begin
-        CurrentSymbol := RegisterSpecificFunctionLocation(FuncStr, Addr);
+        CurrentSymbol := FindOrAddSymbol(FuncStr, {FoundFunction=}nil);
         CurrentSymbol.Address := Addr;
         MyFinalLocations[i] := CurrentSymbol;
         Result := True;

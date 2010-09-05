@@ -70,8 +70,10 @@ var DummyRenderState: PDWORD = @(XTL_EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED
 // Dxbx indicator of an unsupported render state (returned when processing an Xbox extension) :
 const D3DRS_UNSUPPORTED = D3DRS_FORCE_DWORD;
 
-// Texture state lookup table
-var XTL_EmuD3DDeferredTextureState: PDWORDs;
+// Texture state lookup table (same size in all XDK versions, so defined as a fixed size array) :
+type TD3DDeferredTextureState = array [0..X_D3DTS_STAGECOUNT-1, 0..X_D3DTS_STAGESIZE-1] of DWORD;
+     PD3DDeferredTextureState = ^TD3DDeferredTextureState;
+var XTL_EmuD3DDeferredTextureState: PD3DDeferredTextureState;
 
 const DEFAULT_XDK_VERSION = 4627; // TODO -oDxbx : Make this configurable
 var g_BuildVersion: uint32 = DEFAULT_XDK_VERSION;
@@ -933,7 +935,6 @@ procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
 var
   State: int;
   Stage: int;
-  pCur: PDWORDs;
   XboxValue: DWORD;
   PCValue: DWORD;
   PCState: D3DTEXTURESTAGESTATETYPE;
@@ -948,10 +949,9 @@ begin
   begin
     for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
     begin
-      pCur := @(XTL_EmuD3DDeferredTextureState[Stage * X_D3DTS_STAGESIZE]);
       for State := X_D3DTSS_DEFERRED_FIRST to X_D3DTSS_DEFERRED_LAST do
       begin
-        XboxValue := pCur[DxbxFromNewVersion_D3DTSS(State)];
+        XboxValue := XTL_EmuD3DDeferredTextureState[Stage, Ord(DxbxFromNewVersion_D3DTSS(State))];
         if (XboxValue = X_D3DTSS_UNK) then
           Continue;
 
@@ -990,9 +990,6 @@ begin
     // if point sprites are enabled, copy stage 3 over to 0
     if (XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSPRITEENABLE]^ = DWord(BOOL_TRUE)) then // Dxbx note : DWord cast to prevent warning
     begin
-      // pCur := Texture Stage 3 States
-      pCur := @(XTL_EmuD3DDeferredTextureState[3*X_D3DTS_STAGESIZE]); // StrikerX3: why was this 2*32? PatrickvL: Probably a bug.
-
       // set the point sprites texture
       g_pD3DDevice.GetTexture(3, PIDirect3DBaseTexture(@pTexture));
       g_pD3DDevice.SetTexture(0, IDirect3DBaseTexture(pTexture));
@@ -1008,7 +1005,7 @@ begin
         PCState := EmuXB2PC_D3DTSS(State);
         if int(PCState) >= 0 then
         begin
-          XboxValue := pCur[DxbxFromNewVersion_D3DTSS(State)];
+          XboxValue := XTL_EmuD3DDeferredTextureState[3, Ord(DxbxFromNewVersion_D3DTSS(State))];
           if (XboxValue <> X_D3DTSS_UNK) then
           begin
             PCValue := XboxValue; // TODO : Use registry of callbacks to do this conversion.
