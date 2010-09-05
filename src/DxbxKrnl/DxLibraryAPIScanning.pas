@@ -188,6 +188,7 @@ type
     AllLeafs: array of RLeafDetectionInfo; // To be indexed with a FunctionID
     NrHits: Integer;
     NrHitsLeafs: Integer;
+    BytesInUse: TBits;
     procedure AddLeafHit(const aAddress: PByte; const aFirstFunctionIndex: PFunctionIndex; const NrChildren: Integer);
     procedure DetermineFunctionsToScanFor;
     procedure ScanForLeafHits(const aTestAddress: PByte);
@@ -344,11 +345,14 @@ begin
   MyFinalLocations := TList.Create;
   MyAddressesScanned := TBits.Create;
   MyAddressesPotentiallyContainingCode := TBits.Create;
+
+  BytesInUse := TBits.Create;
 end;
 
 destructor TSymbolManager.Destroy;
 begin
   Clear;
+  FreeAndNil(BytesInUse);
   FreeAndNil(MyFinalLocations);
   FreeAndNil(MyAddressesScanned);
   FreeAndNil(MyAddressesPotentiallyContainingCode);
@@ -371,6 +375,8 @@ procedure TSymbolManager.Clear;
 var
   w: Word;
 begin
+  BytesInUse.Size := 0;
+
   MyAddressesScanned.Size := 0;
   LibraryVersionsToScan := [];
 
@@ -1181,6 +1187,9 @@ begin
   MyAddressesScanned.Size := 0;
   MyAddressesScanned.Size := ScanUpper;
 
+  BytesInUse.Size := 0;
+  BytesInUse.Size := ScanUpper;
+
   // Reserve a bit per address to see which addresses might contain code :
   MyAddressesPotentiallyContainingCode.Size := 0;
   MyAddressesPotentiallyContainingCode.Size := ScanUpper;
@@ -1299,6 +1308,7 @@ var
   LeafNode: PStoredTrieNode;
   LeafID: TLeafID;
   CurrentHit: PPatternHitResult;
+  j: Integer;
 begin
   // Loop over the sorted list of possible functions :
   for i := 0 to MyFunctionsToScanFor.Count - 1 do
@@ -1307,6 +1317,10 @@ begin
     f := TFunctionIndex(MyFunctionsToScanFor[i]);
     // Retrieve the function information record :
     sf := PatternTrieReader.GetStoredLibraryFunction(f);
+
+    if sf.FunctionLength < 5 then
+      Continue;
+
 //    fn := PatternTrieReader.GetFunctionName(f);
     // Retrieve the LeafNode in which this function ended up :
     LeafNode := PatternTrieReader.GetNode(sf.PatternLeafNodeOffset);
@@ -1320,8 +1334,26 @@ begin
       if CheckFunctionCRC(sf, CurrentHit.Address + PATTERNSIZE) then
       begin
         // TODO : Check the references (recursively)
-        // Register a detected symbols (including it's implicated symbols)
-//        DbgPrintf('Potential hit at 0x%.08x for "%s"', [CurrentHit.Address, fn]);
+
+        // Check that none of the covered bytes are already in use :
+        j := Integer(sf.FunctionLength);
+        while j > 0 do
+        begin
+          Dec(j);
+          if BytesInUse[Integer(CurrentHit.Address) + j] then
+            Break;
+        end;
+
+        if j = 0 then
+        begin
+          // Register a detected symbols (including it's implicated symbols)
+//          DbgPrintf('Potential hit at 0x%.08x for "%s"', [CurrentHit.Address, fn]);
+          for j := 0 to sf.FunctionLength - 1 do
+            BytesInUse[Integer(CurrentHit.Address) + j] := True;
+
+          Break;
+        end;
+
       end;
       CurrentHit := CurrentHit.NextHit;
     end;
