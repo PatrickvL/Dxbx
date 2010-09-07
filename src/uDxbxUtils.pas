@@ -103,6 +103,22 @@ type
     function Write(const Buffer; Count: Longint): Longint; override;
   end;
 
+  TDxbxBits = class(TBits)
+  public
+    procedure ClearRange(aOffset, Range: Integer);
+    procedure SetRange(aOffset, Range: Integer);
+    function IsRangeClear(aOffset, Range: Integer): Boolean;
+  end;
+
+const
+  BitsPerInt = SizeOf(Integer) * 8;
+
+type
+  TBitEnum = 0..BitsPerInt - 1;
+  TBitSet = set of TBitEnum;
+  TBitArray = array[0..(MaxInt div BitsPerInt)-1] of TBitSet;
+  PBitArray = ^TBitArray;
+
 procedure SetFS(const aNewFS: WORD);
 function GetFS(): WORD;
 function GetTIBEntry(const aOffset: DWORD): Pointer;
@@ -1552,6 +1568,98 @@ begin
   MyDump('d', AsSingle(2));
 end;
 *)
+
+{ TDxbxBits }
+
+type
+  RBits_PrivateAccess = record
+    ClassType: TClass;
+    FSize: Integer;
+    FBits: PDWORDs; // Originally declared as Pointer, but used as PBitArray
+  end;
+  TBits_PrivateAccess = ^RBits_PrivateAccess;
+
+// TODO TDxbxBits : Split up our bit access in 3 stages; first handling the lead DWORD,
+// then all full DWORDs and finally the trailing DWORD, to prevent many per-bit loops.
+
+procedure TDxbxBits.ClearRange(aOffset, Range: Integer);
+begin
+  if aOffset + Range >= Size then
+    Bits[Size+1]; // Triggers Error();
+
+  while Range > 0 do
+  begin
+    // Can we work with whole TBitSet's at a time?
+    if  (Range >= BitsPerInt)
+    and (aOffset and (BitsPerInt - 1) = 0) then
+    begin
+      TBits_PrivateAccess(Self).FBits[aOffset div BitsPerInt] := 0;
+      Dec(Range, BitsPerInt);
+      Inc(aOffset, BitsPerInt);
+    end
+    else
+    begin
+      Bits[aOffset] := False;
+      Dec(Range, 1);
+      Inc(aOffset, 1);
+    end;
+  end;
+end;
+
+procedure TDxbxBits.SetRange(aOffset, Range: Integer);
+begin
+  if aOffset + Range >= Size then
+    Bits[Size+1]; // Triggers Error();
+
+  while Range > 0 do
+  begin
+    // Can we work with whole TBitSet's at a time?
+    if  (Range >= BitsPerInt)
+    and (aOffset and (BitsPerInt - 1) = 0) then
+    begin
+      TBits_PrivateAccess(Self).FBits[aOffset div BitsPerInt] := High(DWORD);
+      Dec(Range, BitsPerInt);
+      Inc(aOffset, BitsPerInt);
+    end
+    else
+    begin
+      Bits[aOffset] := True;
+      Dec(Range, 1);
+      Inc(aOffset, 1);
+    end;
+  end;
+end;
+
+function TDxbxBits.IsRangeClear(aOffset, Range: Integer): Boolean;
+begin
+  Result := False;
+  if aOffset + Range >= Size then
+    Bits[Size+1]; // Triggers Error();
+
+  while Range > 0 do
+  begin
+    // Can we work with whole TBitSet's at a time?
+    if  (Range >= BitsPerInt)
+    and (aOffset and (BitsPerInt - 1) = 0) then
+    begin
+      if TBits_PrivateAccess(Self).FBits[aOffset div BitsPerInt] <> 0 then
+        Exit;
+
+      Dec(Range, BitsPerInt);
+      Inc(aOffset, BitsPerInt);
+    end
+    else
+    begin
+      if Bits[aOffset] then
+        Exit;
+
+      Dec(Range, 1);
+      Inc(aOffset, 1);
+    end;
+  end;
+
+  Result := True;
+end;
 
 initialization
 
