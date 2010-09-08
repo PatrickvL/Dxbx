@@ -718,13 +718,13 @@ begin
       Inc(NrHitsLeafs);
       AllLeafs[LeafID].FirstFunctionIndex := aFirstFunctionIndex;
       AllLeafs[LeafID].NrChildren := NrChildren;
-      Hit.NextHit := AllLeafs[LeafID].FirstHit;
+      Hit.NextHit := nil;
     end
     else
     begin
       Assert(AllLeafs[LeafID].FirstFunctionIndex = aFirstFunctionIndex);
       Assert(AllLeafs[LeafID].NrChildren = NrChildren);
-      Hit.NextHit := nil;
+      Hit.NextHit := AllLeafs[LeafID].FirstHit;
     end;
 
     AllLeafs[LeafID].FirstHit := Hit;
@@ -1303,10 +1303,11 @@ function TSymbolManager.CheckFunctionAtAddressAndRegister(const CurrentSymbol: T
 var
   Referenced: array of record
     StoredSymbolReference: PStoredSymbolReference;
-    Address: TCodePointer;
+    ReferencedAddress: TCodePointer;
     Symbol: TSymbolInformation;
-    Function_: PStoredLibraryFunction;
+    OriginalAddress: TCodePointer;
   end;
+  Function_: PStoredLibraryFunction;
   i, j: Integer;
   StoredStringHeader: PStoredStringHeader;
 begin
@@ -1331,11 +1332,9 @@ begin
     for i := 0 to CurrentSymbol.StoredLibraryFunction.NrOfSymbolReferences - 1 do
     begin
       Referenced[i].StoredSymbolReference := PatternTrieReader.GetSymbolReference(CurrentSymbol.StoredLibraryFunction.FirstSymbolReference + Cardinal(i));
-      Referenced[i].Address := GetReferencedSymbolAddress(aAddress, Referenced[i].StoredSymbolReference);
-      if Referenced[i].Address = nil then // TODO : call IsAddressWithinScanRange here, instead of in GetReferencedSymbolAddress
+      Referenced[i].ReferencedAddress := GetReferencedSymbolAddress(aAddress, Referenced[i].StoredSymbolReference);
+      if Referenced[i].ReferencedAddress = nil then // TODO : call IsAddressWithinScanRange here, instead of in GetReferencedSymbolAddress
         Exit;
-
-      Referenced[i].Symbol := nil;
     end;
   end;
 
@@ -1351,46 +1350,34 @@ begin
     for i := 0 to CurrentSymbol.StoredLibraryFunction.NrOfSymbolReferences - 1 do
     begin
       // Lookup if the reference is actually a function reference (using the reference's string header) :
-      Referenced[i].Function_ := nil;
+      Function_ := nil;
       StoredStringHeader := PatternTrieReader.GetStringHeader(Referenced[i].StoredSymbolReference.NameIndex);
       // TODO : Data/function distinction could be put in StoredSymbolReference.ReferenceFlags...
       for j := 0 to Integer(StoredStringHeader.NrOfFunctions) - 1 do
       begin
         // Check if the function is from the correct SDK version (skip the others) :
-        Referenced[i].Function_ := PatternTrieReader.GetStoredLibraryFunction(StoredStringHeader.FirstFunctionIndex + TFunctionIndex(j));
-        if (Referenced[i].Function_.AvailableInVersions * LibraryVersionsToScan) <> [] then
+        Function_ := PatternTrieReader.GetStoredLibraryFunction(StoredStringHeader.FirstFunctionIndex + TFunctionIndex(j));
+        if (Function_.AvailableInVersions * LibraryVersionsToScan) <> [] then
           Break;
 
         // TODO : Handle the case there's no function (like when the reference is a data symbol)
       end;
 
       // Retrieve an object for the symbol being referenced :
-      Referenced[i].Symbol := FindOrAddSymbol(Referenced[i].StoredSymbolReference.NameIndex, Referenced[i].Function_);
-//      if Assigned(Referenced[i].Symbol.Address) then
-//      begin
-//        // If the referenced symbol is already known, check we've registered it at the referenced address :
-//        if Referenced[i].Symbol.Address <> Referenced[i].Address then
-//          Exit;
-//      end
-//      else
-//        ; // TODO : If the referenced symbol is not yet registered, we could check it recursively... it may help.
+      Referenced[i].Symbol := FindOrAddSymbol(Referenced[i].StoredSymbolReference.NameIndex, Function_);
+      // Remember the address that this symbol initially points at (so we could restore it later) :
+      Referenced[i].OriginalAddress := Referenced[i].Symbol.Address;
     end;
 
+    // Recursively check all referenced symbols :
     for i := 0 to CurrentSymbol.StoredLibraryFunction.NrOfSymbolReferences - 1 do
     begin
-      if not CheckFunctionAtAddressAndRegister(Referenced[i].Symbol, Referenced[i].Address) then
+      if not CheckFunctionAtAddressAndRegister(Referenced[i].Symbol, Referenced[i].ReferencedAddress) then
         Exit;
     end;
 
     // All checks are done, we got the right function address !
     Result := True;
-
-    // Make sure all referenced symbols are registered too:
-//    for i := 0 to aStoredLibraryFunction.NrOfSymbolReferences - 1 do
-//    begin
-//      if Referenced[i].Symbol.Address = nil then
-//        Referenced[i].Symbol.Address := Referenced[i].Address;
-//    end;
 
   finally
     if not Result then
@@ -1398,12 +1385,19 @@ begin
       // If the recursive test failed, reset this symbol to 'undetected' state :
       MyAddressesIdentified.ClearRange(UIntPtr(aAddress), CurrentSymbol.Length);
       CurrentSymbol.Address := nil;
-      // TODO : Reset all newly introduced references too!
+      // Reset all (possibly changed) referenced symbol addresses too :
+      for i := 0 to CurrentSymbol.StoredLibraryFunction.NrOfSymbolReferences - 1 do
+        Referenced[i].Symbol.Address := Referenced[i].OriginalAddress;
     end;
   end;
 
   if Result then
-    DbgPrintf('$%.08x;%s', [CurrentSymbol.Address, DxbxUnmangleSymbolName(CurrentSymbol.Name)]);
+    DbgPrintf('$%.08x;%s [-$%.08x]', [CurrentSymbol.Address, DxbxUnmangleSymbolName(CurrentSymbol.Name), UIntPtr(CurrentSymbol.Address) + CurrentSymbol.Length - 1]);
+//    DbgPrintf('Found at 0x%.8x-0x%.8x : %s  [%s]',
+//      [CurrentSymbol.Address,
+//       UIntPtr(CurrentSymbol.Address) + UInt(CurrentSymbol.Length) - 1,
+//       DxbxUnmangleSymbolName(CurrentSymbol.Name),
+//       CurrentSymbol.Name]);
 
 end; // CheckFunctionAtAddressAndRegister
 
@@ -1424,9 +1418,15 @@ var
   CurrentHit: PPatternHitResult;
   CurrentSymbol: TSymbolInformation;
 begin
-    _Test($00016FBF, '_XapiInitProcess@0');
-    _Test($00016966, '_SetLastError@4');
-    _Test($000340B3, '_XInputOpen@16');
+//    _Test($00016FBF, '_XapiInitProcess@0');
+//    _Test($00016966, '_SetLastError@4');
+//    _Test($000340B3, '_XInputOpen@16');
+
+//    _Test($00022020, '_D3DDevice_SetRenderState_StencilEnable@4');
+//    _Test($00022150, '_D3DDevice_SetRenderState_OcclusionCullEnable@4');
+//    _Test($00022230, '_D3DDevice_SetRenderState_RopZCmpAlwaysRead@4');
+//    _Test($00022250, '_D3DDevice_SetRenderState_RopZRead@4');
+//    _Test($00022290, '_D3DDevice_SetRenderState_MultiSampleAntiAlias@4');
 
   // Loop over the sorted list of possible functions :
   for i := 0 to MyFunctionsToScanFor.Count - 1 do
@@ -1434,6 +1434,9 @@ begin
     // Get the function index :
     f := TFunctionIndex(MyFunctionsToScanFor[i]);
     fn := PatternTrieReader.GetFunctionName(f);
+//    if Pos('MatrixRotationAxis', fn) > 0 then // $00030FDF
+//    sf := PatternTrieReader.GetStoredLibraryFunction(f) else
+
     // Retrieve the function information record :
     sf := PatternTrieReader.GetStoredLibraryFunction(f);
     // Skip small functions to prevent too many hits (I guess we'll find most of them via references anyhow) :
