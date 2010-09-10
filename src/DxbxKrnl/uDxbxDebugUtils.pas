@@ -100,17 +100,15 @@ end;
 { TDxbxAPIDebugInfoSource }
 
 function TDxbxAPIDebugInfoSource.GetLocationInfo(const Addr: Pointer; out Info: TJclLocationInfo): Boolean;
-var
-  p: PPotentialFunctionLocation;
 begin
   Result := Assigned(SymbolManager);
   if not Result then
     Exit;
 
-  p := SymbolManager.FindPotentialFunctionLocation(TCodePointer(Addr));
-  Result := Assigned(p) and Assigned(p.Symbol);
-  if not Result then
-    Exit;
+//  p := SymbolManager.FindPotentialFunctionLocation(TCodePointer(Addr));
+//  Result := Assigned(p) and Assigned(p.Symbol);
+//  if not Result then
+//    Exit;
 
   with Info do
   begin
@@ -119,16 +117,16 @@ begin
     // Early exit if address falls outside symbol-size;
     // Note that the symbol length defaults to 4 when
     // symbols are loaded from cache !
-    if OffsetFromProcName > Integer(p.Length) then
-    begin
-      Result := False;
-      Exit;
-    end;
-
-    Address := Pointer(p{.Symbol}.Address); // Error address
-
-//    UnitName: string;               // Name of Delphi unit
-    ProcedureName := p.Symbol.Name;
+//    if OffsetFromProcName > Integer(p.Length) then
+//    begin
+//      Result := False;
+//      Exit;
+//    end;
+//
+//    Address := Pointer(p{.Symbol}.Address); // Error address
+//
+////    UnitName: string;               // Name of Delphi unit
+//    ProcedureName := p.Symbol.Name;
 //    LineNumber: Integer;
 //    OffsetFromLineNumber: Integer;  // Offset from Address to LineNumber symbol location
 //    SourceName: string;             // Module file name

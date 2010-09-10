@@ -65,67 +65,32 @@ uses
 // already, or they need to be validated.
 
 type
+  TLeafID = type TFunctionIndex;
+
   PPatternHitResult = ^RPatternHitResult;
+  RPatternHitResult = record
+    Address: PByte; // The address which matched to the pattern ending up in the owning leaf
+    NextHit: PPatternHitResult; // The next hit (if there are any) on the same leaf
+  end;
 
-  TLeafID = TFunctionIndex;
-
+  // This record contains all info needed to remember which addresses are a potential symbol location,
+  // using the leaf as a starting point.
   RLeafDetectionInfo = record
     FirstFunctionIndex: PFunctionIndex; // A leaf in the resource is nothing more than a list of function ID's
     NrChildren: Integer; // The number of functions (0 means undetermined, as there are no leafs with zero functions)
     FirstHit: PPatternHitResult; // A singly-linked list of addresses that match the PatternTrie up to this leaf
   end;
 
-  RPatternHitResult = record
-    Address: PByte;
-    NextHit: PPatternHitResult;
-  end;
-
-//  RFunctionDetectionInfo = record // One for each function
-//    FunctionIndex: TFunctionIndex;
-//  end;
-
-  TSymbolInformation = class; // forward
-
-  PPotentialFunctionLocation = ^RPotentialFunctionLocation;
-  RPotentialFunctionLocation = record
-  private
-    function GetLength: Cardinal;
-    function GetCodeEnd: TCodePointer;
-  public
-    Address: TCodePointer;
-    Symbol: TSymbolInformation;
-    SymbolReferencesIndex: Integer;
-    NrOfReferencesTo: Integer;
-    NextPotentialFunctionLocationIndex: Integer;
-
-    property Length: Cardinal read GetLength;
-    property CodeEnd: TCodePointer read GetCodeEnd;
-  end; // SizeOf() = 20
-
   TSymbolInformation = class(TObject)
-  private
-    function GetHasPotentialLocations: Boolean;
-    function GetIsSymbolNameUsedInFunctions: Boolean;
-    function GetHasFunctionInformation: Boolean;
-    function GetHasSymbolReferences: Boolean;
+  protected
     function GetLength: Cardinal;
     function GetSymbolReferenceCount: Integer;
     function GetSymbolReference(const aIndex: Integer): PStoredSymbolReference;
   public
-    NameIndex: TStringTableIndex;
+    AliasSymbol: TSymbolInformation;
     Name: string;
     Address: TCodePointer;
-    FirstPotentialFunctionLocationIndex: Integer;
     StoredLibraryFunction: PStoredLibraryFunction; // can be nil for non-pattern symbols
-
-    function FindPotentialLocationIndex(const aAddress: TCodePointer): Integer;
-    function FindPotentialLocation(const aAddress: TCodePointer): PPotentialFunctionLocation;
-    function AddPotentialLocation(const aAddress: TCodePointer): PPotentialFunctionLocation;
-
-    property IsSymbolNameUsedInFunctions: Boolean read GetIsSymbolNameUsedInFunctions;
-    property HasPotentialLocations: Boolean read GetHasPotentialLocations;
-    property HasFunctionInformation: Boolean read GetHasFunctionInformation;
-    property HasSymbolReferences: Boolean read GetHasSymbolReferences;
 
     property Length: Cardinal read GetLength;
     property SymbolReferenceCount: Integer read GetSymbolReferenceCount;
@@ -141,12 +106,45 @@ type
     function FindOrAddSymbol(const aName: string; const aFoundFunction: PStoredLibraryFunction = nil): TSymbolInformation; overload;
   public
     function FindSymbol(const aName: string): TSymbolInformation; overload;
-  protected // Potential function locations :
-    MyPotentialFunctionLocations: array of RPotentialFunctionLocation; // Lineair array for all potential function locations, 0 is invalid
-    MyPotentialFunctionLocations_Count: Integer; // Number of potential function locations
-    function AddPotentialSymbolLocation(const aLocation: TCodePointer; const aSymbol: TSymbolInformation): PPotentialFunctionLocation;
-  public
-    function FindPotentialFunctionLocation(const aLocation: TCodePointer): PPotentialFunctionLocation;
+  protected // Address & reference tooling :
+    ScanUpper: UIntPtr;
+    PatternTrieReader: TPatternTrieReader;
+    procedure DbgPrintSymbol(const aSymbol: TSymbolInformation);
+    function IsAddressWithinScanRange(const aAddress: TCodePointer): Boolean;
+    function GetReferencedSymbolAddress(const aStartingAddress: PByte; const aSymbolReference: PStoredSymbolReference): TCodePointer;
+  protected // Leaf detection :
+    MyDetectedLeafs: array of RLeafDetectionInfo; // All detected leafs, to be indexed with LeafID (it's first FunctionID)
+    FNrDetectedLeafs: Integer; // The number of detected leafs (not counting contained functions)
+    NrLeafHits: Integer; // The number of addresses that hit on a leaf
+    function GetLeafID(const LeafNode: PStoredTrieNode): TLeafID;
+    procedure AddLeafHit(const aAddress: PByte; const aFirstFunctionIndex: PFunctionIndex; const NrChildren: Integer);
+    procedure CheckAddressForPatternHit(const aTestAddress: PByte);
+    procedure ScanAddressRangeForPatternHits(const pXbeHeader: PXBEIMAGE_HEADER);
+    procedure ConvertLeafsIntoSymbols();
+  protected // Intermediate symbol registration :
+    FIntermediateSymbolRegistrationsCount: Integer;
+    MyIntermediateSymbolRegistrations: array of TSymbolInformation;
+    procedure AddIntermediateSymbolRegistration(const CurrentSymbol: TSymbolInformation; const aAddress: PByte);
+    procedure ConfirmIntermediateSymbolRegistrations;
+    procedure RevertIntermediateSymbolRegistrations;
+  protected // Actual scanning :
+    MyAddressesIdentified: TDxbxBits; // Marks memory identification status with 1 bit per address
+    function CheckFunctionAtAddressAndRegister(const CurrentSymbol: TSymbolInformation; const aAddress: PByte): Boolean;
+    procedure LookupFunctionsInHits();
+    procedure PutSymbolsInFinalLocationList;
+    procedure PrintFinalLocationList;
+    procedure CleanupTemporaryScanningData;
+  protected // Valid functions :
+    LibraryVersionsToScan: TLibraryVersionFlags;
+    MyFunctionsToScanFor: TList; // All PStoredLibraryFunction's that could be present
+    procedure DetermineFunctionsToScanFor;
+  protected // Library and specific symbol handling :
+    procedure DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
+    procedure LookupGlobalEmulationSymbols;
+  protected // Caching :
+    class function CacheFileName(const pXbeHeader: PXBEIMAGE_HEADER): string;
+    function LoadSymbolsFromCache(const aCacheFile: string): Boolean;
+    procedure SaveSymbolsToCache(const pXbeHeader: PXBEIMAGE_HEADER; const aCacheFile: string);
   protected // Final function locations :
     MyFinalLocations: TList;
     function GetCount: Integer;
@@ -154,46 +152,11 @@ type
   public
     property Count: Integer read GetCount;
     property Locations[const aIndex: Integer]: TSymbolInformation read GetLocation; default;
-  protected
-    MyAddressesPotentiallyContainingCode: TDxbxBits;
-    MyAddressesScanned: TDxbxBits;
-    ScanUpper: UIntPtr;
-    PatternTrieReader: TPatternTrieReader;
-    AllSymbolReferences: array of record Symbol: TSymbolInformation; Address: TCodePointer; MustSkip: Boolean; end;
-    AllSymbolReferencesInUse: Integer;
-    FCurrentTestAddress: PByte;
-    procedure _Debug(const aSymbol: TSymbolInformation);
-    function IsAddressWithinCodeRange(const aAddress: TCodePointer): Boolean;
-    function IsAddressWithinScanRange(const aAddress: TCodePointer): Boolean;
-    function GetReferencedSymbolAddress(const aStartingAddress: PByte; const aSymbolReference: PStoredSymbolReference): TCodePointer;
-    procedure DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
-    procedure TestAddressUsingPatternTrie(var aTestAddress: PByte; const DoForwardScan: Boolean = True);
-    procedure DetermineFinalLocations;
-    procedure DetermineSpecialSymbols;
-    procedure ScanMemoryRangeForLibraryPatterns(const pXbeHeader: PXBEIMAGE_HEADER);
-  public
-    LibraryVersionsToScan: TLibraryVersionFlags;
+  public // Main interface :
     constructor Create;
     destructor Destroy; override;
-
-    procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
-
     procedure Clear;
-
-    class function CacheFileName(const pXbeHeader: PXBEIMAGE_HEADER): string;
-    function LoadSymbolsFromCache(const aCacheFile: string): Boolean;
-    procedure SaveSymbolsToCache(const pXbeHeader: PXBEIMAGE_HEADER; const aCacheFile: string);
-  public // new scanning
-    MyFunctionsToScanFor: TList;
-    MyAddressesIdentified: TDxbxBits; // 1 bit per address
-    AllLeafs: array of RLeafDetectionInfo; // To be indexed with a FunctionID
-    NrHits: Integer;
-    NrHitsLeafs: Integer;
-    procedure AddLeafHit(const aAddress: PByte; const aFirstFunctionIndex: PFunctionIndex; const NrChildren: Integer);
-    procedure DetermineFunctionsToScanFor;
-    function CheckFunctionAtAddressAndRegister(const CurrentSymbol: TSymbolInformation; const aAddress: PByte): Boolean;
-    procedure ScanForLeafHits(const aTestAddress: PByte);
-    procedure LookupFunctionsInHits();
+    procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
   end;
 
 var
@@ -210,6 +173,31 @@ implementation
 uses
   uVertexBuffer; // CRC32Init, Crc32
 
+const lfUnit = lfDxbx or lfSymbolScan;
+
+(* Old test code :
+
+procedure CheckStringToFunctionMappings;
+// Checks if the stored function names are correct
+var
+  s, f: Integer;
+  Str: AnsiString;
+  sh: PStoredStringHeader;
+  FuncName: AnsiString;
+begin
+  for s := 0 to PatternTrieReader.StoredSignatureTrieHeader.StringTable.NrOfStrings - 1 do
+  begin
+    sh := PatternTrieReader.GetStringHeader(s);
+    str := AnsiString(PatternTrieReader.GetString(s));
+    for f := 0 to Integer(sh.NrOfFunctions) - 1 do
+    begin
+      FuncName := AnsiString(PatternTrieReader.GetFunctionName(sh.FirstFunctionIndex + Cardinal(f)));
+      Assert(FuncName = Str);
+    end;
+  end;
+end;
+
+*)
 
 function SameLibName(StoredLibraryName, CurrentLibName: string): Boolean;
 // StoredLibraryName comes from our pattern files (like '4627xgraphics.pat' gives 'xgraphics')
@@ -234,407 +222,9 @@ begin
   UIntPtr(Result) := UIntPtr(aStartingAddress) + UIntPtr(aOffset);
   Result := PByte(IntPtr(Result) + PInteger(Result)^ + 4);
 end;
-
 {$IFDEF OVERFLOWCHECKS_ON}
   {$OVERFLOWCHECKS ON}
 {$ENDIF}
-
-{ RPotentialFunctionLocation }
-
-function RPotentialFunctionLocation.GetLength: Cardinal;
-begin
-  Assert(Assigned(Symbol));
-
-  if Assigned(Symbol.StoredLibraryFunction) then
-    Result := Symbol.Length
-  else
-    // Assume it's a global variable of type DWORD :
-    Result := SizeOf(DWORD);
-end;
-
-function RPotentialFunctionLocation.GetCodeEnd: TCodePointer;
-begin
-  Assert(Assigned(Symbol));
-
-  UIntPtr(Result) := UIntPtr(Address) + Length - 1;
-end;
-
-{ TSymbolInformation }
-
-function TSymbolInformation.GetHasPotentialLocations: Boolean;
-begin
-  Result := (FirstPotentialFunctionLocationIndex > 0);
-end;
-
-function TSymbolInformation.GetIsSymbolNameUsedInFunctions: Boolean;
-begin
-  Result := SymbolManager.PatternTrieReader.GetStringHeader(NameIndex).NrOfFunctions > 0;
-end;
-
-function TSymbolInformation.GetHasFunctionInformation: Boolean;
-begin
-  Result := Assigned(StoredLibraryFunction);
-end;
-
-function TSymbolInformation.GetHasSymbolReferences: Boolean;
-begin
-  Result := (SymbolReferenceCount > 0);
-end;
-
-function TSymbolInformation.GetLength: Cardinal;
-begin
-  if Assigned(StoredLibraryFunction) then
-    Result := StoredLibraryFunction.FunctionLength
-  else
-    // Assume it's a global variable of type DWORD :
-    Result := SizeOf(DWORD);
-end;
-
-function TSymbolInformation.GetSymbolReferenceCount: Integer;
-begin
-  if Assigned(StoredLibraryFunction) then
-    Result := StoredLibraryFunction.NrOfSymbolReferences
-  else
-    Result := 0;
-end;
-
-function TSymbolInformation.GetSymbolReference(const aIndex: Integer): PStoredSymbolReference;
-begin
-  Result := SymbolManager.PatternTrieReader.GetSymbolReference(StoredLibraryFunction.FirstSymbolReference + Cardinal(aIndex));
-{$IFDEF DXBX_RECTYPE}
-  Assert(Result.RecType = rtStoredSymbolReference, 'StoredSymbolReference type mismatch!');
-{$ENDIF}
-end;
-
-function TSymbolInformation.FindPotentialLocationIndex(const aAddress: TCodePointer): Integer;
-begin
-  Result := FirstPotentialFunctionLocationIndex;
-  while Result > 0 do
-  begin
-    if SymbolManager.MyPotentialFunctionLocations[Result].Address = aAddress then
-      Exit;
-
-    Result := SymbolManager.MyPotentialFunctionLocations[Result].NextPotentialFunctionLocationIndex;
-  end;
-end;
-
-function TSymbolInformation.FindPotentialLocation(const aAddress: TCodePointer): PPotentialFunctionLocation;
-var
-  Index: Integer;
-begin
-  Index := FindPotentialLocationIndex(aAddress);
-  if Index > 0 then
-    Result := @(SymbolManager.MyPotentialFunctionLocations[Index])
-  else
-    Result := nil;
-end;
-
-function TSymbolInformation.AddPotentialLocation(const aAddress: TCodePointer): PPotentialFunctionLocation;
-begin
-  Result := FindPotentialLocation(aAddress);
-  if Result = nil then
-    Result := SymbolManager.AddPotentialSymbolLocation(aAddress, Self);
-end;
-
-{ TSymbolManager }
-
-constructor TSymbolManager.Create;
-begin
-  inherited Create;
-
-  MyFunctionsToScanFor := TList.Create;
-  MyFinalLocations := TList.Create;
-  MyAddressesScanned := TDxbxBits.Create;
-  MyAddressesPotentiallyContainingCode := TDxbxBits.Create;
-
-  MyAddressesIdentified := TDxbxBits.Create;
-end;
-
-destructor TSymbolManager.Destroy;
-begin
-  Clear;
-  FreeAndNil(MyAddressesIdentified);
-  FreeAndNil(MyFinalLocations);
-  FreeAndNil(MyAddressesScanned);
-  FreeAndNil(MyAddressesPotentiallyContainingCode);
-  FreeAndNil(MyFunctionsToScanFor);
-
-  inherited Destroy;
-end;
-
-function TSymbolManager.GetCount: Integer;
-begin
-  Result := MyFinalLocations.Count;
-end;
-
-function TSymbolManager.GetLocation(const aIndex: Integer): TSymbolInformation;
-begin
-  Result := MyFinalLocations[aIndex];
-end;
-
-procedure TSymbolManager.Clear;
-var
-  w: Word;
-begin
-  MyAddressesIdentified.Size := 0;
-
-  MyAddressesScanned.Size := 0;
-  LibraryVersionsToScan := [];
-
-  // Clear MySymbolsHashedOnName :
-  for w := Low(w) to High(w) do
-    FreeAndNil(MySymbolsHashedOnName[w]);
-  MySymbolCount := 0;
-
-  SetLength(MyPotentialFunctionLocations, 0);
-  MyFinalLocations.Clear;
-  MyPotentialFunctionLocations_Count := 0;
-end; // Clear
-
-function TSymbolManager.FindSymbol(const aNameIndex: TStringTableIndex): TSymbolInformation;
-var
-  SymbolName: string;
-begin
-  SymbolName := PatternTrieReader.GetString(aNameIndex);
-  Result := FindSymbol(SymbolName);
-  if Assigned(Result) then
-  begin
-    if Result.NameIndex = 0 then
-      Result.NameIndex := aNameIndex
-    else
-      Assert(Result.NameIndex = aNameIndex);
-  end;
-end; // FindSymbol
-
-function TSymbolManager.FindSymbol(const aName: string): TSymbolInformation;
-var
-  HashIndex: Word;
-begin
-  HashIndex := CalcCRC16(PByte(aName), Length(aName) * SizeOf(Char));
-  Result := MySymbolsHashedOnName[HashIndex];
-  while Assigned(Result) do
-  begin
-    if (Result.Name = aName) then
-      Exit;
-
-    Inc(HashIndex, 1);
-    Result := MySymbolsHashedOnName[HashIndex];
-  end;
-end; // FindSymbol
-
-function TSymbolManager.FindOrAddSymbol(const aNameIndex: TStringTableIndex;
-  const aFoundFunction: PStoredLibraryFunction = nil): TSymbolInformation;
-var
-  SymbolName: string;
-begin
-  SymbolName := PatternTrieReader.GetString(aNameIndex);
-  Result := FindOrAddSymbol(SymbolName, aFoundFunction);
-  if Result.NameIndex = 0 then
-    Result.NameIndex := aNameIndex
-  else
-    Assert(Result.NameIndex = aNameIndex);
-end; // FindOrAddSymbol
-
-function TSymbolManager.FindOrAddSymbol(const aName: string;
-  const aFoundFunction: PStoredLibraryFunction = nil): TSymbolInformation;
-var
-  HashIndex: Word;
-begin
-  HashIndex := CalcCRC16(PByte(aName), Length(aName) * SizeOf(Char));
-  Result := MySymbolsHashedOnName[HashIndex];
-  while Assigned(Result) do
-  begin
-    if (Result.Name = aName) then
-    begin
-      if Result.StoredLibraryFunction = nil then
-        Result.StoredLibraryFunction := aFoundFunction
-      else
-      begin
-        if Assigned(aFoundFunction) then
-        begin
-          // Multiple occurrances are possible (from multiple XDK's)
-          // and are allowable as long as they describe the same function :
-//          Assert(Result.StoredLibraryFunction.GlobalFunctionIndex = aFoundFunction.GlobalFunctionIndex, 'Error! Same name, other function!');
-
-          // Keep track of the longest version :
-          if Result.StoredLibraryFunction.FunctionLength < aFoundFunction.FunctionLength then
-            Result.StoredLibraryFunction := aFoundFunction;
-        end;
-      end;
-
-      Exit;
-    end;
-
-    Inc(HashIndex, 1);
-    Result := MySymbolsHashedOnName[HashIndex];
-  end;
-
-  Result := TSymbolInformation.Create;
-  Result.StoredLibraryFunction := aFoundFunction;
-  Result.Name := aName;
-
-  MySymbolsHashedOnName[HashIndex] := Result;
-  Inc(MySymbolCount);
-end; // FindOrAddSymbol
-
-function TSymbolManager.AddPotentialSymbolLocation(const aLocation: TCodePointer; const aSymbol: TSymbolInformation): PPotentialFunctionLocation;
-var
-  CurrentCapacity: Integer;
-begin
-  Assert(Assigned(aLocation));
-  Assert(Assigned(aSymbol));
-
-  Inc(MyPotentialFunctionLocations_Count);
-
-  // Grow using the so-called 'Doubling method' for O(1) average performance :
-  CurrentCapacity := Length(MyPotentialFunctionLocations);
-  if CurrentCapacity <= MyPotentialFunctionLocations_Count then
-  begin
-    if CurrentCapacity = 0 then
-      CurrentCapacity := 1024
-    else
-      CurrentCapacity := CurrentCapacity * 2;
-
-    SetLength(MyPotentialFunctionLocations, CurrentCapacity);
-  end;
-
-  Result := @(MyPotentialFunctionLocations[MyPotentialFunctionLocations_Count]);
-  with Result^ do
-  begin
-    Address := aLocation;
-    Symbol := aSymbol;
-    NextPotentialFunctionLocationIndex := aSymbol.FirstPotentialFunctionLocationIndex;
-    NrOfReferencesTo := 0;
-  end;
-
-  aSymbol.FirstPotentialFunctionLocationIndex := MyPotentialFunctionLocations_Count;
-end; // AddPotentialSymbolLocation
-
-// Does a binary search over MyPotentialFunctionLocations for the given address.
-// When found, the lowest index where this address appears is returned, -1 otherwise.
-function TSymbolManager.FindPotentialFunctionLocation(const aLocation: TCodePointer): PPotentialFunctionLocation;
-var
-  L, H, I, C: Integer;
-begin
-  // Assert(Sorted);
-  Result := nil;
-  L := 1;
-  H := MyPotentialFunctionLocations_Count;
-  while L <= H do
-  begin
-    I := (L + H) shr 1;
-    Result := @(MyPotentialFunctionLocations[I]);
-    C := IntPtr(Result.Address) - IntPtr(aLocation);
-    if C < 0 then
-      L := I + 1
-    else
-    begin
-      if C = 0 then
-      begin
-        L := I;
-//        Result := L;
-        // We need to find the left-most index, so no break here!
-      end;
-
-      H := I - 1;
-    end;
-  end;
-end; // FindPotentialFunctionLocation
-
-function TSymbolManager.IsAddressWithinCodeRange(const aAddress: TCodePointer): Boolean;
-begin
-  Result := (UIntPtr(aAddress) < UIntPtr(MyAddressesPotentiallyContainingCode.Size))
-        and MyAddressesPotentiallyContainingCode[Integer(aAddress)];
-end;
-
-function TSymbolManager.IsAddressWithinScanRange(const aAddress: TCodePointer): Boolean;
-begin
-  Result := (UIntPtr(aAddress) >= XBE_IMAGE_BASE) and (UIntPtr(aAddress) <= ScanUpper);
-end;
-
-function TSymbolManager.GetReferencedSymbolAddress(const aStartingAddress: PByte;
-  const aSymbolReference: PStoredSymbolReference): TCodePointer;
-begin
-  // Use aSymbolReference to determine the symbol-address that should be checked :
-  if (aSymbolReference.ReferenceFlags and rfIsRelative) > 0 then
-    Result := DetermineRelativeAddress(aStartingAddress, aSymbolReference.Offset)
-  else
-  if (aSymbolReference.ReferenceFlags and rfIsAbsolute) > 0 then
-    Result := DetermineImmediateAddress(aStartingAddress, aSymbolReference.Offset)
-  else
-  begin
-    // TODO : Handle rfIsSectionRel
-    Result := nil;
-    Exit;
-  end;
-
-  Dec(IntPtr(Result), aSymbolReference.BaseOffset); // Must be signed ptr, for negative offsets!
-  if not IsAddressWithinScanRange(Result) then
-    Result := nil;
-end; // GetReferencedSymbolAddress
-
-procedure TSymbolManager._Debug(const aSymbol: TSymbolInformation);
-const
-  DuplicateString: array [Boolean] of string = ('', ' [Duplicate]');
-var
-  i: Integer;
-  f: Integer;
-  c: Integer;
-  CurrentLocation: PPotentialFunctionLocation;
-  SymbolReference: PStoredSymbolReference;
-begin
-  if aSymbol = nil then
-    Exit;
-
-  DbgPrintf('SYMBOL : "%s"', [aSymbol.Name]);
-  DbgPrintf('Length : %d', [aSymbol.Length]);
-  DbgPrintf('Address : $%.08x', [aSymbol.Address]);
-  DbgPrintf('SymbolReferenceCount : %d', [aSymbol.SymbolReferenceCount]);
-  DbgPrintf('PotentialLocations :');
-  c := 10;
-  f := aSymbol.FirstPotentialFunctionLocationIndex;
-  while f > 0 do
-  begin
-    CurrentLocation := @(MyPotentialFunctionLocations[f]);
-    Assert(Assigned(CurrentLocation));
-
-    DbgPrintf('#%d : $%0.8x (%2d references)', [
-      f,
-      CurrentLocation.Address,
-      CurrentLocation.NrOfReferencesTo]);
-
-    if CurrentLocation.SymbolReferencesIndex > 0 then
-    begin
-      for i := 0 to aSymbol.SymbolReferenceCount - 1 do
-      begin
-        SymbolReference := aSymbol.SymbolReferences[i];
-        Assert(Assigned(SymbolReference));
-
-        DbgPrintf('  SymbolReference %2d : $%0.4x -> $%.08x = "%s"+$%.04x%s', [
-          i+1,
-          SymbolReference.Offset,
-          AllSymbolReferences[CurrentLocation.SymbolReferencesIndex+i].Address,
-          AllSymbolReferences[CurrentLocation.SymbolReferencesIndex+i].Symbol.Name,
-          SymbolReference.BaseOffset,
-          DuplicateString[AllSymbolReferences[CurrentLocation.SymbolReferencesIndex+i].MustSkip]
-          ]);
-      end;
-    end;
-
-    f := CurrentLocation.NextPotentialFunctionLocationIndex;
-
-    // Limit the number of locations we show :
-    Dec(c);
-    if c = 0 then
-    begin
-      if f > 0 then
-        DbgPrintf('  ...and more');
-
-      Break;
-    end;
-
-  end;
-end;
 
 function DecodeStretchHeader(var StretchHeader: PByte; out NrFixed, NrWildcards: Integer): Boolean;
 var
@@ -664,8 +254,224 @@ begin
   end;
 end;
 
+function FunctionCompare(Item1, Item2: Pointer): Integer;
+var
+  StoredLibraryFunction1: PStoredLibraryFunction;
+  StoredLibraryFunction2: PStoredLibraryFunction;
+begin
+  StoredLibraryFunction1 := SymbolManager.PatternTrieReader.GetStoredLibraryFunction(TFunctionIndex(Item1));
+  StoredLibraryFunction2 := SymbolManager.PatternTrieReader.GetStoredLibraryFunction(TFunctionIndex(Item2));
+  // First priority : Many references go before less references :
+  Result := Integer(StoredLibraryFunction2.NrOfSymbolReferences) - Integer(StoredLibraryFunction1.NrOfSymbolReferences);
+  if Result = 0 then
+  begin
+    // Second priority : Longer functions go before shorter ones :
+    Result := Integer(StoredLibraryFunction2.FunctionLength) - Integer(StoredLibraryFunction1.FunctionLength);
+    if Result = 0 then
+      // Make the ordering unique :
+      Result := Integer(Item2) - Integer(Item1);
+  end;
+end; // FunctionCompare
+
+{ TSymbolInformation }
+
+function TSymbolInformation.GetLength: Cardinal;
+begin
+  if Assigned(StoredLibraryFunction) then
+    Result := StoredLibraryFunction.FunctionLength
+  else
+    // Assume it's a global variable of type DWORD :
+    Result := SizeOf(DWORD);
+end;
+
+function TSymbolInformation.GetSymbolReferenceCount: Integer;
+begin
+  if Assigned(StoredLibraryFunction) then
+    Result := StoredLibraryFunction.NrOfSymbolReferences
+  else
+    Result := 0;
+end;
+
+function TSymbolInformation.GetSymbolReference(const aIndex: Integer): PStoredSymbolReference;
+begin
+  Result := SymbolManager.PatternTrieReader.GetSymbolReference(StoredLibraryFunction.FirstSymbolReference + Cardinal(aIndex));
+{$IFDEF DXBX_RECTYPE}
+  Assert(Result.RecType = rtStoredSymbolReference, 'StoredSymbolReference type mismatch!');
+{$ENDIF}
+end;
+
+{ TSymbolManager }
+
+constructor TSymbolManager.Create;
+begin
+  inherited Create;
+
+  MyFunctionsToScanFor := TList.Create;
+  MyFinalLocations := TList.Create;
+  MyAddressesIdentified := TDxbxBits.Create;
+end;
+
+destructor TSymbolManager.Destroy;
+begin
+  Clear;
+  FreeAndNil(MyAddressesIdentified);
+  FreeAndNil(MyFinalLocations);
+  FreeAndNil(MyFunctionsToScanFor);
+
+  inherited Destroy;
+end;
+
+function TSymbolManager.GetCount: Integer;
+begin
+  Result := MyFinalLocations.Count;
+end;
+
+function TSymbolManager.GetLocation(const aIndex: Integer): TSymbolInformation;
+begin
+  Result := MyFinalLocations[aIndex];
+end;
+
+procedure TSymbolManager.Clear;
+var
+  w: Word;
+begin
+  CleanupTemporaryScanningData;
+
+  LibraryVersionsToScan := [];
+
+  // Clear MySymbolsHashedOnName :
+  for w := Low(w) to High(w) do
+    FreeAndNil(MySymbolsHashedOnName[w]);
+  MySymbolCount := 0;
+
+  MyFinalLocations.Clear;
+end; // Clear
+
+///
+/// Symbol registration :
+///
+
+function TSymbolManager.FindSymbol(const aNameIndex: TStringTableIndex): TSymbolInformation;
+var
+  SymbolName: string;
+begin
+  SymbolName := PatternTrieReader.GetString(aNameIndex);
+  Result := FindSymbol(SymbolName);
+end; // FindSymbol
+
+function TSymbolManager.FindSymbol(const aName: string): TSymbolInformation;
+var
+  HashIndex: Word;
+begin
+  HashIndex := CalcCRC16(PByte(aName), Length(aName) * SizeOf(Char));
+  Result := MySymbolsHashedOnName[HashIndex];
+  while Assigned(Result) do
+  begin
+    if (Result.Name = aName) then
+    begin
+      Result := Result.AliasSymbol;
+      Exit;
+    end;
+
+    Inc(HashIndex, 1);
+    Result := MySymbolsHashedOnName[HashIndex];
+  end;
+end; // FindSymbol
+
+function TSymbolManager.FindOrAddSymbol(const aNameIndex: TStringTableIndex;
+  const aFoundFunction: PStoredLibraryFunction = nil): TSymbolInformation;
+var
+  SymbolName: string;
+begin
+  SymbolName := PatternTrieReader.GetString(aNameIndex);
+  Result := FindOrAddSymbol(SymbolName, aFoundFunction);
+end; // FindOrAddSymbol
+
+function TSymbolManager.FindOrAddSymbol(const aName: string;
+  const aFoundFunction: PStoredLibraryFunction = nil): TSymbolInformation;
+var
+  HashIndex: Word;
+begin
+  HashIndex := CalcCRC16(PByte(aName), Length(aName) * SizeOf(Char));
+  Result := MySymbolsHashedOnName[HashIndex];
+  while Assigned(Result) do
+  begin
+    if (Result.Name = aName) then
+    begin
+      if Result.StoredLibraryFunction = nil then
+        Result.StoredLibraryFunction := aFoundFunction
+      else
+      begin
+        if Assigned(aFoundFunction) then
+        begin
+          // Multiple occurrances are possible (from multiple XDK's)
+          // and are allowable as long as they describe the same function :
+//          Assert(Result.StoredLibraryFunction.GlobalFunctionIndex = aFoundFunction.GlobalFunctionIndex, 'Error! Same name, other function!');
+
+          // Keep track of the longest version :
+          if Result.StoredLibraryFunction.FunctionLength < aFoundFunction.FunctionLength then
+            Result.StoredLibraryFunction := aFoundFunction;
+        end;
+      end;
+
+      Result := Result.AliasSymbol;
+      Exit;
+    end;
+
+    Inc(HashIndex, 1);
+    Result := MySymbolsHashedOnName[HashIndex];
+  end;
+
+  Result := TSymbolInformation.Create;
+  Result.AliasSymbol := Result; // Initially, a symbol 'aliases' to itself
+  Result.StoredLibraryFunction := aFoundFunction;
+  Result.Name := aName;
+
+  MySymbolsHashedOnName[HashIndex] := Result;
+  Inc(MySymbolCount);
+end; // FindOrAddSymbol
+
+procedure TSymbolManager.DbgPrintSymbol(const aSymbol: TSymbolInformation);
+//const
+//  DuplicateString: array [Boolean] of string = ('', ' [Duplicate]');
+//var
+//  i: Integer;
+//  SymbolReference: PStoredSymbolReference;
+begin
+  if aSymbol = nil then
+    Exit;
+
+  if not MayLog(lfUnit) then // TODO : Add lfExtreme flag once the output is reliable
+    Exit;
+
+  DbgPrintf('SYMBOL : "%s"', [aSymbol.Name]);
+  DbgPrintf('Length : %d', [aSymbol.Length]);
+  DbgPrintf('Address : $%.08x', [aSymbol.Address]);
+  DbgPrintf('SymbolReferenceCount : %d', [aSymbol.SymbolReferenceCount]);
+(*
+  for i := 0 to aSymbol.SymbolReferenceCount - 1 do
+  begin
+    SymbolReference := aSymbol.SymbolReferences[i];
+    Assert(Assigned(SymbolReference));
+
+    DbgPrintf('  SymbolReference %2d : $%0.4x -> $%.08x = "%s"+$%.04x%s', [
+      i+1,
+      SymbolReference.Offset,
+      AllSymbolReferences[CurrentLocation.SymbolReferencesIndex+i].Address,
+      AllSymbolReferences[CurrentLocation.SymbolReferencesIndex+i].Symbol.Name,
+      SymbolReference.BaseOffset,
+      DuplicateString[AllSymbolReferences[CurrentLocation.SymbolReferencesIndex+i].MustSkip]
+      ]);
+  end;
+*)
+end;
+
+///
+/// Leaf scanning code :
+///
+
 // 'Convert' the 1st function index in the leaf to a LeafID
-function GetLeafID(const LeafNode: PStoredTrieNode): TLeafID;
+function TSymbolManager.GetLeafID(const LeafNode: PStoredTrieNode): TLeafID;
 var
   StretchPtr: PByte;
   More: Boolean;
@@ -678,10 +484,10 @@ begin
   repeat
     More := DecodeStretchHeader({var}StretchPtr, {out}NrFixed, {out}NrWildcards);
     Inc(StretchPtr, NrFixed);
-  until More = False;
+  until not More;
 
   // Right after that, is the first function index, return that as a LeafID:
-  Result := TLeafID(PFunctionIndex(StretchPtr)^)
+  Result := TLeafID(PFunctionIndex(StretchPtr)^);
 end;
 
 procedure TSymbolManager.AddLeafHit(const aAddress: PByte; const aFirstFunctionIndex: PFunctionIndex; const NrChildren: Integer);
@@ -695,43 +501,43 @@ begin
 
   // Make sure we have room for this leaf :
   begin
-    NewLength := Length(AllLeafs);
+    NewLength := Length(MyDetectedLeafs);
     if NewLength = 0 then
       NewLength := 16 * 1024;
 
     while NewLength <= Integer(LeafID) do
       Inc(NewLength, NewLength);
 
-    if NewLength > Length(AllLeafs) then
-      SetLength(AllLeafs, NewLength);
+    if NewLength > Length(MyDetectedLeafs) then
+      SetLength(MyDetectedLeafs, NewLength);
   end;
 
   // Append this address to the chain :
   begin
-    Inc(NrHits);
+    Inc(FNrDetectedLeafs);
 
     New(Hit);
     Hit.Address := aAddress;
 
-    if AllLeafs[LeafID].FirstFunctionIndex = nil then
+    if MyDetectedLeafs[LeafID].FirstFunctionIndex = nil then
     begin
-      Inc(NrHitsLeafs);
-      AllLeafs[LeafID].FirstFunctionIndex := aFirstFunctionIndex;
-      AllLeafs[LeafID].NrChildren := NrChildren;
+      Inc(NrLeafHits);
+      MyDetectedLeafs[LeafID].FirstFunctionIndex := aFirstFunctionIndex;
+      MyDetectedLeafs[LeafID].NrChildren := NrChildren;
       Hit.NextHit := nil;
     end
     else
     begin
-      Assert(AllLeafs[LeafID].FirstFunctionIndex = aFirstFunctionIndex);
-      Assert(AllLeafs[LeafID].NrChildren = NrChildren);
-      Hit.NextHit := AllLeafs[LeafID].FirstHit;
+      Assert(MyDetectedLeafs[LeafID].FirstFunctionIndex = aFirstFunctionIndex);
+      Assert(MyDetectedLeafs[LeafID].NrChildren = NrChildren);
+      Hit.NextHit := MyDetectedLeafs[LeafID].FirstHit;
     end;
 
-    AllLeafs[LeafID].FirstHit := Hit;
+    MyDetectedLeafs[LeafID].FirstHit := Hit;
   end;
 end; // AddLeafHit
 
-procedure TSymbolManager.ScanForLeafHits(const aTestAddress: PByte);
+procedure TSymbolManager.CheckAddressForPatternHit(const aTestAddress: PByte);
 
   function _TryMatchingNode(aStoredTrieNode: PStoredTrieNode; aAddress: PByte; Depth: Integer): Boolean;
   var
@@ -794,7 +600,7 @@ procedure TSymbolManager.ScanForLeafHits(const aTestAddress: PByte);
       NextOffset := aStoredTrieNode.NextSiblingOffset;
       // Sanity-check on next-offset :
       if (NextOffset <= 0) or (NextOffset > 100*1024*1024) then
-        Break;
+        Break; // TODO : Remove this when the Trie is proven to contain no errors
 
       // Jump to next sibling :
       aStoredTrieNode := PatternTrieReader.GetNode(NextOffset);
@@ -804,356 +610,14 @@ procedure TSymbolManager.ScanForLeafHits(const aTestAddress: PByte);
 
 begin
   _TryMatchingNode(PatternTrieReader.RootNode, aTestAddress, {aDepth=}0);
-end; // ScanForLeafHits
+end; // CheckAddressForPatternHit
 
-function CheckFunctionCRC(const aStoredLibraryFunction: PStoredLibraryFunction; const aAddress: PByte): Boolean;
-begin
-  if aStoredLibraryFunction.CRCLength > 0 then
-    Result := (aStoredLibraryFunction.CRCValue = CalcCRC16(aAddress, aStoredLibraryFunction.CRCLength))
-  else
-    Result := True;
-end;
-
-procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; const DoForwardScan: Boolean = True);
-
-  function _MayCheckFunction(const aStoredLibraryFunction: PStoredLibraryFunction): Boolean;
-  var
-    LengthWithoutPadding: Integer;
-  begin
-    // Don't count padding bytes (NOP and INT3 for now) at the end of the function (if any) :
-    LengthWithoutPadding := aStoredLibraryFunction.FunctionLength;
-    while (LengthWithoutPadding > 0) and (PBytes(aTestAddress)[LengthWithoutPadding-1] in [OPCODE_NOP, OPCODE_INT3]) do
-      Dec(LengthWithoutPadding);
-
-    // Skip small functions with only one symbol-reference, because those are
-    // very common. Instead, we hope they will be discovered via other functions :
-    case aStoredLibraryFunction.NrOfSymbolReferences of
-      0: Result := (LengthWithoutPadding >= 7);
-      1: Result := (LengthWithoutPadding > 5)
-               and (aTestAddress^ <> OPCODE_JMP);
-      2: Result := (LengthWithoutPadding >= 10);
-    else
-      Result := True;
-    end;
-  end;
-
-  function _CheckAndRememberFunctionSymbolReferences(const aSymbol: TSymbolInformation): Boolean;
-  var
-    SymbolReference: PStoredSymbolReference;
-    c, x, i: Integer;
-  begin
-    Result := (aSymbol.SymbolReferenceCount = 0);
-    if Result then
-      Exit;
-
-    // Make sure there's space for the symbol-references :
-    c := AllSymbolReferencesInUse + aSymbol.SymbolReferenceCount;
-    while Length(AllSymbolReferences) < c do
-      SetLength(AllSymbolReferences, Length(AllSymbolReferences) * 2);
-    c := AllSymbolReferencesInUse;
-
-    // Read all symbol-references and check if they point to a valid address :
-    for x := 0 to aSymbol.SymbolReferenceCount - 1 do
-    begin
-      SymbolReference := aSymbol.SymbolReferences[x];
-
-      AllSymbolReferences[c+x].Symbol := FindOrAddSymbol(SymbolReference.NameIndex, {Function=}nil);
-
-      // Determine which references shouldn't be checked further :
-      AllSymbolReferences[c+x].MustSkip := False
-        // Skip Structured Exception Handling labels (would generate lots of alternatives) :
-        or (strncmp(PChar(AllSymbolReferences[c+x].Symbol.Name), '__SEH', Length('__SEH')) = 0)
-        // Skip kernel call references (for now, but can be resolved later) :
-        or (strncmp(PChar(AllSymbolReferences[c+x].Symbol.Name), '__imp__', Length('__imp__')) = 0);
-
-      // Check that any duplicate symbol-references are all pointing to the same address :
-      if AllSymbolReferences[c+x].MustSkip then
-        Continue;
-
-      // If a symbol-reference falls outside the valid range, we consider this a false hit :
-      AllSymbolReferences[c+x].Address := GetReferencedSymbolAddress(aTestAddress, SymbolReference);
-      if (AllSymbolReferences[c+x].Address = nil) then
-        Exit;
-
-      // Self-references should always point to the test-address :
-      if AllSymbolReferences[c+x].Symbol = aSymbol then
-        if AllSymbolReferences[c+x].Address <> aTestAddress then
-          Exit;
-
-      begin
-        for i := 0 to x - 1 do
-        begin
-          if (AllSymbolReferences[c+i].Symbol = AllSymbolReferences[c+x].Symbol) then
-          begin
-            AllSymbolReferences[c+i].MustSkip := True;
-            // Same symbol, but different address-reference means a false hit, which must be skipped :
-            if (AllSymbolReferences[c+i].Address <> AllSymbolReferences[c+x].Address) then
-              Exit;
-          end;
-        end; // for prior SymbolReferences
-      end;
-
-    end; // for SymbolReferences
-
-    Result := True;
-  end; // _CheckAndRememberFunctionSymbolReferences
-
-  function _CheckForwardFunctionSymbolReferences(const aStoredLibraryFunction: PStoredLibraryFunction;
-    const aSymbolReferencesIndex: Integer): Boolean;
-  var
-    x: Integer;
-    ReferencedAddress: PByte;
-  begin
-    for x := 0 to aStoredLibraryFunction.NrOfSymbolReferences - 1 do
-    begin
-      if AllSymbolReferences[aSymbolReferencesIndex+x].MustSkip then
-        Continue;
-
-      // Determine which referenced address is to be scanned too :
-      ReferencedAddress := AllSymbolReferences[aSymbolReferencesIndex+x].Address;
-
-      // Do not test symbols on the originating address, as we're probably
-      // still busy scanning for all possible symbols that could reside there :
-      if ReferencedAddress = FCurrentTestAddress then
-        Continue;
-
-      // Only scan at addresses where there might be code (as we're about to check
-      // if this address does indeed validate against the symbol's function-pattern) :
-      if IsAddressWithinCodeRange(ReferencedAddress) then
-      begin
-        TestAddressUsingPatternTrie({var}ReferencedAddress, {DoForwardScan=}False);
-        // Referenced address was changed, re-apply the actual address :
-        ReferencedAddress := AllSymbolReferences[aSymbolReferencesIndex+x].Address;
-
-        // Now see if the referenced address does indeed matches the symbol being referenced:
-        if AllSymbolReferences[aSymbolReferencesIndex+x].Symbol.HasFunctionInformation then
-          // If that symbol doesn't occur at the referenced address, we quit here :
-          if AllSymbolReferences[aSymbolReferencesIndex+x].Symbol.FindPotentialLocationIndex(ReferencedAddress) = 0 then
-          begin
-            Result := False;
-            Exit;
-          end;
-      end;
-    end;
-
-    Result := True;
-  end; // _CheckForwardFunctionSymbolReferences
-
-  procedure _CheckLeafFunctions(aLeafFunctionIndexes: PFunctionIndex; NrChildren: Integer; const aAddress: PByte);
-  var
-    i: Integer;
-    aStoredLibraryFunction: PStoredLibraryFunction;
-    FunctionName: string;
-    Symbol: TSymbolInformation;
-    Location: PPotentialFunctionLocation;
-  begin
-    // Check the possible functions further, and find the most number of seemingly valid symbol-references :
-    for i := 0 to NrChildren - 1 do
-    begin
-      aStoredLibraryFunction := PatternTrieReader.GetStoredLibraryFunction(aLeafFunctionIndexes^);
-{$IFDEF DXBX_RECTYPE}
-      Assert(aStoredLibraryFunction.RecType = rtStoredLibraryFunction, 'StoredLibraryFunction type mismatch!');
-{$ENDIF}
-
-      FunctionName := PatternTrieReader.GetFunctionName(aLeafFunctionIndexes^);
-
-      // Check if this functions' library matches an active one :
-      if (aStoredLibraryFunction.AvailableInVersions * LibraryVersionsToScan) <> [] then
-      if _MayCheckFunction(aStoredLibraryFunction) then
-      // Check if the CRC holds :
-      if CheckFunctionCRC(aStoredLibraryFunction, aAddress) then
-      // TODO : Include data & test-code for 'trailing bytes' patterns (or extend the CRC-range).
-      begin
-        Symbol := FindOrAddSymbol(FunctionName, aStoredLibraryFunction);
-
-        // Check if all symbol-references are within the expected memory-range :
-        if _CheckAndRememberFunctionSymbolReferences(Symbol) then
-        begin
-          // Only now add the current location as a candidate for this function :
-          Location := SymbolManager.AddPotentialSymbolLocation(aTestAddress, Symbol);
-
-          // Persist the symbol-references determined for this location :
-          if aStoredLibraryFunction.NrOfSymbolReferences > 0 then
-          begin
-            Location.SymbolReferencesIndex := AllSymbolReferencesInUse;
-            Inc(AllSymbolReferencesInUse, aStoredLibraryFunction.NrOfSymbolReferences);
-
-            if DoForwardScan then
-              if not _CheckForwardFunctionSymbolReferences(aStoredLibraryFunction, Location.SymbolReferencesIndex) then
-                // If the forward function scan fails, invalidate this location (but keep checking other children!) :
-                Location.Address := nil;
-          end;
-        end;
-      end;
-
-      // Skip to the next stored library function (including a step over all symbol-references) :
-      Inc(UIntPtr({var}aStoredLibraryFunction),
-        SizeOf(RStoredLibraryFunction) +
-        (SizeOf(RStoredSymbolReference) * aStoredLibraryFunction.NrOfSymbolReferences)
-        );
-
-      // Step to the next function in the leaf :
-      Inc(aLeafFunctionIndexes);
-    end; // for NrChildren
-  end; // _CheckLeafFunctions
-
-  function _TryMatchingNode(aStoredTrieNode: PStoredTrieNode; aAddress: PByte; Depth: Integer): Boolean;
-  var
-    NrChildren: Integer;
-    StretchPtr: PByte;
-    More: Boolean;
-    NrFixed, NrWildcards, i: Integer;
-    NextOffset: TByteOffset;
-  begin
-    Result := False;
-{$IFDEF DXBX_RECTYPE}
-    Assert(aStoredTrieNode.RecType = rtStoredTrieNode, 'StoredTrieNode type mismatch!');
-{$ENDIF}
-    // Calculate the position of the data after this TrieNode (StretchPtr) :
-    NrChildren := GetNodeNrChildren(aStoredTrieNode, {out}StretchPtr);
-
-    // Scan all stretches after this node :
-    repeat
-      More := DecodeStretchHeader({var}StretchPtr, {out}NrFixed, {out}NrWildcards);
-      if NrWildcards < 0 then
-        NrWildcards := PATTERNSIZE - (Depth + NrFixed);
-
-      // Check if all fixed bytes match :
-      for i := 0 to NrFixed - 1 do
-      begin
-        if aAddress^ <> StretchPtr^ then
-          Exit;
-
-        Inc(aAddress);
-        Inc(StretchPtr);
-      end;
-
-      // If stretch was hit, update depth and search-address for the next stretch :
-      Inc(Depth, NrFixed);
-      Inc(Depth, NrWildcards);
-      Inc(aAddress, NrWildcards);
-
-    until not More;
-
-    // When we're at the end of the pattern :
-    if Depth >= PATTERNSIZE then
-    begin
-      // Handle all children leafs here, searching for the best-fit lib-version :
-      _CheckLeafFunctions(PFunctionIndex(StretchPtr), NrChildren, aAddress);
-      // Stop recursion, by returning True :
-      Result := True;
-      Exit; // leave _TryMatchingNode
-    end; // if Depth
-
-    // When we're somewhere in the node-trie, try to match one of the child nodes :
-    aStoredTrieNode := Pointer(StretchPtr);
-    while NrChildren > 0 do
-    begin
-      // Try to match pattern on this node, stop if we can't go any deeper :
-      Result := _TryMatchingNode(aStoredTrieNode, aAddress, Depth);
-      if Result then
-        Exit;
-
-      // Try next child, maybe that helps:
-      NextOffset := aStoredTrieNode.NextSiblingOffset;
-      // Sanity-check on next-offset :
-      if (NextOffset <= 0) or (NextOffset > 100*1024*1024) then
-        Break;
-
-      // Jump to next sibling :
-      aStoredTrieNode := PatternTrieReader.GetNode(NextOffset);
-      Dec(NrChildren);
-    end;
-  end; // _TryMatchingNode
-
-begin
-  if not MyAddressesScanned[Integer(aTestAddress)] then
-  begin
-    MyAddressesScanned[Integer(aTestAddress)] := True;
-
-    // Search if this address matches a pattern :
-    _TryMatchingNode(PatternTrieReader.RootNode, aTestAddress, 0);
-  end;
-
-  Inc({var}aTestAddress);
-end; // TestAddressUsingPatternTrie
-
-
-procedure TSymbolManager.ScanMemoryRangeForLibraryPatterns(const pXbeHeader: PXBEIMAGE_HEADER);
+procedure TSymbolManager.ScanAddressRangeForPatternHits(const pXbeHeader: PXBEIMAGE_HEADER);
 var
   i: DWord;
   Section: PXBE_SECTIONHEADER;
   ScanEnd: UIntPtr;
   p: UIntPtr;
-
-  procedure _CheckStringToFunctionMappings;
-  var
-    s, f: Integer;
-    Str: AnsiString;
-    sh: PStoredStringHeader;
-    FuncName: AnsiString;
-  begin
-    for s := 0 to PatternTrieReader.StoredSignatureTrieHeader.StringTable.NrOfStrings - 1 do
-    begin
-      sh := PatternTrieReader.GetStringHeader(s);
-      str := AnsiString(PatternTrieReader.GetString(s));
-      for f := 0 to Integer(sh.NrOfFunctions) - 1 do
-      begin
-        FuncName := AnsiString(PatternTrieReader.GetFunctionName(sh.FirstFunctionIndex + Cardinal(f)));
-        Assert(FuncName = Str);
-      end;
-    end;
-  end;
-
-  procedure _ScanTest;
-
-    procedure _Test(const aAddress: UIntPtr; const aSymbolName: string);
-    begin
-      DbgPrintf('Testing at 0x%.08x for "%s"', [aAddress, aSymbolName]);
-      p := aAddress;
-      TestAddressUsingPatternTrie(PByte(p));
-      _Debug(FindSymbol(aSymbolName));
-    end;
-
-  begin
-(*
-    // Turok - Fixed wrong locations and duplicates :
-    _Test($0001171D, 'XapiInitProcess'); // TODO : Use correct pattern-name!
-    _Test($00011A35, '_RaiseException@16');
-    _Test($00011A9D, '_XRegisterThreadNotifyRoutine@8');
-    _Test($001939B0, 'EmuIDirect3DDevice8_SetRenderState_StencilEnable'); // TODO : Use correct pattern-name!
-    _Test($00193A40, 'EmuIDirect3DDevice8_SetRenderState_StencilFail'); // TODO : Use correct pattern-name!
-    _Test($00193AB0, 'EmuIDirect3DDevice8_SetRenderState_YuvEnable'); // TODO : Use correct pattern-name!
-    _Test($00193AE0, 'EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable'); // TODO : Use correct pattern-name!
-    _Test($00193B50, 'EmuIDirect3DDevice8_SetRenderState_StencilCullEnable'); // TODO : Use correct pattern-name!
-    _Test($00193BC0, 'EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead'); // TODO : Use correct pattern-name!
-    _Test($00193BE0, 'EmuIDirect3DDevice8_SetRenderState_RopZRead'); // TODO : Use correct pattern-name!
-    _Test($00194EA0, '_D3DDevice_SetLight@8');
-    _Test($00195080, '_D3DDevice_LightEnable@8');
-    _Test($00195170, '?SetTexture@D3DDevice@@SGJKPAUD3DBaseTexture@@@Z');
-    _Test($001960E0, 'EmuIDirect3DBaseTexture8_GetLevelCount'); // TODO : Use correct pattern-name!
-    _Test($001997F0, '?Get2DSurfaceDesc@PixelJar@D3D@@YGXPAUD3DPixelContainer@@IPAU_D3DSURFACE_DESC@@@Z'); //HLE: 0x001997F0 -> EmuGet2DSurfaceDesc
-    _Test($0019D360, '_D3DDevice_Reset@4'); //HLE: 0x0019D360 -> EmuIDirect3DDevice8_Reset
-    _Test($001B018A, 'CDirectSound_SetRolloffFactor'); // TODO : Use correct pattern-name!
-    _Test($001F35E3, '_USBD_Init@8'); // Cxbx incorrectly calls this XInitDevices!
-
-    // Cxbx meshes :
-    _Test($0001DE60, '_D3DDevice_SetTile@8'); // EmuIDirect3DDevice8_SetTile
-    _Test($00020200, '?SetFence@D3D@@YGKK@Z'); // D3D::SetFence (XREF)
-    _Test($0002CC34, '_XapiProcessHeap');
-
-    // Compiled Xdk samples\Tutorials\Tut01_CreateDevice\Release :
-    _Test($0001F2C0, '?GetSurfaceFormat@PixelJar@D3D@@YGKPAUD3DPixelContainer@@0@Z'); // from EmuIDirect3DDevice8_Clear
-    _Test($00019610, '_D3DDevice_Clear@24'); // EmuIDirect3DDevice8_Clear
-    // Psx :
-    _Test($00114A09, '_IDirectSoundBuffer_Play@16');
-    _Test($00115AC2, '_DirectSoundCreate@12');
-    // Gamepad
-    _Test($00016FBF, '_XapiInitProcess@0');
-    _Test($00016966, '_SetLastError@4');
-    _Test($000340B3, '_XInputOpen@16');
-*)
-  end; // _ScanTest
 
   function _SectionCanContainCode(const aSection: PXBE_SECTIONHEADER): Boolean;
   var
@@ -1166,8 +630,6 @@ var
           and (aSection.dwSizeofRaw > 0); // only when there's something in it!
   end;
 
-var
-  SectionLower, SectionUpper: UIntPtr;
 begin
   Assert(Assigned(pXbeHeader));
   Assert(pXbeHeader.dwSections > 0);
@@ -1183,46 +645,9 @@ begin
     Inc(Section);
   end;
 
-  // Reserve a bit per address to see which addresses are already scanned :
-  MyAddressesScanned.Size := 0;
-  MyAddressesScanned.Size := ScanUpper;
-
+  // Reserve a bit per address to see which addresses are already identified :
   MyAddressesIdentified.Size := 0;
   MyAddressesIdentified.Size := ScanUpper;
-
-  // Reserve a bit per address to see which addresses might contain code :
-  MyAddressesPotentiallyContainingCode.Size := 0;
-  MyAddressesPotentiallyContainingCode.Size := ScanUpper;
-
-  // Determine where all code can reside :
-  UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
-  for i := 0 to pXbeHeader.dwSections - 1 do
-  begin
-    if _SectionCanContainCode(Section) then
-    begin
-      // Calculate the range in which code can fall :
-      SectionLower := UIntPtr(Section.dwVirtualAddr);
-      SectionUpper := UIntPtr(Section.dwVirtualAddr) + Section.dwSizeofRaw;
-
-      // Mark all bytes that might contain code :
-      while SectionLower <= SectionUpper do
-      begin
-        MyAddressesPotentiallyContainingCode[Integer(SectionLower)] := True;
-        Inc(SectionLower);
-      end;
-    end;
-
-    Inc(Section);
-  end;
-
-  // Allocate the symbol-references pool :
-  SetLength(AllSymbolReferences, 1024);
-  ZeroMemory(@(AllSymbolReferences[0]), Length(AllSymbolReferences) * SizeOf(AllSymbolReferences[0]));
-  AllSymbolReferencesInUse := 1; // Start at index 1, so index 0 means 'no value'
-
-  // _CheckStringToFunctionMappings;
-
-  _ScanTest;
 
   // Do the actual scanning per section :
   UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
@@ -1234,19 +659,16 @@ begin
       p := UIntPtr(Section.dwVirtualAddr);
       ScanEnd := UIntPtr(Section.dwVirtualAddr) + Section.dwSizeofRaw; // Don't scan outside of raw size!
 
-{$IFDEF DXBX_DEBUG}
-      DbgPrintf('DxbxHLE : Detecting functions in section $%0.4x (%s) from $%.8x to $%.8x', [
-        i, string(PAnsiChar(Section.dwSectionNameAddr)), p, ScanEnd]);
-{$ENDIF}
+      if MayLog(lfUnit or lfDebug) then
+        DbgPrintf('DxbxHLE : Detecting functions in section $%0.4x (%s) from $%.8x to $%.8x', [
+          i, string(PAnsiChar(Section.dwSectionNameAddr)), p, ScanEnd]);
 
       while p < ScanEnd do
       try
-        // Store the addres we're about to scan, so it can
-        // be used in _CheckForwardFunctionSymbolReferences :
-        FCurrentTestAddress := PByte(p);
-//        ScanForLeafHits({var}PByte(p)); // Inc(PByte(p));
-        // Now scan this address, collecting all symbols :
-        TestAddressUsingPatternTrie({var}PByte(p));
+        // Now check this address, adding a LeafHit when apropriate :
+        CheckAddressForPatternHit(PByte(p));
+        Inc(PByte(p));
+
       except
 {$IFDEF DXBX_DEBUG}
         DbgPrintf('DxbxHLE : Exception while scanning on address $%.8x', [p]);
@@ -1257,29 +679,298 @@ begin
 
     Inc(Section);
   end;
+end; // ScanAddressRangeForPatternHits
 
-  // Set of 'potentially code'-addresses is no longer needed :
-  MyAddressesPotentiallyContainingCode.Size := 0;
-end; // ScanMemoryRangeForLibraryPatterns
+procedure TSymbolManager.ConvertLeafsIntoSymbols();
 
-function FunctionCompare(Item1, Item2: Pointer): Integer;
-var
-  StoredLibraryFunction1: PStoredLibraryFunction;
-  StoredLibraryFunction2: PStoredLibraryFunction;
-begin
-  StoredLibraryFunction1 := SymbolManager.PatternTrieReader.GetStoredLibraryFunction(Integer(Item1));
-  StoredLibraryFunction2 := SymbolManager.PatternTrieReader.GetStoredLibraryFunction(Integer(Item2));
-  // First priority : Many references go before less references :
-  Result := Integer(StoredLibraryFunction2.NrOfSymbolReferences) - Integer(StoredLibraryFunction1.NrOfSymbolReferences);
-  if Result = 0 then
+  function _IsAliasFunction(aStoredLibraryFunction1, aStoredLibraryFunction2: PStoredLibraryFunction): Boolean;
+  var
+    i: Integer;
+    Reference1, Reference2: PStoredSymbolReference;
   begin
-    // Second priority : Longer functions go before shorter ones :
-    Result := Integer(StoredLibraryFunction2.FunctionLength) - Integer(StoredLibraryFunction1.FunctionLength);
-    if Result = 0 then
-      // Make the ordering unique :
-      Result := Integer(Item2) - Integer(Item1);
+    Result := (aStoredLibraryFunction1.NrOfSymbolReferences > 0)
+          and (aStoredLibraryFunction1.FunctionLength = aStoredLibraryFunction2.FunctionLength)
+          and (aStoredLibraryFunction1.CRCLength = aStoredLibraryFunction2.CRCLength)
+          and (aStoredLibraryFunction1.CRCValue = aStoredLibraryFunction2.CRCValue)
+          and (aStoredLibraryFunction1.NrOfSymbolReferences = aStoredLibraryFunction2.NrOfSymbolReferences)
+          and ((aStoredLibraryFunction1.AvailableInVersions * aStoredLibraryFunction2.AvailableInVersions * LibraryVersionsToScan) <> []);
+    if not Result then
+      Exit;
+
+    // Check all references are identical too :
+    for i := 0 to aStoredLibraryFunction1.NrOfSymbolReferences - 1 do
+    begin
+      Reference1 := PatternTrieReader.GetSymbolReference(aStoredLibraryFunction1.FirstSymbolReference + Cardinal(i));
+      Reference2 := PatternTrieReader.GetSymbolReference(aStoredLibraryFunction2.FirstSymbolReference + Cardinal(i));
+
+      if (Reference1.Offset         <> Reference2.Offset)
+      or (Reference1.BaseOffset     <> Reference2.BaseOffset)
+      or (Reference1.NameIndex      <> Reference2.NameIndex) // Hm... these could be aliasses too....
+      or (Reference1.ReferenceFlags <> Reference2.ReferenceFlags) then
+      begin
+        Result := False;
+        Exit;
+      end;
+    end;
   end;
+
+  function _IsAliasSymbol(const aSymbol1, aSymbol2: TSymbolInformation): Boolean;
+  begin
+    Result := _IsAliasFunction(aSymbol1.StoredLibraryFunction, aSymbol2.StoredLibraryFunction);
+  end;
+
+var
+  i, j, k: Integer;
+  FunctionIndex: PFunctionIndex;
+  FunctionName: string;
+  NrValidSymbols: Integer;
+  ValidSymbols: array of TSymbolInformation;
+  StoredFunction: PStoredLibraryFunction;
+begin
+  SetLength(ValidSymbols, 16);
+
+  // Loop over all leafs :
+  for i := 0 to Length(MyDetectedLeafs) - 1 do
+  begin
+    // Check if the leaf was reached in the scan :
+    FunctionIndex := MyDetectedLeafs[i].FirstFunctionIndex;
+    if FunctionIndex = nil then
+      Continue;
+
+    // Loop over all functions in the leaf :
+    NrValidSymbols := 0;
+    for j := 0 to MyDetectedLeafs[i].NrChildren - 1 do
+    begin
+      // Check if the function is available in the current SDK version :
+      StoredFunction := PatternTrieReader.GetStoredLibraryFunction(FunctionIndex^);
+      if (StoredFunction.AvailableInVersions * LibraryVersionsToScan) <> [] then
+      begin
+        // Create a symbol & remember it :
+        FunctionName := PatternTrieReader.GetFunctionName(FunctionIndex^);
+        ValidSymbols[NrValidSymbols] := FindOrAddSymbol(FunctionName, StoredFunction);
+        Inc(NrValidSymbols);
+
+        // Make room when needed :
+        if Length(ValidSymbols) = NrValidSymbols then
+          SetLength(ValidSymbols, 2 * NrValidSymbols);
+      end;
+
+      Inc(FunctionIndex);
+    end; // for valid leaf children
+
+    // Find & Register aliases (duplicate declarations) between these symbols :
+    for j := 0 to NrValidSymbols - 1 do
+    begin
+      // Loop over all following symbols :
+      for k := j + 1 to NrValidSymbols - 1 do
+        // Check if these are equal to the initial symbol :
+        if _IsAliasSymbol(ValidSymbols[k], ValidSymbols[j]) then
+        begin
+          // Alias one to the other :
+          ValidSymbols[k].AliasSymbol := ValidSymbols[j];
+          DbgPrintf('Aliased %s to %s', [ValidSymbols[k].Name, ValidSymbols[j].Name]);
+        end;
+    end; // for aliases
+  end; // for leafs
+end; // ConvertLeafsIntoSymbols
+
+///
+/// Function scanning code :
+///
+
+function TSymbolManager.IsAddressWithinScanRange(const aAddress: TCodePointer): Boolean;
+begin
+  Result := (UIntPtr(aAddress) >= XBE_IMAGE_BASE) and (UIntPtr(aAddress) <= ScanUpper);
 end;
+
+function TSymbolManager.GetReferencedSymbolAddress(const aStartingAddress: PByte;
+  const aSymbolReference: PStoredSymbolReference): TCodePointer;
+begin
+  // Use aSymbolReference to determine the symbol-address that should be checked :
+  if (aSymbolReference.ReferenceFlags and rfIsRelative) > 0 then
+    Result := DetermineRelativeAddress(aStartingAddress, aSymbolReference.Offset)
+  else
+  if (aSymbolReference.ReferenceFlags and rfIsAbsolute) > 0 then
+    Result := DetermineImmediateAddress(aStartingAddress, aSymbolReference.Offset)
+  else
+  begin
+    // TODO : Handle rfIsSectionRel
+    Result := nil;
+    Exit;
+  end;
+
+  Dec(IntPtr(Result), aSymbolReference.BaseOffset); // Must be signed ptr, for negative offsets!
+end; // GetReferencedSymbolAddress
+
+procedure TSymbolManager.AddIntermediateSymbolRegistration(const CurrentSymbol: TSymbolInformation; const aAddress: PByte);
+begin
+  // Only register intermediate results when the address is not set already :
+  if CurrentSymbol.Address = aAddress then
+    Exit;
+
+  // To register, mark the covered addresses as being 'identified', and set the address in this symbol :
+  MyAddressesIdentified.SetRange(UIntPtr(aAddress), CurrentSymbol.Length);
+  CurrentSymbol.Address := aAddress;
+
+  // Make room for an new intermediate registration :
+  Inc(FIntermediateSymbolRegistrationsCount);
+  if Length(MyIntermediateSymbolRegistrations) < FIntermediateSymbolRegistrationsCount then
+    SetLength(MyIntermediateSymbolRegistrations, FIntermediateSymbolRegistrationsCount * 2);
+
+  // The only thing we need to remember, is the symbol itself :
+  MyIntermediateSymbolRegistrations[FIntermediateSymbolRegistrationsCount-1] := CurrentSymbol;
+end;
+
+procedure TSymbolManager.ConfirmIntermediateSymbolRegistrations;
+var
+  i: Integer;
+  CurrentSymbol: TSymbolInformation;
+begin
+  if MayLog(lfUnit) then // TODO : Add lfExtreme flag once the output is reliable
+    for i := 0 to FIntermediateSymbolRegistrationsCount - 1 do
+    begin
+      CurrentSymbol := MyIntermediateSymbolRegistrations[i];
+      DbgPrintf('$%.08x;%s [-$%.08x]', [CurrentSymbol.Address, DxbxUnmangleSymbolName(CurrentSymbol.Name), UIntPtr(CurrentSymbol.Address) + CurrentSymbol.Length - 1]);
+    end;
+
+  // There's not much to it, really - confirming the registrations is just
+  // a matter of not reverting them (as they've already been registered) :
+  FIntermediateSymbolRegistrationsCount := 0;
+end;
+
+procedure TSymbolManager.RevertIntermediateSymbolRegistrations;
+var
+  i: Integer;
+begin
+  // Loop over all intermediate registrations, and remove their trails :
+  for i := 0 to FIntermediateSymbolRegistrationsCount - 1 do
+  begin
+    MyAddressesIdentified.ClearRange(UIntPtr(MyIntermediateSymbolRegistrations[i].Address), MyIntermediateSymbolRegistrations[i].Length);
+    MyIntermediateSymbolRegistrations[i].Address := nil;
+  end;
+
+  // Reset the index, so the array can be filled again :
+  FIntermediateSymbolRegistrationsCount := 0;
+end;
+
+function TSymbolManager.CheckFunctionAtAddressAndRegister(const CurrentSymbol: TSymbolInformation; const aAddress: PByte): Boolean;
+
+  function _CheckFunctionCRC(const aStoredLibraryFunction: PStoredLibraryFunction; const aAddress: PByte): Boolean;
+  begin
+    if aStoredLibraryFunction.CRCLength > 0 then
+      Result := (aStoredLibraryFunction.CRCValue = CalcCRC16(aAddress, aStoredLibraryFunction.CRCLength))
+    else
+      Result := True;
+  end;
+
+  function _GetStoredFunctionByNameIndex(const aNameIndex: TStringTableIndex): PStoredLibraryFunction;
+  var
+    i: Integer;
+    StoredStringHeader: PStoredStringHeader;
+  begin
+    StoredStringHeader := PatternTrieReader.GetStringHeader(aNameIndex);
+    // TODO : Data/function distinction could be put in StoredSymbolReference.ReferenceFlags...
+    for i := 0 to Integer(StoredStringHeader.NrOfFunctions) - 1 do
+    begin
+      // Check if the function is from the correct SDK version (skip the others) :
+      Result := PatternTrieReader.GetStoredLibraryFunction(StoredStringHeader.FirstFunctionIndex + TFunctionIndex(i));
+      if (Result.AvailableInVersions * LibraryVersionsToScan) <> [] then
+        Exit;
+    end;
+
+    // Clear the function pointer, in case the reference is a data symbol :
+    Result := nil;
+  end;
+
+(*
+  procedure _DetermineReferencesToCheck;
+  begin
+    // Determine which references shouldn't be checked further (like duplicates) :
+    AllSymbolReferences[c+x].MustSkip := False
+      // Skip Structured Exception Handling labels (would generate lots of alternatives) :
+      or (strncmp(PChar(AllSymbolReferences[c+x].Symbol.Name), '__SEH', Length('__SEH')) = 0)
+      // Skip kernel call references (for now, but can be resolved later) :
+      or (strncmp(PChar(AllSymbolReferences[c+x].Symbol.Name), '__imp__', Length('__imp__')) = 0);
+  end;
+*)
+
+var
+  Referenced: array of record
+    StoredSymbolReference: PStoredSymbolReference;
+    ReferencedAddress: TCodePointer;
+    Symbol: TSymbolInformation;
+  end;
+  Function_: PStoredLibraryFunction;
+  i: Integer;
+begin
+  // If the symbol was already detected here, return True; If it's on another address, return False; When nil, check further :
+  Result := (CurrentSymbol.Address = aAddress);
+  if Result or Assigned(CurrentSymbol.Address) then
+    Exit;
+
+  // Check that none of the covered bytes are already identified :
+  if not MyAddressesIdentified.IsRangeClear(UIntPtr(aAddress), CurrentSymbol.Length) then
+    Exit;
+
+  // See if the symbol has function information (if not, it's probably data, which we can't check any further) :
+  if (CurrentSymbol.StoredLibraryFunction = nil) then
+  begin
+    // To facilitate recursive references checks (on a higher level), pretend the data-symbol is detected at this address :
+    AddIntermediateSymbolRegistration(CurrentSymbol, aAddress);
+    Result := True;
+    Exit;
+  end;
+
+  // Check the CRC for this function on the given address :
+  if not _CheckFunctionCRC(CurrentSymbol.StoredLibraryFunction, aAddress + PATTERNSIZE) then
+    Exit;
+
+  // Collect all references and check they're all within bounds :
+  SetLength(Referenced, CurrentSymbol.SymbolReferenceCount);
+  for i := 0 to Length(Referenced) - 1 do
+  begin
+    Referenced[i].StoredSymbolReference := CurrentSymbol.SymbolReferences[i];
+    Referenced[i].ReferencedAddress := GetReferencedSymbolAddress(aAddress, Referenced[i].StoredSymbolReference);
+    if not IsAddressWithinScanRange(Referenced[i].ReferencedAddress) then
+      Exit;
+  end;
+
+  // To facilitate recursive references checks, pretend the function is detected at this address :
+  AddIntermediateSymbolRegistration(CurrentSymbol, aAddress);
+
+  // Retrieve all references :
+  for i := 0 to Length(Referenced) - 1 do
+  begin
+    // Lookup if the reference is actually a function reference (using the reference's name) :
+    Function_ := _GetStoredFunctionByNameIndex(Referenced[i].StoredSymbolReference.NameIndex);
+
+    // Retrieve an object for the symbol being referenced :
+    Referenced[i].Symbol := FindOrAddSymbol(Referenced[i].StoredSymbolReference.NameIndex, Function_);
+  end;
+
+  // TODO : _DetermineReferencesToCheck;
+
+  // Recursively check all referenced symbols :
+  for i := 0 to Length(Referenced) - 1 do
+  begin
+    // Skip ??_H@YGXPAXIHP6EPAX0@Z@Z (vector constructor iterator) and *PAXI* (vector destructor iterator),
+    // because the C-compiler generates these symbols on-demand (our patterns are just a distraction here)
+    // (See http://www.kegel.com/mangle.html and http://www.codeproject.com/KB/recipes/compout.aspx )
+    if Pos('PAXI', Referenced[i].Symbol.Name) > 0 then
+      Continue;
+
+    // Same for '??KD3DXVECTOR3@@QBE?AU0@M@Z and variants (these appear deformed, so won't fit the pattern either) :
+    if Pos('@@QBE?AU0@M@Z', Referenced[i].Symbol.Name) > 0 then
+      Continue;
+
+    if not CheckFunctionAtAddressAndRegister(Referenced[i].Symbol, Referenced[i].ReferencedAddress) then
+      // If the recursive check fails, all temporary registrations are reverted
+      Exit;
+  end;
+
+  // All checks are done, we got the right symbol address (for now) !
+  Result := True;
+end; // CheckFunctionAtAddressAndRegister
 
 procedure TSymbolManager.DetermineFunctionsToScanFor;
 var
@@ -1297,171 +988,237 @@ begin
 
   // Sort all functions descending from most references and longest code length :
   MyFunctionsToScanFor.Sort(FunctionCompare);
-end;
-
-function TSymbolManager.CheckFunctionAtAddressAndRegister(const CurrentSymbol: TSymbolInformation; const aAddress: PByte): Boolean;
-var
-  Referenced: array of record
-    StoredSymbolReference: PStoredSymbolReference;
-    ReferencedAddress: TCodePointer;
-    Symbol: TSymbolInformation;
-    OriginalAddress: TCodePointer;
-  end;
-  Function_: PStoredLibraryFunction;
-  i, j: Integer;
-  StoredStringHeader: PStoredStringHeader;
-begin
-  // If the symbol was already detected here, return True; If it's on another address, return False; When nil, check further :
-  Result := (CurrentSymbol.Address = aAddress);
-  if Result or Assigned(CurrentSymbol.Address) then
-    Exit;
-
-  // Check that none of the covered bytes are already identified :
-  if not MyAddressesIdentified.IsRangeClear(UIntPtr(aAddress), CurrentSymbol.Length) then
-    Exit;
-
-  // See if the symbol has function information (everything else is probably data, which we can't check any further) :
-  if Assigned(CurrentSymbol.StoredLibraryFunction) then
-  begin
-    // Check the CRC for this function on the given address :
-    if not CheckFunctionCRC(CurrentSymbol.StoredLibraryFunction, aAddress + PATTERNSIZE) then
-      Exit;
-
-    // Collect all references and check they're all assigned & within bounds :
-    SetLength(Referenced, CurrentSymbol.StoredLibraryFunction.NrOfSymbolReferences);
-    for i := 0 to CurrentSymbol.StoredLibraryFunction.NrOfSymbolReferences - 1 do
-    begin
-      Referenced[i].StoredSymbolReference := PatternTrieReader.GetSymbolReference(CurrentSymbol.StoredLibraryFunction.FirstSymbolReference + Cardinal(i));
-      Referenced[i].ReferencedAddress := GetReferencedSymbolAddress(aAddress, Referenced[i].StoredSymbolReference);
-      if Referenced[i].ReferencedAddress = nil then // TODO : call IsAddressWithinScanRange here, instead of in GetReferencedSymbolAddress
-        Exit;
-    end;
-  end;
-
-  // To facilitate a recursive references check, pretend the symbol is detected at this address :
-  MyAddressesIdentified.SetRange(UIntPtr(aAddress), CurrentSymbol.Length);
-  CurrentSymbol.Address := aAddress;
-
-  // Again, see if we have further function information to check :
-  Result := (CurrentSymbol.StoredLibraryFunction = nil);
-  if not Result then
-  try
-    // Check the validity of all references :
-    for i := 0 to CurrentSymbol.StoredLibraryFunction.NrOfSymbolReferences - 1 do
-    begin
-      // Lookup if the reference is actually a function reference (using the reference's string header) :
-      Function_ := nil;
-      StoredStringHeader := PatternTrieReader.GetStringHeader(Referenced[i].StoredSymbolReference.NameIndex);
-      // TODO : Data/function distinction could be put in StoredSymbolReference.ReferenceFlags...
-      for j := 0 to Integer(StoredStringHeader.NrOfFunctions) - 1 do
-      begin
-        // Check if the function is from the correct SDK version (skip the others) :
-        Function_ := PatternTrieReader.GetStoredLibraryFunction(StoredStringHeader.FirstFunctionIndex + TFunctionIndex(j));
-        if (Function_.AvailableInVersions * LibraryVersionsToScan) <> [] then
-          Break;
-
-        // TODO : Handle the case there's no function (like when the reference is a data symbol)
-      end;
-
-      // Retrieve an object for the symbol being referenced :
-      Referenced[i].Symbol := FindOrAddSymbol(Referenced[i].StoredSymbolReference.NameIndex, Function_);
-      // Remember the address that this symbol initially points at (so we could restore it later) :
-      Referenced[i].OriginalAddress := Referenced[i].Symbol.Address;
-    end;
-
-    // Recursively check all referenced symbols :
-    for i := 0 to CurrentSymbol.StoredLibraryFunction.NrOfSymbolReferences - 1 do
-    begin
-      if not CheckFunctionAtAddressAndRegister(Referenced[i].Symbol, Referenced[i].ReferencedAddress) then
-        Exit;
-    end;
-
-    // All checks are done, we got the right function address !
-    Result := True;
-
-  finally
-    if not Result then
-    begin
-      // If the recursive test failed, reset this symbol to 'undetected' state :
-      MyAddressesIdentified.ClearRange(UIntPtr(aAddress), CurrentSymbol.Length);
-      CurrentSymbol.Address := nil;
-      // Reset all (possibly changed) referenced symbol addresses too :
-      for i := 0 to CurrentSymbol.StoredLibraryFunction.NrOfSymbolReferences - 1 do
-        Referenced[i].Symbol.Address := Referenced[i].OriginalAddress;
-    end;
-  end;
-
-  if Result then
-    DbgPrintf('$%.08x;%s [-$%.08x]', [CurrentSymbol.Address, DxbxUnmangleSymbolName(CurrentSymbol.Name), UIntPtr(CurrentSymbol.Address) + CurrentSymbol.Length - 1]);
-//    DbgPrintf('Found at 0x%.8x-0x%.8x : %s  [%s]',
-//      [CurrentSymbol.Address,
-//       UIntPtr(CurrentSymbol.Address) + UInt(CurrentSymbol.Length) - 1,
-//       DxbxUnmangleSymbolName(CurrentSymbol.Name),
-//       CurrentSymbol.Name]);
-
-end; // CheckFunctionAtAddressAndRegister
+end; // DetermineFunctionsToScanFor
 
 procedure TSymbolManager.LookupFunctionsInHits();
 
-  procedure _Test(Address: UIntPtr; Name: string);
+  procedure _ScanTest;
+
+    procedure _Test(const aAddress: UIntPtr; const aSymbolName: string);
+    begin
+      DbgPrintf('Testing at 0x%.08x for "%s"', [aAddress, aSymbolName]);
+      CheckFunctionAtAddressAndRegister(FindOrAddSymbol(aSymbolName), PByte(aAddress));
+      DbgPrintSymbol(FindSymbol(aSymbolName));
+    end;
+
   begin
-    CheckFunctionAtAddressAndRegister(FindOrAddSymbol(Name), PByte(Address));
-  end;
+(*
+    // Turok - Fixed wrong locations and duplicates :
+    _Test(?, '_D3D__RenderState'));
+    _Test(?, '?CommonSetDebugRegisters@D3D@@YIXXZ'));
+    _Test(?, '_XapiProcessHeap'));
+    _Test($0001171D, 'XapiInitProcess'); // TODO : Use correct pattern-name!
+    _Test($00011A35, '_RaiseException@16');
+    _Test($00011A9D, '_XRegisterThreadNotifyRoutine@8');
+    _Test($001939B0, 'EmuIDirect3DDevice8_SetRenderState_StencilEnable'); // TODO : Use correct pattern-name!
+    _Test($00193A40, 'EmuIDirect3DDevice8_SetRenderState_StencilFail'); // TODO : Use correct pattern-name!
+    _Test($00193AB0, 'EmuIDirect3DDevice8_SetRenderState_YuvEnable'); // TODO : Use correct pattern-name!
+    _Test($00193AE0, 'EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable'); // TODO : Use correct pattern-name!
+    _Test($00193B50, 'EmuIDirect3DDevice8_SetRenderState_StencilCullEnable'); // TODO : Use correct pattern-name!
+    _Test($00193BC0, '_D3DDevice_SetRenderState_RopZCmpAlwaysRead@4'));
+    _Test($00193BE0, '_D3DDevice_SetRenderState_RopZRead@4'));
+    _Test($00193C00, '_D3DDevice_SetRenderState_DoNotCullUncompressed@4'));
+
+    _Test($00194EA0, '_D3DDevice_SetLight@8');
+    _Test($00195080, '_D3DDevice_LightEnable@8');
+    _Test($00195170, '?SetTexture@D3DDevice@@SGJKPAUD3DBaseTexture@@@Z');
+    _Test($001960E0, 'EmuIDirect3DBaseTexture8_GetLevelCount'); // TODO : Use correct pattern-name!
+    _Test($001997F0, '?Get2DSurfaceDesc@PixelJar@D3D@@YGXPAUD3DPixelContainer@@IPAU_D3DSURFACE_DESC@@@Z'); //HLE: 0x001997F0 -> EmuGet2DSurfaceDesc
+    _Test($0019D360, '_D3DDevice_Reset@4'); //HLE: 0x0019D360 -> EmuIDirect3DDevice8_Reset
+    _Test($001B018A, 'CDirectSound_SetRolloffFactor'); // TODO : Use correct pattern-name!
+    _Test($001F35E3, '_USBD_Init@8'); // Cxbx incorrectly calls this XInitDevices!
+
+    // Cxbx meshes :
+    _Test($0001DE60, '_D3DDevice_SetTile@8'); // EmuIDirect3DDevice8_SetTile
+    _Test($00020200, '?SetFence@D3D@@YGKK@Z'); // D3D::SetFence (XREF)
+    _Test($0002CC34, '_XapiProcessHeap');
+
+    // Compiled Xdk samples\Tutorials\Tut01_CreateDevice\Release :
+    _Test($0001F2C0, '?GetSurfaceFormat@PixelJar@D3D@@YGKPAUD3DPixelContainer@@0@Z'); // from EmuIDirect3DDevice8_Clear
+    _Test($00019610, '_D3DDevice_Clear@24'); // EmuIDirect3DDevice8_Clear
+
+    // Psx :
+    _Test($00114A09, '_IDirectSoundBuffer_Play@16');
+    _Test($00115AC2, '_DirectSoundCreate@12');
+
+    // Gamepad
+    _Test($00016FBF, '_XapiInitProcess@0');
+    _Test($00016966, '_SetLastError@4');
+    _Test($000340B3, '_XInputOpen@16');
+
+    _Test($00022020, '_D3DDevice_SetRenderState_StencilEnable@4');
+    _Test($00022150, '_D3DDevice_SetRenderState_OcclusionCullEnable@4');
+    _Test($00022230, '_D3DDevice_SetRenderState_RopZCmpAlwaysRead@4');
+    _Test($00022250, '_D3DDevice_SetRenderState_RopZRead@4');
+    _Test($00022290, '_D3DDevice_SetRenderState_MultiSampleAntiAlias@4');
+    _Test($00030E38, '?D3DXVec3LengthSq@@YAMPBUD3DXVECTOR3@@@Z');
+    _Test($00030E80, '_D3DXVec3Normalize@8');
+*)
+
+  end; // _ScanTest
+
+  function _MayCheckFunction(const aStoredLibraryFunction: PStoredLibraryFunction): Boolean;
+  // Determines if a function should be scanned for
+  begin
+    // Skip small functions with only one symbol-reference, because those are
+    // very common. Instead, we hope they will be discovered via other functions :
+    case aStoredLibraryFunction.NrOfSymbolReferences of
+      0: Result := (aStoredLibraryFunction.FunctionLength > 7);
+      1: Result := (aStoredLibraryFunction.FunctionLength > 5);
+      2: Result := (aStoredLibraryFunction.FunctionLength > 9);
+    else
+      Result := True;
+    end;
+  end; // _MayCheckFunction
 
 var
   i: Integer;
-  f: TFunctionIndex;
-  fn: string;
-  sf: PStoredLibraryFunction;
+  FunctionIndex: TFunctionIndex;
+  FunctionName: string;
+  StoredFunction: PStoredLibraryFunction;
   LeafNode: PStoredTrieNode;
   LeafID: TLeafID;
   CurrentHit: PPatternHitResult;
   CurrentSymbol: TSymbolInformation;
 begin
-//    _Test($00016FBF, '_XapiInitProcess@0');
-//    _Test($00016966, '_SetLastError@4');
-//    _Test($000340B3, '_XInputOpen@16');
-
-//    _Test($00022020, '_D3DDevice_SetRenderState_StencilEnable@4');
-//    _Test($00022150, '_D3DDevice_SetRenderState_OcclusionCullEnable@4');
-//    _Test($00022230, '_D3DDevice_SetRenderState_RopZCmpAlwaysRead@4');
-//    _Test($00022250, '_D3DDevice_SetRenderState_RopZRead@4');
-//    _Test($00022290, '_D3DDevice_SetRenderState_MultiSampleAntiAlias@4');
+  _ScanTest;
 
   // Loop over the sorted list of possible functions :
   for i := 0 to MyFunctionsToScanFor.Count - 1 do
   begin
     // Get the function index :
-    f := TFunctionIndex(MyFunctionsToScanFor[i]);
-    fn := PatternTrieReader.GetFunctionName(f);
-//    if Pos('MatrixRotationAxis', fn) > 0 then // $00030FDF
-//    sf := PatternTrieReader.GetStoredLibraryFunction(f) else
+    FunctionIndex := TFunctionIndex(MyFunctionsToScanFor[i]);
+    FunctionName := PatternTrieReader.GetFunctionName(FunctionIndex);
 
     // Retrieve the function information record :
-    sf := PatternTrieReader.GetStoredLibraryFunction(f);
+    StoredFunction := PatternTrieReader.GetStoredLibraryFunction(FunctionIndex);
+
     // Skip small functions to prevent too many hits (I guess we'll find most of them via references anyhow) :
-    if sf.FunctionLength < 5 then
+    if not _MayCheckFunction(StoredFunction) then
       Continue;
 
     // Retrieve the LeafNode in which this function ended up :
-    LeafNode := PatternTrieReader.GetNode(sf.PatternLeafNodeOffset);
+    LeafNode := PatternTrieReader.GetNode(StoredFunction.PatternLeafNodeOffset);
     // Get the ID from this leaf node :
     LeafID := GetLeafID(LeafNode);
     // Loop over all locations matching up to this leaf (and thus potentially hitting this function) :
-    CurrentHit := AllLeafs[LeafID].FirstHit;
+    CurrentHit := MyDetectedLeafs[LeafID].FirstHit;
     while Assigned(CurrentHit) do
     begin
+(* TODO : In Gamepad, we still have trouble finding :
+$0003111A;D3DXMatrixLookAtLH (or it's alias, XGMatrixRotationYawPitchRoll)
+if UIntPtr(CurrentHit.Address) = $0003111A then
+CurrentSymbol := FindOrAddSymbol(FunctionName, StoredFunction) else
+*)
+
       // Find the symbol so we can check if it's positioned at this address :
-      CurrentSymbol := FindOrAddSymbol(fn, sf);
+      CurrentSymbol := FindOrAddSymbol(FunctionName, StoredFunction);
+
       // Check the references recursively & register it (including it's implicated symbols):
       if CheckFunctionAtAddressAndRegister(CurrentSymbol, CurrentHit.Address) then
-        // If the function is pinpointed, stop searching :
+      begin
+        // If the function is pinpointed successfully, confirm the resulting registrations and step to the next function :
+        ConfirmIntermediateSymbolRegistrations;
         Break;
+      end;
 
+      // The check failed, remove it's intermediate symbol registrations :
+      RevertIntermediateSymbolRegistrations();
+      // And try an alternative hit on the same leaf :
       CurrentHit := CurrentHit.NextHit;
+    end; // while hits
+  end; // for functions
+
+end; // LookupFunctionsInHits
+
+procedure TSymbolManager.PutSymbolsInFinalLocationList;
+
+  function _Compare_Symbol_Address(Item1, Item2: Pointer): Integer;
+  begin
+    Result := Integer(TSymbolInformation(Item1).Address) - Integer(TSymbolInformation(Item2).Address);
+  end;
+
+var
+  w: Word;
+  CurrentSymbol: TSymbolInformation;
+begin
+  if MayLog(lfUnit) then
+    DbgPrintf('DxbxHLE : Collecting final symbols');
+
+  MyFinalLocations.Count := MySymbolCount;
+  MySymbolCount := 0;
+
+  // Loop over all symbols and put them in one big list :
+  for w := Low(w) to High(w) do
+  begin
+    CurrentSymbol := MySymbolsHashedOnName[w];
+    if (CurrentSymbol = nil)
+    or (CurrentSymbol.Address = nil) then
+      Continue;
+
+    MyFinalLocations[MySymbolCount] := CurrentSymbol;
+    Inc(MySymbolCount);
+  end;
+
+  MyFinalLocations.Count := MySymbolCount;
+
+  // Sort that list
+  MyFinalLocations.Sort(@_Compare_Symbol_Address);
+end; // PutSymbolsInFinalLocationList
+
+procedure TSymbolManager.PrintFinalLocationList;
+var
+  i: Integer;
+  CurrentSymbol: TSymbolInformation;
+  Name: string;
+begin
+  if not MayLog(lfUnit or lfDebug) then
+    Exit;
+
+  for i := 0 to Count - 1 do
+  begin
+    CurrentSymbol := Locations[i];
+
+    Name := DxbxUnmangleSymbolName(CurrentSymbol.Name);
+    if (CurrentSymbol.StoredLibraryFunction = nil) then
+      Name := Name + ' (XRef)';
+
+    DbgPrintf('Found at 0x%.8x-0x%.8x : %s  [%s]',
+      [CurrentSymbol.Address,
+       UIntPtr(CurrentSymbol.Address) + UInt(CurrentSymbol.Length) - 1,
+       Name,
+       CurrentSymbol.Name]);
+  end; // for Symbols
+end; // PrintFinalLocationList
+
+procedure TSymbolManager.CleanupTemporaryScanningData;
+
+  procedure _RecursiveDisposeHits(const aHit: PPatternHitResult);
+  begin
+    if Assigned(aHit) then
+    begin
+      _RecursiveDisposeHits(aHit.NextHit);
+      Dispose(aHit);
     end;
   end;
-end; // LookupFunctionsInHits
+
+var
+  i: Integer;
+begin
+  SetLength(MyIntermediateSymbolRegistrations, 0);
+
+  for i := 0 to FNrDetectedLeafs - 1 do
+    _RecursiveDisposeHits(MyDetectedLeafs[i].FirstHit);
+
+  SetLength(MyDetectedLeafs, 0);
+  FNrDetectedLeafs := 0;
+
+  MyAddressesIdentified.Size := 0;
+end; // CleanupTemporaryScanningData
+
+///
+/// Support code :
+///
 
 procedure TSymbolManager.DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
 var
@@ -1478,7 +1235,9 @@ begin
   CurrentXbeLibraryVersion := pLibraryVersion;
   if not Assigned(CurrentXbeLibraryVersion) then
   begin
-    DbgPrintf('DxbxHLE : No XBE library versions to scan!');
+    if MayLog(lfUnit) then
+      DbgPrintf('DxbxHLE : No XBE library versions to scan!');
+
     Exit;
   end;
 
@@ -1488,7 +1247,8 @@ begin
   for i := 0 to pXbeHeader.dwLibraryVersions - 1 do
   begin
     CurrentLibName := string(PCharToString(@(CurrentXbeLibraryVersion.szName[0]), XBE_LIBRARYNAME_MAXLENGTH));
-    DbgPrintf('DxbxHLE : Library "%s" is version %d', [CurrentLibName, CurrentXbeLibraryVersion.wBuildVersion]);
+    if MayLog(lfUnit) then
+      DbgPrintf('DxbxHLE : Library "%s" is version %d', [CurrentLibName, CurrentXbeLibraryVersion.wBuildVersion]);
 
     // Collect all known library-numbers with the same name in a stringlist :
     StoredLibraryVersions.Clear;
@@ -1560,316 +1320,13 @@ begin
   FreeAndNil(StoredLibraryVersions);
 end; // DetectVersionedXboxLibraries
 
-procedure TSymbolManager.DetermineFinalLocations;
-
-  procedure _FinalTest;
-
-    procedure _Test(const aAddress: UIntPtr; const aSymbolName: string);
-    begin
-      DbgPrintf('Testing at 0x%.08x for "%s"', [aAddress, aSymbolName]);
-      _Debug(FindSymbol(aSymbolName));
-    end;
-
-  begin
-(*
-    // Turok - Fixed wrong locations and duplicates :
-    _Test(?, '_D3D__RenderState'));
-    _Test(?, '?CommonSetDebugRegisters@D3D@@YIXXZ'));
-    _Test(?, '_XapiProcessHeap'));
-    _Test($00193BC0, '_D3DDevice_SetRenderState_RopZCmpAlwaysRead@4'));
-    _Test($00193BE0, '_D3DDevice_SetRenderState_RopZRead@4'));
-    _Test($00193C00, '_D3DDevice_SetRenderState_DoNotCullUncompressed@4'));
-    _Test($00194EA0, '_D3DDevice_SetLight@8');
-    _Test($00195080, '_D3DDevice_LightEnable@8');
-    _Test($001997F0, '?Get2DSurfaceDesc@PixelJar@D3D@@YGXPAUD3DPixelContainer@@IPAU_D3DSURFACE_DESC@@@Z'); //HLE: 0x001997F0 -> EmuGet2DSurfaceDesc
-    _Test($0019D360, '_D3DDevice_Reset@4'); //HLE: 0x0019D360 -> EmuIDirect3DDevice8_Reset
-    // Compiled Xdk samples\Tutorials\Tut01_CreateDevice\Release :
-    _Test($00019610, '_D3DDevice_Clear@24'); // EmuIDirect3DDevice8_Clear
-    // Psx :
-    _Test($00115AC2, '_DirectSoundCreate@12');
-    // Gamepad
-    _Test($00016FBF, '_XapiInitProcess@0');
-    _Test($00016966, '_SetLastError@4');
-    _Test($000340B3, '_XInputOpen@16');
-*)
-  end; // _FinalTest
-
-  procedure _AddMissingSymbols;
-  var
-    w: Word;
-    CurrentSymbol: TSymbolInformation;
-    i: Integer;
-    CurrentLocation: PPotentialFunctionLocation;
-    x: Integer;
-    ReferencedSymbolInformation: TSymbolInformation;
-    ReferencedSymbolAddress: TCodePointer;
-    ReferencedSymbolLocation: PPotentialFunctionLocation;
-  begin
-    DbgPrintf('DxbxHLE : Adding missing symbols');
-    // Loop over all symbols :
-    for w := Low(w) to High(w) do
-    begin
-      CurrentSymbol := MySymbolsHashedOnName[w];
-      if (CurrentSymbol = nil) then
-        Continue;
-      if (not CurrentSymbol.HasSymbolReferences) then
-        Continue;
-
-      // Iterate over all potential locations of this symbol :
-      i := CurrentSymbol.FirstPotentialFunctionLocationIndex;
-      while i > 0 do
-      begin
-        CurrentLocation := @(MyPotentialFunctionLocations[i]);
-
-        // For now, skip locations that where added later and thus have no symbol-references cached :
-        if CurrentLocation.SymbolReferencesIndex > 0 then
-        begin
-          // Loop over each symbol-reference reachable from this symbol-address :
-          for x := 0 to CurrentSymbol.SymbolReferenceCount - 1 do
-          begin
-            if AllSymbolReferences[CurrentLocation.SymbolReferencesIndex + x].MustSkip then
-              Continue;
-
-            ReferencedSymbolAddress := AllSymbolReferences[CurrentLocation.SymbolReferencesIndex + x].Address;
-            ReferencedSymbolInformation := AllSymbolReferences[CurrentLocation.SymbolReferencesIndex + x].Symbol;
-
-            if ReferencedSymbolInformation.HasFunctionInformation then
-            begin
-              // A cross referenced symbol with function-information should
-              // have been detected at the referenced addres :
-              ReferencedSymbolLocation := ReferencedSymbolInformation.FindPotentialLocation(ReferencedSymbolAddress);
-              // If there's no potential location at that address for that symbol :
-              if ReferencedSymbolLocation = nil then
-              begin
-                // Then we invalidate the originating location :
-                CurrentLocation.Address := nil;
-                Break;
-              end;
-            end
-            else
-              // Add all symbol-references that haven't been detected as function yet (ONLY if it must be data!) :
-              if ReferencedSymbolInformation.IsSymbolNameUsedInFunctions then
-                ReferencedSymbolLocation := nil
-              else
-              begin
-                ReferencedSymbolLocation := ReferencedSymbolInformation.AddPotentialLocation(ReferencedSymbolAddress);
-
-                // Re-determine the CurrentLocation, as the above add might have enlarged the
-                // MyPotentialFunctionLocations, invalidating the pointer we're working with :
-                CurrentLocation := @(MyPotentialFunctionLocations[i]);
-              end;
-
-            // Count all references :
-            if Assigned(ReferencedSymbolLocation) then
-              Inc(ReferencedSymbolLocation.NrOfReferencesTo);
-          end; // for SymbolReferences
-        end;
-
-        i := CurrentLocation.NextPotentialFunctionLocationIndex;
-      end; // while Locations
-    end; // for Symbols
-  end; // _AddMissingSymbols
-
-  procedure _SelectBestLocation;
-  var
-    w: Word;
-    CurrentSymbol: TSymbolInformation;
-    BestLocationIndex: Integer;
-    NrOfReferencesToBestLocation: Integer;
-    i: Integer;
-  begin
-    DbgPrintf('DxbxHLE : Selecting best locations');
-    // Loop over all symbols and select their best address :
-    for w := Low(w) to High(w) do
-    begin
-      CurrentSymbol := MySymbolsHashedOnName[w];
-      if CurrentSymbol = nil then
-        Continue;
-
-      BestLocationIndex := 0;
-      NrOfReferencesToBestLocation := -1;
-
-      // Iterate over all locations for this symbol :
-      i := CurrentSymbol.FirstPotentialFunctionLocationIndex;
-      while i > 0 do
-      begin
-        if NrOfReferencesToBestLocation < MyPotentialFunctionLocations[i].NrOfReferencesTo then
-        begin
-          NrOfReferencesToBestLocation := MyPotentialFunctionLocations[i].NrOfReferencesTo;
-          BestLocationIndex := i;
-        end;
-
-        i := MyPotentialFunctionLocations[i].NextPotentialFunctionLocationIndex;
-      end; // while locations
-
-      if BestLocationIndex > 0 then
-        CurrentSymbol.Address := MyPotentialFunctionLocations[BestLocationIndex].Address;
-    end; // for Symbols
-  end; // _SelectBestLocation
-
-  function _RemoveIncorrectAlternatives: Boolean;
-  var
-    w: Word;
-    CurrentSymbol: TSymbolInformation;
-    i: Integer;
-    PrevLocation: PPotentialFunctionLocation;
-    CurrentLocation: PPotentialFunctionLocation;
-    Remove: Boolean;
-    x: Integer;
-    ReferencedSymbolInformation: TSymbolInformation;
-    ReferencedSymbolAddress: TCodePointer;
-  begin
-    DbgPrintf('DxbxHLE : Removing incorrect alternatives');
-    Result := False;
-    // Loop over all symbols :
-    for w := Low(w) to High(w) do
-    begin
-      CurrentSymbol := MySymbolsHashedOnName[w];
-      if (CurrentSymbol = nil) then
-        Continue;
-      if (not CurrentSymbol.HasSymbolReferences) then
-        Continue;
-
-      // Iterate over all potential locations of this symbol :
-      i := CurrentSymbol.FirstPotentialFunctionLocationIndex;
-      PrevLocation := nil;
-      while i > 0 do
-      begin
-        CurrentLocation := @(MyPotentialFunctionLocations[i]);
-        i := CurrentLocation.NextPotentialFunctionLocationIndex;
-
-        // Loop over each symbol-reference reachable from this symbol-address :
-        Remove := False;
-        if  (CurrentLocation.SymbolReferencesIndex > 0)
-        and (CurrentLocation.Address = CurrentSymbol.Address) then
-        begin
-          for x := 0 to CurrentSymbol.SymbolReferenceCount - 1 do
-          begin
-            if AllSymbolReferences[CurrentLocation.SymbolReferencesIndex + x].MustSkip then
-              Continue;
-
-            // Check if one of the potential locations of the referenced symbol is detected at the referenced address :
-            ReferencedSymbolAddress := AllSymbolReferences[CurrentLocation.SymbolReferencesIndex + x].Address;
-            ReferencedSymbolInformation := AllSymbolReferences[CurrentLocation.SymbolReferencesIndex + x].Symbol;
-            Assert(Assigned(ReferencedSymbolInformation));
-
-//            if ReferencedSymbolInformation.HasFunctionInformation then
-//            if ReferencedSymbolInformation.HasPotentialLocations then
-            if ReferencedSymbolInformation.Address <> ReferencedSymbolAddress then
-            begin
-              // Discard this alternative if the above check failed :
-              Remove := True;
-              Break;
-            end;
-          end; // for SymbolReferences
-        end;
-
-        if Remove then
-        begin
-          // Invalidate this potential location :
-          CurrentLocation.Address := nil;
-          CurrentLocation.Symbol := nil;
-          CurrentLocation.NrOfReferencesTo := 0;
-          CurrentLocation.SymbolReferencesIndex := 0;
-          CurrentLocation.NextPotentialFunctionLocationIndex := 0;
-
-          // Decouple current alternative :
-          if Assigned(PrevLocation) then
-            PrevLocation.NextPotentialFunctionLocationIndex := i
-          else
-            CurrentSymbol.FirstPotentialFunctionLocationIndex := i;
-
-          // Signal a change :
-          Result := True;
-        end
-        else
-          PrevLocation := CurrentLocation;
-      end; // while Locations
-    end; // for Symbols
-  end; // _RemoveIncorrectAlternatives
-
-  procedure _PutSymbolsInList;
-
-    function _Compare_Symbol_Address(Item1, Item2: Pointer): Integer;
-    begin
-      Result := Integer(TSymbolInformation(Item1).Address) - Integer(TSymbolInformation(Item2).Address);
-    end;
-
-  var
-    w: Word;
-    CurrentSymbol: TSymbolInformation;
-  begin
-    DbgPrintf('DxbxHLE : Collecting final symbols');
-    MyFinalLocations.Count := MySymbolCount;
-    MySymbolCount := 0;
-
-    // Finally, loop over all symbols and put them in one big list :
-    for w := Low(w) to High(w) do
-    begin
-      CurrentSymbol := MySymbolsHashedOnName[w];
-      if (CurrentSymbol = nil)
-      or (CurrentSymbol.Address = nil) then
-        Continue;
-
-      MyFinalLocations[MySymbolCount] := CurrentSymbol;
-      Inc(MySymbolCount);
-    end;
-
-    MyFinalLocations.Count := MySymbolCount;
-
-    // Sort that list
-    MyFinalLocations.Sort(@_Compare_Symbol_Address);
-  end; // _PutSymbolsInList
-
-  procedure _PrintLocationList;
-  var
-    i: Integer;
-    CurrentSymbol: TSymbolInformation;
-    Name: string;
-  begin
-    for i := 0 to Count - 1 do
-    begin
-      CurrentSymbol := Locations[i];
-
-      Name := DxbxUnmangleSymbolName(CurrentSymbol.Name);
-      if (CurrentSymbol.StoredLibraryFunction = nil)
-      or (CurrentSymbol.FirstPotentialFunctionLocationIndex = 0) then
-        Name := Name + ' (XRef)';
-
-      DbgPrintf('Found at 0x%.8x-0x%.8x : %s  [%s]',
-        [CurrentSymbol.Address,
-         UIntPtr(CurrentSymbol.Address) + UInt(CurrentSymbol.Length) - 1,
-         Name,
-         CurrentSymbol.Name]);
-    end; // for Symbols
-  end; // _PrintLocationList
-
-begin // DetermineFinalLocations
-
-  _AddMissingSymbols;
-
-  _FinalTest;
-
-  repeat
-    _SelectBestLocation();
-  until _RemoveIncorrectAlternatives() = False;
-
-  _FinalTest;
-
-  _PutSymbolsInList;
-
-  _PrintLocationList;
-
-  // TODO :
-  // - fix cache-loading
-end; // DetermineFinalLocations
-
-procedure TSymbolManager.DetermineSpecialSymbols;
+procedure TSymbolManager.LookupGlobalEmulationSymbols;
 var
   Symbol: TSymbolInformation;
   s, v: int;
 begin
-  DbgPrintf('DxbxHLE : Determining special symbols');
+  if MayLog(lfUnit) then
+    DbgPrintf('DxbxHLE : Determining special symbols');
 
   // locate D3DDeferredTextureState
   begin
@@ -1886,8 +1343,9 @@ begin
           XTL_EmuD3DDeferredTextureState[s, v] := X_D3DTSS_UNK;
       end;
 
-      DbgPrintf('HLE: $%.08X -> EmuD3DDeferredTextureState',
-        [XTL_EmuD3DDeferredTextureState]);
+      if MayLog(lfUnit) then
+        DbgPrintf('HLE: $%.08X -> EmuD3DDeferredTextureState',
+          [XTL_EmuD3DDeferredTextureState]);
     end
     else
       EmuWarning('EmuD3DDeferredTextureState was not found!');
@@ -1912,72 +1370,20 @@ begin
       // and remember that in a global :
       XTL_EmuXapiProcessHeap := Symbol.Address;
 
-{$IFDEF DXBX_DEBUG}
-    if Assigned(XTL_EmuXapiProcessHeap) then
-      DbgPrintf('HLE: $%.08X -> XapiProcessHeap',
-        [XTL_EmuXapiProcessHeap])
-    else
-      DbgPrintf('HLE : Can''t find XapiProcessHeap!');
-{$ENDIF}
-  end;
-end; // DetermineSpecialSymbols
-
-procedure TSymbolManager.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
-var
-  ResourceStream: TResourceStream;
-  CacheFileNameStr: string;
-begin
-  Clear;
-
-  // Get StoredPatternTrie from resource :
-  ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);
-  try
-    PatternTrieReader := TPatternTrieReader.Create;
-    try
-      PatternTrieReader.LoadFromStream(ResourceStream);
-
-      DetectVersionedXboxLibraries(pLibraryVersion, pXbeHeader);
-
-      // Note : Somehow, the output of CacheFileName() changes because of the
-      // following code, that's why we put the initial filename in a variable :
-      CacheFileNameStr := CacheFileName(pXbeHeader);
-
-      // Try to load the symbols from the cache :
-      if LoadSymbolsFromCache(CacheFileNameStr) then
-        // If that succeeded, we don't have to scan and save anymore :
-        CacheFileNameStr := ''
+    if MayLog(lfUnit) then
+    begin
+      if Assigned(XTL_EmuXapiProcessHeap) then
+        DbgPrintf('HLE: $%.08X -> XapiProcessHeap',
+          [XTL_EmuXapiProcessHeap])
       else
-      begin
-        DetermineFunctionsToScanFor;
-
-        // Scan Patterns using this trie :
-        ScanMemoryRangeForLibraryPatterns(pXbeHeader);
-
-//        LookupFunctionsInHits();
-
-        DetermineFinalLocations();
-      end;
-
-      DetermineSpecialSymbols();
-
-    finally
-      FreeAndNil(PatternTrieReader);
+        DbgPrintf('HLE : Can''t find XapiProcessHeap!');
     end;
-
-  finally
-    // Unlock the resource :
-    FreeAndNil(ResourceStream);
   end;
+end; // LookupGlobalEmulationSymbols
 
-{$IFDEF DXBX_DEBUG}
-  DbgPrintf('DxbxHLE : Detected %d symbols, chosen from %d potential locations.', [Count, MyPotentialFunctionLocations_Count]);
-{$ENDIF}
-
-  // After detection of all symbols, see if we need to save that to cache :
-  if CacheFileNameStr <> '' then
-    SaveSymbolsToCache(pXbeHeader, CacheFileNameStr);
-
-end; // DxbxScanForLibraryAPIs
+///
+/// Cache related code :
+///
 
 class function TSymbolManager.CacheFileName(const pXbeHeader: PXBEIMAGE_HEADER): string;
 var
@@ -2031,10 +1437,9 @@ begin
     FreeAndNil(Symbols);
   end;
 
-{$IFDEF DXBX_DEBUG}
   if Result then
-    DbgPrintf('DxbxHLE : Loaded symbols : %d.', [MyPotentialFunctionLocations_Count]);
-{$ENDIF}
+    if MayLog(lfUnit) then
+      DbgPrintf('DxbxHLE : Loaded symbols : %d.', [MyFinalLocations.Count]);
 end; // LoadSymbolsFromCache
 
 procedure TSymbolManager.SaveSymbolsToCache(const pXbeHeader: PXBEIMAGE_HEADER; const aCacheFile: string);
@@ -2082,6 +1487,75 @@ begin
     Free;
   end;
 end; // SaveSymbolsToCache
+
+///
+/// Main detection method :
+///
+
+procedure TSymbolManager.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
+var
+  ResourceStream: TResourceStream;
+  CacheFileNameStr: string;
+begin
+  Clear;
+
+  // Get StoredPatternTrie from resource :
+  ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);
+  try
+    PatternTrieReader := TPatternTrieReader.Create;
+    try
+      PatternTrieReader.LoadFromStream(ResourceStream);
+
+      DetectVersionedXboxLibraries(pLibraryVersion, pXbeHeader);
+
+      // Note : Somehow, the output of CacheFileName() changes because of the
+      // following code, that's why we put the initial filename in a variable :
+      CacheFileNameStr := CacheFileName(pXbeHeader);
+
+      // Try to load the symbols from the cache :
+      if LoadSymbolsFromCache(CacheFileNameStr) then
+        // If that succeeded, we don't have to scan and save anymore :
+        CacheFileNameStr := ''
+      else
+      begin
+        DetermineFunctionsToScanFor;
+
+        // Scan the xbe memory using the trie, resulting in a bunch of LeafHits :
+        ScanAddressRangeForPatternHits(pXbeHeader);
+
+        ConvertLeafsIntoSymbols();
+
+        // Detect functions from those leafs, expanding recursively to all reachable symbols :
+        LookupFunctionsInHits();
+
+        // Populate the final symbol list :
+        PutSymbolsInFinalLocationList();
+
+        PrintFinalLocationList();
+
+        CleanupTemporaryScanningData();
+      end;
+
+      // Lookup a few symbols for global access during emulation :
+      LookupGlobalEmulationSymbols();
+
+    finally
+      FreeAndNil(PatternTrieReader);
+    end;
+
+  finally
+    // Unlock the resource :
+    FreeAndNil(ResourceStream);
+  end;
+
+  if MayLog(lfUnit) then
+    DbgPrintf('DxbxHLE : Detected %d symbols, reachable from %d leaf hits.', [Count, NrLeafHits]);
+
+  // After detection of all symbols, see if we need to save that to cache :
+  if CacheFileNameStr <> '' then
+    SaveSymbolsToCache(pXbeHeader, CacheFileNameStr);
+
+end; // DxbxScanForLibraryAPIs
 
 initialization
 
