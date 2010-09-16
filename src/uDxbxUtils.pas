@@ -1584,7 +1584,7 @@ type
 
 procedure TDxbxBits.ClearRange(aOffset, Range: Integer);
 begin
-  if aOffset + Range >= Size then
+  if aOffset + Range > Size then
     Bits[Size+1]; // Triggers Error();
 
   while Range > 0 do
@@ -1608,7 +1608,7 @@ end;
 
 procedure TDxbxBits.SetRange(aOffset, Range: Integer);
 begin
-  if aOffset + Range >= Size then
+  if aOffset + Range > Size then
     Bits[Size+1]; // Triggers Error();
 
   while Range > 0 do
@@ -1633,7 +1633,7 @@ end;
 function TDxbxBits.IsRangeClear(aOffset, Range: Integer): Boolean;
 begin
   Result := False;
-  if aOffset + Range >= Size then
+  if aOffset + Range > Size then
     Bits[Size+1]; // Triggers Error();
 
   while Range > 0 do

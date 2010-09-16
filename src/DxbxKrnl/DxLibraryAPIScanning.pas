@@ -639,11 +639,14 @@ begin
     if (SectionName = '.text') // .text is a special case; Compiler&linker-effects cause pattern-deviations in it!
     or (SectionName = 'D3D')
     or (SectionName = 'D3DX')
-    or (SectionName = 'DMUSIC')
+    or (SectionName = 'DOLBY') //'DMUSIC' ??
     or (SectionName = 'DSOUND')
+    or (SectionName = 'WMADEC') // ??
+    or (SectionName = 'WMADECXM') // ??
     or (SectionName = 'XACTENG')
-    or (SectionName = 'XAPILIB')
-    or (SectionName = 'XGRAPHC')
+    or (SectionName = 'XMV')
+    or (SectionName = 'XPP')
+    or (SectionName = 'XGRPH')
     or (SectionName = 'XNET')
     or (SectionName = 'XONLINE') then
     begin
@@ -1335,6 +1338,7 @@ begin
   FNrDetectedLeafs := 0;
 
   MyAddressesIdentified.Size := 0;
+  MyAddressesInKnownSections.Size := 0;
 end; // CleanupTemporaryScanningData
 
 ///
