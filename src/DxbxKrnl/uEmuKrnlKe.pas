@@ -299,13 +299,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : KeDelayExecutionThread' +
-      #13#10'(' +
-      #13#10'   WaitMode             : 0x%.08X' +
-      #13#10'   Alertable            : 0x%.08X' +
-      #13#10'   Interval             : 0x%.16X' + // was %I64X
-      #13#10');',
-      [Ord(WaitMode), Alertable, QuadPart(Interval)]);
+    LogBegin('EmuKrnl : KeDelayExecutionThread').
+      _(Ord(WaitMode), 'WaitMode').
+      _(Alertable, 'Alertable').
+      _(Interval, 'Interval').
+    LogEnd();
 
   // Dxbx note : The Interval can be negative or positive.
   // When negative, it's a relative wait, when positive it's
