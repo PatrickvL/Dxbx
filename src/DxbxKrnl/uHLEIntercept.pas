@@ -108,7 +108,7 @@ begin
 
     for i := 0 to SymbolManager.Count - 1 do
     begin
-      DetectedSymbol := SymbolManager.Locations[i];
+      DetectedSymbol := SymbolManager.Symbols[i];
       OrgCode := DetectedSymbol.Address;
       if not Assigned(OrgCode) then
         continue;
