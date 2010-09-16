@@ -254,7 +254,7 @@ function TPatternTrieNode.AddLeaf(const aFunction: PVersionedXboxLibraryFunction
     Result := (aFunction1.Stored.FunctionLength = aFunction2.Stored.FunctionLength)
           and (aFunction1.Stored.CRCValue = aFunction2.Stored.CRCValue)
           and (aFunction1.Stored.CRCLength = aFunction2.Stored.CRCLength)
-          and (Length(aFunction1.SymbolReferences) = Length(aFunction2.SymbolReferences));
+          and (Length(aFunction1.SymbolReferences) = Length(aFunction2.SymbolReferences)); // Same as NrOfSymbolReferences
 
     for i := 0 to Length(aFunction1.SymbolReferences) - 1 do
     begin
@@ -586,7 +586,7 @@ var
     end;
 
     // Write the node record to file already (it will be updated later on) :
-    StoredTrieNode.ParentNodeOffset := aParentNodeOffset;
+    //StoredTrieNode.ParentNodeOffset := aParentNodeOffset;
     CurrentNodeOffset := OutputFile.Position;
     OutputFile.WriteBuffer(StoredTrieNode, Len);
 
@@ -639,7 +639,7 @@ var
   end; // _WriteTrieNodes
 
 var
-  i, j: Integer;
+  i, j, k: Integer;
   CurrentFunction: PVersionedXboxLibraryFunction;
   FunctionIndex: TFunctionIndex;
   TmpString: string;
@@ -812,7 +812,17 @@ begin // Save
             StoredSymbolReference.ReferenceFlags := rfIsRelative;
           'S':
             StoredSymbolReference.ReferenceFlags := rfIsSectionRel;
+        else
+          StoredSymbolReference.ReferenceFlags := 0;
         end;
+
+        // Detect & mark duplicate references :
+        for k := 0 to j - 1 do
+          if CurrentFunction.SymbolReferences[k].Name = CurrentFunction.SymbolReferences[j].Name then
+          begin
+            StoredSymbolReference.ReferenceFlags := StoredSymbolReference.ReferenceFlags or rfIsDuplicate;
+            Break;
+          end;
 
         OutputFile.WriteBuffer(StoredSymbolReference, SizeOf(RStoredSymbolReference));
       end;

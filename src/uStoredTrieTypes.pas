@@ -39,12 +39,15 @@ type
 
 {$IFDEF DXBX_RECTYPE}
   TRecType = (
-    rtUnknown,
-    rtStoredLibrary,
-    rtStoredStringHeader,
-    rtStoredLibraryFunction,
-    rtStoredSymbolReference,
-    rtStoredTrieNode);
+    rtUnknown
+    , rtStoredLibrary
+    , rtStoredStringHeader
+    , rtStoredLibraryFunction
+    , rtStoredSymbolReference
+    , rtStoredTrieNode
+//    , rtStoredGlobal
+//    , rtStoredLeafNode
+    );
 {$ENDIF}
 
   TLibVersion = Word; // The 4-digit version number of an XDK library
@@ -66,6 +69,8 @@ type
   TByteOffset = type Cardinal; /// Use this everywhere a location in the Trie's persistent storage is needed.
 
   TStringTableIndex = type BaseIndexType; /// Use this everywhere a string is uniquely identified.
+
+  TLeafID = type BaseIndexType; /// Use this everywhere a leaf is uniquely identified.
 
   TFunctionIndex = type BaseIndexType; /// Use this everywhere a function is uniquely identified.
   PFunctionIndex = ^TFunctionIndex;
@@ -117,6 +122,8 @@ const
   rfIsAbsolute       = $0001; // If set, reference is an absolute address
   rfIsRelative       = $0002; // If set, is a relative address
   rfIsSectionRel     = $0004; // If set, is a 'section-relative' address (Which means what!?)
+  rfIsDuplicate      = $0008; // If set, symbol is referenced multiple times
+  rfIsDataReference  = $0010; // If set, symmbol is data - TODO : Realize this
 
 type
   PStoredSymbolReferencesList = ^TStoredSymbolReferencesList;
@@ -129,6 +136,7 @@ type
     RecType: TRecType;
 {$ENDIF}
     PatternLeafNodeOffset: TByteOffset; /// Use this to backtrace the pattern associated with this function
+    // ParentLeafNodeID: TLeafID;
     FunctionLength: Word;
     CRCValue: Word;
     CRCLength: Byte; /// TODO : This could be removed once the CRC covers the whole function (except its references)
@@ -141,12 +149,27 @@ type
   PStoredLibraryFunctionsList = ^TStoredLibraryFunctionsList;
   TStoredLibraryFunctionsList = array [0..(MaxInt div SizeOf(RStoredLibraryFunction))-1] of RStoredLibraryFunction;
 
+//  RStoredGlobal = packed record
+//{$IFDEF DXBX_RECTYPE}
+//    RecType: TRecType;
+//{$ENDIF}
+//    DataLength: Word;
+//    GlobalNameIndex: TStringTableIndex; /// Name of the global (by index)
+//  end;
+
+//  PStoredLeafNode = ^RStoredLeafNode;
+//  RStoredLeafNode = packed record
+//{$IFDEF DXBX_RECTYPE}
+//    RecType: TRecType;
+//{$ENDIF}
+//  end;
+
   PStoredTrieNode = ^RStoredTrieNode;
   RStoredTrieNode = packed record
 {$IFDEF DXBX_RECTYPE}
     RecType: TRecType;
 {$ENDIF}
-    ParentNodeOffset: TByteOffset; // so we can backtrace the pattern for one single function
+    //ParentNodeOffset: TByteOffset; // so we can backtrace the pattern for one single function
     NextSiblingOffset: TByteOffset;
     NrChildrenByte1: Byte;
     // The next byte is optional, only used when the actual number of
@@ -191,6 +214,11 @@ type
       LibrariesOffset: TByteOffset; /// The location of the first library
     end;
 
+//    LeafNodeTable: packed record // TODO : Populate & use this!
+//      NrOfLeafs: BaseIndexType;
+//      LeadNodesOffset: TByteOffset;
+//    end;
+
     // Global functions can be indicated using a number in the range [0..NrOfFunctions-1].
     // These unique global function numbers can be put in a to-be generated code unit,
     // so we can refer to them by number, instead of name. This saves quite some space
@@ -199,13 +227,18 @@ type
 
     FunctionTable: packed record
       NrOfFunctions: BaseIndexType; /// The number of functions in this table (sorted on name)
-      FunctionsOffset: TByteOffset; /// The location of the first function
+      FunctionsOffset: TByteOffset; /// The location of the first function (RStoredLibraryFunction)
     end;
 
     ReferencesTable: packed record
       NrOfReferences: BaseIndexType; /// The number of references in this table
-      ReferencesOffset: TByteOffset; /// The location of the first reference
+      ReferencesOffset: TByteOffset; /// The location of the first reference (RStoredSymbolReference)
     end;
+
+//    GlobalsTable: packed record
+//      NrOfGlobals: BaseIndexType; /// The number of globals in this table
+//      GlobalsOffset: TByteOffset; /// The location of the first global (RStoredGlobal)
+//    end;
 
     TrieRootNode: TByteOffset; /// The location of the root of the Trie, this location contains a RStoredTrieNode
   end;
@@ -249,6 +282,7 @@ type
     function GetStoredLibrary(const aStoredLibraryIndex: TLibraryIndex): PStoredLibrary;
     function GetStoredLibraryFunction(const aStoredFunctionIndex: TFunctionIndex): PStoredLibraryFunction;
     function GetSymbolReference(const aStoredSymbolReferencesIndex: TSymbolReferenceIndex): PStoredSymbolReference;
+    //function GetGlobalSymbol(const aStoredGlobalIndex: TSymbolReferenceIndex): PStoredSymbolReference;
     function GetFunctionName(const aStoredLibraryFunctionIndex: TFunctionIndex): string;
     //function GetLibraryName(const aLibraryIndex: TLibraryIndex): string;
     function GetNode(const aNodeOffset: TByteOffset): PStoredTrieNode;
