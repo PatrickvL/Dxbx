@@ -62,6 +62,7 @@ procedure PrepareXBoxMemoryMap;
 procedure ReinitExeImageHeader;
 procedure ReinitXbeImageHeader;
 
+function GetEntryPoint(const aXbeHeader: PXbeHeader): UIntPtr;
 function MapAndRunXBE(const aFilePath: string; const aHandle: THandle): Boolean;
 
 procedure DxbxMain(const aData: MathPtr; const aSize: DWord); stdcall;
@@ -169,6 +170,14 @@ begin
   ExeDosHeader._lfanew := Xbe_lfanew;
 end;
 
+// Decode entry point address :
+function GetEntryPoint(const aXbeHeader: PXbeHeader): UIntPtr;
+begin
+  Result := aXbeHeader.dwEntryAddr xor XOR_EP_RETAIL;
+  if Result > XOR_MAX_VIRTUAL_ADDRESS then
+    Result := aXbeHeader.dwEntryAddr xor XOR_EP_DEBUG;
+end;
+
 // Load XBE sections in Virtual Memory, and call DxbxKrnlInit (TODO : from a new thread?)
 function MapAndRunXBE(const aFilePath: string; const aHandle: THandle): Boolean;
 var
@@ -182,7 +191,7 @@ var
   i: Integer;
   kt, t: DWord;
   kt_tbl: PDWORDs;
-  EntryPoint: DWord;
+  EntryPoint: UIntPtr;
   XbeTLS: PXbeTLS;
   XbeTlsData: Pvoid;
   XbeLibraryVersion: PXbeLibraryVersion;
@@ -302,12 +311,7 @@ begin
     DWord(kt_tbl) := 0; // Make sure Delphi doesn't automatically deallocate this variable
   end;
 
-  // Decode entry point address :
-  begin
-    EntryPoint := XbeHeader.dwEntryAddr xor XOR_EP_RETAIL;
-    if EntryPoint > XOR_MAX_VIRTUAL_ADDRESS then
-      EntryPoint := XbeHeader.dwEntryAddr xor XOR_EP_DEBUG;
-  end;
+  EntryPoint := GetEntryPoint(XbeHeader);
 
   Result := True;
 

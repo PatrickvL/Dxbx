@@ -67,32 +67,38 @@ begin
     begin
       CallerModule := CallerInfo.SourceName;
       Result := Format('Exception in module %s: ', [CallerModule]);
-      b := False;
-      for I := 0 to List.Count - 1 do
-        if GetLocationInfo(List.Items[I].CallerAddr, {var}Info) then
-          with Info do
-           if CallerModule = Info.SourceName then
-           begin
-             Result := Result + Format('[%s at line %d] <- ', [ProcedureName, LineNumber]);
-             b := True;
-           end;
+      if Assigned(List) then
+      begin
+        b := False;
+        for I := 0 to List.Count - 1 do
+          if GetLocationInfo(List.Items[I].CallerAddr, {var}Info) then
+            with Info do
+             if CallerModule = Info.SourceName then
+             begin
+               Result := Result + Format('[%s at line %d] <- ', [ProcedureName, LineNumber]);
+               b := True;
+             end;
 
-      if b then
-        SetLength(Result, Length(Result) - 4);
+        if b then
+          SetLength(Result, Length(Result) - 4);
+      end;
     end
     else
     begin
       Result := 'Exception ';
-      for I := 0 to List.Count - 1 do
-        if GetLocationInfo(List.Items[I].CallerAddr, {var}Info) then
-          Result := Result + LocationInfoToString(Info) + ' <- '
-//          with Info do
-//            Result := Result + Format('[%s: %s at line %d] <- ', [UnitName, ProcedureName, LineNumber]);
-        else
-          Result := Result + Format('$%p <- ', [List.Items[I].CallerAddr]);
+      if Assigned(List) then
+      begin
+        for I := 0 to List.Count - 1 do
+          if GetLocationInfo(List.Items[I].CallerAddr, {var}Info) then
+            Result := Result + LocationInfoToString(Info) + ' <- '
+  //          with Info do
+  //            Result := Result + Format('[%s: %s at line %d] <- ', [UnitName, ProcedureName, LineNumber]);
+          else
+            Result := Result + Format('$%p <- ', [List.Items[I].CallerAddr]);
 
-      if List.Count > 0 then
-        SetLength(Result, Length(Result) - 4);
+        if List.Count > 0 then
+          SetLength(Result, Length(Result) - 4);
+      end;
     end;
   end;
 end;
