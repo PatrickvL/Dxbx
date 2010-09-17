@@ -108,10 +108,12 @@ type
   public
     function FindSymbolWithAddress(const aName: string): TSymbolInformation; overload;
   protected // Address & reference tooling :
+//    EntryPoint: UIntPtr;
     ScanUpper: UIntPtr;
     PatternTrieReader: TPatternTrieReader;
     procedure DbgPrintSymbol(const aSymbol: TSymbolInformation);
     function IsAddressWithinScanRange(const aAddress: TCodePointer): Boolean;
+    function MayCheckFunction(const aStoredLibraryFunction: PStoredLibraryFunction): Boolean;
     function GetReferencedSymbolAddress(const aStartingAddress: PByte; const aSymbolReference: PStoredSymbolReference): TCodePointer;
   protected // Leaf detection :
     MyDetectedLeafs: array of RLeafDetectionInfo; // All detected leafs, to be indexed with LeafID (it's first FunctionID)
@@ -163,6 +165,7 @@ type
 var
   SymbolManager: TSymbolManager;
   LibD3D8: PStoredLibrary = nil;
+//  TextSection: PXBE_SECTIONHEADER;
 
 const
   OPCODE_NOP = $90;
@@ -599,30 +602,40 @@ var
   Section: PXBE_SECTIONHEADER;
   SectionName: string;
   ScanEnd: UIntPtr;
-  p: UIntPtr;
+  ScanPtr: UIntPtr;
 
-  function _SectionCanContainCode(const aSection: PXBE_SECTIONHEADER): Boolean;
-  var
-    SectionName: string;
+  function _SectionIsKnown(const aSectionName: string): Boolean;
   begin
-    SectionName := string(PCharToString(PAnsiChar(aSection.dwSectionNameAddr), XBE_SECTIONNAME_MAXLENGTH));
-    // TODO : Improve the check if a section can contain code,
-    // for now skip resource sections (beginning with an '$') :
-    Result := (SectionName[1] <> '$')
-          and (aSection.dwSizeofRaw > 0); // only when there's something in it!
+    Result := (aSectionName = 'D3D')
+           or (aSectionName = 'D3DX')
+           or (aSectionName = 'DOLBY')
+           or (aSectionName = 'DMUSIC')
+           or (aSectionName = 'DSOUND')
+           or (aSectionName = 'WMADEC')
+           or (aSectionName = 'WMADECXM')
+           or (aSectionName = 'XACTENG')
+           or (aSectionName = 'XMV')
+           or (aSectionName = 'XPP') // Contains code from "xapilib.lib"
+           or (aSectionName = 'XGRPH') // Contains code from "xgraphics.lib"
+           or (aSectionName = 'XNET')
+           or (aSectionName = 'XONLINE');
   end;
 
 begin
   Assert(Assigned(pXbeHeader));
   Assert(pXbeHeader.dwSections > 0);
 
+//  // Retrieve the entry point, for registration & checking later on :
+//  EntryPoint := GetEntryPoint(pXbeHeader);
+
   // Determine upper bound for scanning, based on the XBE sections :
   ScanUpper := Low(ScanUpper);
   UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
   for i := 0 to pXbeHeader.dwSections - 1 do
   begin
-    if ScanUpper < UIntPtr(Section.dwVirtualAddr) + Section.dwVirtualSize then
-      ScanUpper := UIntPtr(Section.dwVirtualAddr) + Section.dwVirtualSize;
+    ScanPtr := UIntPtr(Section.dwVirtualAddr) + Section.dwVirtualSize;
+    if ScanUpper < ScanPtr then
+      ScanUpper := ScanPtr;
 
     Inc(Section);
   end;
@@ -635,28 +648,24 @@ begin
   begin
     SectionName := string(PCharToString(PAnsiChar(Section.dwSectionNameAddr), XBE_SECTIONNAME_MAXLENGTH));
 
-    // Only for the sections that can contain code :
-    if (SectionName = '.text') // .text is a special case; Compiler&linker-effects cause pattern-deviations in it!
-    or (SectionName = 'D3D')
-    or (SectionName = 'D3DX')
-    or (SectionName = 'DOLBY') //'DMUSIC' ??
-    or (SectionName = 'DSOUND')
-    or (SectionName = 'WMADEC') // ??
-    or (SectionName = 'WMADECXM') // ??
-    or (SectionName = 'XACTENG')
-    or (SectionName = 'XMV')
-    or (SectionName = 'XPP')
-    or (SectionName = 'XGRPH')
-    or (SectionName = 'XNET')
-    or (SectionName = 'XONLINE') then
-    begin
-      p := UIntPtr(Section.dwVirtualAddr);
-      ScanEnd := UIntPtr(Section.dwVirtualAddr) + Section.dwSizeofRaw; // Don't scan outside of raw size!
+//    // .text is a special case; Compiler&Linker-effects cause pattern-deviations in it!
+//    if (SectionName = '.text') then
+//      TextSection := Section; // TODO : Research if all detections before _main (if in .text at all) should always be avoided?
+//    if (aSectionName = '.rdata') then
+//      ; // "Fable The Lost Chapters" has it's _main() here
+//    if (aSectionName = '.data') then
+//      ; // Contains kernel thunk table in some XBEs
 
-      while p < ScanEnd do
+    // Mark only those sections that we know about :
+    if _SectionIsKnown(SectionName) then
+    begin
+      ScanPtr := UIntPtr(Section.dwVirtualAddr);
+      ScanEnd := ScanPtr + Section.dwSizeofRaw; // Don't scan outside of raw size!
+
+      while ScanPtr < ScanEnd do
       begin
-        MyAddressesInKnownSections[p] := True;
-        Inc(p);
+        MyAddressesInKnownSections[ScanPtr] := True;
+        Inc(ScanPtr);
       end;
     end;
 
@@ -671,30 +680,36 @@ begin
   UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
   for i := 0 to pXbeHeader.dwSections - 1 do
   begin
-    // Only for the sections that can contain code :
-    if _SectionCanContainCode(Section) then
+    SectionName := string(PCharToString(PAnsiChar(Section.dwSectionNameAddr), XBE_SECTIONNAME_MAXLENGTH));
+
+    // Only scan sections ...
+    // .. when there's something in it :
+    if  (Section.dwSizeofRaw > 0)
+    // .. names not starting with a '$' :
+    and (SectionName <> '')
+    and (SectionName[1] <> '$') then
     begin
-      p := UIntPtr(Section.dwVirtualAddr);
-      ScanEnd := UIntPtr(Section.dwVirtualAddr) + Section.dwSizeofRaw; // Don't scan outside of raw size!
+      ScanPtr := UIntPtr(Section.dwVirtualAddr);
+      ScanEnd := ScanPtr + Section.dwSizeofRaw; // Don't scan outside of raw size!
 
       if MayLog(lfUnit or lfDebug) then
       begin
         SectionName := string(PCharToString(PAnsiChar(Section.dwSectionNameAddr), XBE_SECTIONNAME_MAXLENGTH));
         DbgPrintf('DxbxHLE : Detecting functions in section $%0.4x (%s) from $%.8x to $%.8x', [
-          i, SectionName, p, ScanEnd]);
+          i, SectionName, ScanPtr, ScanEnd]);
       end;
 
-      while p < ScanEnd do
+      while ScanPtr < ScanEnd do
       try
         // Now check this address, adding a LeafHit when apropriate :
-        CheckSectionAddressForPatternHit(PByte(p));
-        Inc(PByte(p));
+        CheckSectionAddressForPatternHit(PByte(ScanPtr));
+        Inc(PByte(ScanPtr));
 
       except
 {$IFDEF DXBX_DEBUG}
-        DbgPrintf('DxbxHLE : Exception while scanning on address $%.8x', [p]);
+        DbgPrintf('DxbxHLE : Exception while scanning on address $%.8x', [ScanPtr]);
 {$ENDIF}
-        Inc(p);
+        Inc(ScanPtr);
       end;
     end;
 
@@ -807,6 +822,20 @@ function TSymbolManager.IsAddressWithinScanRange(const aAddress: TCodePointer): 
 begin
   Result := (UIntPtr(aAddress) >= XBE_IMAGE_BASE) and (UIntPtr(aAddress) <= ScanUpper);
 end;
+
+function TSymbolManager.MayCheckFunction(const aStoredLibraryFunction: PStoredLibraryFunction): Boolean;
+// Determines if a function should be scanned for
+begin
+  // Skip small functions with only one symbol-reference, because those are
+  // very common. Instead, we hope they will be discovered via other functions :
+  case aStoredLibraryFunction.NrOfSymbolReferences of
+    0: Result := (aStoredLibraryFunction.FunctionLength > 7);
+    1: Result := (aStoredLibraryFunction.FunctionLength > 5);
+    2: Result := (aStoredLibraryFunction.FunctionLength > 9);
+  else
+    Result := True;
+  end;
+end; // MayCheckFunction
 
 function TSymbolManager.GetReferencedSymbolAddress(const aStartingAddress: PByte;
   const aSymbolReference: PStoredSymbolReference): TCodePointer;
@@ -1002,8 +1031,8 @@ begin
   // Check if this symbol can't be detected 100% reliably :
   if UsingLibraryApproximations
   or (not _IsAddressInKnownSection(UIntPtr(aAddress))) then
-    // Don't call any of the following exits a 'failure' anymore then :
-    Result := True;
+    // Don't call any of the following exits a 'failure' anymore when they're big enough   :
+    Result := MayCheckFunction(CurrentSymbol.StoredLibraryFunction);
 
   // Check the CRC for this function on the given address :
   if not _CheckFunctionCRC(CurrentSymbol.StoredLibraryFunction, aAddress + PATTERNSIZE) then
@@ -1087,18 +1116,22 @@ procedure TSymbolManager.PrioritizeSymbolScan();
     if Result <> 0 then
       Exit;
 
+    Result := Ord(Assigned(Symbol2.StoredLibraryFunction)) - Ord(Assigned(Symbol1.StoredLibraryFunction));
+    if Result <> 0 then
+      Exit;
+
     // Many references go before less references :
     Result := Integer(Symbol2.StoredLibraryFunction.NrOfSymbolReferences) - Integer(Symbol1.StoredLibraryFunction.NrOfSymbolReferences);
     if Result <> 0 then
       Exit;
 
-    // Longer CRC lengths go before shorter ones :
-    Result := Integer(Symbol2.StoredLibraryFunction.CRCLength) - Integer(Symbol1.StoredLibraryFunction.CRCLength);
+    // Longer functions go before shorter ones :
+    Result := Integer(Symbol2.StoredLibraryFunction.FunctionLength) - Integer(Symbol1.StoredLibraryFunction.FunctionLength);
     if Result <> 0 then
       Exit;
 
-    // Longer functions go before shorter ones :
-    Result := Integer(Symbol2.StoredLibraryFunction.FunctionLength) - Integer(Symbol1.StoredLibraryFunction.FunctionLength);
+    // Longer CRC lengths go before shorter ones :
+    Result := Integer(Symbol2.StoredLibraryFunction.CRCLength) - Integer(Symbol1.StoredLibraryFunction.CRCLength);
     if Result <> 0 then
       Exit;
 
@@ -1123,11 +1156,12 @@ begin
 
       // Note : Cxbx first scans for 'XapiInitProcess' and then for '_D3DDevice_SetRenderState_CullMode@4',
       // so we immitate that, and add some more important symbols while we're at it :
-      if Pos('XapiInitProcess', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 100
-      else if Pos('etRenderState', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 80
-      else if Pos('D3D', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 60
-      else if Pos('Sound', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 40
-      else if Pos('XInput', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 20
+      if Pos('_mainCRTStartup', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 100
+      else if Pos('XapiInitProcess', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 90
+      else if Pos('_D3DDevice_SetRenderState_', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 80
+//      else if Pos('D3D', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 70
+//      else if Pos('Sound', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 60
+//      else if Pos('XInput', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 50
       else CurrentSymbol.SymbolPriority := 0;
     end;
   end;
@@ -1194,20 +1228,6 @@ procedure TSymbolManager.LookupFunctionsInHits();
     _Test($00030E80, '_D3DXVec3Normalize@8');
 *)
 
-  function _MayCheckFunction(const aStoredLibraryFunction: PStoredLibraryFunction): Boolean;
-  // Determines if a function should be scanned for
-  begin
-    // Skip small functions with only one symbol-reference, because those are
-    // very common. Instead, we hope they will be discovered via other functions :
-    case aStoredLibraryFunction.NrOfSymbolReferences of
-      0: Result := (aStoredLibraryFunction.FunctionLength > 7);
-      1: Result := (aStoredLibraryFunction.FunctionLength > 5);
-      2: Result := (aStoredLibraryFunction.FunctionLength > 9);
-    else
-      Result := True;
-    end;
-  end; // _MayCheckFunction
-
 var
   i: Integer;
   CurrentSymbol: TSymbolInformation;
@@ -1216,6 +1236,10 @@ var
   LeafID: TLeafID;
   CurrentHit: PPatternHitResult;
 begin
+//  // Register the entry point, which is the only symbol ("_mainCRTStartup") we know the address of for sure :
+//  CurrentSymbol := AddSymbol('_mainCRTStartup', nil);
+//  CurrentSymbol.Address := TCodePointer(EntryPoint);
+
   // Loop over the sorted list of possible functions :
   for i := 0 to MySymbols.Count - 1 do
   begin
@@ -1223,7 +1247,7 @@ begin
     StoredFunction := CurrentSymbol.StoredLibraryFunction;
 
     // Skip small functions to prevent too many hits (I guess we'll find most of them via references anyhow) :
-    if not _MayCheckFunction(StoredFunction) then
+    if not MayCheckFunction(StoredFunction) then
       Continue;
 
     // Retrieve the LeafNode in which this function ended up :
