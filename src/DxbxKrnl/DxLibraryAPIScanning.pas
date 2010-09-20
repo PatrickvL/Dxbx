@@ -108,7 +108,7 @@ type
   public
     function FindSymbolWithAddress(const aName: string): TSymbolInformation; overload;
   protected // Address & reference tooling :
-//    EntryPoint: UIntPtr;
+    EntryPoint: UIntPtr;
     ScanUpper: UIntPtr;
     PatternTrieReader: TPatternTrieReader;
     procedure DbgPrintSymbol(const aSymbol: TSymbolInformation);
@@ -625,8 +625,8 @@ begin
   Assert(Assigned(pXbeHeader));
   Assert(pXbeHeader.dwSections > 0);
 
-//  // Retrieve the entry point, for registration & checking later on :
-//  EntryPoint := GetEntryPoint(pXbeHeader);
+  // Retrieve the entry point, for registration & checking later on :
+  EntryPoint := GetEntryPoint(pXbeHeader);
 
   // Determine upper bound for scanning, based on the XBE sections :
   ScanUpper := Low(ScanUpper);
@@ -1156,7 +1156,9 @@ begin
 
       // Note : Cxbx first scans for 'XapiInitProcess' and then for '_D3DDevice_SetRenderState_CullMode@4',
       // so we immitate that, and add some more important symbols while we're at it :
-      if Pos('_mainCRTStartup', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 100
+      if Pos('_mainCRTStartup', CurrentSymbol.Name) > 0 then begin CurrentSymbol.SymbolPriority := 100;
+        // Register the entry point, which is the only symbol ("_mainCRTStartup") we know the address of for sure :
+        CurrentSymbol.Address := TCodePointer(EntryPoint); end
       else if Pos('XapiInitProcess', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 90
       else if Pos('_D3DDevice_SetRenderState_', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 80
 //      else if Pos('D3D', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 70
@@ -1235,11 +1237,8 @@ var
   LeafNode: PStoredTrieNode;
   LeafID: TLeafID;
   CurrentHit: PPatternHitResult;
+  ScanInKnownAddresses: Boolean;
 begin
-//  // Register the entry point, which is the only symbol ("_mainCRTStartup") we know the address of for sure :
-//  CurrentSymbol := AddSymbol('_mainCRTStartup', nil);
-//  CurrentSymbol.Address := TCodePointer(EntryPoint);
-
   // Loop over the sorted list of possible functions :
   for i := 0 to MySymbols.Count - 1 do
   begin
@@ -1254,23 +1253,38 @@ begin
     LeafNode := PatternTrieReader.GetNode(StoredFunction.PatternLeafNodeOffset);
     // Get the ID from this leaf node :
     LeafID := GetLeafID(LeafNode);
-    // Loop over all locations matching up to this leaf (and thus potentially hitting this function) :
-    CurrentHit := MyDetectedLeafs[LeafID].FirstHit;
-    while Assigned(CurrentHit) do
-    begin
-      // Check the references recursively & register it (including it's implicated symbols):
-      if CheckFunctionAtAddressAndRegister(CurrentSymbol, {CurrentHit.Section,} CurrentHit.Address, IntToStr(i)) then
-      begin
-        // If the function is pinpointed successfully, confirm the resulting registrations and step to the next function :
-        ConfirmIntermediateSymbolRegistrations(CurrentSymbol);
-        Break;
-      end;
 
-      // The check failed, remove it's intermediate symbol registrations :
-      RevertIntermediateSymbolRegistrations(CurrentSymbol);
-      // And try an alternative hit on the same leaf :
-      CurrentHit := CurrentHit.NextHit;
-    end; // while hits
+    // Do the following twice, first for 'known' addresses, then for all others :
+    ScanInKnownAddresses := True;
+    repeat
+      // Loop over all locations matching up to this leaf (and thus potentially hitting this function) :
+      CurrentHit := MyDetectedLeafs[LeafID].FirstHit;
+      while Assigned(CurrentHit) do
+      begin
+        // Check if we may check this address in this iteration (we'll be running this loop twice) :
+        if MyAddressesInKnownSections[UIntPtr(CurrentHit.Address)] = ScanInKnownAddresses then
+        begin
+          // Check the references recursively & register it (including it's implicated symbols):
+          if CheckFunctionAtAddressAndRegister(CurrentSymbol, {CurrentHit.Section,} CurrentHit.Address, IntToStr(i)) then
+          begin
+            // If the function is pinpointed successfully, confirm the resulting registrations and step to the next function :
+            ConfirmIntermediateSymbolRegistrations(CurrentSymbol);
+            ScanInKnownAddresses := False; // Prevent a second scan
+            Break;
+          end;
+
+          // The check failed, remove it's intermediate symbol registrations :
+          RevertIntermediateSymbolRegistrations(CurrentSymbol);
+        end;
+
+        // And try an alternative hit on the same leaf :
+        CurrentHit := CurrentHit.NextHit;
+      end; // while hits
+
+      // Flip sections to scan in :
+      ScanInKnownAddresses := not ScanInKnownAddresses;
+    // Stop search if both types are scanned :
+    until ScanInKnownAddresses = True;
   end; // for functions
 
 end; // LookupFunctionsInHits
