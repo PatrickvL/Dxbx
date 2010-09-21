@@ -810,11 +810,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : XMediaObject.AddRef' +
-      #13#10'(' +
-      #13#10'   pXMediaObject             : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : XMediaObject.AddRef').
+      _(Self, 'pXMediaObject').
+    LogEnd();
 
 //  if (Self <> nil) then
 //    if (Self.EmuDirectSoundBuffer8 <> nil) then // Cxbx HACK: Ignore unsupported codecs.
@@ -831,11 +829,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : XMediaObject.Release' +
-      #13#10'(' +
-      #13#10'   pXMediaObject             : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : XMediaObject.Release').
+      _(Self, 'pXMediaObject').
+    LogEnd();
 
   EmuSwapFS(fsXbox);
 
@@ -851,12 +847,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : XMediaObject.GetInfo' +
-      #13#10'(' +
-      #13#10'   pXMediaObject             : 0x%.08X' +
-      #13#10'   pInfo                     : 0x%.08X' +
-      #13#10');',
-      [Self, pInfo]);
+    LogBegin('EmuDSound : XMediaObject.GetInfo').
+      _(Self, 'pXMediaObject').
+      _(pInfo, 'pInfo').
+    LogEnd();
 
   // TODO -oDXBX: A (real) implementation?
   EmuWarning('XMediaObject.GetInfo is not yet supported!');
@@ -875,12 +869,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : XMediaObject.GetStatus' +
-      #13#10'(' +
-      #13#10'   pXMediaObject             : 0x%.08X' +
-      #13#10'   pdwStatus                 : 0x%.08X' +
-      #13#10');',
-      [Self, pdwStatus]);
+    LogBegin('EmuDSound : XMediaObject.GetStatus').
+      _(Self, 'pXMediaObject').
+      _(pdwStatus, 'pdwStatus').
+    LogEnd();
 
   EmuWarning('XMediaObject.GetStatus is not yet implemented');
 
@@ -901,13 +893,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : XMediaObject.Process' +
-      #13#10'(' +
-      #13#10'   pXMediaObject             : 0x%.08X' +
-      #13#10'   pInputBuffer              : 0x%.08X' +
-      #13#10'   pOutputBuffer             : 0x%.08X' +
-      #13#10');',
-      [Self, pInputBuffer, pOutputBuffer]);
+    LogBegin('EmuDSound : XMediaObject.Process').
+      _(Self, 'pXMediaObject').
+      _(pInputBuffer, 'pInputBuffer').
+      _(pOutputBuffer, 'pOutputBuffer').
+    LogEnd();
 
   // TODO -oDXBX: Actually Process
 
@@ -923,11 +913,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : XMediaObject.Discontinuity' +
-      #13#10'(' +
-      #13#10'   pXMediaObject             : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : XMediaObject.Discontinuity').
+      _(Self, 'pXMediaObject').
+    LogEnd();
 
 {$IFDEF GAME_HACKS_ENABLED}
   // Causes deadlock in Halo...
@@ -948,11 +936,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : XMediaObject.Flush' +
-      #13#10'(' +
-      #13#10'   pXMediaObject             : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : XMediaObject.Flush').
+      _(Self, 'pXMediaObject').
+    LogEnd();
 
   // TODO -oDXBX: Actually Flush
 
@@ -974,13 +960,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : DirectSoundCreate' +
-      #13#10'(' +
-      #13#10'   pguidDeviceId             : 0x%.08X' +
-      #13#10'   ppDirectSound             : 0x%.08X' +
-      #13#10'   pUnkOuter                 : 0x%.08X' +
-      #13#10');',
-      [pguidDeviceId, ppDirectSound, pUnkOuter]);
+    LogBegin('EmuDSound : DirectSoundCreate').
+      _(pguidDeviceId, 'pguidDeviceId').
+      _(ppDirectSound, 'ppDirectSound').
+      _(pUnkOuter, 'pUnkOuter').
+    LogEnd();
 
   Result := DS_OK;
 
@@ -1015,12 +999,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : DirectSoundCreateBuffer' +
-      #13#10'(' +
-      #13#10'   pdsbd                     : 0x%.08X' +
-      #13#10'   ppBuffer                  : 0x%.08X' +
-      #13#10');',
-      [pdsbd, ppBuffer]);
+    LogBegin('EmuDSound : DirectSoundCreateBuffer').
+      _(pdsbd, 'pdsbd').
+      _(ppBuffer, 'ppBuffer').
+    LogEnd();
 
   dwEmuFlags := 0;
 
@@ -1232,12 +1214,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : DirectSoundCreateStream' +
-      #13#10'(' +
-      #13#10'   pdssd                     : 0x%.08X' +
-      #13#10'   ppStream                  : 0x%.08X' +
-      #13#10');',
-      [pdssd, ppStream]);
+    LogBegin('EmuDSound : DirectSoundCreateStream').
+      _(pdssd, 'pdssd').
+      _(ppStream, 'ppStream').
+    LogEnd();
 
   // TODO -oCXBX: Garbage Collection
   ppStream^ := TIDirectSoundStream.Create;
@@ -1460,11 +1440,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.AddRef' +
-      #13#10'(' +
-      #13#10'   pDirectSound              : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : TIDirectSound.AddRef').
+      _(Self, 'pDirectSound').
+    LogEnd();
 
   uRet := g_pDSound8RefCount; Inc(g_pDSound8RefCount);
 
@@ -1481,11 +1459,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.Release' +
-      #13#10'(' +
-      #13#10'   pDirectSound              : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : TIDirectSound.Release').
+      _(Self, 'pDirectSound').
+    LogEnd();
 
   uRet := g_pDSound8RefCount; Dec(g_pDSound8RefCount);
 
@@ -1511,12 +1487,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.GetCaps' +
-      #13#10'(' +
-      #13#10'   pDirectSound        : 0x%.08X' +
-      #13#10'   pDSCaps             : 0x%.08X' +
-      #13#10');',
-      [Self, pdsc]);
+    LogBegin('EmuDSound : TIDirectSound.GetCaps').
+      _(Self, 'pDirectSound').
+      _(pdsc, 'pDSCaps').
+    LogEnd();
 
   DxbxAssureDirectSoundCreate(); // Dxbx addition - use one implementation for DirectSoundCreate8
 
@@ -1554,14 +1528,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSound.CreateSoundBuffer' +
-           #13#10'(' +
-           #13#10'   pDirectSound              : 0x%.08X' +
-           #13#10'   pdsbd                     : 0x%.08X' +
-           #13#10'   ppBuffer                  : 0x%.08X' +
-           #13#10'   pUnkOuter                 : 0x%.08X' +
-           #13#10');',
-           [Self, pdsbd, ppBuffer, pUnkOuter]);
+    LogBegin('EmuDSound : TIDirectSound.CreateSoundBuffer').
+      _(Self, 'pDirectSound').
+      _(pdsbd, 'pdsbd').
+      _(ppBuffer, 'ppBuffer').
+      _(pUnkOuter, 'pUnkOuter').
+    LogEnd();
 
   EmuSwapFS(fsXbox);
 
@@ -1579,14 +1551,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSound.CreateSoundStream' +
-           #13#10'(' +
-           #13#10'   pDirectSound              : 0x%.08X' +
-           #13#10'   pdssd                     : 0x%.08X' +
-           #13#10'   ppStream                  : 0x%.08X' +
-           #13#10'   pUnkOuter                 : 0x%.08X' +
-           #13#10');',
-           [Self, pdssd, ppStream, pUnkOuter]);
+    LogBegin('EmuDSound : TIDirectSound.CreateSoundStream').
+      _(Self, 'pDirectSound').
+      _(pdssd, 'pdssd').
+      _(ppStream, 'ppStream').
+      _(pUnkOuter, 'pUnkOuter').
+    LogEnd();
 
   EmuSwapFS(fsXbox);
 
@@ -1602,12 +1572,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.GetSpeakerConfig' +
-      #13#10'(' +
-      #13#10'   pDirectSound              : 0x%.08X' +
-      #13#10'   pdwSpeakerConfig          : 0x%.08X' +
-      #13#10');',
-      [Self, pdwSpeakerConfig]);
+    LogBegin('EmuDSound : TIDirectSound.GetSpeakerConfig').
+      _(Self, 'pDirectSound').
+      _(pdwSpeakerConfig, 'pdwSpeakerConfig').
+    LogEnd();
 
   Result := IDirectSound(g_pDSound8).GetSpeakerConfig({out}pdwSpeakerConfig^);
 
@@ -1653,13 +1621,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.SetCooperativeLevel' +
-      #13#10'(' +
-      #13#10'   pDirectSound              : 0x%.08X' +
-      #13#10'   hWnd                      : 0x%.08X' +
-      #13#10'   dwLevel                   : 0x%.08X' +
-      #13#10');',
-      [Self, hWnd, dwLevel]);
+    LogBegin('EmuDSound : TIDirectSound.SetCooperativeLevel').
+      _(Self, 'pDirectSound').
+      _(hWnd, 'hWnd').
+      _(dwLevel, 'dwLevel').
+    LogEnd();
 
   // TODO -oDxbx : Should we allow this call? And must we pass hWnd or g_hEmuWindow ?
   Result := IDirectSound8(g_pDSound8).SetCooperativeLevel(hWnd, dwLevel);
@@ -1673,11 +1639,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.Compact' +
-      #13#10'(' +
-      #13#10'   pDirectSound              : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : TIDirectSound.Compact').
+      _(Self, 'pDirectSound').
+    LogEnd();
 
   Result := IDirectSound8(g_pDSound8).Compact;
 
@@ -1696,15 +1660,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.DownloadEffectsImage' +
-      #13#10'(' +
-      #13#10'   pDirectSound              : 0x%.08X' +
-      #13#10'   pvImageBuffer             : 0x%.08X' +
-      #13#10'   dwImageSize               : 0x%.08X' +
-      #13#10'   pImageLoc                 : 0x%.08X' +
-      #13#10'   ppImageDesc               : 0x%.08X' +
-      #13#10');',
-      [Self, pvImageBuffer, dwImageSize, pImageLoc, ppImageDesc]);
+    LogBegin('EmuDSound : TIDirectSound.DownloadEffectsImage').
+      _(Self, 'pDirectSound').
+      _(pvImageBuffer, 'pvImageBuffer').
+      _(dwImageSize, 'dwImageSize').
+      _(pImageLoc, 'pImageLoc').
+      _(ppImageDesc, 'ppImageDesc').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
 
@@ -1765,12 +1727,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.EnableHeadphones' +
-      #13#10'(' +
-      #13#10'   pDirectSound              : 0x%.08X' +
-      #13#10'   fEnabled                  : 0x%.08X' +
-      #13#10');',
-      [Self, fEnabled]);
+    LogBegin('EmuDSound : TIDirectSound.EnableHeadphones').
+      _(Self, 'pDirectSound').
+      _(fEnabled, 'fEnabled').
+    LogEnd();
 
   EmuWarning('EmuIDirectSound_EnableHeadphones ignored');
 
@@ -1797,13 +1757,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSound.SetMixBinHeadroom' +
-        #13#10'(' +
-        #13#10'   pDirectSound              : 0x%.08X' +
-        #13#10'   dwMixBinMask              : 0x%.08X' +
-        #13#10'   dwHeadroom                : 0x%.08X' +
-        #13#10');',
-        [Self, dwMixBin, dwHeadroom]);
+    LogBegin('EmuDSound : TIDirectSound.SetMixBinHeadroom').
+      _(Self, 'pDirectSound').
+      _(dwMixBin, 'dwMixBinMask').
+      _(dwHeadroom, 'dwHeadroom').
+    LogEnd();
 
   // TODO -oCXBX: Actually do something
 
@@ -1822,13 +1780,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSound.SetAllParameters' +
-        #13#10'(' +
-        #13#10'   pDirectSound              : 0x%.08X' +
-        #13#10'   pds3dl                    : 0x%.08X' +
-        #13#10'   dwApply                   : 0x%.08X' +
-        #13#10');',
-        [Self, pds3dl, dwApply]);
+    LogBegin('EmuDSound : TIDirectSound.SetAllParameters').
+      _(Self, 'pDirectSound').
+      _(pds3dl, 'pds3dl').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually do something
 
@@ -1855,18 +1811,16 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.SetOrientation' +
-      #13#10'(' +
-      #13#10'   pDirectSound              : 0x%.08X' +
-      #13#10'   xFront                    : %f' +
-      #13#10'   yFront                    : %f' +
-      #13#10'   zFront                    : %f' +
-      #13#10'   xTop                      : %f' +
-      #13#10'   yTop                      : %f' +
-      #13#10'   zTop                      : %f' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, xFront, yFront, zFront, xTop, yTop, zTop, dwApply]);
+    LogBegin('EmuDSound : TIDirectSound.SetOrientation').
+      _(Self, 'pDirectSound').
+      _(xFront, 'xFront').
+      _(yFront, 'yFront').
+      _(zFront, 'zFront').
+      _(xTop, 'xTop').
+      _(yTop, 'yTop').
+      _(zTop, 'zTop').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
 
@@ -1890,15 +1844,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSound.SetPosition' +
-        #13#10'(' +
-        #13#10'   pDirectSound              : 0x%.08X' +
-        #13#10'   x                         : %f' +
-        #13#10'   y                         : %f' +
-        #13#10'   z                         : %f' +
-        #13#10'   dwApply                   : 0x%.08X' +
-        #13#10');',
-        [Self, x, y, z, dwApply]);
+    LogBegin('EmuDSound : TIDirectSound.SetPosition').
+      _(Self, 'pDirectSound').
+      _(x, 'x').
+      _(y, 'y').
+      _(z, 'z').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually do something
 
@@ -1922,15 +1874,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSound.SetVelocity' +
-        #13#10'(' +
-        #13#10'   pDirectSound              : 0x%.08X' +
-        #13#10'   x                         : %f' +
-        #13#10'   y                         : %f' +
-        #13#10'   z                         : %f' +
-        #13#10'   dwApply                   : 0x%.08X' +
-        #13#10');',
-        [Self, x, y, z, dwApply]);
+    LogBegin('EmuDSound : TIDirectSound.SetVelocity').
+      _(Self, 'pDirectSound').
+      _(x, 'x').
+      _(y, 'y').
+      _(z, 'z').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually do something
 
@@ -1952,13 +1902,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.SetDistanceFactor' +
-      #13#10'(' +
-      #13#10'   pDirectSound              : 0x%.08X' +
-      #13#10'   flDistanceFactor          : %f' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, flDistanceFactor, dwApply]);
+    LogBegin('EmuDSound : TIDirectSound.SetDistanceFactor').
+      _(Self, 'pDirectSound').
+      _(flDistanceFactor, 'flDistanceFactor').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
 
@@ -1980,13 +1928,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.SetDopplerFactor' +
-      #13#10'(' +
-      #13#10'   pDirectSound              : 0x%.08X' +
-      #13#10'   flDopplerFactor           : %f' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, flDopplerFactor, dwApply]);
+    LogBegin('EmuDSound : TIDirectSound.SetDopplerFactor').
+      _(Self, 'pDirectSound').
+      _(flDopplerFactor, 'flDopplerFactor').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
 
@@ -2008,13 +1954,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.SetRolloffFactor' +
-      #13#10'(' +
-      #13#10'   pDirectSound              : 0x%.08X' +
-      #13#10'   flRolloffFactor           : %f' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, flRolloffFactor, dwApply]);
+    LogBegin('EmuDSound : TIDirectSound.SetRolloffFactor').
+      _(Self, 'pDirectSound').
+      _(flRolloffFactor, 'flRolloffFactor').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
 
@@ -2036,13 +1980,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSound.SetI3DL2Listener' +
-       #13#10'(' +
-       #13#10'   pDirectSound              : 0x%.08X' +
-       #13#10'   pds3dl                    : 0x%.08X' +
-       #13#10'   dwApply                   : 0x%.08X' +
-       #13#10');',
-       [Self, pds3dl, dwApply]);
+    LogBegin('EmuDSound : TIDirectSound.SetI3DL2Listener').
+      _(Self, 'pDirectSound').
+      _(pds3dl, 'pds3dl').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually do something
 
@@ -2057,11 +1999,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.CommitDeferredSettings' +
-      #13#10'(' +
-      #13#10'   pDirectSound              : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : TIDirectSound.CommitDeferredSettings').
+      _(Self, 'pDirectSound').
+    LogEnd();
 
   // TODO -oCXBX: Translate params, then make the PC DirectSound call
 
@@ -2104,13 +2044,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.GetOutputLevels' +
-      #13#10'(' +
-      #13#10'   pDirectSound            : 0x%.08X' +
-      #13#10'   pOutputLevels           : 0x%.08X' +
-      #13#10'   bResetPeakValues        : 0x%.08X' +
-      #13#10');',
-      [Self, pOutputLevels, fResetPeakValues]);
+    LogBegin('EmuDSound : TIDirectSound.GetOutputLevels').
+      _(Self, 'pDirectSound').
+      _(pOutputLevels, 'pOutputLevels').
+      _(fResetPeakValues, 'bResetPeakValues').
+    LogEnd();
 
   // TODO -oCXBX: Anything?  Either way, I've never seen a game to date use this...
 
@@ -2125,11 +2063,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSound.SynchPlayback' +
-      #13#10'(' +
-      #13#10'   pDirectSound              : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : TIDirectSound.SynchPlayback').
+      _(Self, 'pDirectSound').
+    LogEnd();
 
   EmuWarning('EmuIDirectSound_SynchPlayback ignored');
 
@@ -2368,11 +2304,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.AddRef' +
-      #13#10'(' +
-      #13#10'   pBuffer                 : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.AddRef').
+      _(Self, 'pBuffer').
+    LogEnd();
 
   Result := 0;
 
@@ -2402,11 +2336,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.Release' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10');',
-         [Self]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.Release').
+      _(Self, 'pBuffer').
+    LogEnd();
 
   //TODO DXBX: - This is not good to release... it crashes rayamn menu items hard.
   uRet := 0;
@@ -2453,12 +2385,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetFormat' +
-        #13#10'(' +
-        #13#10'   pBuffer                   : 0x%.08X' +
-        #13#10'   pwfxFormat                : 0x%.08X' +
-        #13#10');',
-        [Self, pwfxFormat]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetFormat').
+      _(Self, 'pBuffer').
+      _(pwfxFormat, 'pwfxFormat').
+    LogEnd();
 
   Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetFormat(pwfxFormat); // TODO -oDxbx : Test this!
 //  Result := DS_OK;
@@ -2475,12 +2405,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetFrequency' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10'   dwFrequency               : 0x%.08X' +
-         #13#10');',
-         [Self, dwFrequency]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetFrequency').
+      _(Self, 'pBuffer').
+      _(dwFrequency, 'dwFrequency').
+    LogEnd();
 
   if Assigned(Self.EmuDirectSoundBuffer8) then
     Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetFrequency(dwFrequency) // TODO -oDxbx : Test this!
@@ -2500,12 +2428,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetVolume' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10'   lVolume                   : 0x%.08X' +
-         #13#10');',
-         [Self, lVolume]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetVolume').
+      _(Self, 'pBuffer').
+      _(lVolume, 'lVolume').
+    LogEnd();
 
   Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume);
 //  Result := DS_OK;
@@ -2522,12 +2448,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetPitch' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10'   lPitch                    : 0x%.08X' +
-         #13#10');',
-         [Self, lPitch]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetPitch').
+      _(Self, 'pBuffer').
+      _(lPitch, 'lPitch').
+    LogEnd();
 
   // TODO -oCXBX: Translate params, then make the PC DirectSound call
   Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lPitch);
@@ -2544,12 +2468,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetLFO' +
-      #13#10'(' +
-      #13#10'   pBuffer                   : 0x%.08X' +
-      #13#10'   pLFODesc                  : 0x%.08X' +
-      #13#10');',
-      [Self, pLFODesc]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetLFO').
+      _(Self, 'pBuffer').
+      _(pLFODesc, 'pLFODesc').
+    LogEnd();
 
   // TODO -oCXBX: Implement
   EmuSwapFS(fsXbox);
@@ -2578,12 +2500,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetFilter' +
-      #13#10'(' +
-      #13#10'   pBuffer             : 0x%.08X' +
-      #13#10'   pFilterDesc         : 0x%.08X' +
-      #13#10');',
-      [Self, pFilterDesc]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetFilter').
+      _(Self, 'pBuffer').
+      _(pFilterDesc, 'pFilterDesc').
+    LogEnd();
 
   // TODO -oCXBX: Implement
 
@@ -2603,12 +2523,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetHeadroom' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10'   dwHeadroom                : 0x%.08X' +
-         #13#10');',
-         [Self, dwHeadroom]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetHeadroom').
+      _(Self, 'pBuffer').
+      _(dwHeadroom, 'dwHeadroom').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
 
@@ -2639,12 +2557,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetMixBins' +
-        #13#10'(' +
-        #13#10'   pBuffer                   : 0x%.08X' +
-        #13#10'   pMixBins                  : 0x%.08X' +
-        #13#10');',
-        [Self, pMixBins]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetMixBins').
+      _(Self, 'pBuffer').
+      _(pMixBins, 'pMixBins').
+    LogEnd();
 
   // TODO -oCXBX: Actually do something
 
@@ -2662,12 +2578,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetMixBinVolumes' +
-        #13#10'(' +
-        #13#10'   pBuffer                   : 0x%.08X' +
-        #13#10'   pMixBins                  : 0x%.08X' +
-        #13#10');',
-        [Self, pMixBins]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetMixBinVolumes').
+      _(Self, 'pBuffer').
+      _(pMixBins, 'pMixBins').
+    LogEnd();
 
   // TODO -oCXBX: Actually do something
 
@@ -2701,15 +2615,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetConeAngles' +
-        #13#10'(' +
-        #13#10'   pBuffer                   : 0x%.08X' +
-        #13#10'   dwInsideConeAngle         : 0x%.08X' +
-        #13#10'   dwOutsideConeAngle        : 0x%.08X' +
-        #13#10'   dwApply                   : 0x%.08X' +
-        #13#10');',
-        [Self, dwInsideConeAngle,
-        dwOutsideConeAngle, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetConeAngles').
+      _(Self, 'pBuffer').
+      _(dwInsideConeAngle, 'dwInsideConeAngle').
+      _(dwOutsideConeAngle, 'dwOutsideConeAngle').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
 // TODO -oDxbx : Make this work & test it!
 //  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply);
@@ -2730,15 +2641,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetConeOrientation' +
-        #13#10'(' +
-        #13#10'   pBuffer                   : 0x%.08X' +
-        #13#10'   x                         : %f' +
-        #13#10'   y                         : %f' +
-        #13#10'   z                         : %f' +
-        #13#10'   dwApply                   : 0x%.08X' +
-        #13#10');',
-        [Self, x, y, z, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetConeOrientation').
+      _(Self, 'pBuffer').
+      _(x, 'x').
+      _(y, 'y').
+      _(z, 'z').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
 // TODO -oDxbx : Make this work & test it!
 //  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeOrientation(x, y, z, dwApply);
@@ -2757,13 +2666,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetConeOutsideVolume' +
-        #13#10'(' +
-        #13#10'   pBuffer                   : 0x%.08X' +
-        #13#10'   lConeOutsideVolume        : 0x%.08X' +
-        #13#10'   dwApply                   : 0x%.08X' +
-        #13#10');',
-        [Self, lConeOutsideVolume, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetConeOutsideVolume').
+      _(Self, 'pBuffer').
+      _(lConeOutsideVolume, 'lConeOutsideVolume').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
 // TODO -oDxbx : Make this work & test it!
 //  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeOutsideVolume(lConeOutsideVolume, dwApply);
@@ -2782,13 +2689,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetMaxDistance' +
-        #13#10'(' +
-        #13#10'   pBuffer                   : 0x%.08X' +
-        #13#10'   flMaxDistance             : %f' +
-        #13#10'   dwApply                   : 0x%.08X' +
-        #13#10');',
-        [Self, flMaxDistance, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetMaxDistance').
+      _(Self, 'pBuffer').
+      _(flMaxDistance, 'flMaxDistance').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
 // TODO -oDxbx : Make this work & test it!
 //  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetMaxDistance(flMaxDistance, dwApply);
@@ -2807,13 +2712,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetMinDistance' +
-        #13#10'(' +
-        #13#10'   pBuffer                   : 0x%.08X' +
-        #13#10'   flMinDistance             : %f' +
-        #13#10'   dwApply                   : 0x%.08X' +
-        #13#10');',
-        [Self, flMinDistance, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetMinDistance').
+      _(Self, 'pBuffer').
+      _(flMinDistance, 'flMinDistance').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
 // TODO -oDxbx : Make this work & test it!
 //  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetMinDistance(flMinDistance, dwApply);
@@ -2832,13 +2735,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetMode' +
-      #13#10'(' +
-      #13#10'   pBuffer             : 0x%.08X' +
-      #13#10'   dwMode              : 0x%.08X' +
-      #13#10'   dwApply             : 0x%.08X' +
-      #13#10');',
-      [Self, dwMode, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetMode').
+      _(Self, 'pBuffer').
+      _(dwMode, 'dwMode').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
 // TODO -oDxbx : Make this work & test it!
 //  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetMode(dwMode, dwApply);
@@ -2859,15 +2760,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetPosition' +
-        #13#10'(' +
-        #13#10'   pBuffer                   : 0x%.08X' +
-        #13#10'   x                         : %f' +
-        #13#10'   y                         : %f' +
-        #13#10'   z                         : %f' +
-        #13#10'   dwApply                   : 0x%.08X' +
-        #13#10');',
-        [Self, x, y, z, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetPosition').
+      _(Self, 'pBuffer').
+      _(x, 'x').
+      _(y, 'y').
+      _(z, 'z').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // Dxbx addition : Call upon the PrimaryBuffer (but do check for the existence of a Listener!) :
   if Assigned(Self.EmuListener) then
@@ -2892,15 +2791,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetVelocity' +
-        #13#10'(' +
-        #13#10'   pBuffer                   : 0x%.08X' +
-        #13#10'   x                         : %f' +
-        #13#10'   y                         : %f' +
-        #13#10'   z                         : %f' +
-        #13#10'   dwApply                   : 0x%.08X' +
-        #13#10');',
-        [Self, x, y, z, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetVelocity').
+      _(Self, 'pBuffer').
+      _(x, 'x').
+      _(y, 'y').
+      _(z, 'z').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // Dxbx addition : Call upon the PrimaryBuffer (but do check for the existence of a Listener!) :
   if Assigned(Self.EmuListener) then
@@ -2924,13 +2821,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetDistanceFactor' +
-        #13#10'(' +
-        #13#10'   pBuffer                   : 0x%.08X' +
-        #13#10'   flDistanceFactor          : %f' +
-        #13#10'   dwApply                   : 0x%.08X' +
-        #13#10');',
-        [Self, flDistanceFactor, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetDistanceFactor').
+      _(Self, 'pBuffer').
+      _(flDistanceFactor, 'flDistanceFactor').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // Dxbx addition : Call upon the PrimaryBuffer (but do check for the existence of a Listener!) :
   if Assigned(Self.EmuListener) then
@@ -2952,13 +2847,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetDopplerFactor' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10'   flDopplerFactor           : %f' +
-         #13#10'   dwApply                   : 0x%.08X' +
-         #13#10');',
-         [Self, flDopplerFactor, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetDopplerFactor').
+      _(Self, 'pBuffer').
+      _(flDopplerFactor, 'flDopplerFactor').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // Dxbx addition : Call upon the PrimaryBuffer (but do check for the existence of a Listener!) :
   if Assigned(Self.EmuListener) then
@@ -2979,13 +2872,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetRolloffFactor' +
-        #13#10'(' +
-        #13#10'   pBuffer                   : 0x%.08X' +
-        #13#10'   flRolloffFactor           : %f' +
-        #13#10'   dwApply                   : 0x%.08X' +
-        #13#10');',
-        [Self, flRolloffFactor, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetRolloffFactor').
+      _(Self, 'pBuffer').
+      _(flRolloffFactor, 'flRolloffFactor').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // Dxbx addition : Call upon the PrimaryBuffer (but do check for the existence of a Listener!) :
   if Assigned(Self.EmuListener) then
@@ -3007,14 +2898,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetRolloffCurve' +
-      #13#10'(' +
-      #13#10'   pBuffer                   : 0x%.08X' +
-      #13#10'   pflPoints                 : 0x%.08X' +
-      #13#10'   dwPointCount              : 0x%.08X' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, pflPoints, dwPointCount, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetRolloffCurve').
+      _(Self, 'pBuffer').
+      _(pflPoints, 'pflPoints').
+      _(dwPointCount, 'dwPointCount').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Implement
 
@@ -3033,13 +2922,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetI3DL2Source' +
-           #13#10'(' +
-           #13#10'   pBuffer                   : 0x%.08X' +
-           #13#10'   pds3db                    : 0x%.08X' +
-           #13#10'   dwApply                   : 0x%.08X' +
-           #13#10');',
-           [Self, pds3db, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetI3DL2Source').
+      _(Self, 'pBuffer').
+      _(pds3db, 'pds3db').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually do something
 
@@ -3060,14 +2947,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.Play' +
-      #13#10'(' +
-      #13#10'   pBuffer                   : 0x%.08X' +
-      #13#10'   dwReserved1               : 0x%.08X' +
-      #13#10'   dwReserved2               : 0x%.08X' +
-      #13#10'   dwFlags                   : 0x%.08X' +
-      #13#10');',
-      [Self, dwReserved1, dwReserved2, dwFlags]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.Play').
+      _(Self, 'pBuffer').
+      _(dwReserved1, 'dwReserved1').
+      _(dwReserved2, 'dwReserved2').
+      _(dwFlags, 'dwFlags').
+    LogEnd();
 
   if (dwFlags and (not (DSBPLAY_LOOPING or X_DSBPLAY_FROMSTART))) > 0 then
     DxbxKrnlCleanup('Unsupported Playing Flags');
@@ -3123,13 +3008,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.PlayEx' +
-      #13#10'(' +
-      #13#10'   pBuffer                   : 0x%.08X' +
-      #13#10'   rtTimeStamp               : 0x%.08X' +
-      #13#10'   dwFlags                   : 0x%.08X' +
-      #13#10');',
-      [Self, rtTimeStamp, dwFlags]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.PlayEx').
+      _(Self, 'pBuffer').
+      _(rtTimeStamp, 'rtTimeStamp').
+      _(dwFlags, 'dwFlags').
+    LogEnd();
 
   if(Self.EmuDirectSoundBuffer8 = nil) then
     EmuWarning('pBuffer.EmuDirectSoundBuffer8 == 0');
@@ -3149,11 +3032,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.Stop' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10');',
-         [Self]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.Stop').
+      _(Self, 'pBuffer').
+    LogEnd();
 
   hRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).Stop();
 
@@ -3172,13 +3053,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.StopEx' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10'   rtTimeStamp               : 0x%.08X' +
-         #13#10'   dwFlags                   : 0x%.08X' +
-         #13#10');',
-         [Self, rtTimeStamp, dwFlags]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.StopEx').
+      _(Self, 'pBuffer').
+      _(rtTimeStamp, 'rtTimeStamp').
+      _(dwFlags, 'dwFlags').
+    LogEnd();
 
   if (Self.EmuDirectSoundBuffer8 = nil) then
     EmuWarning('pBuffer.EmuDirectSoundBuffer8 == 0');
@@ -3199,12 +3078,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.Pause' +
-      #13#10'(' +
-      #13#10'   pBuffer                 : 0x%.08X' +
-      #13#10'   dwPause                 : 0x%.08X' +
-      #13#10');',
-      [Self, dwPause]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.Pause').
+      _(Self, 'pBuffer').
+      _(dwPause, 'dwPause').
+    LogEnd();
 
   // This function wasn't part of the XDK until 4721.
   Result := DS_OK;
@@ -3242,13 +3119,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.PauseEx' +
-      #13#10'(' +
-      #13#10'   pBuffer                 : 0x%.08X' +
-      #13#10'   rtTimestamp             : 0x%.08X' +
-      #13#10'   dwPause                 : 0x%.08X' +
-      #13#10');',
-      [Self, rtTimestamp, dwPause]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.PauseEx').
+      _(Self, 'pBuffer').
+      _(rtTimestamp, 'rtTimestamp').
+      _(dwPause, 'dwPause').
+    LogEnd();
 
   // This function wasn't part of the XDK until 4721.
   // TODO: Implement time stamp feature (a thread maybe?)
@@ -3288,13 +3163,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetPlayRegion' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10'   dwPlayStart               : 0x%.08X' +
-         #13#10'   dwPlayLength              : 0x%.08X' +
-         #13#10');',
-         [Self, dwPlayStart, dwPlayLength]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetPlayRegion').
+      _(Self, 'pBuffer').
+      _(dwPlayStart, 'dwPlayStart').
+      _(dwPlayLength, 'dwPlayLength').
+    LogEnd();
 
   // TODO -oCXBX: Translate params, then make the PC DirectSound call
 
@@ -3313,13 +3186,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetLoopRegion' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10'   dwLoopStart               : 0x%.08X' +
-         #13#10'   dwLoopLength              : 0x%.08X' +
-         #13#10');',
-         [Self, dwLoopStart, dwLoopLength]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetLoopRegion').
+      _(Self, 'pBuffer').
+      _(dwLoopStart, 'dwLoopStart').
+      _(dwLoopLength, 'dwLoopLength').
+    LogEnd();
 
   //Dxbx_TIDirectSoundBuffer_Resize(Self, dwLoopLength);
 
@@ -3339,12 +3210,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.GetStatus' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10'   pdwStatus                 : 0x%.08X' +
-         #13#10');',
-         [Self, pdwStatus]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.GetStatus').
+      _(Self, 'pBuffer').
+      _(pdwStatus, 'pdwStatus').
+    LogEnd();
 
   hRet := DS_OK;
 
@@ -3374,13 +3243,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.GetCurrentPosition' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10'   pdwCurrentPlayCursor      : 0x%.08X' +
-         #13#10'   pdwCurrentWriteCursor     : 0x%.08X' +
-         #13#10');',
-         [Self, pdwPlayCursor, pdwWriteCursor]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.GetCurrentPosition').
+      _(Self, 'pBuffer').
+      _(pdwPlayCursor, 'pdwCurrentPlayCursor').
+      _(pdwWriteCursor, 'pdwCurrentWriteCursor').
+    LogEnd();
 
   DxbxHackUpdateSoundBuffers();
   DxbxHackUpdateSoundStreams();
@@ -3413,12 +3280,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetCurrentPosition' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10'   dwNewPosition             : 0x%.08X' +
-         #13#10');',
-         [Self, dwPlayCursor]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetCurrentPosition').
+      _(Self, 'pBuffer').
+      _(dwPlayCursor, 'dwPlayCursor').
+    LogEnd();
 
   // NOTE: TODO -oCXBX: This call *will* (by MSDN) fail on primary buffers!
   hRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetCurrentPosition(dwPlayCursor);
@@ -3441,13 +3306,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.SetBufferData' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10'   pvBufferData              : 0x%.08X' +
-         #13#10'   dwBufferBytes             : 0x%.08X' +
-         #13#10');',
-         [Self, pvBufferData, dwBufferBytes]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.SetBufferData').
+      _(Self, 'pBuffer').
+      _(pvBufferData, 'pvBufferData').
+      _(dwBufferBytes, 'dwBufferBytes').
+    LogEnd();
 
   // update buffer data cache
   Self.EmuBuffer := pvBufferData;
@@ -3476,19 +3339,16 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.Lock' +
-         #13#10'(' +
-         #13#10'   pBuffer                   : 0x%.08X' +
-         #13#10'   dwOffset                  : 0x%.08X' +
-         #13#10'   dwBytes                   : 0x%.08X' +
-         #13#10'   ppvAudioPtr1              : 0x%.08X' +
-         #13#10'   pdwAudioBytes1            : 0x%.08X' +
-         #13#10'   ppvAudioPtr2              : 0x%.08X' +
-         #13#10'   pdwAudioBytes2            : 0x%.08X' +
-         #13#10'   dwFlags                   : 0x%.08X' +
-         #13#10');',
-         [Self, dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1,
-         ppvAudioPtr2, pdwAudioBytes2, dwFlags]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.Lock').
+      _(Self, 'pBuffer').
+      _(dwOffset, 'dwOffset').
+      _(dwBytes, 'dwBytes').
+      _(ppvAudioPtr1, 'ppvAudioPtr1').
+      _(pdwAudioBytes1, 'pdwAudioBytes1').
+      _(ppvAudioPtr2, 'ppvAudioPtr2').
+      _(pdwAudioBytes2, 'pdwAudioBytes2').
+      _(dwFlags, 'dwFlags').
+    LogEnd();
 
   hRet := DS_OK; // Dxbx note : Cxbx uses D3D_OK here.
 
@@ -3579,12 +3439,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundBuffer.GetVoiceProperties' +
-      #13#10'(' +
-      #13#10'   pBuffer                 : 0x%.08X' +
-      #13#10'   pVoiceProps             : 0x%.08X' +
-      #13#10');',
-      [Self, pVoiceProps]);
+    LogBegin('EmuDSound : TIDirectSoundBuffer.GetVoiceProperties').
+      _(Self, 'pBuffer').
+      _(pVoiceProps, 'pVoiceProps').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement
 
@@ -3865,11 +3723,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.AddRef' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : TIDirectSoundStream.AddRef').
+      _(Self, 'pStream').
+    LogEnd();
 
   if (Self <> nil) then
     if (Self.EmuDirectSoundBuffer8 <> nil) then // Cxbx HACK: Ignore unsupported codecs.
@@ -3889,11 +3745,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.Release' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : TIDirectSoundStream.Release').
+      _(Self, 'pStream').
+    LogEnd();
 
   uRet := 0;
 
@@ -3934,12 +3788,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.GetInfo' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   pInfo                     : 0x%.08X' +
-      #13#10');',
-      [Self, pInfo]);
+    LogBegin('EmuDSound : TIDirectSoundStream.GetInfo').
+      _(Self, 'pStream').
+      _(pInfo, 'pInfo').
+    LogEnd();
 
   // TODO -oCXBX: A (real) implementation?
   EmuWarning('EmuCDirectSoundStream_GetInfo is not yet supported!');
@@ -3966,12 +3818,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.GetStatus' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   pdwStatus                 : 0x%.08X' +
-      #13#10');',
-      [Self, pdwStatus]);
+    LogBegin('EmuDSound : TIDirectSoundStream.GetStatus').
+      _(Self, 'pStream').
+      _(pdwStatus, 'pdwStatus').
+    LogEnd();
 
   EmuWarning('EmuCDirectSoundStream_GetStatus is not yet implemented');
 
@@ -3992,13 +3842,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.Process' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   pInputBuffer              : 0x%.08X' +
-      #13#10'   pOutputBuffer             : 0x%.08X' +
-      #13#10');',
-      [Self, pInputBuffer, pOutputBuffer]);
+    LogBegin('EmuDSound : TIDirectSoundStream.Process').
+      _(Self, 'pStream').
+      _(pInputBuffer, 'pInputBuffer').
+      _(pOutputBuffer, 'pOutputBuffer').
+    LogEnd();
 
   if  (Self <> nil)
   and (Self.EmuDirectSoundBuffer8 <> NULL) then
@@ -4030,11 +3878,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.Discontinuity' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : TIDirectSoundStream.Discontinuity').
+      _(Self, 'pStream').
+    LogEnd();
 
   // TODO -oCXBX: Actually Process
 
@@ -4050,11 +3896,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.Flush' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10');',
-      [Self]);
+    LogBegin('EmuDSound : TIDirectSoundStream.Flush').
+      _(Self, 'pStream').
+    LogEnd();
 
   // TODO -oCXBX: Actually Flush
 
@@ -4072,12 +3916,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetFormat' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   pwfxFormat                : 0x%.08X' +
-      #13#10');',
-      [Self, pwfxFormat]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetFormat').
+      _(Self, 'pStream').
+      _(pwfxFormat, 'pwfxFormat').
+    LogEnd();
 
   if  (Self <> nil)
   and (Self.EmuDirectSoundBuffer8 <> NULL) then
@@ -4097,12 +3939,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetFrequency' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   dwFrequency               : %d' +
-      #13#10');',
-      [Self, dwFrequency]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetFrequency').
+      _(Self, 'pStream').
+      _(dwFrequency, 'dwFrequency').
+    LogEnd();
 
   if  (Self <> nil)
   and (Self.EmuDirectSoundBuffer8 <> NULL) then
@@ -4123,12 +3963,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetVolume' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   lVolume                   : %d' +
-      #13#10');',
-      [Self, lVolume]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetVolume').
+      _(Self, 'pStream').
+      _(lVolume, 'lVolume').
+    LogEnd();
 
   if  (Self <> nil)
   and (Self.EmuDirectSoundBuffer8 <> NULL) then
@@ -4148,12 +3986,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetPitch' +
-      #13#10'(' +
-      #13#10'   pStream             : 0x%.08X' +
-      #13#10'   lPitch              : 0x%.08X' +
-      #13#10');',
-      [Self, lPitch]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetPitch').
+      _(Self, 'pStream').
+      _(lPitch, 'lPitch').
+    LogEnd();
 
   Result := DS_OK;
 
@@ -4184,12 +4020,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetEG' +
-      #13#10'(' +
-      #13#10'   pStream                 : 0x%.08X' +
-      #13#10'   pEnvelopeDesc           : 0x%.08X' +
-      #13#10');',
-      [Self, pEnvelopeDesc]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetEG').
+      _(Self, 'pStream').
+      _(pEnvelopeDesc, 'pEnvelopeDesc').
+    LogEnd();
 
   // TODO -oCXBX: Implement this...
 
@@ -4207,12 +4041,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetFilter' +
-      #13#10'(' +
-      #13#10'   pStream             : 0x%.08X' +
-      #13#10'   pFilterDesc         : 0x%.08X' +
-      #13#10');',
-      [Self, pFilterDesc]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetFilter').
+      _(Self, 'pStream').
+      _(pFilterDesc, 'pFilterDesc').
+    LogEnd();
 
   // TODO -oCXBX: Implement
 
@@ -4232,12 +4064,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetHeadroom' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   dwHeadroom                : 0x%.08X' +
-      #13#10');',
-      [Self, dwHeadroom]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetHeadroom').
+      _(Self, 'pStream').
+      _(dwHeadroom, 'dwHeadroom').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
@@ -4267,12 +4097,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetMixBins' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   pMixBins                  : 0x%.08X' +
-      #13#10');',
-      [Self, pMixBins]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetMixBins').
+      _(Self, 'pStream').
+      _(pMixBins, 'pMixBins').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this.
 
@@ -4305,13 +4133,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetAllParameters' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   pds3db                    : 0x%.08X' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, pds3db, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetAllParameters').
+      _(Self, 'pStream').
+      _(pds3db, 'pds3db').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
   // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetAllParameters(pds3db, dwApply);
@@ -4330,14 +4156,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetConeAngles' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   dwInsideConeAngle         : 0x%.08X' +
-      #13#10'   dwOutsideConeAngle        : 0x%.08X' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, dwInsideConeAngle, dwOutsideConeAngle, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetConeAngles').
+      _(Self, 'pStream').
+      _(dwInsideConeAngle, 'dwInsideConeAngle').
+      _(dwOutsideConeAngle, 'dwOutsideConeAngle').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
   // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply);
@@ -4357,15 +4181,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetConeOrientation' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   x                         : %f' +
-      #13#10'   y                         : %f' +
-      #13#10'   z                         : %f' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, x, y, z, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetConeOrientation').
+      _(Self, 'pStream').
+      _(x, 'x').
+      _(y, 'y').
+      _(z, 'z').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
   // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeOrientation(x, y, z, dwApply);
@@ -4383,13 +4205,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetConeOutsideVolume' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   lConeOutsideVolume        : %d' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, lConeOutsideVolume, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetConeOutsideVolume').
+      _(Self, 'pStream').
+      _(lConeOutsideVolume, 'lConeOutsideVolume').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
   // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeOutsideVolume(lConeOutsideVolume, dwApply);
@@ -4407,13 +4227,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetMaxDistance' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   flMaxDistance             : %f' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, flMaxDistance, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetMaxDistance').
+      _(Self, 'pStream').
+      _(flMaxDistance, 'flMaxDistance').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
   // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetMaxDistance(flMaxDistance, dwApply);
@@ -4431,13 +4249,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetMinDistance' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   flMinDistance             : %f' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, flMinDistance, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetMinDistance').
+      _(Self, 'pStream').
+      _(flMinDistance, 'flMinDistance').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
   // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetMinDistance(flMinDistance, dwApply);
@@ -4455,13 +4271,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetFormat' +
-      #13#10'(' +
-      #13#10'   pStream             : 0x%.08X' +
-      #13#10'   dwMode              : 0x%.08X' +
-      #13#10'   dwApply             : 0x%.08X' +
-      #13#10');',
-      [Self, dwMode, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetFormat').
+      _(Self, 'pStream').
+      _(dwMode, 'dwMode').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   Result := DS_OK;
 
@@ -4482,15 +4296,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetPosition' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   x                         : %f' +
-      #13#10'   y                         : %f' +
-      #13#10'   z                         : %f' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, x, y, z, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetPosition').
+      _(Self, 'pStream').
+      _(x, 'x').
+      _(y, 'y').
+      _(z, 'z').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
   // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetPosition(x, y, z, dwApply);
@@ -4510,15 +4322,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetVelocity' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   x                         : %f' +
-      #13#10'   y                         : %f' +
-      #13#10'   z                         : %f' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, x, y, z, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetVelocity').
+      _(Self, 'pStream').
+      _(x, 'x').
+      _(y, 'y').
+      _(z, 'z').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
   // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetVelocity(x, y, z, dwApply);
@@ -4561,13 +4371,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetRolloffFactor' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   flRolloffFactor           : %f' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, flRolloffFactor, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetRolloffFactor').
+      _(Self, 'pStream').
+      _(flRolloffFactor, 'flRolloffFactor').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually SetRolloffFactor
   EmuSwapFS(fsXbox);
@@ -4599,13 +4407,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.SetI3DL2Source' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   pds3db                    : 0x%.08X' +
-      #13#10'   dwApply                   : 0x%.08X' +
-      #13#10');',
-      [Self, pds3db, dwApply]);
+    LogBegin('EmuDSound : TIDirectSoundStream.SetI3DL2Source').
+      _(Self, 'pStream').
+      _(pds3db, 'pds3db').
+      _(dwApply, 'dwApply').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
@@ -4621,12 +4427,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.Pause' +
-      #13#10'(' +
-      #13#10'   pStream                   : 0x%.08X' +
-      #13#10'   dwPause                   : 0x%.08X' +
-      #13#10');',
-      [Self, dwPause]);
+    LogBegin('EmuDSound : TIDirectSoundStream.Pause').
+      _(Self, 'pStream').
+      _(dwPause, 'dwPause').
+    LogEnd();
 
   EmuSwapFS(fsXbox);
 
@@ -4657,13 +4461,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.FlushEx' +
-      #13#10'(' +
-      #13#10'   pStream                 : 0x%.08X' +
-      #13#10'   rtTimeStamp             : 0x%.08X' +
-      #13#10'   dwFlags                 : 0x%.08X' +
-      #13#10');',
-      [Self, rtTimeStamp, dwFlags]);
+    LogBegin('EmuDSound : TIDirectSoundStream.FlushEx').
+      _(Self, 'pStream').
+      _(rtTimeStamp, 'rtTimeStamp').
+      _(dwFlags, 'dwFlags').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement
 
@@ -4681,12 +4483,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : TIDirectSoundStream.GetVoiceProperties' +
-      #13#10'(' +
-      #13#10'   pStream                 : 0x%.08X' +
-      #13#10'   pVoiceProps             : 0x%.08X' +
-      #13#10');',
-      [Self, pVoiceProps]);
+    LogBegin('EmuDSound : TIDirectSoundStream.GetVoiceProperties').
+      _(Self, 'pStream').
+      _(pVoiceProps, 'pVoiceProps').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement
 
@@ -4922,13 +4722,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : XAudioCreateAdpcmFormat' +
-      #13#10'(' +
-      #13#10'   nChannels                 : 0x%.04X' +
-      #13#10'   nSamplesPerSec            : 0x%.08X' +
-      #13#10'   pwfx                      : 0x%.08X' +
-      #13#10');',
-      [nChannels, nSamplesPerSec, pwfx]);
+    LogBegin('EmuDSound : XAudioCreateAdpcmFormat').
+      _(nChannels, 'nChannels').
+      _(nSamplesPerSec, 'nSamplesPerSec').
+      _(pwfx, 'pwfx').
+    LogEnd();
 
   // Fill out the pwfx structure with the appropriate data
   pwfx.wfx.wFormatTag       := X_WAVE_FORMAT_XBOX_ADPCM;
@@ -4962,9 +4760,9 @@ begin
       _(ppImageDesc, 'ppImageDesc').
     LogEnd();
 
-   EmuSwapFS(fsXbox);
+  EmuSwapFS(fsXbox);
 
-   Result := DS_OK;
+  Result := DS_OK;
 end;
 
 {.$MESSAGE 'PatrickvL reviewed up to here'}
