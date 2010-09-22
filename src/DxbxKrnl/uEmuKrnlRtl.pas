@@ -518,7 +518,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('RtlAnsiStringToUnicodeString').
-      _(DestinationString, 'DestinationString').
+      _(Pointer(DestinationString), 'DestinationString').
       _(SourceString, 'SourceString').
       _(AllocateDestinationString, ' AllocateDestinationString').
     LogEnd();
@@ -592,17 +592,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlAssert' +
-        #13#10'(' +
-        #13#10'   FailedAssertion           : 0x%.08X ("%s")' +
-        #13#10'   FileName                  : 0x%.08X ("%s")' +
-        #13#10'   LineNumber                : 0x%.08X (%d)' +
-        #13#10'   Message                   : 0x%.08X ("%s")' +
-        #13#10');',
-        [Pointer(FailedAssertion), PAnsiCharMaxLenToString(FailedAssertion, 260),
-         Pointer(FileName), PAnsiCharMaxLenToString(FileName, 260),
-         LineNumber, LineNumber,
-         Pointer(Message_), PAnsiCharMaxLenToString(Message_, 260)]);
+    LogBegin('EmuKrnl : RtlAssert').
+      _(PAnsiChar(FailedAssertion), 'FailedAssertion').
+      _(PAnsiChar(FileName), 'FileName').
+      _(LineNumber, 'LineNumber').
+      _(PAnsiChar(Message_), 'Message').
+    LogEnd();
 
   JwaNative.RtlAssert(FailedAssertion, FileName, LineNumber, Message_);
 
@@ -680,7 +675,7 @@ begin
     LogBegin('RtlCompareMemory').
       _(Source1, 'Source1').
       _(Source2, 'Source2').
-      _(Length).
+      _(Length, 'Length').
     LogEnd();
 
   Result := JwaNative.RtlCompareMemory(Source1, Source2, Length);
@@ -757,7 +752,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('RtlCopyString').
-      _(DestinationString, 'DestinationString').
+      _(Pointer(DestinationString), 'DestinationString').
       _(SourceString, 'SourceString').
     LogEnd();
 
@@ -775,7 +770,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('RtlCopyUnicodeString').
-      _(DestinationString, 'DestinationString').
+      _(Pointer(DestinationString), 'DestinationString').
       _(SourceString, 'SourceString').
     LogEnd();
 
@@ -793,7 +788,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('RtlCreateUnicodeString').
-      _(DestinationString, 'DestinationString').
+      _(Pointer(DestinationString), 'DestinationString').
       _(SourceString, 'SourceString').
     LogEnd();
 
@@ -828,7 +823,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('RtlDowncaseUnicodeString').
-      _(DestinationString, 'DestinationString').
+      _(Pointer(DestinationString), 'DestinationString').
       _(SourceString, 'SourceString').
       _(AllocateDestinationString, 'AllocateDestinationString').
     LogEnd();
@@ -939,7 +934,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('RtlExtendedIntegerMultiply').
-      _(Multiplicand.QuadPart, 'Multiplicand').
+      _(Multiplicand, 'Multiplicand').
       _(Multiplier, 'Multiplier').
     LogEnd();
 
@@ -957,15 +952,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlExtendedLargeIntegerDivide' +
-        #13#10'(' +
-        #13#10'   Dividend                  : 0x%.08X' +
-        #13#10'   Divisor                   : 0x%.08X' +
-        #13#10'   Remainder                 : 0x%.08X' +
-        #13#10');',
-        [Dividend.QuadPart,
-        Divisor,
-        Remainder]);
+    LogBegin('EmuKrnl : RtlExtendedLargeIntegerDivide').
+      _(Dividend, 'Dividend').
+      _(Divisor, 'Divisor').
+      _(Remainder, 'Remainder').
+    LogEnd();
 
   Result := _LARGE_INTEGER(JwaNative.RtlExtendedLargeIntegerDivide(Dividend, Divisor, Remainder));
   EmuSwapFS(fsXbox);
@@ -981,15 +972,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlExtendedMagicDivide' +
-        #13#10'(' +
-        #13#10'   Dividend                  : 0x%.08X' +
-        #13#10'   MagicDivisor              : 0x%.08X' +
-        #13#10'   ShiftCount                : 0x%.08X' +
-        #13#10');',
-        [Dividend.QuadPart,
-        MagicDivisor.QuadPart,
-        ShiftCount]);
+    LogBegin('EmuKrnl : RtlExtendedMagicDivide').
+      _(Dividend, 'Dividend').
+      _(MagicDivisor, 'MagicDivisor').
+      _(ShiftCount, 'ShiftCount').
+    LogEnd();
 
   Result := _LARGE_INTEGER(JwaNative.RtlExtendedMagicDivide(Dividend, MagicDivisor, JwaWinType.CCHAR(ShiftCount)));
   EmuSwapFS(fsXbox);
@@ -1005,15 +992,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlFillMemory' +
-        #13#10'(' +
-        #13#10'   Destination               : 0x%.08X' +
-        #13#10'   Length                    : 0x%.08X' +
-        #13#10'   Fill                      : 0x%.08X' +
-        #13#10');',
-        [Destination,
-        Length,
-        Fill]);
+    LogBegin('EmuKrnl : RtlFillMemory').
+      _(Destination, 'Destination').
+      _(Length, 'Length').
+      _(Fill, 'Fill').
+    LogEnd();
 
   JwaNative.RtlFillMemory(Destination, Length, Fill);
   EmuSwapFS(fsXbox);
@@ -1029,15 +1012,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlFillMemoryUlong' +
-        #13#10'(' +
-        #13#10'   Destination               : 0x%.08X' +
-        #13#10'   Length                    : 0x%.08X' +
-        #13#10'   Fill                      : 0x%.08X' +
-        #13#10');',
-        [Destination,
-        Length,
-        Fill]);
+    LogBegin('EmuKrnl : RtlFillMemoryUlong').
+      _(Destination, 'Destination').
+      _(Length, 'Length').
+      _(Fill, 'Fill').
+    LogEnd();
 
   JwaNative.RtlFillMemoryUlong(Destination, Length, Fill);
   EmuSwapFS(fsXbox);
@@ -1051,11 +1030,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlFreeAnsiString' +
-        #13#10'(' +
-        #13#10'   AnsiString                : 0x%.08X' +
-        #13#10');',
-        [AnsiString]);
+    LogBegin('EmuKrnl : RtlFreeAnsiString').
+      _(AnsiString, 'AnsiString').
+    LogEnd();
 
   JwaNative.RtlFreeAnsiString(AnsiString);
   EmuSwapFS(fsXbox);
@@ -1069,11 +1046,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlFreeUnicodeString' +
-        #13#10'(' +
-        #13#10'   UnicodeString                : 0x%.08X' +
-        #13#10');',
-        [UnicodeString]);
+    LogBegin('EmuKrnl : RtlFreeUnicodeString').
+      _(UnicodeString, 'UnicodeString').
+    LogEnd();
 
   JwaNative.RtlFreeUnicodeString(UnicodeString);
   EmuSwapFS(fsXbox);
@@ -1088,13 +1063,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlGetCallersAddress' +
-        #13#10'(' +
-        #13#10'   CallersAddress                : 0x%.08X' +
-        #13#10'   CallersCaller                : 0x%.08X' +
-        #13#10');',
-        [CallersAddress,
-        CallersCaller]);
+    LogBegin('EmuKrnl : RtlGetCallersAddress').
+      _(CallersAddress, 'CallersAddress').
+      _(CallersCaller, 'CallersCaller').
+    LogEnd();
 
   JwaNative.RtlGetCallersAddress(CallersAddress, CallersCaller);
   EmuSwapFS(fsXbox);
@@ -1110,13 +1082,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlInitAnsiString' +
-        #13#10'(' +
-        #13#10'   DestinationString   : 0x%.08X' +
-        #13#10'   SourceString        : 0x%.08X ("%s")' +
-        #13#10');',
-        [DestinationString,
-         SourceString, AnsiString(SourceString)]);
+    LogBegin('EmuKrnl : RtlInitAnsiString').
+      _(Pointer(DestinationString), 'DestinationString').
+      _(PAnsiChar(SourceString), 'SourceString').
+    LogEnd();
 
   JwaNative.RtlInitAnsiString(DestinationString, SourceString);
 
@@ -1132,13 +1101,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlInitUnicodeString' +
-        #13#10'(' +
-        #13#10'   DestinationString            : 0x%.08X' +
-        #13#10'   SourceString                 : 0x%.08X' +
-        #13#10');',
-        [DestinationString,
-        SourceString]);
+    LogBegin('EmuKrnl : RtlInitUnicodeString').
+      _(Pointer(DestinationString), 'DestinationString').
+      _(SourceString, 'SourceString').
+    LogEnd();
 
   JwaNative.RtlInitUnicodeString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
@@ -1153,11 +1119,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlInitializeCriticalSection' +
-             #13#10'(' +
-             #13#10'   CriticalSection              : 0x%.08X' +
-             #13#10');',
-             [CriticalSection]);
+    LogBegin('EmuKrnl : RtlInitializeCriticalSection').
+      _(CriticalSection, 'CriticalSection').
+    LogEnd();
 
 {$IFDEF XBOX_CRITICAL_SECTION}
   X_RtlInitializeCriticalSection(CriticalSection);
@@ -1179,17 +1143,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlIntegerToChar' +
-        #13#10'(' +
-        #13#10'   Value                        : 0x%.08X' +
-        #13#10'   Base                         : 0x%.08X' +
-        #13#10'   Length                       : 0x%.08X' +
-        #13#10'   Str                          : 0x%.08X' +
-        #13#10');',
-        [Value,
-        Base,
-        Length,
-        Str]);
+    LogBegin('EmuKrnl : RtlIntegerToChar').
+      _(Value, 'Value').
+      _(Base, 'Base').
+      _(Length, 'Length').
+      _(Str, 'Str').
+    LogEnd();
 
   Result := JwaNative.RtlIntegerToChar(Value, Base, Length, Str);
   EmuSwapFS(fsXbox);
@@ -1205,15 +1164,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlIntegerToUnicodeString' +
-        #13#10'(' +
-        #13#10'   Value                        : 0x%.08X' +
-        #13#10'   Base                         : 0x%.08X' +
-        #13#10'   Str                          : 0x%.08X' +
-        #13#10');',
-        [Value,
-        Base,
-        Str]);
+    LogBegin('EmuKrnl : RtlIntegerToUnicodeString').
+      _(Value, 'Value').
+      _(Base, 'Base').
+      _(Pointer(Str), 'Str').
+    LogEnd();
 
   Result := JwaNative.RtlIntegerToUnicodeString(Value, Base, Str);
   EmuSwapFS(fsXbox);
@@ -1228,11 +1183,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit and lfDxbx and lfTrace) then
-    DbgPrintf('EmuKrnl : RtlLeaveCriticalSection' +
-        #13#10'(' +
-        #13#10'   CriticalSection              : 0x%.08X' +
-        #13#10');',
-        [CriticalSection]);
+    LogBegin('EmuKrnl : RtlLeaveCriticalSection').
+      _(CriticalSection, 'CriticalSection').
+    LogEnd();
 
 {$IFDEF XBOX_CRITICAL_SECTION}
   X_RtlLeaveCriticalSection(CriticalSection);
@@ -1250,11 +1203,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit and lfDxbx and lfTrace) then
-    DbgPrintf('EmuKrnl : RtlLeaveCriticalSectionAndRegion' +
-        #13#10'(' +
-        #13#10'   CriticalSection              : 0x%.08X' +
-        #13#10');',
-        [CriticalSection]);
+    LogBegin('EmuKrnl : RtlLeaveCriticalSectionAndRegion').
+      _(CriticalSection, 'CriticalSection').
+    LogEnd();
 
 {$IFDEF XBOX_CRITICAL_SECTION}
   X_RtlLeaveCriticalSection(CriticalSection); // TODO : Do something better (region-related?)
@@ -1286,13 +1237,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlMapGenericMask' +
-        #13#10'(' +
-        #13#10'   AccessMask                   : 0x%.08X' +
-        #13#10'   GenericMapping               : 0x%.08X' +
-        #13#10');',
-        [AccessMask,
-        GenericMapping]);
+    LogBegin('EmuKrnl : RtlMapGenericMask').
+      _(AccessMask, 'AccessMask').
+      _(GenericMapping, 'GenericMapping').
+    LogEnd();
 
   JwaNative.RtlMapGenericMask(AccessMask, GenericMapping);
   EmuSwapFS(fsXbox);
@@ -1308,15 +1256,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlMoveMemory' +
-        #13#10'(' +
-        #13#10'   Destination                  : 0x%.08X' +
-        #13#10'   Source                       : 0x%.08X' +
-        #13#10'   Length                       : 0x%.08X' +
-        #13#10');',
-        [Destination,
-        Source,
-        Length]);
+    LogBegin('EmuKrnl : RtlMoveMemory').
+      _(Destination, 'Destination').
+      _(Source, 'Source').
+      _(Length, 'Length').
+    LogEnd();
 
   JwaNative.RtlMoveMemory(Destination, Source, Length);
   EmuSwapFS(fsXbox);
@@ -1336,17 +1280,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlMultiByteToUnicodeN' +
-             #13#10'(' +
-             #13#10'   UnicodeString          : 0x%.08X' +
-             #13#10'   MaxBytesInUnicodeString: 0x%.08X' +
-             #13#10'   BytesInUnicodeString   : 0x%.08X' +
-             #13#10'   MultiByteString        : 0x%.08X' +// ("%s")' +
-             #13#10'   BytesInMultiByteString : 0x%.08X' +
-             #13#10');',
-             [Pointer(UnicodeString), MaxBytesInUnicodeString,
-              BytesInUnicodeString,
-              Pointer(MultiByteString), {AnsiString(MultiByteString), }BytesInMultiByteString]);
+    LogBegin('EmuKrnl : RtlMultiByteToUnicodeN').
+      _(Pointer(UnicodeString), 'UnicodeString'). // Output buffer, do not print contents
+      _(MaxBytesInUnicodeString, 'MaxBytesInUnicodeString').
+      _(BytesInUnicodeString, 'BytesInUnicodeString').
+      _(PAnsiChar(MultiByteString), 'MultiByteString').// Input
+      _(BytesInMultiByteString, 'BytesInMultiByteString').
+    LogEnd();
 
   MaxChars := MaxBytesInUnicodeString div SizeOf(WideChar);
   if MaxChars > BytesInMultiByteString then
@@ -1379,14 +1319,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlMultiByteToUnicodeN' +
-             #13#10'(' +
-             #13#10'   BytesInUnicodeString   : 0x%.08X' +
-             #13#10'   MultiByteString        : 0x%.08X' +// ("%s")' +
-             #13#10'   BytesInMultiByteString : 0x%.08X' +
-             #13#10');',
-             [BytesInUnicodeString,
-              Pointer(MultiByteString), {AnsiString(MultiByteString), }BytesInMultiByteString]);
+    LogBegin('EmuKrnl : RtlMultiByteToUnicodeN').
+      _(BytesInUnicodeString, 'BytesInUnicodeString').
+      _(PAnsiChar(MultiByteString), 'MultiByteString').
+      _(BytesInMultiByteString, 'BytesInMultiByteString').
+    LogEnd();
 
   BytesInUnicodeString^ := BytesInMultiByteString * SizeOf(WideChar);
 
@@ -1404,11 +1341,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlNtStatusToDosError' +
-             #13#10'(' +
-             #13#10'   Status              : 0x%.08X' +
-             #13#10');',
-             [Status]);
+    LogBegin('EmuKrnl : RtlNtStatusToDosError').
+      _(Status, 'Status').
+    LogEnd();
 
   Result := JwaNative.RtlNtStatusToDosError(Status);
 
@@ -1433,11 +1368,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlRaiseStatus' +
-        #13#10'(' +
-        #13#10'   Status                       : 0x%.08X' +
-        #13#10');',
-        [Status]);
+    LogBegin('EmuKrnl : RtlRaiseStatus').
+      _(Status, 'Status').
+    LogEnd();
 
   JwaNative.RtlRaiseStatus(Status);
   EmuSwapFS(fsXbox);
@@ -1453,12 +1386,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlTimeFieldsToTime' +
-        #13#10'(' +
-        #13#10'   TimeFields          : 0x%.08X' +
-        #13#10'   Time                : 0x%.08X' +
-        #13#10');',
-        [TimeFields, Time]);
+    LogBegin('EmuKrnl : RtlTimeFieldsToTime').
+      _(TimeFields, 'TimeFields').
+      _(Time, 'Time').
+    LogEnd();
 
   Result := JwaNative.RtlTimeFieldsToTime(TimeFields, Time);
 
@@ -1475,12 +1406,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlTimeToTimeFields' +
-        #13#10'(' +
-        #13#10'   Time                : 0x%.08X (%d)' +
-        #13#10'   TimeFields          : 0x%.08X' +
-        #13#10');',
-        [Time, QuadPart(Time), TimeFields]);
+    LogBegin('EmuKrnl : RtlTimeToTimeFields').
+      _(Time, 'Time').
+      _(TimeFields, 'TimeFields').
+    LogEnd();
 
   JwaNative.RtlTimeToTimeFields(Time, TimeFields);
 
@@ -1496,11 +1425,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlTryEnterCriticalSection' +
-        #13#10'(' +
-        #13#10'   CriticalSection     : 0x%.08X' +
-        #13#10');',
-        [CriticalSection]);
+    LogBegin('EmuKrnl : RtlTryEnterCriticalSection').
+      _(CriticalSection, 'CriticalSection').
+    LogEnd();
 
 {$IFDEF XBOX_CRITICAL_SECTION}
   Result := X_RtlTryEnterCriticalSection(CriticalSection);
@@ -1521,11 +1448,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlRaiseStatus' +
-        #13#10'(' +
-        #13#10'   Source                       : 0x%.08X' +
-        #13#10');',
-        [Source]);
+    LogBegin('EmuKrnl : RtlRaiseStatus').
+      _(Source, 'Source').
+    LogEnd();
 
   Result := JwaNative.RtlUlongByteSwap(Source);
   EmuSwapFS(fsXbox);
@@ -1542,15 +1467,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlUnicodeStringToAnsiString' +
-        #13#10'(' +
-        #13#10'   DestinationString         : 0x%.08X' +
-        #13#10'   SourceString              : 0x%.08X ("%s")' +
-        #13#10'   AllocateDestinationString : 0x%.08X' +
-        #13#10');',
-        [DestinationString,
-         SourceString, PUNICODE_STRING_String(SourceString),
-         AllocateDestinationString]);
+    LogBegin('EmuKrnl : RtlUnicodeStringToAnsiString').
+      _(Pointer(DestinationString), 'DestinationString'). // Output buffer, do not print contents
+      _(SourceString, 'SourceString').
+      _(AllocateDestinationString, 'AllocateDestinationString').
+    LogEnd();
 
   Result := JwaNative.RtlUnicodeStringToAnsiString(DestinationString, SourceString, AllocateDestinationString);
 
@@ -1567,13 +1488,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlUnicodeStringToInteger' +
-        #13#10'(' +
-        #13#10'   Str                       : 0x%.08X ("%s")' +
-        #13#10'   Base                      : 0x%.08X' +
-        #13#10'   Value                     : 0x%.08X' +
-        #13#10');',
-        [Str, PUNICODE_STRING_String(Str), Base, Value]);
+    LogBegin('EmuKrnl : RtlUnicodeStringToInteger').
+      _(Str, 'Str').
+      _(Base, 'Base').
+      _(Value, 'Value').
+    LogEnd();
 
   Result := JwaNative.RtlUnicodeStringToInteger(Str, Base, Value);
   EmuSwapFS(fsXbox);
@@ -1593,17 +1512,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlUnicodeToMultiByteN' +
-        #13#10'(' +
-        #13#10'   MultiByteString          : 0x%.08X' +
-        #13#10'   MaxBytesInMultiByteString: 0x%.08X' +
-        #13#10'   BytesInMultiByteString   : 0x%.08X' +
-        #13#10'   UnicodeString            : 0x%.08X' +// ("%s")' +
-        #13#10'   BytesInUnicodeString     : 0x%.08X' +
-        #13#10');',
-        [Pointer(MultiByteString), MaxBytesInMultiByteString,
-         BytesInMultiByteString,
-         Pointer(UnicodeString), {WideString(UnicodeString), }BytesInUnicodeString]);
+    LogBegin('EmuKrnl : RtlUnicodeToMultiByteN').
+      _(Pointer(MultiByteString), 'MultiByteString'). // Output buffer, do not print contents
+      _(MaxBytesInMultiByteString, 'MaxBytesInMultiByteString').
+      _(BytesInMultiByteString, 'BytesInMultiByteString').
+      _(PWideChar(UnicodeString), 'UnicodeString').
+      _(BytesInUnicodeString, 'BytesInUnicodeString').
+    LogEnd();
 
   MaxChars := BytesInUnicodeString div SizeOf(WideChar);
   if MaxChars > MaxBytesInMultiByteString then
@@ -1639,13 +1554,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlUnicodeToMultiByteSize' +
-        #13#10'(' +
-        #13#10'   BytesInMultiByteString    : 0x%.08X' +
-        #13#10'   UnicodeString             : 0x%.08X' +// ("%s")' +
-        #13#10'   BytesInUnicodeString      : 0x%.08X' +
-        #13#10');',
-        [BytesInMultiByteString, Pointer(UnicodeString), {PWideChar(UnicodeString), }BytesInUnicodeString]);
+    LogBegin('EmuKrnl : RtlUnicodeToMultiByteSize').
+      _(BytesInMultiByteString, 'BytesInMultiByteString').
+      _(UnicodeString, 'UnicodeString').
+      _(BytesInUnicodeString, 'BytesInUnicodeString').
+    LogEnd();
 
   BytesInMultiByteString^ := BytesInUnicodeString div SizeOf(WideChar);
 
@@ -1665,17 +1578,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlUnwind' +
-        #13#10'(' +
-        #13#10'   TargetFrame                  : 0x%.08X' +
-        #13#10'   TargetIp                     : 0x%.08X' +
-        #13#10'   ExceptionRecord              : 0x%.08X' +
-        #13#10'   ReturnValue                  : 0x%.08X' +
-        #13#10');',
-        [TargetFrame,
-        TargetIp,
-        ExceptionRecord,
-        ReturnValue]);
+    LogBegin('EmuKrnl : RtlUnwind').
+      _(TargetFrame, 'TargetFrame').
+      _(TargetIp, 'TargetIp').
+      _(ExceptionRecord, 'ExceptionRecord').
+      _(ReturnValue, 'ReturnValue').
+    LogEnd();
 
   JwaNative.RtlUnwind(TargetFrame, TargetIp, ExceptionRecord, ReturnValue);
   EmuSwapFS(fsXbox);
@@ -1689,11 +1597,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlUpcaseUnicodeChar' +
-        #13#10'(' +
-        #13#10'   SourceCharacter              : 0x%.08X' +
-        #13#10');',
-        [SourceCharacter]);
+    LogBegin('EmuKrnl : RtlUpcaseUnicodeChar').
+      _(SourceCharacter, 'SourceCharacter').
+    LogEnd();
 
   Result := JwaNative.RtlUpcaseUnicodeChar(SourceCharacter);
   EmuSwapFS(fsXbox);
@@ -1709,15 +1615,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlUpcaseUnicodeString' +
-        #13#10'(' +
-        #13#10'   DestinationString            : 0x%.08X' +
-        #13#10'   SourceString                 : 0x%.08X' +
-        #13#10'   AllocateDestinationString    : 0x%.08X' +
-        #13#10');',
-        [DestinationString,
-        SourceString,
-        AllocateDestinationString]);
+    LogBegin('EmuKrnl : RtlUpcaseUnicodeString').
+      _(Pointer(DestinationString), 'DestinationString').
+      _(SourceString, 'SourceString').
+      _(AllocateDestinationString, 'AllocateDestinationString').
+    LogEnd();
 
   Result := JwaNative.RtlUpcaseUnicodeString(DestinationString, SourceString, Boolean(AllocateDestinationString));
   EmuSwapFS(fsXbox);
@@ -1735,19 +1637,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlUpcaseUnicodeToMultiByteN' +
-        #13#10'(' +
-        #13#10'   MbString                     : 0x%.08X' +
-        #13#10'   MbSize                       : 0x%.08X' +
-        #13#10'   ResultSize                   : 0x%.08X' +
-        #13#10'   UnicodeString                : 0x%.08X' +
-        #13#10'   UnicodeSize                  : 0x%.08X' +
-        #13#10');',
-        [MbString,
-        MbSize,
-        ResultSize,
-        UnicodeString,
-        UnicodeSize]);
+    LogBegin('EmuKrnl : RtlUpcaseUnicodeToMultiByteN').
+      _(Pointer(MbString), 'MbString').
+      _(MbSize, 'MbSize').
+      _(ResultSize, 'ResultSize').
+      _(UnicodeString, 'UnicodeString').
+      _(UnicodeSize, 'UnicodeSize').
+    LogEnd();
 
   Result := JwaNative.RtlUpcaseUnicodeToMultiByteN(MbString, MbSize, {var}ResultSize^, UnicodeString, UnicodeSize);
   EmuSwapFS(fsXbox);
@@ -1761,11 +1657,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlUpperChar' +
-        #13#10'(' +
-        #13#10'   Character                    : 0x%.08X' +
-        #13#10');',
-        [Character]);
+    LogBegin('EmuKrnl : RtlUpperChar').
+      _(Character, 'Character').
+    LogEnd();
 
   Result := JwaNative.RtlUpperChar(Character);
   EmuSwapFS(fsXbox);
@@ -1780,13 +1674,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlUpperString' +
-        #13#10'(' +
-        #13#10'   DestinationString            : 0x%.08X' +
-        #13#10'   SourceString                 : 0x%.08X' +
-        #13#10');',
-        [DestinationString,
-        SourceString]);
+    LogBegin('EmuKrnl : RtlUpperString').
+      _(Pointer(DestinationString), 'DestinationString').
+      _(SourceString, 'SourceString').
+    LogEnd();
 
   JwaNative.RtlUpperString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
@@ -1802,11 +1693,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlUshortByteSwap' +
-        #13#10'(' +
-        #13#10'   Source                       : 0x%.08X' +
-        #13#10');',
-        [Source]);
+    LogBegin('EmuKrnl : RtlUshortByteSwap').
+      _(Source, 'Source').
+    LogEnd();
 
   Result := JwaNative.RtlUshortByteSwap(Source);
   EmuSwapFS(fsXbox);
@@ -1833,13 +1722,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : RtlZeroMemory' +
-        #13#10'(' +
-        #13#10'   Destination                  : 0x%.08X' +
-        #13#10'   Length                       : 0x%.08X' +
-        #13#10');',
-        [Destination,
-        Length]);
+    LogBegin('EmuKrnl : RtlZeroMemory').
+      _(Destination, 'Destination').
+      _(Length, 'Length').
+    LogEnd();
 
   JwaNative.RtlZeroMemory(Destination, Length);
   EmuSwapFS(fsXbox);

@@ -172,7 +172,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  //  Result := xboxkrnl_ExAllocatePoolWithTag(NumberOfBytes, ULONG($656E6F4E {?}));
+  //  Result := xboxkrnl_ExAllocatePoolWithTag(NumberOfBytes, ULONG($656E6F4E)); // MakeFourCC('None');
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : ExAllocatePool' +
              #13#10'(' +
