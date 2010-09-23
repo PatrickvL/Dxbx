@@ -4784,7 +4784,7 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuCDirectSound_GetTime name PatchPrefix + 'DirectSound.CDirectSound.GetTime',
   //XTL_EmuCDirectSound_QueryInterface name PatchPrefix + 'DirectSound.CDirectSound.QueryInterface',
   //XTL_EmuCDirectSound_QueryInterfaceC name PatchPrefix + 'DirectSound.CDirectSound.QueryInterfaceC',
-  XTL_EmuCDirectSound_Release name PatchPrefix + '_IDirectSound_Release@4', // Was 'IDirectSound_Release'
+  XTL_EmuCDirectSound_Release name PatchPrefix + 'DirectSound.CDirectSound.Release',
   XTL_EmuCDirectSound_SetAllParameters name PatchPrefix + 'DirectSound.CDirectSound.SetAllParameters',
   XTL_EmuCDirectSound_SetCooperativeLevel name PatchPrefix + 'DirectSound.CDirectSound.SetCooperativeLevel',
   XTL_EmuCDirectSound_SetDistanceFactor name PatchPrefix + 'DirectSound.CDirectSound.SetDistanceFactor',
