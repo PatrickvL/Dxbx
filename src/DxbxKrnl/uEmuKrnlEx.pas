@@ -174,11 +174,9 @@ begin
 
   //  Result := xboxkrnl_ExAllocatePoolWithTag(NumberOfBytes, ULONG($656E6F4E)); // MakeFourCC('None');
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : ExAllocatePool' +
-             #13#10'(' +
-             #13#10'   NumberOfBytes       : 0x%.08X' +
-             #13#10');',
-             [NumberOfBytes]);
+    LogBegin('EmuKrnl : ExAllocatePool').
+      _(NumberOfBytes, 'NumberOfBytes').
+    LogEnd();
 
   pRet := DxbxMalloc(NumberOfBytes);
   EmuSwapFS(fsXbox);
@@ -199,12 +197,10 @@ begin
   EmuSwapFS(fsWindows);
   
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : ExAllocatePoolWithTag' +
-             #13#10'(' +
-             #13#10'   NumberOfBytes       : 0x%.08X' +
-             #13#10'   Tag                 : 0x%.08X' +
-             #13#10');',
-             [NumberOfBytes, Tag]);
+    LogBegin('EmuKrnl : ExAllocatePoolWithTag').
+      _(NumberOfBytes, 'NumberOfBytes').
+      _(Tag, 'Tag').
+    LogEnd();
 
   // TODO -oCXBX: Actually implement this
   pRet := DxbxMalloc(NumberOfBytes);
@@ -216,11 +212,15 @@ end;
 procedure {017} xboxkrnl_ExFreePool(
   Block: PVOID
   ); stdcall;
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('ExFreePool');
-  // ExFreeNonPagedPool
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : ExFreePool').
+    LogEnd();
+
+  DxbxFree(Block); // ExFreeNonPagedPool
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -280,7 +280,15 @@ function {023} xboxkrnl_ExQueryPoolBlockSize(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : ExQueryPoolBlockSize').
+      _(PoolBlock, 'PoolBlock').
+      _(QuotaCharged, 'QuotaCharged').
+    LogEnd();
+
   Result := Unimplemented('ExQueryPoolBlockSize');
+
   EmuSwapFS(fsXbox);
 end;
 
