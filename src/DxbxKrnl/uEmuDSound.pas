@@ -2260,6 +2260,7 @@ asm jmp TIDirectSound.CommitDeferredSettings; end;
 procedure XTL_EmuCDirectSound_GetTime;
 asm jmp TIDirectSound.GetTime; end;
 
+
 procedure XTL_EmuCDirectSound_GetOutputLevels;
 asm jmp TIDirectSound.GetOutputLevels; end;
 
@@ -3713,6 +3714,10 @@ asm jmp TIDirectSoundBuffer.StopEx; end;
 procedure XTL_EmuCDirectSoundBuffer_Unlock;
 asm jmp TIDirectSoundBuffer.Unlock; end;
 
+procedure XTL_EmuCDirectSoundBuffer_Release;
+asm jmp TIDirectSoundBuffer.Release; end;
+
+
 //
 // TIDirectSoundStream - no patches, but a real class implementation as a VMT-replacement for the Xbox version
 //
@@ -4616,9 +4621,18 @@ asm jmp TIDirectSoundStream.FlushEx; end;
 procedure XTL_EmuIDirectSoundStream_GetVoiceProperties;
 asm jmp TIDirectSoundStream.GetVoiceProperties; end;
 
+procedure XTL_EmuIDirectSoundStream_Release;
+asm jmp TIDirectSoundStream.Release; end;
+
 //
 // Patches on CDirectSoundStream class functions
 //
+
+procedure XTL_EmuCDirectSoundStream_AddRef;
+asm jmp TIDirectSoundStream.AddRef; end;
+
+procedure XTL_EmuCDirectSoundStream_Discontinuity;
+asm jmp TIDirectSoundStream.Discontinuity; end;
 
 procedure XTL_EmuCDirectSoundStream_SetFormat;
 asm jmp TIDirectSoundStream.SetFormat; end;
@@ -4701,6 +4715,21 @@ asm jmp TIDirectSoundStream.Pause; end;
 procedure XTL_EmuCDirectSoundStream_PauseEx;
 asm jmp TIDirectSoundStream.PauseEx; end;
 
+procedure XTL_EmuCDirectSoundStream_Process;
+asm jmp TIDirectSoundStream.Process; end;
+
+procedure XTL_EmuCDirectSoundStream_Release;
+asm jmp TIDirectSoundStream.Release; end;
+
+procedure XTL_EmuCDirectSoundStream_GetStatus;
+asm jmp TIDirectSoundStream.GetStatus; end;
+
+procedure XTL_EmuCDirectSoundStream_GetInfo;
+asm jmp TIDirectSoundStream.GetInfo; end;
+
+procedure XTL_EmuCDirectSoundStream_Flush;
+asm jmp TIDirectSoundStream.Flush; end;
+
 procedure XTL_EmuCDirectSoundStream_FlushEx;
 asm jmp TIDirectSoundStream.FlushEx; end;
 
@@ -4782,8 +4811,8 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuCDirectSound_GetOutputLevels name PatchPrefix + 'DirectSound.CDirectSound.GetOutputLevels',
   XTL_EmuCDirectSound_GetSpeakerConfig name PatchPrefix + 'DirectSound.CDirectSound.GetSpeakerConfig',
   XTL_EmuCDirectSound_GetTime name PatchPrefix + 'DirectSound.CDirectSound.GetTime',
-  //XTL_EmuCDirectSound_QueryInterface name PatchPrefix + 'DirectSound.CDirectSound.QueryInterface',
-  //XTL_EmuCDirectSound_QueryInterfaceC name PatchPrefix + 'DirectSound.CDirectSound.QueryInterfaceC',
+//  XTL_EmuCDirectSound_QueryInterface name PatchPrefix + 'DirectSound.CDirectSound.QueryInterface',
+//  XTL_EmuCDirectSound_QueryInterfaceC name PatchPrefix + 'DirectSound.CDirectSound.QueryInterfaceC',
   XTL_EmuCDirectSound_Release name PatchPrefix + 'DirectSound.CDirectSound.Release',
   XTL_EmuCDirectSound_SetAllParameters name PatchPrefix + 'DirectSound.CDirectSound.SetAllParameters',
   XTL_EmuCDirectSound_SetCooperativeLevel name PatchPrefix + 'DirectSound.CDirectSound.SetCooperativeLevel',
@@ -4803,9 +4832,10 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuCDirectSoundBuffer_GetVoiceProperties name PatchPrefix + 'DirectSound.CDirectSoundBuffer.GetVoiceProperties',
   XTL_EmuCDirectSoundBuffer_Lock name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Lock',
   XTL_EmuCDirectSoundBuffer_Pause name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Pause',
-  //XTL_EmuCDirectSoundBuffer_PauseEx name PatchPrefix + 'DirectSound.CDirectSoundBuffer.PauseEx',
+  XTL_EmuCDirectSoundBuffer_PauseEx name PatchPrefix + 'DirectSound.CDirectSoundBuffer.PauseEx',
   XTL_EmuCDirectSoundBuffer_Play name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Play',
   XTL_EmuCDirectSoundBuffer_PlayEx name PatchPrefix + 'DirectSound.CDirectSoundBuffer.PlayEx',
+  XTL_EmuCDirectSoundBuffer_Release name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Release',
   XTL_EmuCDirectSoundBuffer_Restore name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Restore',
   XTL_EmuCDirectSoundBuffer_SetAllParameters name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetAllParameters',
   XTL_EmuCDirectSoundBuffer_SetBufferData name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetBufferData',
@@ -4841,17 +4871,17 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuCDirectSoundBuffer_StopEx name PatchPrefix + 'DirectSound.CDirectSoundBuffer.StopEx',
   XTL_EmuCDirectSoundBuffer_Unlock name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Unlock',
 
-//  XTL_EmuCDirectSoundStream_AddRef name PatchPrefix + 'DirectSound.CDirectSoundStream.AddRef',
-//  XTL_EmuCDirectSoundStream_Discontinuity name PatchPrefix + 'DirectSound.CDirectSoundStream.Discontinuity',
-//  XTL_EmuCDirectSoundStream_Flush name PatchPrefix + 'DirectSound.CDirectSoundStream.Flush',
+  XTL_EmuCDirectSoundStream_AddRef name PatchPrefix + 'DirectSound.CDirectSoundStream.AddRef',
+  XTL_EmuCDirectSoundStream_Discontinuity name PatchPrefix + 'DirectSound.CDirectSoundStream.Discontinuity',
+  XTL_EmuCDirectSoundStream_Flush name PatchPrefix + 'DirectSound.CDirectSoundStream.Flush',
   XTL_EmuCDirectSoundStream_FlushEx name PatchPrefix + 'DirectSound.CDirectSoundStream.FlushEx',
-//  XTL_EmuCDirectSoundStream_GetInfo name PatchPrefix + 'DirectSound.CDirectSoundStream.GetInfo',
-//  XTL_EmuCDirectSoundStream_GetStatus name PatchPrefix + 'DirectSound.CDirectSoundStream.GetStatus',
+  XTL_EmuCDirectSoundStream_GetInfo name PatchPrefix + 'DirectSound.CDirectSoundStream.GetInfo',
+  XTL_EmuCDirectSoundStream_GetStatus name PatchPrefix + 'DirectSound.CDirectSoundStream.GetStatus',
   XTL_EmuCDirectSoundStream_GetVoiceProperties name PatchPrefix + 'DirectSound.CDirectSoundStream.GetVoiceProperties',
   XTL_EmuCDirectSoundStream_Pause name PatchPrefix + 'DirectSound.CDirectSoundStream.Pause',
   XTL_EmuCDirectSoundStream_PauseEx name PatchPrefix + 'DirectSound.CDirectSoundStream.PauseEx',
-//  XTL_EmuCDirectSoundStream_Process name PatchPrefix + 'DirectSound.CDirectSoundStream.Process',
-//  XTL_EmuCDirectSoundStream_Release name PatchPrefix + 'DirectSound.CDirectSoundStream.Release',
+  XTL_EmuCDirectSoundStream_Process name PatchPrefix + 'DirectSound.CDirectSoundStream.Process',
+  XTL_EmuCDirectSoundStream_Release name PatchPrefix + 'DirectSound.CDirectSoundStream.Release',
   XTL_EmuCDirectSoundStream_SetAllParameters name PatchPrefix + 'DirectSound.CDirectSoundStream.SetAllParameters',
   XTL_EmuCDirectSoundStream_SetConeAngles name PatchPrefix + 'DirectSound.CDirectSoundStream.SetConeAngles',
   XTL_EmuCDirectSoundStream_SetConeOrientation name PatchPrefix + 'DirectSound.CDirectSoundStream.SetConeOrientation',
@@ -4924,7 +4954,7 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuIDirectSoundBuffer_GetVoiceProperties,
   XTL_EmuIDirectSoundBuffer_Lock,
   XTL_EmuIDirectSoundBuffer_Pause,
-  //XTL_EmuIDirectSoundBuffer_PauseEx,
+  XTL_EmuIDirectSoundBuffer_PauseEx,
   XTL_EmuIDirectSoundBuffer_Play,
   XTL_EmuIDirectSoundBuffer_PlayEx,
   XTL_EmuIDirectSoundBuffer_QueryInterface,
@@ -4952,7 +4982,7 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuIDirectSoundBuffer_SetMixBins,
   XTL_EmuIDirectSoundBuffer_SetMixBinVolumes,
   XTL_EmuIDirectSoundBuffer_SetMode,
-//  XTL_EmuIDirectSoundBuffer_SetNotificationPositions,
+  XTL_EmuIDirectSoundBuffer_SetNotificationPositions,
   XTL_EmuIDirectSoundBuffer_SetOutputBuffer,
   XTL_EmuIDirectSoundBuffer_SetPitch,
   XTL_EmuIDirectSoundBuffer_SetPlayRegion,
