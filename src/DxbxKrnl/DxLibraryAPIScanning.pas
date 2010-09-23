@@ -92,6 +92,7 @@ type
     SymbolPriority: Integer;
     Discovery: string;
     FailReason: string;
+    IsApproximation: Boolean;
 
     property Length: Cardinal read GetLength;
     property SymbolReferenceCount: Integer read GetSymbolReferenceCount;
@@ -134,7 +135,7 @@ type
     FLibraryVersionsToScan: TLibraryVersionFlags;
     MyAddressesInKnownSections: TDxbxBits; // Marks addresses that are covered with our library patterns
     MyAddressesIdentified: TDxbxBits; // Marks memory identification status with 1 bit per address
-    function CheckFunctionAtAddressAndRegister(const CurrentSymbol: TSymbolInformation; const aAddress: PByte; const Prefix: string = ''): Boolean;
+    function CheckFunctionAtAddressAndRegister(const CurrentSymbol: TSymbolInformation; const aAddress: PByte; const Prefix: string = ''): Integer;
     procedure PrioritizeSymbolScan();
     procedure LookupFunctionsInHits();
     procedure PutSymbolsInFinalList;
@@ -263,7 +264,13 @@ end;
 function TSymbolInformation.GetLength: Cardinal;
 begin
   if Assigned(StoredLibraryFunction) then
-    Result := StoredLibraryFunction.FunctionLength
+  begin
+    Result := StoredLibraryFunction.FunctionLength;
+
+    // Approximations cover only 75 % of their length, to prevent overlap on functions that became shorter:
+    if IsApproximation then
+      Result := (Result * 4) div 3;
+  end
   else
     // Assume it's a global variable of type DWORD :
     Result := SizeOf(DWORD);
@@ -930,16 +937,32 @@ begin
         ]);
 
     MyAddressesIdentified.ClearRange(UIntPtr(Symbol.Address), Symbol.Length);
+
     Symbol.Address := nil;
     Symbol.Discovery := '';
     Symbol.FailReason := '';
+    Symbol.IsApproximation := False;
   end;
 
   // Reset the index, so the array can be filled again :
   FIntermediateSymbolRegistrationsCount := 0;
 end; // RevertIntermediateSymbolRegistrations
 
-function TSymbolManager.CheckFunctionAtAddressAndRegister(const CurrentSymbol: TSymbolInformation; const aAddress: PByte; const Prefix: string = ''): Boolean;
+const
+  // Check results (positive values are acceptable, negative ones are not) :
+  CR_APPROXIMATION = 0;
+
+  CR_ADDRESS_MATCH = 1;
+  CR_DATA_OKAY = 2;
+  CR_ALL_CHECKS_OKAY = 3;
+
+  CR_ADDRESS_ALREADY_SET = -1;
+  CR_ADDRESS_RANGE_TAKEN = -2;
+  CR_CRC_FAILED = -3;
+  CR_REFERENCE_OUT_OF_RANGE = -4;
+  CR_REFERENCE_INCONSISTENCY = -5;
+
+function TSymbolManager.CheckFunctionAtAddressAndRegister(const CurrentSymbol: TSymbolInformation; const aAddress: PByte; const Prefix: string = ''): Integer;
 
   function _CheckFunctionCRC(const aStoredLibraryFunction: PStoredLibraryFunction; const aAddress: PByte): Boolean;
   begin
@@ -1001,14 +1024,18 @@ begin
   if CurrentSymbol.Discovery = '' then
     CurrentSymbol.Discovery := Prefix;
 
-  // If the symbol was already detected here, return True; If it's on another address, return False; When nil, check further :
-  Result := (CurrentSymbol.Address = aAddress);
-  if Result then
+  // If the symbol was already detected here, return that fact :
+  if (CurrentSymbol.Address = aAddress) then
+  begin
+    Result := CR_ADDRESS_MATCH;
     Exit;
+  end;
 
+  // If the symbol was already detected somewhere else, return that fact :
   if Assigned(CurrentSymbol.Address) then
   begin
     CurrentSymbol.FailReason := Format('address already set at $%.08x', [UIntPtr(CurrentSymbol.Address)]);
+    Result := CR_ADDRESS_ALREADY_SET;
     Exit;
   end;
 
@@ -1016,28 +1043,26 @@ begin
   if not MyAddressesIdentified.IsRangeClear(UIntPtr(aAddress), CurrentSymbol.Length) then
   begin
     CurrentSymbol.FailReason := 'address range taken';
+    Result := CR_ADDRESS_RANGE_TAKEN;
     Exit;
   end;
 
   // See if the symbol has function information (if not, it's probably data, which we can't check any further) :
   if (CurrentSymbol.StoredLibraryFunction = nil) then
   begin
+    // TODO : For data-symbols, we should somehow determine the length...
+
     // To facilitate recursive references checks (on a higher level), pretend the data-symbol is detected at this address :
     AddIntermediateSymbolRegistration(CurrentSymbol, aAddress);
-    Result := True;
+    Result := CR_DATA_OKAY;
     Exit;
   end;
-
-  // Check if this symbol can't be detected 100% reliably :
-  if UsingLibraryApproximations
-  or (not _IsAddressInKnownSection(UIntPtr(aAddress))) then
-    // Don't call any of the following exits a 'failure' anymore when they're big enough   :
-    Result := MayCheckFunction(CurrentSymbol.StoredLibraryFunction);
 
   // Check the CRC for this function on the given address :
   if not _CheckFunctionCRC(CurrentSymbol.StoredLibraryFunction, aAddress + PATTERNSIZE) then
   begin
     CurrentSymbol.FailReason := 'crc check failed';
+    Result := CR_CRC_FAILED;
     Exit;
   end;
 
@@ -1051,6 +1076,7 @@ begin
     begin
       CurrentSymbol.FailReason := Format('reference #%d out of range : $%.08x', [
         i, UIntPtr(Referenced[i].ReferencedAddress)]);
+      Result := CR_REFERENCE_OUT_OF_RANGE;
       Exit;
     end;
 
@@ -1064,6 +1090,7 @@ begin
           CurrentSymbol.FailReason := Format('reference #%d ($%.08x) should match reference #%d $%.08x', [
             j, UIntPtr(Referenced[j].ReferencedAddress),
             i, UIntPtr(Referenced[i].ReferencedAddress)]);
+          Result := CR_REFERENCE_INCONSISTENCY;
           Exit;
         end;
     end;
@@ -1087,21 +1114,55 @@ begin
   // Recursively check all referenced symbols :
   for i := 0 to Length(Referenced) - 1 do
   begin
-    if not CheckFunctionAtAddressAndRegister(Referenced[i].Symbol, Referenced[i].ReferencedAddress, Prefix + '.' + IntToStr(i)) then
-    begin
-      // Add fail reason, for debugging (but not 'Address already set' failures, to prevent removal of good symbols !) :
-      if Assigned(Referenced[i].Symbol.Address) and (Referenced[i].Symbol.Address <> Referenced[i].ReferencedAddress) then
-        // skip these
-      else
-        AddIntermediateSymbolRegistration(Referenced[i].Symbol, Referenced[i].ReferencedAddress);
+    // Don't check duplicates (the first one is not a duplicate by the way) :
+    if (Referenced[i].StoredSymbolReference.ReferenceFlags and rfIsDuplicate) > 0 then
+      Continue;
 
-      // If the recursive check fails, all temporary registrations are reverted (see RevertIntermediateSymbolRegistrations)
-      Exit;
+    // Do the recursive check :
+    Result := CheckFunctionAtAddressAndRegister(Referenced[i].Symbol, Referenced[i].ReferencedAddress, Prefix + '.' + IntToStr(i));
+
+    // See if there was a failure of some kind :
+    if Result <= CR_ADDRESS_ALREADY_SET then
+    begin
+      // If the failure wasn't address- or range-related :
+      if Result < CR_ADDRESS_RANGE_TAKEN then
+      begin
+        // Check if this symbol couldn't be detected 100% reliably :
+        if UsingLibraryApproximations
+        or (not _IsAddressInKnownSection(UIntPtr(Referenced[i].ReferencedAddress))) then
+        begin
+          // Don't call any of the following exits a 'failure' anymore when they're big enough   :
+          if MayCheckFunction(Referenced[i].Symbol.StoredLibraryFunction) then
+            Result := CR_APPROXIMATION;
+        end;
+      end;
+
+      if Result = CR_APPROXIMATION then
+      begin
+        // Approximations where failures, so they're not yet registered;
+        // Mark them as an approximation (trunking their length a bit) and register anyway :
+        Referenced[i].Symbol.IsApproximation := True;
+        AddIntermediateSymbolRegistration(Referenced[i].Symbol, Referenced[i].ReferencedAddress);
+      end
+      else
+      begin
+        // Here, the reference was really unacceptable, so we're gonna stop this check;
+
+        // Add the failing symbol, for debugging purposes (but not for 'Address already set' failures,
+        // to prevent removal of previously registered symbols!) :
+        if Result = CR_ADDRESS_ALREADY_SET then
+          // skip these
+        else
+          AddIntermediateSymbolRegistration(Referenced[i].Symbol, Referenced[i].ReferencedAddress);
+
+        // When the recursive check fails, all temporary registrations will be reverted (see RevertIntermediateSymbolRegistrations)
+        Exit;
+      end;
     end;
   end;
 
   // All checks are done, we got the right symbol address (for now) !
-  Result := True;
+  Result := CR_ALL_CHECKS_OKAY;
 end; // CheckFunctionAtAddressAndRegister
 
 procedure TSymbolManager.PrioritizeSymbolScan();
@@ -1265,7 +1326,7 @@ begin
         if MyAddressesInKnownSections[UIntPtr(CurrentHit.Address)] = ScanInKnownAddresses then
         begin
           // Check the references recursively & register it (including it's implicated symbols):
-          if CheckFunctionAtAddressAndRegister(CurrentSymbol, {CurrentHit.Section,} CurrentHit.Address, IntToStr(i)) then
+          if CheckFunctionAtAddressAndRegister(CurrentSymbol, {CurrentHit.Section,} CurrentHit.Address, IntToStr(i)) >= CR_APPROXIMATION then
           begin
             // If the function is pinpointed successfully, confirm the resulting registrations and step to the next function :
             ConfirmIntermediateSymbolRegistrations(CurrentSymbol);
