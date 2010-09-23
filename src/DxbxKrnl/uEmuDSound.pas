@@ -4828,7 +4828,7 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuCDirectSoundBuffer_SetMixBins name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetMixBins',
   XTL_EmuCDirectSoundBuffer_SetMixBinVolumes name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetMixBinVolumes',
   XTL_EmuCDirectSoundBuffer_SetMode name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetMode',
-//  XTL_EmuCDirectSoundBuffer_SetNotificationPositions name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetNotificationPositions',
+  XTL_EmuCDirectSoundBuffer_SetNotificationPositions name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetNotificationPositions',
   XTL_EmuCDirectSoundBuffer_SetOutputBuffer name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetOutputBuffer',
   XTL_EmuCDirectSoundBuffer_SetPitch name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetPitch',
   XTL_EmuCDirectSoundBuffer_SetPlayRegion name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetPlayRegion',

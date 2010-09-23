@@ -1714,6 +1714,24 @@ begin
 end;
 
 
+function XTL_EmuXGetGameRegion(): DWord;
+var
+  ulType: ULONG;
+  dwValue: DWORD;
+begin
+  if MayLog(lfUnit) then
+    LogBegin('EmuXGetGameRegion').
+    LogEnd();
+
+(*  Result := NT_SUCCESS(ExQueryNonVolatileSetting(
+                       XC_FACTORY_GAME_REGION,
+                       @ulType,
+                       @dwValue,
+                       sizeof(dwValue),
+                       NULL)) ? dwValue : 0; *)
+
+end;
+
 function XTL_EmuXGetLaunchInfo
 (
   pdwLaunchDataType: PDWORD;
@@ -2077,8 +2095,8 @@ end;
 exports
   //XTL_EmuCloseHandle, // TODO -oDXBX: This makes emuclose instead of ntclose;
   XTL_EmuCreateFiber,
-//  XTL_EmuCreateMutex,
-//  XTL_EmuCreateSemaphore,
+//  XTL_EmuCreateMutex, // Dxbx note : Disabled, too high level. See xboxkrnl_NtCreateMutant
+//  XTL_EmuCreateSemaphore, // Dxbx note : Disabled, too high level. See xboxkrnl_NtCreateSemaphore
   XTL_EmuDeleteFiber,
   XTL_EmuGetExitCodeThread,
   XTL_EmuGetOverlappedResult,
@@ -2088,7 +2106,7 @@ exports
   XTL_EmuQueryPerformanceFrequency,
   XTL_EmuQueueUserAPC,
   XTL_EmuRaiseException,
-//  XTL_EmuReleaseSemaphore,
+//  XTL_EmuReleaseSemaphore, // Dxbx note : Disabled, too high level. See xboxkrnl_NtReleaseSemaphore
   XTL_EmuRtlAllocateHeap,
   XTL_EmuRtlCreateHeap,
   XTL_EmuRtlDestroyHeap,
@@ -2098,7 +2116,7 @@ exports
   XTL_EmuRtlSizeHeap,
   XTL_EmuSetThreadPriority,
   XTL_EmuSetThreadPriorityBoost,
-//  XTL_EmuSignalObjectAndWait,
+//  XTL_EmuSignalObjectAndWait, // Dxbx note : Disabled, too high level. See xboxkrnl_NtSignalAndWaitForSingleObjectEx
   XTL_EmutimeKillEvent,
   XTL_EmutimeSetEvent,
   XTL_EmuXapiApplyKernelPatches,
@@ -2112,10 +2130,11 @@ exports
   XTL_EmuXFreeSectionByHandle,
   XTL_EmuXGetDeviceChanges,
   XTL_EmuXGetDevices,
-//  XTL_EmuXGetFileCacheSize,
+//  XTL_EmuXGetFileCacheSize, // Dxbx note : Disabled, too high level. See xboxkrnl_FscGetCacheSize
+  XTL_EmuXGetGameRegion,
   XTL_EmuXGetLaunchInfo,
   XTL_EmuXGetSectionHandleA,
-//  XTL_EmuXGetSectionSize,
+//  XTL_EmuXGetSectionSize, // Dxbx note : This patch is not really needed, as the Xbox1 seems to use the SectionHeader address as a handle too.
   XTL_EmuXInitDevices name PatchPrefix + '_USBD_Init@8', // Cxbx incorrectly calls this XInitDevices
   XTL_EmuXInputClose,
   XTL_EmuXInputGetCapabilities,
