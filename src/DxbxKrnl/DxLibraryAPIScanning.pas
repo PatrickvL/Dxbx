@@ -93,6 +93,7 @@ type
     Discovery: string;
     FailReason: string;
     IsApproximation: Boolean;
+    PatchedBy: string;
 
     property Length: Cardinal read GetLength;
     property SymbolReferenceCount: Integer read GetSymbolReferenceCount;
@@ -176,6 +177,7 @@ const
 implementation
 
 uses
+  uHLEIntercept, // EmuInstallWrappers
   uVertexBuffer; // CRC32Init, Crc32
 
 const lfUnit = lfDxbx or lfSymbolScan;
@@ -1672,6 +1674,7 @@ var
   i: Integer;
   Symbol: TSymbolInformation;
   m_Certificate: PXBE_CERTIFICATE;
+  tmpStr: String;
 begin
   if Count <= 0 then
     Exit;
@@ -1684,7 +1687,7 @@ begin
     for i := 0 to Self.Count - 1 do
     begin
       Symbol := Symbols[i];
-      AddObject(Symbol.Name, TObject(Symbol.Address));
+      AddObject(Symbol.Name, Symbol);
     end;
 
     CustomSort(@SortObjects);
@@ -1701,10 +1704,19 @@ begin
 
       // (Re)generate the complete [Symbols] section :
       // In the [Symbols] section, each line looks like this :
-      // ?Pause@CDirectSoundStream@DirectSound@@QAGJK@Z=$000CCDB1;DirectSound.CDirectSoundStream.Pause
+      // ?Pause@CDirectSoundStream@DirectSound@@QAGJK@Z=$000CCDB1;DirectSound.CDirectSoundStream.Pause // PatchedBy
       // ^-------mangled function name----------------^ ^address^ ^----unmangled function name-------^
       for i := 0 to Count - 1 do
-        WriteString('Symbols', Strings[i], Format('$%.8x;%s', [Integer(Objects[i]), DxbxUnmangleSymbolName(Strings[i])]));
+      begin
+        Symbol := TSymbolInformation(Objects[i]);
+        tmpStr := Format('$%.8x;%s', [UIntPtr(Symbol.Address), DxbxUnmangleSymbolName(Strings[i])]);
+        if Symbol.PatchedBy <> '' then
+          tmpStr := tmpStr + ' // PatchedBy:' + Symbol.PatchedBy
+        else
+          tmpStr := tmpStr + ' // ## UNPATCHED ##';
+
+        WriteString('Symbols', Strings[i], tmpStr);
+      end;
     finally
       Free;
     end;
@@ -1775,6 +1787,9 @@ begin
 
   if MayLog(lfUnit) then
     DbgPrintf('DxbxHLE : Detected %d symbols, reachable from %d leaf hits.', [Count, NrLeafHits]);
+
+  // Now that the symbols are known, patch them up where needed :
+  EmuInstallWrappers(pXbeHeader);
 
   // After detection of all symbols, see if we need to save that to cache :
   if CacheFileNameStr <> '' then

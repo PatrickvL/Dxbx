@@ -65,9 +65,6 @@ procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE
     DbgPrintf('DxbxHLE: Detected Microsoft XDK application...');
 
   SymbolManager.DxbxScanForLibraryAPIs(pLibraryVersion, pXbeHeader);
-
-  // Now that the symbols are known, patch them up where needed :
-  EmuInstallWrappers(pXbeHeader);
 end;
 
 // install function interception wrapper
@@ -109,6 +106,8 @@ begin
     for i := 0 to SymbolManager.Count - 1 do
     begin
       DetectedSymbol := SymbolManager.Symbols[i];
+      DetectedSymbol.PatchedBy := '';
+
       OrgCode := DetectedSymbol.Address;
       if not Assigned(OrgCode) then
         continue;
@@ -127,6 +126,7 @@ begin
       UsedPatches[XboxLibraryPatch] := True;
 {$ENDIF}
 
+      DetectedSymbol.PatchedBy := AvailablePatches[XboxLibraryPatch - 1];
       EmuInstallWrapper(OrgCode, NewCode);
 
       // Fill the remainder of the patched function with "int 3" opcodes,
@@ -161,7 +161,6 @@ begin
     end;
 
     DbgPrintf('DxbxHLE : Unused patches : %d.', [NrPatches]);
-
   finally
     FreeAndNil(UsedPatches);
   end;
