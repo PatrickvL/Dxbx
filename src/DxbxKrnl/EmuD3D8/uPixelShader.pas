@@ -1177,7 +1177,7 @@ begin
   Result := 'dp3' + aScope.InstructionOutputCombiner + ' ' +
     Self.DisassembleRegister(aScope) + aScope.OutputWriteMask + ', ' +
     Input1.DisassembleInputRegister(aScope) + ', ' +
-    Input2.DisassembleInputRegister(aScope);
+    Input2.DisassembleInputRegister(aScope) + #13#10;
   // TODO : Because "dp3" needs the color/vector pipeline, no color component outputing opcode can be co-issued with it.
   // So, we need to skip adding '+' after this.
 end;
