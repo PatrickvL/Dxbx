@@ -2269,7 +2269,6 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-{ MARKED OUT BY CXBX
 function XTL_EmuD3DDevice_BeginStateBig(): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
@@ -2285,7 +2284,7 @@ begin
   DxbxKrnlCleanup('BeginStateBig is not implemented');
   EmuSwapFS(fsXbox);
   Result := ret;
-end; }
+end;
 
 function XTL_EmuD3DDevice_CaptureStateBlock(Token: DWORD): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -10784,8 +10783,7 @@ begin
 
 end; *)
 
-
-(*function XTL_EmuD3DDevice_CreateSurface
+function XTL_EmuD3DDevice_CreateSurface
 (
   // UNKNOWN PARAMS
 ): HRESULT; stdcall;
@@ -10796,10 +10794,8 @@ begin
   Unimplemented('XTL_EmuD3DDevice_CreateSurface');
 
   EmuSwapFS(fsXbox);
-end; *)
+end;
 
-
-(*
 function XTL_EmuD3DDevice_CreateSurface2(
   Width: DWORD;
   Height: DWORD;
@@ -10813,7 +10809,6 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
-*)
 
 (*function XTL_EmuIDirect3DSurface_GetContainer2
 (
@@ -11182,6 +11177,15 @@ exports
   XTL_EmuIDirect3D_GetAdapterModeCount name PatchPrefix + 'Direct3D_GetAdapterModeCount',
   XTL_EmuIDirect3D_GetDeviceCaps name PatchPrefix + 'Direct3D_GetDeviceCaps',
   XTL_EmuIDirect3D_KickOffAndWaitForIdle name PatchPrefix + 'KickOffAndWaitForIdle',
+  // XTL_EmuIDirect3D_LazySetCombiners name PatchPrefix + 'LazySetCombiners', // Dxbx: Not yet implemented
+  // XTL_EmuIDirect3D_LazySetSpecFogCombiner name PatchPrefix + 'LazySetSpecFogCombiner', // Dxbx: Not yet implemented
+  // XTL_EmuIDirect3D_LazySetLights name PatchPrefix + 'LazySetLights', // Dxbx: Not yet implemented
+  // XTL_EmuIDirect3D_LazySetPointParams name PatchPrefix + 'LazySetPointParams', // Dxbx: Not yet implemented
+  // XTL_EmuIDirect3D_LazySetShaderStageProgram name PatchPrefix + LazySetShaderStageProgram, // Dxbx: Not yet implemented
+  // XTL_EmuIDirect3D_LazySetState name PatchPrefix + 'LazySetState', // Dxbx: Not yet implemented
+  // XTL_EmuIDirect3D_LazySetTextureState name + PatchPrefix + 'LazySetTextureState', // Dxbx: Not yet implemented
+  // XTL_EmuIDirect3D_LazySetTransform name + PatchPrefix + 'LazySetTransform', // Dxbx: Not yet implemented
+  // XTL_EmuIDirect3D_LazySetTextureTransform name + PatchPrefix 'LazySetTextureTransform', // Dxbx: Not yet implemented
   XTL_EmuIDirect3D_SetPushBufferSize name PatchPrefix + 'Direct3D_SetPushBufferSize',
 
   XTL_EmuIDirect3DBaseTexture_GetLevelCount name PatchPrefix + 'D3DBaseTexture_GetLevelCount@4',
@@ -11192,7 +11196,7 @@ exports
   XTL_EmuD3DDevice_Begin,
   XTL_EmuD3DDevice_BeginPush,
   XTL_EmuD3DDevice_BeginPushBuffer, // ??
-//  XTL_EmuD3DDevice_BeginStateBig, // MARKED OUT BY CXBX
+  XTL_EmuD3DDevice_BeginStateBig,
   XTL_EmuD3DDevice_BeginStateBlock name PatchPrefix + 'D3DDevice_BeginStateBlock@0',
   XTL_EmuD3DDevice_BeginVisibilityTest name PatchPrefix + 'D3DDevice_BeginVisibilityTest@0', // [PvL] reviewed up to here
   XTL_EmuD3DDevice_BlockOnFence,
@@ -11209,8 +11213,8 @@ exports
   XTL_EmuD3DDevice_CreatePalette2,
   XTL_EmuD3DDevice_CreatePixelShader name PatchPrefix + 'D3DDevice_CreatePixelShader@8',
   XTL_EmuD3DDevice_CreateStateBlock,
-(*  XTL_EmuD3DDevice_CreateSurface, *)  // TODO -oDXBX: NOT YET IMPLEMENTED
-(*  XTL_EmuD3DDevice_CreateSurface2, *)  // TODO -oDXBX: NOT YET IMPLEMENTED
+  XTL_EmuD3DDevice_CreateSurface,
+  XTL_EmuD3DDevice_CreateSurface2,
   XTL_EmuD3DDevice_CreateTexture,
   XTL_EmuD3DDevice_CreateTexture2,
   XTL_EmuD3DDevice_CreateVertexBuffer,
@@ -11236,9 +11240,12 @@ exports
   XTL_EmuD3DDevice_GetBackBuffer2 name PatchPrefix + 'D3DDevice_GetBackBuffer2@4',
   XTL_EmuD3DDevice_GetBackMaterial,
   XTL_EmuD3DDevice_GetCreationParameters,
+//  XTL_EmuD3DDevice_GetDirect3D, // Dxbx: not implemented yet
   XTL_EmuD3DDevice_GetDepthClipPlanes,
   XTL_EmuD3DDevice_GetDepthStencilSurface,
   XTL_EmuD3DDevice_GetDepthStencilSurface2,
+// XTL_EmuD3DDevice_GetOverscanColor, // Dxbx: not implemented yet
+// XTL_EmuD3DDevice_GetPersistedSurface2, // Dxbx: not implemented yet
   XTL_EmuD3DDevice_GetDeviceCaps,
   XTL_EmuD3DDevice_GetDisplayFieldStatus,
   XTL_EmuD3DDevice_GetDisplayMode,
@@ -11279,10 +11286,12 @@ exports
   XTL_EmuD3DDevice_InsertCallback,
   XTL_EmuD3DDevice_InsertFence, // : DXBX for better logging.
   XTL_EmuD3DDevice_IsBusy,
+//  XTL_EmuD3DDevice_KickPushBuffer, // Dxbx: not yet implemented yet
   XTL_EmuD3DDevice_IsFencePending,
   XTL_EmuD3DDevice_LightEnable,
   XTL_EmuD3DDevice_LoadVertexShader,
   XTL_EmuD3DDevice_LoadVertexShaderProgram,
+//  XTL_EmuD3DDevice_MakeSpace, // Dxbx: Not yet implemented
   XTL_EmuD3DDevice_Nop,
   XTL_EmuD3DDevice_PersistDisplay,
   XTL_EmuD3DDevice_Present,
@@ -11292,7 +11301,7 @@ exports
 (*  XTL_EmuD3DDevice_Resume,*) // TODO -oDXBX: NOT YET IMPLEMENTED YET
   XTL_EmuD3DDevice_RunPushBuffer,
   XTL_EmuD3DDevice_RunVertexStateShader,
-  XTL_EmuD3DDevice_SelectVertexShader,
+    XTL_EmuD3DDevice_SelectVertexShader,
   XTL_EmuD3DDevice_SelectVertexShaderDirect,
   XTL_EmuD3DDevice_SetBackBufferScale,
   XTL_EmuD3DDevice_SetBackMaterial, // ??
@@ -11304,6 +11313,7 @@ exports
   XTL_EmuD3DDevice_SetModelView, // ??
   XTL_EmuD3DDevice_SetOverscanColor,
   XTL_EmuD3DDevice_SetPalette,
+//  XTL_EmuD3DDevice_SetCopyRectsState, // Dxbx: not yet implemented
   XTL_EmuD3DDevice_SetPixelShader,
   XTL_EmuD3DDevice_SetPixelShaderConstant,
   XTL_EmuD3DDevice_SetPixelShaderProgram,
