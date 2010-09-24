@@ -10693,7 +10693,7 @@ function XTL_EmuIDirect3DVolumeTexture_GetVolumeLevel2
 (
   pThis: PX_D3DVolumeTexture;
   Level: UINT;
-  ppVolumeLevel: PPX_D3DVolume;
+  ppVolumeLevel: PPX_D3DVolume
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
 var
@@ -10714,10 +10714,13 @@ begin
 
   pVolumeTexture := pThis.Emu.VolumeTexture;
 
-  Result := IDirect3DVolumeTexture(pVolumeTexture).GetVolumeLevel2(Level, {out}ppVolumeLevel);
+  EmuWarning('NOT YET IMPLEMENTED');
+
+
+(*  Result := (*IDirect3DVolumeTexture(pVolumeTexture).GetVolumeLevel2(Level, {out}ppVolumeLevel);
 
   if (FAILED(Result)) then
-    EmuWarning('GetVolumeLevel2 Failed!');
+    EmuWarning('GetVolumeLevel2 Failed!'); *)
 
   EmuSwapFS(fsXbox);
 end;
