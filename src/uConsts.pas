@@ -167,6 +167,7 @@ const
   TITLEID_DeadToRights_PAL = $4541002C;
   TITLEID_Halo = $4D530004;
   TITLEID_Halo2 = $4D530064;
+  TITLEID_PetitCopter = $41510001;
   TITLEID_UnrealChampionship = $49470024;
   TITLEID_UnrealChampionship2 = $4D570021;
   TITLEID_UnrealII = $4947003C;
