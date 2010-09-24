@@ -8849,11 +8849,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_CreatePalette2' +
-        #13#10'(' +
-        #13#10'   Size              : 0x%.08X' +
-        #13#10');',
-           [Ord(Size)]);
+    LogBegin('EmuD3D8 : EmuD3DDevice_CreatePalette2').
+      _(Integer(Ord(Size)), 'Size').
+    LogEnd();
 
   New({var PX_D3DPalette}pPalette);
 
@@ -8876,12 +8874,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetPalette' +
-        #13#10'(' +
-        #13#10'   Stage             : 0x%.08X' +
-        #13#10'   pPalette          : 0x%.08X' +
-        #13#10');',
-             [Stage, pPalette]);
+    LogBegin('EmuD3D8 : EmuD3DDevice_SetPalette').
+      _(Stage, 'Stage').
+      _(pPalette, 'pPalette').
+    LogEnd();
 
   // Marked out by Cxbx
   //g_pD3DDevice.SetPaletteEntries(0, (PALETTEENTRY*)(*pPalette.Data);
@@ -8893,14 +8889,28 @@ begin
   Result := D3D_OK;
 end;
 
-(*function XTL_EmuD3DDevice_SetCopyRectsState
+function XTL_EmuD3DDevice_SetCopyRectsState
 (
   pCopyRectState: PD3DCOPYRECTSTATE;
   pCopyRectRopState: PD3DCOPYRECTROPSTATE
 ): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
 begin
+  EmuSwapFS(fsWindows);
 
-end; *)
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3D8 : EmuD3DDevice_SetCopyRectsState').
+      _(pCopyRectState, 'pCopyRectState').
+      _(pCopyRectRopState, 'pCopyRectRopState').
+    LogEnd();
+
+//  D3DDevice_SetCopyRectsState(pCopyRectState, pCopyRectRopState);
+  EmuWarning('NOT YET IMPLEMENTED');
+
+  EmuSwapFS(fsXbox);
+
+  Result := D3D_OK;
+end;
 
 procedure XTL_EmuD3DDevice_SetFlickerFilter
 (
@@ -11299,7 +11309,7 @@ exports
   XTL_EmuD3DDevice_GetDepthStencilSurface,
   XTL_EmuD3DDevice_GetDepthStencilSurface2,
   XTL_EmuD3DDevice_GetOverscanColor,
-// XTL_EmuD3DDevice_GetPersistedSurface2, // Dxbx: not implemented yet
+//  XTL_EmuD3DDevice_GetPersistedSurface2, // Dxbx: not implemented yet
   XTL_EmuD3DDevice_GetDeviceCaps,
   XTL_EmuD3DDevice_GetDisplayFieldStatus,
   XTL_EmuD3DDevice_GetDisplayMode,
@@ -11367,7 +11377,7 @@ exports
   XTL_EmuD3DDevice_SetModelView, // ??
   XTL_EmuD3DDevice_SetOverscanColor,
   XTL_EmuD3DDevice_SetPalette,
-//  XTL_EmuD3DDevice_SetCopyRectsState, // Dxbx: not yet implemented
+  XTL_EmuD3DDevice_SetCopyRectsState,
   XTL_EmuD3DDevice_SetPixelShader,
   XTL_EmuD3DDevice_SetPixelShaderConstant,
   XTL_EmuD3DDevice_SetPixelShaderProgram,
