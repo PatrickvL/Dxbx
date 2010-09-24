@@ -1187,6 +1187,7 @@ begin
   end;
 
   // Retrieve all references :
+  SetLength(Referenced, CurrentSymbol.SymbolReferenceCount);
   for i := 0 to Length(Referenced) - 1 do
   begin
     Referenced[i].StoredSymbolReference := CurrentSymbol.SymbolReferences[i];
@@ -1199,7 +1200,6 @@ begin
   end;
 
   // Collect all references and check they're all within bounds :
-  SetLength(Referenced, CurrentSymbol.SymbolReferenceCount);
   for i := 0 to Length(Referenced) - 1 do
   begin
     // Skip operators (they're often compiled-in on multiple places, like 'operator new' and 'operator new[]') :
