@@ -85,12 +85,14 @@ type
     function GetSymbolReferenceCount: Integer;
     function GetSymbolReference(const aIndex: Integer): PStoredSymbolReference;
   public
+    OtherVersion: TSymbolInformation;
     AliasSymbol: TSymbolInformation;
     Name: string;
     UnmangledName: string;
     Address: TCodePointer;
     StoredLibraryFunction: PStoredLibraryFunction; // can be nil for non-pattern symbols
-    SymbolPriority: Integer;
+    OrderingImportance: Integer;
+    OrderingVersion: Integer; // Only used when (mangled)name matches
     OrderingScore: Integer;
     Discovery: string;
     FailReason: string;
@@ -358,12 +360,17 @@ end; // Clear
 
 function TSymbolManager.AddSymbol(const aName: string; const aFoundFunction: PStoredLibraryFunction = nil): TSymbolInformation;
 var
+  PrevVersion: TSymbolInformation;
   HashIndex: Word;
 begin
+  PrevVersion := nil;
   HashIndex := CalcCRC16(PByte(aName), Length(aName) * SizeOf(Char));
   Result := MySymbolsHashedOnName[HashIndex];
   while Assigned(Result) do
   begin
+    if (Result.Name = aName) then
+      PrevVersion := Result;
+
     Inc(HashIndex, 1);
     Result := MySymbolsHashedOnName[HashIndex];
   end;
@@ -373,6 +380,12 @@ begin
   Result.StoredLibraryFunction := aFoundFunction;
   Result.Name := aName;
   Result.UnmangledName := DxbxUnmangleSymbolName(aName);
+
+  if Assigned(PrevVersion) then
+  begin
+    Result.OtherVersion := PrevVersion;
+    PrevVersion.OtherVersion := Result;
+  end;
 
   MySymbolsHashedOnName[HashIndex] := Result;
   Inc(FSymbolCount);
@@ -385,6 +398,7 @@ var
   HashIndex: Word;
 begin
   SymbolName := PatternTrieReader.GetString(aNameIndex);
+
   HashIndex := CalcCRC16(PByte(SymbolName), Length(SymbolName) * SizeOf(Char));
   Result := MySymbolsHashedOnName[HashIndex];
   while Assigned(Result) do
@@ -848,15 +862,18 @@ begin
 end; // ConvertLeafsIntoSymbols
 
 
-function _IsTestCase(const aMangledName: string; const aAddress: UIntPtr): Boolean;
+function _IsTestCase(const aAddress: UIntPtr; const aMangledName: string): Boolean;
 
-  function _Test(const aCheckName: string; const aCheckAddress: UIntPtr): Boolean;
+  function _Test(const aCheckAddress: UIntPtr; const aCheckName: string): Boolean;
   begin
     Result := (aCheckAddress = aAddress) or SameStr(aCheckName, aMangledName);
   end;
 
 begin
   Result := False
+  // PetitCopter
+//  or _Test($0004779E, '_XapiInitProcess@0')
+//  or _Test($000476C0, '_XapiVerifyMediaInDrive@0')
 //  // Myst III - New symbol detection :
 //  or _Test(nil, '_DirectSoundCreate@12')
 //  or _Text(nil, '?BltBox2D@CD3DXBlt@@IAEJXZ')
@@ -1127,7 +1144,7 @@ var
   Function_: PStoredLibraryFunction;
   i, j: Integer;
 begin
-  if _IsTestCase(CurrentSymbol.Name, UIntPtr(aAddress)) then
+  if _IsTestCase(UIntPtr(aAddress), CurrentSymbol.Name) then
     IsTestCase := True;
 
   if IsTestCase then
@@ -1185,7 +1202,7 @@ begin
     Exit;
   end;
 
-  // Retrieve all references :
+  // Collect all references and check they're all within bounds :
   SetLength(Referenced, CurrentSymbol.SymbolReferenceCount);
   for i := 0 to Length(Referenced) - 1 do
   begin
@@ -1196,24 +1213,12 @@ begin
 
     // Retrieve an object for the symbol being referenced :
     Referenced[i].Symbol := FindOrAddVersionedSymbol(CurrentSymbol.StoredLibraryFunction.AvailableInVersions, Referenced[i].StoredSymbolReference.NameIndex, Function_);
-  end;
 
-  // Collect all references and check they're all within bounds :
-  for i := 0 to Length(Referenced) - 1 do
-  begin
     // Skip operators (they're often compiled-in on multiple places, like 'operator new' and 'operator new[]') :
     if Referenced[i].Symbol.IsOperator then
       Continue;
 
     Referenced[i].ReferencedAddress := GetReferencedSymbolAddress(aAddress, Referenced[i].StoredSymbolReference);
-
-    if not IsAddressWithinScanRange(Referenced[i].ReferencedAddress) then
-    begin
-      CurrentSymbol.FailReason := Format('reference #%d out of range : $%.08x', [
-        i, UIntPtr(Referenced[i].ReferencedAddress)]);
-      Result := CR_REFERENCE_OUT_OF_RANGE;
-      Exit;
-    end;
 
     // Check all duplicate symbol references point to the same location :
     if (Referenced[i].StoredSymbolReference.ReferenceFlags and rfIsDuplicate) > 0 then
@@ -1228,6 +1233,18 @@ begin
           Result := CR_REFERENCE_INCONSISTENCY;
           Exit;
         end;
+
+      // No further checking needed on duplicate references :
+      Continue;
+    end;
+
+    // Unique references should point to a valid address :
+    if not IsAddressWithinScanRange(Referenced[i].ReferencedAddress) then
+    begin
+      CurrentSymbol.FailReason := Format('reference #%d out of range : $%.08x', [
+        i, UIntPtr(Referenced[i].ReferencedAddress)]);
+      Result := CR_REFERENCE_OUT_OF_RANGE;
+      Exit;
     end;
   end;
 
@@ -1243,6 +1260,12 @@ begin
 
     // Do the recursive check :
     Result := CheckFunctionAtAddressAndRegister(Referenced[i].Symbol, Referenced[i].ReferencedAddress, Prefix + '.' + IntToStr(i));
+
+    // When there's a problem, and we're scanning using approximating patterns, try the other version (if any) :
+    if  UsingLibraryApproximations
+    and (Result <= CR_ADDRESS_ALREADY_SET)
+    and Assigned(Referenced[i].Symbol.OtherVersion) then
+      Result := CheckFunctionAtAddressAndRegister(Referenced[i].Symbol.OtherVersion, Referenced[i].ReferencedAddress, Prefix + '.' + IntToStr(i));
 
     // See if there was a failure of some kind :
     if Result <= CR_ADDRESS_ALREADY_SET then
@@ -1292,17 +1315,41 @@ end; // CheckFunctionAtAddressAndRegister
 
 procedure TSymbolManager.PrioritizeSymbolScan();
 
+  function _HighestVersion(const aVersions: TLibraryVersionFlags): Integer;
+  var
+    i: TLibraryVersionFlag;
+  begin
+    for i := High(i) downto Low(i) do
+    begin
+      if i in aVersions then
+      begin
+        Result := LibraryVersionFlagToInt[i];
+        Exit;
+      end;
+    end;
+
+    Result := 0;
+  end;
+
   function _Compare(Item1, Item2: Pointer): Integer;
   var
     Symbol1: TSymbolInformation absolute Item1;
     Symbol2: TSymbolInformation absolute Item2;
   begin
-    // Hard-coded priority ordering :
-    Result := Integer(Symbol2.SymbolPriority) - Integer(Symbol1.SymbolPriority);
+    // Hard-coded priority ordering (higher first) :
+    Result := Integer(Symbol2.OrderingImportance) - Integer(Symbol1.OrderingImportance);
     if Result <> 0 then
       Exit;
 
-    // Score-based ordering :
+    if Symbol2.Name = Symbol1.Name then
+    begin
+      // Version-based ordering (higher first) :
+      Result := Integer(Symbol2.OrderingVersion) - Integer(Symbol1.OrderingVersion);
+      if Result <> 0 then
+        Exit;
+    end;
+
+    // Score-based ordering (higher first) :
     Result := Integer(Symbol2.OrderingScore) - Integer(Symbol1.OrderingScore);
     if Result <> 0 then
       Exit;
@@ -1335,26 +1382,32 @@ begin
 
       // Note : Cxbx first scans for 'XapiInitProcess' and then for '_D3DDevice_SetRenderState_CullMode@4',
       // so we immitate that, and add some more important symbols while we're at it :
-      if Pos('_mainCRTStartup', CurrentSymbol.Name) > 0 then begin CurrentSymbol.SymbolPriority := 100;
+      if Pos('_mainCRTStartup', CurrentSymbol.Name) > 0 then begin CurrentSymbol.OrderingImportance := 100;
         // Register the entry point, which is the only symbol ("_mainCRTStartup") we know the address of for sure :
         CurrentSymbol.Address := TCodePointer(EntryPoint); end
-      else if Pos('XapiInitProcess', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 90
-      else if Pos('_D3DDevice_SetRenderState_', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 80
-//      else if Pos('D3D', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 70
-//      else if Pos('Sound', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 60
-//      else if Pos('XInput', CurrentSymbol.Name) > 0 then CurrentSymbol.SymbolPriority := 50
-      else CurrentSymbol.SymbolPriority := 0;
+      else if Pos('XapiInitProcess', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 90
+      else if Pos('_D3DDevice_SetRenderState_', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 80
+//      else if Pos('D3D', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 70
+//      else if Pos('Sound', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 60
+//      else if Pos('XInput', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 50
+      else CurrentSymbol.OrderingImportance := 0;
 
       if CurrentSymbol.StoredLibraryFunction = nil then
-        CurrentSymbol.OrderingScore := ScoreHasNoFunction
+      begin
+        CurrentSymbol.OrderingVersion := 0;
+        CurrentSymbol.OrderingScore := ScoreHasNoFunction;
+      end
       else
       begin
+        CurrentSymbol.OrderingVersion := _HighestVersion(CurrentSymbol.StoredLibraryFunction.AvailableInVersions);
         CurrentSymbol.OrderingScore := ScoreHasFunction;
 
         Inc(CurrentSymbol.OrderingScore, (CurrentSymbol.StoredLibraryFunction.NrOfSymbolReferences * ScoreNrOfSymbolReferences));
         Inc(CurrentSymbol.OrderingScore, (CurrentSymbol.StoredLibraryFunction.CRCLength * ScoreCRCLength));
         Inc(CurrentSymbol.OrderingScore, (CurrentSymbol.StoredLibraryFunction.FunctionLength * ScoreFunctionLength));
       end;
+
+
     end;
   end;
 
@@ -1616,6 +1669,14 @@ begin
   else
     // For OpenSDK / SDLx linked XBEs, assume 4627 libs where used :
     g_BuildVersion := DEFAULT_XDK_VERSION; // TODO -oDxbx: Make this configurable!
+
+  if IsRunning(TITLEID_PetitCopter) then
+  begin
+    // TODO : Make this configurable ?
+    DbgPrintf('!Game-hack! PetitCopter also needs 4627 patterns (at least to verify ''_XapiVerifyMediaInDrive@0'' at $000476C0)');
+    FLibraryVersionsToScan := FLibraryVersionsToScan + [lib4627];
+    UsingLibraryApproximations := True;
+  end;
 
   FreeAndNil(StoredLibraryVersions);
 end; // DetectVersionedXboxLibraries
