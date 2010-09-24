@@ -8892,6 +8892,15 @@ begin
   Result := D3D_OK;
 end;
 
+(*function XTL_EmuD3DDevice_SetCopyRectsState
+(
+  pCopyRectState: PD3DCOPYRECTSTATE;
+  pCopyRectRopState: PD3DCOPYRECTROPSTATE
+): HRESULT; stdcall;
+begin
+
+end; *)
+
 procedure XTL_EmuD3DDevice_SetFlickerFilter
 (
   Filter: DWORD
@@ -10453,7 +10462,7 @@ begin
   Result := D3D_OK;
 end;
 
-procedure XTL_EmuXMETAL_StartPush
+(*procedure XTL_EmuXMETAL_StartPush
 (
   Unknown: Pvoid
 ); stdcall;
@@ -10467,7 +10476,7 @@ begin
     LogEnd();
 
   EmuSwapFS(fsXbox);
-end;
+end;*)
 
 function XTL_EmuD3DDevice_GetLight
 (
@@ -10680,7 +10689,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-(*function XTL_EmuIDirect3DVolumeTexture_GetVolumeLevel2
+function XTL_EmuIDirect3DVolumeTexture_GetVolumeLevel2
 (
   pThis: PX_D3DVolumeTexture;
   Level: UINT;
@@ -10711,8 +10720,7 @@ begin
     EmuWarning('GetVolumeLevel2 Failed!');
 
   EmuSwapFS(fsXbox);
-end; *)
-
+end;
 
 function XTL_EmuD3DVolume_GetDesc
 (
@@ -10820,11 +10828,6 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
-
-(*function XTL_EmuD3DVolume_LockBox();
-begin
-
-end; *)
 
 function XTL_EmuD3DDevice_CreateSurface
 (
@@ -11482,15 +11485,14 @@ exports
   XTL_EmuD3DVolume_GetDesc,
   XTL_EmuD3DVolume_GetContainer2,
   XTL_EmuD3DVolume_LockBox,
-(*  XTL_EmuD3DVolume_GetDesc, *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
 
   XTL_EmuIDirect3DVolumeTexture_GetLevelDesc name PatchPrefix + 'D3DVolumeTexture_GetLevelDesc',
-(*  XTL_EmuIDirect3DVolumeTexture_GetVolumeLevel2 name PatchPrefix + 'D3DVolumeTexture_GetVolumeLevel2', *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
+  XTL_EmuIDirect3DVolumeTexture_GetVolumeLevel2 name PatchPrefix + 'D3DVolumeTexture_GetVolumeLevel2',
   XTL_EmuIDirect3DVolumeTexture_LockBox name PatchPrefix + 'D3DVolumeTexture_LockBox',
 
   XTL_EmuLock2DSurface name PatchPrefix + 'Lock2DSurface';
 
-//  XTL_EmuXMETAL_StartPush name PatchPrefix + 'XMETAL_StartPush';  // DXBX - MARKED OUT 4x4 EVO 2
+//  XTL_EmuXMETAL_StartPush name PatchPrefix + 'XMETAL_StartPush';
 
 initialization
 
