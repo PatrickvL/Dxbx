@@ -778,11 +778,10 @@ procedure TSymbolManager.ConvertLeafsIntoSymbols();
   function _IsAliasSymbol(const aSymbol1, aSymbol2: TSymbolInformation): Boolean;
   begin
     Result := (aSymbol1.Name <> aSymbol2.Name)
-          and _IsAliasFunction(aSymbol1.StoredLibraryFunction, aSymbol2.StoredLibraryFunction)
-          and SameStr(aSymbol1.UnmangledName, aSymbol2.UnmangledName);
-//    if Result then
-//      Result := (aSymbol1.SymbolReferenceCount > 0)
-//            or SameStr(aSymbol1.UnmangledName, aSymbol2.UnmangledName);
+          and _IsAliasFunction(aSymbol1.StoredLibraryFunction, aSymbol2.StoredLibraryFunction);
+    if Result then
+      Result := (aSymbol1.SymbolReferenceCount > 0)
+            or SameStr(aSymbol1.UnmangledName, aSymbol2.UnmangledName);
   end;
 
 var
