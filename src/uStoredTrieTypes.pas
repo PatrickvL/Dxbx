@@ -142,8 +142,8 @@ type
     CRCLength: Byte; /// TODO : This could be removed once the CRC covers the whole function (except its references)
     NrOfSymbolReferences: Byte; // A byte is enough for 255 symbol references, no function will use that much!
     FirstSymbolReference: TSymbolReferenceIndex; /// The index of the first reference (the others are right next to it)
-    AvailableInVersions: TLibraryVersionFlags; /// Indicates which XDK versions this exact function occurs in (LibraryIndex can go)
-//    LibraryNameIndex: TStringTableIndex; /// Just the name of the library this function originates from (not really important)
+    AvailableInVersions: TLibraryVersionFlags; /// Indicates which XDK versions this exact function occurs in
+    LibraryNameIndex: TStringTableIndex; /// Just the name of the library this function originates from
   end;
 
   PStoredLibraryFunctionsList = ^TStoredLibraryFunctionsList;
