@@ -96,7 +96,7 @@ type
     FailReason: string;
     IsApproximation: Boolean;
     PatchedBy: string;
-
+    function IsOperator: Boolean;
     property Length: Cardinal read GetLength;
     property SymbolReferenceCount: Integer read GetSymbolReferenceCount;
     property SymbolReferences[const aIndex: Integer]: PStoredSymbolReference read GetSymbolReference;
@@ -138,6 +138,7 @@ type
     FLibraryVersionsToScan: TLibraryVersionFlags;
     MyAddressesInKnownSections: TDxbxBits; // Marks addresses that are covered with our library patterns
     MyAddressesIdentified: TDxbxBits; // Marks memory identification status with 1 bit per address
+    IsTestCase: Boolean;
     ScanningInKnownAddresses: Boolean;
     function CheckFunctionAtAddressAndRegister(const CurrentSymbol: TSymbolInformation; const aAddress: PByte; const Prefix: string = ''): Integer;
     procedure PrioritizeSymbolScan();
@@ -295,6 +296,13 @@ begin
 {$IFDEF DXBX_RECTYPE}
   Assert(Result.RecType = rtStoredSymbolReference, 'StoredSymbolReference type mismatch!');
 {$ENDIF}
+end;
+
+function TSymbolInformation.IsOperator: Boolean;
+begin
+  Result := (System.Length(Name) >= 2)
+        and (Name[1] = '?')
+        and (Name[2] = '?');
 end;
 
 { TSymbolManager }
@@ -770,10 +778,11 @@ procedure TSymbolManager.ConvertLeafsIntoSymbols();
   function _IsAliasSymbol(const aSymbol1, aSymbol2: TSymbolInformation): Boolean;
   begin
     Result := (aSymbol1.Name <> aSymbol2.Name)
-          and _IsAliasFunction(aSymbol1.StoredLibraryFunction, aSymbol2.StoredLibraryFunction);
-    if Result then
-      Result := (aSymbol1.SymbolReferenceCount > 0)
-             or (aSymbol1.UnmangledName = aSymbol2.UnmangledName);
+          and _IsAliasFunction(aSymbol1.StoredLibraryFunction, aSymbol2.StoredLibraryFunction)
+          and SameStr(aSymbol1.UnmangledName, aSymbol2.UnmangledName);
+//    if Result then
+//      Result := (aSymbol1.SymbolReferenceCount > 0)
+//            or SameStr(aSymbol1.UnmangledName, aSymbol2.UnmangledName);
   end;
 
 var
@@ -823,15 +832,88 @@ begin
       // Loop over all following symbols :
       for k := j + 1 to NrValidSymbols - 1 do
         // Check if these are equal to the initial symbol :
-        if _IsAliasSymbol(ValidSymbols[k], ValidSymbols[j]) then
+        if (ValidSymbols[k].AliasSymbol = ValidSymbols[k])
+        and _IsAliasSymbol(ValidSymbols[k], ValidSymbols[j]) then
         begin
           // Alias one to the other :
           ValidSymbols[k].AliasSymbol := ValidSymbols[j];
-          DbgPrintf('Aliased %s to %s', [ValidSymbols[k].Name, ValidSymbols[j].Name]);
+          DbgPrintf('Aliased %s (%s) to %s (%s)', [
+            ValidSymbols[k].Name,
+            ValidSymbols[k].UnmangledName,
+            ValidSymbols[j].Name,
+            ValidSymbols[j].UnmangledName
+            ]);
         end;
     end; // for aliases
   end; // for leafs
 end; // ConvertLeafsIntoSymbols
+
+
+function _IsTestCase(const aMangledName: string; const aAddress: UIntPtr): Boolean;
+
+  function _Test(const aCheckName: string; const aCheckAddress: UIntPtr): Boolean;
+  begin
+    Result := (aCheckAddress = aAddress) or SameStr(aCheckName, aMangledName);
+  end;
+
+begin
+  Result := False
+//  // Myst III - New symbol detection :
+//  or _Test(nil, '_DirectSoundCreate@12')
+//  or _Text(nil, '?BltBox2D@CD3DXBlt@@IAEJXZ')
+//
+//  // Turok - Fixed wrong locations and duplicates :
+//  or _Test(?, '_D3D__RenderState'))
+//  or _Test(?, '?CommonSetDebugRegisters@D3D@@YIXXZ'))
+//  or _Test(?, '_XapiProcessHeap'))
+//  or _Test($0001171D, 'XapiInitProcess') // TODO : Use correct pattern-name!
+//  or _Test($00011A35, '_RaiseException@16')
+//  or _Test($00011A9D, '_XRegisterThreadNotifyRoutine@8')
+//  or _Test($001939B0, 'EmuIDirect3DDevice8_SetRenderState_StencilEnable') // TODO : Use correct pattern-name!
+//  or _Test($00193A40, 'EmuIDirect3DDevice8_SetRenderState_StencilFail') // TODO : Use correct pattern-name!
+//  or _Test($00193AB0, 'EmuIDirect3DDevice8_SetRenderState_YuvEnable') // TODO : Use correct pattern-name!
+//  or _Test($00193AE0, 'EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable') // TODO : Use correct pattern-name!
+//  or _Test($00193B50, 'EmuIDirect3DDevice8_SetRenderState_StencilCullEnable') // TODO : Use correct pattern-name!
+//  or _Test($00193BC0, '_D3DDevice_SetRenderState_RopZCmpAlwaysRead@4'))
+//  or _Test($00193BE0, '_D3DDevice_SetRenderState_RopZRead@4'))
+//  or _Test($00193C00, '_D3DDevice_SetRenderState_DoNotCullUncompressed@4'))
+//
+//  or _Test($00194EA0, '_D3DDevice_SetLight@8')
+//  or _Test($00195080, '_D3DDevice_LightEnable@8')
+//  or _Test($00195170, '?SetTexture@D3DDevice@@SGJKPAUD3DBaseTexture@@@Z')
+//  or _Test($001960E0, 'EmuIDirect3DBaseTexture8_GetLevelCount') // TODO : Use correct pattern-name!
+//  or _Test($001997F0, '?Get2DSurfaceDesc@PixelJar@D3D@@YGXPAUD3DPixelContainer@@IPAU_D3DSURFACE_DESC@@@Z') //HLE: 0x001997F0 -> EmuGet2DSurfaceDesc
+//  or _Test($0019D360, '_D3DDevice_Reset@4') //HLE: 0x0019D360 -> EmuIDirect3DDevice8_Reset
+//  or _Test($001B018A, 'CDirectSound_SetRolloffFactor') // TODO : Use correct pattern-name!
+//  or _Test($001F35E3, '_USBD_Init@8') // Cxbx incorrectly calls this XInitDevices!
+//
+//  // Cxbx meshes :
+//  or _Test($0001DE60, '_D3DDevice_SetTile@8') // EmuIDirect3DDevice8_SetTile
+//  or _Test($00020200, '?SetFence@D3D@@YGKK@Z') // D3D::SetFence (XREF)
+//  or _Test($0002CC34, '_XapiProcessHeap')
+//
+//  // Compiled Xdk samples\Tutorials\Tut01_CreateDevice\Release :
+//  or _Test($0001F2C0, '?GetSurfaceFormat@PixelJar@D3D@@YGKPAUD3DPixelContainer@@0@Z') // from EmuIDirect3DDevice8_Clear
+//  or _Test($00019610, '_D3DDevice_Clear@24') // EmuIDirect3DDevice8_Clear
+//
+//  // Psx :
+//  or _Test($00114A09, '_IDirectSoundBuffer_Play@16')
+//  or _Test($00115AC2, '_DirectSoundCreate@12')
+//
+//  // Gamepad
+//  or _Test($00016FBF, '_XapiInitProcess@0')
+//  or _Test($00016966, '_SetLastError@4')
+//  or _Test($000340B3, '_XInputOpen@16')
+//
+//  or _Test($00022020, '_D3DDevice_SetRenderState_StencilEnable@4')
+//  or _Test($00022150, '_D3DDevice_SetRenderState_OcclusionCullEnable@4')
+//  or _Test($00022230, '_D3DDevice_SetRenderState_RopZCmpAlwaysRead@4')
+//  or _Test($00022250, '_D3DDevice_SetRenderState_RopZRead@4')
+//  or _Test($00022290, '_D3DDevice_SetRenderState_MultiSampleAntiAlias@4')
+//  or _Test($00022B70, '_D3DDevice_GetDepthStencilSurface@4')
+//  or _Test($00030E38, '?D3DXVec3LengthSq@@YAMPBUD3DXVECTOR3@@@Z')
+//  or _Test($00030E80, '_D3DXVec3Normalize@8')
+end;
 
 ///
 /// Function scanning code :
@@ -879,7 +961,24 @@ procedure TSymbolManager.AddIntermediateSymbolRegistration(const CurrentSymbol: 
 begin
   // Only register intermediate results when the address is not set already :
   if CurrentSymbol.Address = aAddress then
+  begin
+    if IsTestCase then
+    begin
+      DbgPrintf('AddIntermediateSymbolRegistration(%s) %d - Address already determined :', [
+        CurrentSymbol.Name,
+        FIntermediateSymbolRegistrationsCount
+        ]);
+
+      DbgPrintf('$%.08x;%s [-$%.08x] %s', [
+        CurrentSymbol.Address,
+        CurrentSymbol.UnmangledName,
+        UIntPtr(CurrentSymbol.Address) + CurrentSymbol.Length - 1,
+        CurrentSymbol.Discovery
+        ]);
+    end;
+
     Exit;
+  end;
 
   // To register, mark the covered addresses as being 'identified', and set the address in this symbol :
   MyAddressesIdentified.SetRange(UIntPtr(aAddress), CurrentSymbol.Length);
@@ -902,9 +1001,13 @@ begin
   if FIntermediateSymbolRegistrationsCount = 0 then
     Exit;
 
-  if MayLog(lfUnit) then // TODO : Add lfExtreme flag once the output is reliable
+  if MayLog(lfUnit) or IsTestCase then // TODO : Add lfExtreme flag once the output is reliable
   begin
-    DbgPrintf('ConfirmIntermediateSymbolRegistrations(%s) %d', [CurrentSymbol.Name, FIntermediateSymbolRegistrationsCount]);
+    DbgPrintf('ConfirmIntermediateSymbolRegistrations(%s) %d', [
+      CurrentSymbol.Name,
+      FIntermediateSymbolRegistrationsCount
+      ]);
+
     for i := 0 to FIntermediateSymbolRegistrationsCount - 1 do
     begin
       Symbol := MyIntermediateSymbolRegistrations[i];
@@ -931,15 +1034,18 @@ begin
   if FIntermediateSymbolRegistrationsCount = 0 then
     Exit;
 
-  if MayLog(lfUnit) then // TODO : Add lfExtreme flag once the output is reliable
-    DbgPrintf('RevertIntermediateSymbolRegistrations(%s) %d', [CurrentSymbol.Name, FIntermediateSymbolRegistrationsCount]);
+  if MayLog(lfUnit) or IsTestCase then // TODO : Add lfExtreme flag once the output is reliable
+    DbgPrintf('RevertIntermediateSymbolRegistrations(%s) %d', [
+      CurrentSymbol.Name,
+      FIntermediateSymbolRegistrationsCount
+      ]);
 
   // Loop over all intermediate registrations, and remove their trails :
   for i := 0 to FIntermediateSymbolRegistrationsCount - 1 do
   begin
     Symbol := MyIntermediateSymbolRegistrations[i];
 
-    if MayLog(lfUnit) then // TODO : Add lfExtreme flag once the output is reliable
+    if MayLog(lfUnit) or IsTestCase then // TODO : Add lfExtreme flag once the output is reliable
       DbgPrintf('NOT $%.08x;%s [-$%.08x] %s %s', [
         Symbol.Address,
         Symbol.UnmangledName,
@@ -965,8 +1071,9 @@ const
   CR_APPROXIMATION = 0;
 
   CR_ADDRESS_MATCH = 1;
-  CR_DATA_OKAY = 2;
-  CR_ALL_CHECKS_OKAY = 3;
+  CR_OPERATOR_IGNORED = 2;
+  CR_DATA_OKAY = 3;
+  CR_ALL_CHECKS_OKAY = 4;
 
   CR_ADDRESS_ALREADY_SET = -1;
   CR_ADDRESS_RANGE_TAKEN = -2;
@@ -1004,18 +1111,6 @@ function TSymbolManager.CheckFunctionAtAddressAndRegister(const CurrentSymbol: T
     Result := nil;
   end; // _GetVersionedStoredFunction
 
-(*
-  procedure _DetermineReferencesToCheck;
-  begin
-    // Determine which references shouldn't be checked further (like duplicates) :
-    AllSymbolReferences[c+x].MustSkip := False
-      // Skip Structured Exception Handling labels (would generate lots of alternatives) :
-      or (strncmp(PChar(AllSymbolReferences[c+x].Symbol.Name), '__SEH', Length('__SEH')) = 0)
-      // Skip kernel call references (for now, but can be resolved later) :
-      or (strncmp(PChar(AllSymbolReferences[c+x].Symbol.Name), '__imp__', Length('__imp__')) = 0);
-  end;
-*)
-
   function _IsAddressInKnownSection(const aAddress: UIntPtr): Boolean;
   begin
     if (aAddress < UIntPtr(MyAddressesInKnownSections.Size)) then
@@ -1033,6 +1128,19 @@ var
   Function_: PStoredLibraryFunction;
   i, j: Integer;
 begin
+  if _IsTestCase(CurrentSymbol.Name, UIntPtr(aAddress)) then
+    IsTestCase := True;
+
+  if IsTestCase then
+    DbgPrintf('Test: CheckFunctionAtAddressAndRegister(%s, $%.08x, %s)', [
+      CurrentSymbol.Name, UIntPtr(aAddress), Prefix]);
+
+  if CurrentSymbol.IsOperator then
+  begin
+    Result := CR_OPERATOR_IGNORED;
+    Exit;
+  end;
+
   if CurrentSymbol.Discovery = '' then
     CurrentSymbol.Discovery := Prefix;
 
@@ -1078,12 +1186,28 @@ begin
     Exit;
   end;
 
+  // Retrieve all references :
+  for i := 0 to Length(Referenced) - 1 do
+  begin
+    Referenced[i].StoredSymbolReference := CurrentSymbol.SymbolReferences[i];
+
+    // Lookup if the reference is actually a function reference (using the reference's name) :
+    Function_ := _GetVersionedStoredFunction(CurrentSymbol.StoredLibraryFunction.AvailableInVersions, Referenced[i].StoredSymbolReference.NameIndex);
+
+    // Retrieve an object for the symbol being referenced :
+    Referenced[i].Symbol := FindOrAddVersionedSymbol(CurrentSymbol.StoredLibraryFunction.AvailableInVersions, Referenced[i].StoredSymbolReference.NameIndex, Function_);
+  end;
+
   // Collect all references and check they're all within bounds :
   SetLength(Referenced, CurrentSymbol.SymbolReferenceCount);
   for i := 0 to Length(Referenced) - 1 do
   begin
-    Referenced[i].StoredSymbolReference := CurrentSymbol.SymbolReferences[i];
+    // Skip operators (they're often compiled-in on multiple places, like 'operator new' and 'operator new[]') :
+    if Referenced[i].Symbol.IsOperator then
+      Continue;
+
     Referenced[i].ReferencedAddress := GetReferencedSymbolAddress(aAddress, Referenced[i].StoredSymbolReference);
+
     if not IsAddressWithinScanRange(Referenced[i].ReferencedAddress) then
     begin
       CurrentSymbol.FailReason := Format('reference #%d out of range : $%.08x', [
@@ -1110,18 +1234,6 @@ begin
 
   // To facilitate recursive references checks, pretend the function is detected at this address :
   AddIntermediateSymbolRegistration(CurrentSymbol, aAddress);
-
-  // Retrieve all references :
-  for i := 0 to Length(Referenced) - 1 do
-  begin
-    // Lookup if the reference is actually a function reference (using the reference's name) :
-    Function_ := _GetVersionedStoredFunction(CurrentSymbol.StoredLibraryFunction.AvailableInVersions, Referenced[i].StoredSymbolReference.NameIndex);
-
-    // Retrieve an object for the symbol being referenced :
-    Referenced[i].Symbol := FindOrAddVersionedSymbol(CurrentSymbol.StoredLibraryFunction.AvailableInVersions, Referenced[i].StoredSymbolReference.NameIndex, Function_);
-  end;
-
-  // TODO : _DetermineReferencesToCheck;
 
   // Recursively check all referenced symbols :
   for i := 0 to Length(Referenced) - 1 do
@@ -1254,61 +1366,6 @@ begin
 end; // PrioritizeSymbolScan
 
 procedure TSymbolManager.LookupFunctionsInHits();
-
-(*
-    // Turok - Fixed wrong locations and duplicates :
-    _Test(?, '_D3D__RenderState'));
-    _Test(?, '?CommonSetDebugRegisters@D3D@@YIXXZ'));
-    _Test(?, '_XapiProcessHeap'));
-    _Test($0001171D, 'XapiInitProcess'); // TODO : Use correct pattern-name!
-    _Test($00011A35, '_RaiseException@16');
-    _Test($00011A9D, '_XRegisterThreadNotifyRoutine@8');
-    _Test($001939B0, 'EmuIDirect3DDevice8_SetRenderState_StencilEnable'); // TODO : Use correct pattern-name!
-    _Test($00193A40, 'EmuIDirect3DDevice8_SetRenderState_StencilFail'); // TODO : Use correct pattern-name!
-    _Test($00193AB0, 'EmuIDirect3DDevice8_SetRenderState_YuvEnable'); // TODO : Use correct pattern-name!
-    _Test($00193AE0, 'EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable'); // TODO : Use correct pattern-name!
-    _Test($00193B50, 'EmuIDirect3DDevice8_SetRenderState_StencilCullEnable'); // TODO : Use correct pattern-name!
-    _Test($00193BC0, '_D3DDevice_SetRenderState_RopZCmpAlwaysRead@4'));
-    _Test($00193BE0, '_D3DDevice_SetRenderState_RopZRead@4'));
-    _Test($00193C00, '_D3DDevice_SetRenderState_DoNotCullUncompressed@4'));
-
-    _Test($00194EA0, '_D3DDevice_SetLight@8');
-    _Test($00195080, '_D3DDevice_LightEnable@8');
-    _Test($00195170, '?SetTexture@D3DDevice@@SGJKPAUD3DBaseTexture@@@Z');
-    _Test($001960E0, 'EmuIDirect3DBaseTexture8_GetLevelCount'); // TODO : Use correct pattern-name!
-    _Test($001997F0, '?Get2DSurfaceDesc@PixelJar@D3D@@YGXPAUD3DPixelContainer@@IPAU_D3DSURFACE_DESC@@@Z'); //HLE: 0x001997F0 -> EmuGet2DSurfaceDesc
-    _Test($0019D360, '_D3DDevice_Reset@4'); //HLE: 0x0019D360 -> EmuIDirect3DDevice8_Reset
-    _Test($001B018A, 'CDirectSound_SetRolloffFactor'); // TODO : Use correct pattern-name!
-    _Test($001F35E3, '_USBD_Init@8'); // Cxbx incorrectly calls this XInitDevices!
-
-    // Cxbx meshes :
-    _Test($0001DE60, '_D3DDevice_SetTile@8'); // EmuIDirect3DDevice8_SetTile
-    _Test($00020200, '?SetFence@D3D@@YGKK@Z'); // D3D::SetFence (XREF)
-    _Test($0002CC34, '_XapiProcessHeap');
-
-    // Compiled Xdk samples\Tutorials\Tut01_CreateDevice\Release :
-    _Test($0001F2C0, '?GetSurfaceFormat@PixelJar@D3D@@YGKPAUD3DPixelContainer@@0@Z'); // from EmuIDirect3DDevice8_Clear
-    _Test($00019610, '_D3DDevice_Clear@24'); // EmuIDirect3DDevice8_Clear
-
-    // Psx :
-    _Test($00114A09, '_IDirectSoundBuffer_Play@16');
-    _Test($00115AC2, '_DirectSoundCreate@12');
-
-    // Gamepad
-    _Test($00016FBF, '_XapiInitProcess@0');
-    _Test($00016966, '_SetLastError@4');
-    _Test($000340B3, '_XInputOpen@16');
-
-    _Test($00022020, '_D3DDevice_SetRenderState_StencilEnable@4');
-    _Test($00022150, '_D3DDevice_SetRenderState_OcclusionCullEnable@4');
-    _Test($00022230, '_D3DDevice_SetRenderState_RopZCmpAlwaysRead@4');
-    _Test($00022250, '_D3DDevice_SetRenderState_RopZRead@4');
-    _Test($00022290, '_D3DDevice_SetRenderState_MultiSampleAntiAlias@4');
-    _Test($00022B70, '_D3DDevice_GetDepthStencilSurface@4');
-    _Test($00030E38, '?D3DXVec3LengthSq@@YAMPBUD3DXVECTOR3@@@Z');
-    _Test($00030E80, '_D3DXVec3Normalize@8');
-*)
-
 var
   i: Integer;
   CurrentSymbol: TSymbolInformation;
@@ -1331,6 +1388,8 @@ begin
     LeafNode := PatternTrieReader.GetNode(StoredFunction.PatternLeafNodeOffset);
     // Get the ID from this leaf node :
     LeafID := GetLeafID(LeafNode);
+
+    IsTestCase := False;
 
     // Do the following twice, first for 'known' addresses, then for all others :
     ScanningInKnownAddresses := True;
