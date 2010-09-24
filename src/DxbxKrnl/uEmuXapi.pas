@@ -46,6 +46,7 @@ uses
   uEmu,
   uEmuDInput,
   uEmuFile,
+  uEmuKrnl, // Unimplemented
   uEmuKrnlKe,
   uXBController,
   uXboxLibraryUtils; // PatchPrefix
@@ -1715,13 +1716,18 @@ end;
 
 
 function XTL_EmuXGetGameRegion(): DWord;
-var
-  ulType: ULONG;
-  dwValue: DWORD;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+//var
+//  ulType: ULONG;
+//  dwValue: DWORD;
 begin
+  EmuSwapFS(fsWindows);
+
   if MayLog(lfUnit) then
     LogBegin('EmuXGetGameRegion').
     LogEnd();
+
+  Result := Unimplemented('XGetGameRegion');
 
 (*  Result := NT_SUCCESS(ExQueryNonVolatileSetting(
                        XC_FACTORY_GAME_REGION,
@@ -1730,6 +1736,7 @@ begin
                        sizeof(dwValue),
                        NULL)) ? dwValue : 0; *)
 
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuXGetLaunchInfo

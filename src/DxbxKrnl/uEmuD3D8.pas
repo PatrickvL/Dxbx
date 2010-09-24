@@ -3095,7 +3095,8 @@ begin
   if MayLog(lfUnit) then
     DbgPrintf('EmuD3D8 : EmuD3DDevice_GetOverscanColor');
 
-  DbgPrintf('NOT YET IMPLEMENTED!');
+//  DbgPrintf('NOT YET IMPLEMENTED!');
+  Result := Unimplemented('D3DDevice_GetOverscanColor');
   (*Result := D3DDevice_GetOverscanColor(); *)
 
   EmuSwapFS(fsXbox);
@@ -8994,8 +8995,10 @@ begin
         #13#10');',
            [pThis]);
 
-  //return D3DPalette_GetSize(pThis);
   Unimplemented('XTL_EmuIDirect3DPushBuffer_SetPalette');
+
+  //return D3DPalette_GetSize(pThis);
+  Result := D3DPALETTE_32;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10696,8 +10699,8 @@ function XTL_EmuIDirect3DVolumeTexture_GetVolumeLevel2
   ppVolumeLevel: PPX_D3DVolume
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
-var
-  pVolumeTexture: XTL_PIDirect3DVolumeTexture8;
+//var
+//  pVolumeTexture: XTL_PIDirect3DVolumeTexture8;
 begin
   EmuSwapFS(fsWindows);
 
@@ -10712,15 +10715,17 @@ begin
 
   EmuVerifyResourceIsRegistered(pThis);
 
+(*
   pVolumeTexture := pThis.Emu.VolumeTexture;
 
   EmuWarning('NOT YET IMPLEMENTED');
 
-
-(*  Result := (*IDirect3DVolumeTexture(pVolumeTexture).GetVolumeLevel2(Level, {out}ppVolumeLevel);
+  Result := (*IDirect3DVolumeTexture(pVolumeTexture).GetVolumeLevel2(Level, {out}ppVolumeLevel);
 
   if (FAILED(Result)) then
     EmuWarning('GetVolumeLevel2 Failed!'); *)
+
+  Result := Unimplemented('IDirect3DVolumeTexture_GetVolumeLevel2');
 
   EmuSwapFS(fsXbox);
 end;
@@ -10840,7 +10845,7 @@ function XTL_EmuD3DDevice_CreateSurface
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuD3DDevice_CreateSurface');
+  Result := Unimplemented('XTL_EmuD3DDevice_CreateSurface');
 
   EmuSwapFS(fsXbox);
 end;
@@ -10854,7 +10859,7 @@ function XTL_EmuD3DDevice_CreateSurface2(
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuD3DDevice_CreateSurface2');
+  Result := Pointer(Unimplemented('XTL_EmuD3DDevice_CreateSurface2'));
 
   EmuSwapFS(fsXbox);
 end;

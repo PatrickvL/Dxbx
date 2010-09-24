@@ -87,6 +87,8 @@ const
 type
   TEmuNtObject = class; // forward
 
+{$HINTS OFF} // Prevent [DCC Hint] H2269 Overriding virtual method 'TEmuHandle.Destroy' has lower visibility (protected) than base class 'TObject' (public)
+
   // Wrapper of a handle object
   TEmuHandle = class(TObject)
   protected
@@ -126,6 +128,8 @@ type
     // For other objects (the default implementation), "Self" is returned.
     function NtDuplicateObject(Options: DWORD): TEmuNtObject; virtual;
   end;
+
+{$HINTS ON}
 
 (*
   // Emulated handle to file
