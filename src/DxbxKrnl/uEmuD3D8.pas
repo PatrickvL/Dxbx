@@ -1728,6 +1728,19 @@ begin
   Result := g_bIsBusy; // Dxbx note : We read a boolean that's only true while inside Present()
 end; // XTL_EmuD3DDevice_IsBusy
 
+procedure XTL_EmuD3DDevice_KickPushBuffer();
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuD3D8 :EmuD3DDevice_KickPushBuffer();');
+
+  EmuWarning('NOT YET IMPLEMENTED');
+
+  EmuSwapFS(fsXbox);
+end;
+
 function XTL_EmuD3DDevice_GetCreationParameters(pParameters: PD3DDEVICE_CREATION_PARAMETERS): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -1748,6 +1761,24 @@ begin
   EmuSwapFS(fsXbox);
 end; // XTL_EmuD3DDevice_GetCreationParameters
 
+function XTL_EmuD3DDevice_GetDirect3D
+(
+  ppD3D8: XTL_PLPDIRECT3D8
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_GetDirect3D').
+      _(ppD3D8, 'ppD3D8').
+    LogEnd();
+
+  g_pD3DDevice.GetDirect3D({out}PIDirect3D8(ppD3D8));
+  Result := D3D_OK;
+
+  EmuSwapFS(fsXbox);
+end;
 
 procedure XTL_EmuD3DDevice_GetDepthClipPlanes
 (
@@ -2837,7 +2868,6 @@ begin
   Result := D3D_OK;
 end;
 
-
 function XTL_EmuD3DDevice_Reset
 (
   pPresentationParameters: PX_D3DPRESENT_PARAMETERS
@@ -2854,7 +2884,6 @@ begin
         [pPresentationParameters]);
 
   DumpPresentationParameters(pPresentationParameters);
-
   EmuWarning('Device Reset is being utterly ignored');
 
   EmuSwapFS(fsXbox);
@@ -2874,8 +2903,8 @@ begin
       _(Reset, 'Reset').
     LogEnd();
 
-//  D3DDevice_Resume(Reset);
-  Unimplemented('XTL_EmuD3DDevice_Resume');
+  if Reset = BOOL_TRUE then
+    g_pD3DDevice.Reset(g_EmuCDPD.NativePresentationParameters);
 
   EmuSwapFS(fsXbox);
   Result := D3D_OK;
@@ -3056,6 +3085,20 @@ begin
   EmuSwapFS(fsXbox);
 
   Result := g_pCachedZStencilSurface;
+end;
+
+function XTL_EmuD3DDevice_GetOverscanColor(): D3DCOLOR; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetOverscanColor');
+
+  DbgPrintf('NOT YET IMPLEMENTED!');
+  (*Result := D3DDevice_GetOverscanColor(); *)
+
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuD3DDevice_GetTile
@@ -9043,7 +9086,7 @@ procedure XTL_EmuD3DDevice_SelectVertexShaderDirect
   pVAF: PX_VERTEXATTRIBUTEFORMAT;
   Address: DWORD
 ); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -9157,7 +9200,7 @@ function XTL_EmuD3DDevice_SetVertexShaderInputDirect
   StreamCount: UINT; 
   pStreamInputs: PX_STREAMINPUT
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -9182,7 +9225,7 @@ function XTL_EmuD3DDevice_GetVertexShaderInput
   pStreamCount: PUINT;
   pStreamInputs: PX_STREAMINPUT
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -9208,7 +9251,7 @@ function XTL_EmuD3DDevice_SetVertexShaderInput
   StreamCount: UINT;
   pStreamInputs: PX_STREAMINPUT
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -9232,7 +9275,7 @@ procedure XTL_EmuD3DDevice_RunVertexStateShader
   Address: DWORD;
   {CONST} pData: PFLOAT
 ); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -9254,7 +9297,7 @@ procedure XTL_EmuD3DDevice_LoadVertexShaderProgram
   {CONST} pFunction: PDWORD;
   Address: DWORD
 ); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -9272,6 +9315,7 @@ begin
 end;
 
 function XTL_EmuD3DDevice_Nop(): HRESULT;
+// Branch:DXBX  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -10310,7 +10354,7 @@ function XTL_EmuD3DDevice_SetModelView
   {CONST} pInverseModelView: PD3DMATRIX;
   {CONST} pComposite: PD3DMATRIX
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -10322,7 +10366,7 @@ begin
     LogEnd();
 
   // TODO -oCxbx: Implement
-//  DxbxKrnlCleanup('SetModelView not yet implemented (should be easy fix, tell blueshogun)');
+  EmuWarning('SetModelView not yet implemented (should be easy fix, tell blueshogun)');
 
   EmuSwapFS(fsXbox);
 
@@ -10389,7 +10433,6 @@ begin
       _(pPushBuffer, 'pPushBuffer').
     LogEnd();
 
-  //DxbxKrnlCleanup('BeginPushBuffer is not yet implemented!');
   EmuWarning('BeginPushBuffer is not yet implemented!');
 
   EmuSwapFS(fsXbox);
@@ -11240,11 +11283,11 @@ exports
   XTL_EmuD3DDevice_GetBackBuffer2 name PatchPrefix + 'D3DDevice_GetBackBuffer2@4',
   XTL_EmuD3DDevice_GetBackMaterial,
   XTL_EmuD3DDevice_GetCreationParameters,
-//  XTL_EmuD3DDevice_GetDirect3D, // Dxbx: not implemented yet
+  XTL_EmuD3DDevice_GetDirect3D,
   XTL_EmuD3DDevice_GetDepthClipPlanes,
   XTL_EmuD3DDevice_GetDepthStencilSurface,
   XTL_EmuD3DDevice_GetDepthStencilSurface2,
-// XTL_EmuD3DDevice_GetOverscanColor, // Dxbx: not implemented yet
+  XTL_EmuD3DDevice_GetOverscanColor,
 // XTL_EmuD3DDevice_GetPersistedSurface2, // Dxbx: not implemented yet
   XTL_EmuD3DDevice_GetDeviceCaps,
   XTL_EmuD3DDevice_GetDisplayFieldStatus,
@@ -11284,9 +11327,9 @@ exports
   XTL_EmuD3DDevice_GetViewportOffsetAndScale,
   XTL_EmuD3DDevice_GetVisibilityTestResult,
   XTL_EmuD3DDevice_InsertCallback,
-  XTL_EmuD3DDevice_InsertFence, // : DXBX for better logging.
+  XTL_EmuD3DDevice_InsertFence,
   XTL_EmuD3DDevice_IsBusy,
-//  XTL_EmuD3DDevice_KickPushBuffer, // Dxbx: not yet implemented yet
+  XTL_EmuD3DDevice_KickPushBuffer,
   XTL_EmuD3DDevice_IsFencePending,
   XTL_EmuD3DDevice_LightEnable,
   XTL_EmuD3DDevice_LoadVertexShader,
@@ -11298,10 +11341,10 @@ exports
   XTL_EmuD3DDevice_PrimeVertexCache,
   XTL_EmuD3DDevice_Release,
   XTL_EmuD3DDevice_Reset,
-(*  XTL_EmuD3DDevice_Resume,*) // TODO -oDXBX: NOT YET IMPLEMENTED YET
+  XTL_EmuD3DDevice_Resume,
   XTL_EmuD3DDevice_RunPushBuffer,
   XTL_EmuD3DDevice_RunVertexStateShader,
-    XTL_EmuD3DDevice_SelectVertexShader,
+  XTL_EmuD3DDevice_SelectVertexShader,
   XTL_EmuD3DDevice_SelectVertexShaderDirect,
   XTL_EmuD3DDevice_SetBackBufferScale,
   XTL_EmuD3DDevice_SetBackMaterial, // ??
