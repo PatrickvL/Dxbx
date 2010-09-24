@@ -519,6 +519,85 @@ type X_D3DVERTEXBLENDFLAGS= (
     X_D3DVBF_FORCE_DWORD       = $7fffffff
 );
 
+
+type _D3DCOPYRECTCOLORFORMAT = (
+    D3DCOPYRECT_COLOR_FORMAT_DEFAULT                 = 0,
+    D3DCOPYRECT_COLOR_FORMAT_Y8                      = 1,
+    D3DCOPYRECT_COLOR_FORMAT_X1R5G5B5_Z1R5G5B5       = 2,
+    D3DCOPYRECT_COLOR_FORMAT_X1R5G5B5_O1R5G5B5       = 3,
+    D3DCOPYRECT_COLOR_FORMAT_R5G6B5                  = 4,
+    D3DCOPYRECT_COLOR_FORMAT_Y16                     = 5,
+    D3DCOPYRECT_COLOR_FORMAT_X8R8G8B8_Z8R8G8B8       = 6,
+    D3DCOPYRECT_COLOR_FORMAT_X8R8G8B8_O8R8G8B8       = 7,
+    D3DCOPYRECT_COLOR_FORMAT_X1A7R8G8B8_Z1A7R8G8B8   = 8,
+    D3DCOPYRECT_COLOR_FORMAT_X1A7R8G8B8_O1A7R8G8B8   = 9,
+    D3DCOPYRECT_COLOR_FORMAT_A8R8G8B8                = 10,
+    D3DCOPYRECT_COLOR_FORMAT_Y32                     = 11,
+    D3DCOPYRECT_COLOR_FORMAT_FORCE_DWORD             = $7fffffff //* force 32-bit size enum */
+);
+D3DCOPYRECTCOLORFORMAT = _D3DCOPYRECTCOLORFORMAT;
+PD3DCOPYRECTCOLORFORMAT = ^D3DCOPYRECTCOLORFORMAT;
+
+type _D3DCOPYRECTOPERATION =
+(
+    D3DCOPYRECT_SRCCOPY_AND         = 0,
+    D3DCOPYRECT_ROP_AND             = 1,
+    D3DCOPYRECT_BLEND_AND           = 2,
+    D3DCOPYRECT_SRCCOPY             = 3,
+    D3DCOPYRECT_SRCCOPY_PREMULT     = 4,
+    D3DCOPYRECT_BLEND_PREMULT       = 5,
+    D3DCOPYRECT_FORCE_DWORD         = $7fffffff // force 32-bit size enum */
+);
+D3DCOPYRECTOPERATION = _D3DCOPYRECTOPERATION;
+PD3DCOPYRECTOPERATION = ^D3DCOPYRECTOPERATION;
+
+type _D3DCOPYRECTSTATE = record
+    ColorFormat: D3DCOPYRECTCOLORFORMAT;
+    Operation: D3DCOPYRECTOPERATION;
+
+    ColorKeyEnable: BOOL;
+    ColorKeyValue: DWORD;
+
+    // D3DCOPYRECT_BLEND_AND alpha value
+    // The VALUE_FRACTION bits (30:21) contain the 10 bit unsigned fraction of the alpha value.
+    // The VALUE bits (31:31) contain the 1 bit signed integer of the alpha value.
+    BlendAlpha: DWORD;
+
+    // D3DCOPYRECT_*_PREMULT alpha value
+    // Contains an alpha value for all four channels.
+    PremultAlpha: DWORD;
+
+    // Clipping Rect
+    ClippingPoint: DWORD;    // y_x S16_S16
+    ClippingSize: DWORD ;     // height_width U16_U16
+
+  end;
+  D3DCOPYRECTSTATE = _D3DCOPYRECTSTATE;
+  PD3DCOPYRECTSTATE = ^D3DCOPYRECTSTATE;
+
+
+type _D3DCOPYRECTROPSTATE = record            // Xbox extension
+    Rop: DWORD;              // Ternary raster operation.
+                            //   DSTINVERT:0x55, SRCCOPY:0xCC,
+                            //   SRCPAINT:0xEE, SRCINVERT:0x66,
+                            //   ...
+
+    Shape: DWORD;            // 0:8X_8Y, 1:64X_1Y, 2:1X_64Y
+    PatternSelect: DWORD;    // 1:monochrome, 2:color
+
+    MonoColor0: DWORD;       // Color to use when bit is "0"
+    MonoColor1: DWORD;       // Color to use when bit is "1"
+
+    MonoPattern0: DWORD;     // 8x8 = 64 bit pattern
+    MonoPattern1: DWORD;     //
+
+    ColorPattern: PDWORD;       // Color Pattern used if PatternSelect == color
+                                // 32-bit: Array of 64 DWORDS
+                                // 16-bit: Array of 32 DWORDS
+  end;
+  D3DCOPYRECTROPSTATE  =_D3DCOPYRECTROPSTATE;
+  PD3DCOPYRECTROPSTATE = ^D3DCOPYRECTROPSTATE;
+
 type _X_D3DDISPLAYMODE = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Width: UINT;
