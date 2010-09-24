@@ -726,7 +726,9 @@ begin
     if  (Section.dwSizeofRaw > 0)
     // .. names not starting with a '$' :
     and (SectionName <> '')
-    and (SectionName[1] <> '$') then
+    and (SectionName[1] <> '$')
+    // .. and not in 'BINK*' sections :
+    and (not SameText('BINK', Copy(SectionName, 1, 4))) then
     begin
       ScanPtr := UIntPtr(Section.dwVirtualAddr);
       ScanEnd := ScanPtr + Section.dwSizeofRaw; // Don't scan outside of raw size!
@@ -1007,7 +1009,7 @@ begin
 
   // The only thing we need to remember, is the symbol itself :
   MyIntermediateSymbolRegistrations[FIntermediateSymbolRegistrationsCount-1] := CurrentSymbol;
-end;
+end; // AddIntermediateSymbolRegistration
 
 procedure TSymbolManager.ConfirmIntermediateSymbolRegistrations(const CurrentSymbol: TSymbolInformation);
 var
@@ -1096,6 +1098,7 @@ const
   CR_CRC_FAILED = -3;
   CR_REFERENCE_OUT_OF_RANGE = -4;
   CR_REFERENCE_INCONSISTENCY = -5;
+  CR_WRONG_SECTION = -6;
 
 function TSymbolManager.CheckFunctionAtAddressAndRegister(const CurrentSymbol: TSymbolInformation; const aAddress: PByte; const Prefix: string = ''): Integer;
 
@@ -1105,6 +1108,11 @@ function TSymbolManager.CheckFunctionAtAddressAndRegister(const CurrentSymbol: T
       Result := (aStoredLibraryFunction.CRCValue = CalcCRC16(aAddress, aStoredLibraryFunction.CRCLength))
     else
       Result := True;
+  end;
+
+  function _IsAddressInsideLibrary(const aAddress: PByte; const aLibraryNameIndex: TStringTableIndex): Boolean;
+  begin
+    Result := True; // TODO : Implement this to prevent scanning functions in other sections than their own (and maybe .text?)
   end;
 
   function _GetVersionedStoredFunction(const aAvailableInVersions: TLibraryVersionFlags;
@@ -1191,6 +1199,13 @@ begin
     // To facilitate recursive references checks (on a higher level), pretend the data-symbol is detected at this address :
     AddIntermediateSymbolRegistration(CurrentSymbol, aAddress);
     Result := CR_DATA_OKAY;
+    Exit;
+  end;
+
+  if not _IsAddressInsideLibrary(aAddress, CurrentSymbol.StoredLibraryFunction.LibraryNameIndex) then
+  begin
+    CurrentSymbol.FailReason := 'symbol cannot occur at another library address';
+    Result := CR_WRONG_SECTION;
     Exit;
   end;
 
@@ -1478,6 +1493,32 @@ begin
 
 end; // LookupFunctionsInHits
 
+procedure TSymbolManager.CleanupTemporaryScanningData;
+
+  procedure _RecursiveDisposeHits(const aHit: PPatternHitResult);
+  begin
+    if Assigned(aHit) then
+    begin
+      _RecursiveDisposeHits(aHit.NextHit);
+      Dispose(aHit);
+    end;
+  end;
+
+var
+  i: Integer;
+begin
+  SetLength(MyIntermediateSymbolRegistrations, 0);
+
+  for i := 0 to FNrDetectedLeafs - 1 do
+    _RecursiveDisposeHits(MyDetectedLeafs[i].FirstHit);
+
+  SetLength(MyDetectedLeafs, 0);
+  FNrDetectedLeafs := 0;
+
+  MyAddressesIdentified.Size := 0;
+  MyAddressesInKnownSections.Size := 0;
+end; // CleanupTemporaryScanningData
+
 procedure TSymbolManager.PutSymbolsInFinalList;
 
   function _Compare_Symbol_Address(Item1, Item2: Pointer): Integer;
@@ -1541,32 +1582,6 @@ begin
        CurrentSymbol.Name]);
   end; // for Symbols
 end; // PrintSymbolList
-
-procedure TSymbolManager.CleanupTemporaryScanningData;
-
-  procedure _RecursiveDisposeHits(const aHit: PPatternHitResult);
-  begin
-    if Assigned(aHit) then
-    begin
-      _RecursiveDisposeHits(aHit.NextHit);
-      Dispose(aHit);
-    end;
-  end;
-
-var
-  i: Integer;
-begin
-  SetLength(MyIntermediateSymbolRegistrations, 0);
-
-  for i := 0 to FNrDetectedLeafs - 1 do
-    _RecursiveDisposeHits(MyDetectedLeafs[i].FirstHit);
-
-  SetLength(MyDetectedLeafs, 0);
-  FNrDetectedLeafs := 0;
-
-  MyAddressesIdentified.Size := 0;
-  MyAddressesInKnownSections.Size := 0;
-end; // CleanupTemporaryScanningData
 
 ///
 /// Support code :
@@ -1899,12 +1914,12 @@ begin
         // Detect functions from those leafs, expanding recursively to all reachable symbols :
         LookupFunctionsInHits();
 
+        CleanupTemporaryScanningData();
+
         // Populate the final symbol list :
         PutSymbolsInFinalList();
 
         PrintSymbolList();
-
-        CleanupTemporaryScanningData();
       end;
 
       // Lookup a few symbols for global access during emulation :

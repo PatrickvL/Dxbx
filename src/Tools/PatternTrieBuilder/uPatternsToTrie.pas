@@ -800,6 +800,7 @@ begin // Save
     begin
       CurrentFunction := PVersionedXboxLibraryFunction(AllFunctions.Objects[i]);
       CurrentFunction.Stored.FirstSymbolReference := StoredSignatureTrieHeader.ReferencesTable.NrOfReferences;
+      CurrentFunction.Stored.LibraryNameIndex := CurrentFunction.VersionedXboxLibrary.LibNameIndex;
       for j := 0 to Length(CurrentFunction.SymbolReferences) - 1 do
       begin
         StoredSymbolReference.Offset := CurrentFunction.SymbolReferences[j].Offset;
