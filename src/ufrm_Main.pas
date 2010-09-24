@@ -217,7 +217,9 @@ type
 
 var
   KernelDebugMode: TDebugMode = dmFile;
-  KernelDebugFileName: string = '';
+
+  KernelDebugFilePath: string = '';
+  KernelDebugFile: string = '';
 
   frm_Main: Tfrm_Main;
 
@@ -658,7 +660,10 @@ begin
   // even function as a complete database of everything related to
   // Xbox1 emulation!
   if FileExists(aXbeInfo.FileName) then
-    LoadXbe(aXbeInfo.FileName)
+  begin
+    LoadXbe(aXbeInfo.FileName);
+    m_Xbe.DumpInformation(KernelDebugFilePath + '\' +  PChar(m_szAsciiTitle) + ' ' + DXBX_KERNEL_DEBUG_FILENAME)
+  end
   else
   begin
     m_Xbe := nil;
@@ -1282,17 +1287,17 @@ begin
   end
   else
   begin
-    if KernelDebugFileName <> '' then
-      SaveDialog.FileName := KernelDebugFileName
-    else
-      SaveDialog.FileName := DXBX_KERNEL_DEBUG_FILENAME;
+    if KernelDebugFilePath <> '' then
+      SaveDialog.InitialDir := KernelDebugFilePath;
+
+    SaveDialog.FileName := PChar(m_szAsciiTitle) + ' ' + DXBX_KERNEL_DEBUG_FILENAME;
 
     SaveDialog.Filter := DIALOG_FILTER_TEXT;
     if SaveDialog.Execute then
     begin
       //CloseLogs;
       KernelDebugMode := dmFile;
-      KernelDebugFileName := SaveDialog.FileName;
+      KernelDebugFilePath := ExtractFilePath( SaveDialog.FileName );
       //CreateLogs(KernelDebugMode, KernelDebugFileName);
       AdjustMenu;
     end;
@@ -1401,7 +1406,7 @@ begin
     DebugFileName := IniFile.ReadString('Settings', 'DxbxDebugFileName', '');
 
     KernelDebugMode := TDebugMode(IniFile.ReadInteger('Settings', 'KrnlDebug', Ord(dmNone)));
-    KernelDebugFileName := IniFile.ReadString('Settings', 'KrnlDebugFileName', '');
+    KernelDebugFilePath := IniFile.ReadString('Settings', 'KrnlDebugFilePath', '');
 
     // Read recent XBE files
     with TStringList.Create do
@@ -1443,7 +1448,7 @@ begin
     IniFile.WriteString('Settings', 'DxbxDebugFileName', DebugFileName);
 
     IniFile.WriteInteger('Settings', 'KrnlDebug', Ord(KernelDebugMode));
-    IniFile.WriteString('Settings', 'KrnlDebugFileName', KernelDebugFileName);
+    IniFile.WriteString('Settings', 'KrnlDebugFilePath', KernelDebugFilePath);
   finally
     FreeAndNil(IniFile);
   end;
@@ -1499,7 +1504,7 @@ begin
     {XbePath=}AnsiQuotedStr(m_Xbe.XbePath, '"') + ' ' +
     {WindowHandle=}IntToStr(GetEmuWindowHandle) + ' ' +
     {DebugMode=}IntToStr(Ord(KernelDebugMode)) + ' ' +
-    {DebugFileName=}AnsiQuotedStr(KernelDebugFileName, '"');
+    {DebugFileName=}AnsiQuotedStr( KernelDebugFilePath + '\' + PChar(m_szAsciiTitle) + ' ' + DXBX_KERNEL_DEBUG_FILENAME, '"');
 
   // Dxbx uses itself as Xbe Launcher; In this new process, the '/load'-argument
   // transfers control to DxbxMain() in our emulation dll, which start emulation :
