@@ -4878,6 +4878,7 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuCDirectSoundStream_GetInfo name PatchPrefix + 'DirectSound.CDirectSoundStream.GetInfo',
   XTL_EmuCDirectSoundStream_GetStatus name PatchPrefix + 'DirectSound.CDirectSoundStream.GetStatus',
   XTL_EmuCDirectSoundStream_GetVoiceProperties name PatchPrefix + 'DirectSound.CDirectSoundStream.GetVoiceProperties',
+//  XTL_EmuCDirectSoundStream_Initialize  name PatchPrefix + 'DirectSound.CDirectSoundStream.Initialize', // Not yet implemented
   XTL_EmuCDirectSoundStream_Pause name PatchPrefix + 'DirectSound.CDirectSoundStream.Pause',
   XTL_EmuCDirectSoundStream_PauseEx name PatchPrefix + 'DirectSound.CDirectSoundStream.PauseEx',
   XTL_EmuCDirectSoundStream_Process name PatchPrefix + 'DirectSound.CDirectSoundStream.Process',

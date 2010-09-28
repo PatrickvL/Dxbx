@@ -7126,6 +7126,26 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+function XTL_EmuD3DDevice_SetTextureState_ParameterCheck
+(
+  State: D3DRENDERSTATETYPE;
+  Value: DWORD
+): HResult; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_SetTextureState_ParameterCheck').
+      _(Integer(Ord(State)), 'State').
+      _(Value, 'Value').
+    LogEnd();
+
+  EmuWarning('SetTextureState_ParameterCheck is not supported!');
+
+  EmuSwapFS(fsXbox);
+end;
+
 procedure XTL_EmuD3DDevice_SetTextureState_BumpEnv
 (
     Stage: DWORD;
@@ -10874,7 +10894,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-(*function XTL_EmuIDirect3DSurface_GetContainer2
+function XTL_EmuIDirect3DSurface_GetContainer2
 (
   pThis: PX_D3DSurface;
   ppBaseTexture: PPX_D3DBaseTexture
@@ -10899,7 +10919,7 @@ begin
   Result := Unimplemented('XTL_EmuD3DDevice_CreateSurface2');
 
   EmuSwapFS(fsXbox);
-end;*)
+end;
 
 function XTL_EmuIDirect3DPushBuffer_SetModelView
 (
@@ -10946,7 +10966,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-(*function XTL_EmuIDirect3DPushBuffer_SetVertexShaderInputDirect
+function XTL_EmuIDirect3DPushBuffer_SetVertexShaderInputDirect
 (
   pPushBuffer: PX_D3DPushBuffer;
   Offset: DWORD;
@@ -10962,7 +10982,7 @@ begin
   Unimplemented('XTL_EmuIDirect3DPushBuffer_SetVertexShaderInputDirect');
 
   EmuSwapFS(fsXbox);
-end;         *)
+end;
 
 function XTL_EmuIDirect3DPushBuffer_SetPalette
 (
@@ -11227,10 +11247,17 @@ begin
 end;
 
 exports
-  XTL_EmuGet2DSurfaceDesc,
-  XTL_EmuGet2DSurfaceDescD, // TODO -oDXBX: Fix wrong prefix!
-
   XTL_EmuIDevice3D_KickOff name PatchPrefix + '?KickOff@CDevice@D3D@@QAEXXZ',
+  // XTL_EmuIDevice3D_UninitializePushBuffer name PatchPrefix + '?UninitializePushBuffer@CDevice@D3D@@QAEXXZ', // Not yet implemented
+  // XTL_EmuIDevice3D_UnInit name PatchPrefix + '?UnInit@CDevice@D3D@@QAEXXZ', // Not yet implemented
+  // XTL_EmuIDevice3D_LazySetStateUP name PatchPrefix + '?LazySetStateUP@CDevice@D3D@@QAEXXZ', // Not yet implemented
+  // XTL_EmuIDevice3D_LazySetStateVB name PatchPrefix + '?LazySetStateVB@CDevice@D3D@@QAEXK@Z', // Not yet implemented
+  // XTL_EmuIDevice3D_ReentrantKickOffAndWait name PatchPrefix + '?ReentrantKickOffAndWait@CDevice@D3D@@QAEXXZ', // Not yet implemented
+  // XTL_EmuIDevice3D_FreeFrameBuffers name PatchPrefix + '?FreeFrameBuffers@CDevice@D3D@@QAEXXZ', .. Not yet implemented
+  // XTL_EmuIDevice3D_GpuGet name PatchPrefix + '?GpuGet@CDevice@D3D@@QAEPCKXZ', // Not yet implemented
+  // XTL_EmuIDevice3D_InitializePushBuffer name PatchPrefix + '?InitializePushBuffer@CDevice@D3D@@QAEJXZ', Not yet implemented
+  // XTL_EmuIDevice3D_UninitializePushBuffer name PatchPrefix + '?UninitializePushBuffer@CDevice@D3D@@QAEXXZ', Not yet implemented
+  // XTL_EmuIDevice3D_UnInit name PatchPrefix + '?UnInit@CDevice@D3D@@QAEXXZ', // Not yet implemented
 
   // XTL_EmuIDirect3D_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8', // No need to patch, as our kernel implements MmAllocateContiguousMemory(Ex) already
   XTL_EmuIDirect3D_CheckDeviceFormat name PatchPrefix + 'Direct3D_CheckDeviceFormat',
@@ -11365,6 +11392,7 @@ exports
   XTL_EmuD3DDevice_Resume,
   XTL_EmuD3DDevice_RunPushBuffer,
   XTL_EmuD3DDevice_RunVertexStateShader,
+//   XTL_EMUD3DDevice_SetSceneAmbientAndMaterialEmission, // Not yet implemented
   XTL_EmuD3DDevice_SelectVertexShader,
   XTL_EmuD3DDevice_SelectVertexShaderDirect,
   XTL_EmuD3DDevice_SetBackBufferScale,
@@ -11373,6 +11401,7 @@ exports
   XTL_EmuD3DDevice_SetGammaRamp,
   XTL_EmuD3DDevice_SetIndices,
   XTL_EmuD3DDevice_SetLight,
+//  XTL_EMUD3Device_SetLightColors, // Not yet implemented
   XTL_EmuD3DDevice_SetMaterial,
   XTL_EmuD3DDevice_SetModelView, // ??
   XTL_EmuD3DDevice_SetOverscanColor,
@@ -11419,6 +11448,7 @@ exports
   XTL_EmuD3DDevice_SetScreenSpaceOffset,
   XTL_EmuD3DDevice_SetShaderConstantMode,
   XTL_EmuD3DDevice_SetSoftDisplayFilter,
+//  XTL_EmuD3DDevice_SetSpecularParameters, // Not yet implemented
   XTL_EmuD3DDevice_SetStateUP,
   XTL_EmuD3DDevice_SetStateVB,
   XTL_EmuD3DDevice_SetStipple,
@@ -11429,6 +11459,7 @@ exports
   XTL_EmuD3DDevice_SetTextureState_BorderColor,
   XTL_EmuD3DDevice_SetTextureState_BumpEnv,
   XTL_EmuD3DDevice_SetTextureState_ColorKeyColor,
+  XTL_EmuD3DDevice_SetTextureState_ParameterCheck, // Not yet implemented
   XTL_EmuD3DDevice_SetTextureState_TexCoordIndex,
   XTL_EmuD3DDevice_SetTileNoWait name PatchPrefix + '?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z',
   XTL_EmuD3DDevice_SetTileNoWait name PatchPrefix + 'D3DDevice_SetTile', // Dxbx note : SetTileNoWait is applied to SetTile in Cxbx 4361 OOPVA's!
@@ -11450,8 +11481,38 @@ exports
   XTL_EmuD3DDevice_SetVertexShaderInputDirect,
   XTL_EmuD3DDevice_SetVerticalBlankCallback,
   XTL_EmuD3DDevice_SetViewport,
+// XTL_EmuD3DDevice_ShadowVertexShaderState, // Not yet implemented
   XTL_EmuD3DDevice_Suspend,
   XTL_EmuD3DDevice_Swap,
+// XTL_EmuD3DDevice_SwapCopy, // Not yet implemented
+// XTL_EmuD3DDevice_SwapCopyBlt, // Not yet implemented
+// XTL_EmuD3DDevice_SwapFinish, // Not yet implemented
+// XTL_EmuD3DDevice_SwapFirstFlip, // Not yet implemented
+// XTL_EmuD3DDevice_SwapFlip, // Not yet implemented
+
+// XTL_EmuD3DDevice_SwapRestoreState // Not yet implemented
+// XTL_EmuD3DDevice_SwapRestoreSurfaces // Not yet implemented
+// XTL_EmuD3DDevice_SwapSaveState // Not yet implemented
+// XTL_EmuD3DDevice_SwapSaveSurfaces // Not yet implemented
+// XTL_EmuD3DDevice_SwapSetState // Not yet implemented
+// XTL_EmuD3DDevice_UpdateProjectionViewportTransform // Not yet implemented
+// XTL_EmuD3DDevice_VideoBitsPerPixelOfD3DFORMAT // Not yet implemented
+// XTL_EmuD3DDevice_IsCompressedD3DFORMAT // Not yet implemented
+// XTL_EmuD3DDevice_IsResourceSetInDevice // Not yet implemented
+// XTL_EmuD3DDevice_JBInvSqrt // Not yet implemented
+// XTL_EmuD3DDevice_Log2 // Not yet implemented
+// XTL_EmuD3DDevice_Log // Not yet implemented
+// XTL_EmuD3DDevice_MakeRequestedSpace // Not yet implemented
+// XTL_EmuD3DDevice_MapToLinearD3DFORMAT // Not yet implemented
+// XTL_EmuD3DDevice_MatrixProduct4x4 // Not yet implemented
+// XTL_EmuD3DDevice_NormalizeVector3 // Not yet implemented
+// XTL_EmuD3DDevice_ParseDeclarationConstants // Not yet implemented
+// XTL_EmuD3DDevice_ParseDeclarationStream // Not yet implemented
+// XTL_EmuD3DDevice_ParseProgram // Not yet implemented
+// XTL_EmuD3DDevice_RecordStateBlock // Not yet implemented
+// XTL_EmuD3DDevice_RestoreVertexShaders // Not yet implemented
+// XTL_EmuD3DDevice_FindFence // Not yet implemented
+// XTL_EmuD3DDevice_GetColorMaterial // Not yet implemented
   XTL_EmuD3DDevice_SwitchTexture,
   XTL_EmuD3DDevice_Unknown1 name PatchPrefix + 'D3DDevice_Unknown', // TODO -oDXBX: Fix wrong prefix!
   XTL_EmuD3DDevice_UpdateOverlay,
@@ -11472,7 +11533,7 @@ exports
   XTL_EmuD3DResource_SetPrivateData,
 
   XTL_EmuIDirect3DSurface_GetDesc name PatchPrefix + 'D3DSurface_GetDesc',
-(*  XTL_EmuIDirect3DSurface_GetContainer2 name PatchPrefix + 'D3DSurface_GetContainer2',*)
+  XTL_EmuIDirect3DSurface_GetContainer2 name PatchPrefix + 'D3DSurface_GetContainer2',
   XTL_EmuIDirect3DSurface_LockRect name PatchPrefix + 'D3DSurface_LockRect@16',
 
   XTL_EmuIDirect3DCubeTexture_GetLevelDesc name PatchPrefix + 'D3DCubeTexture_GetLevelDesc',
@@ -11487,7 +11548,7 @@ exports
 
   XTL_EmuIDirect3DPushBuffer_SetModelView name PatchPrefix + 'D3DPushBuffer_SetModelView',
   XTL_EmuIDirect3DPushBuffer_SetVertexBlendModelView name PatchPrefix + 'D3DPushBuffer_SetVertexBlendModelView',
-(*  XTL_EmuIDirect3DPushBuffer_SetVertexShaderInputDirect name PatchPrefix + 'D3DPushBuffer_SetVertexShaderInputDirect', *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
+  XTL_EmuIDirect3DPushBuffer_SetVertexShaderInputDirect name PatchPrefix + 'D3DPushBuffer_SetVertexShaderInputDirect',
   XTL_EmuIDirect3DPushBuffer_SetPalette name PatchPrefix + 'D3DPushBuffer_SetPalette',
   XTL_EmuIDirect3DPushBuffer_SetVertexShaderConstant name PatchPrefix + 'D3DPushBuffer_SetVertexShaderConstant',
   XTL_EmuIDirect3DPushBuffer_SetRenderState name PatchPrefix + 'D3DPushBuffer_SetRenderState',
@@ -11508,7 +11569,17 @@ exports
   XTL_EmuIDirect3DVolumeTexture_GetVolumeLevel2 name PatchPrefix + 'D3DVolumeTexture_GetVolumeLevel2',
   XTL_EmuIDirect3DVolumeTexture_LockBox name PatchPrefix + 'D3DVolumeTexture_LockBox',
 
-  XTL_EmuLock2DSurface name PatchPrefix + 'Lock2DSurface';
+
+  XTL_EmuLock2DSurface name PatchPrefix + 'Lock2DSurface',
+  XTL_EmuGet2DSurfaceDesc,
+  XTL_EmuGet2DSurfaceDescD; // TODO -oDXBX: Fix wrong prefix!
+  // XTL_EmuFindSurfaceWithinTexture name PatchPrefix + 'FindSurfaceWithinTexture'; // Not yet implemented
+  // XTL_EmuGetDepthBufferScale name PatchPrefix + 'GetDepthBufferScale', // Not yet implemented
+  // XTL_EmuGetPitch name PatchPrefix + 'GetPitch', // Not yet implemented
+  // XTL_EmuGetSize name PatchPrefix + 'GetSize', // Not yet implemented
+  // XTL_EmuGetSlice name PathcPrefix + 'GetSlice', // Not yet implemented
+  // XTL_EmuGetSurfaceFormat name PatchPrefix + 'GetSurfaceFormat', // Not yet implemented
+  // XTL_EmuGetEncodeFormat name PatchPrefix + 'EncodeFormat', // Not yet implemented
 
 //  XTL_EmuXMETAL_StartPush name PatchPrefix + 'XMETAL_StartPush';
 
