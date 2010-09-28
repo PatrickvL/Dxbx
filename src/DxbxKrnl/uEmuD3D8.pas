@@ -2252,12 +2252,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetGammaRamp' +
-        #13#10'(' +
-        #13#10'   dwFlags                   : 0x%.08X' +
-        #13#10'   pRamp                     : 0x%.08X' +
-        #13#10');',
-        [dwFlags, pRamp]);
+    LogBegin('EmuD3DDevice_SetGammaRamp').
+      _(dwFlags, 'dwFlags').
+      _(pRamp, 'pRamp').
+    LogEnd();
 
   // remove D3DSGR_IMMEDIATE
   dwPCFlags := dwFlags and (not $00000002);
@@ -2323,11 +2321,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_CaptureStateBlock' +
-        #13#10'(' +
-        #13#10'   Token                     : 0x%.08X' +
-        #13#10');',
-        [Token]);
+    LogBegin('EmuD3DDevice_CaptureStateBlock').
+      _(Token, 'Token').
+    LogEnd();
 
 {$IFDEF DXBX_USE_D3D9}
   Result := IDirect3DStateBlock9(Token).Capture();
@@ -2344,11 +2340,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_ApplyStateBlock' +
-        #13#10'(' +
-        #13#10'   Token                     : 0x%.08X' +
-        #13#10');',
-       [Token]);
+    LogBegin('EmuD3DDevice_ApplyStateBlock').
+      _(Token, 'Token').
+    LogEnd();
 
 {$IFDEF DXBX_USE_D3D9}
   Result := IDirect3DStateBlock9(Token).Apply();
@@ -2365,11 +2359,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_EndStateBlock' +
-        #13#10'(' +
-        #13#10'   pToken                    : 0x%.08X' +
-        #13#10');',
-        [pToken]);
+    LogBegin('EmuD3DDevice_EndStateBlock').
+      _(pToken, 'pToken').
+    LogEnd();
 
 {$IFDEF DXBX_USE_D3D9}
   Result := g_pD3DDevice.EndStateBlock(PIDirect3DStateBlock(pToken));
@@ -2396,16 +2388,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_CopyRects' +
-        #13#10'(' +
-        #13#10'   pSourceSurface            : 0x%.08X' +
-        #13#10'   pSourceRectsArray         : 0x%.08X' +
-        #13#10'   cRects                    : 0x%.08X' +
-        #13#10'   pDestinationSurface       : 0x%.08X' +
-        #13#10'   pDestPointsArray          : 0x%.08X' +
-        #13#10');',
-        [pSourceSurface, pSourceRectsArray, cRects,
-        pDestinationSurface, pDestPointsArray]);
+    LogBegin('EmuD3DDevice_CopyRects').
+      _(pSourceSurface, 'pSourceSurface').
+      _(pSourceRectsArray, 'pSourceRectsArray').
+      _(cRects, 'cRects').
+      _(pDestinationSurface, 'pDestinationSurface').
+      _(pDestPointsArray, 'pDestPointsArray').
+    LogEnd();
 
   // Dxbx addition : This is safer than a hardcoded call to UnlockRect like Cxbx does :
   DxbxUnlockD3DResource(pSourceSurface); // Dxbx addition
@@ -2455,14 +2444,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_CreateImageSurface' +
-        #13#10'(' +
-        #13#10'   Width                     : 0x%.08X' +
-        #13#10'   Height                    : 0x%.08X' +
-        #13#10'   Format                    : 0x%.08X' +
-        #13#10'   ppBackBuffer              : 0x%.08X' +
-        #13#10');',
-        [Width, Height, Ord(Format), ppBackBuffer]);
+    LogBegin('EmuD3DDevice_CreateImageSurface').
+      _(Width, 'Width').
+      _(Height, 'Height').
+      _(Ord(Format), 'Format').
+      _(ppBackBuffer, 'ppBackBuffer').
+    LogEnd();
 
   New({var PX_D3DSurface}ppBackBuffer^);
 
@@ -2513,11 +2500,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetGammaRamp' +
-        #13#10'(' +
-        #13#10'   pRamp                     : 0x%.08X' +
-        #13#10');',
-        [pRamp]);
+    LogBegin('EmuD3DDevice_GetGammaRamp').
+      _(pRamp, 'pRamp').
+    LogEnd();
 
   pGammaRamp := PD3DGAMMARAMP(malloc(sizeof(D3DGAMMARAMP)));
 
@@ -2547,12 +2532,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetBackBuffer2' +
-        #13#10'(' +
-        #13#10'   BackBuffer                : 0x%.08X' +
-        #13#10');',
-        [BackBuffer]);
-
+    LogBegin('EmuD3DDevice_GetBackBuffer2').
+      _(BackBuffer, 'BackBuffer').
+    LogEnd();
 
 (* unsafe, somehow  -- MARKED OUT BY CXBX --
     HRESULT hRet := D3D_OK;
@@ -2621,13 +2603,13 @@ begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetBackBuffer >>' +
-        #13#10'(' +
-        #13#10'   BackBuffer                : 0x%.08X' +
-        #13#10'   Type                      : 0x%.08X' +
-        #13#10'   ppBackBuffer              : 0x%.08X' +
-        #13#10');',
-        [BackBuffer, Ord(Type_), ppBackBuffer]);
+
+    LogBegin('EmuD3DDevice_GetBackBuffer >>').
+      _(BackBuffer, 'BackBuffer').
+      _(Ord(Type_), 'Type').
+      _(ppBackBuffer, 'ppBackBuffer').
+    LogEnd();
+
     EmuSwapFS(fsXbox);
   end;
 
@@ -2768,11 +2750,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetViewport' +
-        #13#10'(' +
-        #13#10'   pViewport                 : 0x%.08X' +
-        #13#10');',
-        [pViewport]);
+    LogBegin('EmuD3DDevice_GetViewport').
+      _(pViewport, 'pViewport').
+    LogEnd();
 
   Result := g_pD3DDevice.GetViewport({out}pViewport^);
 
@@ -2802,12 +2782,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetViewportOffsetAndScale' +
-        #13#10'(' +
-        #13#10'   pOffset                   : 0x%.08X' +
-        #13#10'   pScale                    : 0x%.08X' +
-        #13#10');',
-        [pOffset, pScale]);
+    LogBegin('EmuD3DDevice_GetViewportOffsetAndScale').
+      _(pOffset, 'pOffset').
+      _(pScale, 'pScale').
+    LogEnd();
 
 {
   Never used because Cxbx marked them out below
@@ -2856,11 +2834,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetShaderConstantMode' +
-        #13#10'(' +
-        #13#10'   Mode                      : 0x%.08X' +
-        #13#10');',
-        [Mode]);
+    LogBegin('EmuD3DDevice_SetShaderConstantMode').
+      _(Mode, 'Mode').
+    LogEnd();
 
   g_VertexShaderConstantMode := Mode;
   EmuSwapFS(fsXbox);
@@ -2877,11 +2853,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_Reset' +
-        #13#10'(' +
-        #13#10'   pPresentationParameters   : 0x%.08X' +
-        #13#10');',
-        [pPresentationParameters]);
+    LogBegin('EmuD3DDevice_Reset').
+      _(pPresentationParameters, 'pPresentationParameters').
+    LogEnd();
 
   DumpPresentationParameters(pPresentationParameters);
   EmuWarning('Device Reset is being utterly ignored');
@@ -2921,11 +2895,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetRenderTarget' +
-        #13#10'(' +
-        #13#10'   ppRenderTarget            : 0x%.08X' +
-        #13#10');',
-        [ppRenderTarget]);
+    LogBegin('EmuD3DDevice_GetRenderTarget').
+      _(ppRenderTarget, 'ppRenderTarget').
+    LogEnd();
 
   pSurface := g_pCachedRenderTarget.Emu.Surface;
 
@@ -3043,11 +3015,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetDepthStencilSurface' +
-        #13#10'(' +
-        #13#10'   ppZStencilSurface         : 0x%.08X' +
-        #13#10');',
-        [ppZStencilSurface]);
+    LogBegin('EmuD3DDevice_GetDepthStencilSurface').
+      _(ppZStencilSurface, 'ppZStencilSurface').
+    LogEnd();
 
   pSurface := g_pCachedZStencilSurface.Emu.Surface;
 
@@ -3112,12 +3082,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetTile' +
-        #13#10'(' +
-        #13#10'   Index                     : 0x%.08X' +
-        #13#10'   pTile                     : 0x%.08X' +
-        #13#10');',
-        [Index, pTile]);
+    LogBegin('EmuD3DDevice_GetTile').
+      _(Index, 'Index').
+      _(pTile, 'pTile').
+    LogEnd();
 
   if (pTile <> NULL) then
     memcpy(pTile, @(g_EmuD3DTileCache[Index]), sizeof(X_D3DTILE));
@@ -3181,12 +3149,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetTileNoWait' +
-        #13#10'(' +
-        #13#10'   Index                     : 0x%.08X' +
-        #13#10'   pTile                     : 0x%.08X' +
-        #13#10');',
-        [Index, pTile]);
+    LogBegin('EmuD3DDevice_SetTileNoWait').
+      _(Index, 'Index').
+      _(pTile, 'pTile').
+    LogEnd();
 
   if (pTile <> NULL) then
     memcpy(@(g_EmuD3DTileCache[Index]), pTile, sizeof(X_D3DTILE));
@@ -3259,14 +3225,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_CreateVertexShader' +
-        #13#10'(' +
-        #13#10'   pDeclaration              : 0x%.08X' +
-        #13#10'   pFunction                 : 0x%.08X' +
-        #13#10'   pHandle                   : 0x%.08X' +
-        #13#10'   Usage                     : 0x%.08X' +
-        #13#10');',
-       [pDeclaration, pFunction, pHandle, Usage]);
+    LogBegin('EmuD3DDevice_CreateVertexShader').
+      _(pDeclaration, 'pDeclaration').
+      _(pFunction, 'pFunction').
+      _(pHandle, 'pHandle').
+      _(Usage, 'Usage').
+    LogEnd();
 
   // create emulated shader struct
   pD3DVertexShader := PX_D3DVertexShader(DxbxMalloc(sizeof(X_D3DVertexShader)));
@@ -3484,13 +3448,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetPixelShaderConstant' +
-        #13#10'(' +
-        #13#10'   Register                  : 0x%.08X' +
-        #13#10'   pConstantData             : 0x%.08X' +
-        #13#10'   ConstantCount             : 0x%.08X' +
-        #13#10');',
-      [Register_, pConstantData, ConstantCount]);
+    LogBegin('EmuD3DDevice_SetPixelShaderConstant').
+      _(Register_, 'Register').
+      _(pConstantData, 'pConstantData').
+      _(ConstantCount, 'ConstantCount').
+    LogEnd();
 
   // TODO -oDxbx: This forwards the values to the native pixel shader, but we should also pack them
   // and place them into X_D3DRS_PSCONSTANT* render state registers (using the PS_CONSTANTMAPPING macro)!
@@ -3540,13 +3502,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetVertexShaderConstant' +
-        #13#10'(' +
-        #13#10'   Register                  : 0x%.08X' +
-        #13#10'   pConstantData             : 0x%.08X' +
-        #13#10'   ConstantCount             : 0x%.08X' +
-        #13#10');',
-      [Register_, pConstantData, ConstantCount]);
+    LogBegin('EmuD3DDevice_SetVertexShaderConstant').
+      _(Register_, 'Register').
+      _(pConstantData, 'pConstantData').
+      _(ConstantCount, 'ConstantCount').
+    LogEnd();
 
 {$IFDEF _DEBUG_TRACK_VS_CONST}
   if ConstantCount > 0 then // Dxbx addition, to prevent underflow
@@ -3609,12 +3569,12 @@ begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetVertexShaderConstant1' +
-        #13#10'(' +
-        #13#10'   Register                  : 0x%.08X' +
-        #13#10'   pConstantData             : 0x%.08X' +
-        #13#10');',
-      [Register_, pConstantData]);
+
+    LogBegin('EmuD3DDevice_SetVertexShaderConstant1').
+      _(Register_, 'Register').
+      _(pConstantData, 'pConstantData').
+    LogEnd();
+
     EmuSwapFS(fsXbox);
   end;
 

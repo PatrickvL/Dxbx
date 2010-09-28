@@ -1743,10 +1743,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuXGetGameRegion').
+    LogBegin('EmuXGetParentalControlSetting').
     LogEnd();
 
-  Result := Unimplemented('XGetGameRegion');
+  Result := Unimplemented('EmuXGetParentalControlSetting');
 
   EmuSwapFS(fsXbox);
 end;
