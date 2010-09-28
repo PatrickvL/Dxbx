@@ -1716,8 +1716,9 @@ begin
 end;
 
 
+(* Dxbx note : Disabled, too high level. See xboxkrnl_ExQueryNonVolatileSetting
 function XTL_EmuXGetGameRegion(): DWord; stdcall;
-// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
 var
   ulType: ULONG;
   dwValue: DWORD;
@@ -1728,17 +1729,26 @@ begin
     LogBegin('EmuXGetGameRegion').
     LogEnd();
 
-  Result := iif(NT_SUCCESS(xboxkrnl_ExQueryNonVolatileSetting(
+  if NT_SUCCESS(xboxkrnl_ExQueryNonVolatileSetting(
                        Ord(XC_FACTORY_GAME_REGION),
                        @ulType,
                        @dwValue,
                        sizeof(dwValue),
-                       NULL)), dwValue, 0);
+                       NULL)) then
+    Result := dwValue
+  else
+    Result := 0;
 
   EmuSwapFS(fsXbox);
 end;
+*)
 
+(* Dxbx note : Disabled, too high level. See xboxkrnl_ExQueryNonVolatileSetting
 function XTL_EmuXGetParentalControlSetting(): DWord; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  ulType: ULONG;
+  dwValue: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1746,10 +1756,19 @@ begin
     LogBegin('EmuXGetParentalControlSetting').
     LogEnd();
 
-  Result := Unimplemented('EmuXGetParentalControlSetting');
+  if NT_SUCCESS(xboxkrnl_ExQueryNonVolatileSetting(
+                       Ord(XC_PARENTAL_CONTROL_GAMES),
+                       @ulType,
+                       @dwValue,
+                       sizeof(dwValue),
+                       NULL)) then
+    Result := dwValue
+  else
+    Result := 0;
 
   EmuSwapFS(fsXbox);
 end;
+*)
 
 function XTL_EmuXGetLaunchInfo
 (
@@ -2149,9 +2168,9 @@ exports
   XTL_EmuXGetDeviceChanges,
   XTL_EmuXGetDevices,
 //  XTL_EmuXGetFileCacheSize, // Dxbx note : Disabled, too high level. See xboxkrnl_FscGetCacheSize
-  XTL_EmuXGetGameRegion,
+//  XTL_EmuXGetGameRegion, // Dxbx note : Disabled, too high level. See xboxkrnl_ExQueryNonVolatileSetting
   XTL_EmuXGetLaunchInfo,
-  XTL_EmuXGetParentalControlSetting,
+//  XTL_EmuXGetParentalControlSetting, // Dxbx note : Disabled, too high level. See xboxkrnl_ExQueryNonVolatileSetting
   XTL_EmuXGetSectionHandleA,
 //  XTL_EmuXGetSectionSize, // Dxbx note : This patch is not really needed, as the Xbox1 seems to use the SectionHeader address as a handle too.
   XTL_EmuXInitDevices name PatchPrefix + '_USBD_Init@8', // Cxbx incorrectly calls this XInitDevices
