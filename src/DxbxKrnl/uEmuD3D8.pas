@@ -3592,12 +3592,12 @@ begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetVertexShaderConstant4' +
-        #13#10'(' +
-        #13#10'   Register                  : 0x%.08X' +
-        #13#10'   pConstantData             : 0x%.08X' +
-        #13#10');',
-        [Register_, pConstantData]);
+
+    LogBegin('EmuD3DDevice_SetVertexShaderConstant4').
+      _(Register_, 'Register').
+      _(pConstantData, 'pConstantData').
+    LogEnd();
+
     EmuSwapFS(fsXbox);
   end;
 
@@ -3616,13 +3616,13 @@ begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetVertexShaderConstantNotInline' +
-        #13#10'(' +
-        #13#10'   Register                  : 0x%.08X' +
-        #13#10'   pConstantData             : 0x%.08X' +
-        #13#10'   ConstantCount             : 0x%.08X' +
-        #13#10');',
-        [Register_, pConstantData, ConstantCount]);
+
+    LogBegin('EmuD3DDevice_SetVertexShaderConstantNotInline').
+      _(Register_, 'Register').
+      _(pConstantData, 'pConstantData').
+      _(ConstantCount, 'ConstantCount').
+    LogEnd();
+
     EmuSwapFS(fsXbox);
   end;
 
@@ -3639,11 +3639,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_DeletePixelShader' +
-        #13#10'(' +
-        #13#10'   Handle                    : 0x%.08X' +
-        #13#10');',
-      [Handle]);
+    LogBegin('EmuD3DDevice_DeletePixelShader').
+      _(Handle, 'Handle').
+    LogEnd();
 
   if (Handle = X_PIXELSHADER_FAKE_HANDLE) then
   begin
@@ -3676,12 +3674,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_CreatePixelShader' +
-        #13#10'(' +
-        #13#10'   pPSDef                    : 0x%.08X' +
-        #13#10'   pHandle                   : 0x%.08X' +
-        #13#10');',
-      [pPSDef, pHandle]);
+    LogBegin('EmuD3DDevice_CreatePixelShader').
+      _(pPSDef, 'pPSDef').
+      _(pHandle, 'pHandle').
+    LogEnd();
 
   // Attempt to recompile PixelShader
   ConvertedPixelShader := AnsiString(XTL_EmuRecompilePshDef(pPSDef));
@@ -3761,11 +3757,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetPixelShader' +
-        #13#10'(' +
-        #13#10'   Handle                    : 0x%.08X' +
-        #13#10');',
-      [Handle]);
+    LogBegin('EmuD3DDevice_SetPixelShader').
+      _(Handle, 'Handle').
+    LogEnd();
 
   // redirect to windows d3d
   Result := D3D_OK;
@@ -5039,12 +5033,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_RunPushBuffer' +
-        #13#10'(' +
-        #13#10'   pPushBuffer               : 0x%.08X' +
-        #13#10'   pFixup                    : 0x%.08X' +
-        #13#10');',
-      [pPushBuffer, pFixup]);
+    LogBegin('EmuD3DDevice_RunPushBuffer').
+      _(pPushBuffer, 'pPushBuffer').
+      _(pFixup, 'pFixup').
+    LogEnd();
 
   XTL_EmuExecutePushBuffer(pPushBuffer, pFixup);
   Result := D3D_OK;
@@ -5142,14 +5134,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_Present' +
-        #13#10'(' +
-        #13#10'   pSourceRect               : 0x%.08X' +
-        #13#10'   pDestRect                 : 0x%.08X' +
-        #13#10'   pDummy1                   : 0x%.08X' +
-        #13#10'   pDummy2                   : 0x%.08X' +
-        #13#10');',
-           [pSourceRect, pDestRect, pDummy1, pDummy2]);
+    LogBegin('EmuD3DDevice_Present').
+      _(pSourceRect, 'pSourceRect').
+      _(pDestRect, 'pDestRect').
+      _(pDummy1, 'pDummy1').
+      _(pDummy2, 'pDummy2').
+    LogEnd();
 
   // release back buffer lock
   begin
@@ -5204,11 +5194,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_Swap >>' +
-        #13#10'(' +
-        #13#10'   Flags                     : 0x%.08X' +
-        #13#10');',
-      [Flags]);
+    LogBegin('EmuD3DDevice_Swap >>').
+      _(Flags, 'Flags').
+    LogEnd();
 
   // TODO -oCXBX: Ensure this flag is always the same across library versions
   if (Flags <> X_D3DSWAP_DEFAULT) then
@@ -5678,11 +5666,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DResource_AddRef' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10');',
-      [pThis]);
+    LogBegin('EmuIDirect3DResource_AddRef').
+      _(pThis, 'pThis').
+    LogEnd();
 
   uRet := 0;
 
@@ -5730,11 +5716,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DResource_Release' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10');',
-      [pThis]);
+    LogBegin('EmuIDirect3DResource_Release').
+      _(pThis, 'pThis').
+    LogEnd();
  
   uRet := 0;
 
@@ -5846,11 +5830,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DResource_IsBusy' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10');',
-      [pThis]);
+    LogBegin('EmuIDirect3DResource_IsBusy').
+      _(pThis, 'pThis').
+    LogEnd();
 
   // pResource := pThis.Emu.Resource;
   EmuSwapFS(fsXbox);
@@ -5870,12 +5852,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : IDirect3DResource_GetDevice' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10'   ppDevice                  : 0x%.08X' +
-        #13#10');',
-      [pThis, ppDevice]);
+    LogBegin('IDirect3DResource_GetDevice').
+      _(pThis, 'pThis').
+      _(ppDevice, 'ppDevice').
+    LogEnd();
 
   ppDevice^ := Pointer(g_pD3DDevice); // TODO -oDxbx : Is this correct?
 
@@ -5891,11 +5871,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DResource_GetType' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10');',
-      [pThis]);
+    LogBegin('EmuIDirect3DResource_GetType').
+      _(pThis, 'pThis').
+    LogEnd();
 
   // TODO -oCXBX: Handle situation where the resource type is >7
   Result := X_D3DRESOURCETYPE(IDirect3DResource(pThis.Emu.Resource).GetType());
@@ -5950,13 +5928,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuGet2DSurfaceDesc' +
-        #13#10'(' +
-        #13#10'   pPixelContainer           : 0x%.08X' +
-        #13#10'   dwLevel                   : 0x%.08X' +
-        #13#10'   pDesc                     : 0x%.08X' +
-        #13#10');',
-        [pPixelContainer, dwLevel, pDesc]);
+    LogBegin('EmuGet2DSurfaceDesc').
+      _(pPixelContainer, 'pPixelContainer').
+      _(dwLevel, 'dwLevel').
+      _(pDesc, 'pDesc').
+    LogEnd();
 
   EmuVerifyResourceIsRegistered(pPixelContainer);
 
