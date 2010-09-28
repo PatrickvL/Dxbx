@@ -5080,16 +5080,14 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_Clear' +
-        #13#10'(' +
-        #13#10'   Count                     : 0x%.08X' +
-        #13#10'   pRects                    : 0x%.08X' +
-        #13#10'   Flags                     : 0x%.08X' +
-        #13#10'   Color                     : 0x%.08X' +
-        #13#10'   Z                         : %f' +
-        #13#10'   Stencil                   : 0x%.08X' +
-        #13#10');',
-        [Count, pRects, Flags, Color, Z, Stencil]);
+    LogBegin('EmuD3DDevice_Clear').
+        _(Count, 'Count').
+        _(pRects, 'pRects').
+        _(Flags, 'Flags').
+        _(Color, 'Color').
+        _(Z, 'Z').
+        _(Stencil, 'Stencil').
+    LogEnd();
 
   // make adjustments to parameters to make sense with windows d3d
   begin
@@ -6420,16 +6418,14 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DCubeTexture_LockRect' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10'   FaceType                  : 0x%.08X' +
-        #13#10'   Level                     : 0x%.08X' +
-        #13#10'   pLockedBox                : 0x%.08X' +
-        #13#10'   pRect                     : 0x%.08X' +
-        #13#10'   Flags                     : 0x%.08X' +
-        #13#10');',
-      [pThis, Ord(FaceType), Level, pLockedBox, pRect, Flags]);
+    LogBegin('EmuIDirect3DCubeTexture_LockRect').
+      _(pThis, 'pThis').
+      _(Ord(FaceType), 'FaceType').
+      _(Level, 'Level').
+      _(pLockedBox, 'pLockedBox').
+      _(pRect, 'pRect').
+      _(Flags, 'Flags').
+    LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
 
@@ -6508,11 +6504,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_CreateVertexBuffer2' +
-        #13#10'(' +
-        #13#10'   Length                    : 0x%.08X' +
-        #13#10');',
-           [Length]);
+    LogBegin('EmuD3DDevice_CreateVertexBuffer2').
+      _(Length, 'Length').
+    LogEnd();
 
   NewLength := Length;
 
@@ -6562,11 +6556,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_EnableOverlay' +
-        #13#10'(' +
-        #13#10'   Enable                    : 0x%.08X' +
-        #13#10');',
-      [Enable]);
+    LogBegin('EmuD3DDevice_EnableOverlay').
+      _(Enable, 'Enable').
+    LogEnd();
 
   if (Enable = BOOL_FALSE) and (g_pDDSOverlay7 <> NULL) then
   begin
@@ -6677,15 +6669,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_UpdateOverlay' +
-        #13#10'(' +
-        #13#10'   pSurface                  : 0x%.08X' +
-        #13#10'   SrcRect                   : 0x%.08X' +
-        #13#10'   DstRect                   : 0x%.08X' +
-        #13#10'   EnableColorKey            : 0x%.08X' +
-        #13#10'   ColorKey                  : 0x%.08X' +
-        #13#10');',
-      [pSurface, SrcRect, DstRect, EnableColorKey, ColorKey]);
+    LogBegin('EmuD3DDevice_UpdateOverlay').
+      _(pSurface, 'pSurface').
+      _(SrcRect, 'SrcRect').
+      _(DstRect, 'DstRect').
+      _(EnableColorKey, 'EnableColorKey').
+      _(ColorKey, 'ColorKey').
+   LogEnd();
 
 //{$IFDEF GAME_HACKS_ENABLED}??
 // Cxbx has #ifndef UnrealChampionshipHack
@@ -6920,11 +6910,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetVerticalBlankCallback' +
-        #13#10'(' +
-        #13#10'   pCallback                 : 0x%.08X' +
-        #13#10');',
-      [Addr(pCallback)]); // Dxbx: Check this causes no call!
+    LogBegin('EmuD3DDevice_SetVerticalBlankCallback').
+      _(Addr(pCallback), 'pCallback').
+    LogEnd();
 
   if Addr(pCallback) <> Null then
     g_pVBCallback := pCallback
@@ -6945,12 +6933,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetTextureState_TexCoordIndex' +
-        #13#10'(' +
-        #13#10'   Stage                     : 0x%.08X' +
-        #13#10'   Value                     : 0x%.08X' +
-        #13#10');',
-      [Stage, Value]);
+    LogBegin('EmuD3DDevice_SetTextureState_TexCoordIndex').
+      _(Stage, 'Stage').
+      _(Value, 'Value').
+    LogEnd();
 
   if (Value > $00030000) then
     DxbxKrnlCleanup('EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', [Value]);
@@ -6973,11 +6959,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetTextureState_TwoSidedLighting' +
-        #13#10'(' +
-        #13#10'   Value                     : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetTextureState_TwoSidedLighting').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_TWOSIDEDLIGHTING]^ := Value;
@@ -6996,11 +6980,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_BackFillMode' +
-        #13#10'(' +
-        #13#10'   Value                     : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_BackFillMode').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_BACKFILLMODE]^ := Value;
@@ -7020,12 +7002,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetTextureState_BorderColor' +
-        #13#10'(' +
-        #13#10'   Stage                     : 0x%.08X' +
-        #13#10'   Value                     : 0x%.08X' +
-        #13#10');',
-      [Stage, Value]);
+    LogBegin('EmuD3DDevice_SetTextureState_BorderColor').
+      _(Stage, 'Stage').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
   XTL_EmuD3DDeferredTextureState[Stage, Ord(DxbxFromNewVersion_D3DTSS(X_D3DTSS_BORDERCOLOR))] := Value;
@@ -7046,12 +7026,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetTextureState_ColorKeyColor' +
-        #13#10'(' +
-        #13#10'   Stage                     : 0x%.08X' +
-        #13#10'   Value                     : 0x%.08X' +
-        #13#10');',
-      [Stage, Value]);
+    LogBegin('EmuD3DDevice_SetTextureState_ColorKeyColor').
+      _(Stage, 'Stage').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
   XTL_EmuD3DDeferredTextureState[Stage, Ord(DxbxFromNewVersion_D3DTSS(X_D3DTSS_COLORKEYCOLOR))] := Value;
@@ -7121,11 +7099,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_FrontFace' +
-        #13#10'(' +
-        #13#10'   Value                     : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_FrontFace').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_FRONTFACE]^ := Value;
@@ -7144,11 +7120,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_LogicOp' +
-        #13#10'(' +
-        #13#10'   Value                     : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_LogicOp').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_LOGICOP]^ := Value;
@@ -7167,11 +7141,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_NormalizeNormals' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_NormalizeNormals').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_NORMALIZENORMALS]^ := Value;
@@ -7190,11 +7162,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_TextureFactor' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_TextureFactor').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_TEXTUREFACTOR]^ := Value;
@@ -7213,11 +7183,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_ZBias' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+   LogBegin('EmuD3DDevice_SetRenderState_ZBias').
+     _(Value, 'Value').
+   LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_ZBIAS]^ := Value;
@@ -7247,11 +7215,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_EdgeAntiAlias' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_EdgeAntiAlias').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_EDGEANTIALIAS]^ := Value;
@@ -7278,11 +7244,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_FillMode' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Ord(Value)]);
+    LogBegin('EmuD3DDevice_SetRenderState_FillMode').
+      _(Integer(Ord(Value)), 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_FILLMODE]^ := DWORD(Value);
@@ -7310,11 +7274,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_FogColor' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_FogColor').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_FOGCOLOR]^ := Value;
@@ -7333,11 +7295,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_Dxt1NoiseEnable' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_Dxt1NoiseEnable').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_DXT1NOISEENABLE]^ := Value;
@@ -7359,12 +7319,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_Simple' +
-        #13#10'(' +
-        #13#10'   Method                  : 0x%.08X' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Method, Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_Simple').
+      _(Method, 'Method').
+      _(Value, 'Value').
+    LogEnd();
 
   XboxRenderState := DxbxXboxMethodToRenderState(Method);
   // Dxbx note : Methods are already version-independant
@@ -7411,11 +7369,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_VertexBlend' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Ord(Value)]);
+    LogBegin('EmuD3DDevice_SetRenderState_VertexBlend').
+      _(Ord(Value), 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_VERTEXBLEND]^ := Value;
@@ -7439,11 +7395,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_PSTextureModes' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_PSTextureModes').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_PSTEXTUREMODES]^ := Value;
@@ -7465,11 +7419,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_CullMode' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Ord(Value)]);
+    LogBegin('EmuD3DDevice_SetRenderState_CullMode').
+      _(Integer(Ord(Value)), 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_CULLMODE]^ := DWORD(Value);
@@ -7494,11 +7446,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_LineWidth' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_LineWidth').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_LINEWIDTH]^ := Value;
@@ -7519,11 +7469,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_StencilFail' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_StencilFail').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILFAIL]^ := Value;
@@ -7542,11 +7490,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_OcclusionCullEnable' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_OcclusionCullEnable').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_OCCLUSIONCULLENABLE]^ := Value;
@@ -7565,11 +7511,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_StencilCullEnable' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_StencilCullEnable').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILCULLENABLE]^ := Value;
@@ -7588,11 +7532,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_RopZCmpAlwaysRead' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_RopZCmpAlwaysRead').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_ROPZCMPALWAYSREAD]^ := Value;
@@ -7611,11 +7553,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_RopZRead' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_RopZRead').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_ROPZREAD]^ := Value;
@@ -7634,11 +7574,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_DoNotCullUncompressed' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_DoNotCullUncompressed').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_DONOTCULLUNCOMPRESSED]^ := Value;
@@ -7678,11 +7616,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_StencilEnable' +
-        #13#10'(' +
-        #13#10'   Value                   : 0x%.08X' +
-        #13#10');',
-        [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_StencilEnable').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILENABLE]^ := Value;
@@ -7701,11 +7637,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_MultiSampleAntiAlias' +
-        #13#10'(' +
-        #13#10'   Value                 : 0x%.08X' +
-        #13#10');',
-        [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_MultiSampleAntiAlias').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEANTIALIAS]^ := Value;
@@ -7725,11 +7659,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_MultiSampleMask' +
-        #13#10'(' +
-        #13#10'   Value                 : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_MultiSampleMask').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEMASK]^ := Value;
@@ -7748,11 +7680,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_MultiSampleMode' +
-        #13#10'(' +
-        #13#10'   Value                 : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_MultiSampleMode').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEMODE]^ := Value;
@@ -7771,11 +7701,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_MultiSampleRenderTargetMode' +
-        #13#10'(' +
-        #13#10'   Value                 : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_MultiSampleRenderTargetMode').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLERENDERTARGETMODE]^ := Value;
@@ -7794,11 +7722,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_ShadowFunc' +
-        #13#10'(' +
-        #13#10'   Value                 : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_ShadowFunc').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_SHADOWFUNC]^ := Value;
@@ -7817,11 +7743,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderState_YuvEnable' +
-        #13#10'(' +
-        #13#10'   Value                : 0x%.08X' +
-        #13#10');',
-      [Value]);
+    LogBegin('EmuD3DDevice_SetRenderState_YuvEnable').
+      _(Value, 'Value').
+    LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_YUVENABLE]^ := Value;
@@ -7902,12 +7826,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetTransform' +
-        #13#10'(' +
-        #13#10'   State                 : 0x%.08X' +
-        #13#10'   pMatrix               : 0x%.08X' +
-        #13#10');',
-      [Ord(State), pMatrix]);
+    LogBegin('EmuD3DDevice_GetTransform').
+      _(Integer(Ord(State)), 'State').
+      _(pMatrix, 'pMatrix').
+    LogEnd();
 
   Result := g_pD3DDevice.GetTransform(EmuXB2PC_D3DTS(State), {out}pMatrix^);
 
@@ -7930,15 +7852,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DVertexBuffer_Lock' +
-        #13#10'(' +
-        #13#10'   ppVertexBuffer        : 0x%.08X' +
-        #13#10'   OffsetToLock          : 0x%.08X' +
-        #13#10'   SizeToLock            : 0x%.08X' +
-        #13#10'   ppbData               : 0x%.08X' +
-        #13#10'   Flags                 : 0x%.08X' +
-        #13#10');',
-      [ppVertexBuffer, OffsetToLock, SizeToLock, ppbData, Flags]);
+    LogBegin('EmuIDirect3DVertexBuffer_Lock').
+      _(ppVertexBuffer, 'ppVertexBuffer').
+      _(OffsetToLock, 'OffsetToLock').
+      _(SizeToLock, 'SizeToLock').
+      _(ppbData, 'ppbData').
+      _(Flags, 'Flags').
+    LogEnd();
 
   pVertexBuffer := ppVertexBuffer.Emu.VertexBuffer;
 
@@ -7970,12 +7890,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DVertexBuffer_Lock2' +
-        #13#10'(' +
-        #13#10'   ppVertexBuffer          : 0x%.08X' +
-        #13#10'   Flags                   : 0x%.08X' +
-        #13#10');',
-           [ppVertexBuffer, Flags]);
+    LogBegin('EmuIDirect3DVertexBuffer_Lock2').
+      _(ppVertexBuffer, 'ppVertexBuffer').
+      _(Flags, 'Flags').
+    LogEnd();
 
   pVertexBuffer := ppVertexBuffer^.Emu.VertexBuffer;
   pbData := NULL;
@@ -8011,12 +7929,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetStreamSource2' +
-      #13#10'(' +
-      #13#10'   StreamNumber            : 0x%.08X' +
-      #13#10'   pStride                 : 0x%.08X' +
-      #13#10');',
-      [StreamNumber, pStride]);
+    LogBegin('EmuD3DDevice_GetStreamSource2').
+      _(StreamNumber, 'StreamNumber').
+      _(pStride, 'pStride').
+    LogEnd();
 
   EmuWarning('Not correctly implemented yet!');
   {ignore HRESULT?}g_pD3DDevice.GetStreamSource(
@@ -8107,11 +8023,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetVertexShader' +
-        #13#10'(' +
-        #13#10'   Handle                  : 0x%.08X' +
-        #13#10');',
-      [Handle]);
+    LogBegin('EmuD3DDevice_SetVertexShader').
+      _(Handle, 'Handle').
+    LogEnd();
 
   // Result := D3D_OK;
 
@@ -8180,13 +8094,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_DrawVertices' +
-        #13#10'(' +
-        #13#10'   PrimitiveType           : 0x%.08X' +
-        #13#10'   StartVertex             : 0x%.08X' +
-        #13#10'   VertexCount             : 0x%.08X' +
-        #13#10');',
-      [Ord(PrimitiveType), StartVertex, VertexCount]);
+    LogBegin('EmuD3DDevice_DrawVertices').
+      _(Integer(Ord(PrimitiveType)), 'PrimitiveType').
+      _(StartVertex, 'StartVertex').
+      _(VertexCount, 'VertexCount').
+    LogEnd();
 
   XTL_EmuUpdateDeferredStates();
 
@@ -8245,15 +8157,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_DrawVerticesUP' +
-        #13#10'(' +
-        #13#10'   PrimitiveType            : 0x%.08X' +
-        #13#10'   VertexCount              : 0x%.08X' +
-        #13#10'   pVertexStreamZeroData    : 0x%.08X' +
-        #13#10'   VertexStreamZeroStride   : 0x%.08X' +
-        #13#10');',
-      [Ord(PrimitiveType), VertexCount, pVertexStreamZeroData,
-      VertexStreamZeroStride]);
+    LogBegin('EmuD3DDevice_DrawVerticesUP').
+      _(Integer(Ord(PrimitiveType)), 'PrimitiveType').
+      _(VertexCount, 'VertexCount').
+      _(pVertexStreamZeroData, 'pVertexStreamZeroData').
+      _(VertexStreamZeroStride, 'VertexStreamZeroStride').
+    LogEnd();
 
   XTL_EmuUpdateDeferredStates();
 
@@ -8323,13 +8232,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_DrawIndexedVertices' +
-        #13#10'(' +
-        #13#10'   PrimitiveType            : 0x%.08X' +
-        #13#10'   VertexCount              : 0x%.08X' +
-        #13#10'   pIndexData               : 0x%.08X' +
-        #13#10');',
-        [Ord(PrimitiveType), VertexCount, pIndexData]);
+    LogBegin('EmuD3DDevice_DrawIndexedVertices').
+      _(Integer(Ord(PrimitiveType)), 'PrimitiveType').
+      _(VertexCount, 'VertexCount').
+      _(pIndexData, 'pIndexData').
+    LogEnd();
 
   // update index buffer, if necessary
   if (g_pIndexBuffer <> nil) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
@@ -8524,15 +8431,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_DrawIndexedVerticesUP' +
-        #13#10'(' +
-        #13#10'   PrimitiveType          : 0x%.08X' +
-        #13#10'   VertexCount            : 0x%.08X' +
-        #13#10'   pIndexData             : 0x%.08X' +
-        #13#10'   pVertexStreamZeroData  : 0x%.08X' +
-        #13#10'   VertexStreamZeroStride : 0x%.08X' +
-        #13#10');',
-      [Ord(PrimitiveType), VertexCount, pIndexData, pVertexStreamZeroData, VertexStreamZeroStride]);
+    LogBegin('EmuD3DDevice_DrawIndexedVerticesUP').
+      _(Integer(Ord(PrimitiveType)), 'PrimitiveType').
+      _(VertexCount, 'VertexCount').
+      _(pIndexData, 'pIndexData').
+      _(pVertexStreamZeroData, 'pVertexStreamZeroData').
+      _(VertexStreamZeroStride, 'VertexStreamZeroStride').
+    LogEnd();
 
   // update index buffer, if necessary
   if (g_pIndexBuffer <> nil) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
@@ -8591,12 +8496,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetLight' +
-        #13#10'(' +
-        #13#10'   Index               : 0x%.08X' +
-        #13#10'   pLight              : 0x%.08X' +
-        #13#10');',
-      [Index, pLight]);
+    LogBegin('EmuD3DDevice_SetLight').
+      _(Index, 'Index').
+      _(pLight, 'pLight').
+    LogEnd();
 
   Result := g_pD3DDevice.SetLight(Index, pLight^);
   EmuSwapFS(fsXbox);
@@ -8611,11 +8514,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetMaterial' +
-        #13#10'(' +
-        #13#10'   pMaterial           : 0x%.08X' +
-        #13#10');',
-      [pMaterial]);
+    LogBegin('EmuD3DDevice_SetMaterial').
+      _(pMaterial, 'pMaterial').
+    LogEnd();
 
   Result := g_pD3DDevice.SetMaterial({const}pMaterial^);
 
@@ -8632,12 +8533,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_LightEnable' +
-        #13#10'(' +
-        #13#10'   Index               : 0x%.08X' +
-        #13#10'   bEnable             : 0x%.08X' +
-        #13#10');',
-      [Index, bEnable]);
+    LogBegin('EmuD3DDevice_LightEnable').
+      _(Index, 'Index').
+      _(bEnable, 'bEnable').
+    LogEnd();
 
   Result := g_pD3DDevice.LightEnable(Index, bEnable <> BOOL_FALSE);
   EmuSwapFS(fsXbox);
@@ -8877,11 +8776,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetFlickerFilter' +
-        #13#10'(' +
-        #13#10'   Filter            : 0x%.08X' +
-        #13#10');',
-      [Filter]);
+    LogBegin('EmuD3DDevice_SetFlickerFilter').
+      _(Filter, 'Filter').
+    LogEnd();
 
   EmuWarning('Not setting flicker filter');
   EmuSwapFS(fsXbox);
@@ -8935,12 +8832,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DPalette_Lock' +
-        #13#10'(' +
-        #13#10'   pThis             : 0x%.08X' +
-        #13#10'   Flags             : 0x%.08X' +
-        #13#10');',
-           [pThis, Flags]);
+    LogBegin('EmuIDirect3DPalette_Lock').
+      _(pThis, 'pThis').
+      _(Flags, 'Flags').
+    LogEnd();
 
   Result := PD3DCOLOR(pThis.Data);
 
@@ -8955,11 +8850,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DPalette_GetSize' +
-        #13#10'(' +
-        #13#10'   pThis             : 0x%.08X' +
-        #13#10');',
-           [pThis]);
+    LogBegin('EmuIDirect3DPalette_GetSize').
+      _(pThis, 'pThis').
+    LogEnd();
 
   Unimplemented('XTL_EmuIDirect3DPushBuffer_SetPalette');
 
@@ -8982,12 +8875,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetVertexShaderSize' +
-        #13#10'(' +
-        #13#10'   Handle            : 0x%.08X' +
-        #13#10'   pSize             : 0x%.08X' +
-        #13#10');',
-      [Handle_, pSize]);
+    LogBegin('EmuD3DDevice_GetVertexShaderSize').
+      _(Handle_, 'Handle').
+      _(pSize, 'pSize').
+    LogEnd();
 
   if Assigned(pSize) then
   begin
@@ -9023,11 +8914,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_DeleteVertexShader' +
-        #13#10'(' +
-        #13#10'   Handle            : 0x%.08X' +
-        #13#10');',
-      [Handle]);
+    LogBegin('EmuD3DDevice_DeleteVertexShader').
+      _(Handle, 'Handle').
+    LogEnd();
 
   Result := D3D_OK;
 
@@ -9069,12 +8958,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-  DbgPrintf('EmuD3D8 : EmuD3DDevice_SelectVertexShaderDirect' +
-      #13#10'(' +
-      #13#10'   pVAF              : 0x%.08X' +
-      #13#10'   Address           : 0x%.08X' +
-      #13#10');',
-    [pVAF, Address]);
+    LogBegin('EmuD3DDevice_SelectVertexShaderDirect').
+      _(pVAF, 'pVAF').
+      _(Address, 'Address').
+    LogEnd();
 
   DbgPrintf('NOT YET IMPLEMENTED!');
 
@@ -9090,11 +8977,11 @@ begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetShaderConstantMode' +
-        #13#10'(' +
-        #13#10'   pMode             : 0x%.08X' +
-        #13#10');',
-      [pMode]);
+
+    LogBegin('EmuD3DDevice_GetShaderConstantMode').
+      _(pMode, 'pMode').
+    LogEnd();
+
     EmuSwapFS(fsXbox);
   end;
 
@@ -9111,11 +8998,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-  DbgPrintf('EmuD3D8 : EmuD3DDevice_GetVertexShader' +
-      #13#10'(' +
-      #13#10'   pHandle           : 0x%.08X' +
-      #13#10');',
-    [pHandle]);
+    LogBegin('EmuD3DDevice_GetVertexShader').
+      _(pHandle, 'pHandle').
+    LogEnd();
 
   if  Assigned(pHandle)
   and VshHandleIsValidShader(g_CurrentVertexShader) then
@@ -9140,13 +9025,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-  DbgPrintf('EmuD3D8 : EmuD3DDevice_GetVertexShaderConstant' +
-      #13#10'(' +
-      #13#10'   Register          : 0x%.08X' +
-      #13#10'   pConstantData     : 0x%.08X' +
-      #13#10'   ConstantCount     : 0x%.08X' +
-      #13#10');',
-    [Register_, pConstantData, ConstantCount]);
+    LogBegin('EmuD3DDevice_GetVertexShaderConstant').
+      _(Register_, 'Register').
+      _(pConstantData, 'pConstantData').
+      _(ConstantCount, 'ConstantCount').
+    LogEnd();
 
   // TODO -oDxbx: If we ever find a title that calls this, check if this correction
   // should indeed be done version-dependantly (like in SetVertexShaderConstant);
@@ -9183,13 +9066,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SelectVertexShaderDirect' +
-        #13#10'(' +
-        #13#10'   pVAF              : 0x%.08X' +
-        #13#10'   StreamCount       : 0x%.08X' +
-        #13#10'   pStreamInputs     : 0x%.08X' +
-        #13#10');',
-      [pVAF, StreamCount, pStreamInputs]);
+    LogBegin('EmuD3DDevice_SelectVertexShaderDirect').
+      _(pVAF, 'pVAF').
+      _(StreamCount, 'StreamCount').
+      _(pStreamInputs, 'pStreamInputs').
+    LogEnd();
 
   DbgPrintf('NOT YET IMPLEMENTED!');
 
@@ -9208,13 +9089,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetVertexShaderInput' +
-        #13#10'(' +
-        #13#10'   pHandle           : 0x%.08X' +
-        #13#10'   pStreamCount      : 0x%.08X' +
-        #13#10'   pStreamInputs     : 0x%.08X' +
-        #13#10');',
-      [pHandle, pStreamCount, pStreamInputs]);
+    LogBegin('EmuD3DDevice_GetVertexShaderInput').
+      _(pHandle, 'pHandle').
+      _(pStreamCount, 'pStreamCount').
+      _(pStreamInputs, 'pStreamInputs').
+    LogEnd();
 
   DbgPrintf('NOT YET IMPLEMENTED!');
 
@@ -9234,13 +9113,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetVertexShaderInput' +
-        #13#10'(' +
-        #13#10'   Handle            : 0x%.08X' +
-        #13#10'   StreamCount       : 0x%.08X' +
-        #13#10'   pStreamInputs     : 0x%.08X' +
-        #13#10');',
-      [aHandle, StreamCount, pStreamInputs]);
+    LogBegin('EmuD3DDevice_SetVertexShaderInput').
+      _(aHandle, 'aHandle').
+      _(StreamCount, 'StreamCount').
+      _(pStreamInputs, 'pStreamInputs').
+    LogEnd();
 
   DbgPrintf('NOT YET IMPLEMENTED!');
 
@@ -9258,12 +9135,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_RunVertexStateShader' +
-        #13#10'(' +
-        #13#10'   Address           : 0x%.08X' +
-        #13#10'   pData             : 0x%.08X' +
-        #13#10');',
-      [Address, pData]);
+    LogBegin('EmuD3DDevice_RunVertexStateShader').
+      _(Address, 'Address').
+      _(pData, 'pData').
+    LogEnd();
 
   DbgPrintf('NOT YET IMPLEMENTED!');
 
@@ -9280,12 +9155,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_LoadVertexShaderProgram' +
-        #13#10'(' +
-        #13#10'   pFunction         : 0x%.08X' +
-        #13#10'   Address           : 0x%.08X' +
-        #13#10');',
-      [pFunction, Address]);
+    LogBegin('EmuD3DDevice_LoadVertexShaderProgram').
+      _(pFunction, 'pFunction').
+      _(Address, 'Address').
+    LogEnd();
 
   DbgPrintf('NOT YET IMPLEMENTED!');
 
@@ -9317,12 +9190,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetVertexShaderType' +
-        #13#10'(' +
-        #13#10'   Handle             : 0x%.08X' +
-        #13#10'   pType              : 0x%.08X' +
-        #13#10');',
-      [aHandle, pType]);
+    LogBegin('EmuD3DDevice_GetVertexShaderType').
+      _(aHandle, 'aHandle').
+      _(pType, 'pType').
+    LogEnd();
 
   if Assigned(pType) and VshHandleIsVertexShader(aHandle) then
   begin
@@ -9345,13 +9216,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetVertexShaderDeclaration' +
-        #13#10'(' +
-        #13#10'   Handle             : 0x%.08X' +
-        #13#10'   pData              : 0x%.08X' +
-        #13#10'   pSizeOfData        : 0x%.08X' +
-        #13#10');',
-      [Handle, pData, pSizeOfData]);
+    LogBegin('EmuD3DDevice_GetVertexShaderDeclaration').
+      _(Handle, 'Handle').
+      _(pData, 'pData').
+      _(pSizeOfData, 'pSizeOfData').
+    LogEnd();
 
   Result := D3DERR_INVALIDCALL;
 
@@ -9386,13 +9255,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetVertexShaderFunction' +
-        #13#10'(' +
-        #13#10'   Handle             : 0x%.08X' +
-        #13#10'   pData              : 0x%.08X' +
-        #13#10'   pSizeOfData        : 0x%.08X' +
-        #13#10');',
-      [aHandle, pData, pSizeOfData]);
+    LogBegin('EmuD3DDevice_GetVertexShaderFunction').
+      _(aHandle, 'aHandle').
+      _(pData, 'pData').
+      _(pSizeOfData, 'pSizeOfData').
+    LogEnd();
 
   Result := D3DERR_INVALIDCALL;
 
@@ -9472,13 +9339,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DTexture_GetLevelDesc' +
-        #13#10'(' +
-        #13#10'   pThis               : 0x%.08X' +
-        #13#10'   Level               : 0x%.08X' +
-        #13#10'   pDesc               : 0x%.08X' +
-        #13#10');',
-      [pThis, Level, pDesc]);
+    LogBegin('EmuIDirect3DTexture_GetLevelDesc').
+      _(pThis, 'pThis').
+      _(Level, 'Level').
+      _(pDesc, 'pDesc').
+    LogEnd();
 
   IDirect3DTexture(pThis).GetLevelDesc(Level, PD3DSURFACE_DESC(pDesc)^);
 
@@ -9503,15 +9368,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3D_CheckDeviceMultiSampleType' +
-        #13#10'(' +
-        #13#10'   Adapter             : 0x%.08X' +
-        #13#10'   DeviceType          : 0x%.08X' +
-        #13#10'   SurfaceFormat       : 0x%.08X' +
-        #13#10'   Windowed            : 0x%.08X' +
-        #13#10'   MultiSampleType     : 0x%.08X' +
-        #13#10');',
-      [Adapter, Ord(DeviceType), Ord(SurfaceFormat), Windowed, Ord(MultiSampleType)]);
+    LogBegin('EmuIDirect3D_CheckDeviceMultiSampleType').
+      _(Adapter, 'Adapter').
+      _(Ord(DeviceType), 'DeviceType').
+      _(Ord(SurfaceFormat), 'SurfaceFormat').
+      _(Windowed, 'Windowed').
+      _(Ord(MultiSampleType), 'MultiSampleType').
+    LogEnd();
 
   if (Adapter <> D3DADAPTER_DEFAULT) then
   begin
@@ -9576,13 +9439,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3D_GetDeviceCaps' +
-        #13#10'(' +
-        #13#10'   Adapter                   : 0x%.08X' +
-        #13#10'   DeviceType                : 0x%.08X' +
-        #13#10'   pCaps                     : 0x%.08X' +
-        #13#10');',
-      [Adapter, Ord(DeviceType), pCaps]);
+    LogBegin('EmuIDirect3D_GetDeviceCaps').
+      _(Adapter, 'Adapter').
+      _(Ord(DeviceType), 'DeviceType').
+      _(pCaps, 'pCaps').
+    LogEnd();
 
   Result := g_pD3D.GetDeviceCaps(Adapter, DeviceType, {out}pCaps^);
 
@@ -10671,13 +10532,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DVolumeTexture_GetVolumeLevel2' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10'   Level                     : 0x%.08X' +
-        #13#10'   ppVolumeLevel             : 0x%.08X' +
-        #13#10');',
-      [pThis, Level, ppVolumeLevel]);
+    LogBegin('EmuIDirect3DVolumeTexture_GetVolumeLevel2').
+      _(pThis, 'pThis').
+      _(Level, 'Level').
+      _(ppVolumeLevel, 'ppVolumeLevel').
+    LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
 
@@ -10842,12 +10701,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DVolumeTexture_GetVolumeLevel2' +
-        #13#10'(' +
-        #13#10'   pThis                     : 0x%.08X' +
-        #13#10'   ppBaseTexture             : 0x%.08X' +
-        #13#10');',
-      [pThis, ppBaseTexture]);
+    LogBegin('EmuIDirect3DVolumeTexture_GetVolumeLevel2').
+      _(pThis, 'pThis').
+      _(ppBaseTexture, 'ppBaseTexture').
+    LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
   pSurface := pThis.Emu.Surface;
