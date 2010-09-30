@@ -3828,7 +3828,7 @@ begin
       _(pdwStatus, 'pdwStatus').
     LogEnd();
 
-  unimplemented(('EmuCDirectSoundStream_GetStatus');
+  unimplemented('EmuCDirectSoundStream_GetStatus');
 
   pdwStatus^ := DSBSTATUS_PLAYING;
 

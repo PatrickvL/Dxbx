@@ -7879,7 +7879,7 @@ function XTL_EmuD3DVertexBuffer_Lock2
 var
   pVertexBuffer: XTL_PIDirect3DVertexBuffer8;
   pbData: PBYTE;
-//  hRet: HRESULT;
+  hRet: HRESULT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7892,14 +7892,17 @@ begin
   pVertexBuffer := ppVertexBuffer^.Emu.VertexBuffer;
   pbData := NULL;
 
-  {Dxbx unused hRet :=} IDirect3DVertexBuffer(pVertexBuffer).Lock(0, 0, {out}TLockData(pbData), EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
+  hRet := IDirect3DVertexBuffer(pVertexBuffer).Lock(0, 0, {out}TLockData(pbData), EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
+
+  if (FAILED(hRet)) then
+    EmuWarning('VertexBuffer Lock2 Failed!');
 
   if MayLog(lfUnit or lfReturnValue) then
   begin
-    (*DbgPrintf('VertexBuffer 0x%08X was locked (2): hRet = 0x%08x', [
+    DbgPrintf('VertexBuffer 0x%08X was locked (2): hRet = 0x%08x', [
           pVertexBuffer,
           hRet
-          ]);*)
+          ]);
     DbgPrintf('pbData : 0x%.08X', [pbData]);
   end;
 
