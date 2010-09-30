@@ -3065,9 +3065,8 @@ begin
   if MayLog(lfUnit) then
     DbgPrintf('EmuD3D8 : EmuD3DDevice_GetOverscanColor');
 
-//  DbgPrintf('NOT YET IMPLEMENTED!');
   Result := Unimplemented('D3DDevice_GetOverscanColor');
-  (*Result := D3DDevice_GetOverscanColor(); *)
+  (*Result := D3DDevice_GetOverscanColor();*)
 
   EmuSwapFS(fsXbox);
 end;
@@ -6110,17 +6109,10 @@ begin
   if MayLog(lfUnit or lfDebug) then
     DbgPrintf('EmuD3D8 : EmuIDirect3DSurface_LockRect (pThis->Surface = 0x%8.8X)', [pThis.Emu.Surface]);
 
-  // Cxbx (shogun) commented this :
-  //if(nil=pThis.Emu.Surface) or (pThis.Emu.Surface = IDirect3DSurface($00000004)) then
-  //begin
-  //  EmuWarning('Invalid Surface!');
-  //  EmuSwapFS(fsXbox);
-  //  Result := E_FAIL; Exit;
-  //end;
-
   EmuVerifyResourceIsRegistered(pThis);
 
-  if (IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
+  // check if we have an unregistered YUV2 resource
+  if ((pThis <> nil) and IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
   begin
     pLockedRect.Pitch := g_dwOverlayP;
     pLockedRect.pBits := PVOID(pThis.Emu.Lock);
@@ -6129,6 +6121,7 @@ begin
   end
   else
   begin
+    // Dxbx note : Copied this over from EmuIDirect3DSurface_LockRect, seems the right thing to do
     if (Flags and X_D3DLOCK_TILED) > 0 then
       EmuWarning('D3DLOCK_TILED ignored!');
 
@@ -6241,7 +6234,6 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-  begin
     LogBegin('EmuIDirect3DTexture_LockRect').
       _(pThis, 'pThis').
       _(Level, 'Level').
@@ -6250,8 +6242,10 @@ begin
       _(Flags, 'Flags').
     LogEnd();
 
+  hRet := 0; // Dxbx : Prevent 'not initialized' compiler warning
+
+  if MayLog(lfUnit or lfDebug) then
     DbgPrintf('EmuD3D8 : EmuIDirect3DTexture_LockRect (pThis->Texture = 0x%8.8X)', [pThis.Emu.Texture]);
-  end;
 
   EmuVerifyResourceIsRegistered(pThis);
 
@@ -6292,8 +6286,10 @@ begin
       IDirect3DTexture(pTexture).UnlockRect(Level);
 
       hRet := IDirect3DTexture(pTexture).LockRect(Level, {out}pLockedRect^, pRect, NewFlags);
+      if (FAILED(hRet)) then
+        EmuWarning('LockRect Failed!');
 
-      pThis.Common := pThis.Common or X_D3DCOMMON_ISLOCKED;
+(*      pThis.Common := pThis.Common or X_D3DCOMMON_ISLOCKED;*)
     end;
   end;
 
@@ -8854,7 +8850,7 @@ begin
       _(pThis, 'pThis').
     LogEnd();
 
-  Unimplemented('XTL_EmuIDirect3DPushBuffer_SetPalette');
+  Unimplemented('XTL_EmuD3DPalette_GetSize');
 
   //return D3DPalette_GetSize(pThis);
   Result := D3DPALETTE_32;
@@ -9345,7 +9341,7 @@ begin
       _(pDesc, 'pDesc').
     LogEnd();
 
-  IDirect3DTexture(pThis).GetLevelDesc(Level, PD3DSURFACE_DESC(pDesc)^);
+  IDirect3DTexture(pThis.Emu.Texture).GetLevelDesc(Level, PD3DSURFACE_DESC(pDesc)^);
 
   EmuSwapFS(fsXbox);
 
@@ -10459,13 +10455,20 @@ procedure XTL_EmuIDirect3DCubeTexture_GetLevelDesc
 (
   pThis: PX_D3DCubeTexture;
   Level: UINT;
-  pDesc: PD3DSURFACE_DESC
+  pDesc: PX_D3DSURFACE_DESC
 ) stdcall;
 // Branch:Dxbx  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirect3DCubeTexture_GetLevelDesc');
+  if MayLog(lfUnit) then
+    LogBegin('XTL_EmuIDirect3DCubeTexture_GetLevelDesc').
+      _(pThis, 'pThis').
+      _(Level, 'Level').
+      _(pDesc, 'pDesc').
+    LogEnd();
+
+  IDirect3DCubeTexture8(pThis.Emu.CubeTexture).GetLevelDesc(Level, PD3DSURFACE_DESC(pDesc)^);
 
   EmuSwapFS(fsXbox);
 end;
@@ -10481,8 +10484,15 @@ function XTL_EmuIDirect3DCubeTexture_GetCubeMapSurface2
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirect3DCubeTexture_GetCubeMapSurface2');
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirect3DCubeTexture_GetCubeMapSurface2').
+      _(pThis, 'pThis').
+      _(Ord(FaceType), 'FaceType').
+      _(Level, 'Level').
+      _(ppCubeMapSurface, 'ppCubeMapSurface').
+    LogEnd();
 
+  IDirect3DCubeTexture8(pThis.Emu.CubeTexture).GetCubeMapSurface(FaceType, Level,PIDirect3DSurface8(ppCubeMapSurface));
   EmuSwapFS(fsXbox);
 
   Result := D3D_OK;
@@ -10492,7 +10502,7 @@ function XTL_EmuIDirect3DVolumeTexture_GetLevelDesc
 (
   pThis: PX_D3DVolumeTexture;
   Level: UINT;
-  pDesc: PD3DVOLUME_DESC
+  pDesc: PX_D3DVOLUME_DESC
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:Shadow_Tj  Done:100
 var
@@ -10511,7 +10521,8 @@ begin
 
   pVolumeTexture := pThis.Emu.VolumeTexture;
 
-  Result := IDirect3DVolumeTexture(pVolumeTexture).GetLevelDesc(Level, {out}pDesc^);
+
+  Result := IDirect3DVolumeTexture(pVolumeTexture).GetLevelDesc(Level, {out}PD3DVOLUME_DESC(pDesc)^);
 
   if (FAILED(Result)) then
     EmuWarning('GetLevelDesc Failed!');
@@ -10540,17 +10551,8 @@ begin
 
   EmuVerifyResourceIsRegistered(pThis);
 
-(*
-  pVolumeTexture := pThis.Emu.VolumeTexture;
 
-  EmuWarning('NOT YET IMPLEMENTED');
-
-  Result := (*IDirect3DVolumeTexture(pVolumeTexture).GetVolumeLevel2(Level, {out}ppVolumeLevel);
-
-  if (FAILED(Result)) then
-    EmuWarning('GetVolumeLevel2 Failed!'); *)
-
-  Result := Unimplemented('IDirect3DVolumeTexture_GetVolumeLevel2');
+  Result := IDirect3DVolumeTexture(pthis).GetVolumeLevel(Level, PIDirect3DVolume8(ppVolumeLevel));
 
   EmuSwapFS(fsXbox);
 end;
@@ -10625,7 +10627,13 @@ function XTL_EmuD3DVolume_GetContainer2
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('XTL_EmuIDirect3DVolume_GetContainer2');
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DVolume_GetContainer2').
+      _(pThis, 'pThis').
+      _(ppBaseTexture, 'ppBaseTexture').
+    LogEnd();
+
+  Result := IDirect3DVolume(pThis.Emu.VolumeTexture).GetContainer(IID_IDirect3DTexture8, Pointer(ppBaseTexture));
 
   EmuSwapFS(fsXbox);
 end;
@@ -10708,8 +10716,7 @@ begin
 
   EmuVerifyResourceIsRegistered(pThis);
   pSurface := pThis.Emu.Surface;
-//  Result := IDirect3DSurface(pSurface).GetContainer(pThis, {out}ppBaseTexture);
-  Result := Unimplemented('XTL_EmuD3DDevice_CreateSurface2');
+  Result := IDirect3DVolume(pSurface).GetContainer(IID_IDirect3DTexture8, Pointer(ppBaseTexture));
 
   EmuSwapFS(fsXbox);
 end;
