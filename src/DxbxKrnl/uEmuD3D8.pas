@@ -468,6 +468,40 @@ begin
   pPixelContainer.Emu.Lock := dwPtr;
 end;
 
+// TODO : Move to appropriate unit :
+procedure EmuPC2XB_D3DSURFACE_DESC(const SurfaceDesc: D3DSURFACE_DESC; const pDesc: PX_D3DSURFACE_DESC; const CallerName: string);
+begin
+  // Convert Format (PC->Xbox)
+  pDesc.Format := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
+  pDesc.Type_ := X_D3DRESOURCETYPE(SurfaceDesc._Type);
+
+  if (Ord(pDesc.Type_) > 7) then
+    DxbxKrnlCleanup(CallerName + ': pDesc->Type > 7');
+
+  pDesc.Usage := SurfaceDesc.Usage;
+  pDesc.Size := GetSurfaceSize(@SurfaceDesc);
+  pDesc.MultiSampleType := EmuPC2XB_D3DMULTISAMPLE_TYPE(SurfaceDesc.MultiSampleType);
+  pDesc.Width  := SurfaceDesc.Width;
+  pDesc.Height := SurfaceDesc.Height;
+end;
+
+// TODO : Move to appropriate unit :
+procedure EmuPC2XB_D3DVOLUME_DESC(const VolumeDesc: TD3DVolumeDesc; const pDesc: PX_D3DVOLUME_DESC; const CallerName: string);
+begin
+  // Convert Format (PC->Xbox)
+  pDesc.Format := EmuPC2XB_D3DFormat(VolumeDesc.Format);
+  pDesc.Type_ :=  X_D3DRESOURCETYPE(VolumeDesc._Type);
+
+  if (Ord(pDesc.Type_) > 7) then
+    DxbxKrnlCleanup(CallerName + ': pDesc->Type > 7');
+
+  pDesc.Usage := VolumeDesc.Usage;
+  pDesc.Size := GetVolumeSize(@VolumeDesc);
+  pDesc.Width := VolumeDesc.Width;
+  pDesc.Height := VolumeDesc.Height;
+  pDesc.Depth := VolumeDesc.Depth;
+end;
+
 const
   MillisecondsPerSecond = 1000;
 
@@ -5981,22 +6015,9 @@ begin
     *)
   end;
 
-  // rearrange into xbox format (remove D3DPOOL)
   if SUCCEEDED(hRet) then
-  begin
-    // Convert Format (PC->Xbox)
-    pDesc.Format := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
-    pDesc.Type_ := X_D3DRESOURCETYPE(SurfaceDesc._Type);
-
-    if (Ord(pDesc.Type_) > 7) then
-      DxbxKrnlCleanup('EmuGet2DSurfaceDesc: pDesc->Type > 7');
-
-    pDesc.Usage := SurfaceDesc.Usage;
-    pDesc.Size := GetSurfaceSize(@SurfaceDesc);
-    pDesc.MultiSampleType := EmuPC2XB_D3DMULTISAMPLE_TYPE(SurfaceDesc.MultiSampleType);
-    pDesc.Width := SurfaceDesc.Width;
-    pDesc.Height := SurfaceDesc.Height;
-  end;
+    // rearrange into xbox format (remove D3DPOOL)
+    EmuPC2XB_D3DSURFACE_DESC(SurfaceDesc, pDesc, 'EmuGet2DSurfaceDesc');
 
   EmuSwapFS(fsXbox);
 end;
@@ -6060,22 +6081,9 @@ begin
 
     Result := IDirect3DSurface(pSurface).GetDesc({out}SurfaceDesc);
 
-    // rearrange into xbox format (remove D3DPOOL)
     if SUCCEEDED(Result) then
-    begin
-      // Convert Format (PC->Xbox)
-      pDesc.Format := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
-      pDesc.Type_ := X_D3DRESOURCETYPE(SurfaceDesc._Type);
-
-      if (Ord(pDesc.Type_) > 7) then
-        DxbxKrnlCleanup('EmuIDirect3DSurface_GetDesc: pDesc->Type > 7');
-
-      pDesc.Usage := SurfaceDesc.Usage;
-      pDesc.Size := GetSurfaceSize(@SurfaceDesc);
-      pDesc.MultiSampleType := EmuPC2XB_D3DMULTISAMPLE_TYPE(SurfaceDesc.MultiSampleType);
-      pDesc.Width  := SurfaceDesc.Width;
-      pDesc.Height := SurfaceDesc.Height;
-    end;
+      // rearrange into xbox format (remove D3DPOOL)
+      EmuPC2XB_D3DSURFACE_DESC(SurfaceDesc, pDesc, 'EmuIDirect3DSurface_GetDesc');
   end;
 
   EmuSwapFS(fsXbox);
@@ -6244,7 +6252,7 @@ begin
       _(Flags, 'Flags').
     LogEnd();
 
-  hRet := 0; // Dxbx : Prevent 'not initialized' compiler warning
+//  hRet := 0; // Dxbx : Prevent 'not initialized' compiler warning
 
   if MayLog(lfUnit or lfDebug) then
     DbgPrintf('EmuD3D8 : EmuIDirect3DTexture_LockRect (pThis->Texture = 0x%8.8X)', [pThis.Emu.Texture]);
@@ -9331,6 +9339,8 @@ function XTL_EmuD3DTexture_GetLevelDesc
   pDesc: PX_D3DSURFACE_DESC
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  SurfaceDesc: D3DSURFACE_DESC;
 begin
   EmuSwapFS(fsWindows);
 
@@ -9341,11 +9351,13 @@ begin
       _(pDesc, 'pDesc').
     LogEnd();
 
-  IDirect3DTexture(pThis.Emu.Texture).GetLevelDesc(Level, PD3DSURFACE_DESC(pDesc)^);
+  Result := IDirect3DTexture(pThis.Emu.Texture).GetLevelDesc(Level, {out}SurfaceDesc);
+
+  if SUCCEEDED(Result) then
+    // rearrange into xbox format (remove D3DPOOL)
+    EmuPC2XB_D3DSURFACE_DESC(SurfaceDesc, pDesc, 'EmuIDirect3DSurface_GetDesc');
 
   EmuSwapFS(fsXbox);
-
-  Result := D3D_OK;
 end;
 
 function XTL_EmuDirect3D_CheckDeviceMultiSampleType
@@ -10458,6 +10470,9 @@ procedure XTL_EmuD3DCubeTexture_GetLevelDesc
   pDesc: PX_D3DSURFACE_DESC
 ) stdcall;
 // Branch:Dxbx  Translator:Shadow_Tj  Done:0
+var
+  SurfaceDesc: D3DSURFACE_DESC;
+  hRet: HRESULT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -10468,7 +10483,11 @@ begin
       _(pDesc, 'pDesc').
     LogEnd();
 
-  IDirect3DCubeTexture8(pThis.Emu.CubeTexture).GetLevelDesc(Level, PD3DSURFACE_DESC(pDesc)^);
+  hRet := IDirect3DCubeTexture8(pThis.Emu.CubeTexture).GetLevelDesc(Level, {out}SurfaceDesc);
+
+  if SUCCEEDED(hRet) then
+    // rearrange into xbox format (remove D3DPOOL)
+    EmuPC2XB_D3DSURFACE_DESC(SurfaceDesc, pDesc, 'D3DCubeTexture_GetLevelDesc');
 
   EmuSwapFS(fsXbox);
 end;
@@ -10503,6 +10522,8 @@ function XTL_EmuD3DVolumeTexture_GetLevelDesc
   pDesc: PX_D3DVOLUME_DESC
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:Shadow_Tj  Done:100
+var
+  VolumeDesc: TD3DVolumeDesc;
 begin
   EmuSwapFS(fsWindows);
 
@@ -10514,10 +10535,14 @@ begin
     LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
-  Result := IDirect3DVolumeTexture(pThis.Emu.VolumeTexture).GetLevelDesc(Level, {out}PD3DVOLUME_DESC(pDesc)^);
+
+  Result := IDirect3DVolumeTexture(pThis.Emu.VolumeTexture).GetLevelDesc(Level, {out}VolumeDesc);
 
   if (FAILED(Result)) then
-    EmuWarning('GetLevelDesc Failed!');
+    EmuWarning('GetLevelDesc Failed!')
+  else
+    // rearrange into xbox format (remove D3DPOOL)
+    EmuPC2XB_D3DVOLUME_DESC(VolumeDesc, pDesc, 'D3DVolume_GetDesc');
 
   EmuSwapFS(fsXbox);
 end;
@@ -10590,22 +10615,9 @@ begin
 
     Result := IDirect3DVolume(pVolume).GetDesc({out}VolumeDesc);
 
-    // rearrange into xbox format (remove D3DPOOL)
     if SUCCEEDED(Result) then
-    begin
-      // Convert Format (PC->Xbox)
-      pDesc.Format := EmuPC2XB_D3DFormat(VolumeDesc.Format);
-      pDesc.Type_ :=  X_D3DRESOURCETYPE(VolumeDesc._Type);
-
-      if (Ord(pDesc.Type_) > 7) then
-        DxbxKrnlCleanup('EmuIDirect3DVolume_GetDesc: pDesc->Type > 7');
-
-      pDesc.Usage := VolumeDesc.Usage;
-      pDesc.Size := GetVolumeSize(@VolumeDesc);
-      pDesc.Width := VolumeDesc.Width;
-      pDesc.Height := VolumeDesc.Height;
-      pDesc.Depth := VolumeDesc.Depth;
-    end;
+      // rearrange into xbox format (remove D3DPOOL)
+      EmuPC2XB_D3DVOLUME_DESC(VolumeDesc, pDesc, 'D3DVolume_GetDesc');
   end;
 
   EmuSwapFS(fsXbox);
