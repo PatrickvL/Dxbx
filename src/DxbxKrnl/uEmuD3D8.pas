@@ -6167,8 +6167,10 @@ begin
     LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
-  
   Result := IDirect3DBaseTexture(pThis.Emu.BaseTexture).GetLevelCount();
+
+  if (FAILED(Result)) then
+    EmuWarning('GetLevelCount Failed!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -6374,8 +6376,6 @@ function XTL_EmuIDirect3DVolumeTexture_LockBox
   Flags: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  pVolumeTexture: XTL_PIDirect3DVolumeTexture8;
 begin
   EmuSwapFS(fsWindows);
 
@@ -6389,10 +6389,7 @@ begin
     LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
-
-  pVolumeTexture := pThis.Emu.VolumeTexture;
-
-  Result := IDirect3DVolumeTexture(pVolumeTexture).LockBox(Level, {out}pLockedVolume^, pBox, Flags);
+  Result := IDirect3DVolumeTexture(pThis.Emu.VolumeTexture).LockBox(Level, {out}pLockedVolume^, pBox, Flags);
 
   if (FAILED(Result)) then
     EmuWarning('LockBox Failed!');
@@ -6427,8 +6424,9 @@ begin
 
   // Dxbx addition : Remove old lock(s) :
   IDirect3DCubeTexture(pThis.Emu.CubeTexture).UnlockRect(FaceType, Level);
-
   Result := IDirect3DCubeTexture(pThis.Emu.CubeTexture).LockRect(FaceType, Level, {out}pLockedBox^, pRect, Flags);
+  if (FAILED(Result)) then
+    EmuWarning('LockRect Failed!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -9558,7 +9556,7 @@ begin
       _(Flags, 'Flags').
     LogEnd();
 
-  IDirect3DResource(pThis).SetPrivateData(refGuid^, pData, SizeOfData, Flags);
+  IDirect3DResource(pThis.Emu.Resource).SetPrivateData(refGuid^, pData, SizeOfData, Flags);
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
@@ -9583,7 +9581,7 @@ begin
       _(PSizeOfData, 'PSizeOfData').
     LogEnd();
 
-  IDirect3DResource(pThis).GetPrivateData(refguid^, pData, pSizeOfData^);
+  IDirect3DResource(pThis.Emu.Resource).GetPrivateData(refguid^, pData, pSizeOfData^);
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
@@ -9604,7 +9602,7 @@ begin
       _(refguid, 'refguid').
     LogEnd();
 
-  IDirect3DResource(pThis).FreePrivateData(refguid^);
+  IDirect3DResource(pThis.Emu.Resource).FreePrivateData(refguid^);
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
@@ -9625,7 +9623,7 @@ begin
       _(pDesc, 'pDesc').
     LogEnd();
 
-  Result := IDirect3DVertexBuffer(pThis).GetDesc({out}pDesc^);
+  Result := IDirect3DVertexBuffer(pThis.Emu.VertexBuffer).GetDesc({out}pDesc^);
 
   // Dxbx addition : Convert Format (PC->Xbox, in-place)
   X_D3DFORMAT(pDesc.Format) := EmuPC2XB_D3DFormat(pDesc.Format);
@@ -10492,10 +10490,8 @@ begin
       _(ppCubeMapSurface, 'ppCubeMapSurface').
     LogEnd();
 
-  IDirect3DCubeTexture8(pThis.Emu.CubeTexture).GetCubeMapSurface(FaceType, Level,PIDirect3DSurface8(ppCubeMapSurface));
+  Result := IDirect3DCubeTexture8(pThis.Emu.CubeTexture).GetCubeMapSurface(FaceType, Level,PIDirect3DSurface8(ppCubeMapSurface^));
   EmuSwapFS(fsXbox);
-
-  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DVolumeTexture_GetLevelDesc
@@ -10505,8 +10501,6 @@ function XTL_EmuIDirect3DVolumeTexture_GetLevelDesc
   pDesc: PX_D3DVOLUME_DESC
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:Shadow_Tj  Done:100
-var
-  pVolumeTexture: XTL_PIDirect3DVolumeTexture8;
 begin
   EmuSwapFS(fsWindows);
 
@@ -10518,11 +10512,7 @@ begin
     LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
-
-  pVolumeTexture := pThis.Emu.VolumeTexture;
-
-
-  Result := IDirect3DVolumeTexture(pVolumeTexture).GetLevelDesc(Level, {out}PD3DVOLUME_DESC(pDesc)^);
+  Result := IDirect3DVolumeTexture(pThis.Emu.VolumeTexture).GetLevelDesc(Level, {out}PD3DVOLUME_DESC(pDesc)^);
 
   if (FAILED(Result)) then
     EmuWarning('GetLevelDesc Failed!');
@@ -10550,9 +10540,10 @@ begin
     LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
+  Result := IDirect3DVolumeTexture(pthis.Emu.VolumeTexture).GetVolumeLevel(Level, PIDirect3DVolume8(ppVolumeLevel));
 
-
-  Result := IDirect3DVolumeTexture(pthis).GetVolumeLevel(Level, PIDirect3DVolume8(ppVolumeLevel));
+  if (FAILED(Result)) then
+    EmuWarning('GetVolumeLevel2 Failed!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -10646,8 +10637,6 @@ function XTL_EmuD3DVolume_LockBox
   Flags: DWORD
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:PatrickvL  Done:100
-var
-  pVolume: XTL_PIDirect3DVolume8;
 begin
   EmuSwapFS(fsWindows);
 
@@ -10660,12 +10649,9 @@ begin
     LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
-
-  pVolume := pThis.Emu.Volume;
-
-  IDirect3DVolume(pVolume).LockBox({out}pLockedVolume^, pBox, Flags);
-
-  Result := D3D_OK;
+  Result := IDirect3DVolume(pThis.Emu.Volume).LockBox({out}pLockedVolume^, pBox, Flags);
+  if (FAILED(Result)) then
+    EmuWarning('LockBox Failed!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -10703,8 +10689,6 @@ function XTL_EmuIDirect3DSurface_GetContainer2
   ppBaseTexture: PPX_D3DBaseTexture
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
-var
-  pSurface: XTL_PIDirect3DSurface8;
 begin
   EmuSwapFS(fsWindows);
 
@@ -10715,8 +10699,9 @@ begin
     LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
-  pSurface := pThis.Emu.Surface;
-  Result := IDirect3DVolume(pSurface).GetContainer(IID_IDirect3DTexture8, Pointer(ppBaseTexture));
+  Result := IDirect3DVolume(pThis.Emu.Surface).GetContainer(IID_IDirect3DTexture8, Pointer(ppBaseTexture));
+  if (FAILED(Result)) then
+    EmuWarning('GetVolumeLevel2 Failed!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -10829,6 +10814,7 @@ end;
 
 function XTL_EmuIDirect3DPushBuffer_SetRenderState
 (
+  pPushBuffer: PX_D3DPushBuffer;
   Offset: DWORD;
   State: X_D3DRENDERSTATETYPE;
   Value: DWORD
@@ -10844,6 +10830,7 @@ end;
 
 function XTL_EmuIDirect3DPushBuffer_CopyRects
 (
+  pPushBuffer: PX_D3DPushBuffer;
   Offset: DWORD;
   pSourceSurface: PIDirect3DSurface;
   pDestinationSurface: PIDirect3DSurface
