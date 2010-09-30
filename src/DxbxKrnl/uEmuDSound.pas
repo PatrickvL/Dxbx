@@ -874,7 +874,7 @@ begin
       _(pdwStatus, 'pdwStatus').
     LogEnd();
 
-  EmuWarning('XMediaObject.GetStatus is not yet implemented');
+  unimplemented('XMediaObject.GetStatus');
 
   pdwStatus^ := DSBSTATUS_PLAYING;
 
@@ -3018,7 +3018,7 @@ begin
   if(Self.EmuDirectSoundBuffer8 = nil) then
     EmuWarning('pBuffer.EmuDirectSoundBuffer8 == 0');
 
-  EmuWarning('PlayEx not yet implemented!');
+  Unimplemented('PlayEx');
 
   EmuSwapFS(fsXbox);
 
@@ -3828,7 +3828,7 @@ begin
       _(pdwStatus, 'pdwStatus').
     LogEnd();
 
-  EmuWarning('EmuCDirectSoundStream_GetStatus is not yet implemented');
+  unimplemented(('EmuCDirectSoundStream_GetStatus');
 
   pdwStatus^ := DSBSTATUS_PLAYING;
 
@@ -3998,7 +3998,7 @@ begin
 
   Result := DS_OK;
 
-  EmuWarning('IDirectSoundStream_SetPitch not yet implemented!');
+  unimplemented('IDirectSoundStream_SetPitch');
 
   EmuSwapFS(fsXbox);
 end;
