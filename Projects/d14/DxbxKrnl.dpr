@@ -33,6 +33,11 @@ library DxbxKrnl;
 {$R 'SvnRevision.res' '..\..\resource\SvnRevision.rc'}
 
 uses
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   Windows,
   SysUtils,
   uLog in '..\..\src\uLog.pas',
@@ -98,7 +103,8 @@ uses
   uEmuD3D8Utils in '..\..\src\DxbxKrnl\uEmuD3D8Utils.pas',
   uPixelShader in '..\..\src\DxbxKrnl\EmuD3D8\uPixelShader.pas',
   uXDVDFS in '..\..\src\uXDVDFS.pas',
-  uFileSystem in '..\..\src\uFileSystem.pas';
+  uFileSystem in '..\..\src\uFileSystem.pas',
+  uEmuXactEng in '..\..\src\DxbxKrnl\uEmuXactEng.pas';
 
 {$IMAGEBASE $10000000}
 
