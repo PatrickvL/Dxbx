@@ -20,6 +20,7 @@ program Dxbx;
 {$INCLUDE Dxbx.inc}
 
 {$R 'DxbxResources.res' '..\..\resource\DxbxResources.rc'}
+{$R 'SvnRevision.res' '..\..\resource\SvnRevision.rc'}
 
 uses
   SysUtils,

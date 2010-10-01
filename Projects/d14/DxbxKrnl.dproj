@@ -23,6 +23,8 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_Define>DXBX_DLL;$(DCC_Define)</DCC_Define>
+			<DCC_Alignment>4</DCC_Alignment>
 			<DCC_DependencyCheckOutputName>DxbxKrnl.dll</DCC_DependencyCheckOutputName>
 			<GenDll>true</GenDll>
 		</PropertyGroup>
@@ -43,10 +45,9 @@
 			<DCC_HppOutput>..\..\dcu</DCC_HppOutput>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_DependencyCheckOutputName>..\..\Bin\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
-			<DCC_Define>DEBUG;DXBX_DLL;_DEBUG_TRACE;madExcept;$(DCC_Define)</DCC_Define>
+			<DCC_Define>DEBUG;_DEBUG_TRACE;$(DCC_Define)</DCC_Define>
 			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;..\..\Libraries\FastMM;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ResourcePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ResourcePath)</DCC_ResourcePath>
 			<DCC_ObjPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ObjPath)</DCC_ObjPath>
@@ -66,6 +67,7 @@
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 						<Parameters Name="HostApplication">..\..\bin\Dxbx.exe</Parameters>
+						<Parameters Name="RunParams">&quot;D:\!Patrick_Sofware\XBox\Xbox software\Xdk 4627 compiled projects\Graphics\AlphaFog\Release\alphafog.xbe&quot;</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
@@ -114,6 +116,11 @@
 				<ContainerId>RC</ContainerId>
 				<ContainerId>RC</ContainerId>
 				<Form>StoredTrie.res</Form>
+			</RcCompile>
+			<RcCompile Include="..\..\resource\SvnRevision.rc">
+				<ContainerId>RC</ContainerId>
+				<ContainerId>RC</ContainerId>
+				<Form>SvnRevision.res</Form>
 			</RcCompile>
 			<DCCReference Include="..\..\src\uLog.pas"/>
 			<DCCReference Include="..\..\src\uMutex.pas"/>

@@ -145,9 +145,6 @@ begin
   // debug console allocation (if configured)
   CreateLogs(DbgMode, string(szDebugFileName)); // Initialize logging interface
 
-  if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuInit : Dxbx Version ' + _DXBX_VERSION);
-
   // update caches
   DxbxKrnl_TLS := pTLS;
   DxbxKrnl_TLSData := pTLSData;

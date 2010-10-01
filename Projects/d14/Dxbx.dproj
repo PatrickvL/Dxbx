@@ -124,6 +124,11 @@
 				<ContainerId>RC</ContainerId>
 				<Form>DxbxResources.res</Form>
 			</RcCompile>
+			<RcCompile Include="..\..\resource\SvnRevision.rc">
+				<ContainerId>RC</ContainerId>
+				<ContainerId>RC</ContainerId>
+				<Form>SvnRevision.res</Form>
+			</RcCompile>
 			<DCCReference Include="..\..\src\uEmuShared.pas"/>
 			<DCCReference Include="..\..\src\uError.pas"/>
 			<DCCReference Include="..\..\src\ufrm_About.pas"/>

@@ -119,6 +119,8 @@ type
   TBitArray = array[0..(MaxInt div BitsPerInt)-1] of TBitSet;
   PBitArray = ^TBitArray;
 
+function SvnRevision: Integer;
+
 procedure SetFS(const aNewFS: WORD);
 function GetFS(): WORD;
 function GetTIBEntry(const aOffset: DWORD): Pointer;
@@ -292,6 +294,45 @@ var
 procedure ReadSystemTimeIntoLargeInteger(const aSystemTime: PKSYSTEM_TIME; const aLargeInteger: PLARGE_INTEGER);
 
 implementation
+
+var
+  _SvnRevision: Integer = 0;
+
+function SvnRevision: Integer;
+var
+  ResourceStream: TResourceStream;
+  VerPtr: PAnsiChar;
+begin
+  Result := _SvnRevision;
+  if Result > 0 then
+    Exit;
+
+  ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'SvnRevision', RT_RCDATA);
+  try
+    VerPtr := PAnsiChar(ResourceStream.Memory);
+    while VerPtr^ <> #0 do
+    begin
+      if VerPtr^ = #10 then
+      begin
+        Inc(Result);
+        if (Result > 3) then
+          Break;
+      end
+      else
+        if  (Result = 3)
+        and (VerPtr^ in ['0'..'9'])
+        and (_SvnRevision < 100000) then
+          _SvnRevision := _SvnRevision * 10 + Ord(VerPtr^) - Ord('0');
+
+      Inc(VerPtr);
+    end;
+
+  finally
+    // Unlock the resource :
+    FreeAndNil(ResourceStream);
+    Result := _SvnRevision;
+  end;
+end;
 
 {$STACKFRAMES OFF}
 

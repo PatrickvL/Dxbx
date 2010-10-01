@@ -784,7 +784,8 @@ begin // Save
     for i := 0 to VersionedLibraries.Count - 1 do
     begin
       StoredLibrary.LibVersion := PVersionedXboxLibrary(VersionedLibraries[i]).LibVersion;
-      StoredLibrary.LibNameIndex := UniqueStrings.IndexOf(PVersionedXboxLibrary(VersionedLibraries[i]).LibName);
+      PVersionedXboxLibrary(VersionedLibraries[i]).LibNameIndex := UniqueStrings.IndexOf(PVersionedXboxLibrary(VersionedLibraries[i]).LibName);
+      StoredLibrary.LibNameIndex := PVersionedXboxLibrary(VersionedLibraries[i]).LibNameIndex;
       OutputFile.WriteBuffer(StoredLibrary, SizeOf(StoredLibrary));
     end;
 

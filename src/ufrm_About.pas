@@ -25,7 +25,8 @@ uses
   // Delphi
   Types, SysUtils, Classes, Controls, ExtCtrls, Forms, Graphics, jpeg,
   // Dxbx
-  uConsts;
+  uConsts,
+  uDxbxUtils;
 
 
 type
@@ -81,7 +82,7 @@ procedure Tfrm_About.FormCreate(Sender: TObject);
 var
   JPEGImage: TJPEGImage;
 begin
-  Caption := 'Dxbx version ' + _DXBX_VERSION;
+  Caption := 'Dxbx version ' + _DXBX_VERSION + ' (svn revision ' + IntToStr(SvnRevision) + ')';
 
   JPEGImage := GetJPEGResource('About');
   Self.Width := JPEGImage.Width;
