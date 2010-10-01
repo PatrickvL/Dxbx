@@ -218,12 +218,17 @@ type
 var
   KernelDebugMode: TDebugMode = dmFile;
 
-  KernelDebugFilePath: string = '';
-  KernelDebugFile: string = '';
+  KernelDebugFilePath: string = ''; // Just the default folder
 
   frm_Main: Tfrm_Main;
 
 implementation
+
+function GetTitleSpecificKernelDebugFilePath: string;
+begin
+  // Was DXBX_KERNEL_DEBUG_FILENAME
+  Result := Format('DxbxKrnl %s (%d).txt', [m_szAsciiTitle, SvnRevision]);
+end;
 
 procedure GradientHorizontalLineCanvas(const ACanvas: TCanvas;
   const AStartColor, AEndColor: TColor; const X, Y, Width: Integer); overload;
@@ -662,7 +667,7 @@ begin
   if FileExists(aXbeInfo.FileName) then
   begin
     LoadXbe(aXbeInfo.FileName);
-    m_Xbe.DumpInformation(KernelDebugFilePath + '\' +  PChar(m_szAsciiTitle) + ' ' + DXBX_KERNEL_DEBUG_FILENAME)
+    m_Xbe.DumpInformation(GetTitleSpecificKernelDebugFilePath);
   end
   else
   begin
@@ -1287,17 +1292,18 @@ begin
   end
   else
   begin
+    // TODO : Change this into a folder-selection dialog (filename is generated) :
     if KernelDebugFilePath <> '' then
       SaveDialog.InitialDir := KernelDebugFilePath;
 
-    SaveDialog.FileName := PChar(m_szAsciiTitle) + ' ' + DXBX_KERNEL_DEBUG_FILENAME;
+    SaveDialog.FileName := ExtractFileName(GetTitleSpecificKernelDebugFilePath);
 
     SaveDialog.Filter := DIALOG_FILTER_TEXT;
     if SaveDialog.Execute then
     begin
       //CloseLogs;
       KernelDebugMode := dmFile;
-      KernelDebugFilePath := ExtractFilePath( SaveDialog.FileName );
+      KernelDebugFilePath := ExtractFilePath(SaveDialog.FileName);
       //CreateLogs(KernelDebugMode, KernelDebugFileName);
       AdjustMenu;
     end;
@@ -1504,7 +1510,7 @@ begin
     {XbePath=}AnsiQuotedStr(m_Xbe.XbePath, '"') + ' ' +
     {WindowHandle=}IntToStr(GetEmuWindowHandle) + ' ' +
     {DebugMode=}IntToStr(Ord(KernelDebugMode)) + ' ' +
-    {DebugFileName=}AnsiQuotedStr( KernelDebugFilePath + '\' + PChar(m_szAsciiTitle) + ' ' + DXBX_KERNEL_DEBUG_FILENAME, '"');
+    {DebugFileName=}AnsiQuotedStr(GetTitleSpecificKernelDebugFilePath, '"');
 
   // Dxbx uses itself as Xbe Launcher; In this new process, the '/load'-argument
   // transfers control to DxbxMain() in our emulation dll, which start emulation :

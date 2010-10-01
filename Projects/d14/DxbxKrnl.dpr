@@ -30,6 +30,7 @@ library DxbxKrnl;
 {$INCLUDE Dxbx.inc}
 
 {$R 'StoredTrie.res' '..\..\resource\StoredTrie.rc'}
+{$R 'SvnRevision.res' '..\..\resource\SvnRevision.rc'}
 
 uses
   Windows,

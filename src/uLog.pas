@@ -34,6 +34,7 @@ uses
 {$ENDIF}
   // Dxbx
   uTypes, // IntPtr
+  uConsts,
   uDxbxUtils,
   uConsoleClass;
 
@@ -627,6 +628,7 @@ begin
   end; // case aDebugMode
 
   WriteLog('Started logging at ' + DateTimeToStr(Now));
+  WriteLog('Dxbx version ' + _DXBX_VERSION + ' (svn revision ' + IntToStr(SvnRevision) + ')');
 end; // CreateLogs
 
 procedure CloseLogs;
