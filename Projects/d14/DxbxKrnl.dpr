@@ -33,11 +33,6 @@ library DxbxKrnl;
 {$R 'SvnRevision.res' '..\..\resource\SvnRevision.rc'}
 
 uses
-  madExcept,
-  madLinkDisAsm,
-  madListHardware,
-  madListProcesses,
-  madListModules,
   Windows,
   SysUtils,
   uLog in '..\..\src\uLog.pas',

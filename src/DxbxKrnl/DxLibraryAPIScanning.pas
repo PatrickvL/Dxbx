@@ -1403,7 +1403,7 @@ begin
       else if Pos('XapiInitProcess', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 90
       else if Pos('_D3DDevice_SetRenderState_', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 80
 //      else if Pos('D3D', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 70
-      else if Pos('Sound', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 60
+//      else if Pos('Sound', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 60
 //      else if Pos('XInput', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 50
       else CurrentSymbol.OrderingImportance := 0;
 
