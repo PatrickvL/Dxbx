@@ -117,7 +117,6 @@ type
     EntryPoint: UIntPtr;
     ScanUpper: UIntPtr;
     PatternTrieReader: TPatternTrieReader;
-    procedure DbgPrintSymbol(const aSymbol: TSymbolInformation);
     function IsAddressWithinScanRange(const aAddress: TCodePointer): Boolean;
     function MayCheckFunction(const aStoredLibraryFunction: PStoredLibraryFunction): Boolean;
     function GetReferencedSymbolAddress(const aStartingAddress: PByte; const aSymbolReference: PStoredSymbolReference): TCodePointer;
@@ -150,6 +149,13 @@ type
     procedure CleanupTemporaryScanningData;
   protected // Library and specific symbol handling :
     UsingLibraryApproximations: Boolean;
+    SectionInfo: array of record
+      SectionHeader: PXBE_SECTIONHEADER;
+      SectionEndAddr: UIntPtr;
+      SectionName: string;
+      LibraryNameIndex: TStringTableIndex;
+      LibraryName: string;
+    end;
     procedure DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
     procedure LookupGlobalEmulationSymbols;
   protected // Caching :
@@ -453,41 +459,6 @@ begin
   end;
 end; // FindSymbolWithAddress
 
-procedure TSymbolManager.DbgPrintSymbol(const aSymbol: TSymbolInformation);
-//const
-//  DuplicateString: array [Boolean] of string = ('', ' [Duplicate]');
-//var
-//  i: Integer;
-//  SymbolReference: PStoredSymbolReference;
-begin
-  if aSymbol = nil then
-    Exit;
-
-  if not MayLog(lfUnit) then // TODO : Add lfExtreme flag once the output is reliable
-    Exit;
-
-  DbgPrintf('SYMBOL : "%s"', [aSymbol.Name]);
-  DbgPrintf('Length : %d', [aSymbol.Length]);
-  DbgPrintf('Address : $%.08x', [aSymbol.Address]);
-  DbgPrintf('SymbolReferenceCount : %d', [aSymbol.SymbolReferenceCount]);
-(*
-  for i := 0 to aSymbol.SymbolReferenceCount - 1 do
-  begin
-    SymbolReference := aSymbol.SymbolReferences[i];
-    Assert(Assigned(SymbolReference));
-
-    DbgPrintf('  SymbolReference %2d : $%0.4x -> $%.08x = "%s"+$%.04x%s', [
-      i+1,
-      SymbolReference.Offset,
-      AllSymbolReferences[CurrentLocation.SymbolReferencesIndex+i].Address,
-      AllSymbolReferences[CurrentLocation.SymbolReferencesIndex+i].Symbol.Name,
-      SymbolReference.BaseOffset,
-      DuplicateString[AllSymbolReferences[CurrentLocation.SymbolReferencesIndex+i].MustSkip]
-      ]);
-  end;
-*)
-end;
-
 ///
 /// Leaf scanning code :
 ///
@@ -639,7 +610,9 @@ procedure TSymbolManager.ScanAddressRangeForPatternHits(const pXbeHeader: PXBEIM
 var
   i: DWord;
   Section: PXBE_SECTIONHEADER;
-  SectionName: string;
+  j: Integer;
+  StoredLibrary: PStoredLibrary;
+  StoredLibraryName: string;
   ScanEnd: UIntPtr;
   ScanPtr: UIntPtr;
 
@@ -647,7 +620,7 @@ var
   begin
     Result := (aSectionName = 'D3D')
            or (aSectionName = 'D3DX')
-           or (aSectionName = 'DOLBY')
+//           or (aSectionName = 'DOLBY') // Contains 'Initialized Data' from "dsound.lib"
            or (aSectionName = 'DMUSIC')
            or (aSectionName = 'DSOUND')
            or (aSectionName = 'WMADEC')
@@ -667,25 +640,27 @@ begin
   // Retrieve the entry point, for registration & checking later on :
   EntryPoint := GetEntryPoint(pXbeHeader);
 
-  // Determine upper bound for scanning, based on the XBE sections :
+  // Init work variables :
   ScanUpper := Low(ScanUpper);
-  UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
-  for i := 0 to pXbeHeader.dwSections - 1 do
-  begin
-    ScanPtr := UIntPtr(Section.dwVirtualAddr) + Section.dwVirtualSize;
-    if ScanUpper < ScanPtr then
-      ScanUpper := ScanPtr;
-
-    Inc(Section);
-  end;
-
-  // Reserve a bit per address that's contained in a section that's covered by our library patterns :
   MyAddressesInKnownSections.Size := 0;
   MyAddressesInKnownSections.Size := ScanUpper;
   UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
+  SetLength(SectionInfo, pXbeHeader.dwSections);
+
+  // Loop over all XBE sections, checking & registering various aspects :
   for i := 0 to pXbeHeader.dwSections - 1 do
   begin
-    SectionName := string(PCharToString(PAnsiChar(Section.dwSectionNameAddr), XBE_SECTIONNAME_MAXLENGTH));
+    // Determine upper bound for scanning, using highest virtual address :
+    ScanPtr := UIntPtr(Section.dwVirtualAddr);
+    ScanEnd := ScanPtr + Section.dwVirtualSize;
+    if ScanUpper < ScanEnd then
+      ScanUpper := ScanEnd;
+
+    // Remember section & (raw) scan-size :
+    ScanEnd := ScanPtr + Section.dwSizeofRaw;
+    SectionInfo[i].SectionHeader := Section;
+    SectionInfo[i].SectionEndAddr := ScanEnd;
+    SectionInfo[i].SectionName := string(PCharToString(PAnsiChar(Section.dwSectionNameAddr), XBE_SECTIONNAME_MAXLENGTH));
 
 //    // .text is a special case; Compiler&Linker-effects cause pattern-deviations in it!
 //    if (SectionName = '.text') then
@@ -696,11 +671,37 @@ begin
 //      ; // Contains kernel thunk table in some XBEs
 
     // Mark only those sections that we know about :
-    if _SectionIsKnown(SectionName) then
+    if _SectionIsKnown(SectionInfo[i].SectionName) then
     begin
-      ScanPtr := UIntPtr(Section.dwVirtualAddr);
-      ScanEnd := ScanPtr + Section.dwSizeofRaw; // Don't scan outside of raw size!
+      // Determine section's corresponding library name :
+      if SectionInfo[i].SectionName = 'XPP' then
+        SectionInfo[i].LibraryName := 'xapilib'
+      else
+      if SectionInfo[i].SectionName = 'XGRPH' then
+        SectionInfo[i].LibraryName := 'xgraphics'
+      else
+      if SectionInfo[i].SectionName = 'D3D' then
+        SectionInfo[i].LibraryName := 'd3d8'
+      else
+      if SectionInfo[i].SectionName = 'D3DX' then
+        SectionInfo[i].LibraryName := 'd3dx8'
+      else
+        SectionInfo[i].LibraryName := SectionInfo[i].SectionName;
 
+
+      // Look up library name index :
+      for j := 0 to PatternTrieReader.StoredSignatureTrieHeader.LibraryTable.NrOfLibraries - 1 do
+      begin
+        StoredLibrary := PatternTrieReader.GetStoredLibrary(j);
+        StoredLibraryName := PatternTrieReader.GetString(StoredLibrary.LibNameIndex);
+        if SameLibName(StoredLibraryName, SectionInfo[i].LibraryName) then
+        begin
+          SectionInfo[i].LibraryNameIndex := StoredLibrary.LibNameIndex;
+          Break;
+        end;
+      end;
+
+      // Reserve a bit per address that's contained in a section that's covered by our library patterns :
       while ScanPtr < ScanEnd do
       begin
         MyAddressesInKnownSections[ScanPtr] := True;
@@ -716,28 +717,24 @@ begin
   MyAddressesIdentified.Size := ScanUpper;
 
   // Do the actual scanning per section :
-  UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
-  for i := 0 to pXbeHeader.dwSections - 1 do
+  for i := 0 to Length(SectionInfo) - 1 do
   begin
-    SectionName := string(PCharToString(PAnsiChar(Section.dwSectionNameAddr), XBE_SECTIONNAME_MAXLENGTH));
-
     // Only scan sections ...
     // .. when there's something in it :
-    if  (Section.dwSizeofRaw > 0)
+    if  (SectionInfo[i].SectionHeader.dwSizeofRaw > 0)
     // .. names not starting with a '$' :
-    and (SectionName <> '')
-    and (SectionName[1] <> '$')
+    and (SectionInfo[i].SectionName <> '')
+    and (SectionInfo[i].SectionName[1] <> '$')
     // .. and not in 'BINK*' sections :
-    and (not SameText('BINK', Copy(SectionName, 1, 4))) then
+    and (not SameText('BINK', Copy(SectionInfo[i].SectionName, 1, 4))) then
     begin
-      ScanPtr := UIntPtr(Section.dwVirtualAddr);
-      ScanEnd := ScanPtr + Section.dwSizeofRaw; // Don't scan outside of raw size!
+      ScanPtr := UIntPtr(SectionInfo[i].SectionHeader.dwVirtualAddr);
+      ScanEnd := ScanPtr + SectionInfo[i].SectionHeader.dwSizeofRaw; // Don't scan outside of raw size!
 
       if MayLog(lfUnit or lfDebug) then
       begin
-        SectionName := string(PCharToString(PAnsiChar(Section.dwSectionNameAddr), XBE_SECTIONNAME_MAXLENGTH));
         DbgPrintf('DxbxHLE : Detecting functions in section $%0.4x (%s) from $%.8x to $%.8x', [
-          i, SectionName, ScanPtr, ScanEnd]);
+          i, SectionInfo[i].SectionName, ScanPtr, ScanEnd]);
       end;
 
       while ScanPtr < ScanEnd do
@@ -753,8 +750,6 @@ begin
         Inc(ScanPtr);
       end;
     end;
-
-    Inc(Section);
   end;
 end; // ScanAddressRangeForPatternHits
 
@@ -884,7 +879,7 @@ begin
 //  or _Test(?, '_D3D__RenderState'))
 //  or _Test(?, '?CommonSetDebugRegisters@D3D@@YIXXZ'))
 //  or _Test(?, '_XapiProcessHeap'))
-//  or _Test($0001171D, 'XapiInitProcess') // TODO : Use correct pattern-name!
+//  or _Test($0001171D, '_XapiInitProcess@0')
 //  or _Test($00011A35, '_RaiseException@16')
 //  or _Test($00011A9D, '_XRegisterThreadNotifyRoutine@8')
 //  or _Test($001939B0, 'EmuIDirect3DDevice8_SetRenderState_StencilEnable') // TODO : Use correct pattern-name!
@@ -1110,9 +1105,23 @@ function TSymbolManager.CheckFunctionAtAddressAndRegister(const CurrentSymbol: T
       Result := True;
   end;
 
-  function _IsAddressInsideLibrary(const aAddress: PByte; const aLibraryNameIndex: TStringTableIndex): Boolean;
+  // This is to prevent scanning functions in other sections than their own (and maybe .text?)
+  function _IsAddressInsideLibrary(const aAddress: UIntPtr; const aLibraryNameIndex: TStringTableIndex): Boolean;
+  var
+    i: Integer;
   begin
-    Result := True; // TODO : Implement this to prevent scanning functions in other sections than their own (and maybe .text?)
+    for i := 0 to Length(SectionInfo) - 1 do
+    begin
+      if  (aAddress >= SectionInfo[i].SectionHeader.dwVirtualAddr)
+      and (aAddress < SectionInfo[i].SectionEndAddr)
+      and (SectionInfo[i].LibraryNameIndex > 0) then
+      begin
+        Result := (SectionInfo[i].LibraryNameIndex = aLibraryNameIndex);
+        Exit;
+      end;
+    end;
+
+    Result := True;
   end;
 
   function _GetVersionedStoredFunction(const aAvailableInVersions: TLibraryVersionFlags;
@@ -1202,7 +1211,7 @@ begin
     Exit;
   end;
 
-  if not _IsAddressInsideLibrary(aAddress, CurrentSymbol.StoredLibraryFunction.LibraryNameIndex) then
+  if not _IsAddressInsideLibrary(UIntPtr(aAddress), CurrentSymbol.StoredLibraryFunction.LibraryNameIndex) then
   begin
     CurrentSymbol.FailReason := 'symbol cannot occur at another library address';
     Result := CR_WRONG_SECTION;
