@@ -540,6 +540,7 @@ type
     V1R0Reg: PS_REGISTER;
     EFReg: PS_REGISTER;
     function EmitConstant(const OutputStr: string; const MulResult: int): string;
+    function EmitMov(const OutputStr: string; const Input: PPSRegisterObject): string;
     function EmitAdd(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
     function EmitSub(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
     function EmitMul(const DestRegister: PPSRegisterObject; const Input1, Input2: PPSInputRegister): string;
@@ -1043,14 +1044,29 @@ begin
   end;
 end;
 
+function RPSDisassembleScope.EmitMov(const OutputStr: string; const Input: PPSRegisterObject): string;
+begin
+  Result := Input.DisassembleRegister(@Self);
+  if Pos(Result, OutputStr) > 0 then
+    Result := ''
+  else
+    Result := 'mov ' + OutputStr + ', ' + Result + #13#10;
+end;
+
 function RPSDisassembleScope.EmitAdd(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
 begin
-  Result := 'add' + OutputStr + Input1.DisassembleRegister(@Self) + ', ' + Input2.DisassembleRegister(@Self) + #13#10;
+  if Input2.Reg = PS_REGISTER_ZERO then
+    Result := EmitMov(OutputStr, Input1)
+  else
+    Result := 'add' + OutputStr + Input1.DisassembleRegister(@Self) + ', ' + Input2.DisassembleRegister(@Self) + #13#10;
 end;
 
 function RPSDisassembleScope.EmitSub(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
 begin
-  Result := 'sub' + OutputStr + Input1.DisassembleRegister(@Self) + ', ' + Input2.DisassembleRegister(@Self) + #13#10;
+  if Input2.Reg = PS_REGISTER_ZERO then
+    Result := EmitMov(OutputStr, Input1)
+  else
+    Result := 'sub' + OutputStr + Input1.DisassembleRegister(@Self) + ', ' + Input2.DisassembleRegister(@Self) + #13#10;
 end;
 
 function RPSDisassembleScope.EmitMul(const DestRegister: PPSRegisterObject;
@@ -1090,7 +1106,7 @@ begin
     MULRESULT_NEG_ONE,
     MULRESULT_HALF,
     MULRESULT_NEG_HALF:
-      Result := EmitConstant(OutputStr, MulResult);
+      Result := EmitConstant(' ' + DestRegister.DisassembleRegister(@Self) + ', ', MulResult); // Not full OutputStr!
 
     MULRESULT_VARIABLE: // 1 * A or B
       if Input1.Reg = PS_REGISTER_ONE then
@@ -1120,7 +1136,7 @@ begin
 
   if Result <> '' then
     Result := Result + #13#10;
-end;
+end; // EmitMul
 
 function RPSDisassembleScope.EmitMad(const OutputStr: string;
   const Input1, Input2: PPSInputRegister; const Input3: PPSRegisterObject): string;
@@ -1185,6 +1201,13 @@ end;
 function RPSCombinerOutput.DisassembleCombinerOutput(const aScope: PPSDisassembleScope): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
+  if Reg in [PS_REGISTER_V0, PS_REGISTER_V1] then
+  begin
+    // Cannot set a constant in a read-only (vertex) register!
+    Result := '';
+    Exit;
+  end;
+
   // Handle combining of A and B (doing either a dot-product, or a multiplication) :
   if DotProduct then
     Result := Result + CombineStageInputDot(aScope)
@@ -1251,9 +1274,10 @@ begin
       else
       begin
         // TODO : We use Sum register as a temp, which could pose a problem if one or more of the inputs use the same register!
-        Result := Result + 'mul' + SumOutputString +
-          OutputAB.Input1.DisassembleInputRegister(aScope) + ', ' +
-          OutputAB.Input2.DisassembleInputRegister(aScope) + #13#10;
+//        Result := Result + 'mul' + SumOutputString +
+//          OutputAB.Input1.DisassembleInputRegister(aScope) + ', ' +
+//          OutputAB.Input2.DisassembleInputRegister(aScope) + #13#10;
+        Result := Result + aScope.EmitMul(@Self, @OutputAB.Input1, @OutputAB.Input2);
         Result := Result + aScope.EmitMad(SumOutputString, @OutputCD.Input1, @OutputCD.Input2, @Self);
       end;
     end
@@ -1343,13 +1367,13 @@ function RPSCombinerOutputMuxSum.SumTry2Regs_1Reg1Fixed(const aScope: PPSDisasse
   const Output2Reg, Output1Reg: PPSCombinerOutput): string;
 begin
   // Is A (Output1.Input1) a register?
-  if Output1Reg.Input1.MulResult >= MULRESULT_VARIABLE then
+  if Abs(Output1Reg.Input1.MulResult) >= MULRESULT_VARIABLE then
     // Multiply CD and add A using the "mad" opcode :
     // TODO : B is a fixed value - handle the multiplication factor that implies!
     Result := aScope.EmitMad(SumOutputString, @Output2Reg.Input1, @Output2Reg.Input2, @Output1Reg.Input1)
   else
     // Is B (Output2.Input2) a register ?
-    if Output1Reg.Input2.MulResult >= MULRESULT_VARIABLE then
+    if Abs(Output1Reg.Input2.MulResult) >= MULRESULT_VARIABLE then
       // Multiply CD and add B using the "mad" opcode :
       // TODO : A is a fixed value - handle the multiplication factor that implies!
       Result := aScope.EmitMad(SumOutputString, @Output2Reg.Input1, @Output2Reg.Input2, @Output1Reg.Input2)
@@ -1357,7 +1381,7 @@ begin
     begin
       // AB is a fixed value, so just multiply CD using the "mul" opcode :
       Result := aScope.EmitMul(@Self, @Output2Reg.Input1, @Output2Reg.Input2);
-      if Output1Reg.MulResult > MULRESULT_ZERO then
+      if Abs(Output1Reg.MulResult) > MULRESULT_ZERO then
         Result := Result + '; Ignored fixed value <> ZERO!'#13#10; // TODO : Somehow, incorporate the fixed value here
     end;
 end;
@@ -1468,14 +1492,15 @@ begin
   // Reg*Reg multiplications are handled above, so check the remaining cases :
 
   // Test if the outputs read one variable (not two, that was handled above):
-  ABCheck := (OutputAB.MulResult >= MULRESULT_VARIABLE);
-  CDCheck := (OutputCD.MulResult >= MULRESULT_VARIABLE);
+  ABCheck := (Abs(OutputAB.MulResult) >= MULRESULT_VARIABLE);
+  CDCheck := (Abs(OutputCD.MulResult) >= MULRESULT_VARIABLE);
   if ABCheck and CDCheck then
   begin
     // Handle cases like this example : sum R0 = (T0*ONE) + (-C0*ONE)
+    // or sum R0 = (R0*ONE) + (R1*NEG_ONE)
     // TODO : Check where the registers are, and also apply all possible input mappings!
     // For now, we assume the fixed values are in B and D (so we add registers A and C) :
-    if OutputCD.Input1.Multiplier < 0 then
+    if (OutputCD.MulResult < 0) then
       Result := aScope.EmitSub(SumOutputString, @OutputAB.Input1, @OutputCD.Input1)
     else
       Result := aScope.EmitAdd(SumOutputString, @OutputAB.Input1, @OutputCD.Input1);
@@ -1497,8 +1522,8 @@ begin
   end;
 
   // Test if the outputs result in a fixed value :
-  ABCheck := (OutputAB.MulResult < MULRESULT_VARIABLE);
-  CDCheck := (OutputCD.MulResult < MULRESULT_VARIABLE);
+  ABCheck := (Abs(OutputAB.MulResult) < MULRESULT_VARIABLE);
+  CDCheck := (Abs(OutputCD.MulResult) < MULRESULT_VARIABLE);
   if ABCheck and CDCheck then
   begin
     // Both outputs are a fixed value - calculate what that amounts to, and generate code
@@ -1700,6 +1725,7 @@ function RPSFinalCombiner.DisassembleFinalCombiner(const aScope: PPSDisassembleS
 var
   TmpReg: PS_REGISTER;
   AlreadyHandled_D: Boolean;
+  SumOutputString: string;
 begin
   Result := '';
 
@@ -1748,6 +1774,7 @@ begin
         ; // TODO : See if R0 or R1 is available - use it for E*F or stop
 
     Result := Result + 'mul ' + PSRegToStr(aScope, aScope.EFReg) + ', ' + InputE.DisassembleInputRegister(aScope) + ', ' + InputF.DisassembleInputRegister(aScope) + #13#10;
+//    Result := Result + aScope.EmitMul(PSRegToStr(aScope, aScope.EFReg), @InputE, @InputF);
   end;
 
   // Handle PS_REGISTER_V1R0_SUM :
@@ -1786,6 +1813,9 @@ begin
   TmpReg := PS_REGISTER_R0; // TODO : Check if r0 is usable
   AlreadyHandled_D := True; // Assume D is handled
 
+//  SumOutputString := aScope.InstructionOutputCombiner + ' ' + Self.DisassembleRegister(aScope) + aScope.OutputWriteMask + ', ';
+  SumOutputString := ' ' + PSRegToStr(aScope, TmpReg) + ', ';
+
   if  ((InputA.Reg = PS_REGISTER_ZERO) or (InputA.Reg = PS_REGISTER_R0))
   and ((InputB.Reg = PS_REGISTER_ZERO) or (InputB.Reg = PS_REGISTER_R0))
   and ((InputC.Reg = PS_REGISTER_ZERO) or (InputC.Reg = PS_REGISTER_R0)) then
@@ -1797,17 +1827,18 @@ begin
       if (InputA.Reg = PS_REGISTER_ONE) then
       begin
         // r0 = B + D
-        Result := Result + 'add ' + PSRegToStr(aScope, TmpReg) + ', ' + InputB.DisassembleInputRegister(aScope) + ', ' + InputD.DisassembleInputRegister(aScope) + #13#10;
+        Result := Result + aScope.EmitAdd(SumOutputString, @InputB, @InputD);
       end
       else if (InputB.Reg = PS_REGISTER_ONE) then
       begin
         // r0 = A + D
-        Result := Result + 'add ' + PSRegToStr(aScope, TmpReg) + ', ' + InputA.DisassembleInputRegister(aScope) + ', ' + InputD.DisassembleInputRegister(aScope) + #13#10;
+        Result := Result + aScope.EmitAdd(SumOutputString, @InputA, @InputD);
       end
       else
       begin
         // r0 = A*B + D
-        Result := Result + 'mad ' + PSRegToStr(aScope, TmpReg) + ', ' + InputA.DisassembleInputRegister(aScope) + ', ' + InputB.DisassembleInputRegister(aScope) + ', ' + InputD.DisassembleInputRegister(aScope) + #13#10;
+//        Result := Result + 'mad ' + PSRegToStr(aScope, TmpReg) + ', ' + InputA.DisassembleInputRegister(aScope) + ', ' + InputB.DisassembleInputRegister(aScope) + ', ' + InputD.DisassembleInputRegister(aScope) + #13#10;
+        Result := Result + aScope.EmitMad(SumOutputString, @InputA, @InputB, @InputD);
       end;
     end
     else
@@ -2240,8 +2271,10 @@ begin
   if (Original.PSFinalCombinerInputsABCD > 0)
   or (Original.PSFinalCombinerInputsEFG > 0) then
   begin
-    Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC0Mapping, Original.PSFinalCombinerConstant0);
-    Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC1Mapping, Original.PSFinalCombinerConstant1);
+    if FinalCombiner.FinalCombinerC0Mapping < 8 then
+      Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC0Mapping, Original.PSFinalCombinerConstant0);
+    if FinalCombiner.FinalCombinerC1Mapping < 8 then
+      Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC1Mapping, Original.PSFinalCombinerConstant1);
   end;
 
   // Handle Texture declarations :
