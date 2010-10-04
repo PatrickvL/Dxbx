@@ -640,8 +640,20 @@ begin
   // Retrieve the entry point, for registration & checking later on :
   EntryPoint := GetEntryPoint(pXbeHeader);
 
-  // Init work variables :
+  // Determine upper bound for scanning, using highest virtual address :
   ScanUpper := Low(ScanUpper);
+  UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
+  for i := 0 to pXbeHeader.dwSections - 1 do
+  begin
+    ScanPtr := UIntPtr(Section.dwVirtualAddr);
+    ScanEnd := ScanPtr + Section.dwVirtualSize;
+    if ScanUpper < ScanEnd then
+      ScanUpper := ScanEnd;
+
+    Inc(Section);
+  end;
+
+  // Init work variables :
   MyAddressesInKnownSections.Size := 0;
   MyAddressesInKnownSections.Size := ScanUpper;
   UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
@@ -650,13 +662,8 @@ begin
   // Loop over all XBE sections, checking & registering various aspects :
   for i := 0 to pXbeHeader.dwSections - 1 do
   begin
-    // Determine upper bound for scanning, using highest virtual address :
-    ScanPtr := UIntPtr(Section.dwVirtualAddr);
-    ScanEnd := ScanPtr + Section.dwVirtualSize;
-    if ScanUpper < ScanEnd then
-      ScanUpper := ScanEnd;
-
     // Remember section & (raw) scan-size :
+    ScanPtr := UIntPtr(Section.dwVirtualAddr);
     ScanEnd := ScanPtr + Section.dwSizeofRaw;
     SectionInfo[i].SectionHeader := Section;
     SectionInfo[i].SectionEndAddr := ScanEnd;
@@ -687,7 +694,6 @@ begin
         SectionInfo[i].LibraryName := 'd3dx8'
       else
         SectionInfo[i].LibraryName := SectionInfo[i].SectionName;
-
 
       // Look up library name index :
       for j := 0 to PatternTrieReader.StoredSignatureTrieHeader.LibraryTable.NrOfLibraries - 1 do
