@@ -1106,7 +1106,8 @@ begin
     MULRESULT_NEG_ONE,
     MULRESULT_HALF,
     MULRESULT_NEG_HALF:
-      Result := EmitConstant(' ' + DestRegister.DisassembleRegister(@Self) + ', ', MulResult); // Not full OutputStr!
+//      Result := EmitConstant(' ' + DestRegister.DisassembleRegister(@Self) + ', ', MulResult); // Not full OutputStr!
+      Result := EmitConstant(OutputStr, MulResult);
 
     MULRESULT_VARIABLE: // 1 * A or B
       if Input1.Reg = PS_REGISTER_ONE then
@@ -1248,6 +1249,7 @@ begin
   begin
     if (OutputCD.Reg = PS_REGISTER_DISCARD) then
     begin
+      // TODO : Handle ONE*ZERO too!
       if  (OutputAB.Input2.Reg = PS_REGISTER_ONE)
       and (OutputCD.Input2.Reg = PS_REGISTER_ONE) then
         Result := Result + 'cnd' + SumOutputString + 'r0.a, ' +
@@ -1760,21 +1762,28 @@ begin
   end;
 
   // Handle PS_REGISTER_EF_PROD :
-  if (InputE.Reg > PS_REGISTER_ZERO) or (InputF.Reg > PS_REGISTER_ZERO) then
+  if (InputE.Reg > PS_REGISTER_ZERO) and (InputF.Reg > PS_REGISTER_ZERO) then
   begin
     Result := Result + '; final combiner - E*F'#13#10;
-    if (InputE.Reg = PS_REGISTER_R0)
-    or (InputF.Reg = PS_REGISTER_R0) then
-      aScope.EFReg := PS_REGISTER_R0
+    if  (InputE.Reg = PS_REGISTER_ONE)
+    and (InputF.Reg = PS_REGISTER_ONE) then
+      aScope.EFReg := PS_REGISTER_ONE
     else
-      if (InputE.Reg = PS_REGISTER_R1)
-      or (InputF.Reg = PS_REGISTER_R1) then
-        aScope.EFReg := PS_REGISTER_R1
+      if (InputE.Reg = PS_REGISTER_R0)
+      or (InputF.Reg = PS_REGISTER_R0) then
+        aScope.EFReg := PS_REGISTER_R0
       else
-        ; // TODO : See if R0 or R1 is available - use it for E*F or stop
+        if (InputE.Reg = PS_REGISTER_R1)
+        or (InputF.Reg = PS_REGISTER_R1) then
+          aScope.EFReg := PS_REGISTER_R1
+        else
+          ; // TODO : See if R0 or R1 is available - use it for E*F or stop
 
-    Result := Result + 'mul ' + PSRegToStr(aScope, aScope.EFReg) + ', ' + InputE.DisassembleInputRegister(aScope) + ', ' + InputF.DisassembleInputRegister(aScope) + #13#10;
-//    Result := Result + aScope.EmitMul(PSRegToStr(aScope, aScope.EFReg), @InputE, @InputF);
+    if aScope.EFReg > PS_REGISTER_ONE then
+      Result := Result + 'mul ' + PSRegToStr(aScope, aScope.EFReg) + ', ' + InputE.DisassembleInputRegister(aScope) + ', ' + InputF.DisassembleInputRegister(aScope) + #13#10
+//    Result := Result + aScope.EmitMul(PSRegToStr(aScope, aScope.EFReg), @InputE, @InputF)
+    else
+      ; // TODO : How should we handle EFReg PS_REGISTER_ONE ?
   end;
 
   // Handle PS_REGISTER_V1R0_SUM :
