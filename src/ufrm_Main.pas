@@ -665,10 +665,7 @@ begin
   // even function as a complete database of everything related to
   // Xbox1 emulation!
   if FileExists(aXbeInfo.FileName) then
-  begin
-    LoadXbe(aXbeInfo.FileName);
-    m_Xbe.DumpInformation(GetTitleSpecificKernelDebugFilePath);
-  end
+    LoadXbe(aXbeInfo.FileName)
   else
   begin
     m_Xbe := nil;
