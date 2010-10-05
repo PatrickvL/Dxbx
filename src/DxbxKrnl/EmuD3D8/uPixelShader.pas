@@ -438,6 +438,7 @@ type
   RPSRegisterObject = object
     IsAlpha: Boolean;
     Reg: PS_REGISTER;
+    function IsNativeRegWriteable: Boolean;
     procedure Decode(Value: Byte; aIsAlpha: Boolean);
     function IsSameAsAlpha(const Alpha: PPSRegisterObject): Boolean;
     function IntermediateToString(): string;
@@ -491,7 +492,7 @@ type
   RPSCombinerStageChannel = record
     OutputSUM: RPSCombinerOutputMuxSum; // Contains OutputAB, OutputCD
     CombinerOutputFlags: PS_COMBINEROUTPUT;
-    AB_CD_MUX: Boolean; // False=AB+CD, True=MUX(AB;CD) based on R0.a
+    AB_CD_SUM: Boolean; // True=AB+CD, False=MUX(AB;CD) based on R0.a
     procedure Decode(PSInputs, PSOutputs: DWORD; IsAlpha: Boolean = False);
     function IsSameAsAlpha(const Alpha: PPSCombinerStageChannel): Boolean;
     function DisassembleCombinerStageChannel(const aScope: PPSDisassembleScope): string;
@@ -862,6 +863,16 @@ begin
   Reg := PS_REGISTER(Value);
 end;
 
+function RPSRegisterObject.IsNativeRegWriteable: Boolean;
+begin
+  Result := Reg in [PS_REGISTER_T0..PS_REGISTER_T3,
+                    PS_REGISTER_R0..PS_REGISTER_R1];
+
+  // Note : Xbox allows writing to V0 (diffuse color) and V1 (specular color), but native ps.1.3 doesn't!
+  // Some examples of this behaviour can be seen when running RayMan Arena.
+  // TODO : How are we ever going to support this?!?
+end;
+
 function RPSRegisterObject.IsSameAsAlpha(const Alpha: PPSRegisterObject): Boolean;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
@@ -1195,17 +1206,23 @@ begin
     Self.DisassembleRegister(aScope) + aScope.OutputWriteMask + ', ' +
     Input1.DisassembleInputRegister(aScope) + ', ' +
     Input2.DisassembleInputRegister(aScope) + #13#10;
-  // TODO : Because "dp3" needs the color/vector pipeline, no color component outputing opcode can be co-issued with it.
-  // So, we need to skip adding '+' after this.
+
+  // Because "dp3" needs the color/vector pipeline, no color component outputing opcode can be co-issued with it.
+  // So, we need to skip adding '+' after this, by signalling this via the OutputWriteMask :
+  aScope.OutputWriteMask := '';
 end;
 
 function RPSCombinerOutput.DisassembleCombinerOutput(const aScope: PPSDisassembleScope): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  if Reg in [PS_REGISTER_V0, PS_REGISTER_V1] then
+  if not IsNativeRegWriteable then
   begin
-    // Cannot set a constant in a read-only (vertex) register!
-    Result := '';
+    // Cannot assign to a read-only (probably vertex) register!
+    Result := '; Ignored assignment to read-only register (' + Self.DisassembleRegister(aScope) + ')!'#13#10;
+    // TODO : We could try to find a free spare register for this case and use that instead,
+    // or even mark this output as DISCARD, when there's no further use of this register!
+    // (If we do that, we should do it before determining MayPostponeMul, to profit from that optimization.)
+    aScope.OutputWriteMask := ''; // Also prevent co-issueing (instead, output a normal instruction)
     Exit;
   end;
 
@@ -1223,7 +1240,7 @@ begin
       // Note 2: Pixel shader 1.1-1.3 'blue replicate' on source, uses an alpha destination write mask.
       Result := Result + 'mov ' + DisassembleRegister(aScope) + '.a, ' + DisassembleRegister(aScope) + '.b'#13#10;
   end;
-end;
+end; // DisassembleCombinerOutput
 
 { RPSCombinerOutputMuxSum }
 
@@ -1579,7 +1596,7 @@ begin
   OutputSUM.OutputCD.Decode((PSOutputs shr 0) and $F, (PSInputs shr  0) and $FFFF, IsAlpha);
   OutputSUM.Decode((PSOutputs shr 8) and $F, IsAlpha);
 
-  AB_CD_MUX := (CombinerOutputFlags and PS_COMBINEROUTPUT_AB_CD_MUX) > 0; // False=AB+CD, True=MUX(AB,CD) based on R0.a
+  AB_CD_SUM := (CombinerOutputFlags and PS_COMBINEROUTPUT_AB_CD_MUX) = 0; // True=AB+CD, False=MUX(AB,CD) based on R0.a
 (*
   // Ease the emulation by convering the combiner output flags to a multiplier & correction
   case PS_COMBINEROUTPUT(Ord(CombinerOutputFlags) and $38) of
@@ -1603,9 +1620,17 @@ end;
 function RPSCombinerStageChannel.DisassembleCombinerStageChannel(const aScope: PPSDisassembleScope): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
-  MaySkip: Boolean;
+  MayPostponeMul: Boolean;
 begin
   Result := '';
+
+  // Note : On a hardware level, there are only 4 pixel shaders instructions present in the Nvidia NV2A GPU :
+  // - xdd (dot/dot/discard) > calculating AB=A.B and CD=C.D
+  // - xdm (dot/mul/discard) > calculating AB=A.B and CD=C*D
+  // - xmmc (mul/mul/mux)    > calculating AB=A*B and CD=C*D and Mux=AB?CD
+  // - xmma (mul/mul/sum)    > calculating AB=A*B and CD=C*D and Sum=AB+CD
+  // (One of the implications is, that once a dot-product is issued, no Sum or Mux operation is possible.)
+  // All other instructions (mov, add, sub, mul, lrp, dp3) are compiled into one of these 4 using varying arguments.
 
   // Convert the CombinerOutput flag to a InstructionOutputCombiner
   // or an SourceRegisterModifier (so far as that's possible):
@@ -1620,18 +1645,19 @@ begin
     PS_COMBINEROUTPUT_SHIFTRIGHT_1:     aScope.InstructionOutputCombiner := '_d2';      // y = x/2 = x*0.5
   end;
 
-  // We may skip (one) output calculation, if we can postpone it to the Sum step :
-  MaySkip := (OutputSUM.Reg > PS_REGISTER_DISCARD) and (AB_CD_MUX = False);
+  // In Sum-mode, we might be able to skip (one) multiplication, if we can postpone it to the Sum step :
+  MayPostponeMul := AB_CD_SUM and (OutputSUM.Reg > PS_REGISTER_DISCARD);
 
   // Do we need to calculate AB ?
   if OutputSUM.OutputAB.Reg > PS_REGISTER_DISCARD then
   begin
     // If the result is a multiplication and goes to the same register as the Sum target register,
     // we don't output A*B just yet, as it could be done more efficient later :
-    if MaySkip and (OutputSUM.OutputAB.Reg = OutputSUM.Reg) then
+    if MayPostponeMul and (OutputSUM.OutputAB.Reg = OutputSUM.Reg) then
     begin
-      MaySkip := False;
+      // This one occurance was encountered, ignore AB for now (and don't postpone CD calculation!) :
       OutputSUM.OutputAB.Reg := PS_REGISTER_DISCARD;
+      MayPostponeMul := False;
     end
     else
       Result := Result + OutputSUM.OutputAB.DisassembleCombinerOutput(aScope);
@@ -1642,7 +1668,7 @@ begin
   begin
     // If the result is a multiplication and goes to the same register as the Sum target register,
     // we don't output C*D just yet, as it could be done more efficient later :
-    if MaySkip and (OutputSUM.OutputCD.Reg = OutputSUM.Reg) then
+    if MayPostponeMul and (OutputSUM.OutputCD.Reg = OutputSUM.Reg) then
     begin
       // unused MaySkip := False;
       OutputSUM.OutputCD.Reg := PS_REGISTER_DISCARD;
@@ -1654,12 +1680,12 @@ begin
   // Do we need to calculate SUM ?
   if OutputSUM.Reg > PS_REGISTER_DISCARD then
   begin
-    if AB_CD_MUX then
-      Result := Result + OutputSUM.CombineStageInputMux(aScope)
+    if AB_CD_SUM then
+      Result := Result + OutputSUM.CombineStageInputSum(aScope)
     else
-      Result := Result + OutputSUM.CombineStageInputSum(aScope);
+      Result := Result + OutputSUM.CombineStageInputMux(aScope);
   end;
-end;
+end; // DisassembleCombinerStageChannel
 
 { RPSCombinerStage }
 
@@ -1681,24 +1707,32 @@ begin
     // In that case, we combine both channels in one go without Output Write Masks (which defaults to '.rgba') :
     aScope.OutputWriteMask := '';
     Result := Result + RGB.DisassembleCombinerStageChannel(aScope);
-  end
-  else
+    Exit;
+  end;
+
+  // Else, handle RGB separately from Alpha :
+  aScope.OutputWriteMask := '.rgb';
+  StageOutputStrRGB := RGB.DisassembleCombinerStageChannel(aScope);
+  Result := Result + StageOutputStrRGB;
+
+  // If someone (like CombineStageInputDot) cleared the output-writemask (disabling co-issueing)
+  if aScope.OutputWriteMask = '' then
+    // Disable the following co-issueing with the Alpha channel :
+    StageOutputStrRGB := '';
+
+  // Now, generate the Alpha channel :
+  aScope.OutputWriteMask := '.a';
+  StageOutputStrAlpha := Alpha.DisassembleCombinerStageChannel(aScope);
+
+  // And output it (only if Alpha output is not identical to RGB) :
+  // TODO : This test needs improvement!
+  if StageOutputStrAlpha <> '' then
   begin
-    // Else, handle rgb separately from alpha :
-    aScope.OutputWriteMask := '.rgb';
-    StageOutputStrRGB := RGB.DisassembleCombinerStageChannel(aScope);
+    // Co-issue the Alpha channel together with the RGB channel (if that's still possible) :
+    if (StageOutputStrRGB <> '') and (StageOutputStrAlpha[1] <> ';') then
+      Result := Result + '+';
 
-    aScope.OutputWriteMask := '.a';
-    StageOutputStrAlpha := Alpha.DisassembleCombinerStageChannel(aScope);
-
-    Result := Result + StageOutputStrRGB;
-    if StageOutputStrAlpha <> '' then
-    begin
-      if StageOutputStrRGB <> '' then
-        Result := Result + '+ ';
-
-      Result := Result + StageOutputStrAlpha;
-    end;
+    Result := Result + StageOutputStrAlpha;
   end;
 end;
 
