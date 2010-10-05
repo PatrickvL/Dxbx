@@ -56,7 +56,6 @@ function DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE): H
 function DxbxTextureStageStateIsXboxExtension(const Value: X_D3DTEXTURESTAGESTATETYPE): Boolean; {NOPATCH}
 function DxbxFromOldVersion_D3DTSS(const OldValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
 function DxbxFromNewVersion_D3DTSS(const NewValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
-function EmuXB2PC_D3DTSS(Value: X_D3DTEXTURESTAGESTATETYPE): D3DTEXTURESTAGESTATETYPE;
 
 procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
 
@@ -549,7 +548,7 @@ begin
     D3DRS_BLENDOPALPHA              = 209   // Blending operation for the alpha channel when D3DRS_SEPARATEDESTALPHAENABLE is TRUE
 *)
   else
-    Result := D3DRS_UNSUPPORTED;
+    Result := D3DRENDERSTATETYPE(D3DRS_UNSUPPORTED);
   end;
 end;
 
@@ -811,43 +810,6 @@ begin
   end;
 end;
 
-// convert from xbox to pc texture stage state
-function EmuXB2PC_D3DTSS(Value: X_D3DTEXTURESTAGESTATETYPE): D3DTEXTURESTAGESTATETYPE;
-// Branch:Dxbx  Translator:PatrickvL  Done:100
-begin
-  case (Value) of
-    X_D3DTSS_ADDRESSU                   : Result := D3DSAMP_ADDRESSU;
-    X_D3DTSS_ADDRESSV                   : Result := D3DSAMP_ADDRESSV;
-    X_D3DTSS_ADDRESSW                   : Result := D3DSAMP_ADDRESSW;
-    X_D3DTSS_MAGFILTER                  : Result := D3DSAMP_MAGFILTER;
-    X_D3DTSS_MINFILTER                  : Result := D3DSAMP_MINFILTER;
-    X_D3DTSS_MIPFILTER                  : Result := D3DSAMP_MIPFILTER;
-    X_D3DTSS_MIPMAPLODBIAS              : Result := D3DSAMP_MIPMAPLODBIAS;
-    X_D3DTSS_MAXMIPLEVEL                : Result := D3DSAMP_MAXMIPLEVEL;
-    X_D3DTSS_MAXANISOTROPY              : Result := D3DSAMP_MAXANISOTROPY;
-    X_D3DTSS_COLOROP                    : Result := D3DTSS_COLOROP;
-    X_D3DTSS_COLORARG0                  : Result := D3DTSS_COLORARG0;
-    X_D3DTSS_COLORARG1                  : Result := D3DTSS_COLORARG1;
-    X_D3DTSS_COLORARG2                  : Result := D3DTSS_COLORARG2;
-    X_D3DTSS_ALPHAOP                    : Result := D3DTSS_ALPHAOP;
-    X_D3DTSS_ALPHAARG0                  : Result := D3DTSS_ALPHAARG0;
-    X_D3DTSS_ALPHAARG1                  : Result := D3DTSS_ALPHAARG1;
-    X_D3DTSS_ALPHAARG2                  : Result := D3DTSS_ALPHAARG2;
-    X_D3DTSS_RESULTARG                  : Result := D3DTSS_RESULTARG;
-    X_D3DTSS_TEXTURETRANSFORMFLAGS      : Result := D3DTSS_TEXTURETRANSFORMFLAGS;
-    X_D3DTSS_BUMPENVMAT00               : Result := D3DTSS_BUMPENVMAT00;
-    X_D3DTSS_BUMPENVMAT01               : Result := D3DTSS_BUMPENVMAT01;
-    X_D3DTSS_BUMPENVMAT10               : Result := D3DTSS_BUMPENVMAT10;
-    X_D3DTSS_BUMPENVMAT11               : Result := D3DTSS_BUMPENVMAT11;
-    X_D3DTSS_BUMPENVLSCALE              : Result := D3DTSS_BUMPENVLSCALE;
-    X_D3DTSS_BUMPENVLOFFSET             : Result := D3DTSS_BUMPENVLOFFSET;
-    X_D3DTSS_TEXCOORDINDEX              : Result := D3DTSS_TEXCOORDINDEX;
-    X_D3DTSS_BORDERCOLOR                : Result := D3DSAMP_BORDERCOLOR;
-  else
-    Result := D3DTEXTURESTAGESTATETYPE(-1); // Unsupported
-  end;
-end;
-
 function DxbxFromOldVersion_D3DTSS(const OldValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
@@ -905,7 +867,7 @@ begin
   begin
     // Map the Xbox state to a PC state, and check if it's supported :
     PCRenderState := EmuXB2PC_D3DRS(XboxRenderState); // TODO : Speed this up using a lookup table
-    if PCRenderState <> D3DRS_UNSUPPORTED then
+    if Ord(PCRenderState) <> Ord(D3DRS_UNSUPPORTED) then
     begin
       // Convert the value from Xbox format into PC format, and set it locally :
       Result := DxbxRenderStateXB2PCCallback[XboxRenderState](XboxValue);
@@ -937,7 +899,6 @@ var
   Stage: int;
   XboxValue: DWORD;
   PCValue: DWORD;
-  PCState: D3DTEXTURESTAGESTATETYPE;
   pTexture: XTL_PIDirect3DBaseTexture8;
 begin
   // Generic transfer of all Xbox deferred render states to PC :
@@ -983,7 +944,7 @@ begin
             Continue;
         end;
 
-        IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, EmuXB2PC_D3DTSS(State), PCValue);
+        IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, State, PCValue);
       end;
     end;
 
@@ -996,22 +957,18 @@ begin
       // TODO -oDXBX: Should we clear the pTexture interface (and how)?
 
       // disable all other stages
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 1, X_D3DTSS_COLOROP, D3DTOP_DISABLE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 1, X_D3DTSS_ALPHAOP, D3DTOP_DISABLE);
 
       // copy over the stage
       for State := 0 to X_D3DTS_STAGESIZE-1 do
       begin
-        PCState := EmuXB2PC_D3DTSS(State);
-        if int(PCState) >= 0 then
+        XboxValue := XTL_EmuD3DDeferredTextureState[3, Ord(DxbxFromNewVersion_D3DTSS(State))];
+        if (XboxValue <> X_D3DTSS_UNK) then
         begin
-          XboxValue := XTL_EmuD3DDeferredTextureState[3, Ord(DxbxFromNewVersion_D3DTSS(State))];
-          if (XboxValue <> X_D3DTSS_UNK) then
-          begin
-            PCValue := XboxValue; // TODO : Use registry of callbacks to do this conversion.
-            IDirect3DDevice_GetTextureStageState(g_pD3DDevice, 3, PCState, {out}PCValue);
-            IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 0, PCState, PCValue);
-          end;
+          PCValue := XboxValue; // TODO : Use registry of callbacks to do this conversion.
+          IDirect3DDevice_GetTextureStageState(g_pD3DDevice, 3, State, {out}PCValue);
+          IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 0, State, PCValue);
         end;
       end;
     end;
@@ -1034,13 +991,13 @@ begin
     (* Cxbx has this disabled :
     for v:=0 to 4-1 do
     begin
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, D3DTSS_COLOROP,   D3DTOP_MODULATE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, D3DTSS_COLORARG2, D3DTA_CURRENT);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLOROP,   D3DTOP_MODULATE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLORARG1, D3DTA_TEXTURE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLORARG2, D3DTA_CURRENT);
 
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, D3DTSS_ALPHAOP,   D3DTOP_MODULATE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAOP,   D3DTOP_MODULATE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAARG2, D3DTA_CURRENT);
     end;
 
     g_pD3DDevice.SetRenderState(D3DRS_NORMALIZENORMALS, BOOL_TRUE);

@@ -67,9 +67,11 @@ function IDirect3DDevice_CreateVolumeTexture(const aDirect3DDevice: IDirect3DDev
   Width, Height, Depth, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppVolumeTexture: PIDirect3DVolumeTexture): HResult;
 function IDirect3DDevice_GetTextureStageState(const aDirect3DDevice: IDirect3DDevice;
-  Sampler: DWORD; _Type: TD3DSamplerStateType; out Value: DWORD): HResult;
+  Sampler: DWORD; _Type: X_D3DTEXTURESTAGESTATETYPE; out Value: DWORD): HResult;
 function IDirect3DDevice_SetTextureStageState(const aDirect3DDevice: IDirect3DDevice;
-  Sampler: DWORD; _Type: TD3DSamplerStateType; Value: DWORD): HResult;
+  Sampler: DWORD; _Type: X_D3DTEXTURESTAGESTATETYPE; Value: DWORD): HResult;
+
+function EmuXB2PC_D3DTSS(Value: X_D3DTEXTURESTAGESTATETYPE): TD3DSamplerStateType;
 
 function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;
 
@@ -199,28 +201,87 @@ begin
 {$ENDIF}
 end;
 
+// Note! Because of the split between texture-stage-state and sampler-state, this method
+// must have the original (Xbox) value to work with (otherwise, we would have overlapping
+// values in Direct3D9!). As a consequence, the conversion to native takes place in here.
 function IDirect3DDevice_GetTextureStageState(const aDirect3DDevice: IDirect3DDevice;
-  Sampler: DWORD; _Type: TD3DSamplerStateType; out Value: DWORD): HResult;
+  Sampler: DWORD; _Type: X_D3DTEXTURESTAGESTATETYPE; out Value: DWORD): HResult;
+var
+  PCState: TD3DSamplerStateType;
 begin
+  PCState := EmuXB2PC_D3DTSS(_Type);
+  if Ord(PCState) < 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
 {$IFDEF DXBX_USE_D3D9}
-  // For Direct3D9, everything below D3DSAMP_MAXANISOTROPY needs to call SetSamplerState :
-  if Sampler <= D3DSAMP_MAXANISOTROPY then
-    Result := aDirect3DDevice.GetSamplerState(DWORD(Sampler), _Type, {out}Value)
+  // For Direct3D9, everything below X_D3DSAMP_MAXANISOTROPY needs to call SetSamplerState :
+  if (_Type <= X_D3DTSS_MAXANISOTROPY) then
+    Result := aDirect3DDevice.GetSamplerState(Sampler, PCState, {out}Value)
   else
+    // TODO : Aren't we missing out on texture-states?
 {$ENDIF}
-    Result := aDirect3DDevice.GetTextureStageState(Sampler, _Type, {out}Value);
+    Result := aDirect3DDevice.GetTextureStageState(Sampler, TD3DTextureStageStateType(PCState), {out}Value);
 end;
 
 function IDirect3DDevice_SetTextureStageState(const aDirect3DDevice: IDirect3DDevice;
-  Sampler: DWORD; _Type: TD3DSamplerStateType; Value: DWORD): HResult;
+  Sampler: DWORD; _Type: X_D3DTEXTURESTAGESTATETYPE; Value: DWORD): HResult;
+var
+  PCState: TD3DSamplerStateType;
 begin
+  PCState := EmuXB2PC_D3DTSS(_Type);
+  if Ord(PCState) < 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
 {$IFDEF DXBX_USE_D3D9}
   // For Direct3D9, everything below D3DSAMP_MAXANISOTROPY needs to call SetSamplerState :
-  if Sampler <= D3DSAMP_MAXANISOTROPY then
-    Result := aDirect3DDevice.SetSamplerState(DWORD(Sampler), _Type, Value)
+  if _Type <= X_D3DTSS_MAXANISOTROPY then
+    Result := aDirect3DDevice.SetSamplerState(Sampler, PCState, Value)
   else
 {$ENDIF}
-    Result := aDirect3DDevice.SetTextureStageState(Sampler, _Type, Value);
+    Result := aDirect3DDevice.SetTextureStageState(Sampler, TD3DTextureStageStateType(PCState), Value);
+end;
+
+// convert from xbox to pc texture stage state
+function EmuXB2PC_D3DTSS(Value: X_D3DTEXTURESTAGESTATETYPE): TD3DSamplerStateType;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  case (Value) of
+    X_D3DTSS_ADDRESSU                   : Result := D3DSAMP_ADDRESSU;
+    X_D3DTSS_ADDRESSV                   : Result := D3DSAMP_ADDRESSV;
+    X_D3DTSS_ADDRESSW                   : Result := D3DSAMP_ADDRESSW;
+    X_D3DTSS_MAGFILTER                  : Result := D3DSAMP_MAGFILTER;
+    X_D3DTSS_MINFILTER                  : Result := D3DSAMP_MINFILTER;
+    X_D3DTSS_MIPFILTER                  : Result := D3DSAMP_MIPFILTER;
+    X_D3DTSS_MIPMAPLODBIAS              : Result := D3DSAMP_MIPMAPLODBIAS;
+    X_D3DTSS_MAXMIPLEVEL                : Result := D3DSAMP_MAXMIPLEVEL;
+    X_D3DTSS_MAXANISOTROPY              : Result := D3DSAMP_MAXANISOTROPY;
+    X_D3DTSS_COLOROP                    : Result := TD3DSamplerStateType(D3DTSS_COLOROP);
+    X_D3DTSS_COLORARG0                  : Result := TD3DSamplerStateType(D3DTSS_COLORARG0);
+    X_D3DTSS_COLORARG1                  : Result := TD3DSamplerStateType(D3DTSS_COLORARG1);
+    X_D3DTSS_COLORARG2                  : Result := TD3DSamplerStateType(D3DTSS_COLORARG2);
+    X_D3DTSS_ALPHAOP                    : Result := TD3DSamplerStateType(D3DTSS_ALPHAOP);
+    X_D3DTSS_ALPHAARG0                  : Result := TD3DSamplerStateType(D3DTSS_ALPHAARG0);
+    X_D3DTSS_ALPHAARG1                  : Result := TD3DSamplerStateType(D3DTSS_ALPHAARG1);
+    X_D3DTSS_ALPHAARG2                  : Result := TD3DSamplerStateType(D3DTSS_ALPHAARG2);
+    X_D3DTSS_RESULTARG                  : Result := TD3DSamplerStateType(D3DTSS_RESULTARG);
+    X_D3DTSS_TEXTURETRANSFORMFLAGS      : Result := TD3DSamplerStateType(D3DTSS_TEXTURETRANSFORMFLAGS);
+    X_D3DTSS_BUMPENVMAT00               : Result := TD3DSamplerStateType(D3DTSS_BUMPENVMAT00);
+    X_D3DTSS_BUMPENVMAT01               : Result := TD3DSamplerStateType(D3DTSS_BUMPENVMAT01);
+    X_D3DTSS_BUMPENVMAT10               : Result := TD3DSamplerStateType(D3DTSS_BUMPENVMAT10);
+    X_D3DTSS_BUMPENVMAT11               : Result := TD3DSamplerStateType(D3DTSS_BUMPENVMAT11);
+    X_D3DTSS_BUMPENVLSCALE              : Result := TD3DSamplerStateType(D3DTSS_BUMPENVLSCALE);
+    X_D3DTSS_BUMPENVLOFFSET             : Result := TD3DSamplerStateType(D3DTSS_BUMPENVLOFFSET);
+    X_D3DTSS_TEXCOORDINDEX              : Result := TD3DSamplerStateType(D3DTSS_TEXCOORDINDEX);
+    X_D3DTSS_BORDERCOLOR                : Result := D3DSAMP_BORDERCOLOR;
+  else
+    Result := TD3DSamplerStateType(-1); // Unsupported
+  end;
 end;
 
 function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;
