@@ -1808,7 +1808,11 @@ begin
       _(ppD3D8, 'ppD3D8').
     LogEnd();
 
+{$IFDEF DXBX_USE_D3D9}
+  g_pD3DDevice.GetDirect3D({out}PIDirect3D9(ppD3D8));
+{$ELSE}
   g_pD3DDevice.GetDirect3D({out}PIDirect3D8(ppD3D8));
+{$ENDIF}
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
@@ -2156,7 +2160,7 @@ begin
   end;
 
   EmuSwapFS(fsXbox);
-  
+
   Result := ret;
 end;
 
@@ -2181,7 +2185,7 @@ begin
   // This value. We can initialize the cache with the default Xbox mode data.
   Result := g_pD3D.GetAdapterDisplayMode
   (
-    g_XBVideo.GetDisplayAdapter(), 
+    g_XBVideo.GetDisplayAdapter(),
     {out}PD3DDISPLAYMODE(pMode)^
   );
 
@@ -2529,7 +2533,7 @@ procedure XTL_EmuD3DDevice_GetGammaRamp
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   pGammaRamp: PD3DGAMMARAMP;
-  v: int;        
+  v: int;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2997,7 +3001,7 @@ begin
     if DxbxTextureStageStateIsXboxExtension(Type_VersionIndependent) then
       PValue^ := XTL_EmuD3DDeferredTextureState[Stage, Ord(Type_)]
     else
-      IDirect3DDevice_GetTextureStageState(g_pD3DDevice, Stage, EmuXB2PC_D3DTSS(Type_VersionIndependent), {out}pValue^);
+      IDirect3DDevice_GetTextureStageState(g_pD3DDevice, Stage, Type_VersionIndependent, {out}pValue^);
   end;
 
   Result := D3D_OK;
@@ -4102,10 +4106,10 @@ end;
 
 function XTL_EmuD3DDevice_CreateVolumeTexture
 (
-    Width: UINT; 
+    Width: UINT;
     Height: UINT;
-    Depth: UINT; 
-    Levels: UINT; 
+    Depth: UINT;
+    Levels: UINT;
     Usage: DWORD;
     Format: X_D3DFORMAT;
     Pool: X_D3DPOOL;
@@ -5750,7 +5754,7 @@ begin
     LogBegin('EmuIDirect3DResource_Release').
       _(pThis, 'pThis').
     LogEnd();
- 
+
   uRet := 0;
 
   // HACK: In case the clone technique fails...
@@ -6947,7 +6951,7 @@ begin
   XTL_EmuD3DDeferredTextureState[Stage, Ord(DxbxFromNewVersion_D3DTSS(X_D3DTSS_TEXCOORDINDEX))] := Value;
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
-  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, D3DTSS_TEXCOORDINDEX, Value);
+  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, X_D3DTSS_TEXCOORDINDEX, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7013,7 +7017,7 @@ begin
   XTL_EmuD3DDeferredTextureState[Stage, Ord(DxbxFromNewVersion_D3DTSS(X_D3DTSS_BORDERCOLOR))] := Value;
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
-  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, D3DSAMP_BORDERCOLOR, Value);
+  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, X_D3DTSS_BORDERCOLOR, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7058,6 +7062,7 @@ begin
     LogEnd();
 
   EmuWarning('SetTextureState_ParameterCheck is not supported!');
+  Result := 0;
 
   EmuSwapFS(fsXbox);
 end;
@@ -7087,7 +7092,7 @@ begin
   // Dxbx Note : The BumpEnv values don't need a XB2PC conversion
   // Dxbx Note : The BumpEnv types all have a PC counterpart (so no -1 test needed)
 
-  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, EmuXB2PC_D3DTSS(DxbxFromOldVersion_D3DTSS(Type_)), Value);
+  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, DxbxFromOldVersion_D3DTSS(Type_), Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8214,7 +8219,7 @@ end;
 function XTL_EmuD3DDevice_DrawIndexedVertices
 (
   PrimitiveType: X_D3DPRIMITIVETYPE;
-  VertexCount: UINT; 
+  VertexCount: UINT;
   pIndexData: PWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -9063,7 +9068,7 @@ end;
 function XTL_EmuD3DDevice_SetVertexShaderInputDirect
 (
   pVAF: PX_VERTEXATTRIBUTEFORMAT;
-  StreamCount: UINT; 
+  StreamCount: UINT;
   pStreamInputs: PX_STREAMINPUT
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:0
@@ -9474,7 +9479,7 @@ begin
     LogEnd();
 
   Result := D3D_OK; // This is a Xbox extension, meaning there is no pc counterpart.
-  
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -10483,7 +10488,7 @@ begin
       _(pDesc, 'pDesc').
     LogEnd();
 
-  hRet := IDirect3DCubeTexture8(pThis.Emu.CubeTexture).GetLevelDesc(Level, {out}SurfaceDesc);
+  hRet := IDirect3DCubeTexture(pThis.Emu.CubeTexture).GetLevelDesc(Level, {out}SurfaceDesc);
 
   if SUCCEEDED(hRet) then
     // rearrange into xbox format (remove D3DPOOL)
@@ -10511,7 +10516,7 @@ begin
       _(ppCubeMapSurface, 'ppCubeMapSurface').
     LogEnd();
 
-  Result := IDirect3DCubeTexture8(pThis.Emu.CubeTexture).GetCubeMapSurface(FaceType, Level,PIDirect3DSurface8(ppCubeMapSurface^));
+  Result := IDirect3DCubeTexture(pThis.Emu.CubeTexture).GetCubeMapSurface(FaceType, Level, PIDirect3DSurface(ppCubeMapSurface^));
   EmuSwapFS(fsXbox);
 end;
 
@@ -10567,7 +10572,7 @@ begin
     LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
-  Result := IDirect3DVolumeTexture(pthis.Emu.VolumeTexture).GetVolumeLevel(Level, PIDirect3DVolume8(ppVolumeLevel));
+  Result := IDirect3DVolumeTexture(pthis.Emu.VolumeTexture).GetVolumeLevel(Level, PIDirect3DVolume(ppVolumeLevel));
 
   if (FAILED(Result)) then
     EmuWarning('GetVolumeLevel2 Failed!');
@@ -10638,7 +10643,7 @@ begin
       _(ppBaseTexture, 'ppBaseTexture').
     LogEnd();
 
-  Result := IDirect3DVolume(pThis.Emu.VolumeTexture).GetContainer(IID_IDirect3DTexture8, Pointer(ppBaseTexture));
+  Result := IDirect3DVolume(pThis.Emu.VolumeTexture).GetContainer({IID_}IDirect3DTexture, Pointer(ppBaseTexture));
 
   EmuSwapFS(fsXbox);
 end;
@@ -10713,7 +10718,7 @@ begin
     LogEnd();
 
   EmuVerifyResourceIsRegistered(pThis);
-  Result := IDirect3DVolume(pThis.Emu.Surface).GetContainer(IID_IDirect3DTexture8, Pointer(ppBaseTexture));
+  Result := IDirect3DVolume(pThis.Emu.Surface).GetContainer({IID_}IDirect3DTexture, Pointer(ppBaseTexture));
   if (FAILED(Result)) then
     EmuWarning('GetVolumeLevel2 Failed!');
 
@@ -10778,7 +10783,7 @@ function XTL_EmuD3DPushBuffer_SetVertexShaderInputDirect
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuD3DPushBuffer_SetVertexShaderInputDirect');
+  Result := Unimplemented('XTL_EmuD3DPushBuffer_SetVertexShaderInputDirect');
 
   EmuSwapFS(fsXbox);
 end;

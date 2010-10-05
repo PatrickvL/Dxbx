@@ -57,6 +57,7 @@ type
   PIDirect3DSurface = PIDirect3DSurface9;
   PIDirect3DTexture = PIDirect3DTexture9;
   PIDirect3DVertexBuffer = PIDirect3DVertexBuffer9;
+  PIDirect3DVolume = PIDirect3DVolume9;
   PIDirect3DVolumeTexture = PIDirect3DVolumeTexture9;
 
   PD3DMaterial = PD3DMaterial9;
@@ -161,7 +162,9 @@ const
   D3DVSDE_TEXCOORD2 = D3DDECLUSAGE_TEXCOORD; // Mapped to index 2 in D3D9
   D3DVSDE_TEXCOORD3 = D3DDECLUSAGE_TEXCOORD; // Mapped to index 3 in D3D9
 
-{$ELSE}
+  D3DRS_FORCE_DWORD               = $7fffffff;
+
+{$ELSE !DXBX_USE_D3D9}
 const
   UNSUPPORTED = DWORD(-1); // Doesn't exist in D3D8
 
@@ -189,6 +192,7 @@ type
   PIDirect3DSurface = PIDirect3DSurface8;
   PIDirect3DTexture = PIDirect3DTexture8;
   PIDirect3DVertexBuffer = PIDirect3DVertexBuffer8;
+  PIDirect3DVolume = PIDirect3DVolume8;
   PIDirect3DVolumeTexture = PIDirect3DVolumeTexture8;
 
   PD3DMaterial = PD3DMaterial8;
@@ -1239,7 +1243,6 @@ const X_D3DRS_COMPLEX_LAST = X_D3DRS_DONOTCULLUNCOMPRESSED;
 
 const X_D3DRS_FIRST = X_D3DRS_PS_FIRST;
 const X_D3DRS_LAST = X_D3DRS_COMPLEX_LAST;
-
 
 const X_D3DWRAP_U = $00000010;
 const X_D3DWRAP_V = $00001000;
