@@ -2,7 +2,7 @@ object FormXBEExplorer: TFormXBEExplorer
   Left = 0
   Top = 0
   Caption = 'XBE Explorer'
-  ClientHeight = 704
+  ClientHeight = 728
   ClientWidth = 836
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,7 +18,7 @@ object FormXBEExplorer: TFormXBEExplorer
     Left = 0
     Top = 23
     Width = 225
-    Height = 681
+    Height = 705
     Align = alLeft
     HideSelection = False
     Indent = 19
@@ -26,14 +26,16 @@ object FormXBEExplorer: TFormXBEExplorer
     RowSelect = True
     TabOrder = 0
     OnChange = TreeView1Change
+    ExplicitHeight = 681
   end
   object PageControl: TPageControl
     Left = 225
     Top = 23
     Width = 611
-    Height = 681
+    Height = 705
     Align = alClient
     TabOrder = 1
+    ExplicitHeight = 681
   end
   object ActionMainMenuBar: TActionMainMenuBar
     Left = 0
@@ -42,9 +44,9 @@ object FormXBEExplorer: TFormXBEExplorer
     Height = 23
     UseSystemFont = False
     ActionManager = ActionManager
-    ColorMap.HighlightColor = 14410210
+    ColorMap.HighlightColor = 15660791
     ColorMap.BtnSelectedColor = clBtnFace
-    ColorMap.UnusedColor = 14410210
+    ColorMap.UnusedColor = 15660791
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
