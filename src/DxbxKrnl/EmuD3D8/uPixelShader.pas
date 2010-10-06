@@ -1796,6 +1796,7 @@ begin
   end;
 
   // Handle PS_REGISTER_EF_PROD :
+  aScope.EFReg := PS_REGISTER_ZERO;
   if (InputE.Reg > PS_REGISTER_ZERO) and (InputF.Reg > PS_REGISTER_ZERO) then
   begin
     Result := Result + '; final combiner - E*F'#13#10;

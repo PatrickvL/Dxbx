@@ -90,6 +90,7 @@ type
     Name: string;
     UnmangledName: string;
     Address: TCodePointer;
+    RangeClaimed: Boolean;
     StoredLibraryFunction: PStoredLibraryFunction; // can be nil for non-pattern symbols
     OrderingImportance: Integer;
     OrderingVersion: Integer; // Only used when (mangled)name matches
@@ -132,9 +133,10 @@ type
   protected // Intermediate symbol registration :
     FIntermediateSymbolRegistrationsCount: Integer;
     MyIntermediateSymbolRegistrations: array of TSymbolInformation;
-    procedure AddIntermediateSymbolRegistration(const CurrentSymbol: TSymbolInformation; const aAddress: PByte);
+    procedure AddIntermediateSymbolRegistration(const CurrentSymbol: TSymbolInformation;
+      const aAddress: PByte; const IsFailureRegistration: Boolean = False);
     procedure ConfirmIntermediateSymbolRegistrations(const CurrentSymbol: TSymbolInformation);
-    procedure RevertIntermediateSymbolRegistrations(const CurrentSymbol: TSymbolInformation);
+    procedure RevertIntermediateSymbolRegistrations(const CurrentSymbol: TSymbolInformation; NrToRevert: Integer = -1);
   protected // Actual scanning :
     FLibraryVersionsToScan: TLibraryVersionFlags;
     MyAddressesInKnownSections: TDxbxBits; // Marks addresses that are covered with our library patterns
@@ -282,8 +284,9 @@ begin
     Result := StoredLibraryFunction.FunctionLength;
 
     // Approximations cover only 75 % of their length, to prevent overlap on functions that became shorter:
-    if IsApproximation then
-      Result := (Result * 4) div 3;
+//    if IsApproximation then
+    if SymbolManager.UsingLibraryApproximations then
+      Result := (Result * 3) div 4;
   end
   else
     // Assume it's a global variable of type DWORD :
@@ -848,7 +851,8 @@ begin
       // Loop over all following symbols :
       for k := j + 1 to NrValidSymbols - 1 do
         // Check if these are equal to the initial symbol :
-        if (ValidSymbols[k].AliasSymbol = ValidSymbols[k])
+        if  (ValidSymbols[k].AliasSymbol = ValidSymbols[k]) // Only alias when it still points to itself
+        and (ValidSymbols[k].OtherVersion = nil) // Don't alias other versions
         and _IsAliasSymbol(ValidSymbols[k], ValidSymbols[j]) then
         begin
           // Alias one to the other :
@@ -932,7 +936,19 @@ begin
 //  or _Test($00022B70, '_D3DDevice_GetDepthStencilSurface@4')
 //  or _Test($00030E38, '?D3DXVec3LengthSq@@YAMPBUD3DXVECTOR3@@@Z')
 //  or _Test($00030E80, '_D3DXVec3Normalize@8')
-end;
+
+  // Smashing Drive
+//  or _Test($000A5620, '?Init@CDevice@D3D@@QAEJPAU_D3DPRESENT_PARAMETERS_@@@Z'); // "address range taken" ? Fixed.
+//  or _Test($000DA7ED, '@OHCD_fIsochCloseEndpoint@8') // 3911 has ref to @OHCD_ScheduleAddEndpointPeriodic@8 at +$21 (4631 refs @OHCD_fPauseEndpoint@8) Fixed.
+//  or _Test($000A0320, '_D3DDevice_BlockUntilIdle@0') // Address appeared 2 times (but overlap not allowed!) Fixed.
+//  or _Test($000A0320, '_D3DVolumeTexture_GetLevelDesc@12') // 2nd appearance
+//  or _Test($000D4CA9, '_XInputGetCapabilities@8') // TODO : Fix missing
+//  or _Test($000D9DE6, '@OHCD_fPauseEndpoint@8') // Busy.: 2 version found at conflicting addresses
+//  or _Test($000D8A30, '@OHCD_fPauseEndpoint@8') // Busy.: 2 version found at conflicting addresses
+//  or _Test($000D8A30, '@OHCD_ScheduleRemoveEndpointPeriodic@8') // Also conflicting
+//  or _Test($000DA7ED, '@OHCD_fIsochCloseEndpoint@8') // Cause - 2 versions have different references
+
+end; // _IsTestCase
 
 ///
 /// Function scanning code :
@@ -976,7 +992,8 @@ begin
   Dec(IntPtr(Result), aSymbolReference.BaseOffset); // Must be signed ptr, for negative offsets!
 end; // GetReferencedSymbolAddress
 
-procedure TSymbolManager.AddIntermediateSymbolRegistration(const CurrentSymbol: TSymbolInformation; const aAddress: PByte);
+procedure TSymbolManager.AddIntermediateSymbolRegistration(const CurrentSymbol: TSymbolInformation;
+  const aAddress: PByte; const IsFailureRegistration: Boolean = False);
 begin
   // Only register intermediate results when the address is not set already :
   if CurrentSymbol.Address = aAddress then
@@ -1000,7 +1017,11 @@ begin
   end;
 
   // To register, mark the covered addresses as being 'identified', and set the address in this symbol :
-  MyAddressesIdentified.SetRange(UIntPtr(aAddress), CurrentSymbol.Length);
+  if not IsFailureRegistration then
+  begin
+    MyAddressesIdentified.SetRange(UIntPtr(aAddress), CurrentSymbol.Length);
+    CurrentSymbol.RangeClaimed := True;
+  end;
   CurrentSymbol.Address := aAddress;
 
   // Make room for an new intermediate registration :
@@ -1032,7 +1053,7 @@ begin
       Symbol := MyIntermediateSymbolRegistrations[i];
       DbgPrintf('$%.08x;%s [-$%.08x] %s %s', [
         Symbol.Address,
-        Symbol.UnmangledName,
+        Symbol.{Unmangled}Name,
         UIntPtr(Symbol.Address) + Symbol.Length - 1,
         Symbol.Discovery,
         Symbol.FailReason
@@ -1045,12 +1066,33 @@ begin
   FIntermediateSymbolRegistrationsCount := 0;
 end; // ConfirmIntermediateSymbolRegistrations
 
-procedure TSymbolManager.RevertIntermediateSymbolRegistrations(const CurrentSymbol: TSymbolInformation);
+procedure TSymbolManager.RevertIntermediateSymbolRegistrations(const CurrentSymbol: TSymbolInformation; NrToRevert: Integer = -1);
+
+  procedure _Revert(Symbol: TSymbolInformation);
+  begin
+    if MayLog(lfUnit) or IsTestCase then // TODO : Add lfExtreme flag once the output is reliable
+      DbgPrintf('NOT $%.08x;%s [-$%.08x] %s %s', [
+        Symbol.Address,
+        Symbol.{Unmangled}Name,
+        UIntPtr(Symbol.Address) + Symbol.Length - 1,
+        Symbol.Discovery,
+        Symbol.FailReason
+        ]);
+
+    if Symbol.RangeClaimed then
+      MyAddressesIdentified.ClearRange(UIntPtr(Symbol.Address), Symbol.Length);
+    Symbol.RangeClaimed := False;
+    Symbol.Address := nil;
+    Symbol.Discovery := '';
+    Symbol.FailReason := '';
+    Symbol.IsApproximation := False;
+  end;
+
 var
   i: Integer;
-  Symbol: TSymbolInformation;
 begin
-  if FIntermediateSymbolRegistrationsCount = 0 then
+  if (FIntermediateSymbolRegistrationsCount = 0)
+  or (NrToRevert = 0) then
     Exit;
 
   if MayLog(lfUnit) or IsTestCase then // TODO : Add lfExtreme flag once the output is reliable
@@ -1059,30 +1101,24 @@ begin
       FIntermediateSymbolRegistrationsCount
       ]);
 
-  // Loop over all intermediate registrations, and remove their trails :
-  for i := 0 to FIntermediateSymbolRegistrationsCount - 1 do
+  if NrToRevert > 0 then
   begin
-    Symbol := MyIntermediateSymbolRegistrations[i];
+    if NrToRevert > FIntermediateSymbolRegistrationsCount then
+      NrToRevert := FIntermediateSymbolRegistrationsCount;
 
-    if MayLog(lfUnit) or IsTestCase then // TODO : Add lfExtreme flag once the output is reliable
-      DbgPrintf('NOT $%.08x;%s [-$%.08x] %s %s', [
-        Symbol.Address,
-        Symbol.UnmangledName,
-        UIntPtr(Symbol.Address) + Symbol.Length - 1,
-        Symbol.Discovery,
-        Symbol.FailReason
-        ]);
+    Dec(FIntermediateSymbolRegistrationsCount, NrToRevert);
+    for i := 0 to NrToRevert - 1 do
+      _Revert(MyIntermediateSymbolRegistrations[FIntermediateSymbolRegistrationsCount + i]);
+  end
+  else
+  begin
+    // Loop over all intermediate registrations, and remove their trails :
+    for i := 0 to FIntermediateSymbolRegistrationsCount - 1 do
+      _Revert(MyIntermediateSymbolRegistrations[i]);
 
-    MyAddressesIdentified.ClearRange(UIntPtr(Symbol.Address), Symbol.Length);
-
-    Symbol.Address := nil;
-    Symbol.Discovery := '';
-    Symbol.FailReason := '';
-    Symbol.IsApproximation := False;
+    // Reset the index, so the array can be filled again :
+    FIntermediateSymbolRegistrationsCount := 0;
   end;
-
-  // Reset the index, so the array can be filled again :
-  FIntermediateSymbolRegistrationsCount := 0;
 end; // RevertIntermediateSymbolRegistrations
 
 const
@@ -1164,6 +1200,8 @@ var
     ReferencedAddress: TCodePointer;
     Symbol: TSymbolInformation;
   end;
+  Version1: TSymbolInformation;
+  Version2: TSymbolInformation;
   Function_: PStoredLibraryFunction;
   i, j: Integer;
 begin
@@ -1289,13 +1327,33 @@ begin
       Continue;
 
     // Do the recursive check :
-    Result := CheckFunctionAtAddressAndRegister(Referenced[i].Symbol, Referenced[i].ReferencedAddress, Prefix + '.' + IntToStr(i));
+    begin
+      // Make sure we test the shortest of the two versions first,
+      // to assure we're not claiming to much address range :
+      Version1 := Referenced[i].Symbol;
+      Version2 := Version1.OtherVersion;
+      if Assigned(Version2) and (Version1.Length > Version2.Length) then
+      begin
+        Version1 := Version2; // 1 is shortest of the two now
+        Version2 := Referenced[i].Symbol;
+      end;
 
-    // When there's a problem, and we're scanning using approximating patterns, try the other version (if any) :
-    if  UsingLibraryApproximations
-    and (Result <= CR_ADDRESS_ALREADY_SET)
-    and Assigned(Referenced[i].Symbol.OtherVersion) then
-      Result := CheckFunctionAtAddressAndRegister(Referenced[i].Symbol.OtherVersion, Referenced[i].ReferencedAddress, Prefix + '.' + IntToStr(i));
+      // Remember the current number of registrations (so we can rollback when needed) :
+      j := FIntermediateSymbolRegistrationsCount;
+      Result := CheckFunctionAtAddressAndRegister(Version1, Referenced[i].ReferencedAddress, Prefix + '.' + IntToStr(i));
+
+      // When there's a problem, and we're scanning using approximating patterns, try the other version (if any) :
+      if  UsingLibraryApproximations
+      and (Result <= CR_ADDRESS_ALREADY_SET)
+      and Assigned(Version2) then
+      begin
+        // Remove any registrations done by the previous call :
+        RevertIntermediateSymbolRegistrations(CurrentSymbol, FIntermediateSymbolRegistrationsCount - j);
+        // And try again with the other version :
+        Result := CheckFunctionAtAddressAndRegister(Version2, Referenced[i].ReferencedAddress, Prefix + '.' + IntToStr(i));
+        Version1 := Version2;
+      end
+    end;
 
     // See if there was a failure of some kind :
     if Result <= CR_ADDRESS_ALREADY_SET then
@@ -1310,7 +1368,7 @@ begin
         if ScanningInKnownAddresses then
         begin
           // Don't call any of the following exits a 'failure' anymore when they're big enough   :
-          if MayCheckFunction(Referenced[i].Symbol.StoredLibraryFunction) then
+          if MayCheckFunction(Version1.StoredLibraryFunction) then
             Result := CR_APPROXIMATION;
         end;
       end;
@@ -1319,8 +1377,9 @@ begin
       begin
         // Approximations where failures, so they're not yet registered;
         // Mark them as an approximation (trunking their length a bit) and register anyway :
-        Referenced[i].Symbol.IsApproximation := True;
-        AddIntermediateSymbolRegistration(Referenced[i].Symbol, Referenced[i].ReferencedAddress);
+        Version1.IsApproximation := True;
+        AddIntermediateSymbolRegistration(Version1, Referenced[i].ReferencedAddress);
+        Version1.FailReason := 'Allowed approximation';
       end
       else
       begin
@@ -1331,7 +1390,7 @@ begin
         if Result = CR_ADDRESS_ALREADY_SET then
           // skip these
         else
-          AddIntermediateSymbolRegistration(Referenced[i].Symbol, Referenced[i].ReferencedAddress);
+          AddIntermediateSymbolRegistration(Version1, Referenced[i].ReferencedAddress, {IsFailureRegistration=}True);
 
         // When the recursive check fails, all temporary registrations will be reverted (see RevertIntermediateSymbolRegistrations)
         Exit;
@@ -1417,7 +1476,8 @@ begin
         CurrentSymbol.Address := TCodePointer(EntryPoint); end
       else if Pos('XapiInitProcess', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 90
       else if Pos('_D3DDevice_SetRenderState_', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 80
-//      else if Pos('D3D', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 70
+      else if Pos('_D3DDevice_', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 75
+      else if Pos('D3D', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 70
 //      else if Pos('Sound', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 60
 //      else if Pos('XInput', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 50
       else CurrentSymbol.OrderingImportance := 0;
