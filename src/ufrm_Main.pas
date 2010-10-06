@@ -166,7 +166,7 @@ type
     procedure SaveXBEList(const aFilePath, aPublishedBy: string);
     Function ImportXBEGameList(aImportFilePath: string = ''; aUseImportDialog: Boolean = False): Integer;
     function FindByFileName(const aFileName: string): Integer;
-    function ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
+//    function ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
     function FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
     function _ReadXBEInfoFromNode(const XBEInfoNode: IXMLNode): TXBEInfo;
     procedure UpdateBackground;
@@ -1092,7 +1092,7 @@ begin
   // TODO : Add other non-duplicate tests here
 end;
 
-function Tfrm_Main.ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
+(*function Tfrm_Main.ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
 var
   i: Integer;
   XBEInfo: TXBEInfo;
@@ -1124,7 +1124,7 @@ begin
     frm_XBEList.Release;
     frm_XBEList := nil;
   end;
-end; // ShowImportList
+end; // ShowImportList *)
 
 function Tfrm_Main.ImportXBEGameList(aImportFilePath: string = '';
   aUseImportDialog: Boolean = False): Integer;

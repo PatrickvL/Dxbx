@@ -33,6 +33,7 @@
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_DependencyCheckOutputName>..\..\Bin\TranslationChecker.exe</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
