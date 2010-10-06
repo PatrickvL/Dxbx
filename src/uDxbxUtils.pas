@@ -112,6 +112,7 @@ type
 
 const
   BitsPerInt = SizeOf(Integer) * 8;
+  BitsPerIntShift = 5;
 
 type
   TBitEnum = 0..BitsPerInt - 1;
@@ -1634,7 +1635,7 @@ begin
     if  (Range >= BitsPerInt)
     and (aOffset and (BitsPerInt - 1) = 0) then
     begin
-      TBits_PrivateAccess(Self).FBits[aOffset div BitsPerInt] := 0;
+      TBits_PrivateAccess(Self).FBits[aOffset shr BitsPerIntShift] := 0;
       Dec(Range, BitsPerInt);
       Inc(aOffset, BitsPerInt);
     end
@@ -1658,7 +1659,7 @@ begin
     if  (Range >= BitsPerInt)
     and (aOffset and (BitsPerInt - 1) = 0) then
     begin
-      TBits_PrivateAccess(Self).FBits[aOffset div BitsPerInt] := High(DWORD);
+      TBits_PrivateAccess(Self).FBits[aOffset shr BitsPerIntShift] := High(DWORD);
       Dec(Range, BitsPerInt);
       Inc(aOffset, BitsPerInt);
     end
@@ -1683,7 +1684,7 @@ begin
     if  (Range >= BitsPerInt)
     and (aOffset and (BitsPerInt - 1) = 0) then
     begin
-      if TBits_PrivateAccess(Self).FBits[aOffset div BitsPerInt] <> 0 then
+      if TBits_PrivateAccess(Self).FBits[aOffset shr BitsPerIntShift] <> 0 then
         Exit;
 
       Dec(Range, BitsPerInt);

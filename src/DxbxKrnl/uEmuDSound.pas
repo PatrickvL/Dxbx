@@ -4908,6 +4908,7 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuCDirectSoundStream_SetRolloffFactor name PatchPrefix + 'DirectSound.CDirectSoundStream.SetRolloffFactor',
   XTL_EmuCDirectSoundStream_SetVelocity name PatchPrefix + 'DirectSound.CDirectSoundStream.SetVelocity',
   XTL_EmuCDirectSoundStream_SetVolume name PatchPrefix + 'DirectSound.CDirectSoundStream.SetVolume',
+  XTL_EmuCDirectSoundStream_SetVolume name PatchPrefix + '?SetVolume@CDirectSoundVoice@DirectSound@@QAGJJ@Z', // Cxbx Smashin Drive patches this
 
   XTL_EmuDirectSoundCreate,
   XTL_EmuDirectSoundCreateBuffer,
