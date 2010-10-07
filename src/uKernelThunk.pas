@@ -172,7 +172,7 @@ var
     {117}@xboxkrnl_KeInsertQueue,
     {118}@xboxkrnl_KeInsertQueueApc,
     {119}@xboxkrnl_KeInsertQueueDpc,
-    {120}nil,// xboxkrnl_KeInterruptTime variable
+    {120}nil, //@xboxkrnl_KeInterruptTime, //variable
     {121}@xboxkrnl_KeIsExecutingDpc,
     {122}@xboxkrnl_KeLeaveCriticalRegion,
     {123}@xboxkrnl_KePulseEvent,
@@ -206,7 +206,7 @@ var
     {151}@xboxkrnl_KeStallExecutionProcessor,
     {152}@xboxkrnl_KeSuspendThread,
     {153}@xboxkrnl_KeSynchronizeExecution,
-    {154}nil, // xboxkrnl_KeSystemTime variable
+    {154}nil, //@xboxkrnl_KeSystemTime, //variable
     {155}@xboxkrnl_KeTestAlertThread,
     {156}@xboxkrnl_KeTickCount, // variable
     {157}@xboxkrnl_KeTimeIncrement, // variable

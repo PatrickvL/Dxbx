@@ -124,6 +124,8 @@ type
     actExportGameList: TAction;
     ImportDialog: TOpenDialog;
     ExportDialog: TSaveDialog;
+    mnu_EnableSymbolCache: TMenuItem;
+    N5: TMenuItem;
     procedure actStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -158,6 +160,7 @@ type
     procedure actExportGameListExecute(Sender: TObject);
     procedure dgXbeInfosDblClick(Sender: TObject);
     procedure dgXbeInfosKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure mnu_EnableSymbolCacheClick(Sender: TObject);
   protected
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
     procedure WndProc(var Message: TMessage); override;
@@ -1484,6 +1487,8 @@ begin
   // Update Edit menu actions (should be done after actXdkTracker update) :
   mnu_Patch.Enabled := False;
   mnu_DumpxbeinfoTo.Enabled := Assigned(m_Xbe);
+
+  mnu_EnableSymbolCache.Checked := g_EmuShared.m_EnableSymbolCache;
 end; // AdjustMenu
 
 function Tfrm_Main.GetEmuWindowHandle(const aEmuDisplayMode: Integer = 1): THandle;
@@ -1850,6 +1855,13 @@ begin
   XMLRootNode := XMLDocument.DocumentElement;
   InsertXBEInfo(TXBEInfo(_ReadXBEInfoFromNode(XMLRootNode)));
   MyXBEList.Sort;
+end;
+
+procedure Tfrm_Main.mnu_EnableSymbolCacheClick(Sender: TObject);
+begin
+  g_EmuShared.m_EnableSymbolCache := not g_EmuShared.m_EnableSymbolCache;
+  g_EmuShared.Save;
+  AdjustMenu;
 end;
 
 // Tfrm_Main.LoadXBEList
