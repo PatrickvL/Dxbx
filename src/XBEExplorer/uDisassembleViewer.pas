@@ -22,12 +22,15 @@ interface
 uses
   // Delphi
   Windows, Classes, SysUtils, Controls, Graphics, ExtCtrls, Forms, Grids, Menus, Dialogs,
+  Clipbrd,
   // Dxbx
   uConsts,
   uTypes,
   uDxbxUtils,
   uDisassembleUtils,
-  uViewerUtils;
+  uViewerUtils,
+  uXbe; // m_szAsciiTitle
+
 
 type
   // This code is loosely based on http://cheatengine.org disassembly viewer code
@@ -45,8 +48,9 @@ type
     MyInstructionOffsets: TList;
     function GetLabelByVA(const aVirtualAddress: Pointer): string;
     procedure GridDrawCellEvent(Sender: TObject; ACol, ARow: Longint; Rect: TRect; State: TGridDrawState);
-//    procedure CreatePatternExecute(Sender: TObject);
+    procedure CreatePatternExecute(Sender: TObject);
     procedure GotoAddressExecute(Sender: TObject);
+    function GeneratePatternForAddress(const aAddress: UIntPtr): string;
   public
     OnGetLabel: TGetLabelEvent;
 
@@ -134,7 +138,7 @@ begin
   with PopupMenu do
   begin
     Items.Add(_MenuItem('&Goto address...', GotoAddressExecute));
-//    Items.Add(_MenuItem('Create pattern from here...', CreatePatternExecute));
+    Items.Add(_MenuItem('Create pattern from here...', CreatePatternExecute));
   end;
 end;
 
@@ -145,11 +149,90 @@ begin
   inherited Destroy;
 end;
 
-(*
-procedure TDisassembleViewer.CreatePatternExecute(Sender: TObject);
+function TDisassembleViewer.GeneratePatternForAddress(const aAddress: UIntPtr): string;
+var
+  References: array of record
+    Offset: Integer;
+    ReferenceType: Char;
+    ReferencedSymbol: string;
+  end;
+  PatternPrefixStr: string;
+  CrcLength: Integer;
+  CrcValue: Integer;
+  SymbolSize: Integer;
+  SymbolName: string;
+  i: Integer;
+
+  function _AnalyzeFunction: Integer;
+  const
+    MAX_SIZE = $1800;
+  var
+    Offset: Integer;
+  begin
+    Result := 0;
+    Offset := aAddress - UIntPtr(FRegionInfo.VirtualAddres);
+    MyDisassemble.Offset := Offset;
+    while MyDisassemble.DoDisasm do
+    begin
+      Result := Integer(MyDisassemble.Offset) - Offset;
+
+      // If this the end of the function?
+      if MyDisassemble.IsOpcode(OPCODE_RET)
+      or MyDisassemble.IsOpcode(OPCODE_RETN)
+      // TODO : Verify these two :
+      or MyDisassemble.IsOpcode(OPCODE_RETF)
+      or MyDisassemble.IsOpcode(OPCODE_RETFN) then
+        Exit;
+
+      // TODO : Detect & collect References
+
+      // Append pattern within the first 32 bytes of code :
+      if Length(PatternPrefixStr) < 64 then
+        PatternPrefixStr := PatternPrefixStr + StringReplace(MyDisassemble.HexStr, ' ', '', [rfReplaceAll]);
+        // TODO : dot-out references!
+
+      // TODO : Calculate CrcLength and CrcValue here too
+
+      if Result > MAX_SIZE then
+        Exit;
+    end;
+  end;
+
 begin
+  SymbolName := GetLabelByVA(Pointer(aAddress));
+  if SymbolName = '' then
+    SymbolName := Format('?Symbol_%0.8x', [aAddress]);
+
+  SymbolName := InputBox('Generate pattern', 'Enter symbol name', SymbolName);
+
+  PatternPrefixStr := '';
+  CrcLength := 0;
+  CrcValue := 0;
+  SetLength(References, 0);
+
+  SymbolSize := _AnalyzeFunction();
+
+  // Fixup the pattern string (pad or trim it when neccessary) :
+  while Length(PatternPrefixStr) < 64 do
+    PatternPrefixStr := PatternPrefixStr + '..';
+  SetLength(PatternPrefixStr, 64);
+
+  Result := Format('%64s %0.2x %0.4x %0.4x %s', [PatternPrefixStr, CrcLength, CrcValue, SymbolSize, SymbolName]);
+
+  // Add references :
+  for i := 0 to Length(References) - 1 do
+    Result := Result + Format(' ^%0.4x%c %s', [References[i].Offset, References[i].ReferenceType, References[i].ReferencedSymbol]);
 end;
-*)
+
+procedure TDisassembleViewer.CreatePatternExecute(Sender: TObject);
+// Create a pattern-line, based on the currently selected address.
+// The output is set in the clipboard, and ready to be pasted into a custom-made pattern-file,
+// which turns out to be neccessary to support XDK versions we have no patterns for.
+begin
+  Clipboard.AsText :=
+    Format('; Xbe Explorer generated pattern, derived from address $%0.8x in "%s" :'#13#10'%s',
+    [Address, m_szAsciiTitle, GeneratePatternForAddress(Address)]);
+end;
 
 procedure TDisassembleViewer.GotoAddressExecute(Sender: TObject);
 var
@@ -158,7 +241,7 @@ var
   GotoAddressStr: string;
 begin
   AddressStr := DWord2Str(Address);
-  GotoAddressStr := InputBox('&Goto address', 'Enter hexadecimal address', AddressStr);
+  GotoAddressStr := InputBox('Goto address', 'Enter hexadecimal address', AddressStr);
   if GotoAddressStr = AddressStr then
     Exit;
 

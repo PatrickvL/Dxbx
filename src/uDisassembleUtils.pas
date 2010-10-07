@@ -57,6 +57,7 @@ type
     function LabelStr: string;
     function OpcodeStr: string;
     function HexStr: string;
+    function IsOpcode(const aOpcode: Integer): Boolean;
     function GetLabelStr(const aVirtualAddr: Pointer): string;
     function GetReferencedMemoryAddress(var TargetAddress: Cardinal): Boolean;
 //    function ArgReadsFromMemory(const aArgNr: Integer): Boolean;
@@ -158,6 +159,11 @@ begin
   // Split HexStr in operand+space+arguments :
   Result := PByteToHexString(@PBytes(FBuffer)[FCurrentOffset], OpcodeLen)
     + ' ' + PByteToHexString(@PBytes(FBuffer)[FCurrentOffset + OpcodeLen], FLen - OpcodeLen);
+end;
+
+function RDisassemble.IsOpcode(const aOpcode: Integer): Boolean;
+begin
+  Result := MyDisAsm.Instruction.Opcode = aOpcode;
 end;
 
 function RDisassemble.GetArg(const aArgNr: Integer): PARGTYPE;
