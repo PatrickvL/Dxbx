@@ -1893,8 +1893,13 @@ begin
     end
     else
     begin
-      // r0 = A*B + (1-A)*C + D
-      Result := Result + 'lrp ' + PSRegToStr(aScope, TmpReg) + ', ' + InputA.DisassembleInputRegister(aScope) + ', ' + InputB.DisassembleInputRegister(aScope) + ', ' + InputC.DisassembleInputRegister(aScope) + #13#10;
+      if (InputA.Reg = PS_REGISTER_ONE) then
+        // r0 = B + D
+        Result := Result + 'add r0, ' + InputB.DisassembleInputRegister(aScope) + ', ' + InputD.DisassembleInputRegister(aScope) + #13#10
+      else
+        // r0 = A*B + (1-A)*C + D
+        Result := Result + 'lrp ' + PSRegToStr(aScope, TmpReg) + ', ' + InputA.DisassembleInputRegister(aScope) + ', ' + InputB.DisassembleInputRegister(aScope) + ', ' + InputC.DisassembleInputRegister(aScope) + #13#10;
+
       // Reset D - already handled :
       AlreadyHandled_D := False;
     end;
