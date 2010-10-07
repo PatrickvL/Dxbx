@@ -58,12 +58,9 @@ type
     pmImage: TPopupMenu;
     SaveAs1: TMenuItem;
     SavePictureDialog: TSavePictureDialog;
-    pmHexViewer: TPopupMenu;
-    miGotoOffset: TMenuItem;
     ActionMainMenuBar: TActionMainMenuBar;
     ActionManager: TActionManager;
     actExit: TFileExit;
-    actGotoOffset: TAction;
     actFileOpen: TAction;
     actClose: TAction;
     actSaveAs: TAction;
@@ -74,8 +71,6 @@ type
     procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
     procedure About1Click(Sender: TObject);
     procedure actSaveAsExecute(Sender: TObject);
-    procedure actGotoOffsetExecute(Sender: TObject);
-    procedure actGotoOffsetUpdate(Sender: TObject);
     procedure actCloseUpdate(Sender: TObject);
     procedure actSaveAsUpdate(Sender: TObject);
     procedure ExploreFileSystem1Click(Sender: TObject);
@@ -147,7 +142,7 @@ begin
         Exit;
     end;
   end;
-  
+
   Result := nil;
 end;
 {$R *.dfm}
@@ -211,32 +206,6 @@ begin
   end;
 
   ShowMessage('Save cancelled');
-end;
-
-procedure TFormXBEExplorer.actGotoOffsetUpdate(Sender: TObject);
-begin
-  TAction(Sender).Enabled := Assigned(PageControl)
-    and Assigned(PageControl.ActivePage)
-    and Assigned(TWinControlHelper(PageControl.ActivePage).FindChildControlClass(THexViewer));
-end;
-
-procedure TFormXBEExplorer.actGotoOffsetExecute(Sender: TObject);
-var
-  HexViewer: THexViewer;
-  Offset: Integer;
-  OffsetStr: string;
-begin
-  HexViewer := THexViewer(TWinControlHelper(PageControl.ActivePage).FindChildControlClass(THexViewer));
-  OffsetStr := DWord2Str(HexViewer.Offset);
-  OffsetStr := InputBox('Goto offset', 'Enter hexadecimal offset', OffsetStr);
-  if ScanHexDWord(PChar(OffsetStr), {var}Offset) then
-  begin
-    HexViewer.Offset := Offset;
-    if HexViewer.Offset = DWord(Offset) then
-      Exit;
-  end;
-
-  ShowMessage('Goto failed');
 end;
 
 procedure TFormXBEExplorer.About1Click(Sender: TObject);
@@ -702,7 +671,6 @@ var
     Splitter.Top := Grid.Height;
 
     SectionViewer := TSectionViewer.Create(Self);
-    SectionViewer.PopupMenu := pmHexViewer;
     SectionViewer.Parent := Result;
     SectionViewer.Align := alClient;
 
@@ -779,7 +747,6 @@ var
     OrgVA: Pointer;
   begin
     Result := THexViewer.Create(Self);
-    Result.PopupMenu := pmHexViewer;
 
     // Trick the HexViewer into thinking the VA = 0 :
     OrgVA := RegionInfo.VirtualAddres;
@@ -823,7 +790,7 @@ begin // OpenFile
   MyRanges.Parent := Self; // Temporarily set Parent, to allow adding lines already
   MyRanges.ScrollBars := ssBoth;
   MyRanges.Font.Name := 'Consolas';
-  
+
   RegionInfo.Buffer := MyXBE.RawData;
   RegionInfo.Size := MyXBE.FileSize;
   RegionInfo.FileOffset := 0;

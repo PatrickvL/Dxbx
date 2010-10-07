@@ -671,7 +671,7 @@ end;
 function _ScanHexDigits(aLine: PAnsiChar; var Value: Integer; Digits: Integer): Boolean; overload;
 begin
   Value := 0;
-  while Digits > 0 do
+  while (Digits > 0) and (aLine^ > #0) do
   begin
     Result := _ScanAndAddHexDigit(Value, aLine^);
     if not Result then
@@ -687,7 +687,7 @@ end;
 function _ScanHexDigits(aLine: PWideChar; var Value: Integer; Digits: Integer): Boolean; overload;
 begin
   Value := 0;
-  while Digits > 0 do
+  while (Digits > 0) and (aLine^ > #0) do
   begin
     Result := _ScanAndAddHexDigit(Value, aLine^);
     if not Result then

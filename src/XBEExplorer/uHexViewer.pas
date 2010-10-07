@@ -21,7 +21,7 @@ interface
 
 uses
   // Delphi
-  Windows, Classes, SysUtils, Controls, ExtCtrls, Forms, Grids, Dialogs,
+  Windows, Classes, SysUtils, Controls, ExtCtrls, Forms, Grids, Dialogs, Menus,
   // Dxbx
   uTypes,
   uDxbxUtils,
@@ -33,7 +33,6 @@ type
     function GetOffset: DWord;
     procedure SetOffset(const Value: DWord);
   protected
-//    MyPopupMenu: TPopupMenu;
     MyHeader: TPanel;
     MyDrawGrid: TDrawGrid;
     FRegionInfo: RRegionInfo;
@@ -51,16 +50,18 @@ implementation
 { THexViewer }
 
 constructor THexViewer.Create(Owner: TComponent);
+
+  function _MenuItem(const aCaption: string; const aOnClick: TNotifyEvent): TMenuItem;
+  begin
+    Result := TMenuItem.Create(PopupMenu);
+    Result.Caption := aCaption;
+    Result.OnClick := aOnClick;
+  end;
+
 begin
   inherited Create(Owner);
 
   BevelOuter := bvNone;
-
-//  MyPopupMenu = TPopupMenu.Create(Self);
-//  with MyPopupMenu do
-//  begin
-//
-//  end;
 
   MyHeader := TPanel.Create(Self);
   with MyHeader do
@@ -88,12 +89,18 @@ begin
     ColWidths[16] := 28; // extra padding between $F and Ascii data
     ColWidths[17] := 96;
     FixedCols := 1;
-    RowCount := 2; // Needed to be able to set FixedRows 
+    RowCount := 2; // Needed to be able to set FixedRows
     FixedRows := 1;
     Options := [goRangeSelect, goDrawFocusSelected, goThumbTracking];
     OnDrawCell := DoDrawCell;
   end;
-  
+
+  PopupMenu := TPopupMenu.Create(Self);
+  with PopupMenu do
+  begin
+    Items.Add(_MenuItem('&Goto offset...', GotoOffsetExecute));
+  end;
+
   SetRegion(FRegionInfo);
 end;
 
