@@ -41,6 +41,7 @@ uses
   uStoredTrieTypes,
   uXboxLibraryUtils,
   uEmuD3D8Types,
+  uEmuShared,
   uState, // XTL_EmuD3DDeferredTextureState
   uEmu, // EmuWarning
   uEmuXapi, // XTL_EmuXapiProcessHeap
@@ -1863,7 +1864,8 @@ var
   Symbols: TStringList;
 begin
   Result := False;
-  if not FileExists(aCacheFile) then
+  if not FileExists(aCacheFile)
+  and not g_EmuShared.m_EnableSymbolCache then
     Exit;
 
   Symbols := TStringList.Create;

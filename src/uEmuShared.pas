@@ -52,6 +52,9 @@ type EmuShared = object(Mutex)
     procedure Create;
     procedure Destroy;
 
+    procedure LoadExtraSettings(const szRegistryKey: P_char);
+    procedure SaveExtraSettings(const szRegistryKey: P_char);
+
     procedure Load;
     procedure Save;
 
@@ -82,6 +85,7 @@ type EmuShared = object(Mutex)
   public
     m_ActiveLogFlags: TLogFlags;
     m_DisabledLogFlags: TLogFlags;
+    m_EnableSymbolCache: Boolean;
   end; // size = 7164 (as in Cxbx) + 8 (Dxxb addition)
   PEmuShared = ^EmuShared;
 
@@ -200,11 +204,32 @@ procedure EmuShared.Load;
 begin
   m_XBController.Load(PAnsiChar('Software\Dxbx\XBController'));
   m_XBVideo.Load(PAnsiChar('Software\Dxbx\XBVideo'));
+  LoadExtraSettings('Software\Dxbx\Settings');
 
   // 'load' the default logflags :
   m_ActiveLogFlags := g_ActiveLogFlags;
   m_DisabledLogFlags := g_DisabledLogFlags;
   // TODO -oDxbx : Use a real persistence mechanism for the logflags (including presets)
+end;
+
+procedure EmuShared.LoadExtraSettings(const szRegistryKey: P_char);
+var
+  dwDisposition, dwType, dwSize: DWORD;
+  hKey: Windows.HKEY;
+begin
+  // Load Configuration from Registry
+  try
+    if RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
+    try
+      dwType := REG_DWORD;
+      dwSize := sizeof(DWORD);
+      RegQueryValueExA(hKey, 'EnableSymbolCache', NULL, @dwType, PBYTE(@m_EnableSymbolCache), @dwSize);
+    finally
+      RegCloseKey(hKey);
+    end;
+  except
+    raise Exception.Create('LoadExtraSettings raised an exception');
+  end;
 end;
 
 procedure EmuShared.ActivateLogFlags;
@@ -221,6 +246,27 @@ procedure EmuShared.Save;
 begin
   m_XBController.Save(PAnsiChar('Software\Dxbx\XBController'));
   m_XBVideo.Save(PAnsiChar('Software\Dxbx\XBVideo'));
+  SaveExtraSettings('Software\Dxbx\Settings');
+end;
+
+procedure EmuShared.SaveExtraSettings(const szRegistryKey: P_char);
+var
+  dwDisposition, dwType, dwSize: DWORD;
+  hKey: Windows.HKEY;
+begin
+  // Save Configuration to Registry
+  try
+    if RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
+    try
+      dwType := REG_DWORD;
+      dwSize := sizeof(DWORD);
+      RegSetValueExA(hKey, 'EnableSymbolCache', 0, dwType, PBYTE(@m_EnableSymbolCache), dwSize);
+    finally
+      RegCloseKey(hKey);
+    end;
+  except
+    raise Exception.Create('SaveExtraSettings raised an exception');
+  end;
 end;
 
 procedure EmuShared.Destroy;

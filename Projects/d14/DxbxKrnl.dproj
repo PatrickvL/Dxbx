@@ -68,7 +68,6 @@
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 						<Parameters Name="HostApplication">..\..\bin\Dxbx.exe</Parameters>
-						<Parameters Name="RunParams">&quot;D:\!Patrick_Sofware\XBox\Xbox software\Xdk 4627 compiled projects\Graphics\AlphaFog\Release\alphafog.xbe&quot;</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>

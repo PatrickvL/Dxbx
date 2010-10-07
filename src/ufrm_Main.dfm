@@ -212,6 +212,13 @@ object frm_Main: Tfrm_Main
       object miCleanSymbolCache: TMenuItem
         Action = actCleanSymbolCache
       end
+      object mnu_EnableSymbolCache: TMenuItem
+        Caption = 'Enable Symbol Cache'
+        OnClick = mnu_EnableSymbolCacheClick
+      end
+      object N5: TMenuItem
+        Caption = '-'
+      end
       object mnu_ConfigControler: TMenuItem
         Action = actConfiguration
       end
