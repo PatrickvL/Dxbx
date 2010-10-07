@@ -797,7 +797,7 @@ end;
 function PSRegToStr(const aScope: PPSDisassembleScope; const aReg: PS_REGISTER): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-//  Assert((PS_REGISTER_C0 <= aReg) and (aReg <= PS_REGISTER_EF_PROD));
+  Assert((PS_REGISTER_C0 <= aReg) and (aReg <= PS_REGISTER_EF_PROD));
 
   case aReg of
     PS_REGISTER_C0: Result := aScope.C0RegStr;

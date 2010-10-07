@@ -1864,8 +1864,7 @@ var
   Symbols: TStringList;
 begin
   Result := False;
-  if not FileExists(aCacheFile)
-  and not g_EmuShared.m_EnableSymbolCache then
+  if not FileExists(aCacheFile) then
     Exit;
 
   Symbols := TStringList.Create;
@@ -1976,7 +1975,8 @@ begin
       CacheFileNameStr := CacheFileName(pXbeHeader);
 
       // Try to load the symbols from the cache :
-      if LoadSymbolsFromCache(CacheFileNameStr) then
+      if not g_EmuShared.m_BypassSymbolCache
+      and LoadSymbolsFromCache(CacheFileNameStr) then
         // If that succeeded, we don't have to scan and save anymore :
         CacheFileNameStr := ''
       else

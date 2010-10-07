@@ -85,7 +85,7 @@ type EmuShared = object(Mutex)
   public
     m_ActiveLogFlags: TLogFlags;
     m_DisabledLogFlags: TLogFlags;
-    m_EnableSymbolCache: Boolean;
+    m_BypassSymbolCache: Boolean;
   end; // size = 7164 (as in Cxbx) + 8 (Dxxb addition)
   PEmuShared = ^EmuShared;
 
@@ -223,7 +223,7 @@ begin
     try
       dwType := REG_DWORD;
       dwSize := sizeof(DWORD);
-      RegQueryValueExA(hKey, 'EnableSymbolCache', NULL, @dwType, PBYTE(@m_EnableSymbolCache), @dwSize);
+      RegQueryValueExA(hKey, 'BypassSymbolCache', NULL, @dwType, PBYTE(@m_BypassSymbolCache), @dwSize);
     finally
       RegCloseKey(hKey);
     end;
@@ -260,7 +260,7 @@ begin
     try
       dwType := REG_DWORD;
       dwSize := sizeof(DWORD);
-      RegSetValueExA(hKey, 'EnableSymbolCache', 0, dwType, PBYTE(@m_EnableSymbolCache), dwSize);
+      RegSetValueExA(hKey, 'BypassSymbolCache', 0, dwType, PBYTE(@m_BypassSymbolCache), dwSize);
     finally
       RegCloseKey(hKey);
     end;
