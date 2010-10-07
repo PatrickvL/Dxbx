@@ -184,11 +184,6 @@ var
   LibD3D8: PStoredLibrary = nil;
 //  TextSection: PXBE_SECTIONHEADER;
 
-const
-  OPCODE_NOP = $90;
-  OPCODE_INT3 = $CC;
-  OPCODE_JMP = $E9;
-
 implementation
 
 uses

@@ -29,6 +29,7 @@ uses
   // Jedi Win32API
   JwaWinType,
   // Dxbx
+  uConsts,
   uTypes,
   uLog,
   uDxbxKrnlUtils,
