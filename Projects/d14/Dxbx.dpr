@@ -23,11 +23,6 @@ program Dxbx;
 {$R 'SvnRevision.res' '..\..\resource\SvnRevision.rc'}
 
 uses
-  madExcept,
-  madLinkDisAsm,
-  madListHardware,
-  madListProcesses,
-  madListModules,
   SysUtils,
   Forms,
   uEmuShared in '..\..\src\uEmuShared.pas',
