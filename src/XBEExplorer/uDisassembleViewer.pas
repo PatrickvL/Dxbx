@@ -21,7 +21,7 @@ interface
 
 uses
   // Delphi
-  Windows, Classes, SysUtils, Controls, Graphics, ExtCtrls, Forms, Grids,
+  Windows, Classes, SysUtils, Controls, Graphics, ExtCtrls, Forms, Grids, Menus, Dialogs,
   // Dxbx
   uConsts,
   uTypes,
@@ -35,8 +35,8 @@ type
   TDisassembleViewer = class(TPanel)
   private
     FTextMetric: TTextMetric;
-    function GetOffset: DWord;
-    procedure SetOffset(const Value: DWord);
+    function GetAddress: UIntPtr;
+    procedure SetAddress(Value: UIntPtr);
   protected
     MyHeading: TPanel;
     MyDrawGrid: TDrawGrid;
@@ -45,10 +45,12 @@ type
     MyInstructionOffsets: TList;
     function GetLabelByVA(const aVirtualAddress: Pointer): string;
     procedure GridDrawCellEvent(Sender: TObject; ACol, ARow: Longint; Rect: TRect; State: TGridDrawState);
+//    procedure CreatePatternExecute(Sender: TObject);
+    procedure GotoAddressExecute(Sender: TObject);
   public
     OnGetLabel: TGetLabelEvent;
 
-    property Offset: DWord read GetOffset write SetOffset;
+    property Address: UIntPtr read GetAddress write SetAddress;
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
 
@@ -69,6 +71,14 @@ var
 { TDisassembleViewer }
 
 constructor TDisassembleViewer.Create(Owner: TComponent);
+
+  function _MenuItem(const aCaption: string; const aOnClick: TNotifyEvent): TMenuItem;
+  begin
+    Result := TMenuItem.Create(PopupMenu);
+    Result.Caption := aCaption;
+    Result.OnClick := aOnClick;
+  end;
+
 begin
   inherited Create(Owner);
 
@@ -119,6 +129,13 @@ begin
     Parent := Self;
     // ParentFont := True; // Why doesn't this take the parent font?
   end;
+
+  PopupMenu := TPopupMenu.Create(Self);
+  with PopupMenu do
+  begin
+    Items.Add(_MenuItem('&Goto address...', GotoAddressExecute));
+//    Items.Add(_MenuItem('Create pattern from here...', CreatePatternExecute));
+  end;
 end;
 
 destructor TDisassembleViewer.Destroy;
@@ -128,14 +145,57 @@ begin
   inherited Destroy;
 end;
 
-procedure TDisassembleViewer.SetOffset(const Value: DWord);
+(*
+procedure TDisassembleViewer.CreatePatternExecute(Sender: TObject);
+begin
+end;
+*)
+
+procedure TDisassembleViewer.GotoAddressExecute(Sender: TObject);
 var
+  NewAddress: Integer;
+  AddressStr: string;
+  GotoAddressStr: string;
+begin
+  AddressStr := DWord2Str(Address);
+  GotoAddressStr := InputBox('&Goto address', 'Enter hexadecimal address', AddressStr);
+  if GotoAddressStr = AddressStr then
+    Exit;
+
+  if ScanHexDWord(PChar(GotoAddressStr), {var}NewAddress) then
+    Address := NewAddress;
+end;
+
+procedure TDisassembleViewer.SetAddress(Value: UIntPtr);
+
+  function _AddressCompare(const aInstructionOffsets: TList; const Index: Integer; const SearchData: Pointer): Integer;
+  begin
+    Result := Integer(aInstructionOffsets[Index]) - Integer(SearchData);
+  end;
+
+var
+  Index: Integer;
   GridRect: TGridRect;
 begin
-  GridRect.Top := Integer(Value div 16) + MyDrawGrid.FixedRows;
+  if Value < UIntPtr(FRegionInfo.VirtualAddres) then
+    Exit;
+
+  Dec(Value, UIntPtr(FRegionInfo.VirtualAddres));
+  if Value > FRegionInfo.Size then
+    Exit;
+
+
+  GenericBinarySearch(
+    {List=}MyInstructionOffsets,
+    MyInstructionOffsets.Count,
+    {SearchData=}Pointer(Value),
+    @_AddressCompare,
+    {out}Index);
+
+  GridRect.Top := Index + MyDrawGrid.FixedRows;
   if GridRect.Top < MyDrawGrid.RowCount then
   begin
-    GridRect.Left := Integer(Value mod 16) + MyDrawGrid.FixedCols;
+    GridRect.Left := MyDrawGrid.FixedCols;
     GridRect.Right := GridRect.Left;
     GridRect.Bottom := GridRect.Top;
     MyDrawGrid.Selection := GridRect;
@@ -143,12 +203,18 @@ begin
   end;
 end;
 
-function TDisassembleViewer.GetOffset: DWord;
+function TDisassembleViewer.GetAddress: UIntPtr;
 var
   GridRect: TGridRect;
 begin
   GridRect := MyDrawGrid.Selection;
-  Result := ((GridRect.Top - 1) * 16) + GridRect.Left - 1
+  Result := GridRect.Top - 1;
+  if Result >= UIntPtr(MyInstructionOffsets.Count) then
+    Result := 0
+  else
+    Result := Cardinal(MyInstructionOffsets[Result ]);
+
+  Result := UIntPtr(FRegionInfo.VirtualAddres) + Result;
 end;
 
 const

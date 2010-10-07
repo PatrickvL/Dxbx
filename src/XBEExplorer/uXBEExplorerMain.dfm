@@ -26,7 +26,6 @@ object FormXBEExplorer: TFormXBEExplorer
     RowSelect = True
     TabOrder = 0
     OnChange = TreeView1Change
-    ExplicitHeight = 681
   end
   object PageControl: TPageControl
     Left = 225
@@ -35,7 +34,6 @@ object FormXBEExplorer: TFormXBEExplorer
     Height = 705
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 681
   end
   object ActionMainMenuBar: TActionMainMenuBar
     Left = 0
@@ -44,9 +42,9 @@ object FormXBEExplorer: TFormXBEExplorer
     Height = 23
     UseSystemFont = False
     ActionManager = ActionManager
-    ColorMap.HighlightColor = 15660791
+    ColorMap.HighlightColor = 14410210
     ColorMap.BtnSelectedColor = clBtnFace
-    ColorMap.UnusedColor = 15660791
+    ColorMap.UnusedColor = 14410210
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -108,13 +106,6 @@ object FormXBEExplorer: TFormXBEExplorer
     Left = 104
     Top = 72
   end
-  object pmHexViewer: TPopupMenu
-    Left = 64
-    Top = 112
-    object miGotoOffset: TMenuItem
-      Action = actGotoOffset
-    end
-  end
   object ActionManager: TActionManager
     ActionBars = <
       item
@@ -131,9 +122,6 @@ object FormXBEExplorer: TFormXBEExplorer
           end
           item
             Action = actSaveAs
-          end
-          item
-            Action = actGotoOffset
           end>
         ActionBar = ActionMainMenuBar
       end>
@@ -154,13 +142,6 @@ object FormXBEExplorer: TFormXBEExplorer
       Hint = 'Close'
       OnExecute = actCloseExecute
       OnUpdate = actCloseUpdate
-    end
-    object actGotoOffset: TAction
-      Category = 'Edit'
-      Caption = '&Goto offset...'
-      Enabled = False
-      OnExecute = actGotoOffsetExecute
-      OnUpdate = actGotoOffsetUpdate
     end
     object actExit: TFileExit
       Category = 'File'
