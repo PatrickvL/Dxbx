@@ -1124,7 +1124,7 @@ begin
   end
   else
     // redirect to Win2k/XP
-    Result := JwaNative.NtDuplicateObject
+    NTSTATUS(Result) := JwaNative.NtDuplicateObject
     (
         GetCurrentProcess(),
         SourceHandle,
@@ -1137,7 +1137,7 @@ begin
 
   // From http://msdn.microsoft.com/en-us/library/ms724251(VS.85).aspx
   // "If the function fails, the return value is zero" :
-  if Result = 0 then
+  if Result <> STATUS_SUCCESS then
     EmuWarning('Object was not duplicated!');
 
   EmuSwapFS(fsXbox);

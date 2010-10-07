@@ -1118,7 +1118,7 @@ procedure xboxkrnl_RtlInitializeCriticalSection
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfExtreme) then
     LogBegin('EmuKrnl : RtlInitializeCriticalSection').
       _(CriticalSection, 'CriticalSection').
     LogEnd();
@@ -1182,7 +1182,7 @@ procedure xboxkrnl_RtlLeaveCriticalSection
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit and lfDxbx and lfTrace) then
+  if MayLog(lfUnit or lfExtreme) then
     LogBegin('EmuKrnl : RtlLeaveCriticalSection').
       _(CriticalSection, 'CriticalSection').
     LogEnd();
@@ -1202,7 +1202,7 @@ procedure xboxkrnl_RtlLeaveCriticalSectionAndRegion(
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit and lfDxbx and lfTrace) then
+  if MayLog(lfUnit or lfDxbx or lfTrace) then
     LogBegin('EmuKrnl : RtlLeaveCriticalSectionAndRegion').
       _(CriticalSection, 'CriticalSection').
     LogEnd();

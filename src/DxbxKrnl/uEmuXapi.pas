@@ -357,7 +357,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit or lfHeap or lfExtreme) then
+  if MayLog(lfUnit or lfHeap) then
     LogBegin('EmuRtlAllocateHeap').
       _(hHeap, 'hHeap').
       _(dwFlags, 'dwFlags').
@@ -392,7 +392,7 @@ function XTL_EmuRtlFreeHeap
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit or lfHeap or lfExtreme) then
+  if MayLog(lfUnit or lfHeap) then
     LogBegin('EmuRtlFreeHeap').
       _(hHeap, 'hHeap').
       _(dwFlags, 'dwFlags').
@@ -420,7 +420,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit or lfHeap or lfExtreme) then
+  if MayLog(lfUnit or lfHeap) then
     LogBegin('EmuRtlReAllocateHeap').
       _(hHeap, 'hHeap').
       _(dwFlags, 'dwFlags').
