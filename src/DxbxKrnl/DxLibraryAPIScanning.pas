@@ -197,39 +197,52 @@ uses
 
 const lfUnit = lfDxbx or lfSymbolScan;
 
-(* Old test code :
-
-procedure CheckStringToFunctionMappings;
-// Checks if the stored function names are correct
-var
-  s, f: Integer;
-  Str: AnsiString;
-  sh: PStoredStringHeader;
-  FuncName: AnsiString;
+function IsLibraryBasedSectionName(const aSectionName: string): Boolean;
 begin
-  for s := 0 to PatternTrieReader.StoredSignatureTrieHeader.StringTable.NrOfStrings - 1 do
-  begin
-    sh := PatternTrieReader.GetStringHeader(s);
-    str := AnsiString(PatternTrieReader.GetString(s));
-    for f := 0 to Integer(sh.NrOfFunctions) - 1 do
-    begin
-      FuncName := AnsiString(PatternTrieReader.GetFunctionName(sh.FirstFunctionIndex + Cardinal(f)));
-      Assert(FuncName = Str);
-    end;
-  end;
-end;
+// Note : The following sections names are all known to result from linking with a library.
+// (Which library that is, is returned by MapSectionNameToLibraryName below.)
+//
+// Other sections we know about are :
+//  '.text'  : Normally contains _main. Research if all detections before _main (if in .text at all) should always be avoided?
+//             '.text' is a special case; Compiler&Linker-effects cause pattern-deviations in it!
+//  '.rdata' : "Fable The Lost Chapters" has it's _main() here
+//  '.data'  : Contains kernel thunk table in some XBEs
 
-*)
+  Result := (aSectionName = 'D3D')
+         or (aSectionName = 'D3DX')
+//         or (aSectionName = 'DOLBY') // Contains 'Initialized Data' from "dsound.lib" and no code, so disabled for now
+         or (aSectionName = 'DMUSIC')
+         or (aSectionName = 'DSOUND')
+         or (aSectionName = 'WMADEC') // Note : We keep no patterns for this section
+         or (aSectionName = 'WMADECXM') // Note : We keep no patterns for this section
+         or (aSectionName = 'XACTENG') // Note : We keep no patterns for this section
+         or (aSectionName = 'XMV')
+         or (aSectionName = 'XPP') // Contains code from "xapilib.lib"
+         or (aSectionName = 'XGRPH') // Contains code from "xgraphics.lib"
+         or (aSectionName = 'XNET')
+         or (aSectionName = 'XONLINE');
+end; // IsLibraryBasedSectionName
 
-function SameLibName(StoredLibraryName, CurrentLibName: string): Boolean;
-// StoredLibraryName comes from our pattern files (like '4627xgraphics.pat' gives 'xgraphics')
-// CurrentLibName comes from the XBE header (like 'XGRAPHC')
+function MapSectionNameToLibraryName(const aSectionName: string): string;
 begin
-  // Map the pattern-based names to the linked names :
-  if SameText(StoredLibraryName, 'xgraphics') then
-    StoredLibraryName := 'XGRAPHC';
+  // A few sections come from a library with a name different from the section name;
+  // Note, that the library name is derived from the original filename of those libs,
+  // without their extension.
+  //
+  // Check for these cases and map them to the library name they actually came from :
+       if aSectionName = 'XPP'   then Result := 'xapilib'
+  else if aSectionName = 'XGRPH' then Result := 'xgraphics'
+  else if aSectionName = 'D3D'   then Result := 'd3d8'
+  else if aSectionName = 'D3DX'  then Result := 'd3dx8'
+  // All other sections come from a library with the same name as the section name :
+  else                                Result := aSectionName;
+end; // MapSectionNameToLibraryName
 
-  Result := SameText(StoredLibraryName, CurrentLibName);
+function MapLibraryAbbreviationToLibraryName(const aLibraryAbbreviation: string): string;
+// Maps the library abbreviations used in the XBE header (like 'XGRAPHC') to their actual library name (like 'xgraphics')
+begin
+  if SameText(aLibraryAbbreviation, 'XGRAPHC') then Result := 'xgraphics'
+  else                                              Result := aLibraryAbbreviation;
 end;
 
 {$OVERFLOWCHECKS OFF}
@@ -274,7 +287,7 @@ begin
   else // NODE_5BITFIXED_0WILDCARDS:
     NrWildcards := 0;
   end;
-end;
+end; // DecodeStretchHeader
 
 { TSymbolInformation }
 
@@ -284,7 +297,7 @@ begin
   begin
     Result := StoredLibraryFunction.FunctionLength;
 
-    // Approximations cover only 75 % of their length, to prevent overlap on functions that became shorter:
+    // Approximations cover only 75 % of their length, to prevent overlap on functions that are shorter in the actual version :
 //    if IsApproximation then
     if SymbolManager.UsingLibraryApproximations then
       Result := (Result * 3) div 4;
@@ -619,24 +632,6 @@ var
   StoredLibraryName: string;
   ScanEnd: UIntPtr;
   ScanPtr: UIntPtr;
-
-  function _SectionIsKnown(const aSectionName: string): Boolean;
-  begin
-    Result := (aSectionName = 'D3D')
-           or (aSectionName = 'D3DX')
-//           or (aSectionName = 'DOLBY') // Contains 'Initialized Data' from "dsound.lib"
-           or (aSectionName = 'DMUSIC')
-           or (aSectionName = 'DSOUND')
-           or (aSectionName = 'WMADEC')
-           or (aSectionName = 'WMADECXM')
-           or (aSectionName = 'XACTENG')
-           or (aSectionName = 'XMV')
-           or (aSectionName = 'XPP') // Contains code from "xapilib.lib"
-           or (aSectionName = 'XGRPH') // Contains code from "xgraphics.lib"
-           or (aSectionName = 'XNET')
-           or (aSectionName = 'XONLINE');
-  end;
-
 begin
   Assert(Assigned(pXbeHeader));
   Assert(pXbeHeader.dwSections > 0);
@@ -673,38 +668,18 @@ begin
     SectionInfo[i].SectionEndAddr := ScanEnd;
     SectionInfo[i].SectionName := string(PCharToString(PAnsiChar(Section.dwSectionNameAddr), XBE_SECTIONNAME_MAXLENGTH));
 
-//    // .text is a special case; Compiler&Linker-effects cause pattern-deviations in it!
-//    if (SectionName = '.text') then
-//      TextSection := Section; // TODO : Research if all detections before _main (if in .text at all) should always be avoided?
-//    if (aSectionName = '.rdata') then
-//      ; // "Fable The Lost Chapters" has it's _main() here
-//    if (aSectionName = '.data') then
-//      ; // Contains kernel thunk table in some XBEs
-
     // Mark only those sections that we know about :
-    if _SectionIsKnown(SectionInfo[i].SectionName) then
+    if IsLibraryBasedSectionName(SectionInfo[i].SectionName) then
     begin
       // Determine section's corresponding library name :
-      if SectionInfo[i].SectionName = 'XPP' then
-        SectionInfo[i].LibraryName := 'xapilib'
-      else
-      if SectionInfo[i].SectionName = 'XGRPH' then
-        SectionInfo[i].LibraryName := 'xgraphics'
-      else
-      if SectionInfo[i].SectionName = 'D3D' then
-        SectionInfo[i].LibraryName := 'd3d8'
-      else
-      if SectionInfo[i].SectionName = 'D3DX' then
-        SectionInfo[i].LibraryName := 'd3dx8'
-      else
-        SectionInfo[i].LibraryName := SectionInfo[i].SectionName;
+      SectionInfo[i].LibraryName := MapSectionNameToLibraryName(SectionInfo[i].SectionName);
 
       // Look up library name index :
       for j := 0 to PatternTrieReader.StoredSignatureTrieHeader.LibraryTable.NrOfLibraries - 1 do
       begin
         StoredLibrary := PatternTrieReader.GetStoredLibrary(j);
         StoredLibraryName := PatternTrieReader.GetString(StoredLibrary.LibNameIndex);
-        if SameLibName(StoredLibraryName, SectionInfo[i].LibraryName) then
+        if SameText(StoredLibraryName, SectionInfo[i].LibraryName) then
         begin
           SectionInfo[i].LibraryNameIndex := StoredLibrary.LibNameIndex;
           Break;
@@ -944,8 +919,8 @@ begin
 //  or _Test($000A0320, '_D3DDevice_BlockUntilIdle@0') // Address appeared 2 times (but overlap not allowed!) Fixed.
 //  or _Test($000A0320, '_D3DVolumeTexture_GetLevelDesc@12') // 2nd appearance
 //  or _Test($000D4CA9, '_XInputGetCapabilities@8') // TODO : Fix missing
-//  or _Test($000D9DE6, '@OHCD_fPauseEndpoint@8') // Busy.: 2 version found at conflicting addresses
-//  or _Test($000D8A30, '@OHCD_fPauseEndpoint@8') // Busy.: 2 version found at conflicting addresses
+//  or _Test($000D9DE6, '@OHCD_fPauseEndpoint@8') // Busy.: 2 versions found at conflicting addresses
+//  or _Test($000D8A30, '@OHCD_fPauseEndpoint@8') // Busy.: 2 versions found at conflicting addresses
 //  or _Test($000D8A30, '@OHCD_ScheduleRemoveEndpointPeriodic@8') // Also conflicting
 //  or _Test($000DA7ED, '@OHCD_fIsochCloseEndpoint@8') // Cause - 2 versions have different references
 
@@ -1054,7 +1029,7 @@ begin
       Symbol := MyIntermediateSymbolRegistrations[i];
       DbgPrintf('$%.08x;%s [-$%.08x] %s %s', [
         Symbol.Address,
-        Symbol.{Unmangled}Name,
+        Symbol.Name,
         UIntPtr(Symbol.Address) + Symbol.Length - 1,
         Symbol.Discovery,
         Symbol.FailReason
@@ -1074,15 +1049,19 @@ procedure TSymbolManager.RevertIntermediateSymbolRegistrations(const CurrentSymb
     if MayLog(lfUnit) or IsTestCase then // TODO : Add lfExtreme flag once the output is reliable
       DbgPrintf('NOT $%.08x;%s [-$%.08x] %s %s', [
         Symbol.Address,
-        Symbol.{Unmangled}Name,
+        Symbol.Name,
         UIntPtr(Symbol.Address) + Symbol.Length - 1,
         Symbol.Discovery,
         Symbol.FailReason
         ]);
 
+    // Covered range should only be cleared if it was claimed (otherwise we turn out to clear other, valid symbols!) :
     if Symbol.RangeClaimed then
+    begin
       MyAddressesIdentified.ClearRange(UIntPtr(Symbol.Address), Symbol.Length);
-    Symbol.RangeClaimed := False;
+      Symbol.RangeClaimed := False;
+    end;
+
     Symbol.Address := nil;
     Symbol.Discovery := '';
     Symbol.FailReason := '';
@@ -1201,8 +1180,8 @@ var
     ReferencedAddress: TCodePointer;
     Symbol: TSymbolInformation;
   end;
-  Version1: TSymbolInformation;
-  Version2: TSymbolInformation;
+  CurrentReferencedSymbol: TSymbolInformation;
+  ReferencedSymbol_NextVersion: TSymbolInformation;
   Function_: PStoredLibraryFunction;
   i, j: Integer;
 begin
@@ -1327,32 +1306,34 @@ begin
     if (Referenced[i].StoredSymbolReference.ReferenceFlags and rfIsDuplicate) > 0 then
       Continue;
 
+    CurrentReferencedSymbol := Referenced[i].Symbol;
+
     // Do the recursive check :
     begin
       // Make sure we test the shortest of the two versions first,
       // to assure we're not claiming to much address range :
-      Version1 := Referenced[i].Symbol;
-      Version2 := Version1.OtherVersion;
-      if Assigned(Version2) and (Version1.Length > Version2.Length) then
+      ReferencedSymbol_NextVersion := CurrentReferencedSymbol.OtherVersion;
+      if Assigned(ReferencedSymbol_NextVersion) and (CurrentReferencedSymbol.Length > ReferencedSymbol_NextVersion.Length) then
       begin
-        Version1 := Version2; // 1 is shortest of the two now
-        Version2 := Referenced[i].Symbol;
+        CurrentReferencedSymbol := ReferencedSymbol_NextVersion; // start with the shortest of the two
+        ReferencedSymbol_NextVersion := Referenced[i].Symbol;
       end;
 
-      // Remember the current number of registrations (so we can rollback when needed) :
+      // Remember the current number of registrations (so we can rollback when needed) and do the recursive check :
       j := FIntermediateSymbolRegistrationsCount;
-      Result := CheckFunctionAtAddressAndRegister(Version1, Referenced[i].ReferencedAddress, Prefix + '.' + IntToStr(i));
+      Result := CheckFunctionAtAddressAndRegister(CurrentReferencedSymbol, Referenced[i].ReferencedAddress, Prefix + '.' + IntToStr(i));
 
       // When there's a problem, and we're scanning using approximating patterns, try the other version (if any) :
       if  UsingLibraryApproximations
       and (Result <= CR_ADDRESS_ALREADY_SET)
-      and Assigned(Version2) then
+      and Assigned(ReferencedSymbol_NextVersion) then
       begin
         // Remove any registrations done by the previous call :
         RevertIntermediateSymbolRegistrations(CurrentSymbol, FIntermediateSymbolRegistrationsCount - j);
+
         // And try again with the other version :
-        Result := CheckFunctionAtAddressAndRegister(Version2, Referenced[i].ReferencedAddress, Prefix + '.' + IntToStr(i));
-        Version1 := Version2;
+        CurrentReferencedSymbol := ReferencedSymbol_NextVersion;
+        Result := CheckFunctionAtAddressAndRegister(CurrentReferencedSymbol, Referenced[i].ReferencedAddress, Prefix + '.' + IntToStr(i));
       end
     end;
 
@@ -1369,7 +1350,7 @@ begin
         if ScanningInKnownAddresses then
         begin
           // Don't call any of the following exits a 'failure' anymore when they're big enough   :
-          if MayCheckFunction(Version1.StoredLibraryFunction) then
+          if MayCheckFunction(CurrentReferencedSymbol.StoredLibraryFunction) then
             Result := CR_APPROXIMATION;
         end;
       end;
@@ -1378,9 +1359,9 @@ begin
       begin
         // Approximations where failures, so they're not yet registered;
         // Mark them as an approximation (trunking their length a bit) and register anyway :
-        Version1.IsApproximation := True;
-        AddIntermediateSymbolRegistration(Version1, Referenced[i].ReferencedAddress);
-        Version1.FailReason := 'Allowed approximation';
+        CurrentReferencedSymbol.IsApproximation := True;
+        AddIntermediateSymbolRegistration(CurrentReferencedSymbol, Referenced[i].ReferencedAddress);
+        CurrentReferencedSymbol.FailReason := 'Allowed approximation';
       end
       else
       begin
@@ -1391,7 +1372,7 @@ begin
         if Result = CR_ADDRESS_ALREADY_SET then
           // skip these
         else
-          AddIntermediateSymbolRegistration(Version1, Referenced[i].ReferencedAddress, {IsFailureRegistration=}True);
+          AddIntermediateSymbolRegistration(CurrentReferencedSymbol, Referenced[i].ReferencedAddress, {IsFailureRegistration=}True);
 
         // When the recursive check fails, all temporary registrations will be reverted (see RevertIntermediateSymbolRegistrations)
         Exit;
@@ -1693,13 +1674,15 @@ begin
     if MayLog(lfUnit) then
       DbgPrintf('DxbxHLE : Library "%s" is version %d', [CurrentLibName, CurrentXbeLibraryVersion.wBuildVersion]);
 
+    CurrentLibName := MapLibraryAbbreviationToLibraryName(CurrentLibName);
+
     // Collect all known library-numbers with the same name in a stringlist :
     StoredLibraryVersions.Clear;
     for j := 0 to PatternTrieReader.StoredSignatureTrieHeader.LibraryTable.NrOfLibraries - 1 do
     begin
       StoredLibrary := PatternTrieReader.GetStoredLibrary(j);
       StoredLibraryName := PatternTrieReader.GetString(StoredLibrary.LibNameIndex);
-      if SameLibName(StoredLibraryName, CurrentLibName) then
+      if SameText(StoredLibraryName, CurrentLibName) then
         StoredLibraryVersions.AddObject(IntToStr(StoredLibrary.LibVersion), TObject(j));
     end;
 
@@ -1729,7 +1712,7 @@ begin
     begin
       StoredLibrary := PatternTrieReader.GetStoredLibrary(BestStoredLibraryIndex);
       StoredLibraryName := PatternTrieReader.GetString(StoredLibrary.LibNameIndex);
-      if SameLibName(StoredLibraryName, 'D3D8') then
+      if SameText(StoredLibraryName, 'D3D8') then
         LibD3D8 := StoredLibrary;
 
       // Add this library to a set we'll use in the detection-code :
