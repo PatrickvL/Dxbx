@@ -6222,7 +6222,9 @@ begin
   end
   else
   begin
+    EmuSwapFS(fsXbox);
     XTL_EmuD3DTexture_GetSurfaceLevel(pThis, Level, @pSurfaceLevel);
+    EmuSwapFS(fsWindows);
 
     Result := pSurfaceLevel;
   end;
@@ -7046,7 +7048,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3DDevice_SetTextureState_ParameterCheck
+(*function XTL_EmuD3DDevice_SetTextureState_ParameterCheck
 (
   State: D3DRENDERSTATETYPE;
   Value: DWORD
@@ -7065,7 +7067,7 @@ begin
   Result := 0;
 
   EmuSwapFS(fsXbox);
-end;
+end; *)
 
 procedure XTL_EmuD3DDevice_SetTextureState_BumpEnv
 (
@@ -11301,7 +11303,7 @@ exports
   XTL_EmuD3DDevice_SetTextureState_BorderColor,
   XTL_EmuD3DDevice_SetTextureState_BumpEnv,
   XTL_EmuD3DDevice_SetTextureState_ColorKeyColor,
-  XTL_EmuD3DDevice_SetTextureState_ParameterCheck, // Not yet implemented
+//  XTL_EmuD3DDevice_SetTextureState_ParameterCheck, // Not yet implemented
   XTL_EmuD3DDevice_SetTextureState_TexCoordIndex,
   XTL_EmuD3DDevice_SetTileCompressionTagBits,
   XTL_EmuD3DDevice_SetTileNoWait name PatchPrefix + '?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z',
