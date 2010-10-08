@@ -30,8 +30,8 @@ uses
 type
   TSectionViewer = class(TPageControl)
   protected
-    FHexViewer: THexViewer;
     FDisassembleViewer: TDisassembleViewer;
+    FHexViewer: THexViewer;
   public
     constructor Create(Owner: TComponent); override;
 
@@ -63,11 +63,11 @@ begin
 
   Parent := TWinControl(Owner);
 
-  FHexViewer := THexViewer.Create(Self);
   FDisassembleViewer := TDisassembleViewer.Create(Self);
+  FHexViewer := THexViewer.Create(Self);
 
-  _NewTab(FHexViewer, 'Hex view');
   _NewTab(FDisassembleViewer, 'Disassembly');
+  _NewTab(FHexViewer, 'Hex view');
 end;
 
 procedure TSectionViewer.SetRegion(const aRegionInfo: RRegionInfo);

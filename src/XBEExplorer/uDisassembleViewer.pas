@@ -26,6 +26,7 @@ uses
   // Dxbx
   uConsts,
   uTypes,
+  uCrc16,
   uDxbxUtils,
   uDisassembleUtils,
   uViewerUtils,
@@ -46,7 +47,7 @@ type
     FRegionInfo: RRegionInfo;
     MyDisassemble: RDisassemble;
     MyInstructionOffsets: TList;
-    function GetLabelByVA(const aVirtualAddress: Pointer): string;
+    function GetLabelByVA(const aVirtualAddress: Pointer; const aInLabelMode: Boolean = True): string;
     procedure GridDrawCellEvent(Sender: TObject; ACol, ARow: Longint; Rect: TRect; State: TGridDrawState);
     procedure CreatePatternExecute(Sender: TObject);
     procedure GotoAddressExecute(Sender: TObject);
@@ -157,17 +158,30 @@ var
     ReferencedSymbol: string;
   end;
   PatternPrefixStr: string;
-  CrcLength: Integer;
-  CrcValue: Integer;
+  CRCLength: Integer;
+  CRCValue: Integer;
   SymbolSize: Integer;
   SymbolName: string;
   i: Integer;
+
+  procedure _UpdateCRC(const aFixedOffset: Integer);
+  begin
+    // Don't calculate CRC is already done, or we're before the end of the 32 pattern bytes :
+    if (CRCLength >= 0) or (aFixedOffset <= 32) then
+      Exit;
+
+    CRCLength := aFixedOffset - 32;
+    CRCValue := CalcCRC16(@(PByte(MyDisassemble.Buffer)[32]), CRCLength);
+  end;
 
   function _AnalyzeFunction: Integer;
   const
     MAX_SIZE = $1800;
   var
     Offset: Integer;
+    ReferencedSymbol: string;
+    r: Integer;
+    ReferencedAddress: Cardinal;
   begin
     Result := 0;
     Offset := aAddress - UIntPtr(FRegionInfo.VirtualAddres);
@@ -182,21 +196,57 @@ var
       // TODO : Verify these two :
       or MyDisassemble.IsOpcode(OPCODE_RETF)
       or MyDisassemble.IsOpcode(OPCODE_RETFN) then
-        Exit;
-
-      // TODO : Detect & collect References
+        Break;
 
       // Append pattern within the first 32 bytes of code :
       if Length(PatternPrefixStr) < 64 then
         PatternPrefixStr := PatternPrefixStr + StringReplace(MyDisassemble.HexStr, ' ', '', [rfReplaceAll]);
-        // TODO : dot-out references!
 
-      // TODO : Calculate CrcLength and CrcValue here too
+      // See if this instuction references another address, of which we know the name :
+      if MyDisassemble.GetReferencedMemoryAddress({var}ReferencedAddress) then
+      begin
+        ReferencedSymbol := GetLabelByVA(Pointer(ReferencedAddress), {aInLabelMode=}False);
+        if ReferencedSymbol <> '' then
+        begin
+          // We found a reference with label and all, register it :
+          r := Length(References);
+          SetLength(References, r + 1);
+          References[r].Offset := Result - 4;
+          References[r].ReferencedSymbol := ReferencedSymbol;
 
+          // Determine direct or relative addressing :
+          if MyDisassemble.IsOpcode(OPCODE_CALL) then
+            References[r].ReferenceType := 'R' // TODO : Check more opcodes
+          else
+            References[r].ReferenceType := 'D';
+        end;
+
+        // Calculate CRCLength and CRCValue if possible :
+        r := Result - 4;
+        if r >= 32 then
+          _UpdateCRC(r)
+        else
+          // Disable CRC calculation if the reference lies over the 32 byte border :
+          if (r < 32) and (Result > 32) then
+            CRCLength := 0;
+
+        // Dot-out this reference in the pattern (even if we didn't register a label) :
+        while (r < Result) do
+        begin
+          PatternPrefixStr[(r * 2) + 1] := '.';
+          PatternPrefixStr[(r * 2) + 2] := '.';
+          Inc(r);
+        end;
+      end; // if Reference
+
+      // Never exceed maximum function size :
       if Result > MAX_SIZE then
-        Exit;
-    end;
-  end;
+        Break;
+    end; // while
+
+    // For functions without references, the CRC can still be calculated :
+    _UpdateCRC(Result);
+  end; // _AnalyzeFunction
 
 begin
   SymbolName := GetLabelByVA(Pointer(aAddress));
@@ -206,8 +256,8 @@ begin
   SymbolName := InputBox('Generate pattern', 'Enter symbol name', SymbolName);
 
   PatternPrefixStr := '';
-  CrcLength := 0;
-  CrcValue := 0;
+  CRCLength := -1;
+  CRCValue := 0;
   SetLength(References, 0);
 
   SymbolSize := _AnalyzeFunction();
@@ -217,11 +267,17 @@ begin
     PatternPrefixStr := PatternPrefixStr + '..';
   SetLength(PatternPrefixStr, 64);
 
-  Result := Format('%64s %0.2x %0.4x %0.4x %s', [PatternPrefixStr, CrcLength, CrcValue, SymbolSize, SymbolName]);
+  if CRCLength < 0 then
+    CRCLength := 0;
 
-  // Add references :
+  // Write the pattern, using the previously determined values :
+  Result := Format('%64s %0.2x %0.4x %0.4x %s', [PatternPrefixStr, CRCLength, CRCValue, SymbolSize, SymbolName]);
+
+  // Add the references :
   for i := 0 to Length(References) - 1 do
-    Result := Result + Format(' ^%0.4x%c %s', [References[i].Offset, References[i].ReferenceType, References[i].ReferencedSymbol]);
+    Result := Result + Format(' ^%0.4x%s %s', [References[i].Offset, References[i].ReferenceType, References[i].ReferencedSymbol]);
+
+  Result := Result + #13#10;
 end;
 
 procedure TDisassembleViewer.CreatePatternExecute(Sender: TObject);
@@ -301,9 +357,15 @@ begin
 end;
 
 const
-  ShowMangledNames = False; // Change this into a setting
+  ShowMangledNames = True; // Change this into a setting
 
-function TDisassembleViewer.GetLabelByVA(const aVirtualAddress: Pointer): string;
+function TDisassembleViewer.GetLabelByVA(const aVirtualAddress: Pointer; const aInLabelMode: Boolean = True): string;
+
+  function _Compare(const List: Pointer; const Index: Integer; const SearchData: Pointer): Integer;
+  begin
+    Result := Integer(TStringList(List).Objects[Index]) - Integer(SearchData);
+  end;
+
 var
   i: Integer;
 begin
@@ -311,15 +373,26 @@ begin
   if SymbolList = nil then
     Exit;
 
-  i := SymbolList.IndexOfObject(TObject(aVirtualAddress));
-  if i < 0 then
-    Exit;
+  // Search for closest address :
+  if not GenericBinarySearch(SymbolList, SymbolList.Count, aVirtualAddress, @_Compare, {out}i) then
+  begin
+    if aInLabelMode then
+      Exit;
 
-  Result := SymbolList[i];
+    // Because we found no exact hit, we have to step 1 hit back and work from there (if we can) :
+    Dec(i);
+    if (i < 0)
+    or (UIntPtr(SymbolList.Objects[i]) > UIntPtr(aVirtualAddress)) then
+      Exit;
+
+    // Append hexadecimal offset here, where no exact hit was found :
+    Result := Format('+%0.4x', [UIntPtr(aVirtualAddress) - UIntPtr(SymbolList.Objects[i])]);
+  end;
+
   if ShowMangledNames then
-    Exit;
-
-  Result := DxbxUnmangleSymbolName(Result);
+    Result := SymbolList[i] + Result
+  else
+    Result := DxbxUnmangleSymbolName(SymbolList[i]) + Result;
 end;
 
 procedure TDisassembleViewer.SetRegion(const aRegionInfo: RRegionInfo);
@@ -475,7 +548,7 @@ begin
       CommentStr := '';
       if MyDisassemble.GetReferencedMemoryAddress({var}Address) then
       begin
-        CommentStr := MyDisassemble.GetLabelStr(Pointer(Address));
+        CommentStr := MyDisassemble.GetLabelStr(Pointer(Address), {InLabelMode=}False);
         if  (CommentStr = '')
         // TODO : Check XBE Range better than this
         // Also, add support for strings referenced in another section :

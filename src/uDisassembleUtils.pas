@@ -31,7 +31,7 @@ uses
 type
   PARGTYPE = ^TARGTYPE; // DO NOT USE OUTSIDE THIS UNIT!
 
-  TGetLabelEvent = function (const aVirtualAddress: Pointer): string of object;
+  TGetLabelEvent = function (const aVirtualAddress: Pointer; const aInLabelMode: Boolean = True): string of object;
 
   // Dxbx type wrapping the BeaEngine.TDISASM type, so we can easily switch
   // disassemblers if the need ever arises, by hiding the internals in this unit.
@@ -58,7 +58,7 @@ type
     function OpcodeStr: string;
     function HexStr: string;
     function IsOpcode(const aOpcode: Integer): Boolean;
-    function GetLabelStr(const aVirtualAddr: Pointer): string;
+    function GetLabelStr(const aVirtualAddr: Pointer; const aInLabelMode: Boolean = True): string;
     function GetReferencedMemoryAddress(var TargetAddress: Cardinal): Boolean;
 //    function ArgReadsFromMemory(const aArgNr: Integer): Boolean;
 //    function ArgMemoryAddress(const aArgNr: Integer): Cardinal;
@@ -107,10 +107,10 @@ begin
     Inc(Offset, FLen);
 end;
 
-function RDisassemble.GetLabelStr(const aVirtualAddr: Pointer): string;
+function RDisassemble.GetLabelStr(const aVirtualAddr: Pointer; const aInLabelMode: Boolean = True): string;
 begin
   if Assigned(OnGetLabel) then
-    Result := OnGetLabel(aVirtualAddr)
+    Result := OnGetLabel(aVirtualAddr, aInLabelMode)
   else
     Result := '';
 end;
@@ -179,16 +179,20 @@ end;
 
 function RDisassemble.GetReferencedMemoryAddress(var TargetAddress: Cardinal): Boolean;
 begin
-  Result := {((MyDisAsm.Instruction.Category and CONTROL_TRANSFER) > 0)
-        and} (MyDisasm.Instruction.AddrValue > 0);
+  Result := (FLen > 4);
+  if not Result then
+    Exit;
+
+  Result := ((MyDisAsm.Instruction.Category and $0000FFFF) in [DATA_TRANSFER, CONTROL_TRANSFER])
+        and (MyDisasm.Instruction.AddrValue > 0);
   if Result then
   begin
     {var}TargetAddress := MyDisasm.Instruction.AddrValue;
     Exit;
   end;
 
-  Result := {((MyDisAsm.Instruction.Category and CONTROL_TRANSFER) > 0)
-        and} (MyDisasm.Instruction.Immediat > 0);
+  Result := ((MyDisAsm.Instruction.Category and $0000FFFF) in [CONTROL_TRANSFER])
+        and (MyDisasm.Instruction.Immediat > 0);
   if Result then
   begin
     {var}TargetAddress := MyDisasm.Instruction.Immediat;
@@ -196,16 +200,26 @@ begin
   end;
 
   with GetArg(2)^ do
-    {var}TargetAddress := Memory.Displacement;
-  Result := (TargetAddress > 0);
-  if Result then
-    Exit;
+    if  (SegmentReg = DSReg)
+    and (Memory.BaseRegister = 0)
+    and ((ArgType and $FFFF0000) >= MEMORY_TYPE) then
+    begin
+      {var}TargetAddress := Memory.Displacement;
+      Result := (TargetAddress > 0);
+      if Result then
+        Exit;
+    end;
 
   with GetArg(1)^ do
-    {var}TargetAddress := Memory.Displacement;
-  Result := (TargetAddress > 0);
-  if Result then
-    Exit;
+    if  (SegmentReg = DSReg)
+    and (Memory.BaseRegister = 0)
+    and ((ArgType and $FFFF0000) >= MEMORY_TYPE) then
+    begin
+      {var}TargetAddress := Memory.Displacement;
+      Result := (TargetAddress > 0);
+      if Result then
+        Exit;
+    end;
 end;
 
 //  if ((MyDisasm.Instruction.ImplicitModifiedRegs and REG4) > 0)
