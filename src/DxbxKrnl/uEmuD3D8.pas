@@ -255,6 +255,9 @@ uses
 
 const lfUnit = lfCxbx or lfGraphics;
 
+var
+  g_Title: string = '';
+
 procedure DxbxResetGlobals;
 begin
   g_pD3DDevice := NULL;
@@ -841,7 +844,8 @@ begin
   begin
     CertAddr := g_XbeHeader.dwCertificateAddr - g_XbeHeader.dwBaseAddr;
     IntPtr(XbeCert) := IntPtr(g_XbeHeader) + CertAddr;
-    AsciiTitle := 'Dxbx: Emulating ' + GetReadableTitle(XbeCert);
+    g_Title := GetReadableTitle(XbeCert);
+    AsciiTitle := 'Dxbx: Emulating ' + g_Title;
   end;
 
   // create the window
@@ -992,7 +996,7 @@ procedure TakeScreenShot(hWnd: HWND);
 
   function _GetScreenshotFileName(): string;
   begin
-    Result := Format('Dxbx running %s (%0.3d).bmp', [m_szAsciiTitle, ScreenShotNr]);
+    Result := Format('Dxbx running %s (%0.3d).bmp', [g_Title, ScreenShotNr]);
     Inc(ScreenShotNr);
   end;
 
