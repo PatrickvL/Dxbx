@@ -55,7 +55,6 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
-						<Parameters Name="RunParams"></Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
@@ -127,6 +126,7 @@
 			<DCCReference Include="..\..\src\XBEExplorer\uViewerUtils.pas"/>
 			<DCCReference Include="..\..\src\uDisassembleUtils.pas"/>
 			<DCCReference Include="..\..\src\VistaIconFix.pas"/>
+			<DCCReference Include="..\..\src\uCRC16.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

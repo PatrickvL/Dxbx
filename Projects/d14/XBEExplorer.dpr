@@ -24,7 +24,8 @@ uses
   uSectionViewer in '..\..\src\XBEExplorer\uSectionViewer.pas',
   uViewerUtils in '..\..\src\XBEExplorer\uViewerUtils.pas',
   uDisassembleUtils in '..\..\src\uDisassembleUtils.pas',
-  VistaIconFix in '..\..\src\VistaIconFix.pas';
+  VistaIconFix in '..\..\src\VistaIconFix.pas',
+  uCRC16 in '..\..\src\uCRC16.pas';
 
 {$R *.res}
 
