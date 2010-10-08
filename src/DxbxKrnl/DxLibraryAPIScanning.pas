@@ -1934,17 +1934,45 @@ end; // SaveSymbolsToCache
 
 procedure TSymbolManager.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
 var
-  ResourceStream: TResourceStream;
+  PatternsStream: TMemoryStream;
+  FApplicationDir: string;
   CacheFileNameStr: string;
+
+  function _TryLoad(const aFolder: string): Boolean;
+  var
+    FilePath: string;
+  begin
+    FilePath := aFolder + 'StoredTrie.dpt';
+    Result := FileExists(FilePath);
+    if Result then
+    begin
+      PatternsStream.LoadFromFile(FilePath);
+      Result := PatternsStream.Size > 0;
+    end;
+  end;
+
 begin
   Clear;
 
   // Get StoredPatternTrie from resource :
-  ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);
+  PatternsStream := TMemoryStream.Create;
   try
+    // Load the resource (search in various paths, TODO : this should be made configurable later) :
+    FApplicationDir := ExtractFilePath(ParamStr(0));
+    if not _TryLoad('..\resource\') then
+    if not _TryLoad('') then
+    if not _TryLoad('..\') then
+    if not _TryLoad(FApplicationDir + '..\resource\') then
+    if not _TryLoad(FApplicationDir) then
+    if not _TryLoad(FApplicationDir +'..\') then
+    begin
+      DbgPrintf('DxbxHLE : Could not find required StoredTrie.dpt resource!');
+      Exit;
+    end;
+
     PatternTrieReader := TPatternTrieReader.Create;
     try
-      PatternTrieReader.LoadFromStream(ResourceStream);
+      PatternTrieReader.LoadFromStream(PatternsStream);
 
       DetectVersionedXboxLibraries(pLibraryVersion, pXbeHeader);
 
@@ -1986,7 +2014,7 @@ begin
 
   finally
     // Unlock the resource :
-    FreeAndNil(ResourceStream);
+    FreeAndNil(PatternsStream);
   end;
 
   if MayLog(lfUnit) then

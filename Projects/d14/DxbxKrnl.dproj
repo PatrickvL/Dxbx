@@ -112,11 +112,6 @@
 			<DelphiCompile Include="DxbxKrnl.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<RcCompile Include="..\..\resource\StoredTrie.rc">
-				<ContainerId>RC</ContainerId>
-				<ContainerId>RC</ContainerId>
-				<Form>StoredTrie.res</Form>
-			</RcCompile>
 			<RcCompile Include="..\..\resource\SvnRevision.rc">
 				<ContainerId>RC</ContainerId>
 				<ContainerId>RC</ContainerId>
