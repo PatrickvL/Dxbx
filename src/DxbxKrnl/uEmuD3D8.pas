@@ -257,6 +257,7 @@ const lfUnit = lfCxbx or lfGraphics;
 
 var
   g_Title: string = '';
+  g_SignalScreenShot: Boolean = False;
 
 procedure DxbxResetGlobals;
 begin
@@ -416,6 +417,73 @@ begin
     Inc(Result, ((dwVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT)*sizeof(FLOAT)*2);
 end;
 
+{static}var ScreenShotNr: Integer = 1;
+{static}var ScreenShotBufferSurface: IDirect3DSurface8 = nil; // this is our pointer to the memory location containing our copy of the front buffer
+
+procedure DxbxTakeScreenShot(hWnd: HWND);
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+// Source : http://www.gamedev.net/reference/articles/article1844.asp
+
+  function _GetScreenshotFileName(): string;
+  begin
+    Result := Format('Dxbx running %s (%0.3d).bmp', [g_Title, ScreenShotNr]);
+    Inc(ScreenShotNr);
+  end;
+  
+const
+  BackBuffer = 0;
+var
+  BackBufferSurface: IDirect3DSurface8;
+  hRet: HRESULT;
+  SurfaceDesc: D3DSURFACE_DESC;
+  FileName: AnsiString;
+begin
+  // Retrieve a pointer to the backbuffer :
+  hRet := g_pD3DDevice.GetBackBuffer({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} BackBuffer, D3DBACKBUFFER_TYPE_MONO, @BackBufferSurface);
+  if (FAILED(hRet)) then
+  begin
+    DbgPrintf('EmuD3D8 : DxbxTakeScreenShot could not get back buffer!');
+    Exit;
+  end;
+
+  // Assure we have a reusable surface (in the correct format) which the back buffer can be converted into :
+  if (ScreenShotBufferSurface = nil) then
+  begin
+    BackBufferSurface.GetDesc({out}SurfaceDesc);
+    hRet := IDirect3DDevice_CreateImageSurface(
+      g_pD3DDevice,
+      SurfaceDesc.Width,
+      SurfaceDesc.Height,
+      D3DFMT_A8R8G8B8, // This format is supported by D3DXSaveSurfaceToFile (D3DFMT_X8R8G8B8 works too)
+      @ScreenShotBufferSurface);
+
+    if (FAILED(hRet)) then
+    begin
+      DbgPrintf('EmuD3D8 : DxbxTakeScreenShot could not create a temporary buffer!');
+      Exit;
+    end;
+  end;
+
+  // Convert the backbuffer to the intermediate buffer (which format is supported by D3DXSaveSurfaceToFile) :
+  hRet := D3DXLoadSurfaceFromSurface(ScreenShotBufferSurface, NULL, NULL, BackBufferSurface, NULL, NULL, D3DX_DEFAULT, 0 );
+  if (FAILED(hRet)) then
+  begin
+    DbgPrintf('EmuD3D8 : DxbxTakeScreenShot could not convert back buffer!');
+    Exit;
+  end;
+
+  // Make sure we hold no reference to the backbuffer (we could wait and let Delphi's automatic reference counting takes care of this) :
+  BackBufferSurface := nil;
+
+  // Now save it to file (somehow, Direct3D8 doesn't export jpgs or pngs, so bitmap has to suffice for now) :
+  FileName := AnsiString(ExtractFilePath(ParamStr(0)) + _GetScreenshotFileName());
+  hRet := D3DXSaveSurfaceToFileA(PAnsiChar(FileName), D3DXIFF_BMP, ScreenShotBufferSurface, NULL, NULL);
+  if (FAILED(hRet)) then
+    DbgPrintf('EmuD3D8 : DxbxTakeScreenShot could not write screen buffer!')
+  else
+    DbgPrintf('EmuD3D8 : Screenshot written to %s', [FileName]);
+end;
+
 // A wrapper for Present() with an extra safeguard to restore 'device lost' errors :
 function DxbxPresent(pSourceRect: PRECT; pDestRect: PRECT; pDummy1: HWND; pDummy2: PVOID): UINT;
 begin
@@ -425,6 +493,13 @@ begin
 {$ENDIF}
 
   g_bIsBusy := BOOL_TRUE;
+  if g_SignalScreenShot then
+  begin
+    g_SignalScreenShot := False;
+
+    DxbxTakeScreenShot(g_hEmuWindow);
+  end;
+
   Result := g_pD3DDevice.Present(pSourceRect, pDestRect, pDummy1, pDummy2);
   g_bIsBusy := BOOL_FALSE;
 
@@ -986,68 +1061,6 @@ begin
   g_bIsFauxFullscreen := not g_bIsFauxFullscreen;
 end;
 
-{static}var ScreenShotNr: Integer = 1;
-{static}var ScreenShotBufferSurface: IDirect3DSurface8 = nil; // this is our pointer to the memory location containing our copy of the front buffer
-{static}var ScreenShotFormat: TD3DFormat;
-
-procedure TakeScreenShot(hWnd: HWND);
-// Branch:Dxbx  Translator:PatrickvL  Done:100
-// Source : http://www.gamedev.net/reference/articles/article1844.asp
-
-  function _GetScreenshotFileName(): string;
-  begin
-    Result := Format('Dxbx running %s (%0.3d).bmp', [g_Title, ScreenShotNr]);
-    Inc(ScreenShotNr);
-  end;
-
-var
-  lRect: TRect;
-  hRet: HRESULT;
-  FileName: AnsiString;
-begin
-  // When needed, create the image that our screen shot will be copied into (in the correct format) :
-  if (ScreenShotBufferSurface = nil) then
-  begin
-    // Create a surface big enough to capture the entire screen :
-    ScreenShotFormat := D3DFMT_A8R8G8B8;
-    GetWindowRect(GetDesktopWindow(), {var}lRect);
-    hRet := IDirect3DDevice_CreateImageSurface(
-      g_pD3DDevice,
-      lRect.right - lRect.left,
-      lRect.bottom - lRect.top,
-      ScreenShotFormat,
-      @ScreenShotBufferSurface);
-
-    if (FAILED(hRet)) then
-    begin
-      DbgPrintf('EmuD3D8 : TakeScreenshot could not create a temporary buffer!');
-      Exit;
-    end;
-
-    ScreenShotBufferSurface._AddRef; // Is this really neccessary ??
-  end;
-
-  // Copy the front buffer into our surface :
-  hRet := g_pD3DDevice.GetFrontBuffer(ScreenShotBufferSurface);
-  if (FAILED(hRet)) then
-  begin
-    DbgPrintf('EmuD3D8 : TakeScreenshot could not get front buffer!');
-    Exit;
-  end;
-
-  // Determine the filename and the rectangle we want to save to file :
-  FileName := AnsiString(ExtractFilePath(ParamStr(0)) + _GetScreenshotFileName());
-  GetWindowRect(hWnd, {var}lRect);
-
-  // Now save it to file (somehow, Direct3D8 cannot export jpgs or pngs, so bitmap has to suffice for now) :
-  hRet := D3DXSaveSurfaceToFileA(PAnsiChar(FileName), D3DXIFF_BMP, ScreenShotBufferSurface, NULL, @lRect);
-  if (FAILED(hRet)) then
-    DbgPrintf('EmuD3D8 : TakeScreenshot could not write screen buffer!')
-  else
-    DbgPrintf('EmuD3D8 : Screenshot written to %s', [FileName]);
-end;
-
-
 // rendering window message procedure
 {static}var bAutoPaused: _bool = false;
 function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
@@ -1110,7 +1123,7 @@ begin
         begin
           // Debugging not used, and PrintScreen key can't be detected somehow, so use F12 for taking screenshotss :
           // XTL_g_bStepPush := not XTL_g_bStepPush;
-          TakeScreenShot(hWnd);
+          g_SignalScreenShot := True; // Will be seen at next Present()
         end;
       end; // case
 
@@ -1763,6 +1776,11 @@ begin
           pPresentationParameters.AutoDepthStencilFormat, pPresentationParameters.Flags]);
 end;
 
+function LogBegin(const aSymbolName: string; const aCategory: string = ''): PLogStack;
+begin
+  Result := uLog.LogBegin(aSymbolName, {Category=}'EmuD3D8');
+end;
+
 function XTL_EmuDirect3D_CreateDevice
 (
     Adapter: UINT;
@@ -1778,7 +1796,7 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('EmuD3D8 : EmuIDirect3D_CreateDevice').
+    LogBegin('EmuIDirect3D_CreateDevice').
       _(Adapter, 'Adapter').
       _(Ord(DeviceType), 'DeviceType').
       _(hFocusWindow, 'hFocusWindow').
@@ -4191,7 +4209,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_CreateVolumeTexture').
+    LogBegin('EmuD3DDevice_CreateVolumeTexture').
       _(Width, 'Width').
       _(Height, 'Height').
       _(Depth, 'Depth').
@@ -4274,7 +4292,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_CreateCubeTexture').
+    LogBegin('EmuD3DDevice_CreateCubeTexture').
       _(EdgeLength, 'EdgeLength').
       _(Levels, 'Levels').
       _(Usage, 'Usage').
@@ -4340,7 +4358,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_CreateIndexBuffer').
+    LogBegin('EmuD3DDevice_CreateIndexBuffer').
       _(Length, 'Length').
       _(Usage, 'Usage').
       _(Ord(Format), 'Format').
@@ -4409,7 +4427,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetIndices').
+    LogBegin('EmuD3DDevice_SetIndices').
       _(pIndexData, 'pIndexData').
       _(BaseVertexIndex, 'BaseVertexIndex').
     LogEnd();
@@ -4489,7 +4507,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetTexture').
+    LogBegin('EmuD3DDevice_SetTexture').
       _(Stage, 'Stage').
       _(pTexture, 'pTexture').
     LogEnd();
@@ -4611,7 +4629,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SwitchTexture').
+    LogBegin('EmuD3DDevice_SwitchTexture').
       _(Method, 'Method').
       _(Data, 'Data').
       _(Format, 'Format').
@@ -4674,7 +4692,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_GetDisplayMode').
+    LogBegin('EmuD3DDevice_GetDisplayMode').
       _(pMode, 'pMode').
     LogEnd();
 
@@ -4706,7 +4724,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_Begin').
+    LogBegin('EmuD3DDevice_Begin').
       _(Int(PrimitiveType), 'PrimitiveType').
     LogEnd();
 
@@ -4734,7 +4752,7 @@ begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetVertexData2f >>').
+    LogBegin('EmuD3DDevice_SetVertexData2f >>').
       _(Register_, 'Register').
       _(a, 'a').
       _(b, 'b').
@@ -4772,7 +4790,7 @@ begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetVertexData2s >>').
+    LogBegin('EmuD3DDevice_SetVertexData2s >>').
       _(Register_, 'Register').
       _(a, 'a').
       _(b, 'b').
@@ -4815,7 +4833,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetVertexData4f').
+    LogBegin('EmuD3DDevice_SetVertexData4f').
       _(Register_, 'Register').
       _(a, 'a').
       _(b, 'b').
@@ -5002,7 +5020,7 @@ begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetVertexData4ub >>').
+    LogBegin('EmuD3DDevice_SetVertexData4ub >>').
       _(Register_, 'Register').
       _(a, 'a').
       _(b, 'b').
@@ -5043,7 +5061,7 @@ begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetVertexData4s >>').
+    LogBegin('EmuD3DDevice_SetVertexData4s >>').
       _(Register_, 'Register').
       _(a, 'a').
       _(b, 'b').
@@ -5083,7 +5101,7 @@ begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetVertexDataColor >>').
+    LogBegin('EmuD3DDevice_SetVertexDataColor >>').
       _(Register_, 'Register').
       _(Color, 'Color').
     LogEnd();
@@ -5157,7 +5175,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_GetPushBufferOffset').
+    LogBegin('EmuD3DDevice_GetPushBufferOffset').
       _(pOffset, 'pOffset').
     LogEnd();
 
@@ -5998,7 +6016,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuLock2DSurface').
+    LogBegin('EmuLock2DSurface').
       _(pPixelContainer, 'pPixelContainer').
       _(Ord(FaceType), 'FaceType').
       _(Level, 'Level').
@@ -6791,11 +6809,9 @@ begin
       end;
 
       IDirectDrawSurface7(g_pDDSOverlay7).Unlock(NULL);
-    end;
 
-    // update overlay!
-    if (g_bSupportsYUY2) then
-    begin
+      // update overlay!
+      
       SourRect := Classes.Rect(0, 0, g_dwOverlayW, g_dwOverlayH);
       ZeroMemory(@aMonitorInfo, sizeof(aMonitorInfo));
 
@@ -7148,7 +7164,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetTextureState_BumpEnv').
+    LogBegin('EmuD3DDevice_SetTextureState_BumpEnv').
       _(Stage, 'Stage').
       _(Type_, 'Type').
       _(Value, 'Value').
@@ -7672,7 +7688,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuIDirect3DDevice_SetRenderState_ZEnable').
+    LogBegin('EmuIDirect3DDevice_SetRenderState_ZEnable').
       _(Value, 'Value').
     LogEnd();
 
@@ -7860,7 +7876,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetTransform').
+    LogBegin('EmuD3DDevice_SetTransform').
       _(int(State), 'State').
       _(pMatrix, 'pMatrix').
     LogEnd();
@@ -8635,7 +8651,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetTextureStageStateNotInline >>').
+    LogBegin('EmuD3DDevice_SetTextureStageStateNotInline >>').
       _(Stage, 'Stage').
       _(Ord(Type_), 'Type_').
       _(Value, 'Value').
@@ -8784,7 +8800,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_CreatePalette2').
+    LogBegin('EmuD3DDevice_CreatePalette2').
       _(Integer(Ord(Size)), 'Size').
     LogEnd();
 
@@ -8809,7 +8825,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetPalette').
+    LogBegin('EmuD3DDevice_SetPalette').
       _(Stage, 'Stage').
       _(pPalette, 'pPalette').
     LogEnd();
@@ -8834,7 +8850,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetCopyRectsState').
+    LogBegin('EmuD3DDevice_SetCopyRectsState').
       _(pCopyRectState, 'pCopyRectState').
       _(pCopyRectRopState, 'pCopyRectRopState').
     LogEnd();
@@ -9543,7 +9559,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfDebug) then
-    LogBegin('EmuD3D8 : EmuIDirect3D_SetPushBufferSize').
+    LogBegin('EmuIDirect3D_SetPushBufferSize').
       _(PushBufferSize, 'PushBufferSize').
       _(KickOffSize, 'KickOffSize').
     LogEnd();
@@ -9576,7 +9592,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_IsFencePending').
+    LogBegin('EmuD3DDevice_IsFencePending').
       _(Fence, 'Fence').
     LogEnd();
 
@@ -9596,7 +9612,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_BlockOnFence').
+    LogBegin('EmuD3DDevice_BlockOnFence').
       _(Fence, 'Fence').
     LogEnd();
 
@@ -9614,7 +9630,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuIDirect3DResource_BlockUntilNotBusy').
+    LogBegin('EmuIDirect3DResource_BlockUntilNotBusy').
       _(pThis, 'pThis').
     LogEnd();
 
@@ -9707,7 +9723,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuIDirect3DVertexBuffer_GetDesc').
+    LogBegin('EmuIDirect3DVertexBuffer_GetDesc').
       _(pThis, 'pThis').
       _(pDesc, 'pDesc').
     LogEnd();
@@ -9732,7 +9748,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetScissors').
+    LogBegin('EmuD3DDevice_SetScissors').
       _(Count, 'Count').
       _(Exclusive, 'Exclusive').
       _(pRects, 'pRects').
@@ -9755,7 +9771,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetScreenSpaceOffset').
+    LogBegin('EmuD3DDevice_SetScreenSpaceOffset').
       _(x, 'x').
       _(y, 'y').
     LogEnd();
@@ -9779,7 +9795,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetPixelShaderProgram >>').
+    LogBegin('EmuD3DDevice_SetPixelShaderProgram >>').
       _(pPSDef, 'pPSDef').
     LogEnd();
 
@@ -9804,7 +9820,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_CreateStateBlock').
+    LogBegin('EmuD3DDevice_CreateStateBlock').
       _(Ord(Type_), 'Type').
       _(pToken, 'pToken').
     LogEnd();
@@ -9836,7 +9852,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_InsertCallback').
+    LogBegin('EmuD3DDevice_InsertCallback').
       _(Ord(Type_), 'Type').
       _(pCallback, 'pCallback').
       _(Context, 'Context').
@@ -9861,7 +9877,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_DrawRectPatch').
+    LogBegin('EmuD3DDevice_DrawRectPatch').
       _(Handle, 'Handle').
       _(pNumSegs^, 'pNumSegs').
       _(pRectPatchInfo, 'pRectPatchInfo').
@@ -9892,7 +9908,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_GetProjectionViewportMatrix').
+    LogBegin('EmuD3DDevice_GetProjectionViewportMatrix').
       _(pProjectionViewport, 'pProjectionViewport').
     LogEnd();
 
@@ -10022,7 +10038,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_GetTexture2').
+    LogBegin('EmuD3DDevice_GetTexture2').
       _(pTexture, 'pTexture').
     LogEnd();
 
@@ -10079,7 +10095,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetStateVB').
+    LogBegin('EmuD3DDevice_SetStateVB').
       _(Unknown1, 'Unknown1').
     LogEnd();
 
@@ -10111,7 +10127,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetStipple').
+    LogBegin('EmuD3DDevice_SetStipple').
       _(pPattern, 'pPattern').
     LogEnd();
 
@@ -10130,7 +10146,7 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetSwapCallback').
+    LogBegin('EmuD3DDevice_SetSwapCallback').
       _(PPointer(@pCallback)^, 'pCallback').
     LogEnd();
 
@@ -10201,7 +10217,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_PrimeVertexCache').
+    LogBegin('EmuD3DDevice_PrimeVertexCache').
       _(VertexCount, 'VertexCount').
       _(pIndexData, 'pIndexData').
     LogEnd();
@@ -10223,7 +10239,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetRenderState_SampleAlpha').
+    LogBegin('EmuD3DDevice_SetRenderState_SampleAlpha').
       _(Value, 'Value').
     LogEnd();
 
@@ -10351,7 +10367,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_BeginPushBuffer').
+    LogBegin('EmuD3DDevice_BeginPushBuffer').
       _(pPushBuffer, 'pPushBuffer').
     LogEnd();
 
@@ -10384,7 +10400,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuXMETAL_StartPush').
+    LogBegin('EmuXMETAL_StartPush').
       _(Unknown, 'Unknown').
     LogEnd();
 
@@ -10506,7 +10522,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetBackMaterial').
+    LogBegin('EmuD3DDevice_SetBackMaterial').
       _(pMaterial, 'pMaterial').
     LogEnd();
 
@@ -10529,7 +10545,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_GetRasterStatus').
+    LogBegin('EmuD3DDevice_GetRasterStatus').
       _(pRasterStatus, 'pRasterStatus').
     LogEnd();
 
@@ -10603,7 +10619,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuIDirect3DVolumeTexture_GetLevelDesc').
+    LogBegin('EmuIDirect3DVolumeTexture_GetLevelDesc').
       _(pThis, 'pThis').
       _(Level, 'Level').
       _(pDesc, 'pDesc').
@@ -10945,7 +10961,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : EmuD3DDevice_SetRenderState_SetRenderStateNotInline >>').
+    LogBegin('EmuD3DDevice_SetRenderState_SetRenderStateNotInline >>').
       _(State, 'State').
       _(Value, 'Value').
     LogEnd();
@@ -11111,7 +11127,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3D8 : XTL_EmuD3DDevice_GetPixelShaderFunction').
+    LogBegin('XTL_EmuD3DDevice_GetPixelShaderFunction').
       _(Handle, 'Handle').
       _(pData, 'pData').
     LogEnd();
