@@ -52,6 +52,7 @@ type
     LibVersion: Integer;
     LibVersionFlag: TLibraryVersionFlag;
     LibNameIndex: Integer;
+    LibFlags: TLibFlags;
     LibName: string;
   end;
 
@@ -1303,9 +1304,18 @@ var
   end;
 
 begin
-  // Stop at a '-' marker :
-  Result := (aLine^ <> '-');
-  if not Result then
+  // Stop scanning at a '-' marker (or at #0) :
+  if (aLine^ = #0) or (aLine^ = '-') then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  // Continue scanning following lines :
+  Result := True;
+
+  // Skip lines that don't start with a hexadecimal character :
+  if not (aLine^ in ['0'..'9','a'..'z','A'..'Z']) then
     Exit;
 
   // Lines must at least be 86 characters long :
@@ -1577,6 +1587,13 @@ function GeneratePatternTrie(const aFileList: TStrings; const aOnlyPatches: Bool
         VersionedXboxLibrary.LibVersionFlag := LibraryVersionNumberToFlag(LibVersion);
         VersionedXboxLibrary.LibName := LibName;
         aPatternTrie.VersionedLibraries.Add(VersionedXboxLibrary);
+
+        // Detect if this is a manually created (and thus incomplete) library.
+        // This fact is used in the symbol scanning code - incomplete patterns
+        // are not used as a 'definite' when scanning for symbols (especially
+        // when we have no version-exact patterns for a title) :
+        if PAnsiChar(Input.Memory)^ = ';' then
+          VersionedXboxLibrary.LibFlags := [lfIsIncomplete];
 
         // If the file is a .lib :
         if SameText(ExtractFileExt(FilePath), '.lib') then

@@ -86,13 +86,15 @@ type
     function GetSymbolReferenceCount: Integer;
     function GetSymbolReference(const aIndex: Integer): PStoredSymbolReference;
   public
-    OtherVersion: TSymbolInformation;
-    AliasSymbol: TSymbolInformation;
+    OtherVersion: TSymbolInformation; // TODO : Fold all versions into one symbol, using a list of PStoredLibraryFunction's
+    AliasSymbol: TSymbolInformation; // TODO : Fold all aliasses into one symbol, instead use a stringlist of alias names
     Name: string;
     UnmangledName: string;
     Address: TCodePointer;
     RangeClaimed: Boolean;
-    StoredLibraryFunction: PStoredLibraryFunction; // can be nil for non-pattern symbols
+//    Versions: array of record
+      StoredLibraryFunction: PStoredLibraryFunction; // can be nil for non-pattern symbols
+//    end;
     OrderingImportance: Integer;
     OrderingVersion: Integer; // Only used when (mangled)name matches
     OrderingScore: Integer;
@@ -2008,6 +2010,16 @@ begin
       // Lookup a few symbols for global access during emulation :
       LookupGlobalEmulationSymbols();
 
+      if MayLog(lfUnit) then
+        DbgPrintf('DxbxHLE : Detected %d symbols, reachable from %d leaf hits.', [Count, NrLeafHits]);
+
+      // Now that the symbols are known, patch them up where needed :
+      EmuInstallWrappers(pXbeHeader);
+
+      // After detection of all symbols, see if we need to save that to cache :
+      if CacheFileNameStr <> '' then
+        SaveSymbolsToCache(pXbeHeader, CacheFileNameStr);
+
     finally
       FreeAndNil(PatternTrieReader);
     end;
@@ -2016,17 +2028,6 @@ begin
     // Unlock the resource :
     FreeAndNil(PatternsStream);
   end;
-
-  if MayLog(lfUnit) then
-    DbgPrintf('DxbxHLE : Detected %d symbols, reachable from %d leaf hits.', [Count, NrLeafHits]);
-
-  // Now that the symbols are known, patch them up where needed :
-  EmuInstallWrappers(pXbeHeader);
-
-  // After detection of all symbols, see if we need to save that to cache :
-  if CacheFileNameStr <> '' then
-    SaveSymbolsToCache(pXbeHeader, CacheFileNameStr);
-
 end; // DxbxScanForLibraryAPIs
 
 initialization

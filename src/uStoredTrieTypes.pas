@@ -63,6 +63,9 @@ type
 
   TLibraryVersionFlags = set of TLibraryVersionFlag;
 
+  TLibFlag = (lfIsIncomplete);
+  TLibFlags = set of TLibFlag;
+
   BaseIndexType = Cardinal; // A Word suffices for less than 65536 strings & functions, use Cardinal for larger sets
 
   PByteOffset = ^TByteOffset;
@@ -98,6 +101,7 @@ type
 {$ENDIF}
     LibVersion: TLibVersion; /// The version number of this library
     LibNameIndex: TStringTableIndex; // The name of this library, in the form of an index into the StringTable.
+//    LibFlags: TLibFlags;
   end;
 
   PStoredLibrariesList = ^TStoredLibrariesList;
