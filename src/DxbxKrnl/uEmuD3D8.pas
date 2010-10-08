@@ -982,6 +982,68 @@ begin
   g_bIsFauxFullscreen := not g_bIsFauxFullscreen;
 end;
 
+{static}var ScreenShotNr: Integer = 1;
+{static}var ScreenShotBufferSurface: IDirect3DSurface8 = nil; // this is our pointer to the memory location containing our copy of the front buffer
+{static}var ScreenShotFormat: TD3DFormat;
+
+procedure TakeScreenShot(hWnd: HWND);
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+// Source : http://www.gamedev.net/reference/articles/article1844.asp
+
+  function _GetScreenshotFileName(): string;
+  begin
+    Result := Format('Dxbx running %s (%0.3d).bmp', [m_szAsciiTitle, ScreenShotNr]);
+    Inc(ScreenShotNr);
+  end;
+
+var
+  lRect: TRect;
+  hRet: HRESULT;
+  FileName: AnsiString;
+begin
+  // When needed, create the image that our screen shot will be copied into (in the correct format) :
+  if (ScreenShotBufferSurface = nil) then
+  begin
+    // Create a surface big enough to capture the entire screen :
+    ScreenShotFormat := D3DFMT_A8R8G8B8;
+    GetWindowRect(GetDesktopWindow(), {var}lRect);
+    hRet := IDirect3DDevice_CreateImageSurface(
+      g_pD3DDevice,
+      lRect.right - lRect.left,
+      lRect.bottom - lRect.top,
+      ScreenShotFormat,
+      @ScreenShotBufferSurface);
+
+    if (FAILED(hRet)) then
+    begin
+      DbgPrintf('EmuD3D8 : TakeScreenshot could not create a temporary buffer!');
+      Exit;
+    end;
+
+    ScreenShotBufferSurface._AddRef; // Is this really neccessary ??
+  end;
+
+  // Copy the front buffer into our surface :
+  hRet := g_pD3DDevice.GetFrontBuffer(ScreenShotBufferSurface);
+  if (FAILED(hRet)) then
+  begin
+    DbgPrintf('EmuD3D8 : TakeScreenshot could not get front buffer!');
+    Exit;
+  end;
+
+  // Determine the filename and the rectangle we want to save to file :
+  FileName := AnsiString(ExtractFilePath(ParamStr(0)) + _GetScreenshotFileName());
+  GetWindowRect(hWnd, {var}lRect);
+
+  // Now save it to file (somehow, Direct3D8 cannot export jpgs or pngs, so bitmap has to suffice for now) :
+  hRet := D3DXSaveSurfaceToFileA(PAnsiChar(FileName), D3DXIFF_BMP, ScreenShotBufferSurface, NULL, @lRect);
+  if (FAILED(hRet)) then
+    DbgPrintf('EmuD3D8 : TakeScreenshot could not write screen buffer!')
+  else
+    DbgPrintf('EmuD3D8 : Screenshot written to %s', [FileName]);
+end;
+
+
 // rendering window message procedure
 {static}var bAutoPaused: _bool = false;
 function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
@@ -1009,10 +1071,10 @@ begin
       end;
 
     WM_KEYDOWN: // Normal key press :
-      begin
-        // disable fullscreen if we are set to faux mode, and faux fullscreen is active
-        if (wParam = VK_ESCAPE) then
+      case wParam of
+        VK_ESCAPE:
         begin
+          // disable fullscreen if we are set to faux mode, and faux fullscreen is active
           if (g_XBVideo.GetFullscreen()) then
           begin
             SendMessage(hWnd, WM_CLOSE, 0, 0);
@@ -1021,30 +1083,32 @@ begin
           begin
             ToggleFauxFullscreen(hWnd);
           end;
-        end
-        else if (wParam = VK_F8) then
+        end;
+        VK_F8:
         begin
           g_bPrintfOn := not g_bPrintfOn;
-        end
-        else if (wParam = VK_F9) then
+        end;
+        VK_F9:
         begin
           XTL_g_bBrkPush := TRUE;
-        end
-        else if (wParam = VK_F10) then
+        end;
+        VK_F10:
         begin
           ToggleFauxFullscreen(hWnd);
-        end
-        else if (wParam = VK_F11) then
+        end;
+        VK_F11:
         begin
           Inc(g_iWireframe); // Cxbx uses post-increment and compares+1 :
           if g_iWireframe = 3 then
             g_iWireframe := 0;
-        end
-        else if (wParam = VK_F12) then
-        begin
-          XTL_g_bStepPush := not XTL_g_bStepPush;
         end;
-      end;
+        VK_F12: // VK_SNAPSHOT
+        begin
+          // Debugging not used, and PrintScreen key can't be detected somehow, so use F12 for taking screenshotss :
+          // XTL_g_bStepPush := not XTL_g_bStepPush;
+          TakeScreenShot(hWnd);
+        end;
+      end; // case
 
     WM_SIZE:
       begin
@@ -11394,5 +11458,9 @@ initialization
 
   ZeroMemory(@g_VBData, SizeOf(g_VBData));
   ZeroMemory(@g_SwapData, SizeOf(g_SwapData));
+
+finalization
+
+  ScreenShotBufferSurface := nil;
 
 end.
