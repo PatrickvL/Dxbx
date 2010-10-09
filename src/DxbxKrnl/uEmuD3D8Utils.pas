@@ -132,7 +132,7 @@ function IDirect3DDevice_CreateImageSurface(const aDirect3DDevice: IDirect3DDevi
 begin
 {$IFDEF DXBX_USE_D3D9}
   Result := aDirect3DDevice.CreateOffscreenPlainSurface(
-    Width, Height, Format, D3DPOOL_SCRATCH,
+    Width, Height, Format, D3DPOOL_SCRATCH, // D3DPOOL_SYSTEMMEM ? See http://us.generation-nt.com/slowdowns-dx9-software-vertex-processing-help-24501522.html
     ppSurface, {Handle=}NULL);
 {$ELSE}
   Result := aDirect3DDevice.CreateImageSurface(
