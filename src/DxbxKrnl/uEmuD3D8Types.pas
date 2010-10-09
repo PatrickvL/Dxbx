@@ -1244,6 +1244,9 @@ const X_D3DRS_COMPLEX_LAST = X_D3DRS_DONOTCULLUNCOMPRESSED;
 const X_D3DRS_FIRST = X_D3DRS_PS_FIRST;
 const X_D3DRS_LAST = X_D3DRS_COMPLEX_LAST;
 
+// deferred render state "unknown" flag
+const X_D3DRS_UNK = $7fffffff;
+
 const X_D3DWRAP_U = $00000010;
 const X_D3DWRAP_V = $00001000;
 const X_D3DWRAP_W = $00100000;

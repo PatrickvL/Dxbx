@@ -2532,7 +2532,7 @@ begin
   }
 
 {$IFDEF DXBX_USE_D3D9}
-  Result := g_pD3DDevice.UpdateSurface // was CopyRects
+  Result := g_pD3DDevice.UpdateSurface
   (
     IDirect3DSurface9(pSourceSurface.Emu.Surface),
     pSourceRectsArray,

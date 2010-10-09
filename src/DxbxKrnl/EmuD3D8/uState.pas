@@ -655,7 +655,7 @@ begin
 
   // Now set the "deferred" states to 'unknown' :
   for i := X_D3DRS_DEFERRED_FIRST to X_D3DRS_DEFERRED_LAST do
-    XTL_EmuMappedD3DRenderState[i]^ := 0;
+    XTL_EmuMappedD3DRenderState[i]^ := X_D3DRS_UNK;
 
   // Assign all Xbox default render states values :
   begin
