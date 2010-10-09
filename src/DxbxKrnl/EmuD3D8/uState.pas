@@ -655,7 +655,7 @@ begin
 
   // Now set the "deferred" states to 'unknown' :
   for i := X_D3DRS_DEFERRED_FIRST to X_D3DRS_DEFERRED_LAST do
-    XTL_EmuMappedD3DRenderState[i]^ := X_D3DRS_UNK;
+    XTL_EmuMappedD3DRenderState[i]^ := X_D3DRS_UNK; // TODO : Explain why the default 0 causes dots in PointSprites sample!
 
   // Assign all Xbox default render states values :
   begin

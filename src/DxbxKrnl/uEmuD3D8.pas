@@ -166,7 +166,7 @@ var
   g_ddguid: GUID;                // DirectDraw driver GUID
   g_hMonitor: HMONITOR = 0;      // Handle to DirectDraw monitor
   g_pD3D: IDirect3D = NULL;
-  g_bSupportsYUY2: BOOL_ = FALSE; // Does device support YUY2 overlays?
+  g_bYUY2OverlaysSupported: BOOL_ = FALSE; // Does device support YUY2 overlays?
   g_pDD7: XTL_LPDIRECTDRAW7 = NULL;   // DirectDraw7
   g_dwOverlayW: DWORD = 640;     // Cached Overlay Width
   g_dwOverlayH: DWORD = 480;     // Cached Overlay Height
@@ -273,7 +273,7 @@ begin
   ZeroMemory(@g_ddguid, SizeOf(GUID));
   g_hMonitor := 0;
   g_pD3D := NULL;
-  g_bSupportsYUY2 := FALSE;
+  g_bYUY2OverlaysSupported := FALSE;
   g_pDD7 := NULL;
   g_dwOverlayW := 640;
   g_dwOverlayH := 480;
@@ -418,7 +418,27 @@ begin
 end;
 
 {static}var ScreenShotNr: Integer = 1;
-{static}var ScreenShotBufferSurface: IDirect3DSurface = nil; // this is our pointer to the memory location containing our copy of the front buffer
+{static}var ExtraXRGBSurface: IDirect3DSurface = nil; // this is our pointer to the memory location containing our copy of the front buffer
+
+procedure AssureExtraXRGBSurface(const BackBufferSurface: IDirect3DSurface; const Caller: string);
+var
+  SurfaceDesc: D3DSURFACE_DESC;
+begin
+  // Assure we have a reusable surface (in the correct format) which the back buffer can be converted into :
+  if (ExtraXRGBSurface = nil) then
+  begin
+    BackBufferSurface.GetDesc({out}SurfaceDesc);
+    if FAILED(IDirect3DDevice_CreateImageSurface(
+      g_pD3DDevice,
+      SurfaceDesc.Width,
+      SurfaceDesc.Height,
+      D3DFMT_A8R8G8B8, // This format is supported by D3DXSaveSurfaceToFile (D3DFMT_X8R8G8B8 works too)
+      @ExtraXRGBSurface)) then
+    begin
+      DbgPrintf('EmuD3D8 : %s could not create a extra buffer!', [Caller]);
+    end;
+  end;
+end;
 
 procedure DxbxTakeScreenShot(hWnd: HWND);
 // Branch:Dxbx  Translator:PatrickvL  Done:100
@@ -429,13 +449,12 @@ procedure DxbxTakeScreenShot(hWnd: HWND);
     Result := Format('Dxbx running %s (%0.3d).bmp', [g_Title, ScreenShotNr]);
     Inc(ScreenShotNr);
   end;
-  
+
 const
   BackBuffer = 0;
 var
   BackBufferSurface: IDirect3DSurface;
   hRet: HRESULT;
-  SurfaceDesc: D3DSURFACE_DESC;
   FileName: AnsiString;
 begin
   // Retrieve a pointer to the backbuffer :
@@ -446,26 +465,10 @@ begin
     Exit;
   end;
 
-  // Assure we have a reusable surface (in the correct format) which the back buffer can be converted into :
-  if (ScreenShotBufferSurface = nil) then
-  begin
-    BackBufferSurface.GetDesc({out}SurfaceDesc);
-    hRet := IDirect3DDevice_CreateImageSurface(
-      g_pD3DDevice,
-      SurfaceDesc.Width,
-      SurfaceDesc.Height,
-      D3DFMT_A8R8G8B8, // This format is supported by D3DXSaveSurfaceToFile (D3DFMT_X8R8G8B8 works too)
-      @ScreenShotBufferSurface);
-
-    if (FAILED(hRet)) then
-    begin
-      DbgPrintf('EmuD3D8 : DxbxTakeScreenShot could not create a temporary buffer!');
-      Exit;
-    end;
-  end;
+  AssureExtraXRGBSurface(BackBufferSurface, 'DxbxTakeScreenShot');
 
   // Convert the backbuffer to the intermediate buffer (which format is supported by D3DXSaveSurfaceToFile) :
-  hRet := D3DXLoadSurfaceFromSurface(ScreenShotBufferSurface, NULL, NULL, BackBufferSurface, NULL, NULL, D3DX_DEFAULT, 0 );
+  hRet := D3DXLoadSurfaceFromSurface(ExtraXRGBSurface, NULL, NULL, BackBufferSurface, NULL, NULL, D3DX_FILTER_LINEAR{D3DX_DEFAULT}, 0);
   if (FAILED(hRet)) then
   begin
     DbgPrintf('EmuD3D8 : DxbxTakeScreenShot could not convert back buffer!');
@@ -475,9 +478,13 @@ begin
   // Make sure we hold no reference to the backbuffer (we could wait and let Delphi's automatic reference counting takes care of this) :
   BackBufferSurface := nil;
 
+  // Generate a filename that doesn't exist yet (so we don't overwrite previous screenshots) :
+  repeat
+    FileName := AnsiString(ExtractFilePath(ParamStr(0)) + _GetScreenshotFileName());
+  until not FileExists(FileName);
+
   // Now save it to file (somehow, Direct3D8 doesn't export jpgs or pngs, so bitmap has to suffice for now) :
-  FileName := AnsiString(ExtractFilePath(ParamStr(0)) + _GetScreenshotFileName());
-  hRet := D3DXSaveSurfaceToFileA(PAnsiChar(FileName), D3DXIFF_BMP, ScreenShotBufferSurface, NULL, NULL);
+  hRet := D3DXSaveSurfaceToFileA(PAnsiChar(FileName), D3DXIFF_BMP, ExtraXRGBSurface, NULL, NULL);
   if (FAILED(hRet)) then
     DbgPrintf('EmuD3D8 : DxbxTakeScreenShot could not write screen buffer!')
   else
@@ -544,6 +551,23 @@ begin
   // Because YUY2 is not supported in hardware (in Direct3D8?), we'll actually mark this as a special fake texture (set highest bit)
   pPixelContainer.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
   pPixelContainer.Emu.Lock := dwPtr;
+end;
+
+// TODO : Move to appropriate unit :
+procedure EmuXB2PC_D3DSURFACE_DESC(const SurfaceDesc: PX_D3DSURFACE_DESC; const pDesc: PD3DSURFACE_DESC; const CallerName: string);
+begin
+  // Convert Format (Xbox->PC)
+  pDesc.Format := EmuXB2PC_D3DFormat(SurfaceDesc.Format);
+  pDesc._Type := D3DRESOURCETYPE(SurfaceDesc.Type_);
+
+//  if (Ord(pDesc.Type_) > 7) then
+//    DxbxKrnlCleanup(CallerName + ': pDesc->Type > 7');
+
+  pDesc.Usage := SurfaceDesc.Usage;
+  pDesc.Size := GetSurfaceSize(@SurfaceDesc);
+  pDesc.MultiSampleType := EmuXB2PC_D3DMULTISAMPLE_TYPE(SurfaceDesc.MultiSampleType);
+  pDesc.Width  := SurfaceDesc.Width;
+  pDesc.Height := SurfaceDesc.Height;
 end;
 
 // TODO : Move to appropriate unit :
@@ -1527,36 +1551,40 @@ begin
           lpCodes := DxbxMalloc(dwCodes*sizeof(DWORD));
           IDirectDraw7(g_pDD7).GetFourCCCodes({var}dwCodes, lpCodes);
 
-          g_bSupportsYUY2 := false;
+          g_bYUY2OverlaysSupported := false;
           if dwCodes > 0 then // Dxbx addition, to prevent underflow
           for v := 0 to dwCodes - 1 do
           begin
             if (PDWORDs(lpCodes)[v] = MAKEFOURCC('Y', 'U', 'Y', '2')) then
             begin
-              g_bSupportsYUY2 := true;
+              g_bYUY2OverlaysSupported := true;
               break;
             end;
           end;
 
           DxbxFree(lpCodes);
 
-          if (not g_bSupportsYUY2) then
-            EmuWarning('YUY2 overlays are not supported in hardware, could be slow!');
-
-          // Does the user want to use Hardware accelerated YUV surfaces?
-          if g_bSupportsYUY2 and g_XBVideo.GetHardwareYUV() and MayLog(lfUnit) then
-            DbgPrintf('EmuD3D8 : Hardware accelerated YUV surfaces Enabled...');
-
-          if not g_XBVideo.GetHardwareYUV() then
+          if (not g_bYUY2OverlaysSupported) then
+            EmuWarning('YUY2 overlays are not supported in hardware, could be slow!')
+          else
           begin
-            g_bSupportsYUY2 := false;
-            if MayLog(lfUnit) then
-              DbgPrintf('EmuD3D8 : Hardware accelerated YUV surfaces Disabled...');
-          end
+            // Does the user want to use Hardware accelerated YUV surfaces?
+            if g_XBVideo.GetHardwareYUV() then
+            begin
+              if MayLog(lfUnit) then
+                DbgPrintf('EmuD3D8 : Hardware accelerated YUV surfaces Enabled...');
+            end
+            else
+            begin
+              g_bYUY2OverlaysSupported := false;
+              if MayLog(lfUnit) then
+                DbgPrintf('EmuD3D8 : Hardware accelerated YUV surfaces Disabled...');
+            end
+          end;
         end;
 
         // initialize primary surface
-        if (g_bSupportsYUY2) then
+        if (g_bYUY2OverlaysSupported) then
         begin
           ZeroMemory(@ddsd2, sizeof(ddsd2));
 
@@ -1641,7 +1669,7 @@ begin
             g_pD3DDevice := nil;
         end;
 
-        if (g_bSupportsYUY2) then
+        if (g_bYUY2OverlaysSupported) then
         begin
           // cleanup directdraw surface
           if (g_pDDSPrimary7 <> nil) then
@@ -6656,7 +6684,8 @@ begin
 
   if (Enable = BOOL_FALSE) and (g_pDDSOverlay7 <> NULL) then
   begin
-    IDirectDrawSurface7(g_pDDSOverlay7).UpdateOverlay(NULL, IDirectDrawSurface7(g_pDDSPrimary7), NULL, DDOVER_HIDE, nil);
+    if (g_bYUY2OverlaysSupported) then
+      IDirectDrawSurface7(g_pDDSOverlay7).UpdateOverlay(NULL, IDirectDrawSurface7(g_pDDSPrimary7), NULL, DDOVER_HIDE, nil);
 
     // cleanup overlay clipper
     if (g_pDDClipper7 <> nil) then
@@ -6677,7 +6706,7 @@ begin
     if (Enable <> BOOL_FALSE) and (g_pDDSOverlay7 = nil) then
     begin
       // initialize overlay surface
-      if (g_bSupportsYUY2) then
+      if (g_bYUY2OverlaysSupported) then
       begin
         ZeroMemory(@ddsd2, sizeof(ddsd2));
 
@@ -6711,6 +6740,16 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+function ClampIntToByte(const aValue: Integer): Integer;
+begin
+  Result := aValue shr 8;
+  if Result < 0 then
+    Result := 0
+  else
+    if Result > 255 then
+      Result := 255;
+end;
+
 function XTL_EmuD3DDevice_UpdateOverlay
 (
   pSurface: PX_D3DSurface;
@@ -6729,10 +6768,14 @@ var
   v: UInt32;
   SourRect: TRect;
   DestRect: TRect;
-  y: Integer;
-  LockedRectDest: D3DLOCKED_RECT;
-  pBackBuffer: XTL_PIDirect3DSurface8;
   hRet: HRESULT;
+  y: Integer;
+
+  SurfaceDesc: D3DSURFACE_DESC;
+  CanWriteToBackbuffer: Boolean;
+  BackBufferSurface: IDirect3DSurface;
+  OverlayBufferSurface: IDirect3DSurface;
+  LockedRectDest: D3DLOCKED_RECT;
 
   pCurByte: Puint08;
   pDest2: Puint08;
@@ -6747,18 +6790,20 @@ var
   nBorderWidth: Integer;
   nBorderHeight: Integer;
   ddofx: DDOVERLAYFX;
-  Y2: array [0..2-1] of Float;
-  U2: Float;
-  V2: Float;
-  a: Integer;
-  x: Integer;
 
+  x: Integer;
   Y3: uint08;
 
-  R: Float;
-  G: Float;
-  B: Float;
-  i: uint32;
+  Y0U0U1V0: DWORD;
+  Y0: Integer;
+  U0: Integer;
+  Y1: Integer;
+  V0: Integer;
+
+  R: Integer;
+  G: Integer;
+  B: Integer;
+
 begin
   EmuSwapFS(fsWindows);
 
@@ -6773,13 +6818,19 @@ begin
 
 //{$IFDEF GAME_HACKS_ENABLED}??
 // Cxbx has #ifndef UnrealChampionshipHack
-  if Assigned(pSurface) then
+  if not Assigned(pSurface) then
   begin
+    EmuWarning('pSurface == NULL!');
+  end
+  else
+  begin
+    // Calculate the source rectangle :
+    SourRect := Classes.Rect(0, 0, g_dwOverlayW, g_dwOverlayH);
+
     // manually copy data over to overlay
-    if (g_bSupportsYUY2) then
+    if (g_bYUY2OverlaysSupported) then
     begin
       ZeroMemory(@ddsd2, sizeof(ddsd2));
-
       ddsd2.dwSize := sizeof(ddsd2);
 
       if (FAILED(IDirectDrawSurface7(g_pDDSOverlay7).Lock(NULL, {out}ddsd2, DDLOCK_SURFACEMEMORYPTR or DDLOCK_WAIT, 0))) then
@@ -6811,23 +6862,20 @@ begin
       IDirectDrawSurface7(g_pDDSOverlay7).Unlock(NULL);
 
       // update overlay!
-      
-      SourRect := Classes.Rect(0, 0, g_dwOverlayW, g_dwOverlayH);
-      ZeroMemory(@aMonitorInfo, sizeof(aMonitorInfo));
 
+      // Calculate the destination rectangle :
+      GetWindowRect(g_hEmuWindow, {var}DestRect);
       nTitleHeight  := 0;//GetSystemMetrics(SM_CYCAPTION);
       nBorderWidth  := 0;//GetSystemMetrics(SM_CXSIZEFRAME);
       nBorderHeight := 0;//GetSystemMetrics(SM_CYSIZEFRAME);
-
-      aMonitorInfo.cbSize := sizeof(MONITORINFO);
-      GetMonitorInfo(g_hMonitor, @aMonitorInfo);
-
-      GetWindowRect(g_hEmuWindow, {var}DestRect);
-
       Inc(DestRect.left,   nBorderWidth);
       Dec(DestRect.right,  nBorderWidth);
       Inc(DestRect.top,    nTitleHeight + nBorderHeight);
       Dec(DestRect.bottom, nBorderHeight);
+
+      ZeroMemory(@aMonitorInfo, sizeof(aMonitorInfo));
+      aMonitorInfo.cbSize := sizeof(MONITORINFO);
+      GetMonitorInfo(g_hMonitor, @aMonitorInfo);
 
       Dec(DestRect.left,   aMonitorInfo.rcMonitor.left);
       Dec(DestRect.right,  aMonitorInfo.rcMonitor.left);
@@ -6835,114 +6883,129 @@ begin
       Dec(DestRect.bottom, aMonitorInfo.rcMonitor.top);
 
       ZeroMemory(@ddofx, sizeof(ddofx));
-
       ddofx.dwSize := sizeof(DDOVERLAYFX);
       ddofx.dckDestColorkey.dwColorSpaceLowValue := 0;
       ddofx.dckDestColorkey.dwColorSpaceHighValue := 0;
-
       {Dxbx unused hRet :=} IDirectDrawSurface7(g_pDDSOverlay7).UpdateOverlay(@SourRect, IDirectDrawSurface7(g_pDDSPrimary7), @DestRect, {DDOVER_KEYDESTOVERRIDE or} DDOVER_SHOW, {&ddofx}nil);
     end
-    else
+    else // not g_bYUY2OverlaysSupported
     begin
-      // TODO -oCXBX: dont assume X8R8G8B8 ?
-      pBackBuffer := nil;
-
-      hRet := g_pD3DDevice.GetBackBuffer({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} 0, D3DBACKBUFFER_TYPE_MONO, @pBackBuffer);
-
-      // if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
-      if (hRet = D3D_OK) and (IDirect3DSurface(pBackBuffer).LockRect({out}LockedRectDest, NULL, 0) = D3D_OK) then
+      // We need to write to the backbuffer ourselves, so get a handle on it :
+      BackBufferSurface := nil;
+      hRet := g_pD3DDevice.GetBackBuffer({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} 0, D3DBACKBUFFER_TYPE_MONO, @BackBufferSurface);
+      if (hRet = D3D_OK) then
       begin
-        pCurByte := Puint08(pSurface.Emu.Lock);
+        // Determine if the overlay can be written directly to the backbuffer :
+        BackBufferSurface.GetDesc({out}SurfaceDesc);
+        CanWriteToBackbuffer := ((DestRect.Top - SourRect.Top) < 10)
+                            and ((DestRect.Right - SourRect.Right) < 20)
+                            and (SurfaceDesc.Format in [D3DFMT_A8R8G8B8, D3DFMT_X8R8G8B8{, D3DFMT_R8G8B8?}]);
 
-        pDest2 := Puint08(LockedRectDest.pBits);
-
-        dx:=0; dy:=0;
-
-        dwImageSize := g_dwOverlayP*g_dwOverlayH;
-
-        // grayscale
-        if (false) then
-        begin
-          if g_dwOverlayH > 0 then // Dxbx addition, to prevent underflow
-          for y := 0 to g_dwOverlayH-1 do
-          begin
-            stop := g_dwOverlayW*4;
-            x := 0; while Uint32(x) < stop do
-            begin
-              Y3 := pCurByte^;
-              pDest2[x+0] := Y3;
-              pDest2[x+1] := Y3;
-              pDest2[x+2] := Y3;
-              pDest2[x+3] := $FF;
-
-              pCurByte := @(pCurByte[2]); // Inc(pCurByte, 2) doesn't work
-              Inc(x, 4);
-            end; // while
-
-            pDest2:= @pDest2[LockedRectDest.Pitch];
-         end;
-        end
-        // full color conversion (YUY2->XRGB)
+        // If we can write to the back buffer, work with that, else use the screenshotbuffer as temporary surface :
+        if CanWriteToBackbuffer then
+          OverlayBufferSurface := BackBufferSurface
         else
         begin
-          v := 0; while v < dwImageSize do
-          begin
-            Y2[0] := pCurByte^; Inc(pCurByte);
-            U2 := pCurByte^; Inc(pCurByte);
-            Y2[1] := pCurByte^; Inc(pCurByte);
-            V2 := pCurByte^; Inc(pCurByte);
-
-            a := 0;
-            for x := 0 to 2-1 do
-            begin
-              R := Y2[a] + 1.402*(V2-128);
-              G := Y2[a] - 0.344*(U2-128) - 0.714*(V2-128);
-              B := Y2[a] + 1.772*(U2-128);
-
-              if R < 0 then R := 0; if R > 255 then R := 255;
-              if G < 0 then G := 0; if G > 255 then G := 255;
-              if B < 0 then B := 0; if B > 255 then B := 255;
-
-              i := (dy*uint32(LockedRectDest.Pitch)+(dx+uint32(x))*4);
-
-              pDest2[i+0] := Round(B);
-              pDest2[i+1] := Round(G);
-              pDest2[i+2] := Round(R);
-              pDest2[i+3] := $FF;
-
-              Inc(a);
-            end;
-
-            Inc(dx, 2);
-
-            if ((dx mod g_dwOverlayW) = 0) then
-            begin
-              Inc(dy);
-              dx := 0;
-            end;
-
-            Inc(v, 4);
-          end; // while
+          AssureExtraXRGBSurface(BackBufferSurface, 'EmuD3DDevice_UpdateOverlay');
+          OverlayBufferSurface := ExtraXRGBSurface; // Note : This surface is always in RGB format
         end;
 
-        IDirect3DSurface(pBackBuffer).UnlockRect();
+        // Manually translate the YUY2 formatted input surface into the RGB buffer of the pre-determined output surface :
+        if (OverlayBufferSurface.LockRect({out}LockedRectDest, NULL, 0) = D3D_OK) then
+        begin
+          pCurByte := Puint08(pSurface.Emu.Lock);
+          pDest2 := Puint08(LockedRectDest.pBits);
+          dx:=0;
+          dwImageSize := g_dwOverlayP*g_dwOverlayH;
+
+(*        // grayscale
+          if (false) then
+          begin
+            if g_dwOverlayH > 0 then // Dxbx addition, to prevent underflow
+            for y := 0 to g_dwOverlayH-1 do
+            begin
+              stop := g_dwOverlayW*4;
+              x := 0; while Uint32(x) < stop do
+              begin
+                Y3 := pCurByte^;
+                pDest2[x+0] := Y3;
+                pDest2[x+1] := Y3;
+                pDest2[x+2] := Y3;
+                pDest2[x+3] := $FF;
+
+                pCurByte := @(pCurByte[2]); // Inc(pCurByte, 2) doesn't work
+                Inc(x, 4);
+              end; // while
+
+              pDest2:= @pDest2[LockedRectDest.Pitch];
+           end;
+          end
+          else
+*)
+          // full color conversion (YUY2->XRGB)
+          begin
+            v := 0; while v < dwImageSize do
+            begin
+              // Convert YUY2 (= packed YUV, Y using all 256 levels) to RGB
+              // See http://www.fourcc.org/yuv.php#YUY2
+              // and http://en.wikipedia.org/wiki/YUV
+              // and http://msdn.microsoft.com/en-us/library/ms893078.aspx
+              // We do it integer-based for speed.
+
+              Y0U0U1V0 := PDWORD(pCurByte+v)^; Inc(v, 4);
+
+{ This would be needed if the format used only Y values 16-235 :
+              Y0 := ((Byte(Y0U0U1V0       ) -  16) * 298) + 128;
+              Y1 := ((Byte(Y0U0U1V0 shr 16) -  16) * 298) + 128;
+  But because Y seems to use 0-255, we must to it like this : }
+              Y0 := (Byte(Y0U0U1V0       ) shl 8) + 128;
+              Y1 := (Byte(Y0U0U1V0 shr 16) shl 8) + 128;
+              U0 :=  Byte(Y0U0U1V0 shr  8)        - 128;
+              V0 :=  Byte(Y0U0U1V0 shr 24)        - 128;
+
+              R :=             ( 409*V0);
+              G := (-100*U0) + (-208*V0);
+              B := ( 516*U0);
+
+              pDest2[dx+0] := ClampIntToByte(Y0 + B);
+              pDest2[dx+1] := ClampIntToByte(Y0 + G);
+              pDest2[dx+2] := ClampIntToByte(Y0 + R);
+              pDest2[dx+3] := $FF;
+
+              pDest2[dx+4] := ClampIntToByte(Y1 + B);
+              pDest2[dx+5] := ClampIntToByte(Y1 + G);
+              pDest2[dx+6] := ClampIntToByte(Y1 + R);
+              pDest2[dx+7] := $FF;
+
+              Inc(dx, 8);
+              if (dx >= 4*g_dwOverlayW) then
+              begin
+                pDest2:= @pDest2[LockedRectDest.Pitch];
+                dx := 0;
+              end;
+            end; // while
+          end;
+
+          OverlayBufferSurface.UnlockRect();
+
+          if not CanWriteToBackbuffer then
+            // When the overlay could not directly be converted into the back buffer,
+            // we now have to stretch-copy there (this also does a format-conversion, if needed) :
+            if D3DXLoadSurfaceFromSurface({DestSurface=}BackBufferSurface, NULL, {DestRect=}nil, {DestSurface=}OverlayBufferSurface, NULL, @SourRect, D3DX_FILTER_LINEAR{D3DX_DEFAULT}, 0) <> D3D_OK then
+              DbgPrintf('EmuD3D8 : UpdateOverlay could not convert buffer!');
+        end;
       end;
 
-      if (hRet = D3D_OK) then
-        IDirect3DSurface(pBackBuffer)._Release;
+      BackBufferSurface := nil;
+      OverlayBufferSurface := nil;
 
       // Update overlay if present was not called since the last call to
       // EmuD3DDevice_UpdateOverlay.
       if g_bHackUpdateSoftwareOverlay then
         DxbxPresent(nil, nil, 0, nil);
-
     end;
 
     g_bHackUpdateSoftwareOverlay := TRUE;
-  end
-  else
-  begin
-    EmuWarning('pSurface == NULL!');
   end;
 
   Result := D3D_OK;
@@ -10763,11 +10826,26 @@ end;
 
 function XTL_EmuD3DDevice_CreateSurface
 (
-  // UNKNOWN PARAMS
+  pDDSurfaceDesc: PX_D3DSURFACE_DESC;
+  {out}lplpDDSurface: XTL_PIDirectDrawSurface7;
+  pUnkOuter: IUnknown
 ): HRESULT; stdcall;
-// Branch:DXBX  Translator:Shadow_Tj  Done:0
+// Branch:DXBX  Translator:PatrickvL  Done:1
+//var
+//  SurfaceDesc: TDDSurfaceDesc2;
 begin
   EmuSwapFS(fsWindows);
+
+//  if MayLog(lfUnit) then
+//    LogBegin('EmuD3DDevice_CreateSurface').
+//      _(pDDSurfaceDesc, 'pDDSurfaceDesc').
+//      _(lplpDDSurface, 'lplpDDSurface').
+//      _(Pointer(pUnkOuter), 'pUnkOuter').
+//    LogEnd();
+//
+//  EmuXB2PC_D3DSURFACE_DESC(pDDSurfaceDesc, @SurfaceDesc, 'EmuD3DDevice_CreateSurface');
+//
+//  Result := IDirectDraw7(g_pDD7).CreateSurface(SurfaceDesc, lplpDDSurface, pUnkOuter);
 
   Result := Unimplemented('XTL_EmuD3DDevice_CreateSurface');
 
@@ -10780,8 +10858,13 @@ function XTL_EmuD3DDevice_CreateSurface2(
   Usage: DWORD;
   Format: X_D3DFORMAT): PX_D3DSurface; stdcall;
 // Branch:DXBX  Translator:PatrickvL  Done:0
+//var
+//  ddsd2: DDSURFACEDESC2;
 begin
   EmuSwapFS(fsWindows);
+
+//  ZeroMemory(@ddsd2, sizeof(ddsd2));
+//  ddsd2.dwSize := sizeof(ddsd2);
 
   Result := Pointer(Unimplemented('XTL_EmuD3DDevice_CreateSurface2'));
 
@@ -11481,6 +11564,6 @@ initialization
 
 finalization
 
-  ScreenShotBufferSurface := nil;
+  ExtraXRGBSurface := nil;
 
 end.
