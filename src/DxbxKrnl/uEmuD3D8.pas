@@ -418,7 +418,7 @@ begin
 end;
 
 {static}var ScreenShotNr: Integer = 1;
-{static}var ScreenShotBufferSurface: IDirect3DSurface8 = nil; // this is our pointer to the memory location containing our copy of the front buffer
+{static}var ScreenShotBufferSurface: IDirect3DSurface = nil; // this is our pointer to the memory location containing our copy of the front buffer
 
 procedure DxbxTakeScreenShot(hWnd: HWND);
 // Branch:Dxbx  Translator:PatrickvL  Done:100
@@ -433,7 +433,7 @@ procedure DxbxTakeScreenShot(hWnd: HWND);
 const
   BackBuffer = 0;
 var
-  BackBufferSurface: IDirect3DSurface8;
+  BackBufferSurface: IDirect3DSurface;
   hRet: HRESULT;
   SurfaceDesc: D3DSURFACE_DESC;
   FileName: AnsiString;
@@ -489,7 +489,7 @@ function DxbxPresent(pSourceRect: PRECT; pDestRect: PRECT; pDummy1: HWND; pDummy
 begin
 {$IFDEF DXBX_USE_D3D9}
   // end scene
-  IDirect3DDevice9(g_pD3DDevice).EndScene();
+  g_pD3DDevice.EndScene();
 {$ENDIF}
 
   g_bIsBusy := BOOL_TRUE;
@@ -505,7 +505,7 @@ begin
 
 {$IFDEF DXBX_USE_D3D9}
   // begin scene
-  IDirect3DDevice9(g_pD3DDevice).BeginScene();
+  g_pD3DDevice.BeginScene();
 {$ENDIF}
 
   if Result = D3D_OK then
@@ -2532,7 +2532,7 @@ begin
   }
 
 {$IFDEF DXBX_USE_D3D9}
-  Result := IDirect3DDevice9(g_pD3DDevice).UpdateSurface // was CopyRects
+  Result := g_pD3DDevice.UpdateSurface // was CopyRects
   (
     IDirect3DSurface9(pSourceSurface.Emu.Surface),
     pSourceRectsArray,
@@ -8751,7 +8751,7 @@ begin
 
 {$IFDEF DXBX_USE_D3D9}
   Result := g_pD3DDevice.SetRenderTarget({RenderTargetIndex=}0, IDirect3DSurface(pPCRenderTarget));
-  IDirect3DDevice9(g_pD3DDevice).SetDepthStencilSurface(IDirect3DSurface9(pPCNewZStencil));
+  g_pD3DDevice.SetDepthStencilSurface(IDirect3DSurface9(pPCNewZStencil));
 {$ELSE}
   Result := g_pD3DDevice.SetRenderTarget(IDirect3DSurface(pPCRenderTarget), IDirect3DSurface(pPCNewZStencil));
 {$ENDIF}
