@@ -979,7 +979,7 @@ begin
     begin
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '; -- Passing the truncation limit --'#13#10));
     end;
-    // Writing combining sign if neccessary
+    // Writing combining sign if necessary
     if(pIntermediate.IsCombined) then
     begin
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '+'));

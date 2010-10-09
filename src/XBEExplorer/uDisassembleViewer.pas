@@ -262,7 +262,7 @@ begin
 
   SymbolSize := _AnalyzeFunction();
 
-  // Fixup the pattern string (pad or trim it when neccessary) :
+  // Fixup the pattern string (pad or trim it when necessary) :
   while Length(PatternPrefixStr) < 64 do
     PatternPrefixStr := PatternPrefixStr + '..';
   SetLength(PatternPrefixStr, 64);
@@ -283,7 +283,7 @@ end;
 procedure TDisassembleViewer.CreatePatternExecute(Sender: TObject);
 // Create a pattern-line, based on the currently selected address.
 // The output is set in the clipboard, and ready to be pasted into a custom-made pattern-file,
-// which turns out to be neccessary to support XDK versions we have no patterns for.
+// which turns out to be necessary to support XDK versions we have no patterns for.
 begin
   Clipboard.AsText :=
     Format('; Xbe Explorer generated pattern, derived from address $%0.8x in "%s" :'#13#10'%s',
