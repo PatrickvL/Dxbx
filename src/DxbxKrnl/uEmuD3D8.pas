@@ -6794,7 +6794,7 @@ var
   x: Integer;
   Y3: uint08;
 
-  Y0U0U1V0: DWORD;
+  Y0U0Y1V0: DWORD;
   Y0: Integer;
   U0: Integer;
   Y1: Integer;
@@ -6952,16 +6952,16 @@ begin
               // and http://msdn.microsoft.com/en-us/library/ms893078.aspx
               // We do it integer-based for speed.
 
-              Y0U0U1V0 := PDWORD(pCurByte+v)^; Inc(v, 4);
+              Y0U0Y1V0 := PDWORD(pCurByte+v)^; Inc(v, 4);
 
 { This would be needed if the format used only Y values 16-235 :
-              Y0 := ((Byte(Y0U0U1V0       ) -  16) * 298) + 128;
-              Y1 := ((Byte(Y0U0U1V0 shr 16) -  16) * 298) + 128;
+              Y0 := ((Byte(Y0U0Y1V0       ) -  16) * 298) + 128;
+              Y1 := ((Byte(Y0U0Y1V0 shr 16) -  16) * 298) + 128;
   But because Y seems to use 0-255, we must to it like this : }
-              Y0 := (Byte(Y0U0U1V0       ) shl 8) + 128;
-              Y1 := (Byte(Y0U0U1V0 shr 16) shl 8) + 128;
-              U0 :=  Byte(Y0U0U1V0 shr  8)        - 128;
-              V0 :=  Byte(Y0U0U1V0 shr 24)        - 128;
+              Y0 := (Byte(Y0U0Y1V0       ) shl 8) + 128;
+              Y1 := (Byte(Y0U0Y1V0 shr 16) shl 8) + 128;
+              U0 :=  Byte(Y0U0Y1V0 shr  8)        - 128;
+              V0 :=  Byte(Y0U0Y1V0 shr 24)        - 128;
 
               R :=             ( 409*V0);
               G := (-100*U0) + (-208*V0);

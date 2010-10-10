@@ -864,6 +864,7 @@ begin
 end;
 
 function RPSRegisterObject.IsNativeRegWriteable: Boolean;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   Result := Reg in [PS_REGISTER_T0..PS_REGISTER_T3,
                     PS_REGISTER_R0..PS_REGISTER_R1];
@@ -1033,6 +1034,7 @@ end;
 // in a free alpha channel slot).
 
 function RPSDisassembleScope.EmitConstant(const OutputStr: string; const MulResult: int): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   case MulResult of
     MULRESULT_ZERO:
@@ -1056,6 +1058,7 @@ begin
 end;
 
 function RPSDisassembleScope.EmitMov(const OutputStr: string; const Input: PPSRegisterObject): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   Result := Input.DisassembleRegister(@Self);
   if Pos(Result, OutputStr) > 0 then
@@ -1065,6 +1068,7 @@ begin
 end;
 
 function RPSDisassembleScope.EmitAdd(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   if Input2.Reg = PS_REGISTER_ZERO then
     Result := EmitMov(OutputStr, Input1)
@@ -1073,6 +1077,7 @@ begin
 end;
 
 function RPSDisassembleScope.EmitSub(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   if Input2.Reg = PS_REGISTER_ZERO then
     Result := EmitMov(OutputStr, Input1)
@@ -1082,6 +1087,7 @@ end;
 
 function RPSDisassembleScope.EmitMul(const DestRegister: PPSRegisterObject;
   const Input1, Input2: PPSInputRegister): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   Input1ReadMask: string;
   Input2ReadMask: string;
@@ -1152,6 +1158,7 @@ end; // EmitMul
 
 function RPSDisassembleScope.EmitMad(const OutputStr: string;
   const Input1, Input2: PPSInputRegister; const Input3: PPSRegisterObject): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   Result := 'mad' + OutputStr
           + Input1.DisassembleInputRegister(@Self) + ', '
@@ -1161,6 +1168,7 @@ end;
 
 function RPSDisassembleScope.EmitLrp(const OutputStr: string;
   const Input1, Input2, Input3: PPSInputRegister): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   Result := 'lrp' + OutputStr
           + Input1.DisassembleInputRegister(@Self) + ', '
@@ -1321,6 +1329,7 @@ begin
 end;
 
 function RPSCombinerOutputMuxSum.SumTryLerp(const aScope: PPSDisassembleScope; SumOutputString: string): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   Src0, Src1, Src2: PPSInputRegister;
 
@@ -1348,6 +1357,7 @@ begin
 end;
 
 function RPSCombinerOutputMuxSum.SumTry4Regs(const aScope: PPSDisassembleScope; SumOutputString: string): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   ABCheck: Boolean;
   CDCheck: Boolean;
@@ -1362,7 +1372,8 @@ begin
   CDCheck := (OutputCD.Input1.Reg = Self.Reg) or (OutputCD.Input2.Reg = Self.Reg);
   if ABCheck and CDCheck then
     // We can't use the sum output register, as it's read by both AB and CD.
-    // (Later we could try to use a free temporary register?)
+    // TODO : We could try to find & use a free temporary register or one of
+    // the other (writeable) inputs, as long as these aren't used any further.
     Exit;
 
   // We have at least one side NOT reading from the SUM output register;
@@ -1384,6 +1395,7 @@ end;
 
 function RPSCombinerOutputMuxSum.SumTry2Regs_1Reg1Fixed(const aScope: PPSDisassembleScope; const SumOutputString: string;
   const Output2Reg, Output1Reg: PPSCombinerOutput): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   // Is A (Output1.Input1) a register?
   if Abs(Output1Reg.Input1.MulResult) >= MULRESULT_VARIABLE then
@@ -1449,7 +1461,7 @@ begin
   // For this, one input appears on both sides, but with an inverted sign. This can be simulated
   // using the "lrp" opcode.
   //
-  // But when fout separate inputs are read, we have no choice but to use a temporary register.
+  // But when four separate inputs are read, we have no choice but to use a temporary register.
   // As long as the Sum ouputs to a register that's never read, or only read on one side,
   // we can use that one using the sequence "sum=C*D", "sum=(A*B)+sum". This takes two opcodes,
   // but at least it's a solution. If there's no such register, we could look for another free
@@ -1465,11 +1477,13 @@ begin
   // we could ignore that side and just calculate the other side, using the "mul" opcode.
   //
   // The most simple case would be when one side is ZERO, and the other reads just one
-  // register. We can solve that using a "mov" opcode.
+  // register. We can solve that using a "mov" opcode. (Unless the register is moved into
+  // itself, which would become a no-op!)
   //
   // What complicates all this, is that both the input & output can be decorated with
   // modifiers, which effectively apply a multiplication and a correction to the input
-  // registers and/or final resulting value.
+  // registers and/or final resulting value. In all 4 previously described cases, the
+  // input-modifiers should be correctly applied.
 
   // Test if the outputs are a result of two registers being multiplied :
   ABCheck := (OutputAB.MulResult = MULRESULT_MULTIPLY);
@@ -2286,6 +2300,7 @@ begin
 end;
 
 function _EmitConstDef(i, Constant: DWORD): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   Result := Format('def c%d, %ff, %ff, %ff, %ff'#13#10, [i,
     {R}((Constant shr 16) and $FF) / 255.0,
