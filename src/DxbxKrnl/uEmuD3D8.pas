@@ -259,6 +259,67 @@ var
   g_Title: string = '';
   g_SignalScreenShot: Boolean = False;
 
+type
+  RLogStackHelper = record helper for RLogStack
+    function _(const aValue: X_D3DPOOL; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: X_D3DTRANSFORMSTATETYPE; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: X_D3DPRIMITIVETYPE; const aName: string = ''): PLogStack; overload;
+  end;
+
+function RLogStackHelper._(const aValue: X_D3DPOOL; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'X_D3DPOOL');
+  // D3DPoolToString :
+  case aValue of
+    D3DPOOL_DEFAULT: SetValue(UIntPtr(aValue), 'D3DPOOL_DEFAULT');
+    D3DPOOL_MANAGED: SetValue(UIntPtr(aValue), 'D3DPOOL_MANAGED');
+    D3DPOOL_SYSTEMMEM: SetValue(UIntPtr(aValue), 'D3DPOOL_SYSTEMMEM');
+    D3DPOOL_SCRATCH: SetValue(UIntPtr(aValue), 'D3DPOOL_SCRATCH');
+  else SetValue(UIntPtr(aValue));
+  end;
+end;
+
+function RLogStackHelper._(const aValue: X_D3DTRANSFORMSTATETYPE; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'X_D3DTRANSFORMSTATETYPE');
+  case aValue of
+    X_D3DTS_VIEW: SetValue(UIntPtr(aValue), 'X_D3DTS_VIEW');
+    X_D3DTS_PROJECTION: SetValue(UIntPtr(aValue), 'X_D3DTS_PROJECTION');
+    X_D3DTS_TEXTURE0: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE0');
+    X_D3DTS_TEXTURE1: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE1');
+    X_D3DTS_TEXTURE2: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE2');
+    X_D3DTS_TEXTURE3: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE3');
+    X_D3DTS_WORLD: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD');
+    X_D3DTS_WORLD1: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD1');
+    X_D3DTS_WORLD2: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD2');
+    X_D3DTS_WORLD3: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD3');
+    X_D3DTS_MAX: SetValue(UIntPtr(aValue), 'X_D3DTS_MAX');
+    X_D3DTS_FORCE_DWORD: SetValue(UIntPtr(aValue), 'X_D3DTS_FORCE_DWORD');
+  else SetValue(UIntPtr(aValue));
+  end;
+end;
+
+function RLogStackHelper._(const aValue: X_D3DPRIMITIVETYPE; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'X_D3DPRIMITIVETYPE');
+  case aValue of
+    X_D3DPT_NONE: SetValue(UIntPtr(aValue), 'X_D3DPT_NONE');
+    X_D3DPT_POINTLIST: SetValue(UIntPtr(aValue), 'X_D3DPT_POINTLIST');
+    X_D3DPT_LINELIST: SetValue(UIntPtr(aValue), 'X_D3DPT_LINELIST');
+    X_D3DPT_LINELOOP: SetValue(UIntPtr(aValue), 'X_D3DPT_LINELOOP');
+    X_D3DPT_LINESTRIP: SetValue(UIntPtr(aValue), 'X_D3DPT_LINESTRIP');
+    X_D3DPT_TRIANGLELIST: SetValue(UIntPtr(aValue), 'X_D3DPT_TRIANGLELIST');
+    X_D3DPT_TRIANGLESTRIP: SetValue(UIntPtr(aValue), 'X_D3DPT_TRIANGLESTRIP');
+    X_D3DPT_TRIANGLEFAN: SetValue(UIntPtr(aValue), 'X_D3DPT_TRIANGLEFAN');
+    X_D3DPT_QUADLIST: SetValue(UIntPtr(aValue), 'X_D3DPT_QUADLIST');
+    X_D3DPT_QUADSTRIP: SetValue(UIntPtr(aValue), 'X_D3DPT_QUADSTRIP');
+    X_D3DPT_POLYGON: SetValue(UIntPtr(aValue), 'X_D3DPT_POLYGON');
+    X_D3DPT_MAX: SetValue(UIntPtr(aValue), 'X_D3DPT_MAX');
+    X_D3DPT_INVALID: SetValue(UIntPtr(aValue), 'X_D3DPT_INVALID');
+  else SetValue(UIntPtr(aValue));
+  end;
+end;
+
 procedure DxbxResetGlobals;
 begin
   g_pD3DDevice := NULL;
@@ -3104,7 +3165,7 @@ begin
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_GetTextureStageState').
       _(Stage, 'Stage').
-      _(Int(Type_), 'Type').
+      _(Type_, 'Type').
       _(pValue, 'pValue').
     LogEnd();
 
@@ -4089,7 +4150,7 @@ begin
       _(Levels, 'Levels').
       _(Usage, 'Usage').
       _(Format, 'Format').
-      _(Ord(Pool), 'Pool'). // TODO : Add override for X_D3DPOOL
+      _(Pool, 'Pool').
       _(ppTexture, 'ppTexture').
     LogEnd();
 
@@ -4244,7 +4305,7 @@ begin
       _(Levels, 'Levels').
       _(Usage, 'Usage').
       _(Ord(Format), 'Format').
-      _(Ord(Pool), 'Pool').
+      _(Pool, 'Pool').
       _(ppVolumeTexture, 'ppVolumeTexture').
     LogEnd();
 
@@ -4325,7 +4386,7 @@ begin
       _(Levels, 'Levels').
       _(Usage, 'Usage').
       _(Ord(Format), 'Format').
-      _(Ord(Pool), 'Pool').
+      _(Pool, 'Pool').
       _(ppCubeTexture, 'ppCubeTexture').
     LogEnd();
 
@@ -4390,7 +4451,7 @@ begin
       _(Length, 'Length').
       _(Usage, 'Usage').
       _(Ord(Format), 'Format').
-      _(Ord(Pool), 'Pool').
+      _(Pool, 'Pool').
       _(ppIndexBuffer, 'ppIndexBuffer').
     LogEnd();
 
@@ -4753,7 +4814,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_Begin').
-      _(Int(PrimitiveType), 'PrimitiveType').
+      _(PrimitiveType, 'PrimitiveType').
     LogEnd();
 
   g_IVBPrimitiveType := PrimitiveType;
@@ -7444,7 +7505,7 @@ end;
 
 procedure XTL_EmuD3DDevice_SetRenderState_Dxt1NoiseEnable
 (
-  Value: DWORD
+  Value: BOOL
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -7639,7 +7700,7 @@ end;
 
 procedure XTL_EmuD3DDevice_SetRenderState_OcclusionCullEnable
 (
-  Value: DWORD
+  Value: BOOL
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -7660,7 +7721,7 @@ end;
 
 procedure XTL_EmuD3DDevice_SetRenderState_StencilCullEnable
 (
-  Value: DWORD
+  Value: BOOL
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -7744,7 +7805,7 @@ end;
 
 procedure XTL_EmuD3DDevice_SetRenderState_ZEnable
 (
-  Value: DWORD
+  Value: BOOL
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -7765,7 +7826,7 @@ end;
 
 procedure XTL_EmuD3DDevice_SetRenderState_StencilEnable
 (
-  Value: DWORD
+  Value: BOOL
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -7892,7 +7953,7 @@ end;
 
 procedure XTL_EmuD3DDevice_SetRenderState_YuvEnable
 (
-  Value: DWORD
+  Value: BOOL
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -7907,9 +7968,9 @@ begin
   XTL_EmuMappedD3DRenderState[X_D3DRS_YUVENABLE]^ := Value;
 
   // HACK: Display YUV surface by using an overlay.
-  if (BOOL(Value) <> BOOL_FALSE) <> g_fYuvEnabled then
+  if (Value <> BOOL_FALSE) <> g_fYuvEnabled then
   begin
-    g_fYuvEnabled := (BOOL(Value) <> BOOL_FALSE);
+    g_fYuvEnabled := (Value <> BOOL_FALSE);
 
     EmuWarning('EmuD3DDevice_SetRenderState_YuvEnable using overlay!');
     EmuSwapFS(fsXbox);
@@ -7940,7 +8001,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_SetTransform').
-      _(int(State), 'State').
+      _(State, 'State').
       _(pMatrix, 'pMatrix').
     LogEnd();
 
@@ -7983,7 +8044,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_GetTransform').
-      _(Integer(Ord(State)), 'State').
+      _(State, 'State').
       _(pMatrix, 'pMatrix').
     LogEnd();
 
@@ -8120,22 +8181,11 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    if Assigned(pStreamData) then
-      DbgPrintf('EmuD3D8 : EmuD3DDevice_SetStreamSource' +
-        #13#10'(' +
-        #13#10'   StreamNumber            : 0x%.08X' +
-        #13#10'   pStreamData             : 0x%.08X (0x%.08X)' +
-        #13#10'   Stride                  : 0x%.08X' +
-        #13#10');',
-        [StreamNumber, pStreamData, pStreamData.Emu.VertexBuffer, Stride])
-    else
-      DbgPrintf('EmuD3D8 : EmuD3DDevice_SetStreamSource' +
-        #13#10'(' +
-        #13#10'   StreamNumber            : 0x%.08X' +
-        #13#10'   pStreamData             : 0x%.08X (0x%.08X)' +
-        #13#10'   Stride                  : 0x%.08X' +
-        #13#10');',
-        [StreamNumber, pStreamData, 0, Stride]);
+    LogBegin('EmuD3DDevice_SetStreamSource').
+      _(StreamNumber, 'StreamNumber').
+      _(pStreamData, 'pStreamData').
+      _(Stride, 'Stride').
+    LogEnd();
   end;
 
   if (StreamNumber = 0) then
@@ -8254,7 +8304,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_DrawVertices').
-      _(Integer(Ord(PrimitiveType)), 'PrimitiveType').
+      _(PrimitiveType, 'PrimitiveType').
       _(StartVertex, 'StartVertex').
       _(VertexCount, 'VertexCount').
     LogEnd();
@@ -8317,7 +8367,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_DrawVerticesUP').
-      _(Integer(Ord(PrimitiveType)), 'PrimitiveType').
+      _(PrimitiveType, 'PrimitiveType').
       _(VertexCount, 'VertexCount').
       _(pVertexStreamZeroData, 'pVertexStreamZeroData').
       _(VertexStreamZeroStride, 'VertexStreamZeroStride').
@@ -8392,7 +8442,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_DrawIndexedVertices').
-      _(Integer(Ord(PrimitiveType)), 'PrimitiveType').
+      _(PrimitiveType, 'PrimitiveType').
       _(VertexCount, 'VertexCount').
       _(pIndexData, 'pIndexData').
     LogEnd();
@@ -8591,7 +8641,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_DrawIndexedVerticesUP').
-      _(Integer(Ord(PrimitiveType)), 'PrimitiveType').
+      _(PrimitiveType, 'PrimitiveType').
       _(VertexCount, 'VertexCount').
       _(pIndexData, 'pIndexData').
       _(pVertexStreamZeroData, 'pVertexStreamZeroData').
@@ -8716,7 +8766,7 @@ begin
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_SetTextureStageStateNotInline >>').
       _(Stage, 'Stage').
-      _(Ord(Type_), 'Type_').
+      _(Type_, 'Type_').
       _(Value, 'Value').
     LogEnd();
 

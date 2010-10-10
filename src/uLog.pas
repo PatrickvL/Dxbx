@@ -119,9 +119,11 @@ type
     LogRoot, Next: PLogStack;
     LogName: string; // LogType: string; ??
     LogValue: string;
+  public
     function SetName(const aName, aType: string): PLogStack;
-    procedure SetValue(const aValue: string; aDetails: string = ''); overload;
-    procedure SetValue(const aValue: UIntPtr; aDetails: string = ''); overload;
+    procedure SetValue(const aValue: string; const aDetails: string = ''); overload;
+    procedure SetValue(const aValue: UIntPtr; const aDetails: string = ''); overload;
+    procedure SetHexValue(const aValue: DWORD; const aNrNibbles: Integer);
   public
     function _(const aValue: AnsiString; const aName: string = ''): PLogStack; overload;
     function _(const aValue: UnicodeString; const aName: string = ''): PLogStack; overload;
@@ -810,7 +812,7 @@ begin
   Result := Next;
 end;
 
-procedure RLogStack.SetValue(const aValue: string; aDetails: string = '');
+procedure RLogStack.SetValue(const aValue: string; const aDetails: string = '');
 begin
   if aDetails <> '' then
     LogValue := aValue + ' (' + aDetails + ')'
@@ -818,9 +820,18 @@ begin
     LogValue := aValue;
 end;
 
-procedure RLogStack.SetValue(const aValue: UIntPtr; aDetails: string = '');
+procedure RLogStack.SetValue(const aValue: UIntPtr; const aDetails: string = '');
 begin
   SetValue('0x' + IntToHex(aValue, SizeOf(UIntPtr) * NIBBLES_PER_BYTE), aDetails);
+end;
+
+procedure RLogStack.SetHexValue(const aValue: DWORD; const aNrNibbles: Integer);
+begin
+  // TODO : Handle signed/unsigned difference
+  if {(aValue < 0) or} (aValue > 9) then // Only add decimal representation when that's different from hexadecimal
+    SetValue('0x' + IntToHex(aValue, aNrNibbles * NIBBLES_PER_BYTE), IntToStr(aValue))
+  else
+    SetValue('0x' + IntToHex(aValue, aNrNibbles * NIBBLES_PER_BYTE));
 end;
 
 function RLogStack._(const aValue: AnsiString; const aName: string = ''): PLogStack;
@@ -838,7 +849,7 @@ end;
 function RLogStack._(const aValue: int; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'int');
-  SetValue(UIntPtr(aValue), IntToStr(aValue));
+  SetValue(IntToStr(aValue));
 end;
 
 function RLogStack._(const aValue: float; const aName: string = ''): PLogStack;
@@ -850,34 +861,37 @@ end;
 function RLogStack._(const aValue: SHORT; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'SHORT');
-  if (aValue < 0) or (aValue > 9) then // Only add decimal representation when that's different from hexadecimal
-    SetValue('0x' + IntToHex(aValue, SizeOf(aValue) * NIBBLES_PER_BYTE), IntToStr(aValue))
-  else
-    SetValue('0x' + IntToHex(aValue, SizeOf(aValue) * NIBBLES_PER_BYTE));
+  SetHexValue(aValue, SizeOf(aValue));
 end;
 
 function RLogStack._(const aValue: WORD; const aName: string): PlogStack;
 begin
   Result := SetName(aName, 'WORD');
-  SetValue('0x' + IntToHex(aValue, SizeOf(aValue) * NIBBLES_PER_BYTE));
+  SetHexValue(aValue, SizeOf(aValue));
 end;
 
 function RLogStack._(const aValue: DWORD; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'DWORD');
-  SetValue(UIntPtr(aValue));
+  SetHexValue(aValue, SizeOf(aValue));
 end;
 
 function RLogStack._(const aValue: BOOL; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'BOOL');
-  SetValue(IntToStr(aValue));
+  if aValue = BOOL_FALSE then
+    SetValue(UIntPtr(aValue), 'FALSE')
+  else
+    SetValue(UIntPtr(aValue), 'TRUE');
 end;
 
 function RLogStack._(const aValue: _BOOLEAN; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, '_BOOLEAN');
-  SetValue(IntToStr(Ord(aValue)));
+  if aValue = False then
+    SetValue(UIntPtr(aValue), 'False')
+  else
+    SetValue(UIntPtr(aValue), 'True');
 end;
 
 function RLogStack._(const aValue: LARGE_INTEGER; const aName: string = ''): PLogStack;
