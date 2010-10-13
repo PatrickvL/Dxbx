@@ -39,7 +39,7 @@ type
   TXboxLibraryPatch = type Cardinal;
 
 const
-  PatchPrefix = 'XTL_';
+  PatchPrefix = 'XTL_Emu';
 
   // This is an TXboxLibraryPatch indicating the 'unknown patch'-state :
   xlp_Unknown = TXboxLibraryPatch(0);
@@ -47,11 +47,8 @@ const
 var
   AvailablePatches: TStringList;
 
-  // This method creates a somewhat readable string for each patched method string.
-  function XboxLibraryPatchToDisplayString(const aValue: string): string;
-
   // This method determines which patch corresponds with the supplied aFunctionName.
-  function XboxFunctionNameToLibraryPatch(const aFunctionName: string): TXboxLibraryPatch;
+  function XboxFunctionNameToLibraryPatch(const aMangledName, aUnmangledName: string): TXboxLibraryPatch;
 
   // This method returns the actual patch function address for each patched method.
   function XboxLibraryPatchToPatch(const aValue: TXboxLibraryPatch): TCodePointer;
@@ -62,94 +59,44 @@ implementation
 
 function TransformExportFunctionNameIntoXboxFunctionName(const aValue: string): string;
 begin
+  Result := aValue;
   // Is this exported function a patch (does it start with our prefix) ?
-  if StrLIComp(PChar(aValue), PatchPrefix, Length(PatchPrefix)) <> 0 then
-  begin
+  if StrLIComp(PChar(Result), PatchPrefix, Length(PatchPrefix)) = 0 then
+    // Remove the prefix and return what's left after that, which is either
+    // the (original) mangled name (when exported with a specific name
+    // or the unmangled name (but having dots replaced by underscores) :
+    Delete(Result, 1, Length(PatchPrefix))
+  else
+    // Any export without our specific prefix ('XTL_Emu') is not a patch, return an empty string :
     Result := '';
-    Exit;
-  end;
-
-  // Remove our prefix :
-  Result := aValue;
-  Delete(Result, 1, Length(PatchPrefix));
-  
-  // Is this exported function a patch without a specific name (those don't have "Emu") ?
-  if StrLIComp(PChar(Result), 'Emu', 3) = 0 then
-    Delete(Result, 1, 3);
 end;
 
-function XboxLibraryPatchToDisplayString(const aValue: string): string;
-var
-  i: Integer;
-begin
-  // Start out with the official pattern-name :
-  Result := aValue;
-
-  // Now remove all prefix non-letters :
-  while (Result <> '') and (not CharInSet(Result[1], ['a'..'z','A'..'Z'])) do
-    Delete(Result, 1, 1);
-
-  // And remove everything from '@' onward :
-  i := Pos('@', Result);
-  if i > 0 then
-    Delete(Result, i, MaxInt);
-
-  Result := PatchPrefix + Result;
-end;
-
-function XboxFunctionNameToLibraryPatch(const aFunctionName: string): TXboxLibraryPatch;
+function XboxFunctionNameToLibraryPatch(const aMangledName, aUnmangledName: string): TXboxLibraryPatch;
 var
   Index: Integer;
   DemangledFunctionName: string;
 begin
   // First option : Try to find exact string :
-  Index := AvailablePatches.IndexOf(aFunctionName);
-  if Index >= 0 then
+  if aUnmangledName <> '' then
   begin
-    // If found, make sure that value 0 keeps the meaning 'xlp_Unknown' :
-    Result := Index + 1;
-    Exit;
+    // Replace any dot with an underscore, as that's how we named our exports :
+    DemangledFunctionName := StringReplace(aUnmangledName, '.', '_', [rfReplaceAll]);
+    Index := AvailablePatches.IndexOf(DemangledFunctionName);
+    if Index >= 0 then
+    begin
+      // If found, make sure that value 0 keeps the meaning 'xlp_Unknown' :
+      Result := Index + 1;
+      Exit;
+    end;
   end;
 
-  if aFunctionName <> '' then
+  if aMangledName <> '' then
   begin
-    // Second option : unmangle the name (unless it is double-escaped) :
-    if CharInSet(aFunctionName[1], ['?', '@', '_']) then
+    Index := AvailablePatches.IndexOf(aMangledName);
+    if Index >= 0 then
     begin
-      if (aFunctionName[1] <> aFunctionName[2]) then
-      begin
-        DemangledFunctionName := DxbxUnmangleSymbolName(aFunctionName);
-        if DemangledFunctionName <> aFunctionName then
-        begin
-          Result := XboxFunctionNameToLibraryPatch(DemangledFunctionName);
-          if Result > xlp_Unknown then
-            Exit;
-        end;
-      end;
-
-      // Also try finding a patch without a prefix character :
-      Result := XboxFunctionNameToLibraryPatch(Copy(aFunctionName, 2, MaxInt));
-      Exit;
-    end;
-
-    // Step backwards over all trailing digits :
-    Index := Length(aFunctionName);
-    while (Index > 1) and CharInSet(aFunctionName[Index], ['0'..'9']) do
-      Dec(Index);
-
-    // When there where digits, and there's a '@' prepending it :
-    if (Index < Length(aFunctionName)) and (aFunctionName[Index] = '@') then
-    begin
-      // Search again, but now without this '@...'-suffix :
-      Result := XboxFunctionNameToLibraryPatch(Copy(aFunctionName, 1, Index - 1));
-      Exit;
-    end;
-
-    Index := Pos('@', aFunctionName);
-    if (Index > 0) then
-    begin
-      // Search again, but now without the whole '@...'-suffix :
-      Result := XboxFunctionNameToLibraryPatch(Copy(aFunctionName, 1, Index - 1));
+      // If found, make sure that value 0 keeps the meaning 'xlp_Unknown' :
+      Result := Index + 1;
       Exit;
     end;
   end;
