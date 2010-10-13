@@ -542,7 +542,7 @@ begin
   // Generate a filename that doesn't exist yet (so we don't overwrite previous screenshots) :
   repeat
     FileName := AnsiString(ExtractFilePath(ParamStr(0)) + _GetScreenshotFileName());
-  until not FileExists(FileName);
+  until not FileExists(string(FileName));
 
   // Now save it to file (somehow, Direct3D8 doesn't export jpgs or pngs, so bitmap has to suffice for now) :
   hRet := D3DXSaveSurfaceToFileA(PAnsiChar(FileName), D3DXIFF_BMP, ExtraXRGBSurface, NULL, NULL);
@@ -6091,7 +6091,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuLock2DSurface
+procedure XTL_EmuD3D_PixelJar_Lock2DSurface
 (
     pPixelContainer: PX_D3DPixelContainer;
     FaceType: D3DCUBEMAP_FACES;
@@ -6124,7 +6124,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuGet2DSurfaceDesc // TODO -oDxbx : Same as XTL_EmuD3DSurface_GetDesc ?
+procedure XTL_EmuD3D_PixelJar_Get2DSurfaceDesc
 (
     pPixelContainer: PX_D3DPixelContainer;
     dwLevel: DWORD;
@@ -6219,10 +6219,10 @@ begin
     EmuSwapFS(fsXbox);
   end;
 
-  Xtl_EmuGet2DSurfaceDesc(pPixelContainer, $FEFEFEFE, pDesc);
+  XTL_EmuD3D_PixelJar_Get2DSurfaceDesc(pPixelContainer, $FEFEFEFE, pDesc);
 end;
 
-function XTL_EmuD3DSurface_GetDesc // TODO -oDxbx : Same as XTL_EmuGet2DSurfaceDesc ?
+function XTL_EmuD3DSurface_GetDesc
 (
   pThis: PX_D3DResource;
   pDesc: PX_D3DSURFACE_DESC
@@ -11320,7 +11320,7 @@ exports
   // XTL_EmuDevice3D_UnInit name PatchPrefix + '?UnInit@CDevice@D3D@@QAEXXZ', // Not yet implemented
   // XTL_EmuDevice3D_UninitializePushBuffer name PatchPrefix + '?UninitializePushBuffer@CDevice@D3D@@QAEXXZ', // Not yet implemented
   // XTL_EmuDevice3D_UninitializePushBuffer name PatchPrefix + '?UninitializePushBuffer@CDevice@D3D@@QAEXXZ', Not yet implemented
-  // XTL_EmuDirect3D_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8', // No need to patch, as our kernel implements MmAllocateContiguousMemory(Ex) already
+  // XTL_EmuDirect3D_AllocContiguousMemory name PatchPrefix + '_D3D_AllocContiguousMemory@8', // No need to patch, as our kernel implements MmAllocateContiguousMemory(Ex) already
   // XTL_EmuDirect3D_LazySetCombiners name PatchPrefix + 'LazySetCombiners', // Dxbx: Not yet implemented
   // XTL_EmuDirect3D_LazySetLights name PatchPrefix + 'LazySetLights', // Dxbx: Not yet implemented
   // XTL_EmuDirect3D_LazySetPointParams name PatchPrefix + 'LazySetPointParams', // Dxbx: Not yet implemented
@@ -11340,7 +11340,10 @@ exports
   // XTL_EmuGetSurfaceFormat name PatchPrefix + 'GetSurfaceFormat', // Not yet implemented
   // XTL_EmuXMETAL_StartPush name PatchPrefix + 'XMETAL_StartPush';
 
-  XTL_EmuD3D_KickOffAndWaitForIdle name PatchPrefix + 'KickOffAndWaitForIdle',
+  XTL_EmuD3D_KickOffAndWaitForIdle,
+
+  XTL_EmuD3D_PixelJar_Get2DSurfaceDesc,
+  XTL_EmuD3D_PixelJar_Lock2DSurface,
 
   XTL_EmuD3DBaseTexture_GetLevelCount,
 
@@ -11603,9 +11606,7 @@ exports
   XTL_EmuDirect3D_GetDeviceCaps,
   XTL_EmuDirect3D_SetPushBufferSize,
 
-  XTL_EmuGet2DSurfaceDesc,
-  XTL_EmuGet2DSurfaceDescD, // TODO -oDXBX: Fix wrong prefix!
-  XTL_EmuLock2DSurface;
+  XTL_EmuGet2DSurfaceDescD; // TODO -oDXBX: Fix wrong prefix!
 
 initialization
 

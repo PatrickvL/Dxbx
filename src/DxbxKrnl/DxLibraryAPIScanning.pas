@@ -168,7 +168,7 @@ type
     function LoadSymbolsFromCache(const aCacheFile: string): Boolean;
     procedure SaveSymbolsToCache(const pXbeHeader: PXBEIMAGE_HEADER; const aCacheFile: string);
   protected // Final symbols :
-    MySymbols: TList;
+    MySymbols: TList; // Contains a subset of the symbols owned by MySymbolsHashedOnName
     function GetCount: Integer;
     function GetSymbol(const aIndex: Integer): TSymbolInformation;
   public

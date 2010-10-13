@@ -104,6 +104,8 @@ begin
     UsedPatches.Size := AvailablePatches.Count + 1;
 {$ENDIF}
 
+    // Log by address :
+    SymbolManager.SortSymbols(ssAddress);
     for i := 0 to SymbolManager.Count - 1 do
     begin
       DetectedSymbol := SymbolManager.Symbols[i];
@@ -113,7 +115,7 @@ begin
       if not Assigned(OrgCode) then
         continue;
 
-      XboxLibraryPatch := XboxFunctionNameToLibraryPatch(DetectedSymbol.Name);
+      XboxLibraryPatch := XboxFunctionNameToLibraryPatch(DetectedSymbol.Name, DetectedSymbol.UnmangledName);
       if XboxLibraryPatch = xlp_Unknown then
         continue;
 
@@ -157,7 +159,7 @@ begin
       if not UsedPatches[{XboxLibraryPatch=}(i + 1)] then
       begin
         Inc(NrPatches);
-        DbgPrintf('DxbxHLE : Unused patch %.3d : %s{Emu}%s', [i, PatchPrefix, AvailablePatches[i]]);
+        DbgPrintf('DxbxHLE : Unused patch %.3d : %s%s', [i, PatchPrefix, AvailablePatches[i]]);
       end;
     end;
 

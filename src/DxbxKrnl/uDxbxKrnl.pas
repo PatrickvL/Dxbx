@@ -86,14 +86,6 @@ procedure DxbxKrnlTerminateThread(); // EmuCleanThread(); // export;
 procedure DxbxKrnlResume();
 procedure DxbxKrnlSuspend();
 
-exports
-  DxbxKrnlInit;
-
-  (*Exports EmuCleanThread name '_EmuCleanThread@0';
-  { TODO -oDXBX: name need to be set }
-  (*Exports Init; // name must be "void EmuShared::Init (void)
-  *)
-
 var
   g_EmuXbePath: AnsiString; // The path of the running Xbe, as seen from Xbox1 (including \Device\Harddisk0\Partition1\)
 
