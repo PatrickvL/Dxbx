@@ -112,6 +112,8 @@ type
     btnSaveLogConfig: TButton;
     OpenDialog1: TOpenDialog;
     SaveDialog1: TSaveDialog;
+    btnDisableAll: TButton;
+    btnEnableAll: TButton;
     procedure FormCreate(Sender: TObject);
     procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
     procedure btnOkClick(Sender: TObject);
@@ -125,6 +127,8 @@ type
     procedure lstLoggingClick(Sender: TObject);
     procedure btnLoadLogConfigClick(Sender: TObject);
     procedure btnSaveLogConfigClick(Sender: TObject);
+    procedure btnDisableAllClick(Sender: TObject);
+    procedure btnEnableAllClick(Sender: TObject);
   private
     MyDirectDraw: IDirectDraw7;
     FXBVideo : XBVideo;
@@ -132,6 +136,8 @@ type
     FHasChanges: Boolean;
     FBusyConfiguring: Boolean;
     procedure RefreshItem(Item: TListItem);
+
+    procedure ChangeStatusAllSettings(aStatus: lsStatus);
 
     procedure SaveLogConfig;
     procedure LoadLogConfig;
@@ -576,6 +582,21 @@ begin
   PageControl1.ActivePageIndex := Node.Index;
 end;
 
+procedure TfmConfiguration.ChangeStatusAllSettings(aStatus: lsStatus);
+var
+  lIndex: Integer;
+  LogStatus: TLogStatus;
+begin
+  for lIndex := 0 to lstLogging.Items.Count -1 do
+  begin
+    LogStatus := TLogStatus(lstLogging.Items[lIndex].Data);
+    LogStatus.Status := aStatus;
+    RefreshItem(lstLogging.Items[lIndex]);
+  end;
+
+  HasChanges := True;
+end;
+
 procedure TfmConfiguration.ChangeClick(Sender: TObject);
 begin
   HasChanges := True;
@@ -602,6 +623,16 @@ end;
 procedure TfmConfiguration.btnCancelClick(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TfmConfiguration.btnDisableAllClick(Sender: TObject);
+begin
+  ChangeStatusAllSettings(lsDisabled);
+end;
+
+procedure TfmConfiguration.btnEnableAllClick(Sender: TObject);
+begin
+  ChangeStatusAllSettings(lsEnabled);
 end;
 
 procedure TfmConfiguration.btnLoadLogConfigClick(Sender: TObject);

@@ -105,7 +105,6 @@ begin
 {$ENDIF}
 
     // Log by address :
-    SymbolManager.SortSymbols(ssAddress);
     for i := 0 to SymbolManager.Count - 1 do
     begin
       DetectedSymbol := SymbolManager.Symbols[i];
