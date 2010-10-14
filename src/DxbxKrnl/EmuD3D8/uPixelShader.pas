@@ -1645,6 +1645,21 @@ begin
   // - xmma (mul/mul/sum)    > calculating AB=A*B and CD=C*D and Sum=AB+CD
   // (One of the implications is, that once a dot-product is issued, no Sum or Mux operation is possible.)
   // All other instructions (mov, add, sub, mul, lrp, dp3) are compiled into one of these 4 using varying arguments.
+  // All 4 instruction specify up to three output registers, all of which must be unique (or be discarded).
+  //
+  // Apart from the r0,r1 and t0-t3 registers, the NV2A allows writing to the v0,v1 (this conflicts with PS.1.3!)
+  //
+  // The precision of registers is also different; On the Xbox, all 4 color components (RGBA) for constant registers
+  // range from 0.0 to 1.0 (with 8 bits of precision), while all other registers (r, t and v) range from -1.0 to 1.0.
+  //
+  // This is different from native PS.1.3 in which constant registers suddenly have a range -1.0 to 1.0, but vertex
+  // registers (v0 and v1) range from 0.0 to 1.0 instead, and the temporary and texture registers have a range
+  // from negative 'MaxPixelShaderValue' to positive 'MaxPixelShaderValue', which value must at least be 1.0
+  // (but depending on hardware capabilities can be higher).
+  //
+  // TODO : Correct emulation should correct these differences; The range of constant-registers must be converted
+  // from 0.0-1.0 to -1.0-1.0, and vertex-registers must be converted from -1.0..1.0 to 0.0..1.0 (if anything like
+  // that is at all possible!)
 
   // Convert the CombinerOutput flag to a InstructionOutputCombiner
   // or an SourceRegisterModifier (so far as that's possible):
