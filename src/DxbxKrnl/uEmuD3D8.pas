@@ -10715,7 +10715,7 @@ function XTL_EmuD3DCubeTexture_GetLevelDesc
   pThis: PX_D3DCubeTexture;
   Level: UINT;
   pDesc: PX_D3DSURFACE_DESC
-); HRESULT; stdcall;
+): HRESULT; stdcall;
 // Branch:Dxbx  Translator:Shadow_Tj  Done:0
 var
   SurfaceDesc: D3DSURFACE_DESC;
