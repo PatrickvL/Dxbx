@@ -7089,14 +7089,30 @@ end;
 
 procedure XTL_EmuD3DDevice_BlockUntilIdle(); stdcall;
 // Branch:dxbx  Translator:Shadow_Tj  Done:100
+{$IFDEF DXBX_USE_D3D9}
+var
+  pQuery: PIDirect3DQuery9;
+  data: BOOL;
+{$ENDIF}
 begin
   EmuSwapFs(fsWindows);
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuD3D8 : EmuD3DDevice_BlockUntilIdle');
 
-  // D3DDevice_BlockUntilIdle();
-  EmuWarning('EmuD3DDevice_BlockUntilIdle not supported!');
+{$IFDEF DXBX_USE_D3D9}
+  // DXBX: Own implementation of BlockUntilIdle
+  // create an event and spin wait on it
+  pDevice.CreateQuery(D3DQUERYTYPE_EVENT, @pQuery);
+  pQuery.Issue(D3DISSUE_END);
+  while (pQuery.GetData(@data, sizeof(data), D3DGETDATA_FLUSH) = S_FALSE) do
+  begin
+    // busy wait
+  end;
+  pQuery.Release();
+{$ELSE}
+  Unimplemented('EmuD3DDevice_BlockUntilIdle');
+{$ENDIF}
 
   EmuSwapFs(fsXbox);
 end;
