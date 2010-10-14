@@ -458,6 +458,24 @@ object fmConfiguration: TfmConfiguration
           TabOrder = 2
           OnClick = btnSaveLogConfigClick
         end
+        object btnDisableAll: TButton
+          Left = 455
+          Top = 112
+          Width = 75
+          Height = 25
+          Caption = 'Disable All'
+          TabOrder = 3
+          OnClick = btnDisableAllClick
+        end
+        object btnEnableAll: TButton
+          Left = 455
+          Top = 143
+          Width = 75
+          Height = 25
+          Caption = 'Enable All'
+          TabOrder = 4
+          OnClick = btnEnableAllClick
+        end
       end
     end
   end
