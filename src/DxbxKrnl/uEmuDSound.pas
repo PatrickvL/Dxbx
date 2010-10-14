@@ -2188,83 +2188,83 @@ asm jmp TIDirectSound.SynchPlayback; end;
 // Patches on CDirectSound class functions
 //
 
-procedure XTL_EmuCDirectSound_AddRef;
+procedure XTL_EmuDirectSound_CDirectSound_AddRef;
 asm  jmp TIDirectSound.AddRef; end;
 
-procedure XTL_EmuCDirectSound_Release;
+procedure XTL_EmuDirectSound_CDirectSound_Release;
 asm jmp TIDirectSound.Release; end;
 
-procedure XTL_EmuCDirectSound_GetCaps;
+procedure XTL_EmuDirectSound_CDirectSound_GetCaps;
 asm jmp TIDirectSound.GetCaps; end;
 
-procedure XTL_EmuCDirectSound_CreateSoundBuffer;
+procedure XTL_EmuDirectSound_CDirectSound_CreateSoundBuffer;
 asm jmp TIDirectSound.CreateSoundBuffer; end;
 
-procedure XTL_EmuCDirectSound_CreateSoundStream;
+procedure XTL_EmuDirectSound_CDirectSound_CreateSoundStream;
 asm jmp TIDirectSound.CreateSoundStream; end;
 
-procedure XTL_EmuCDirectSound_GetSpeakerConfig;
+procedure XTL_EmuDirectSound_CDirectSound_GetSpeakerConfig;
 asm jmp TIDirectSound.GetSpeakerConfig; end;
 
-procedure XTL_EmuCDirectSound_SetCooperativeLevel;
+procedure XTL_EmuDirectSound_CDirectSound_SetCooperativeLevel;
 asm jmp TIDirectSound.SetCooperativeLevel; end;
 
-procedure XTL_EmuCDirectSound_Compact;
+procedure XTL_EmuDirectSound_CDirectSound_Compact;
 asm jmp TIDirectSound.Compact; end;
 
-procedure XTL_EmuCDirectSound_DownloadEffectsImage;
+procedure XTL_EmuDirectSound_CDirectSound_DownloadEffectsImage;
 asm jmp TIDirectSound.DownloadEffectsImage; end;
 
-procedure XTL_EmuCDirectSound_GetEffectData;
+procedure XTL_EmuDirectSound_CDirectSound_GetEffectData;
 asm jmp TIDirectSound.GetEffectData; end;
 
-procedure XTL_EmuCDirectSound_SetEffectData;
+procedure XTL_EmuDirectSound_CDirectSound_SetEffectData;
 asm jmp TIDirectSound.SetEffectData; end;
 
-procedure XTL_EmuCDirectSound_CommitEffectData;
+procedure XTL_EmuDirectSound_CDirectSound_CommitEffectData;
 asm jmp TIDirectSound.CommitEffectData; end;
 
-procedure XTL_EmuCDirectSound_EnableHeadphones;
+procedure XTL_EmuDirectSound_CDirectSound_EnableHeadphones;
 asm jmp TIDirectSound.EnableHeadphones; end;
 
-procedure XTL_EmuCDirectSound_SetMixBinHeadroom;
+procedure XTL_EmuDirectSound_CDirectSound_SetMixBinHeadroom;
 asm jmp TIDirectSound.SetMixBinHeadroom; end;
 
-procedure XTL_EmuCDirectSound_SetAllParameters;
+procedure XTL_EmuDirectSound_CDirectSound_SetAllParameters;
 asm jmp TIDirectSound.SetAllParameters; end;
 
-procedure XTL_EmuCDirectSound_SetOrientation;
+procedure XTL_EmuDirectSound_CDirectSound_SetOrientation;
 asm jmp TIDirectSound.SetOrientation; end;
 
-procedure XTL_EmuCDirectSound_SetPosition;
+procedure XTL_EmuDirectSound_CDirectSound_SetPosition;
 asm jmp TIDirectSound.SetPosition; end;
 
-procedure XTL_EmuCDirectSound_SetVelocity;
+procedure XTL_EmuDirectSound_CDirectSound_SetVelocity;
 asm jmp TIDirectSound.SetVelocity; end;
 
-procedure XTL_EmuCDirectSound_SetDistanceFactor;
+procedure XTL_EmuDirectSound_CDirectSound_SetDistanceFactor;
 asm jmp TIDirectSound.SetDistanceFactor; end;
 
-procedure XTL_EmuCDirectSound_SetDopplerFactor;
+procedure XTL_EmuDirectSound_CDirectSound_SetDopplerFactor;
 asm jmp TIDirectSound.SetDopplerFactor; end;
 
-procedure XTL_EmuCDirectSound_SetRolloffFactor;
+procedure XTL_EmuDirectSound_CDirectSound_SetRolloffFactor;
 asm jmp TIDirectSound.SetRolloffFactor; end;
 
-procedure XTL_EmuCDirectSound_SetI3DL2Listener;
+procedure XTL_EmuDirectSound_CDirectSound_SetI3DL2Listener;
 asm jmp TIDirectSound.SetI3DL2Listener; end;
 
-procedure XTL_EmuCDirectSound_CommitDeferredSettings;
+procedure XTL_EmuDirectSound_CDirectSound_CommitDeferredSettings;
 asm jmp TIDirectSound.CommitDeferredSettings; end;
 
-procedure XTL_EmuCDirectSound_GetTime;
+procedure XTL_EmuDirectSound_CDirectSound_GetTime;
 asm jmp TIDirectSound.GetTime; end;
 
 
-procedure XTL_EmuCDirectSound_GetOutputLevels;
+procedure XTL_EmuDirectSound_CDirectSound_GetOutputLevels;
 asm jmp TIDirectSound.GetOutputLevels; end;
 
-procedure XTL_EmuCDirectSound_SynchPlayback;
+procedure XTL_EmuDirectSound_CDirectSound_SynchPlayback;
 asm jmp TIDirectSound.SynchPlayback; end;
 
 //
@@ -3588,133 +3588,133 @@ asm jmp TIDirectSoundBuffer.Unlock; end;
 //
 //
 
-procedure XTL_EmuCDirectSoundBuffer_GetCurrentPosition;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_GetCurrentPosition;
 asm jmp TIDirectSoundBuffer.GetCurrentPosition; end;
 
-procedure XTL_EmuCDirectSoundBuffer_GetStatus;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_GetStatus;
 asm jmp TIDirectSoundBuffer.GetStatus; end;
 
-procedure XTL_EmuCDirectSoundBuffer_GetVoiceProperties;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_GetVoiceProperties;
 asm jmp TIDirectSoundBuffer.GetVoiceProperties; end;
 
-procedure XTL_EmuCDirectSoundBuffer_Lock;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_Lock;
 asm jmp TIDirectSoundBuffer.Lock; end;
 
-procedure XTL_EmuCDirectSoundBuffer_Pause;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_Pause;
 asm jmp TIDirectSoundBuffer.Pause; end;
 
-procedure XTL_EmuCDirectSoundBuffer_PauseEx;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_PauseEx;
 asm jmp TIDirectSoundBuffer.PauseEx; end;
 
-procedure XTL_EmuCDirectSoundBuffer_Play;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_Play;
 asm jmp TIDirectSoundBuffer.Play; end;
 
-procedure XTL_EmuCDirectSoundBuffer_PlayEx;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_PlayEx;
 asm jmp TIDirectSoundBuffer.PlayEx; end;
 
-procedure XTL_EmuCDirectSoundBuffer_Restore;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_Restore;
 asm jmp TIDirectSoundBuffer.Restore; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetAllParameters;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetAllParameters;
 asm jmp TIDirectSoundBuffer.SetAllParameters; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetBufferData;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetBufferData;
 asm jmp TIDirectSoundBuffer.SetBufferData; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetConeAngles;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetConeAngles;
 asm jmp TIDirectSoundBuffer.SetConeAngles; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetConeOrientation;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetConeOrientation;
 asm jmp TIDirectSoundBuffer.SetConeOrientation; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetConeOutsideVolume;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetConeOutsideVolume;
 asm jmp TIDirectSoundBuffer.SetConeOutsideVolume; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetCurrentPosition;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetCurrentPosition;
 asm jmp TIDirectSoundBuffer.SetCurrentPosition; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetDistanceFactor;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetDistanceFactor;
 asm jmp TIDirectSoundBuffer.SetDistanceFactor; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetDopplerFactor;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetDopplerFactor;
 asm jmp TIDirectSoundBuffer.SetDopplerFactor; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetEG;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetEG;
 asm jmp TIDirectSoundBuffer.SetEG; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetFilter;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetFilter;
 asm jmp TIDirectSoundBuffer.SetFilter; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetFormat;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetFormat;
 asm jmp TIDirectSoundBuffer.SetFormat; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetFrequency;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetFrequency;
 asm jmp TIDirectSoundBuffer.SetFrequency; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetHeadroom;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetHeadroom;
 asm jmp TIDirectSoundBuffer.SetHeadroom; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetI3DL2Source;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetI3DL2Source;
 asm jmp TIDirectSoundBuffer.SetI3DL2Source; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetLFO;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetLFO;
 asm jmp TIDirectSoundBuffer.SetLFO; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetLoopRegion;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetLoopRegion;
 asm jmp TIDirectSoundBuffer.SetLoopRegion; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetMaxDistance;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetMaxDistance;
 asm jmp TIDirectSoundBuffer.SetMaxDistance; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetMinDistance;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetMinDistance;
 asm jmp TIDirectSoundBuffer.SetMinDistance; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetMixBins;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetMixBins;
 asm jmp TIDirectSoundBuffer.SetMixBins; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetMixBinVolumes;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetMixBinVolumes;
 asm jmp TIDirectSoundBuffer.SetMixBinVolumes; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetMode;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetMode;
 asm jmp TIDirectSoundBuffer.SetMode; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetNotificationPositions;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetNotificationPositions;
 asm jmp TIDirectSoundBuffer.SetNotificationPositions; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetOutputBuffer;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetOutputBuffer;
 asm jmp TIDirectSoundBuffer.SetOutputBuffer; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetPitch;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetPitch;
 asm jmp TIDirectSoundBuffer.SetPitch; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetPlayRegion;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetPlayRegion;
 asm jmp TIDirectSoundBuffer.SetPlayRegion; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetPosition;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetPosition;
 asm jmp TIDirectSoundBuffer.SetPosition; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetRolloffCurve;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetRolloffCurve;
 asm jmp TIDirectSoundBuffer.SetRolloffCurve; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetRolloffFactor;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetRolloffFactor;
 asm jmp TIDirectSoundBuffer.SetRolloffFactor; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetVelocity;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetVelocity;
 asm jmp TIDirectSoundBuffer.SetVelocity; end;
 
-procedure XTL_EmuCDirectSoundBuffer_SetVolume;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_SetVolume;
 asm jmp TIDirectSoundBuffer.SetVolume; end;
 
-procedure XTL_EmuCDirectSoundBuffer_Stop;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_Stop;
 asm jmp TIDirectSoundBuffer.Stop; end;
 
-procedure XTL_EmuCDirectSoundBuffer_StopEx;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_StopEx;
 asm jmp TIDirectSoundBuffer.StopEx; end;
 
-procedure XTL_EmuCDirectSoundBuffer_Unlock;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_Unlock;
 asm jmp TIDirectSoundBuffer.Unlock; end;
 
-procedure XTL_EmuCDirectSoundBuffer_Release;
+procedure XTL_EmuDirectSound_CDirectSoundBuffer_Release;
 asm jmp TIDirectSoundBuffer.Release; end;
 
 
@@ -4628,112 +4628,112 @@ asm jmp TIDirectSoundStream.Release; end;
 // Patches on CDirectSoundStream class functions
 //
 
-procedure XTL_EmuCDirectSoundStream_AddRef;
+procedure XTL_EmuDirectSound_CDirectSoundStream_AddRef;
 asm jmp TIDirectSoundStream.AddRef; end;
 
-procedure XTL_EmuCDirectSoundStream_Discontinuity;
+procedure XTL_EmuDirectSound_CDirectSoundStream_Discontinuity;
 asm jmp TIDirectSoundStream.Discontinuity; end;
 
-procedure XTL_EmuCDirectSoundStream_SetFormat;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetFormat;
 asm jmp TIDirectSoundStream.SetFormat; end;
 
-procedure XTL_EmuCDirectSoundStream_SetFrequency;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetFrequency;
 asm jmp TIDirectSoundStream.SetFrequency; end;
 
-procedure XTL_EmuCDirectSoundStream_SetVolume;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetVolume;
 asm jmp TIDirectSoundStream.SetVolume; end;
 
-procedure XTL_EmuCDirectSoundStream_SetPitch;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetPitch;
 asm jmp TIDirectSoundStream.SetPitch; end;
 
-procedure XTL_EmuCDirectSoundStream_SetLFO;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetLFO;
 asm jmp TIDirectSoundStream.SetLFO; end;
 
-procedure XTL_EmuCDirectSoundStream_SetEG;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetEG;
 asm jmp TIDirectSoundStream.SetEG; end;
 
-procedure XTL_EmuCDirectSoundStream_SetFilter;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetFilter;
 asm jmp TIDirectSoundStream.SetFilter; end;
 
-procedure XTL_EmuCDirectSoundStream_SetHeadroom;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetHeadroom;
 asm jmp TIDirectSoundStream.SetHeadroom; end;
 
-procedure XTL_EmuCDirectSoundStream_SetOutputBuffer;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetOutputBuffer;
 asm jmp TIDirectSoundStream.SetOutputBuffer; end;
 
-procedure XTL_EmuCDirectSoundStream_SetMixBins;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetMixBins;
 asm jmp TIDirectSoundStream.SetMixBins; end;
 
-procedure XTL_EmuCDirectSoundStream_SetMixBinVolumes;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetMixBinVolumes;
 asm jmp TIDirectSoundStream.SetMixBinVolumes; end;
 
-procedure XTL_EmuCDirectSoundStream_SetAllParameters;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetAllParameters;
 asm jmp TIDirectSoundStream.SetAllParameters; end;
 
-procedure XTL_EmuCDirectSoundStream_SetConeAngles;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetConeAngles;
 asm jmp TIDirectSoundStream.SetConeAngles; end;
 
-procedure XTL_EmuCDirectSoundStream_SetConeOrientation;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetConeOrientation;
 asm jmp TIDirectSoundStream.SetConeOrientation; end;
 
-procedure XTL_EmuCDirectSoundStream_SetConeOutsideVolume;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetConeOutsideVolume;
 asm jmp TIDirectSoundStream.SetConeOutsideVolume; end;
 
-procedure XTL_EmuCDirectSoundStream_SetMaxDistance;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetMaxDistance;
 asm jmp TIDirectSoundStream.SetMaxDistance; end;
 
-procedure XTL_EmuCDirectSoundStream_SetMinDistance;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetMinDistance;
 asm jmp TIDirectSoundStream.SetMinDistance; end;
 
-procedure XTL_EmuCDirectSoundStream_SetMode;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetMode;
 asm jmp TIDirectSoundStream.SetMode; end;
 
-procedure XTL_EmuCDirectSoundStream_SetPosition;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetPosition;
 asm jmp TIDirectSoundStream.SetPosition; end;
 
-procedure XTL_EmuCDirectSoundStream_SetVelocity;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetVelocity;
 asm jmp TIDirectSoundStream.SetVelocity; end;
 
-procedure XTL_EmuCDirectSoundStream_SetDistanceFactor;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetDistanceFactor;
 asm jmp TIDirectSoundStream.SetDistanceFactor; end;
 
-procedure XTL_EmuCDirectSoundStream_SetDopplerFactor;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetDopplerFactor;
 asm jmp TIDirectSoundStream.SetDopplerFactor; end;
 
-procedure XTL_EmuCDirectSoundStream_SetRolloffFactor;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetRolloffFactor;
 asm jmp TIDirectSoundStream.SetRolloffFactor; end;
 
-procedure XTL_EmuCDirectSoundStream_SetRolloffCurve;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetRolloffCurve;
 asm jmp TIDirectSoundStream.SetRolloffCurve; end;
 
-procedure XTL_EmuCDirectSoundStream_SetI3DL2Source;
+procedure XTL_EmuDirectSound_CDirectSoundStream_SetI3DL2Source;
 asm jmp TIDirectSoundStream.SetI3DL2Source; end;
 
-procedure XTL_EmuCDirectSoundStream_Pause;
+procedure XTL_EmuDirectSound_CDirectSoundStream_Pause;
 asm jmp TIDirectSoundStream.Pause; end;
 
-procedure XTL_EmuCDirectSoundStream_PauseEx;
+procedure XTL_EmuDirectSound_CDirectSoundStream_PauseEx;
 asm jmp TIDirectSoundStream.PauseEx; end;
 
-procedure XTL_EmuCDirectSoundStream_Process;
+procedure XTL_EmuDirectSound_CDirectSoundStream_Process;
 asm jmp TIDirectSoundStream.Process; end;
 
-procedure XTL_EmuCDirectSoundStream_Release;
+procedure XTL_EmuDirectSound_CDirectSoundStream_Release;
 asm jmp TIDirectSoundStream.Release; end;
 
-procedure XTL_EmuCDirectSoundStream_GetStatus;
+procedure XTL_EmuDirectSound_CDirectSoundStream_GetStatus;
 asm jmp TIDirectSoundStream.GetStatus; end;
 
-procedure XTL_EmuCDirectSoundStream_GetInfo;
+procedure XTL_EmuDirectSound_CDirectSoundStream_GetInfo;
 asm jmp TIDirectSoundStream.GetInfo; end;
 
-procedure XTL_EmuCDirectSoundStream_Flush;
+procedure XTL_EmuDirectSound_CDirectSoundStream_Flush;
 asm jmp TIDirectSoundStream.Flush; end;
 
-procedure XTL_EmuCDirectSoundStream_FlushEx;
+procedure XTL_EmuDirectSound_CDirectSoundStream_FlushEx;
 asm jmp TIDirectSoundStream.FlushEx; end;
 
-procedure XTL_EmuCDirectSoundStream_GetVoiceProperties;
+procedure XTL_EmuDirectSound_CDirectSoundStream_GetVoiceProperties;
 asm jmp TIDirectSoundStream.GetVoiceProperties; end;
 
 //
@@ -4798,117 +4798,117 @@ end;
 
 exports // Keep this list sorted, with newlines between patch groups :
 
-  XTL_EmuCDirectSound_AddRef name PatchPrefix + 'DirectSound.CDirectSound.AddRef',
-  XTL_EmuCDirectSound_CommitDeferredSettings name PatchPrefix + 'DirectSound.CDirectSound.CommitDeferredSettings@4',
-  XTL_EmuCDirectSound_CommitEffectData name PatchPrefix + 'DirectSound.CDirectSound.CommitEffectData',
-  XTL_EmuCDirectSound_Compact name PatchPrefix + 'DirectSound.CDirectSound.Compact',
-  XTL_EmuCDirectSound_CreateSoundBuffer name PatchPrefix + 'DirectSound.CDirectSound.CreateSoundBuffer',
-  XTL_EmuCDirectSound_CreateSoundStream name PatchPrefix + 'DirectSound.CDirectSound.CreateSoundStream',
-  XTL_EmuCDirectSound_DownloadEffectsImage name PatchPrefix + 'DirectSound.CDirectSound.DownloadEffectsImage',
-  XTL_EmuCDirectSound_EnableHeadphones name PatchPrefix + 'DirectSound.CDirectSound.EnableHeadphones',
-  XTL_EmuCDirectSound_GetCaps name PatchPrefix + 'DirectSound.CDirectSound.GetCaps',
-  XTL_EmuCDirectSound_GetEffectData name PatchPrefix + 'DirectSound.CDirectSound.GetEffectData',
-  XTL_EmuCDirectSound_GetOutputLevels name PatchPrefix + 'DirectSound.CDirectSound.GetOutputLevels',
-  XTL_EmuCDirectSound_GetSpeakerConfig name PatchPrefix + 'DirectSound.CDirectSound.GetSpeakerConfig',
-  XTL_EmuCDirectSound_GetTime name PatchPrefix + 'DirectSound.CDirectSound.GetTime',
-//  XTL_EmuCDirectSound_QueryInterface name PatchPrefix + 'DirectSound.CDirectSound.QueryInterface',
-//  XTL_EmuCDirectSound_QueryInterfaceC name PatchPrefix + 'DirectSound.CDirectSound.QueryInterfaceC',
-  XTL_EmuCDirectSound_Release name PatchPrefix + 'DirectSound.CDirectSound.Release',
-  XTL_EmuCDirectSound_SetAllParameters name PatchPrefix + 'DirectSound.CDirectSound.SetAllParameters',
-  XTL_EmuCDirectSound_SetCooperativeLevel name PatchPrefix + 'DirectSound.CDirectSound.SetCooperativeLevel',
-  XTL_EmuCDirectSound_SetDistanceFactor name PatchPrefix + 'DirectSound.CDirectSound.SetDistanceFactor',
-  XTL_EmuCDirectSound_SetDopplerFactor name PatchPrefix + 'DirectSound.CDirectSound.SetDopplerFactor',
-  XTL_EmuCDirectSound_SetEffectData name PatchPrefix + 'DirectSound.CDirectSound.SetEffectData',
-  XTL_EmuCDirectSound_SetI3DL2Listener name PatchPrefix + 'DirectSound.CDirectSound.SetI3DL2Listener',
-  XTL_EmuCDirectSound_SetMixBinHeadroom name PatchPrefix + 'DirectSound.CDirectSound.SetMixBinHeadroom',
-  XTL_EmuCDirectSound_SetOrientation name PatchPrefix + 'DirectSound.CDirectSound.SetOrientation',
-  XTL_EmuCDirectSound_SetPosition name PatchPrefix + 'DirectSound.CDirectSound.SetPosition',
-  XTL_EmuCDirectSound_SetRolloffFactor name PatchPrefix + 'DirectSound.CDirectSound.SetRolloffFactor',
-  XTL_EmuCDirectSound_SetVelocity name PatchPrefix + 'DirectSound.CDirectSound.SetVelocity',
-  XTL_EmuCDirectSound_SynchPlayback name PatchPrefix + 'DirectSound.CDirectSound.SynchPlayback',
+  XTL_EmuDirectSound_CDirectSound_AddRef,
+  XTL_EmuDirectSound_CDirectSound_CommitDeferredSettings,
+  XTL_EmuDirectSound_CDirectSound_CommitEffectData,
+  XTL_EmuDirectSound_CDirectSound_Compact,
+  XTL_EmuDirectSound_CDirectSound_CreateSoundBuffer,
+  XTL_EmuDirectSound_CDirectSound_CreateSoundStream,
+  XTL_EmuDirectSound_CDirectSound_DownloadEffectsImage,
+  XTL_EmuDirectSound_CDirectSound_EnableHeadphones,
+  XTL_EmuDirectSound_CDirectSound_GetCaps,
+  XTL_EmuDirectSound_CDirectSound_GetEffectData,
+  XTL_EmuDirectSound_CDirectSound_GetOutputLevels,
+  XTL_EmuDirectSound_CDirectSound_GetSpeakerConfig,
+  XTL_EmuDirectSound_CDirectSound_GetTime,
+//  XTL_EmuDirectSound_CDirectSound_QueryInterface,
+//  XTL_EmuDirectSound_CDirectSound_QueryInterfaceC,
+  XTL_EmuDirectSound_CDirectSound_Release,
+  XTL_EmuDirectSound_CDirectSound_SetAllParameters,
+  XTL_EmuDirectSound_CDirectSound_SetCooperativeLevel,
+  XTL_EmuDirectSound_CDirectSound_SetDistanceFactor,
+  XTL_EmuDirectSound_CDirectSound_SetDopplerFactor,
+  XTL_EmuDirectSound_CDirectSound_SetEffectData,
+  XTL_EmuDirectSound_CDirectSound_SetI3DL2Listener,
+  XTL_EmuDirectSound_CDirectSound_SetMixBinHeadroom,
+  XTL_EmuDirectSound_CDirectSound_SetOrientation,
+  XTL_EmuDirectSound_CDirectSound_SetPosition,
+  XTL_EmuDirectSound_CDirectSound_SetRolloffFactor,
+  XTL_EmuDirectSound_CDirectSound_SetVelocity,
+  XTL_EmuDirectSound_CDirectSound_SynchPlayback,
 
-  XTL_EmuCDirectSoundBuffer_GetCurrentPosition name PatchPrefix + 'DirectSound.CDirectSoundBuffer.GetCurrentPosition',
-  XTL_EmuCDirectSoundBuffer_GetStatus name PatchPrefix + 'DirectSound.CDirectSoundBuffer.GetStatus',
-  XTL_EmuCDirectSoundBuffer_GetVoiceProperties name PatchPrefix + 'DirectSound.CDirectSoundBuffer.GetVoiceProperties',
-  XTL_EmuCDirectSoundBuffer_Lock name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Lock',
-  XTL_EmuCDirectSoundBuffer_Pause name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Pause',
-  XTL_EmuCDirectSoundBuffer_PauseEx name PatchPrefix + 'DirectSound.CDirectSoundBuffer.PauseEx',
-  XTL_EmuCDirectSoundBuffer_Play name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Play',
-  XTL_EmuCDirectSoundBuffer_PlayEx name PatchPrefix + 'DirectSound.CDirectSoundBuffer.PlayEx',
-  XTL_EmuCDirectSoundBuffer_Release name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Release',
-  XTL_EmuCDirectSoundBuffer_Restore name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Restore',
-  XTL_EmuCDirectSoundBuffer_SetAllParameters name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetAllParameters',
-  XTL_EmuCDirectSoundBuffer_SetBufferData name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetBufferData',
-  XTL_EmuCDirectSoundBuffer_SetConeAngles name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetConeAngles',
-  XTL_EmuCDirectSoundBuffer_SetConeOrientation name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetConeOrientation',
-  XTL_EmuCDirectSoundBuffer_SetConeOutsideVolume name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetConeOutsideVolume',
-  XTL_EmuCDirectSoundBuffer_SetCurrentPosition name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetCurrentPosition',
-  XTL_EmuCDirectSoundBuffer_SetDistanceFactor name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetDistanceFactor',
-  XTL_EmuCDirectSoundBuffer_SetDopplerFactor name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetDopplerFactor',
-  XTL_EmuCDirectSoundBuffer_SetEG name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetEG',
-  XTL_EmuCDirectSoundBuffer_SetFilter name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetFilter',
-  XTL_EmuCDirectSoundBuffer_SetFormat name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetFormat',
-  XTL_EmuCDirectSoundBuffer_SetFrequency name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetFrequency',
-  XTL_EmuCDirectSoundBuffer_SetHeadroom name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetHeadroom',
-  XTL_EmuCDirectSoundBuffer_SetI3DL2Source name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetI3DL2Source',
-  XTL_EmuCDirectSoundBuffer_SetLFO name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetLFO',
-  XTL_EmuCDirectSoundBuffer_SetLoopRegion name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetLoopRegion',
-  XTL_EmuCDirectSoundBuffer_SetMaxDistance name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetMaxDistance',
-  XTL_EmuCDirectSoundBuffer_SetMinDistance name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetMinDistance',
-  XTL_EmuCDirectSoundBuffer_SetMixBins name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetMixBins',
-  XTL_EmuCDirectSoundBuffer_SetMixBinVolumes name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetMixBinVolumes',
-  XTL_EmuCDirectSoundBuffer_SetMode name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetMode',
-  XTL_EmuCDirectSoundBuffer_SetNotificationPositions name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetNotificationPositions',
-  XTL_EmuCDirectSoundBuffer_SetOutputBuffer name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetOutputBuffer',
-  XTL_EmuCDirectSoundBuffer_SetPitch name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetPitch',
-  XTL_EmuCDirectSoundBuffer_SetPlayRegion name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetPlayRegion',
-  XTL_EmuCDirectSoundBuffer_SetPosition name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetPosition',
-  XTL_EmuCDirectSoundBuffer_SetRolloffCurve name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetRolloffCurve',
-  XTL_EmuCDirectSoundBuffer_SetRolloffFactor name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetRolloffFactor',
-  XTL_EmuCDirectSoundBuffer_SetVelocity name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetVelocity',
-  XTL_EmuCDirectSoundBuffer_SetVolume name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetVolume',
-  XTL_EmuCDirectSoundBuffer_Stop name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Stop',
-  XTL_EmuCDirectSoundBuffer_StopEx name PatchPrefix + 'DirectSound.CDirectSoundBuffer.StopEx',
-  XTL_EmuCDirectSoundBuffer_Unlock name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Unlock',
+  XTL_EmuDirectSound_CDirectSoundBuffer_GetCurrentPosition,
+  XTL_EmuDirectSound_CDirectSoundBuffer_GetStatus,
+  XTL_EmuDirectSound_CDirectSoundBuffer_GetVoiceProperties,
+  XTL_EmuDirectSound_CDirectSoundBuffer_Lock,
+  XTL_EmuDirectSound_CDirectSoundBuffer_Pause,
+  XTL_EmuDirectSound_CDirectSoundBuffer_PauseEx,
+  XTL_EmuDirectSound_CDirectSoundBuffer_Play,
+  XTL_EmuDirectSound_CDirectSoundBuffer_PlayEx,
+  XTL_EmuDirectSound_CDirectSoundBuffer_Release,
+  XTL_EmuDirectSound_CDirectSoundBuffer_Restore,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetAllParameters,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetBufferData,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetConeAngles,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetConeOrientation,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetConeOutsideVolume,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetCurrentPosition,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetDistanceFactor,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetDopplerFactor,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetEG,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetFilter,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetFormat,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetFrequency,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetHeadroom,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetI3DL2Source,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetLFO,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetLoopRegion,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetMaxDistance,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetMinDistance,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetMixBins,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetMixBinVolumes,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetMode,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetNotificationPositions,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetOutputBuffer,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetPitch,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetPlayRegion,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetPosition,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetRolloffCurve,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetRolloffFactor,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetVelocity,
+  XTL_EmuDirectSound_CDirectSoundBuffer_SetVolume,
+  XTL_EmuDirectSound_CDirectSoundBuffer_Stop,
+  XTL_EmuDirectSound_CDirectSoundBuffer_StopEx,
+  XTL_EmuDirectSound_CDirectSoundBuffer_Unlock,
 
-  XTL_EmuCDirectSoundStream_AddRef name PatchPrefix + 'DirectSound.CDirectSoundStream.AddRef',
-  XTL_EmuCDirectSoundStream_Discontinuity name PatchPrefix + 'DirectSound.CDirectSoundStream.Discontinuity',
-  XTL_EmuCDirectSoundStream_Flush name PatchPrefix + 'DirectSound.CDirectSoundStream.Flush',
-  XTL_EmuCDirectSoundStream_FlushEx name PatchPrefix + 'DirectSound.CDirectSoundStream.FlushEx',
-  XTL_EmuCDirectSoundStream_GetInfo name PatchPrefix + 'DirectSound.CDirectSoundStream.GetInfo',
-  XTL_EmuCDirectSoundStream_GetStatus name PatchPrefix + 'DirectSound.CDirectSoundStream.GetStatus',
-  XTL_EmuCDirectSoundStream_GetVoiceProperties name PatchPrefix + 'DirectSound.CDirectSoundStream.GetVoiceProperties',
-//  XTL_EmuCDirectSoundStream_Initialize  name PatchPrefix + 'DirectSound.CDirectSoundStream.Initialize', // Not yet implemented
-  XTL_EmuCDirectSoundStream_Pause name PatchPrefix + 'DirectSound.CDirectSoundStream.Pause',
-  XTL_EmuCDirectSoundStream_PauseEx name PatchPrefix + 'DirectSound.CDirectSoundStream.PauseEx',
-  XTL_EmuCDirectSoundStream_Process name PatchPrefix + 'DirectSound.CDirectSoundStream.Process',
-  XTL_EmuCDirectSoundStream_Release name PatchPrefix + 'DirectSound.CDirectSoundStream.Release',
-  XTL_EmuCDirectSoundStream_SetAllParameters name PatchPrefix + 'DirectSound.CDirectSoundStream.SetAllParameters',
-  XTL_EmuCDirectSoundStream_SetConeAngles name PatchPrefix + 'DirectSound.CDirectSoundStream.SetConeAngles',
-  XTL_EmuCDirectSoundStream_SetConeOrientation name PatchPrefix + 'DirectSound.CDirectSoundStream.SetConeOrientation',
-  XTL_EmuCDirectSoundStream_SetConeOutsideVolume name PatchPrefix + 'DirectSound.CDirectSoundStream.SetConeOutsideVolume',
-  XTL_EmuCDirectSoundStream_SetDistanceFactor name PatchPrefix + 'DirectSound.CDirectSoundStream.SetDistanceFactor',
-  XTL_EmuCDirectSoundStream_SetDopplerFactor name PatchPrefix + 'DirectSound.CDirectSoundStream.SetDopplerFactor',
-  XTL_EmuCDirectSoundStream_SetEG name PatchPrefix + 'DirectSound.CDirectSoundStream.SetEG',
-  XTL_EmuCDirectSoundStream_SetFilter name PatchPrefix + 'DirectSound.CDirectSoundStream.SetFilter',
-  XTL_EmuCDirectSoundStream_SetFormat name PatchPrefix + 'DirectSound.CDirectSoundStream.SetFormat',
-  XTL_EmuCDirectSoundStream_SetFrequency name PatchPrefix + 'DirectSound.CDirectSoundStream.SetFrequency',
-  XTL_EmuCDirectSoundStream_SetHeadroom name PatchPrefix + 'DirectSound.CDirectSoundStream.SetHeadroom',
-  XTL_EmuCDirectSoundStream_SetI3DL2Source name PatchPrefix + 'DirectSound.CDirectSoundStream.SetI3DL2Source',
-  XTL_EmuCDirectSoundStream_SetLFO name PatchPrefix + 'DirectSound.CDirectSoundStream.SetLFO',
-  XTL_EmuCDirectSoundStream_SetMaxDistance name PatchPrefix + 'DirectSound.CDirectSoundStream.SetMaxDistance',
-  XTL_EmuCDirectSoundStream_SetMinDistance name PatchPrefix + 'DirectSound.CDirectSoundStream.SetMinDistance',
-  XTL_EmuCDirectSoundStream_SetMixBins name PatchPrefix + 'DirectSound.CDirectSoundStream.SetMixBins',
-  XTL_EmuCDirectSoundStream_SetMixBinVolumes name PatchPrefix + 'DirectSound.CDirectSoundStream.SetMixBinVolumes',
-  XTL_EmuCDirectSoundStream_SetMode name PatchPrefix + 'DirectSound.CDirectSoundStream.SetMode',
-  XTL_EmuCDirectSoundStream_SetOutputBuffer name PatchPrefix + 'DirectSound.CDirectSoundStream.SetOutputBuffer',
-  XTL_EmuCDirectSoundStream_SetPitch name PatchPrefix + 'DirectSound.CDirectSoundStream.SetPitch',
-  XTL_EmuCDirectSoundStream_SetPosition name PatchPrefix + 'DirectSound.CDirectSoundStream.SetPosition',
-  XTL_EmuCDirectSoundStream_SetRolloffCurve name PatchPrefix + 'DirectSound.CDirectSoundStream.SetRolloffCurve',
-  XTL_EmuCDirectSoundStream_SetRolloffFactor name PatchPrefix + 'DirectSound.CDirectSoundStream.SetRolloffFactor',
-  XTL_EmuCDirectSoundStream_SetVelocity name PatchPrefix + 'DirectSound.CDirectSoundStream.SetVelocity',
-  XTL_EmuCDirectSoundStream_SetVolume name PatchPrefix + 'DirectSound.CDirectSoundStream.SetVolume',
-  XTL_EmuCDirectSoundStream_SetVolume name PatchPrefix + '?SetVolume@CDirectSoundVoice@DirectSound@@QAGJJ@Z', // Cxbx Smashin Drive patches this
+  XTL_EmuDirectSound_CDirectSoundStream_AddRef,
+  XTL_EmuDirectSound_CDirectSoundStream_Discontinuity,
+  XTL_EmuDirectSound_CDirectSoundStream_Flush,
+  XTL_EmuDirectSound_CDirectSoundStream_FlushEx,
+  XTL_EmuDirectSound_CDirectSoundStream_GetInfo,
+  XTL_EmuDirectSound_CDirectSoundStream_GetStatus,
+  XTL_EmuDirectSound_CDirectSoundStream_GetVoiceProperties,
+//  XTL_EmuDirectSound_CDirectSoundStream_Initialize ,
+  XTL_EmuDirectSound_CDirectSoundStream_Pause,
+  XTL_EmuDirectSound_CDirectSoundStream_PauseEx,
+  XTL_EmuDirectSound_CDirectSoundStream_Process,
+  XTL_EmuDirectSound_CDirectSoundStream_Release,
+  XTL_EmuDirectSound_CDirectSoundStream_SetAllParameters,
+  XTL_EmuDirectSound_CDirectSoundStream_SetConeAngles,
+  XTL_EmuDirectSound_CDirectSoundStream_SetConeOrientation,
+  XTL_EmuDirectSound_CDirectSoundStream_SetConeOutsideVolume,
+  XTL_EmuDirectSound_CDirectSoundStream_SetDistanceFactor,
+  XTL_EmuDirectSound_CDirectSoundStream_SetDopplerFactor,
+  XTL_EmuDirectSound_CDirectSoundStream_SetEG,
+  XTL_EmuDirectSound_CDirectSoundStream_SetFilter,
+  XTL_EmuDirectSound_CDirectSoundStream_SetFormat,
+  XTL_EmuDirectSound_CDirectSoundStream_SetFrequency,
+  XTL_EmuDirectSound_CDirectSoundStream_SetHeadroom,
+  XTL_EmuDirectSound_CDirectSoundStream_SetI3DL2Source,
+  XTL_EmuDirectSound_CDirectSoundStream_SetLFO,
+  XTL_EmuDirectSound_CDirectSoundStream_SetMaxDistance,
+  XTL_EmuDirectSound_CDirectSoundStream_SetMinDistance,
+  XTL_EmuDirectSound_CDirectSoundStream_SetMixBins,
+  XTL_EmuDirectSound_CDirectSoundStream_SetMixBinVolumes,
+  XTL_EmuDirectSound_CDirectSoundStream_SetMode,
+  XTL_EmuDirectSound_CDirectSoundStream_SetOutputBuffer,
+  XTL_EmuDirectSound_CDirectSoundStream_SetPitch,
+  XTL_EmuDirectSound_CDirectSoundStream_SetPosition,
+  XTL_EmuDirectSound_CDirectSoundStream_SetRolloffCurve,
+  XTL_EmuDirectSound_CDirectSoundStream_SetRolloffFactor,
+  XTL_EmuDirectSound_CDirectSoundStream_SetVelocity,
+  XTL_EmuDirectSound_CDirectSoundStream_SetVolume,
+//  XTL_EmuDirectSound_CDirectSoundStream_SetVolume name PatchPrefix + '?SetVolume@CDirectSoundVoice@DirectSound@@QAGJJ@Z', // Cxbx Smashin Drive patches this
 
   XTL_EmuDirectSoundCreate,
   XTL_EmuDirectSoundCreateBuffer,
