@@ -921,6 +921,18 @@ begin
 //  or _Test($000D8A30, '@OHCD_ScheduleRemoveEndpointPeriodic@8') // Also conflicting
 //  or _Test($000DA7ED, '@OHCD_fIsochCloseEndpoint@8') // Cause - 2 versions have different references
 
+  // Daphne (linked to XDK 5558);
+//  or _Test($0009A690, '_Direct3D_CreateDevice@24');
+//  or _Test($000AAD81, '?AddRef@CDirectSound@DirectSound@@UAGKXZ');
+//  or _Test($000AAE63, '?Stop@CDirectSoundBuffer@DirectSound@@QAGJXZ');
+//  or _Test($000AAEB2, '?GetStatus@CDirectSoundBuffer@DirectSound@@QAGJPAK@Z');
+//  or _Test($000AAF03, '?GetCurrentPosition@CDirectSoundBuffer@DirectSound@@QAGJPAK0@Z');
+//  or _Test($000AAF58, '?Lock@CDirectSoundBuffer@DirectSound@@QAGJKKPAPAXPAK01K@Z');
+//  or _Test($000AB3C1, '_IDirectSoundBuffer_SetCurrentPosition@8');
+//  or _Test($000AB985, '?SetBufferData@CDirectSoundBuffer@DirectSound@@QAGJPAXK@Z');
+//  or _Test($000ABC73, '?SetFormat@CDirectSoundBuffer@DirectSound@@QAGJPBUtWAVEFORMATEX@@@Z');
+//  or _Test($000AC036, '?CreateSoundBuffer@CDirectSound@DirectSound@@QAGJPBU_DSBUFFERDESC@@PAPAUIDirectSoundBuffer@@PAUIUnknown@@@Z');
+
 end; // _IsTestCase
 
 ///
@@ -1455,6 +1467,7 @@ begin
         CurrentSymbol.Address := TCodePointer(EntryPoint); end
       else if Pos('XapiInitProcess', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 90
       else if Pos('_D3DDevice_SetRenderState_', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 80
+      else if Pos('CreateDevice', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 78
       else if Pos('_D3DDevice_', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 75
       else if Pos('D3D', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 70
 //      else if Pos('Sound', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 60
@@ -1608,7 +1621,7 @@ begin
   MySymbols.Count := FSymbolCount;
 
   // Sort that list
-  MySymbols.Sort(@_Compare_Symbol_Address);
+  MySymbols.Sort(@  _Compare_Symbol_Address);
 end; // PutSymbolsInFinalList
 
 procedure TSymbolManager.PrintSymbolList;
