@@ -625,7 +625,9 @@ begin
 //    DxbxKrnlCleanup(CallerName + ': pDesc->Type > 7');
 
   pDesc.Usage := SurfaceDesc.Usage;
+{$IFNDEF DXBX_USE_D3D9}
   pDesc.Size := GetSurfaceSize(@SurfaceDesc);
+{$ENDIF}
   pDesc.MultiSampleType := EmuXB2PC_D3DMULTISAMPLE_TYPE(SurfaceDesc.MultiSampleType);
   pDesc.Width  := SurfaceDesc.Width;
   pDesc.Height := SurfaceDesc.Height;
@@ -2137,6 +2139,28 @@ begin
   end;
 
   Result := D3D_OK;
+end;
+
+function XTL_EmuD3DDevice_GetBackBufferScale
+(
+  px: PFLOAT;
+  py: PFLOAT
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_GetBackBufferScale').
+      _(px, 'px').
+      _(py, 'py').
+    LogEnd();
+
+  EmuWarning('GetBackBufferScale ignored');
+
+  Result := D3D_OK;
+
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuD3DDevice_SetBackBufferScale
@@ -6433,8 +6457,6 @@ begin
       _(Flags, 'Flags').
     LogEnd();
 
-//  hRet := 0; // Dxbx : Prevent 'not initialized' compiler warning
-
   if MayLog(lfUnit or lfDebug) then
     DbgPrintf('EmuD3D8 : EmuIDirect3DTexture_LockRect (pThis->Texture = 0x%8.8X)', [pThis.Emu.Texture]);
 
@@ -7103,13 +7125,13 @@ begin
 {$IFDEF DXBX_USE_D3D9}
   // DXBX: Own implementation of BlockUntilIdle
   // create an event and spin wait on it
-  pDevice.CreateQuery(D3DQUERYTYPE_EVENT, @pQuery);
+  g_pD3DDevice.CreateQuery(D3DQUERYTYPE_EVENT, @pQuery);
   pQuery.Issue(D3DISSUE_END);
   while (pQuery.GetData(@data, sizeof(data), D3DGETDATA_FLUSH) = S_FALSE) do
   begin
     // busy wait
   end;
-  pQuery.Release();
+  pQuery._Release();
 {$ELSE}
   Unimplemented('EmuD3DDevice_BlockUntilIdle');
 {$ENDIF}
@@ -8960,8 +8982,7 @@ begin
     LogEnd();
 
   // Marked out by Cxbx
-  //g_pD3DDevice.SetPaletteEntries(0, (PALETTEENTRY*)(*pPalette.Data);
-
+//  g_pD3DDevice.SetPaletteEntries(0, PPALETTEENTRY(@pPalette.Data));
   EmuWarning('Not setting palette');
 
   EmuSwapFS(fsXbox);
@@ -9080,6 +9101,7 @@ begin
     LogEnd();
 
   Unimplemented('XTL_EmuD3DPalette_GetSize');
+
 
   //return D3DPalette_GetSize(pThis);
   Result := D3DPALETTE_32;
@@ -11415,6 +11437,7 @@ exports
   XTL_EmuD3DDevice_FlushVertexCache, // ??
   XTL_EmuD3DDevice_GetBackBuffer,
   XTL_EmuD3DDevice_GetBackBuffer2,
+  XTL_EmuD3DDevice_GetBackBufferScale,
   XTL_EmuD3DDevice_GetBackMaterial,
   XTL_EmuD3DDevice_GetCreationParameters,
   XTL_EmuD3DDevice_GetDepthClipPlanes,
