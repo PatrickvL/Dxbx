@@ -9593,11 +9593,16 @@ begin
       _(pDesc, 'pDesc').
     LogEnd();
 
+  EmuVerifyResourceIsRegistered(pThis);
   Result := IDirect3DTexture(pThis.Emu.Texture).GetLevelDesc(Level, {out}SurfaceDesc);
 
-  if SUCCEEDED(Result) then
+  if (FAILED(Result)) then
+    EmuWarning('EmuD3DTexture_GetLevelDesc Failed!')
+  else
+  begin
     // rearrange into xbox format (remove D3DPOOL)
     EmuPC2XB_D3DSURFACE_DESC(SurfaceDesc, pDesc, 'EmuIDirect3DSurface_GetDesc');
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10705,16 +10710,15 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3DCubeTexture_GetLevelDesc
+function XTL_EmuD3DCubeTexture_GetLevelDesc
 (
   pThis: PX_D3DCubeTexture;
   Level: UINT;
   pDesc: PX_D3DSURFACE_DESC
-) stdcall;
+); HRESULT; stdcall;
 // Branch:Dxbx  Translator:Shadow_Tj  Done:0
 var
   SurfaceDesc: D3DSURFACE_DESC;
-  hRet: HRESULT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -10725,11 +10729,16 @@ begin
       _(pDesc, 'pDesc').
     LogEnd();
 
-  hRet := IDirect3DCubeTexture(pThis.Emu.CubeTexture).GetLevelDesc(Level, {out}SurfaceDesc);
+  EmuVerifyResourceIsRegistered(pThis);
+  Result := IDirect3DCubeTexture(pThis.Emu.CubeTexture).GetLevelDesc(Level, {out}SurfaceDesc);
 
-  if SUCCEEDED(hRet) then
+  if (FAILED(Result)) then
+    EmuWarning('EmuD3DCubeTexture_GetLevelDesc Failed!')
+  else
+  begin
     // rearrange into xbox format (remove D3DPOOL)
     EmuPC2XB_D3DSURFACE_DESC(SurfaceDesc, pDesc, 'D3DCubeTexture_GetLevelDesc');
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10781,7 +10790,7 @@ begin
   Result := IDirect3DVolumeTexture(pThis.Emu.VolumeTexture).GetLevelDesc(Level, {out}VolumeDesc);
 
   if (FAILED(Result)) then
-    EmuWarning('GetLevelDesc Failed!')
+    EmuWarning('EmuD3DVolumeTexture_GetLevelDesc Failed!')
   else
     // rearrange into xbox format (remove D3DPOOL)
     EmuPC2XB_D3DVOLUME_DESC(VolumeDesc, pDesc, 'D3DVolume_GetDesc');
