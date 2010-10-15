@@ -266,6 +266,9 @@ type
     function _(const aValue: X_D3DPOOL; const aName: string = ''): PLogStack; overload;
     function _(const aValue: X_D3DTRANSFORMSTATETYPE; const aName: string = ''): PLogStack; overload;
     function _(const aValue: X_D3DPRIMITIVETYPE; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: X_D3DFORMAT; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: D3DDEVTYPE; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: X_NV2AMETHOD; const aName: string = ''): PLogStack; overload;
   end;
 
 function RLogStackHelper._(const aValue: X_D3DPOOL; const aName: string = ''): PLogStack;
@@ -320,6 +323,110 @@ begin
     X_D3DPT_INVALID: SetValue(UIntPtr(aValue), 'X_D3DPT_INVALID');
   else SetValue(UIntPtr(aValue));
   end;
+end;
+
+function RLogStackHelper._(const aValue: X_D3DFORMAT; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'X_D3DFORMAT');
+  case aValue of
+    // Swizzled Formats
+    X_D3DFMT_L8: SetValue(UIntPtr(aValue), 'X_D3DFMT_L8');
+    X_D3DFMT_AL8: SetValue(UIntPtr(aValue), 'X_D3DFMT_AL8');
+    X_D3DFMT_A1R5G5B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_A1R5G5B5');
+    X_D3DFMT_X1R5G5B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_X1R5G5B5');
+    X_D3DFMT_A4R4G4B4: SetValue(UIntPtr(aValue), 'X_D3DFMT_A4R4G4B4');
+    X_D3DFMT_R5G6B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_R5G6B5');
+    X_D3DFMT_A8R8G8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_A8R8G8B8');
+    X_D3DFMT_X8R8G8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_X8R8G8B8');
+//    X_D3DFMT_X8L8V8U8 = $07; // Alias
+    X_D3DFMT_P8: SetValue(UIntPtr(aValue), 'X_D3DFMT_P8');
+    X_D3DFMT_A8: SetValue(UIntPtr(aValue), 'X_D3DFMT_A8');
+    X_D3DFMT_A8L8: SetValue(UIntPtr(aValue), 'X_D3DFMT_A8L8');
+    X_D3DFMT_R6G5B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_R6G5B5');
+//    X_D3DFMT_L6V5U5 = $27; // Alias
+    X_D3DFMT_G8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_G8B8');
+//    X_D3DFMT_V8U8 = $28; // Alias
+    X_D3DFMT_R8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_R8B8');
+    X_D3DFMT_D24S8: SetValue(UIntPtr(aValue), 'X_D3DFMT_D24S8');
+    X_D3DFMT_F24S8: SetValue(UIntPtr(aValue), 'X_D3DFMT_F24S8');
+    X_D3DFMT_D16: SetValue(UIntPtr(aValue), 'X_D3DFMT_D16');
+//    X_D3DFMT_D16_LOCKABLE = $2C; // Alias
+    X_D3DFMT_F16: SetValue(UIntPtr(aValue), 'X_D3DFMT_F16');
+    X_D3DFMT_L16: SetValue(UIntPtr(aValue), 'X_D3DFMT_L16');
+    X_D3DFMT_V16U16: SetValue(UIntPtr(aValue), 'X_D3DFMT_V16U16');
+    X_D3DFMT_R5G5B5A1: SetValue(UIntPtr(aValue), 'X_D3DFMT_R5G5B5A1');
+    X_D3DFMT_R4G4B4A4: SetValue(UIntPtr(aValue), 'X_D3DFMT_R4G4B4A4');
+    X_D3DFMT_A8B8G8R8: SetValue(UIntPtr(aValue), 'X_D3DFMT_A8B8G8R8');
+//    X_D3DFMT_Q8W8V8U8 = $3A; // Alias
+    X_D3DFMT_B8G8R8A8: SetValue(UIntPtr(aValue), 'X_D3DFMT_B8G8R8A8');
+    X_D3DFMT_R8G8B8A8: SetValue(UIntPtr(aValue), 'X_D3DFMT_R8G8B8A8');
+
+    // YUV Formats
+    X_D3DFMT_YUY2: SetValue(UIntPtr(aValue), 'X_D3DFMT_YUY2');
+    X_D3DFMT_UYVY: SetValue(UIntPtr(aValue), 'X_D3DFMT_UYVY');
+    // Compressed Formats
+    X_D3DFMT_DXT1: SetValue(UIntPtr(aValue), 'X_D3DFMT_DXT1');
+    X_D3DFMT_DXT2: SetValue(UIntPtr(aValue), 'X_D3DFMT_DXT2');
+//    X_D3DFMT_DXT3 = $0E; // linear alpha
+    X_D3DFMT_DXT4: SetValue(UIntPtr(aValue), 'X_D3DFMT_DXT4');
+//    X_D3DFMT_DXT5 = $0F; // interpolated alpha
+
+    // Linear Formats
+    X_D3DFMT_LIN_A1R5G5B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_A1R5G5B5');
+    X_D3DFMT_LIN_R5G6B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_R5G6B5');
+    X_D3DFMT_LIN_A8R8G8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_A8R8G8B8');
+    X_D3DFMT_LIN_L8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_L8');
+    X_D3DFMT_LIN_R8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_R8B8');
+    X_D3DFMT_LIN_G8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_G8B8');
+//    X_D3DFMT_LIN_V8U8 = $17; // Alias
+    X_D3DFMT_LIN_AL8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_AL8');
+    X_D3DFMT_LIN_X1R5G5B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_X1R5G5B5');
+    X_D3DFMT_LIN_A4R4G4B4: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_A4R4G4B4');
+    X_D3DFMT_LIN_X8R8G8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_X8R8G8B8');
+//    X_D3DFMT_LIN_X8L8V8U8 = $1E; // Alias
+    X_D3DFMT_LIN_A8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_A8');
+    X_D3DFMT_LIN_A8L8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_A8L8');
+    X_D3DFMT_LIN_D24S8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_D24S8');
+    X_D3DFMT_LIN_F24S8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_F24S8');
+    X_D3DFMT_LIN_D16: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_D16');
+    X_D3DFMT_LIN_F16: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_F16');
+    X_D3DFMT_LIN_L16: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_L16');
+    X_D3DFMT_LIN_V16U16: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_V16U16');
+    X_D3DFMT_LIN_R6G5B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_R6G5B5');
+//    X_D3DFMT_LIN_L6V5U5 = $37; // Alias
+    X_D3DFMT_LIN_R5G5B5A1: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_R5G5B5A1');
+    X_D3DFMT_LIN_R4G4B4A4: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_R4G4B4A4');
+    X_D3DFMT_LIN_A8B8G8R8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_A8B8G8R8');
+    X_D3DFMT_LIN_B8G8R8A8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_B8G8R8A8');
+    X_D3DFMT_LIN_R8G8B8A8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_R8G8B8A8');
+
+    X_D3DFMT_VERTEXDATA: SetValue(UIntPtr(aValue), 'X_D3DFMT_VERTEXDATA');
+  else SetValue(UIntPtr(aValue));
+  end;
+end;
+
+function RLogStackHelper._(const aValue: D3DDEVTYPE; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'D3DDEVTYPE');
+  case aValue of
+    D3DDEVTYPE_HAL: SetValue(UIntPtr(aValue), 'D3DDEVTYPE_HAL');
+    D3DDEVTYPE_REF: SetValue(UIntPtr(aValue), 'D3DDEVTYPE_REF');
+    D3DDEVTYPE_SW: SetValue(UIntPtr(aValue), 'D3DDEVTYPE_SW');
+  else SetValue(UIntPtr(aValue));
+  end;
+end;
+
+function RLogStackHelper._(const aValue: X_NV2AMETHOD; const aName: string = ''): PLogStack;
+var
+  rs: X_D3DRenderStateType;
+begin
+  Result := SetName(aName, 'X_NV2AMETHOD');
+
+  rs := DxbxXboxMethodToRenderState(aValue);
+  if rs in [X_D3DRS_FIRST..X_D3DRS_LAST] then
+    SetValue(UIntPtr(aValue), 'NV2A_' + DxbxRenderStateXB2String[rs])
+  else
+    SetValue(UIntPtr(aValue));
 end;
 
 procedure DxbxResetGlobals;
@@ -1891,7 +1998,7 @@ begin
   begin
     LogBegin('EmuIDirect3D_CreateDevice').
       _(Adapter, 'Adapter').
-      _(Ord(DeviceType), 'DeviceType').
+      _(DeviceType, 'DeviceType').
       _(hFocusWindow, 'hFocusWindow').
       _(BehaviorFlags, 'BehaviorFlags').
       _(pPresentationParameters, 'pPresentationParameters').
@@ -2035,7 +2142,7 @@ begin
   if MayLog(lfUnit) then
     LogBegin('EmuIDirect3D_CheckDeviceFormat').
       _(Adapter, 'Adapter').
-      _(Ord(DeviceType), 'DeviceType').
+      _(DeviceType, 'DeviceType').
       _(AdapterFormat, 'AdapterFormat').
       _(Usage, 'Usage').
       _(Int(RType), 'RType').
@@ -2686,7 +2793,7 @@ begin
     LogBegin('EmuD3DDevice_CreateImageSurface').
       _(Width, 'Width').
       _(Height, 'Height').
-      _(Ord(Format), 'Format').
+      _(Format, 'Format').
       _(ppBackBuffer, 'ppBackBuffer').
     LogEnd();
 
@@ -2700,7 +2807,7 @@ begin
     PCFormat,
     PIDirect3DSurface(@(ppBackBuffer^.Emu.Surface)));
 
-  DbgPrintf('Created image surface @ 0x%08X [hRet = 0x%08X]: %dx%d, format = 0x%08X', [
+  DbgPrintf('Created image surface @ 0x%.08X [hRet = 0x%.08X]: %dx%d, format = 0x%.08X', [
         ppBackBuffer^.Emu.Surface,
         Result,
         Width, Height, Ord(PCFormat)]);
@@ -2715,7 +2822,7 @@ begin
       D3DFMT_A8R8G8B8,
       PIDirect3DSurface(@(ppBackBuffer^.Emu.Surface)));
 
-    DbgPrintf('Created image surface @ 0x%08X [hRet = 0x%08X]: %dx%d, format = 0x%08X', [
+    DbgPrintf('Created image surface @ 0x%.08X [hRet = 0x%.08X]: %dx%d, format = 0x%.08X', [
         ppBackBuffer^.Emu.Surface,
         Result,
         Width, Height, Ord(D3DFMT_A8R8G8B8)]);
@@ -4275,7 +4382,7 @@ begin
       Levels := IDirect3DTexture(ppTexture^.Emu.Texture).GetLevelCount();
 
       if MayLog(lfUnit or lfReturnValue) then
-        DbgPrintf('Texture created @ 0x%08X [hRet = 0x%08X]: %dx%d, %d levels, usage = 0x%08X, format = 0x%08X', [
+        DbgPrintf('Texture created @ 0x%.08X [hRet = 0x%.08X]: %dx%d, %d levels, usage = 0x%.08X, format = 0x%.08X', [
             ppTexture^.Emu.Texture, Result, Width, Height, Levels, Ord(PCUsage), Ord(PCFormat)]);
 
       // Dxbx addition : Register all levels :
@@ -4330,7 +4437,7 @@ begin
       _(Depth, 'Depth').
       _(Levels, 'Levels').
       _(Usage, 'Usage').
-      _(Ord(Format), 'Format').
+      _(Format, 'Format').
       _(Pool, 'Pool').
       _(ppVolumeTexture, 'ppVolumeTexture').
     LogEnd();
@@ -4411,7 +4518,7 @@ begin
       _(EdgeLength, 'EdgeLength').
       _(Levels, 'Levels').
       _(Usage, 'Usage').
-      _(Ord(Format), 'Format').
+      _(Format, 'Format').
       _(Pool, 'Pool').
       _(ppCubeTexture, 'ppCubeTexture').
     LogEnd();
@@ -4476,7 +4583,7 @@ begin
     LogBegin('EmuD3DDevice_CreateIndexBuffer').
       _(Length, 'Length').
       _(Usage, 'Usage').
-      _(Ord(Format), 'Format').
+      _(Format, 'Format').
       _(Pool, 'Pool').
       _(ppIndexBuffer, 'ppIndexBuffer').
     LogEnd();
@@ -4729,7 +4836,7 @@ procedure XTL_EmuD3DDevice_SwitchTexture
 (
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}Data: DWORD;
-  {1 ECX}Method: DWORD;
+  {1 ECX}Method: X_NV2AMETHOD;
   {3 stack}Format: DWORD
 ); register; // fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -7042,7 +7149,7 @@ begin
               // We do it integer-based for speed; The fractions and divisions
               // in the code below are compiled into (sign-extending!) shifts,
               // so it's quite fast, really. Note : If we would write out the
-              // shifts (using shl) ourselves, they would not sign-extend
+              // right shifts (using shr) ourselves, they would not sign-extend
               // negative values, causing color-wrapping in the output.
 
               Y0U0Y1V0 := PDWORD(pCurByte+v)^; Inc(v, 4);
@@ -7571,7 +7678,7 @@ end;
 procedure XTL_EmuD3DDevice_SetRenderState_Simple(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}Value: DWORD;
-  {1 ECX}Method: DWORD
+  {1 ECX}Method: X_NV2AMETHOD
   ); register; // VALIDATED fastcall simulation - See Translation guide
 // Branch:shogun  Revision:20100412  Translator:Shadow_Tj  Done:100
 var
@@ -8124,7 +8231,7 @@ begin
   pVertexBuffer := ppVertexBuffer.Emu.VertexBuffer;
 
   hRet := IDirect3DVertexBuffer(pVertexBuffer).Lock(OffsetToLock, SizeToLock, {out}TLockData(ppbData^), Flags);
-  (*DbgPrintf('VertexBuffer 0x%08X was locked: 0x%x - 0x%x, hRet = 0x%08x', [
+  (*DbgPrintf('VertexBuffer 0x%.08X was locked: 0x%x - 0x%x, hRet = 0x%.08x', [
         pVertexBuffer,
         OffsetToLock,
         SizeToLock,
@@ -8166,7 +8273,7 @@ begin
 
   if MayLog(lfUnit or lfReturnValue) then
   begin
-    DbgPrintf('VertexBuffer 0x%08X was locked (2): hRet = 0x%08x', [
+    DbgPrintf('VertexBuffer 0x%.08X was locked (2): hRet = 0x%.08x', [
           pVertexBuffer,
           hRet
           ]);
@@ -9045,13 +9152,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetSoftDisplayFilter' +
-        #13#10'(' +
-        #13#10'   Enable            : 0%10s' +
-        #13#10');',
-      [BoolToStr(Enable <> BOOL_FALSE)]);
+    LogBegin('EmuD3DDevice_SetSoftDisplayFilter').
+      _(Enable, 'Enable').
+    LogEnd();
 
   EmuWarning('Not setting soft display filter');
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -9066,7 +9172,7 @@ begin
   // Dxbx note : No EmuSwapFS needed here
 
   ppColors^ := XTL_EmuD3DPalette_Lock2(pThis, Flags);
-  (*DbgPrintf('Pallete 0x%08X was locked: return = 0x%08x', [
+  (*DbgPrintf('Pallete 0x%.08X was locked: return = 0x%.08x', [
         pThis,
         ppColors^
         ]);*)
@@ -9348,7 +9454,8 @@ begin
       _(pStreamInputs, 'pStreamInputs').
     LogEnd();
 
-  unimplemented('EmuD3DDevice_GetVertexShaderInput');
+  Unimplemented('EmuD3DDevice_GetVertexShaderInput');
+
   EmuSwapFS(fsXbox);
 
   Result := D3D_OK;
@@ -9631,8 +9738,8 @@ begin
   if MayLog(lfUnit) then
     LogBegin('EmuIDirect3D_CheckDeviceMultiSampleType').
       _(Adapter, 'Adapter').
-      _(Ord(DeviceType), 'DeviceType').
-      _(Ord(SurfaceFormat), 'SurfaceFormat').
+      _(DeviceType, 'DeviceType').
+      _(SurfaceFormat, 'SurfaceFormat').
       _(Windowed, 'Windowed').
       _(Ord(MultiSampleType), 'MultiSampleType').
     LogEnd();
@@ -9702,7 +9809,7 @@ begin
   if MayLog(lfUnit) then
     LogBegin('EmuIDirect3D_GetDeviceCaps').
       _(Adapter, 'Adapter').
-      _(Ord(DeviceType), 'DeviceType').
+      _(DeviceType, 'DeviceType').
       _(pCaps, 'pCaps').
     LogEnd();
 
@@ -10959,7 +11066,8 @@ function XTL_EmuD3DDevice_CreateSurface2(
   Width: DWORD;
   Height: DWORD;
   Usage: DWORD;
-  Format: X_D3DFORMAT): PX_D3DSurface; stdcall;
+  Format: X_D3DFORMAT
+): PX_D3DSurface; stdcall;
 // Branch:DXBX  Translator:PatrickvL  Done:50
 begin
   // TODO : What about Usage?
