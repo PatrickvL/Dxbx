@@ -463,7 +463,7 @@ object fmConfiguration: TfmConfiguration
           Top = 112
           Width = 75
           Height = 25
-          Caption = 'Disable All'
+          Caption = '&Disable All'
           TabOrder = 3
           OnClick = btnDisableAllClick
         end
@@ -472,7 +472,7 @@ object fmConfiguration: TfmConfiguration
           Top = 143
           Width = 75
           Height = 25
-          Caption = 'Enable All'
+          Caption = '&Enable All'
           TabOrder = 4
           OnClick = btnEnableAllClick
         end
