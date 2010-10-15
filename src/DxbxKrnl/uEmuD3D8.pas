@@ -17,6 +17,8 @@
 *)
 unit uEmuD3D8;
 
+{$DEFINE _OPTIMIZE_UNIT}
+
 {$INCLUDE Dxbx.inc}
 
 {.$define _DEBUG_DUMP_TEXTURE_SETTEXTURE}
@@ -6823,14 +6825,15 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function ClampIntToByte(const aValue: Integer): Integer;
+function ClampIntToByte(const aValue: Integer): Byte;
 begin
-  Result := aValue shr 8;
-  if Result < 0 then
+  if aValue < 0 then
     Result := 0
   else
-    if Result > 255 then
-      Result := 255;
+    if aValue > 255 then
+      Result := 255
+    else
+      Result := aValue;
 end;
 
 function XTL_EmuD3DDevice_UpdateOverlay
@@ -6842,6 +6845,8 @@ function XTL_EmuD3DDevice_UpdateOverlay
   ColorKey: D3DCOLOR
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+const
+  FIXED_POINT_FACTOR = (1 shl 16);
 var
   ddsd2: DDSURFACEDESC2;
   pDest: P_char;
@@ -7001,6 +7006,7 @@ begin
           dx:=0;
           dwImageSize := g_dwOverlayP*g_dwOverlayH;
 
+(*
           // grayscale
           if (false) then
           begin
@@ -7024,7 +7030,7 @@ begin
            end;
           end
           else
-
+*)
           // full color conversion (YUY2->XRGB)
           begin
             v := 0; while v < dwImageSize do
@@ -7033,31 +7039,31 @@ begin
               // See http://www.fourcc.org/yuv.php#YUY2
               // and http://en.wikipedia.org/wiki/YUV
               // and http://msdn.microsoft.com/en-us/library/ms893078.aspx
-              // We do it integer-based for speed.
+              // We do it integer-based for speed; The fractions and divisions
+              // in the code below are compiled into (sign-extending!) shifts,
+              // so it's quite fast, really. Note : If we would write out the
+              // shifts (using shl) ourselves, they would not sign-extend
+              // negative values, causing color-wrapping in the output.
 
               Y0U0Y1V0 := PDWORD(pCurByte+v)^; Inc(v, 4);
 
-{ This would be needed if the format used only Y values 16-235 :
-              Y0 := ((Byte(Y0U0Y1V0       ) -  16) * 298) + 128;
-              Y1 := ((Byte(Y0U0Y1V0 shr 16) -  16) * 298) + 128;
-  But because Y seems to use 0-255, we must to it like this : }
-              Y0 := (Byte(Y0U0Y1V0       ) shl 8) + 128;
-              Y1 := (Byte(Y0U0Y1V0 shr 16) shl 8) + 128;
-              U0 :=  Byte(Y0U0Y1V0 shr  8)        - 128;
-              V0 :=  Byte(Y0U0Y1V0 shr 24)        - 128;
+              Y0 := Byte(Y0U0Y1V0       ) * FIXED_POINT_FACTOR;
+              Y1 := Byte(Y0U0Y1V0 shr 16) * FIXED_POINT_FACTOR;
+              V0 := Byte(Y0U0Y1V0 shr 24) - 128;
+              U0 := Byte(Y0U0Y1V0 shr  8) - 128;
 
-              R :=             ( 409*V0);
-              G := (-100*U0) + (-208*V0);
-              B := ( 516*U0);
+              R :=                                        (Round(1.402*FIXED_POINT_FACTOR)*V0);
+              G := (Round(0.344*FIXED_POINT_FACTOR)*U0) + (Round(0.714*FIXED_POINT_FACTOR)*V0);
+              B := (Round(1.772*FIXED_POINT_FACTOR)*U0);
 
-              pDest2[dx+0] := ClampIntToByte(Y0 + B);
-              pDest2[dx+1] := ClampIntToByte(Y0 + G);
-              pDest2[dx+2] := ClampIntToByte(Y0 + R);
+              pDest2[dx+0] := ClampIntToByte((Y0 + B) div FIXED_POINT_FACTOR);
+              pDest2[dx+1] := ClampIntToByte((Y0 - G) div FIXED_POINT_FACTOR);
+              pDest2[dx+2] := ClampIntToByte((Y0 + R) div FIXED_POINT_FACTOR);
               pDest2[dx+3] := $FF;
 
-              pDest2[dx+4] := ClampIntToByte(Y1 + B);
-              pDest2[dx+5] := ClampIntToByte(Y1 + G);
-              pDest2[dx+6] := ClampIntToByte(Y1 + R);
+              pDest2[dx+4] := ClampIntToByte((Y1 + B) div FIXED_POINT_FACTOR);
+              pDest2[dx+5] := ClampIntToByte((Y1 - G) div FIXED_POINT_FACTOR);
+              pDest2[dx+6] := ClampIntToByte((Y1 + R) div FIXED_POINT_FACTOR);
               pDest2[dx+7] := $FF;
 
               Inc(dx, 8);
