@@ -6502,7 +6502,7 @@ begin
       if (FAILED(hRet)) then
         EmuWarning('LockRect Failed!');
 
-(*      pThis.Common := pThis.Common or X_D3DCOMMON_ISLOCKED;*)
+      pThis.Common := pThis.Common or X_D3DCOMMON_ISLOCKED;
     end;
   end;
 
@@ -7001,7 +7001,7 @@ begin
           dx:=0;
           dwImageSize := g_dwOverlayP*g_dwOverlayH;
 
-(*        // grayscale
+          // grayscale
           if (false) then
           begin
             if g_dwOverlayH > 0 then // Dxbx addition, to prevent underflow
@@ -7024,7 +7024,7 @@ begin
            end;
           end
           else
-*)
+
           // full color conversion (YUY2->XRGB)
           begin
             v := 0; while v < dwImageSize do
