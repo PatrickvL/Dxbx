@@ -301,7 +301,7 @@ type
 
 type X_D3DMULTISAMPLE_TYPE = DWORD;
 type X_D3DSWAPEFFECT = D3DSWAPEFFECT; // Same as on Windows Direct3D
-type X_D3DFORMAT = DWORD;
+type X_D3DFORMAT = type DWORD;
 type X_D3DPOOL = D3DPOOL; // alias
 
 type X_D3DSHADEMODE = (
@@ -425,6 +425,7 @@ type X_D3DTEXTUREOP = DWORD;
 type X_D3DRENDERSTATETYPE = DWORD;
 type X_D3DCOLORWRITEENABLE = DWORD;
 type X_D3DCALLBACK = PVOID;
+type X_NV2AMETHOD = 0..High(DWORD)-1; // Kind of strange declaration, needed to
 
 // Values for material source
 type X_D3DMATERIALCOLORSOURCE = (

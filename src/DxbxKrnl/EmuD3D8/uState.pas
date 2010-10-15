@@ -42,7 +42,7 @@ uses
 
 function DxbxRenderStateIntroducedAtVersion(const aRenderState: X_D3DRENDERSTATETYPE): uint32; {NOPATCH}
 function DxbxRenderStateIsXboxExtension(const Value: X_D3DRENDERSTATETYPE): Boolean; {NOPATCH}
-function DxbxXboxMethodToRenderState(const aMethod: DWORD): X_D3DRenderStateType; {NOPATCH}
+function DxbxXboxMethodToRenderState(const aMethod: X_NV2AMETHOD): X_D3DRenderStateType; {NOPATCH}
 
 function EmuXB2PC_D3DRS(Value: X_D3DRENDERSTATETYPE): D3DRENDERSTATETYPE;
 
@@ -327,7 +327,7 @@ begin
 end;
 
 // Convert a 'method' DWORD into it's associated 'pixel-shader' or 'simple' render state.
-function DxbxXboxMethodToRenderState(const aMethod: DWORD): X_D3DRenderStateType; {NOPATCH}
+function DxbxXboxMethodToRenderState(const aMethod: X_NV2AMETHOD): X_D3DRenderStateType; {NOPATCH}
 begin
   // Dxbx note : Let the compiler sort this out, should be much quicker :
   case (aMethod and $00001fff) of

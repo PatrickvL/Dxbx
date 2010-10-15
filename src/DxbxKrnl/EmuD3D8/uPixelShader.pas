@@ -1660,6 +1660,15 @@ begin
   // TODO : Correct emulation should correct these differences; The range of constant-registers must be converted
   // from 0.0-1.0 to -1.0-1.0, and vertex-registers must be converted from -1.0..1.0 to 0.0..1.0 (if anything like
   // that is at all possible!)
+  //
+  // register | Xbox range | Native range | Xbox      | Native    |
+  //  C0..C8  |  0.0 - 1.0 |   -1.0 - 1.0 | readonly  | readonly  |
+  //  R0..R1  | -1.0 - 1.0 |   -1.0 - 1.0 | writeable | writeable |
+  //  T0..T3  | -1.0 - 1.0 |   -1.0 - 1.0 | writeable | writeable |
+  //  V0..V1  | -1.0 - 1.0 |    0.0 - 1.0 | writeable | readonly  |
+  //
+  // "-C0_bias_x2" shifts range from [ 0..1] to [-1..1]
+  // "-V0_bias_d2" shifts range from [-1..1] to [ 0..1]
 
   // Convert the CombinerOutput flag to a InstructionOutputCombiner
   // or an SourceRegisterModifier (so far as that's possible):
@@ -1797,6 +1806,7 @@ begin
   aScope.C0RegStr := 'c' + IntToStr(FinalCombinerC0Mapping);
   aScope.C1RegStr := 'c' + IntToStr(FinalCombinerC1Mapping);
 
+// Note : The sign bit is lost upon input to the final combiner!
 
 //  The final combiner performs the following operations :
 //
@@ -2445,6 +2455,7 @@ var
 begin
   PSIntermediate.Init(pPSDef);
   Result := PSIntermediate.DisassembleIntermediate();
+//  Result := ' '
 end;
 
 end.
