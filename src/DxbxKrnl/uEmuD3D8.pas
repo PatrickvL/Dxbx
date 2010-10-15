@@ -4230,7 +4230,7 @@ begin
     X_D3DRTYPE_CUBETEXTURE: // 5
       // TODO -oDxbx : Check what the actual EdgeLength value should be
       hRes := XTL_EmuD3DDevice_CreateCubeTexture({EdgeLength=?}Width, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
-(*
+
     X_D3DRTYPE_VERTEXBUFFER: // 6
       // TODO -oDxbx : Check what the actual Length and FVF values should be :
       hRes := XTL_EmuD3DDevice_CreateVertexBuffer({Length=}Width * Height * Depth * Levels, Usage, {FVF=?}Format, D3DPOOL_MANAGED, @pTexture); // Dxbx addition
@@ -4238,7 +4238,7 @@ begin
     X_D3DRTYPE_INDEXBUFFER: // 7
       // TODO -oDxbx : Check what the actual Length value should be :
       hRes := XTL_EmuD3DDevice_CreateIndexBuffer({Length=}Width * Height * Depth * Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture); // Dxbx addition
-
+(*
     X_D3DRTYPE_PALETTE: // 9
       // TODO -oDxbx : Check what the actual Size value should be :
       // Choose D3DPALETTE_256 / D3DPALETTE_128 / D3DPALETTE_64 / D3DPALETTE_32 or D3DPALETTE_MAX,
@@ -6798,28 +6798,19 @@ function XTL_EmuD3DDevice_CreateVertexBuffer
   ppVertexBuffer: PPX_D3DVertexBuffer
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-begin
-  // Dxbx note : No EmuSwapFS needed here
-
-  ppVertexBuffer^ := XTL_EmuD3DDevice_CreateVertexBuffer2(Length);
-  Result := D3D_OK;
-end;
-
-function XTL_EmuD3DDevice_CreateVertexBuffer2
-(
-  Length: UINT
-): PX_D3DVertexBuffer; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   pD3DVertexBuffer: PX_D3DVertexBuffer;
-  hRet: HRESULT;
   NewLength: UINT;
 begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_CreateVertexBuffer2').
+    LogBegin('EmuD3DDevice_CreateVertexBuffer').
       _(Length, 'Length').
+      _(Usage, 'Usage').
+      _(FVF, 'FVF').
+      _(Pool, 'Pool').
+      _(ppVertexBuffer, 'ppVertexBuffer').
     LogEnd();
 
   NewLength := Length;
@@ -6837,25 +6828,48 @@ begin
 
   pD3DVertexBuffer.Common := 0; // ??
   pD3DVertexBuffer.Data := 0; // ??
-  hRet := g_pD3DDevice.CreateVertexBuffer(
+
+  Result := g_pD3DDevice.CreateVertexBuffer(
     NewLength,
-    0,
-    0,
-    D3DPOOL_MANAGED,
+    Usage, // XB2PC?
+    FVF,
+    Pool, // XB2PX ? D3DPOOL_MANAGED,
     {ppVertexBuffer=}@(pD3DVertexBuffer.Emu.VertexBuffer)
     {$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF}
   );
 
-  if (FAILED(hRet)) then
+  if (FAILED(Result)) then
+  begin
     EmuWarning('CreateVertexBuffer Failed!');
-
+    Dispose(pD3DVertexBuffer);
+  end
+  else
+  begin
 {$ifdef _DEBUG_TRACK_VB}
-  g_VBTrackTotal.insert(pD3DVertexBuffer.Emu.VertexBuffer);
+    g_VBTrackTotal.insert(pD3DVertexBuffer.Emu.VertexBuffer);
 {$endif}
+    ppVertexBuffer^ := pD3DVertexBuffer;
+  end;
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuD3DDevice_CreateVertexBuffer2
+(
+  Length: UINT
+): PX_D3DVertexBuffer; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_CreateVertexBuffer2 >>').
+      _(Length, 'Length').
+    LogEnd();
 
   EmuSwapFS(fsXbox);
 
-  Result := pD3DVertexBuffer;
+  XTL_EmuD3DDevice_CreateVertexBuffer(Length, 0, 0, D3DPOOL_MANAGED, @Result);
 end;
 
 function XTL_EmuD3DDevice_EnableOverlay
