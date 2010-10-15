@@ -1654,7 +1654,7 @@ begin
 end;
 
 
-function XTL_EmuXLaunchNewImage
+function XTL_EmuXLaunchNewImageA
 (
   lpTitlePath: LPCSTR;
   pLaunchData: PLAUNCH_DATA
@@ -1668,7 +1668,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuXLaunchNewImage').
+    LogBegin('EmuXLaunchNewImageA').
       _(lpTitlePath, 'lpTitlePath').
       _(pLaunchData, 'pLaunchData').
     LogEnd();
@@ -1678,7 +1678,7 @@ begin
 
   // If no path is specified, then the xbe is rebooting to dashboard
   if (nil = lpTitlePath) then
-    DxbxKrnlCleanup('The xbe is rebooting (XLaunchNewImage)');
+    DxbxKrnlCleanup('The xbe is rebooting (XLaunchNewImageA)');
 
   // Ignore any other attempts to execute other .xbe files (for now).
   EmuWarning('Not executing the xbe!');
@@ -2180,7 +2180,7 @@ exports
   XTL_EmuXInputOpen,
   XTL_EmuXInputPoll,
   XTL_EmuXInputSetState,
-  XTL_EmuXLaunchNewImage name PatchPrefix + 'XLaunchNewImageA',
+  XTL_EmuXLaunchNewImageA,
   XTL_EmuXLoadSectionA,
   XTL_EmuXLoadSectionByHandle,
   XTL_EmuXMountUtilityDrive,

@@ -4907,8 +4907,7 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuDirectSound_CDirectSoundStream_SetRolloffCurve,
   XTL_EmuDirectSound_CDirectSoundStream_SetRolloffFactor,
   XTL_EmuDirectSound_CDirectSoundStream_SetVelocity,
-  XTL_EmuDirectSound_CDirectSoundStream_SetVolume,
-//  XTL_EmuDirectSound_CDirectSoundStream_SetVolume name PatchPrefix + '?SetVolume@CDirectSoundVoice@DirectSound@@QAGJJ@Z', // Cxbx Smashin Drive patches this
+  XTL_EmuDirectSound_CDirectSoundStream_SetVolume, // Among others, used by Smashing Drive
 
   XTL_EmuDirectSoundCreate,
   XTL_EmuDirectSoundCreateBuffer,
@@ -4936,7 +4935,7 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuIDirectSound_GetTime,
   XTL_EmuIDirectSound_QueryInterface,
   XTL_EmuIDirectSound_QueryInterfaceC,
-  XTL_EmuIDirectSound_Release name PatchPrefix + '_IDirectSound_Release@4', // Was 'IDirectSound_Release'
+  XTL_EmuIDirectSound_Release,
   XTL_EmuIDirectSound_SetAllParameters,
   XTL_EmuIDirectSound_SetCooperativeLevel,
   XTL_EmuIDirectSound_SetDistanceFactor,
@@ -4961,7 +4960,8 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuIDirectSoundBuffer_PlayEx,
   XTL_EmuIDirectSoundBuffer_QueryInterface,
   XTL_EmuIDirectSoundBuffer_QueryInterfaceC,
-  XTL_EmuIDirectSoundBuffer_Release name PatchPrefix + '_IDirectSoundBuffer_Release@4',
+  XTL_EmuIDirectSoundBuffer_Release,
+
   XTL_EmuIDirectSoundBuffer_Restore,
   XTL_EmuIDirectSoundBuffer_SetAllParameters,
   XTL_EmuIDirectSoundBuffer_SetBufferData,

@@ -10172,13 +10172,13 @@ end;
 
 
 // * func: EmuD3DDevice_KickOff (D3D::CDevice::KickOff)
-procedure XTL_EmuDevice3D_KickOff(); stdcall;
+procedure XTL_EmuD3D_CDevice_KickOff(); stdcall;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_KickOff();');
+    DbgPrintf('EmuD3D8 : D3D_CDevice_KickOff();');
 
   // TODO -oCXBX: Anything (kick off and NOT wait for idle)?
   // NOTE: We should actually emulate D3DDevice_KickPushBuffer()
@@ -10976,7 +10976,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuIDirect3DVolumeTexture_GetVolumeLevel2').
+    LogBegin('XTL_EmuD3DSurface_GetContainer2').
       _(pThis, 'pThis').
       _(ppBaseTexture, 'ppBaseTexture').
     LogEnd();
@@ -11565,7 +11565,7 @@ exports
   XTL_EmuD3DDevice_SetStreamSource,
   XTL_EmuD3DDevice_SetSwapCallback,
   XTL_EmuD3DDevice_SetTexture,
-  XTL_EmuD3DDevice_SetTextureStageStateNotInline, //?? name PatchPrefix + '_D3DDevice_SetTextureStageStateNotInline@12',
+  XTL_EmuD3DDevice_SetTextureStageStateNotInline,
   XTL_EmuD3DDevice_SetTextureState_BorderColor,
   XTL_EmuD3DDevice_SetTextureState_BumpEnv,
   XTL_EmuD3DDevice_SetTextureState_ColorKeyColor,
@@ -11641,7 +11641,7 @@ exports
   XTL_EmuD3DVolumeTexture_GetVolumeLevel2,
   XTL_EmuD3DVolumeTexture_LockBox,
 
-  XTL_EmuDevice3D_KickOff name PatchPrefix + '?KickOff@CDevice@D3D@@QAEXXZ',
+  XTL_EmuD3D_CDevice_KickOff,
 
   XTL_EmuDirect3D_CheckDeviceFormat,
   XTL_EmuDirect3D_CheckDeviceMultiSampleType,
