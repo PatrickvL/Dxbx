@@ -10950,7 +10950,7 @@ begin
 //
 //  Result := IDirectDraw7(g_pDD7).CreateSurface(SurfaceDesc, lplpDDSurface, pUnkOuter);
 
-  Result := Unimplemented('XTL_EmuD3DDevice_CreateSurface');
+ Result := Unimplemented('XTL_EmuD3DDevice_CreateSurface');
 
   EmuSwapFS(fsXbox);
 end;
@@ -10960,18 +10960,10 @@ function XTL_EmuD3DDevice_CreateSurface2(
   Height: DWORD;
   Usage: DWORD;
   Format: X_D3DFORMAT): PX_D3DSurface; stdcall;
-// Branch:DXBX  Translator:PatrickvL  Done:0
-//var
-//  ddsd2: DDSURFACEDESC2;
+// Branch:DXBX  Translator:PatrickvL  Done:50
 begin
-  EmuSwapFS(fsWindows);
-
-//  ZeroMemory(@ddsd2, sizeof(ddsd2));
-//  ddsd2.dwSize := sizeof(ddsd2);
-
-  Result := Pointer(Unimplemented('XTL_EmuD3DDevice_CreateSurface2'));
-
-  EmuSwapFS(fsXbox);
+  // TODO : What about Usage?
+  {ignore}XTL_EmuD3DDevice_CreateImageSurface(Width, Height, Format, @Result); // Dxbx addition
 end;
 
 function XTL_EmuD3DSurface_GetContainer2
