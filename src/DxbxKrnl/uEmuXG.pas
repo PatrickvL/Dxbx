@@ -426,10 +426,10 @@ begin
 end;
 
 exports
-  XTL_EmuXGIsSwizzledFormat name PatchPrefix + '_XGIsSwizzledFormat@4',
-  XTL_EmuXGSwizzleBox name PatchPrefix + '_XGSwizzleBox@40',
-  XTL_EmuXGSwizzleRect name PatchPrefix + '_XGSwizzleRect@32',
-  XTL_EmuXGUnswizzleRect name PatchPrefix + '_XGUnswizzleRect@32',
-  XTL_EmuXGWriteSurfaceOrTextureToXPR name PatchPrefix + '_XGWriteSurfaceOrTextureToXPR@12';
+  XTL_EmuXGIsSwizzledFormat, // Among others, used by Rayman
+  XTL_EmuXGSwizzleBox, // Among others, used by Turok
+  XTL_EmuXGSwizzleRect, // Among others, used by Rayman
+  XTL_EmuXGUnswizzleRect, // Among others, used by Rayman
+  XTL_EmuXGWriteSurfaceOrTextureToXPR; // Among others, used by Gamepad
 
 end.
