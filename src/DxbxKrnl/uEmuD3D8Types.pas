@@ -420,7 +420,7 @@ type X_D3DLOGICOP = ( // Xbox ext.
   X_D3DLOGICOP_FORCE_DWORD      = $7fffffff
 );
 
-type X_D3DTEXTURESTAGESTATETYPE = DWORD;
+type X_D3DTEXTURESTAGESTATETYPE = 0..High(DWORD)-2; // Unique declaration to make overloads possible;
 type X_D3DTEXTUREOP = DWORD;
 type X_D3DRENDERSTATETYPE = DWORD;
 type X_D3DCOLORWRITEENABLE = DWORD;
