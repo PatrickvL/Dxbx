@@ -85,7 +85,7 @@ var
   DxbxRenderStateXB2PCCallback: array [X_D3DRS_FIRST..X_D3DRS_LAST] of TXB2PCFunc;
   DxbxMapActiveVersionToMostRecent: array [X_D3DRS_FIRST..X_D3DRS_LAST] of X_D3DRENDERSTATETYPE;
   DxbxMapMostRecentToActiveVersion: array [X_D3DRS_FIRST..X_D3DRS_LAST] of X_D3DRENDERSTATETYPE;
-  DxbxRenderStateXB2String: array [X_D3DRS_FIRST..X_D3DRS_LAST] of AnsiString = (
+  DxbxRenderStateXB2String: array [X_D3DRS_FIRST..X_D3DRS_LAST] of string = (
     'D3DRS_PSALPHAINPUTS0',
     'D3DRS_PSALPHAINPUTS1',
     'D3DRS_PSALPHAINPUTS2',

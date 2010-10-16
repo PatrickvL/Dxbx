@@ -269,6 +269,7 @@ type
     function _(const aValue: X_D3DFORMAT; const aName: string = ''): PLogStack; overload;
     function _(const aValue: D3DDEVTYPE; const aName: string = ''): PLogStack; overload;
     function _(const aValue: X_NV2AMETHOD; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: X_D3DTEXTURESTAGESTATETYPE; const aName: string = ''): PLogStack; overload;
   end;
 
 function RLogStackHelper._(const aValue: X_D3DPOOL; const aName: string = ''): PLogStack;
@@ -428,6 +429,46 @@ begin
   else
     SetValue(UIntPtr(aValue));
 end;
+
+function RLogStackHelper._(const aValue: X_D3DTEXTURESTAGESTATETYPE; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'X_D3DTEXTURESTAGESTATETYPE');
+  case aValue of
+    X_D3DTSS_ADDRESSU: SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSU');
+    X_D3DTSS_ADDRESSV: SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSV');
+    X_D3DTSS_ADDRESSW: SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSW');
+    X_D3DTSS_MAGFILTER: SetValue(UIntPtr(aValue), 'X_D3DTSS_MAGFILTER');
+    X_D3DTSS_MINFILTER: SetValue(UIntPtr(aValue), 'X_D3DTSS_MINFILTER');
+    X_D3DTSS_MIPFILTER: SetValue(UIntPtr(aValue), 'X_D3DTSS_MIPFILTER');
+    X_D3DTSS_MIPMAPLODBIAS: SetValue(UIntPtr(aValue), 'X_D3DTSS_MIPMAPLODBIAS');
+    X_D3DTSS_MAXMIPLEVEL: SetValue(UIntPtr(aValue), 'X_D3DTSS_MAXMIPLEVEL');
+    X_D3DTSS_MAXANISOTROPY: SetValue(UIntPtr(aValue), 'X_D3DTSS_MAXANISOTROPY');
+    X_D3DTSS_COLORKEYOP: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORKEYOP');
+    X_D3DTSS_COLORSIGN: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORSIGN');
+    X_D3DTSS_ALPHAKILL: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAKILL');
+    X_D3DTSS_COLOROP: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLOROP');
+    X_D3DTSS_COLORARG0: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG0');
+    X_D3DTSS_COLORARG1: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG1');
+    X_D3DTSS_COLORARG2: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG2');
+    X_D3DTSS_ALPHAOP: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAOP');
+    X_D3DTSS_ALPHAARG0: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG0');
+    X_D3DTSS_ALPHAARG1: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG1');
+    X_D3DTSS_ALPHAARG2: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG2');
+    X_D3DTSS_RESULTARG: SetValue(UIntPtr(aValue), 'X_D3DTSS_RESULTARG');
+    X_D3DTSS_TEXTURETRANSFORMFLAGS: SetValue(UIntPtr(aValue), 'X_D3DTSS_TEXTURETRANSFORMFLAGS');
+    X_D3DTSS_BUMPENVMAT00: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT00');
+    X_D3DTSS_BUMPENVMAT01: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT01');
+    X_D3DTSS_BUMPENVMAT11: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT11');
+    X_D3DTSS_BUMPENVMAT10: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT10');
+    X_D3DTSS_BUMPENVLSCALE: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVLSCALE');
+    X_D3DTSS_BUMPENVLOFFSET: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVLOFFSET');
+    X_D3DTSS_TEXCOORDINDEX: SetValue(UIntPtr(aValue), 'X_D3DTSS_TEXCOORDINDEX');
+    X_D3DTSS_BORDERCOLOR: SetValue(UIntPtr(aValue), 'X_D3DTSS_BORDERCOLOR');
+    X_D3DTSS_COLORKEYCOLOR: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORKEYCOLOR');
+  else SetValue(UIntPtr(aValue));
+  end;
+end;
+
 
 procedure DxbxResetGlobals;
 begin
@@ -3295,16 +3336,17 @@ var
 begin
   EmuSwapFs(fsWindows);
 
+  Type_VersionIndependent := DxbxFromOldVersion_D3DTSS(Type_);
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_GetTextureStageState').
       _(Stage, 'Stage').
-      _(Type_, 'Type').
+      _(DWORD(Type_), 'Type').
+      _(Type_VersionIndependent, 'Type_VersionIndependent').
       _(pValue, 'pValue').
     LogEnd();
 
   if Assigned(PValue) then
   begin
-    Type_VersionIndependent := DxbxFromOldVersion_D3DTSS(Type_);
     // Check if this is an Xbox extension  :
     if DxbxTextureStageStateIsXboxExtension(Type_VersionIndependent) then
       PValue^ := XTL_EmuD3DDeferredTextureState[Stage, Ord(Type_)]
@@ -7449,13 +7491,17 @@ procedure XTL_EmuD3DDevice_SetTextureState_BumpEnv
     Value: DWORD
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  Type_VersionIndependent: X_D3DTEXTURESTAGESTATETYPE;
 begin
   EmuSwapFS(fsWindows);
 
+  Type_VersionIndependent := DxbxFromOldVersion_D3DTSS(Type_);
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_SetTextureState_BumpEnv').
       _(Stage, 'Stage').
-      _(Type_, 'Type').
+      _(DWORD(Type_), 'Type').
+      _(Type_VersionIndependent, 'Type_VersionIndependent').
       _(Value, 'Value').
       _(DWToF(Value), 'Value (as Float)').
     LogEnd();
@@ -7467,7 +7513,7 @@ begin
   // Dxbx Note : The BumpEnv values don't need a XB2PC conversion
   // Dxbx Note : The BumpEnv types all have a PC counterpart (so no -1 test needed)
 
-  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, DxbxFromOldVersion_D3DTSS(Type_), Value);
+  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, Type_VersionIndependent, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8928,14 +8974,14 @@ var
 begin
   EmuSwapFS(fsWindows);
 
+  Type_VersionIndependent := DxbxFromOldVersion_D3DTSS(Type_);
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_SetTextureStageStateNotInline >>').
       _(Stage, 'Stage').
-      _(Type_, 'Type_').
+      _(DWORD(Type_), 'Type').
+      _(Type_VersionIndependent, 'Type_VersionIndependent').
       _(Value, 'Value').
     LogEnd();
-
-  Type_VersionIndependent := DxbxFromOldVersion_D3DTSS(Type_);
 
   EmuSwapFS(fsXbox);
 
