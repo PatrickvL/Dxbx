@@ -1005,15 +1005,16 @@ var
 begin
   // This LogStackEntry won't be processed, but instead it prints the entire stack :
   // First start with the header (accesible via LogRoot) :
-  Str := LogRoot.LogName + '('; // TODO : Handle redirects (marked with '>>') better
+  Str := LogRoot.LogName; // TODO : Handle redirects (marked with '>>') better
   if LogRoot.LogValue <> '' then
     Str := LogRoot.LogValue + ' : ' + Str;
 
   Loop := LogRoot.Next;
   if Loop = @Self then
-    Str := Str + ');'
+    Str := Str + '();'
   else
   begin
+    Str := Str + #13#10'(';
     // Determine how wide the name should be (and give it a minimum width, to keep the layout relatively steady) :
     NameWidth := 18;
     while Loop <> @Self do
@@ -1031,7 +1032,7 @@ begin
       Str := Str + Format(#13#10'   %-*s : %s', [NameWidth, Loop.LogName, Loop.LogValue]);
       Loop := Loop.Next;
     end;
-    Str := Str + #13#10');'
+    Str := Str + #13#10');';
   end;
 
   // Push it to the normal printing function :

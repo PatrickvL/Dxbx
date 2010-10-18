@@ -91,7 +91,7 @@ function XTL_EmuDirect3D_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
   ppReturnedDeviceInterface: XTL_PPIDirect3DDevice8): HRESULT; stdcall// forward
 
-function XTL_EmuD3DDevice_SetVertexData4f(Register_: Integer;
+function XTL_EmuD3DDevice_SetVertexData4f(Register_: DWORD;
   a, b, c, d: FLOAT): HRESULT; stdcall; // forward
 function XTL_EmuD3DDevice_GetVertexShader({CONST} pHandle: PDWORD): HRESULT; stdcall; // forward
 
@@ -270,6 +270,7 @@ type
     function _(const aValue: D3DDEVTYPE; const aName: string = ''): PLogStack; overload;
     function _(const aValue: X_NV2AMETHOD; const aName: string = ''): PLogStack; overload;
     function _(const aValue: X_D3DTEXTURESTAGESTATETYPE; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: PD3DVIEWPORT; const aName: string = ''): PLogStack; overload;
   end;
 
 function RLogStackHelper._(const aValue: X_D3DPOOL; const aName: string = ''): PLogStack;
@@ -469,6 +470,14 @@ begin
   end;
 end;
 
+function RLogStackHelper._(const aValue: PD3DVIEWPORT; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'PD3DVIEWPORT');
+  SetValue(DWORD(aValue), Format('%d, %d, %d, %d, %f, %f',
+      [aValue.X, aValue.Y, aValue.Width, aValue.Height, aValue.MinZ, aValue.MaxZ]));
+end;
+
+//
 
 procedure DxbxResetGlobals;
 begin
@@ -2097,7 +2106,7 @@ begin
   if MayLog(lfUnit) then
     DbgPrintf('EmuD3D8 :EmuD3DDevice_KickPushBuffer();');
 
-  unimplemented('EmuD3DDevice_KickPushBuffer');
+  Unimplemented('EmuD3DDevice_KickPushBuffer');
 
   EmuSwapFS(fsXbox);
 end;
@@ -3049,12 +3058,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetViewport' +
-        #13#10'(' +
-        #13#10'   pViewport                 : 0x%.08X (%d, %d, %d, %d, %f, %f)' +
-        #13#10');',
-        [pViewport, pViewport.X, pViewport.Y, pViewport.Width,
-       pViewport.Height, pViewport.MinZ, pViewport.MaxZ]);
+    LogBegin('EmuD3DDevice_SetViewport').
+      _(pViewport, 'pViewport').
+    LogEnd();
 
 (*
   dwX := pViewport.X;
@@ -3138,7 +3144,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_GetViewport').
-      _(pViewport, 'pViewport').
+      _(Pointer(pViewport), 'pViewport'). // Prevent rendering of PD3DVIEWPORT; TODO : Output arguments need a generic solution.
     LogEnd();
 
   Result := g_pD3DDevice.GetViewport({out}pViewport^);
@@ -3158,13 +3164,13 @@ procedure XTL_EmuD3DDevice_GetViewportOffsetAndScale
     pScale: PD3DXVECTOR4
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
+//var
 {  fScaleX: Float;
   fScaleY: Float;
   fScaleZ: Float;
   fOffsetX: Float;
   fOffsetY: Float;}
-  Viewport: D3DVIEWPORT;
+//  Viewport: D3DVIEWPORT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -3183,9 +3189,9 @@ begin
   fOffsetY := 0.5 + 1.0 / 32;
 }
 
-  EmuSwapFS(fsXbox);
-  XTL_EmuD3DDevice_GetViewport(@Viewport);
-  EmuSwapFS(fsWindows);
+//  EmuSwapFS(fsXbox);
+//  XTL_EmuD3DDevice_GetViewport(@Viewport);
+//  EmuSwapFS(fsWindows);
 
   pScale.x := 1.0;
   pScale.y := 1.0;
@@ -3445,19 +3451,11 @@ begin
   Result := g_pCachedZStencilSurface;
 end;
 
+(* TOO HIGH LEVEL : No patch needed, just reads g_OverscanColor@D3D@@3KA :
 function XTL_EmuD3DDevice_GetOverscanColor(): D3DCOLOR; stdcall;
 // Branch:Dxbx  Translator:Shadow_Tj  Done:0
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetOverscanColor');
-
-  Result := Unimplemented('D3DDevice_GetOverscanColor');
-  (*Result := D3DDevice_GetOverscanColor();*)
-
-  EmuSwapFS(fsXbox);
-end;
+// Note : When we had this patch active, it removed all tree-leafs in Turok Start screen...
+*)
 
 function XTL_EmuD3DDevice_GetTile
 (
@@ -3875,7 +3873,7 @@ end;
 
 function XTL_EmuD3DDevice_SetVertexShaderConstant
 (
-  Register_: INT;
+  Register_: DWORD;
   {CONST} pConstantData: PVOID;
   ConstantCount: DWORD
 ): HRESULT; stdcall;
@@ -3949,7 +3947,7 @@ end;
 procedure XTL_EmuD3DDevice_SetVertexShaderConstant1(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}const pConstantData: PVOID;
-  {1 ECX}Register_: INT
+  {1 ECX}Register_: DWORD
   ); register; // VALIDATED fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -3972,7 +3970,7 @@ end;
 procedure XTL_EmuD3DDevice_SetVertexShaderConstant4(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}const pConstantData: PVOID;
-  {1 ECX}Register_: INT
+  {1 ECX}Register_: DWORD
   ); register; // VALIDATED fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -3995,7 +3993,7 @@ end;
 procedure XTL_EmuD3DDevice_SetVertexShaderConstantNotInline(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}const pConstantData: PVOID;
-  {1 ECX}Register_: INT;
+  {1 ECX}Register_: DWORD;
   {3 stack}ConstantCount: DWORD
   ); register; // fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -5007,7 +5005,7 @@ end;
 
 function XTL_EmuD3DDevice_SetVertexData2f
 (
-    Register_: int;
+    Register_: DWORD;
     a: FLOAT;
     b: FLOAT
 ): HRESULT; stdcall;
@@ -5043,13 +5041,13 @@ end;
 
 function XTL_EmuD3DDevice_SetVertexData2s
 (
-    Register_: int;
+    Register_: DWORD;
     a: SHORT;
     b: SHORT
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  dwA, dwB: DWORD;
+  dwA, dwB: FLOAT;
 begin
   if MayLog(lfUnit or lfTrace) then
   begin
@@ -5066,8 +5064,8 @@ begin
 
   if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
   begin
-    dwA := DWORD(a > 0);
-    dwB := DWORD(b > 0);
+    dwA := dwA / High(a);
+    dwB := dwB / High(b);
   end;
 
 
@@ -5078,7 +5076,7 @@ end;
 
 function XTL_EmuD3DDevice_SetVertexData4f
 (
-    Register_: int;
+    Register_: DWORD;
     a: FLOAT;
     b: FLOAT;
     c: FLOAT;
@@ -5169,10 +5167,10 @@ begin
    {3=}X_D3DVSDE_DIFFUSE:
       begin
         o := g_IVBTblOffs;
-        ca := Trunc(d * 255) shl 24; //FtoDW(d) shl 24;
-        cr := Trunc(a * 255) shl 16; //FtoDW(a) shl 16;
-        cg := Trunc(b * 255) shl 8; //FtoDW(b) shl 8;
-        cb := Trunc(c * 255) shl 0; //FtoDW(c) shl 0;
+        ca := Trunc(d * 255.0) shl 24; //FtoDW(d) shl 24;
+        cr := Trunc(a * 255.0) shl 16; //FtoDW(a) shl 16;
+        cg := Trunc(b * 255.0) shl 8; //FtoDW(b) shl 8;
+        cb := Trunc(c * 255.0) shl 0; //FtoDW(c) shl 0;
 
         g_IVBTable[o].dwDiffuse := ca or cr or cg or cb;
 
@@ -5182,10 +5180,10 @@ begin
     {4=}X_D3DVSDE_SPECULAR:
       begin
         o := g_IVBTblOffs;
-        ca := Trunc(d * 255) shl 24; //FtoDW(d) shl 24;
-        cr := Trunc(a * 255) shl 16; //FtoDW(a) shl 16;
-        cg := Trunc(b * 255) shl 8; //FtoDW(b) shl 8;
-        cb := Trunc(c * 255) shl 0; //FtoDW(c) shl 0;
+        ca := Trunc(d * 255.0) shl 24; //FtoDW(d) shl 24;
+        cr := Trunc(a * 255.0) shl 16; //FtoDW(a) shl 16;
+        cg := Trunc(b * 255.0) shl 8; //FtoDW(b) shl 8;
+        cb := Trunc(c * 255.0) shl 0; //FtoDW(c) shl 0;
 
         g_IVBTable[o].dwSpecular := ca or cr or cg or cb;
 
@@ -5271,7 +5269,7 @@ end;
 
 function XTL_EmuD3DDevice_SetVertexData4ub
 (
-    Register_: INT;
+    Register_: DWORD;
     a: BYTE;
     b: BYTE;
     c: BYTE;
@@ -5298,10 +5296,10 @@ begin
 
   if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
   begin
-    dwA := dwA / 255.0;
-    dwB := dwB / 255.0;
-    dwC := dwC / 255.0;
-    dwD := dwD / 255.0;
+    dwA := dwA / High(a);
+    dwB := dwB / High(b);
+    dwC := dwC / High(c);
+    dwD := dwD / High(d);
   end;
 
   // TODO -oDxbx : Handle Vertex Attributes that need a Color (in this case, r,g,b=0.0-255.0, a=0.0-1.0)
@@ -5312,7 +5310,7 @@ end;
 
 function XTL_EmuD3DDevice_SetVertexData4s
 (
-    Register_: INT;
+    Register_: DWORD;
     a: SHORT;
     b: SHORT;
     c: SHORT;
@@ -5320,11 +5318,11 @@ function XTL_EmuD3DDevice_SetVertexData4s
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Patrickvl  Done:100
 var
-  dwA, dwB, dwC, dwD: DWORD;
+  dwA, dwB, dwC, dwD: FLOAT;
 begin
+  EmuSwapFS(fsWindows);
+
   if MayLog(lfUnit or lfTrace) then
-  begin
-    EmuSwapFS(fsWindows);
     LogBegin('EmuD3DDevice_SetVertexData4s >>').
       _(Register_, 'Register').
       _(a, 'a').
@@ -5332,18 +5330,18 @@ begin
       _(c, 'c').
       _(d, 'd').
     LogEnd();
-    EmuSwapFS(fsXbox);
-  end;
 
   dwA := a; dwB := b; dwC := c; dwD := d;
 
   if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
   begin
-    dwA := DWORD(a > 0);
-    dwB := DWORD(b > 0);
-    dwC := DWORD(c > 0);
-    dwD := DWORD(d > 0);
+    dwA := dwA / High(a);
+    dwB := dwB / High(b);
+    dwC := dwC / High(c);
+    dwD := dwD / High(d);
   end;
+
+  EmuSwapFS(fsXbox);
 
   // TODO -oDxbx : Handle Vertex Attributes that need a Color
   //Result := XTL_EmuD3DDevice_SetVertexData4f(Register_, DWtoF(dwA), DWtoF(dwB), DWtoF(dwC), DWtoF(dwD));
@@ -5352,7 +5350,7 @@ end;
 
 function XTL_EmuD3DDevice_SetVertexDataColor
 (
-    Register_: int;
+    Register_: DWORD;
     Color: D3DCOLOR
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -7673,7 +7671,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_SetRenderState_FillMode').
-      _(Integer(Ord(Value)), 'Value').
+      _(DWORD(Value), 'Value').
     LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
@@ -7848,7 +7846,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_SetRenderState_CullMode').
-      _(Integer(Ord(Value)), 'Value').
+      _(DWORD(Value), 'Value').
     LogEnd();
 
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
@@ -9179,7 +9177,7 @@ begin
     LogEnd();
 
 //  D3DDevice_SetCopyRectsState(pCopyRectState, pCopyRectRopState);
-  unimplemented('EmuD3DDevice_SetCopyRectsState');
+  Unimplemented('EmuD3DDevice_SetCopyRectsState');
 
   EmuSwapFS(fsXbox);
 
@@ -9382,7 +9380,7 @@ begin
       _(Address, 'Address').
     LogEnd();
 
-  unimplemented('EmuD3DDevice_SelectVertexShaderDirect');
+  Unimplemented('EmuD3DDevice_SelectVertexShaderDirect');
 
   EmuSwapFS(fsXbox);
 end;
@@ -9416,7 +9414,7 @@ function XTL_EmuD3DDevice_GetVertexShader
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit or lfTrace) then
+  if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_GetVertexShader').
       _(pHandle, 'pHandle').
     LogEnd();
@@ -9435,7 +9433,7 @@ end;
 
 function XTL_EmuD3DDevice_GetVertexShaderConstant
 (
-  Register_: INT;
+  Register_: DWORD;
   pConstantData: Pvoid;
   ConstantCount: DWORD
 ): HRESULT; stdcall;
@@ -9491,7 +9489,7 @@ begin
       _(pStreamInputs, 'pStreamInputs').
     LogEnd();
 
-  unimplemented('EmuD3DDevice_SetVertexShaderInputDirect');
+  Unimplemented('EmuD3DDevice_SetVertexShaderInputDirect');
 
   EmuSwapFS(fsXbox);
   Result := D3D_OK;
@@ -9538,7 +9536,7 @@ begin
       _(pStreamInputs, 'pStreamInputs').
     LogEnd();
 
-  unimplemented('EmuD3DDevice_SetVertexShaderInput');
+  Unimplemented('EmuD3DDevice_SetVertexShaderInput');
 
   EmuSwapFS(fsXbox);
   Result := D3D_OK;
@@ -9559,7 +9557,7 @@ begin
       _(pData, 'pData').
     LogEnd();
 
-  unimplemented('EmuD3DDevice_RunVertexStateShader');
+  Unimplemented('EmuD3DDevice_RunVertexStateShader');
 
   EmuSwapFS(fsXbox);
 end;
@@ -9579,7 +9577,7 @@ begin
       _(Address, 'Address').
     LogEnd();
 
-  unimplemented('EmuD3DDevice_LoadVertexShaderProgram');
+  Unimplemented('EmuD3DDevice_LoadVertexShaderProgram');
 
   EmuSwapFS(fsXbox);
 end;
@@ -9593,7 +9591,7 @@ begin
     DbgPrintf('EmuD3D8 : EmuD3DDevice_Nop');
 
   //D3DDevice_Nop();
-  unimplemented('EmuD3DDevice_Nop');
+  Unimplemented('EmuD3DDevice_Nop');
 
   EmuSwapFS(fsXbox);
   Result := D3D_OK;
@@ -10640,22 +10638,11 @@ begin
   Result := D3D_OK;
 end;
 
+(* Too High level
 procedure XTL_EmuD3DDevice_SetOverscanColor(
   Color: D3DCOLOR
-);
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetOverscanColor').
-      _(Color, 'Color').
-    LogEnd();
-
-  //D3DDevice_SetOverscanColor(Color);
-  Unimplemented('XTL_EmuD3DDevice_SetOverscanColor');
-
-  EmuSwapFS(fsXbox);
-end;
+); stdcall;
+*)
 
 function XTL_EmuD3DDevice_SetVertexBlendModelView
 (
@@ -10700,7 +10687,7 @@ begin
       _(pPushBuffer, 'pPushBuffer').
     LogEnd();
 
-  unimplemented('EmuD3DDevice_BeginPushBuffer');
+  Unimplemented('EmuD3DDevice_BeginPushBuffer');
 
   EmuSwapFS(fsXbox);
 
@@ -11628,7 +11615,7 @@ exports
   XTL_EmuD3DDevice_GetMaterial,
   XTL_EmuD3DDevice_GetModelView, // ??
   XTL_EmuD3DDevice_GetOverlayUpdateStatus,
-  XTL_EmuD3DDevice_GetOverscanColor,
+//  XTL_EmuD3DDevice_GetOverscanColor, // Too high level
   XTL_EmuD3DDevice_GetPixelShader,
   XTL_EmuD3DDevice_GetPixelShaderConstant,
   XTL_EmuD3DDevice_GetPixelShaderFunction,
@@ -11685,7 +11672,7 @@ exports
   XTL_EmuD3DDevice_SetLight,
   XTL_EmuD3DDevice_SetMaterial,
   XTL_EmuD3DDevice_SetModelView, // ??
-  XTL_EmuD3DDevice_SetOverscanColor,
+//  XTL_EmuD3DDevice_SetOverscanColor, // Too high level
   XTL_EmuD3DDevice_SetPalette,
   XTL_EmuD3DDevice_SetPixelShader,
   XTL_EmuD3DDevice_SetPixelShaderConstant,
@@ -11711,7 +11698,7 @@ exports
   XTL_EmuD3DDevice_SetRenderState_RopZRead,
   XTL_EmuD3DDevice_SetRenderState_SampleAlpha,
   XTL_EmuD3DDevice_SetRenderState_ShadowFunc,
-  XTL_EmuD3DDevice_SetRenderState_Simple,
+  XTL_EmuD3DDevice_SetRenderState_Simple, // Disabling this patch, makes Turok crash in MakeRequestedSpace; Why?
   XTL_EmuD3DDevice_SetRenderState_StencilCullEnable,
   XTL_EmuD3DDevice_SetRenderState_StencilEnable,
   XTL_EmuD3DDevice_SetRenderState_StencilFail,
@@ -11791,10 +11778,9 @@ exports
   XTL_EmuD3DSurface_GetContainer2,
   XTL_EmuD3DSurface_GetDesc,
   XTL_EmuD3DSurface_LockRect,
-
   XTL_EmuD3DTexture_GetLevelDesc,
   XTL_EmuD3DTexture_GetSurfaceLevel,
-  XTL_EmuD3DTexture_GetSurfaceLevel2,
+  XTL_EmuD3DTexture_GetSurfaceLevel2, // Disabling this patch, makes Turok crash early in CreateSurface or something :
   XTL_EmuD3DTexture_LockRect,
 
   XTL_EmuD3DVertexBuffer_GetDesc,
