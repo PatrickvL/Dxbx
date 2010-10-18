@@ -43,6 +43,8 @@ Source: "..\bin\XIso.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: X
 Source: "..\Libraries\D3DX81ab.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main
 Source: "..\Libraries\msvcrtd.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main
 
+Source: "..\resource\StoredTrie.dpt"; DestDir: "{app}"; Flags: ignoreversion; Components: main
+
 Source: "..\Readme.txt"; DestDir: "{app}";  Flags: isreadme; Components: main
 Source: "..\Changelog.txt"; DestDir: "{app}"; Flags: isreadme; Components: main
 
