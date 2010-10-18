@@ -1,6 +1,14 @@
 DXBX Changelog, this changelog has been implemented from version 0.0.9
 So the changes from version 0.0.8 and below are not documented.
 
+Version 0.4 Release:
+- Rewrite of pattern scanning and detection
+- Menu option to skip cache file
+- Menu configuration for log settings
+- Games loaded will be added to the gamelist.
+- Games in the gamelist can be started by pressing launch button
+
+
 Version 0.3 Release:
 - Controllers are working
 - More homebrew is working
