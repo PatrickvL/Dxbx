@@ -126,6 +126,9 @@ type
     ExportDialog: TSaveDialog;
     mnu_BypassSymbolCache: TMenuItem;
     N5: TMenuItem;
+    N6: TMenuItem;
+    Clear1: TMenuItem;
+    actClearGameList: TAction;
     procedure actStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -161,6 +164,7 @@ type
     procedure dgXbeInfosDblClick(Sender: TObject);
     procedure dgXbeInfosKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure mnu_BypassSymbolCacheClick(Sender: TObject);
+    procedure actClearGameListExecute(Sender: TObject);
   protected
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
     procedure WndProc(var Message: TMessage); override;
@@ -1326,6 +1330,19 @@ begin
   SHDeleteFiles(Handle, SymbolCacheFolder + '\*' + SymbolCacheFileExt, [doAllowUndo, doFilesOnly]);
 end;
 
+procedure Tfrm_Main.actClearGameListExecute(Sender: TObject);
+var
+  lIndex: Integer;
+begin
+  // Import another gamedata (next to the already loaded version)
+  for lIndex :=  MyXBEList.Count -1 downto 0 do
+  begin
+    MyXBEList.Delete(lIndex);
+  end;
+  UpdateFilter;
+  SaveXBEList(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aPublishedBy=}'');
+end;
+
 procedure Tfrm_Main.actCloseExecute(Sender: TObject);
 begin
   Close;
@@ -1335,7 +1352,6 @@ procedure Tfrm_Main.actOpenXbeExecute(Sender: TObject);
 var
   XbeXml: string;
 begin
-//  XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
   if XbeOpenDialog.Execute then
   begin
     LoadXbe(XbeOpenDialog.FileName);
