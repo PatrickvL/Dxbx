@@ -874,7 +874,7 @@ begin
       _(pdwStatus, 'pdwStatus').
     LogEnd();
 
-  unimplemented('XMediaObject.GetStatus');
+  Unimplemented('XMediaObject.GetStatus');
 
   pdwStatus^ := DSBSTATUS_PLAYING;
 
@@ -3828,7 +3828,7 @@ begin
       _(pdwStatus, 'pdwStatus').
     LogEnd();
 
-  unimplemented('EmuCDirectSoundStream_GetStatus');
+  Unimplemented('EmuCDirectSoundStream_GetStatus');
 
   pdwStatus^ := DSBSTATUS_PLAYING;
 
@@ -3998,7 +3998,7 @@ begin
 
   Result := DS_OK;
 
-  unimplemented('IDirectSoundStream_SetPitch');
+  Unimplemented('IDirectSoundStream_SetPitch');
 
   EmuSwapFS(fsXbox);
 end;
