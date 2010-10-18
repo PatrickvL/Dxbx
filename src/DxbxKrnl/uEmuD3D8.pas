@@ -4994,9 +4994,10 @@ begin
 
   g_IVBTblOffs := 0;
   g_IVBFVF := 0;
+
   // default values
   if Length(g_IVBTable) > 0 then
-    ZeroMemory(@g_IVBTable[0], sizeof(_D3DIVB)*Length(g_IVBTable));
+    ZeroMemory(@g_IVBTable[0], sizeof(g_IVBTable[0])*Length(g_IVBTable));
 
   EmuSwapFS(fsXbox);
 
@@ -5114,7 +5115,7 @@ begin
     SetLength(g_IVBTable, g_IVBTblOffs + 128);
 
     // default values
-    ZeroMemory(@g_IVBTable[g_IVBTblOffs], sizeof(_D3DIVB)*128);
+    ZeroMemory(@g_IVBTable[g_IVBTblOffs], sizeof(g_IVBTable[0])*128);
 
     // Make sure we also copy the last vertex to the next, at resize time :
     if g_IVBTblOffs > 0 then
@@ -5169,8 +5170,8 @@ begin
         o := g_IVBTblOffs;
         ca := Trunc(d * 255.0) shl 24; //FtoDW(d) shl 24;
         cr := Trunc(a * 255.0) shl 16; //FtoDW(a) shl 16;
-        cg := Trunc(b * 255.0) shl 8; //FtoDW(b) shl 8;
-        cb := Trunc(c * 255.0) shl 0; //FtoDW(c) shl 0;
+        cg := Trunc(b * 255.0) shl  8; //FtoDW(b) shl 8;
+        cb := Trunc(c * 255.0){shl 0}; //FtoDW(c) shl 0;
 
         g_IVBTable[o].dwDiffuse := ca or cr or cg or cb;
 
@@ -5182,8 +5183,8 @@ begin
         o := g_IVBTblOffs;
         ca := Trunc(d * 255.0) shl 24; //FtoDW(d) shl 24;
         cr := Trunc(a * 255.0) shl 16; //FtoDW(a) shl 16;
-        cg := Trunc(b * 255.0) shl 8; //FtoDW(b) shl 8;
-        cb := Trunc(c * 255.0) shl 0; //FtoDW(c) shl 0;
+        cg := Trunc(b * 255.0) shl  8; //FtoDW(b) shl 8;
+        cb := Trunc(c * 255.0){shl 0}; //FtoDW(c) shl 0;
 
         g_IVBTable[o].dwSpecular := ca or cr or cg or cb;
 
@@ -5370,11 +5371,11 @@ begin
     EmuSwapFS(fsXbox);
   end;
 
-  // TODO -oDxbx note : Is this correct? Shouldn't it be r,b,g,a ?
-  a := ((Color and $FF000000) shr 24);
-  r := ((Color and $00FF0000) shr 16);
-  g := ((Color and $0000FF00) shr 8);
-  b := ((Color and $000000FF) shr 0);
+  // Convert ARGB color into its 4 float components :
+  a := Byte(Color shr 24);
+  r := Byte(Color shr 16);
+  g := Byte(Color shr  8);
+  b := Byte(Color{shr 0});
 
   if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
   begin
@@ -5395,8 +5396,8 @@ begin
   if MayLog(lfUnit) then
     DbgPrintf('EmuD3D8 : EmuD3DDevice_End();');
 
-  if (g_IVBTblOffs <> 0) then
-      XTL_EmuFlushIVB();
+  if (g_IVBTblOffs > 0) then
+    XTL_EmuFlushIVB();
 
     // MARKED OUT BY CXBX
     // TODO -oCXBX: Should technically clean this up at some point..but on XP doesnt matter much
