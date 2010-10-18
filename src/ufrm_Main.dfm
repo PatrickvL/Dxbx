@@ -152,6 +152,12 @@ object frm_Main: Tfrm_Main
         object Export1: TMenuItem
           Action = actExportGameList
         end
+        object N6: TMenuItem
+          Caption = '-'
+        end
+        object Clear1: TMenuItem
+          Action = actClearGameList
+        end
       end
       object N1: TMenuItem
         Caption = '-'
@@ -349,6 +355,11 @@ object frm_Main: Tfrm_Main
       Category = 'File'
       Caption = '&Export'
       OnExecute = actExportGameListExecute
+    end
+    object actClearGameList: TAction
+      Category = 'File'
+      Caption = '&Clear'
+      OnExecute = actClearGameListExecute
     end
   end
   object XbeOpenDialog: TOpenDialog
