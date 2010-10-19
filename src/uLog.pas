@@ -19,6 +19,8 @@ unit uLog;
 
 {$INCLUDE Dxbx.inc}
 
+{.$DEFINE DXBX_TRACE_MEM} // Enable this to measure memory-increments (done in LogBegin to assure a reasonable frequency)
+
 interface
 
 uses
@@ -809,8 +811,34 @@ begin
   end;
 end;
 
+{$IFDEF DXBX_TRACE_MEM}
+var
+  Prev_Mem: Int64 = 0;
+
+procedure TraceMemory;
+var
+  Current, Delta: Int64;
+  MemStatus: TMEMORYSTATUSEX;
+begin
+  MemStatus.dwLength := SizeOf(MemStatus);
+  GlobalMemoryStatusEx({var}MemStatus);
+  Current := MemStatus.ullTotalVirtual - MemStatus.ullAvailVirtual;
+
+  Delta := Current - Prev_Mem;
+  if Delta > 4096 then
+  begin
+    Prev_Mem := Current;
+    WriteLog(Format('Traced a memory increase of %.0n bytes!', [0.0+Delta]));
+  end;
+end;
+{$ENDIF}
+
 function LogBegin(const aSymbolName: string; const aCategory: string = ''): PLogStack;
 begin
+{$IFDEF DXBX_TRACE_MEM}
+  TraceMemory;
+{$ENDIF}
+
   // Start the chain with a new entry that points to itself :
   Result := GetLogEntry(nil);
   Result.LogRoot := Result;

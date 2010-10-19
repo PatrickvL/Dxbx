@@ -1456,12 +1456,15 @@ begin
       LocalPatched := True;
     if PatchStream(pPatchDesc, uiStream) then
       LocalPatched := True;
-    if LocalPatched and (nil=pPatchDesc.pVertexStreamZeroData) then
-    begin
-      // Insert the patched stream in the cache
-      CacheStream(pPatchDesc, uiStream);
-      m_pStreams[uiStream].bUsedCached := true;
-    end;
+
+// TODO : Fix the following caching code, which is leaking hundreds of MBs in the PointSprites and XMarbles XDK samples!
+//    if LocalPatched and (nil=pPatchDesc.pVertexStreamZeroData) then
+//    begin
+//      // Insert the patched stream in the cache
+//      CacheStream(pPatchDesc, uiStream);
+//      m_pStreams[uiStream].bUsedCached := true;
+//    end;
+
     Patched := Patched or LocalPatched;
   end;
 
