@@ -532,14 +532,16 @@ uses
 
 {$DEFINE _DEBUG_TRACK_VS}
 
+const lfUnit = lfCxbx or lfDxbx or lfVertexShader;
+
 // VertexShader.h
 
 procedure DbgVshPrintf(aStr: string); overload;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
 {$ifdef _DEBUG_TRACK_VS}
-  if (g_bPrintfOn) then
-    printf(aStr);
+  if MayLog(lfUnit) then
+    DbgPrintf(aStr);
 {$endif}
 end;
 
@@ -547,8 +549,8 @@ procedure DbgVshPrintf(aStr: string; Args: array of const); overload;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
 {$ifdef _DEBUG_TRACK_VS}
-  if (g_bPrintfOn) then
-    printf(aStr, Args);
+  if MayLog(lfUnit) then
+    DbgPrintf(aStr, Args);
 {$endif}
 end;
 

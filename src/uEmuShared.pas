@@ -207,8 +207,8 @@ begin
   LoadExtraSettings('Software\Dxbx\Settings');
 
   // 'load' the default logflags :
-  m_ActiveLogFlags := g_ActiveLogFlags;
-  m_DisabledLogFlags := g_DisabledLogFlags;
+  m_ActiveLogFlags := g_DefaultLogFlags_Enabled;
+  m_DisabledLogFlags := g_DefaultLogFlags_Disabled;
   // TODO -oDxbx : Use a real persistence mechanism for the logflags (including presets)
 end;
 
@@ -237,8 +237,7 @@ begin
 (* Now that we have a configuration interface for these flags,
    we can make them available to MayLog (and thus let them influence the
    logging behaviour) like this : *)
-  uLog.pActiveLogFlags := @m_ActiveLogFlags;
-  uLog.pDisabledLogFlags := @m_DisabledLogFlags;
+  uLog.SetSpecifiedLogFlags(@m_ActiveLogFlags, @m_DisabledLogFlags);
 end;
 
 procedure EmuShared.Save;

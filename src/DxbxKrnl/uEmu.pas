@@ -109,10 +109,7 @@ procedure EmuWarning(szWarningMessage: string);
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
 {$IFDEF DEBUG}
-  if (g_bPrintfOn) then
-  begin
-    DbgPrintf('EmuWarn : ' + szWarningMessage);
-  end;
+  DbgPrintf('EmuWarn : ' + szWarningMessage);
 {$ENDIF}
 end;
 
