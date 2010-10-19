@@ -101,14 +101,20 @@ const
 type TLogFlags = DWORD; // 'set of TLogFlag' prevents inlining of MayLog
   PLogFlags = ^TLogFlags;
 
+const
+  // This are the default logging flags :
+  g_DefaultLogFlags_Enabled: TLogFlags = lfAlways or lfSymbolScan or lfDebug or lfCxbx or lfDxbx or lfKernel or lfPatch or lfReturnValue;
+  g_DefaultLogFlags_Disabled: TLogFlags = lfHeap or lfExtreme;
+
 var
-  // This field indicates all logging flags that are currently active :
-  g_ActiveLogFlags: TLogFlags = lfAlways or lfSymbolScan or lfDebug or lfCxbx or lfDxbx or lfKernel or lfPatch or lfReturnValue;
-  g_DisabledLogFlags: TLogFlags = lfHeap or lfExtreme;
+  // These pointers indicate the logging flags that are currently active
+  // (either by default or via indirection to EmuShared, see SetSpecifiedLogFlags):
+  // DO NOT USE THESE OUTSIDE THIS UNIT, ONLY HERE TO ENABLE INLINING OF MayLog!
+  pLogFlags_Enabled: PLogFlags;
+  pLogFlags_Disabled: PLogFlags;
 
-  pActiveLogFlags: PLogFlags = @g_ActiveLogFlags;
-  pDisabledLogFlags: PLogFlags = @g_DisabledLogFlags;
-
+procedure SetSpecifiedLogFlags(const aLogFlags_Enabled, aLogFlags_Disabled: PLogFlags);
+procedure ToggleLogging;
 function MayLog(const aFlags: TLogFlags): Boolean; inline;
 
 type
@@ -156,12 +162,6 @@ type
   end;
 
   function LogBegin(const aSymbolName: string; const aCategory: string = ''): PLogStack;
-
-procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); inline; overload;
-procedure Log(const aFlags: TLogFlags; const aLogMsg: string); inline; overload;
-procedure Log(const aFlags: TLogFlags; const aLogMsg: string; Args: array of const); overload;
-
-var g_bPrintfOn: _boolean = true;
 
 implementation
 
@@ -234,30 +234,45 @@ end;
 var
   ZeroChar: Char = #0;
 
+const
+  LogFlags_AllDisabled: TLogFlags = High(TLogFlags); // Used to turn off logging
+var
+  SpecifiedLogFlags: PLogFlags; // Initialized to g_DefaultLogFlags_Disabled
+  LoggingEnabled: Boolean = True;
+
+procedure UpdateLogFlags;
+// Make sure the LogFlags represent the enabled/disabled state (controllable with F8).
+// Also, no logging is done when the DebugMode = dmNone (configurable in Dxbx GUI).
+begin
+  if LoggingEnabled and (DebugMode > dmNone) then
+    pLogFlags_Disabled := SpecifiedLogFlags
+  else
+    pLogFlags_Disabled := @LogFlags_AllDisabled;
+end;
+
+procedure SetSpecifiedLogFlags(const aLogFlags_Enabled, aLogFlags_Disabled: PLogFlags);
+begin
+  pLogFlags_Enabled := aLogFlags_Enabled; // No need to set this apart, as it's not overriden
+  SpecifiedLogFlags := aLogFlags_Disabled;
+
+  UpdateLogFlags;
+end;
+
+procedure ToggleLogging;
+begin
+  LoggingEnabled := not LoggingEnabled;
+
+  UpdateLogFlags;
+end;
+
 // TODO -oDxbx: Apply this to all DbgPrintf calls, and put those in inline methods to speed things up
 function MayLog(const aFlags: TLogFlags): Boolean; // inline;
 begin
-  Result := ((aFlags or pActiveLogFlags^) > 0)
-        and ((aFlags and pDisabledLogFlags^) = 0)
-        and g_bPrintfOn
-end;
-
-procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); // inline;
-begin
-  if MayLog(aFlags) then
-    aLogProc();
-end;
-
-procedure Log(const aFlags: TLogFlags; const aLogMsg: string); // inline;
-begin
-  if MayLog(aFlags) then
-    DbgPrintf(aLogMsg);
-end;
-
-procedure Log(const aFlags: TLogFlags; const aLogMsg: string; Args: array of const);
-begin
-  if MayLog(aFlags) then
-    DbgPrintf(aLogMsg, Args);
+  // Note : Check the disabled flags first, as that's faster than checking the enabled flags
+  // in cases where logging is disabled. And besides: If logging is enabled, both flags have
+  // to be checked anyway, so in that scenario the checking-order is not really important :
+  Result := ((aFlags and pLogFlags_Disabled^) = 0)
+        and ((aFlags or pLogFlags_Enabled^) > 0);
 end;
 
 // Checks whether the given address is a valid address
@@ -590,6 +605,7 @@ end;
 procedure SetLogMode(aLogMode: TDebugMode = dmNone); export;
 begin
   DebugMode := aLogMode;
+  UpdateLogFlags;
 end;
 
 procedure CreateLogs(aDebugMode: TDebugMode; aOutputFileName: string = '');
@@ -628,6 +644,9 @@ begin
         raise Exception.Create('Could not create log file');
       end;
   end; // case aDebugMode
+
+  // Make sure the entire logging stack knows about this mode (especially MayLog) :
+  SetLogMode(aDebugMode);
 
   WriteLog('Started logging at ' + DateTimeToStr(Now));
   WriteLog('Dxbx version ' + _DXBX_VERSION + ' (svn revision ' + IntToStr(SvnRevision) + ')');
@@ -1045,6 +1064,8 @@ end;
 initialization
 
   InitializeCriticalSection({var}DxbxLogLock);
+
+  SetSpecifiedLogFlags(@g_DefaultLogFlags_Enabled, @g_DefaultLogFlags_Disabled);
 
 finalization
 

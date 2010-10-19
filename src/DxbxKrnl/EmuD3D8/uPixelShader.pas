@@ -2438,14 +2438,14 @@ var
   PSIntermediate: RPSIntermediate;
 begin
   PSIntermediate.Init(pPSDef);
-  Result :=  PSIntermediate.IntermediateToString();
+  Result := PSIntermediate.IntermediateToString();
 end;
 
 procedure XTL_PrintPixelShaderDefContents(pPSDef: PX_D3DPIXELSHADERDEF);
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  if (g_bPrintfOn) then // TODO -oDxbx: Remove this once our logging relies on MayLog completely
-    Log(lfUnit, XTL_DumpPixelShaderDefToString(pPSDef));
+  if MayLog(lfUnit) then
+    DbgPrintf(XTL_DumpPixelShaderDefToString(pPSDef));
 end;
 
 function XTL_EmuRecompilePshDef(pPSDef: PX_D3DPIXELSHADERDEF): string;

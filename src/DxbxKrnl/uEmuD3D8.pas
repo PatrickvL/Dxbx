@@ -1152,7 +1152,6 @@ var
   nBorderHeight: Integer;
   x, y, nWidth, nHeight: Integer;
   hwndParent: HWND;
-//  lPrintfOn: _bool;
   UpdateTimer: DxbxTimer;
 begin
   // register window class
@@ -1251,7 +1250,7 @@ begin
   begin
     ZeroMemory(@msg, sizeof(msg));
 
-//    lPrintfOn := g_bPrintfOn;
+    // TODO : Should we temporarily disable logging ?
 
     g_bRenderWindowActive := true;
 
@@ -1267,7 +1266,7 @@ begin
       else
       begin
         UpdateTimer.Wait;
-//        lPrintfOn := g_bPrintfOn;
+        // TODO : Should we restore logging ?
       end;
     end;
 
@@ -1370,7 +1369,7 @@ begin
         end;
         VK_F8:
         begin
-          g_bPrintfOn := not g_bPrintfOn;
+          uLog.ToggleLogging;
         end;
         VK_F9:
         begin
