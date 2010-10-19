@@ -84,6 +84,7 @@ uses
 function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0; iFace: int = Ord(D3DCUBEMAP_FACE_POSITIVE_X) - 1): Boolean;
 function DxbxFVFToVertexSizeInBytes(dwVertexShader: DWORD; bIncludeTextures: Boolean = True): uint;
 function DxbxPresent(pSourceRect: PRECT; pDestRect: PRECT; pDummy1: HWND; pDummy2: PVOID): UINT;
+function DxbxSetVertexData(const Register_: X_D3DVSDE; const a, b, c, d: FLOAT): HRESULT;
 
 procedure XTL_EmuD3DInit(XbeHeader: PXBEIMAGE_HEADER; XbeHeaderSize: UInt32); {NOPATCH}
 function XTL_EmuDirect3D_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
@@ -91,8 +92,6 @@ function XTL_EmuDirect3D_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
   ppReturnedDeviceInterface: XTL_PPIDirect3DDevice8): HRESULT; stdcall// forward
 
-function XTL_EmuD3DDevice_SetVertexData4f(Register_: DWORD;
-  a, b, c, d: FLOAT): HRESULT; stdcall; // forward
 function XTL_EmuD3DDevice_GetVertexShader({CONST} pHandle: PDWORD): HRESULT; stdcall; // forward
 
 procedure XTL_EmuD3DResource_Register(pThis: PX_D3DResource;
@@ -271,6 +270,7 @@ type
     function _(const aValue: X_NV2AMETHOD; const aName: string = ''): PLogStack; overload;
     function _(const aValue: X_D3DTEXTURESTAGESTATETYPE; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PD3DVIEWPORT; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: X_D3DVSDE; const aName: string = ''): PLogStack; overload;
   end;
 
 function RLogStackHelper._(const aValue: X_D3DPOOL; const aName: string = ''): PLogStack;
@@ -475,6 +475,27 @@ begin
   Result := SetName(aName, 'PD3DVIEWPORT');
   SetValue(DWORD(aValue), Format('%d, %d, %d, %d, %f, %f',
       [aValue.X, aValue.Y, aValue.Width, aValue.Height, aValue.MinZ, aValue.MaxZ]));
+end;
+
+function RLogStackHelper._(const aValue: X_D3DVSDE; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'X_D3DVSDE');
+  case DWORD(aValue) of
+    X_D3DVSDE_POSITION     : SetValue(UIntPtr(aValue), 'X_D3DVSDE_POSITION');
+    X_D3DVSDE_BLENDWEIGHT  : SetValue(UIntPtr(aValue), 'X_D3DVSDE_BLENDWEIGHT');
+    X_D3DVSDE_NORMAL       : SetValue(UIntPtr(aValue), 'X_D3DVSDE_NORMAL');
+    X_D3DVSDE_DIFFUSE      : SetValue(UIntPtr(aValue), 'X_D3DVSDE_DIFFUSE');
+    X_D3DVSDE_SPECULAR     : SetValue(UIntPtr(aValue), 'X_D3DVSDE_SPECULAR');
+    X_D3DVSDE_FOG          : SetValue(UIntPtr(aValue), 'X_D3DVSDE_FOG');
+    X_D3DVSDE_BACKDIFFUSE  : SetValue(UIntPtr(aValue), 'X_D3DVSDE_BACKDIFFUSE');
+    X_D3DVSDE_BACKSPECULAR : SetValue(UIntPtr(aValue), 'X_D3DVSDE_BACKSPECULAR');
+    X_D3DVSDE_TEXCOORD0    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD0');
+    X_D3DVSDE_TEXCOORD1    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD1');
+    X_D3DVSDE_TEXCOORD2    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD2');
+    X_D3DVSDE_TEXCOORD3    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD3');
+    X_D3DVSDE_VERTEX       : SetValue(UIntPtr(aValue), 'X_D3DVSDE_VERTEX');
+  else SetValue(UIntPtr(aValue));
+  end;
 end;
 
 //
@@ -2239,7 +2260,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_BeginPush(%d);', [Count]);
+    LogBegin('EmuD3DDevice_BeginPush').
+      _(Count, 'Count').
+    LogEnd();
+
+  // TODO -oDxbx : Speed this up by re-using a previously memory block
 
   Result := calloc(Count, sizeof(DWORD)); // Cxbx: new DWORD[Count]
   g_dwPrimaryPBCount := Count;
@@ -2254,7 +2279,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_EndPush(0x%.08X);', [pPush]);
+    LogBegin('EmuD3DDevice_EndPush').
+      _(pPush, 'pPush').
+    LogEnd();
 
   XTL_EmuExecutePushBufferRaw(g_pPrimaryPB);
 
@@ -2272,7 +2299,7 @@ begin
   if MayLog(lfUnit) then
   begin
     EmuSwapFS(fsWindows);
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_BeginVisibilityTest();');
+    LogBegin('EmuD3DDevice_BeginVisibilityTest').LogEnd();
     EmuSwapFS(fsXbox);
   end;
 
@@ -2627,7 +2654,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3D_KickOffAndWaitForIdle();');
+    LogBegin('EmuD3D_KickOffAndWaitForIdle').LogEnd();
 
   // TODO -oCXBX: Actually do something
 
@@ -2674,7 +2701,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_AddRef();');
+    LogBegin('EmuD3DDevice_AddRef').LogEnd();
 
   Result := ULONG(g_pD3DDevice._AddRef());
 
@@ -2687,7 +2714,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_BeginStateBlock();');
+    LogBegin('EmuD3DDevice_BeginStateBlock').LogEnd();
 
   Result := g_pD3DDevice.BeginStateBlock();
 
@@ -2702,7 +2729,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_BeginStateBig();');
+    LogBegin('EmuD3DDevice_BeginStateBig').LogEnd();
 
   ret := g_pD3DDevice.BeginStateBlock();
 
@@ -2857,29 +2884,26 @@ begin
     PCFormat,
     PIDirect3DSurface(@(ppBackBuffer^.Emu.Surface)));
 
-  DbgPrintf('Created image surface @ 0x%.08X [hRet = 0x%.08X]: %dx%d, format = 0x%.08X', [
-        ppBackBuffer^.Emu.Surface,
-        Result,
-        Width, Height, Ord(PCFormat)]);
-
   if FAILED(Result) and (Format = X_D3DFMT_LIN_D24S8) then
   begin
     EmuWarning('CreateImageSurface: D3DFMT_LIN_D24S8 -> D3DFMT_A8R8G8B8');
 
+    PCFormat := D3DFMT_A8R8G8B8;
+
     Result := IDirect3DDevice_CreateImageSurface(g_pD3DDevice,
       Width,
       Height,
-      D3DFMT_A8R8G8B8,
+      PCFormat,
       PIDirect3DSurface(@(ppBackBuffer^.Emu.Surface)));
-
-    DbgPrintf('Created image surface @ 0x%.08X [hRet = 0x%.08X]: %dx%d, format = 0x%.08X', [
-        ppBackBuffer^.Emu.Surface,
-        Result,
-        Width, Height, Ord(D3DFMT_A8R8G8B8)]);
   end;
 
   if FAILED(Result) then
-    {EmuWarning}DxbxKrnlCleanup('CreateImageSurface failed! ' + #13#10 + 'Format = 0x%8.8X', [Format]);
+    {EmuWarning}DxbxKrnlCleanup('CreateImageSurface failed! ' + #13#10 + 'Format = 0x%8.8X', [Format])
+  else
+    DbgPrintf('Created image surface @ 0x%.08X [hRet = 0x%.08X]: %dx%d, format = 0x%.08X', [
+        ppBackBuffer^.Emu.Surface,
+        Result,
+        Width, Height, Ord(PCFormat)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -3824,7 +3848,7 @@ end;
 
 function XTL_EmuD3DDevice_SetPixelShaderConstant
 (
-  Register_: DWORD;
+  Register_: X_D3DVSDE;
   {CONST} pConstantData: PVOID;
   ConstantCount: DWORD
 ): HRESULT; stdcall;
@@ -3873,7 +3897,7 @@ end;
 
 function XTL_EmuD3DDevice_SetVertexShaderConstant
 (
-  Register_: DWORD;
+  Register_: X_D3DVSDE;
   {CONST} pConstantData: PVOID;
   ConstantCount: DWORD
 ): HRESULT; stdcall;
@@ -3993,7 +4017,7 @@ end;
 procedure XTL_EmuD3DDevice_SetVertexShaderConstantNotInline(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}const pConstantData: PVOID;
-  {1 ECX}Register_: DWORD;
+  {1 ECX}Register_: X_D3DVSDE;
   {3 stack}ConstantCount: DWORD
   ); register; // fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -4527,7 +4551,7 @@ begin
         PCFormat, D3DPOOL_MANAGED, @(ppVolumeTexture^.Emu.VolumeTexture));
 
     if (FAILED(hRet)) then
-        EmuWarning('CreateVolumeTexture Failed! (0x%.08X)', [hRet]);
+      EmuWarning('CreateVolumeTexture Failed! (0x%.08X)', [hRet]);
 
     if MayLog(lfUnit or lfReturnValue) then
       DbgPrintf('EmuD3D8 : Created Volume Texture: 0x%.08X (0x%.08X)', [@ppVolumeTexture, ppVolumeTexture^.Emu.VolumeTexture]);
@@ -4638,7 +4662,7 @@ begin
     DbgPrintf('EmuD3D8 : EmuIndexBuffer8 := 0x%.08X', [ppIndexBuffer^.Emu.IndexBuffer]);
 
   if (FAILED(hRet)) then
-      EmuWarning('CreateIndexBuffer Failed! (0x%.08X)', [hRet]);
+    EmuWarning('CreateIndexBuffer Failed! (0x%.08X)', [hRet]);
 
   //
   // update data ptr
@@ -4991,13 +5015,11 @@ begin
     LogEnd();
 
   g_IVBPrimitiveType := PrimitiveType;
-
-  g_IVBTblOffs := 0;
   g_IVBFVF := 0;
+  g_IVBTblOffs := 0;
 
-  // default values
-  if Length(g_IVBTable) > 0 then
-    ZeroMemory(@g_IVBTable[0], sizeof(g_IVBTable[0])*Length(g_IVBTable));
+  // Note : The g_IVBTable array doesn't need to be cleared, as that's already being done
+  // in DxbxSetVertexData (when growing) and in XTL_EmuFlushIVB (after conversion).
 
   EmuSwapFS(fsXbox);
 
@@ -5006,7 +5028,7 @@ end;
 
 function XTL_EmuD3DDevice_SetVertexData2f
 (
-    Register_: DWORD;
+    Register_: X_D3DVSDE;
     a: FLOAT;
     b: FLOAT
 ): HRESULT; stdcall;
@@ -5015,15 +5037,16 @@ begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    LogBegin('EmuD3DDevice_SetVertexData2f >>').
+    LogBegin('EmuD3DDevice_SetVertexData2f').
       _(Register_, 'Register').
       _(a, 'a').
       _(b, 'b').
     LogEnd();
     EmuSwapFS(fsXbox);
   end;
+
   // TODO -oDxbx : Handle Vertex Attributes that need a Color (in this case, r,g,b,a=0.0-1.0)
-  Result := XTL_EmuD3DDevice_SetVertexData4f(Register_, a, b, 0.0, 1.0);
+  Result := DxbxSetVertexData(Register_, a, b, 0.0, 1.0);
 end;
 
 
@@ -5042,18 +5065,18 @@ end;
 
 function XTL_EmuD3DDevice_SetVertexData2s
 (
-    Register_: DWORD;
+    Register_: X_D3DVSDE;
     a: SHORT;
     b: SHORT
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  dwA, dwB: FLOAT;
+  fA, fB: FLOAT;
 begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    LogBegin('EmuD3DDevice_SetVertexData2s >>').
+    LogBegin('EmuD3DDevice_SetVertexData2s').
       _(Register_, 'Register').
       _(a, 'a').
       _(b, 'b').
@@ -5061,41 +5084,31 @@ begin
     EmuSwapFS(fsXbox);
   end;
 
-  dwA := a; dwB := b;
+  fA := a; fB := b;
 
   if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
   begin
-    dwA := dwA / High(a);
-    dwB := dwB / High(b);
+    fA := fA / High(a);
+    fB := fB / High(b);
   end;
 
-
   // TODO -oDxbx : Handle Vertex Attributes that need a Color (in this case, r,g,b,a=0 or 1)
-  //Result := XTL_EmuD3DDevice_SetVertexData4f(Register_, DWtoF(dwA), DWtoF(dwB), 0.0, 1.0);
-  Result := XTL_EmuD3DDevice_SetVertexData4f(Register_, (dwA), (dwB), 0.0, 1.0);
+  Result := DxbxSetVertexData(Register_, fA, fB, 0.0, 1.0);
 end;
 
 function XTL_EmuD3DDevice_SetVertexData4f
 (
-    Register_: DWORD;
+    Register_: X_D3DVSDE;
     a: FLOAT;
     b: FLOAT;
     c: FLOAT;
     d: FLOAT
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  hRet: HRESULT;
-  o: int;
-
-  ca: DWORD;
-  cr: DWORD;
-  cg: DWORD;
-  cb: DWORD;
 begin
-  EmuSwapFS(fsWindows);
-
   if MayLog(lfUnit or lfTrace) then
+  begin
+    EmuSwapFS(fsWindows);
     LogBegin('EmuD3DDevice_SetVertexData4f').
       _(Register_, 'Register').
       _(a, 'a').
@@ -5104,34 +5117,60 @@ begin
       _(d, 'd').
   //    _(g_IVBTblOffs, '## g_IVBTblOffs ##'). // test - show counter
     LogEnd();
+    EmuSwapFS(fsXbox);
+  end;
 
-  hRet := D3D_OK;
+  Result := DxbxSetVertexData(Register_, a, b, c, d);
+end;
+
+function DxbxSetVertexData(const Register_: X_D3DVSDE; const a, b, c, d: FLOAT): HRESULT;
+
+  function _abcdAsD3DCOLOR: D3DCOLOR;
+  begin
+    Result := (Trunc(a * 255.0) shl 16) // Red
+           or (Trunc(b * 255.0) shl  8) // Green
+           or (Trunc(c * 255.0){shl 0}) // Blue
+           or (Trunc(d * 255.0) shl 24);// Alpha
+  end;
+
+  procedure _Error;
+  begin
+    DxbxKrnlCleanup('Unknown IVB Register: %d', [Register_]);
+  end;
+
+const
+  GROWSIZE = 128;
+var
+  g_IVBTable_o: PD3DIVB;
+begin
+  Result := D3D_OK;
 
   // Check if g_IVBTable has enough space for the current g_IVBTblOffs
   // (and one extra for the "Copy current color to next vertex" case) :
   if Length(g_IVBTable) <= (int(g_IVBTblOffs) + 1) then
   begin
     // Grow with 128 vertices at a time :
-    SetLength(g_IVBTable, g_IVBTblOffs + 128);
+    SetLength(g_IVBTable, g_IVBTblOffs + GROWSIZE);
 
     // default values
-    ZeroMemory(@g_IVBTable[g_IVBTblOffs], sizeof(g_IVBTable[0])*128);
+    ZeroMemory(@g_IVBTable[g_IVBTblOffs], sizeof(g_IVBTable[0])*GROWSIZE);
 
     // Make sure we also copy the last vertex to the next, at resize time :
     if g_IVBTblOffs > 0 then
       g_IVBTable[g_IVBTblOffs] := g_IVBTable[g_IVBTblOffs - 1];
   end;
 
+  g_IVBTable_o := @g_IVBTable[g_IVBTblOffs];
+
   case Cardinal(Register_) of
     // TODO -oCXBX: Blend weight.
 
     {0=}X_D3DVSDE_POSITION:
       begin
-        o := g_IVBTblOffs;
-        g_IVBTable[o].Position.x := a;
-        g_IVBTable[o].Position.y := b;
-        g_IVBTable[o].Position.z := c;
-        g_IVBTable[o].Rhw := d; //1.0; // Dxbx note : Why set Rhw to 1.0? And why ignore d?
+        g_IVBTable_o.Position.x := a;
+        g_IVBTable_o.Position.y := b;
+        g_IVBTable_o.Position.z := c;
+        g_IVBTable_o.Rhw := d; //1.0; // Dxbx note : Why set Rhw to 1.0? And why ignore d?
 
         Inc(g_IVBTblOffs);
 
@@ -5140,12 +5179,10 @@ begin
 
     {1=}X_D3DVSDE_BLENDWEIGHT:
       begin
-        o := g_IVBTblOffs;
-
-        g_IVBTable[o].Position.x := a;
-        g_IVBTable[o].Position.y := b;
-        g_IVBTable[o].Position.z := c;
-        g_IVBTable[o].Blend1 := d;
+        g_IVBTable_o.Position.x := a;
+        g_IVBTable_o.Position.y := b;
+        g_IVBTable_o.Position.z := c;
+        g_IVBTable_o.Blend1 := d;
 
         Inc(g_IVBTblOffs);
 
@@ -5154,11 +5191,9 @@ begin
 
     {2=}X_D3DVSDE_NORMAL:
       begin
-        o := g_IVBTblOffs;
-
-        g_IVBTable[o].Normal.x := a;
-        g_IVBTable[o].Normal.y := b;
-        g_IVBTable[o].Normal.z := c;
+        g_IVBTable_o.Normal.x := a;
+        g_IVBTable_o.Normal.y := b;
+        g_IVBTable_o.Normal.z := c;
 
         Inc(g_IVBTblOffs);
 
@@ -5167,34 +5202,22 @@ begin
 
    {3=}X_D3DVSDE_DIFFUSE:
       begin
-        o := g_IVBTblOffs;
-        ca := Trunc(d * 255.0) shl 24; //FtoDW(d) shl 24;
-        cr := Trunc(a * 255.0) shl 16; //FtoDW(a) shl 16;
-        cg := Trunc(b * 255.0) shl  8; //FtoDW(b) shl 8;
-        cb := Trunc(c * 255.0){shl 0}; //FtoDW(c) shl 0;
-
-        g_IVBTable[o].dwDiffuse := ca or cr or cg or cb;
+        g_IVBTable_o.dwDiffuse := _abcdAsD3DCOLOR;
 
         g_IVBFVF := g_IVBFVF or D3DFVF_DIFFUSE;
       end;
 
     {4=}X_D3DVSDE_SPECULAR:
       begin
-        o := g_IVBTblOffs;
-        ca := Trunc(d * 255.0) shl 24; //FtoDW(d) shl 24;
-        cr := Trunc(a * 255.0) shl 16; //FtoDW(a) shl 16;
-        cg := Trunc(b * 255.0) shl  8; //FtoDW(b) shl 8;
-        cb := Trunc(c * 255.0){shl 0}; //FtoDW(c) shl 0;
-
-        g_IVBTable[o].dwSpecular := ca or cr or cg or cb;
+        g_IVBTable_o.dwSpecular := _abcdAsD3DCOLOR;
 
         g_IVBFVF := g_IVBFVF or D3DFVF_SPECULAR;
       end;
+
     {9=}X_D3DVSDE_TEXCOORD0:
       begin
-        o := g_IVBTblOffs;
-        g_IVBTable[o].TexCoord1.x := a;
-        g_IVBTable[o].TexCoord1.y := b;
+        g_IVBTable_o.TexCoord1.x := a;
+        g_IVBTable_o.TexCoord1.y := b;
 
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX1) then
         begin
@@ -5205,9 +5228,8 @@ begin
 
     {10=}X_D3DVSDE_TEXCOORD1:
       begin
-        o := g_IVBTblOffs;
-        g_IVBTable[o].TexCoord2.x := a;
-        g_IVBTable[o].TexCoord2.y := b;
+        g_IVBTable_o.TexCoord2.x := a;
+        g_IVBTable_o.TexCoord2.y := b;
 
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX2) then
         begin
@@ -5218,9 +5240,8 @@ begin
 
     {11=}X_D3DVSDE_TEXCOORD2:
       begin
-        o := g_IVBTblOffs;
-        g_IVBTable[o].TexCoord3.x := a;
-        g_IVBTable[o].TexCoord3.y := b;
+        g_IVBTable_o.TexCoord3.x := a;
+        g_IVBTable_o.TexCoord3.y := b;
 
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX3) then
         begin
@@ -5231,9 +5252,8 @@ begin
 
     {12=}X_D3DVSDE_TEXCOORD3:
       begin
-        o := g_IVBTblOffs;
-        g_IVBTable[o].TexCoord4.x := a;
-        g_IVBTable[o].TexCoord4.y := b;
+        g_IVBTable_o.TexCoord4.x := a;
+        g_IVBTable_o.TexCoord4.y := b;
 
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX4) then
         begin
@@ -5244,33 +5264,28 @@ begin
 
     { $FFFFFFFF=}X_D3DVSDE_VERTEX:
     begin
-      o := g_IVBTblOffs;
-      g_IVBTable[o].Position.x := a;
-      g_IVBTable[o].Position.y := b;
-      g_IVBTable[o].Position.z := c;
-      g_IVBTable[o].Rhw := d;
-
-      // Copy current color to next vertex
-      g_IVBTable[o+1].dwDiffuse := g_IVBTable[o].dwDiffuse;
-      g_IVBTable[o+1].dwSpecular := g_IVBTable[o].dwSpecular;
-      // Dxbx note : Must we copy Blend1 (blendweight) too?
+      g_IVBTable_o.Position.x := a;
+      g_IVBTable_o.Position.y := b;
+      g_IVBTable_o.Position.z := c;
+      g_IVBTable_o.Rhw := d;
 
       Inc(g_IVBTblOffs);
+
+      // Copy current color to next vertex
+      g_IVBTable[g_IVBTblOffs].dwDiffuse := g_IVBTable_o.dwDiffuse;
+      g_IVBTable[g_IVBTblOffs].dwSpecular := g_IVBTable_o.dwSpecular;
+      // Dxbx note : Must we copy Blend1 (blendweight) too?
 
       g_IVBFVF := g_IVBFVF or D3DFVF_XYZRHW;
     end;
   else
-    DxbxKrnlCleanup('Unknown IVB Register: %d', [Register_]);
+    _Error; // Separate inline function, to prevent array finalization in normal flow
   end;
-
-  EmuSwapFS(fsXbox);
-
-  Result := hRet;
 end;
 
 function XTL_EmuD3DDevice_SetVertexData4ub
 (
-    Register_: DWORD;
+    Register_: X_D3DVSDE;
     a: BYTE;
     b: BYTE;
     c: BYTE;
@@ -5278,12 +5293,12 @@ function XTL_EmuD3DDevice_SetVertexData4ub
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Patrickvl  Done:100
 var
-  dwA, dwB, dwC, dwD: FLOAT;
+  fA, fB, fC, fD: FLOAT;
 begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    LogBegin('EmuD3DDevice_SetVertexData4ub >>').
+    LogBegin('EmuD3DDevice_SetVertexData4ub').
       _(Register_, 'Register').
       _(a, 'a').
       _(b, 'b').
@@ -5293,25 +5308,23 @@ begin
     EmuSwapFS(fsXbox);
   end;
 
-  dwA := a; dwB := b; dwC := c; dwD := d;
+  fA := a; fB := b; fC := c; fD := d;
 
   if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
   begin
-    dwA := dwA / High(a);
-    dwB := dwB / High(b);
-    dwC := dwC / High(c);
-    dwD := dwD / High(d);
+    fA := fA / High(a);
+    fB := fB / High(b);
+    fC := fC / High(c);
+    fD := fD / High(d);
   end;
 
   // TODO -oDxbx : Handle Vertex Attributes that need a Color (in this case, r,g,b=0.0-255.0, a=0.0-1.0)
-  // TODO -oDxbx : Shouldn't these be multiplied with 256.0 ?
-  //Result := XTL_EmuD3DDevice_SetVertexData4f(Register_, DWtoF(dwA), DWtoF(dwB), DWtoF(dwC), DWtoF(dwD));
-  Result := XTL_EmuD3DDevice_SetVertexData4f(Register_, (dwA), (dwB), (dwC), (dwD));
+  Result := DxbxSetVertexData(Register_, fA, fB, fC, fD);
 end;
 
 function XTL_EmuD3DDevice_SetVertexData4s
 (
-    Register_: DWORD;
+    Register_: X_D3DVSDE;
     a: SHORT;
     b: SHORT;
     c: SHORT;
@@ -5319,52 +5332,48 @@ function XTL_EmuD3DDevice_SetVertexData4s
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Patrickvl  Done:100
 var
-  dwA, dwB, dwC, dwD: FLOAT;
+  fA, fB, fC, fD: FLOAT;
 begin
-  EmuSwapFS(fsWindows);
-
   if MayLog(lfUnit or lfTrace) then
-    LogBegin('EmuD3DDevice_SetVertexData4s >>').
+  begin
+    EmuSwapFS(fsWindows);
+    LogBegin('EmuD3DDevice_SetVertexData4s').
       _(Register_, 'Register').
       _(a, 'a').
       _(b, 'b').
       _(c, 'c').
       _(d, 'd').
     LogEnd();
+    EmuSwapFS(fsXbox);
+  end;
 
-  dwA := a; dwB := b; dwC := c; dwD := d;
+  fA := a; fB := b; fC := c; fD := d;
 
   if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
   begin
-    dwA := dwA / High(a);
-    dwB := dwB / High(b);
-    dwC := dwC / High(c);
-    dwD := dwD / High(d);
+    fA := fA / High(a);
+    fB := fB / High(b);
+    fC := fC / High(c);
+    fD := fD / High(d);
   end;
 
-  EmuSwapFS(fsXbox);
-
   // TODO -oDxbx : Handle Vertex Attributes that need a Color
-  //Result := XTL_EmuD3DDevice_SetVertexData4f(Register_, DWtoF(dwA), DWtoF(dwB), DWtoF(dwC), DWtoF(dwD));
-  Result := XTL_EmuD3DDevice_SetVertexData4f(Register_, (dwA), (dwB), (dwC), (dwD));
+  Result := DxbxSetVertexData(Register_, fA, fB, fC, fD);
 end;
 
 function XTL_EmuD3DDevice_SetVertexDataColor
 (
-    Register_: DWORD;
+    Register_: X_D3DVSDE;
     Color: D3DCOLOR
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  a: FLOAT;
-  r: FLOAT;
-  g: FLOAT;
-  b: FLOAT;
+  fA, fB, fC, fD: FLOAT;
 begin
   if MayLog(lfUnit or lfTrace) then
   begin
     EmuSwapFS(fsWindows);
-    LogBegin('EmuD3DDevice_SetVertexDataColor >>').
+    LogBegin('EmuD3DDevice_SetVertexDataColor').
       _(Register_, 'Register').
       _(Color, 'Color').
     LogEnd();
@@ -5372,20 +5381,20 @@ begin
   end;
 
   // Convert ARGB color into its 4 float components :
-  a := Byte(Color shr 24);
-  r := Byte(Color shr 16);
-  g := Byte(Color shr  8);
-  b := Byte(Color{shr 0});
+  fA := Byte(Color shr 16); // Red
+  fB := Byte(Color shr  8); // Green
+  fC := Byte(Color{shr 0}); // Blue
+  fD := Byte(Color shr 24); // Alpha
 
   if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
   begin
-    a := a / 255.0;
-    r := r / 255.0;
-    g := g / 255.0;
-    b := b / 255.0;
+    fA := fA / 255.0;
+    fB := fB / 255.0;
+    fC := fC / 255.0;
+    fD := fD / 255.0;
   end;
 
-  Result := XTL_EmuD3DDevice_SetVertexData4f(Register_, r, g, b, a);
+  Result := DxbxSetVertexData(Register_, fA, fB, fC, fD);
 end;
 
 function XTL_EmuD3DDevice_End(): HRESULT; stdcall;
@@ -8183,6 +8192,7 @@ begin
     g_fYuvEnabled := (Value <> BOOL_FALSE);
 
     EmuWarning('EmuD3DDevice_SetRenderState_YuvEnable using overlay!');
+
     EmuSwapFS(fsXbox);
     XTL_EmuD3DDevice_EnableOverlay(BOOL(g_fYuvEnabled));
     EmuSwapFS(fsWindows);
@@ -9199,6 +9209,7 @@ begin
     LogEnd();
 
   EmuWarning('Not setting flicker filter');
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -9434,7 +9445,7 @@ end;
 
 function XTL_EmuD3DDevice_GetVertexShaderConstant
 (
-  Register_: DWORD;
+  Register_: X_D3DVSDE;
   pConstantData: Pvoid;
   ConstantCount: DWORD
 ): HRESULT; stdcall;
@@ -11425,7 +11436,7 @@ end;
 
 function XTL_EmuD3DDevice_GetPixelShaderConstant
 (
-  Register_: DWORD;
+  Register_: X_D3DVSDE;
   pConstantData: PVOID;
   ConstantCount: DWORD
 ): HRESULT; stdcall;
