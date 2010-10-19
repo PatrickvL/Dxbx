@@ -202,6 +202,9 @@ object frm_Main: Tfrm_Main
         object mnu_DebugOutputGuiFile: TMenuItem
           Action = actFileDebugGui
         end
+        object mnu_DebugOutputGuiNone: TMenuItem
+          Action = actDebugGuiNone
+        end
       end
       object mnu_DebugoutputKernel: TMenuItem
         Caption = 'Debug output (Kernel)'
@@ -210,6 +213,9 @@ object frm_Main: Tfrm_Main
         end
         object mnu_DebugOutputKernelFile: TMenuItem
           Action = actFileDebugKernel
+        end
+        object mnu_DebugOutputKernelNone: TMenuItem
+          Action = actDebugKernelNone
         end
       end
     end
@@ -360,6 +366,16 @@ object frm_Main: Tfrm_Main
       Category = 'File'
       Caption = '&Clear'
       OnExecute = actClearGameListExecute
+    end
+    object actDebugKernelNone: TAction
+      Category = 'View'
+      Caption = '&None'
+      OnExecute = actDebugKernelNoneExecute
+    end
+    object actDebugGuiNone: TAction
+      Category = 'View'
+      Caption = '&None'
+      OnExecute = actDebugGuiNoneExecute
     end
   end
   object XbeOpenDialog: TOpenDialog
