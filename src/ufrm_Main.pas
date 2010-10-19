@@ -129,6 +129,10 @@ type
     N6: TMenuItem;
     Clear1: TMenuItem;
     actClearGameList: TAction;
+    actDebugKernelNone: TAction;
+    actDebugGuiNone: TAction;
+    mnu_DebugOutputGuiNone: TMenuItem;
+    mnu_DebugOutputKernelNone: TMenuItem;
     procedure actStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -165,6 +169,8 @@ type
     procedure dgXbeInfosKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure mnu_BypassSymbolCacheClick(Sender: TObject);
     procedure actClearGameListExecute(Sender: TObject);
+    procedure actDebugKernelNoneExecute(Sender: TObject);
+    procedure actDebugGuiNoneExecute(Sender: TObject);
   protected
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
     procedure WndProc(var Message: TMessage); override;
@@ -223,7 +229,7 @@ type
   end;
 
 var
-  KernelDebugMode: TDebugMode = dmFile;
+  KernelDebugMode: TDebugMode = dmNone;
 
   KernelDebugFilePath: string = ''; // Just the default folder
 
@@ -916,6 +922,19 @@ begin
     WriteLog(m_szAsciiTitle + '`s .xbe info was successfully dumped.'); // NOT!
 end;
 
+procedure Tfrm_Main.actDebugGuiNoneExecute(Sender: TObject);
+begin
+  CloseLogs;
+  DebugMode := dmNone;
+  AdjustMenu;
+end;
+
+procedure Tfrm_Main.actDebugKernelNoneExecute(Sender: TObject);
+begin
+  KernelDebugMode := dmNone;
+  AdjustMenu;
+end;
+
 procedure Tfrm_Main.SaveXBEList(const aFilePath, aPublishedBy: string);
 var
   XMLRootNode: IXMLNode;
@@ -1227,90 +1246,54 @@ end;
 
 procedure Tfrm_Main.actConsoleDebugGuiExecute(Sender: TObject);
 begin
-  if DebugMode = dmConsole then
-  begin
-    CloseLogs;
-    DebugMode := dmNone;
-    AdjustMenu;
-  end
-  else
-  begin
-    CloseLogs;
-    DebugMode := dmConsole;
-    CreateLogs(DebugMode);
-    AdjustMenu;
-  end;
+  CloseLogs;
+  DebugMode := dmConsole;
+  CreateLogs(DebugMode);
+  AdjustMenu;
 end; // actConsoleDebugGuiExecute
 
 procedure Tfrm_Main.actFileDebugGuiExecute(Sender: TObject);
 begin
-  if DebugMode = dmFile then
+  if DebugFileName <> '' then
+    SaveDialog.FileName := DebugFileName
+  else
+    SaveDialog.FileName := DXBX_CONSOLE_DEBUG_FILENAME;
+
+  SaveDialog.Filter := DIALOG_FILTER_TEXT;
+  if SaveDialog.Execute then
   begin
     CloseLogs;
-    DebugMode := dmNone;
+    DebugMode := dmFile;
+    DebugFileName := SaveDialog.FileName;
+    CreateLogs(DebugMode, DebugFileName);
     AdjustMenu;
-  end
-  else
-  begin
-    if DebugFileName <> '' then
-      SaveDialog.FileName := DebugFileName
-    else
-      SaveDialog.FileName := DXBX_CONSOLE_DEBUG_FILENAME;
-
-    SaveDialog.Filter := DIALOG_FILTER_TEXT;
-    if SaveDialog.Execute then
-    begin
-      CloseLogs;
-      DebugMode := dmFile;
-      DebugFileName := SaveDialog.FileName;
-      CreateLogs(DebugMode, DebugFileName);
-      AdjustMenu;
-    end;
   end;
 end; // actFileDebugGuiExecute
 
 procedure Tfrm_Main.actConsoleDebugKernelExecute(Sender: TObject);
 begin
-  if KernelDebugMode = dmConsole then
-  begin
-    //CloseLogs;
-    KernelDebugMode := dmNone;
-    AdjustMenu;
-  end
-  else
-  begin
-    //CloseLogs;
-    KernelDebugMode := dmConsole;
-    //CreateLogs(KernelDebugMode);
-    AdjustMenu;
-  end;
+  //CloseLogs;
+  KernelDebugMode := dmConsole;
+  //CreateLogs(KernelDebugMode);
+  AdjustMenu;
 end; // actConsoleDebugKernelExecute
 
 procedure Tfrm_Main.actFileDebugKernelExecute(Sender: TObject);
 begin
-  if KernelDebugMode = dmFile then
+  // TODO : Change this into a folder-selection dialog (filename is generated) :
+  if KernelDebugFilePath <> '' then
+    SaveDialog.InitialDir := KernelDebugFilePath;
+
+  SaveDialog.FileName := ExtractFileName(GetTitleSpecificKernelDebugFilePath);
+
+  SaveDialog.Filter := DIALOG_FILTER_TEXT;
+  if SaveDialog.Execute then
   begin
     //CloseLogs;
-    KernelDebugMode := dmNone;
+    KernelDebugMode := dmFile;
+    KernelDebugFilePath := ExtractFilePath(SaveDialog.FileName);
+    //CreateLogs(KernelDebugMode, KernelDebugFileName);
     AdjustMenu;
-  end
-  else
-  begin
-    // TODO : Change this into a folder-selection dialog (filename is generated) :
-    if KernelDebugFilePath <> '' then
-      SaveDialog.InitialDir := KernelDebugFilePath;
-
-    SaveDialog.FileName := ExtractFileName(GetTitleSpecificKernelDebugFilePath);
-
-    SaveDialog.Filter := DIALOG_FILTER_TEXT;
-    if SaveDialog.Execute then
-    begin
-      //CloseLogs;
-      KernelDebugMode := dmFile;
-      KernelDebugFilePath := ExtractFilePath(SaveDialog.FileName);
-      //CreateLogs(KernelDebugMode, KernelDebugFileName);
-      AdjustMenu;
-    end;
   end;
 end; // actFileDebugKernelExecute
 
@@ -1489,8 +1472,11 @@ begin
   // Update View menu actions :
   actConsoleDebugGui.Checked := (DebugMode = dmConsole);
   actFileDebugGui.Checked := (DebugMode = dmFile);
+  actDebugGuiNone.Checked := (DebugMode = dmNone);
+
   actConsoleDebugKernel.Checked := (KernelDebugMode = dmConsole);
   actFileDebugKernel.Checked := (KernelDebugMode = dmFile);
+  actDebugKernelNone.Checked := (KernelDebugMode = dmNone);
 
   // Update Emulation menu actions :
   actStartEmulation.Enabled := (Emulation_State = esFileOpen);
