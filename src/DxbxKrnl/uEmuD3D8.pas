@@ -1844,14 +1844,16 @@ begin
         // update render target cache
         Dispose({var}g_pCachedRenderTarget); // Dxbx addition : Prevent memory leaks
         New({var X_D3DSurface:}g_pCachedRenderTarget);
-        g_pCachedRenderTarget.Common := 0;
+        ZeroMemory(g_pCachedRenderTarget, SizeOf(g_pCachedRenderTarget^));
+
         g_pCachedRenderTarget.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DREND;
         IDirect3DDevice_GetRenderTarget(g_pD3DDevice, @(g_pCachedRenderTarget.Emu.Surface));
 
         // update z-stencil surface cache
         Dispose({var}g_pCachedZStencilSurface); // Dxbx addition : Prevent memory leaks
         New({var}g_pCachedZStencilSurface);
-        g_pCachedZStencilSurface.Common := 0;
+        ZeroMemory(g_pCachedZStencilSurface, SizeOf(g_pCachedZStencilSurface^));
+
         g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
         if IDirect3DDevice_GetDepthStencilSurface(g_pD3DDevice, @(g_pCachedZStencilSurface.Emu.Surface)) = D3D_OK then
           // Dxbx addition : Test if a ZBuffer exists, to fix invalid arguments to XTL_EmuD3DDevice_Clear :
@@ -2875,6 +2877,7 @@ begin
     LogEnd();
 
   New({var PX_D3DSurface}ppBackBuffer^);
+  ZeroMemory(ppBackBuffer^, SizeOf(ppBackBuffer^^));
 
   PCFormat := EmuXB2PC_D3DFormat(Format);
 
@@ -2960,6 +2963,7 @@ begin
     HRESULT hRet := D3D_OK;
 
     X_D3DSurface *pBackBuffer := new X_D3DSurface();
+    ZeroMemory(pBackBuffer, SizeOf(pBackBuffer^));
 
     if (BackBuffer = -1) then
     begin
@@ -2994,10 +2998,13 @@ begin
 *)
 
   if pBackBuffer = nil then // Dxbx addition, to initialize this 'static' var only once
+  begin
     New({var PX_D3DSurface}pBackBuffer);
+    ZeroMemory(pBackBuffer, SizeOf(pBackBuffer^));
+  end;
 
   if (BackBuffer = -1) then
-      BackBuffer := 0; // TODO : Use actual FrontBuffer number here
+    BackBuffer := 0; // TODO : Use actual FrontBuffer number here
 
   hRet := g_pD3DDevice.GetBackBuffer({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} BackBuffer, D3DBACKBUFFER_TYPE_MONO, @(pBackBuffer.Emu.Surface));
 
@@ -4379,6 +4386,7 @@ begin
   end;
 
   New({var PX_D3DTexture}ppTexture^);
+  ZeroMemory(ppTexture^, SizeOf(ppTexture^^));
 
   if (PCFormat = D3DFMT_YUY2) then
   begin
@@ -4534,6 +4542,7 @@ begin
   end;
 
   New({PX_D3DVolumeTexture}ppVolumeTexture^);
+  ZeroMemory(ppVolumeTexture^, SizeOf(ppVolumeTexture^^));
 
   if (PCFormat = D3DFMT_YUY2) then
   begin
@@ -4612,6 +4621,7 @@ begin
   end;
 
   New({var PX_D3DCubeTexture}ppCubeTexture^);
+  ZeroMemory(ppCubeTexture^, SizeOf(ppCubeTexture^^));
 
   Result := IDirect3DDevice_CreateCubeTexture(g_pD3DDevice,
       EdgeLength, Levels,
@@ -4653,6 +4663,7 @@ begin
     LogEnd();
 
   New({var PX_D3DIndexBuffer}ppIndexBuffer^);
+  ZeroMemory(ppIndexBuffer^, SizeOf(ppIndexBuffer^^));
 
   hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice,
       Length, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
@@ -6713,11 +6724,9 @@ begin
     pTexture := pThis.Emu.Texture;
 
     New({var}ppSurfaceLevel^); // Cxbx : new X_D3DSurface();
-    // TODO -oDxbx : When should this be cleared? Isn't this a memory leak otherwise?
+    ZeroMemory(ppSurfaceLevel^, SizeOf(ppSurfaceLevel^^));
+    // TODO -oDxbx : When should this be freeed? Isn't this a memory leak otherwise?
 
-    ppSurfaceLevel^.Format := 0;
-    ppSurfaceLevel^.Size := 0;
-    ppSurfaceLevel^.Common := 0;
     ppSurfaceLevel^.Data := $B00BBABE;
     hRet := IDirect3DTexture(pTexture).GetSurfaceLevel(Level, @(ppSurfaceLevel^.Emu.Surface));
 
@@ -6875,9 +6884,7 @@ begin
   end;
 
   New({PX_D3DVertexBuffer}pD3DVertexBuffer);
-
-  pD3DVertexBuffer.Common := 0; // ??
-  pD3DVertexBuffer.Data := 0; // ??
+  ZeroMemory(pD3DVertexBuffer, SizeOf(pD3DVertexBuffer^));
 
   Result := g_pD3DDevice.CreateVertexBuffer(
     NewLength,
@@ -9138,7 +9145,7 @@ begin
     LogEnd();
 
   New({var PX_D3DPalette}pPalette);
-
+  // ZeroMemory(pPalette,...) not nescessary, as we're filling each field already here :
   pPalette.Common := 0;
   pPalette.Data := DWORD(AllocMem(lk[Size] * sizeof(uint08)));
   pPalette.Emu.Lock := $8000BEEF; // emulated reference count for palettes
@@ -10238,7 +10245,6 @@ function XTL_EmuD3DDevice_GetProjectionViewportMatrix
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   hRet: HRESULT;
-  Out: D3DMATRIX;
   mtxProjection: D3DMATRIX;
   mtxViewport: D3DMATRIX;
   Viewport: D3DVIEWPORT;
@@ -10256,43 +10262,39 @@ begin
   // implementation.  Still probably not right, but better
   // then before.
 
-
-  // Get current viewport
-  hRet := g_pD3DDevice.GetViewport({out}Viewport);
-  if (FAILED(hRet)) then
-    EmuWarning('Unable to get viewport!');
-
-  // Get current projection matrix
-  hRet := g_pD3DDevice.GetTransform(D3DTS_PROJECTION, {out}mtxProjection);
-  if (FAILED(hRet)) then
-    EmuWarning('Unable to get projection matrix!');
-
-  // Clear the destination matrix
-  ZeroMemory(@Out, sizeof(D3DMATRIX));
-
-  // Create the Viewport matrix manually
-  // Direct3D8 doesn't give me everything I need in a viewport structure
-  // (one thing I REALLY HATE!) so some constants will have to be used
-  // instead.
-
-  ClipWidth := 2.0;
-  ClipHeight := 2.0;
-  ClipX := -1.0;
-  ClipY := 1.0;
-  Width := DWtoF(Viewport.Width);
-  Height := DWtoF(Viewport.Height);
-
-  D3DXMatrixIdentity({out}mtxViewport);
-  mtxViewport._11 := Width / ClipWidth;
-  mtxViewport._22 := -(Height / ClipHeight);
-  mtxViewport._41 := -(ClipX * mtxViewport._11);
-  mtxViewport._42 := -(ClipY * mtxViewport._22);
-
-  // Multiply projection and viewport matrix together
-  Out := D3DMATRIX_MULTIPLY(mtxProjection, mtxViewport);
-
   if Assigned(pProjectionViewport) then
-    pProjectionViewport^ := Out;
+  begin
+    // Get current viewport
+    hRet := g_pD3DDevice.GetViewport({out}Viewport);
+    if (FAILED(hRet)) then
+      EmuWarning('Unable to get viewport!');
+
+    // Get current projection matrix
+    hRet := g_pD3DDevice.GetTransform(D3DTS_PROJECTION, {out}mtxProjection);
+    if (FAILED(hRet)) then
+      EmuWarning('Unable to get projection matrix!');
+
+    // Create the Viewport matrix manually
+    // Direct3D8 doesn't give me everything I need in a viewport structure
+    // (one thing I REALLY HATE!) so some constants will have to be used
+    // instead.
+
+    ClipWidth := 2.0;
+    ClipHeight := 2.0;
+    ClipX := -1.0;
+    ClipY := 1.0;
+    Width := DWtoF(Viewport.Width);
+    Height := DWtoF(Viewport.Height);
+
+    D3DXMatrixIdentity({out}mtxViewport);
+    mtxViewport._11 := Width / ClipWidth;
+    mtxViewport._22 := -(Height / ClipHeight);
+    mtxViewport._41 := -(ClipX * mtxViewport._11);
+    mtxViewport._42 := -(ClipY * mtxViewport._22);
+
+    // Multiply projection and viewport matrix together
+    pProjectionViewport^ := D3DMATRIX_MULTIPLY(mtxProjection, mtxViewport);
+  end;
 
   EmuSwapFS(fsXbox);
 
@@ -10392,6 +10394,7 @@ begin
       DbgPrintf( 'Creating new texture...');
 
     New({X_D3DResource}pTexture);
+    ZeroMemory(pTexture, SizeOf(pTexture^));
   end
   else
   begin

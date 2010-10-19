@@ -707,6 +707,7 @@ begin
     if (g_hInputHandle[dwPort] = 0) then
     begin
       New({var PPOLLING_PARAMETERS_HANDLE}pPH);
+      ZeroMemory(pPH, SizeOf(pPH^));
 
       if (pPollingParameters <> NULL) then
       begin
