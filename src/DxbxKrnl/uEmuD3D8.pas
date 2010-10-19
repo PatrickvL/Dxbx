@@ -6883,7 +6883,7 @@ begin
     NewLength,
     Usage, // XB2PC?
     FVF,
-    Pool, // XB2PX ? D3DPOOL_MANAGED,
+    D3DPOOL_MANAGED, // TODO : If we supply Pool here, the PointSprites and Gamepad XDK samples crash!
     {ppVertexBuffer=}@(pD3DVertexBuffer.Emu.VertexBuffer)
     {$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF}
   );
@@ -6910,14 +6910,14 @@ function XTL_EmuD3DDevice_CreateVertexBuffer2
 ): PX_D3DVertexBuffer; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-  EmuSwapFS(fsWindows);
-
   if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
     LogBegin('EmuD3DDevice_CreateVertexBuffer2 >>').
       _(Length, 'Length').
     LogEnd();
-
-  EmuSwapFS(fsXbox);
+    EmuSwapFS(fsXbox);
+  end;
 
   XTL_EmuD3DDevice_CreateVertexBuffer(Length, 0, 0, D3DPOOL_MANAGED, @Result);
 end;
