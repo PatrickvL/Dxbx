@@ -597,6 +597,7 @@ begin
       if bInc then
         dwCount := dwCount * 2 + 2;
 
+      Inc(pdwPushData);
       pIndexData := pdwPushData;
 
 {$ifdef _DEBUG_TRACK_PB}
