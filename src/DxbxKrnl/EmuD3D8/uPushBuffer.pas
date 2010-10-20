@@ -326,8 +326,7 @@ begin
   begin
     bInc := (pdwPushData^ and D3DPUSH_NOINCREMENT_FLAG) > 0;
     dwMethod := (pdwPushData^ and D3DPUSH_METHOD_MASK);
-    dwCount := ((pdwPushData^ and (not D3DPUSH_NOINCREMENT_FLAG)) shr D3DPUSH_COUNT_SHIFT);
-    Inc(pdwPushData);
+    dwCount := ((pdwPushData^ and (not D3DPUSH_NOINCREMENT_FLAG and not $80000000)) shr D3DPUSH_COUNT_SHIFT);
 
     if MayLog(lfUnit) then
       DbgPrintf('  Method: 0x%.08X      Count: 0x%.08X', [dwMethod, dwCount]);
@@ -335,6 +334,7 @@ begin
     // Interpret GPU Instruction
     if (dwMethod = D3DPUSH_SET_BEGIN_END) then
     begin
+      Inc(pdwPushData);
 {$ifdef _DEBUG_TRACK_PB}
       if (bShowPB) then
       begin
@@ -369,6 +369,7 @@ begin
     end
     else if (dwMethod = D3DPUSH_INLINE_ARRAY) then
     begin
+      Inc(pdwPushData);
       pVertexData := pdwPushData;
 
       Inc(pdwPushData, dwCount);
@@ -597,7 +598,8 @@ begin
       if bInc then
         dwCount := dwCount * 2 + 2;
 
-      Inc(pdwPushData);
+
+      pdwPushData := DWord(pdwPushData) + (pdwPushData);
       pIndexData := pdwPushData;
 
 {$ifdef _DEBUG_TRACK_PB}
@@ -761,6 +763,8 @@ begin
       EmuWarning('Unknown PushBuffer Operation (0x%.04X, %d)', [dwMethod, dwCount]);
       Exit;
     end;
+
+    Inc(pdwPushData);
   end;
 
 {$ifdef _DEBUG_TRACK_PB}
