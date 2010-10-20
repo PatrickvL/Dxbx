@@ -108,7 +108,7 @@ const lfUnit = lfCxbx or lfPushBuffer;
 
 procedure XTL_EmuExecutePushBuffer
 (
-    pPushBuffer: PX_D3DPushBuffer; 
+    pPushBuffer: PX_D3DPushBuffer;
     pFixup: PX_D3DFixup
 ); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -301,7 +301,7 @@ begin
 
   if (not g_PBTrackShowOnce.exists(pdwPushData)) then
   begin
-    g_PBTrackShowOnce.remove(pdwPushData);
+    g_PBTrackShowOnce.insert(pdwPushData);
 
     if MayLog(lfUnit) then
     begin
@@ -324,8 +324,10 @@ begin
 
   while(true) do
   begin
-    dwCount := pdwPushData^ shr D3DPUSH_COUNT_SHIFT;
+    bInc := (pdwPushData^ and D3DPUSH_NOINCREMENT_FLAG) > 0;
     dwMethod := (pdwPushData^ and D3DPUSH_METHOD_MASK);
+    dwCount := ((pdwPushData^ and (not D3DPUSH_NOINCREMENT_FLAG)) shr D3DPUSH_COUNT_SHIFT);
+    Inc(pdwPushData);
 
     if MayLog(lfUnit) then
       DbgPrintf('  Method: 0x%.08X      Count: 0x%.08X', [dwMethod, dwCount]);
@@ -333,46 +335,40 @@ begin
     // Interpret GPU Instruction
     if (dwMethod = D3DPUSH_SET_BEGIN_END) then
     begin
-      Inc(pdwPushData);
-      {$ifdef _DEBUG_TRACK_PB}
+{$ifdef _DEBUG_TRACK_PB}
       if (bShowPB) then
       begin
         DbgPrintf('  NVPB_SetBeginEnd(');
       end;
-      {$endif}
+{$endif}
 
       if (pdwPushData^ = 0) then
       begin
-        {$ifdef _DEBUG_TRACK_PB}
+{$ifdef _DEBUG_TRACK_PB}
         if (bShowPB) then
         begin
           DbgPrintf('DONE)');
         end;
-        {$endif}
+{$endif}
         break;  // done?
       end
       else
       begin
-        {$IFDEF _DEBUG_TRACK_PB}
+{$IFDEF _DEBUG_TRACK_PB}
         if (bShowPB) then
         begin
           DbgPrintf('PrimitiveType := %d)', [pdwPushData^]);
         end;
-        {$endif}
+{$endif}
 
         XBPrimitiveType := X_D3DPRIMITIVETYPE(pdwPushData^);
         PCPrimitiveType := EmuPrimitiveType(XBPrimitiveType);
       end;
 
+      Inc(pdwPushData);
     end
     else if (dwMethod = D3DPUSH_INLINE_ARRAY) then
     begin
-      bInc := pdwPushData^ and D3DPUSH_NOINCREMENT_FLAG > 0;
-
-      if bInc then
-         dwCount := ((pdwPushData^ and not(D3DPUSH_NOINCREMENT_FLAG or D3DPUSH_INLINE_ARRAY)) shr D3DPUSH_COUNT_SHIFT);
-
-      Inc(pdwPushData);
       pVertexData := pdwPushData;
 
       Inc(pdwPushData, dwCount);
@@ -477,7 +473,6 @@ begin
 
         VertPatch.Restore();
       end;
-      Dec(pdwPushData);
     end
     else if (dwMethod = NVPB_FixLoop) then
     begin
@@ -599,12 +594,9 @@ begin
     end
     else if (dwMethod = NVPB_InlineIndexArray) then
     begin
-      bInc := pdwPushData^ and D3DPUSH_NOINCREMENT_FLAG > 0;
-
       if bInc then
-        dwCount := ((pdwPushData^ and not(D3DPUSH_NOINCREMENT_FLAG or D3DPUSH_INLINE_ARRAY)) shr D3DPUSH_COUNT_SHIFT) *2 + 2;
+        dwCount := dwCount * 2 + 2;
 
-      Inc(pdwPushData);
       pIndexData := pdwPushData;
 
 {$ifdef _DEBUG_TRACK_PB}
@@ -669,20 +661,17 @@ begin
       end;
 {$endif}
 
-      if bInc then
-        Inc(pdwPushData, (dwCount div 2))
-      else
-        Inc(pdwPushData, (dwCount div 2) - 2);
+      Inc(pdwPushData, (dwCount div 2) - DWord(iif(bInc, 0, 2)));
 
       // perform rendering
       begin
-
         // TODO -oCXBX: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
         if (dwCount*2 > maxIBSize) then
         begin
           if (pIndexBuffer <> nil) then
           begin
             IDirect3DIndexBuffer(pIndexBuffer)._Release();
+            pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
           end;
 
           hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer(@pIndexBuffer));
@@ -765,15 +754,12 @@ begin
           g_pD3DDevice.SetIndices(nil{$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, 0{$ENDIF});
         end;
       end;
-      Dec(pdwPushData);
     end
     else
     begin
       EmuWarning('Unknown PushBuffer Operation (0x%.04X, %d)', [dwMethod, dwCount]);
       Exit;
     end;
-
-    Inc(pdwPushData);
   end;
 
 {$ifdef _DEBUG_TRACK_PB}
@@ -826,7 +812,7 @@ begin
   pActiveVB := NULL;
 
   pVBData := nil;
-  
+
   // retrieve stream data
   g_pD3DDevice.GetStreamSource(
     0,
@@ -949,4 +935,5 @@ end;
 {$ENDIF}
 
 end.
+
 
