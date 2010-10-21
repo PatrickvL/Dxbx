@@ -119,6 +119,10 @@ begin
   StartRoutine := Parameter.StartRoutine;
   StartSuspended := Parameter.StartSuspended;
 
+  // In http://forums.ngemu.com/cxbx-official-discussion/134298-svn-rev-159-vs-153-panzer-dragoon-orta-3.html#post1876794
+  // Defiance says doing this before the first DbgPrintf helps :
+  EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
+
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : PCSTProxy' +
       #13#10'(' +
@@ -130,8 +134,6 @@ begin
 
   if(StartSuspended = TRUE) then
     SuspendThread(GetCurrentThread());
-
-  EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
 
   // call thread notification routine(s)
   if (g_iThreadNotificationCount <> 0) then
