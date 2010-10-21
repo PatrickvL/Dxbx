@@ -1842,6 +1842,7 @@ begin
 
         // update render target cache
         Dispose({var}g_pCachedRenderTarget); // Dxbx addition : Prevent memory leaks
+
         New({var X_D3DSurface:}g_pCachedRenderTarget);
         ZeroMemory(g_pCachedRenderTarget, SizeOf(g_pCachedRenderTarget^));
 
@@ -1850,6 +1851,7 @@ begin
 
         // update z-stencil surface cache
         Dispose({var}g_pCachedZStencilSurface); // Dxbx addition : Prevent memory leaks
+
         New({var}g_pCachedZStencilSurface);
         ZeroMemory(g_pCachedZStencilSurface, SizeOf(g_pCachedZStencilSurface^));
 
@@ -2903,9 +2905,9 @@ begin
     {EmuWarning}DxbxKrnlCleanup('CreateImageSurface failed! ' + #13#10 + 'Format = 0x%8.8X', [Format])
   else
     DbgPrintf('Created image surface @ 0x%.08X [hRet = 0x%.08X]: %dx%d, format = 0x%.08X', [
-        ppBackBuffer^.Emu.Surface,
-        Result,
-        Width, Height, Ord(PCFormat)]);
+      ppBackBuffer^.Emu.Surface,
+      Result,
+      Width, Height, Ord(PCFormat)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -4407,10 +4409,6 @@ begin
       EmuAdjustPower2(@Width, @Height);
     end;
 
-    if (Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL)) > 0 then
-//    if (Usage and (D3DUSAGE_RENDERTARGET)) > 0 then
-      PCPool := D3DPOOL_DEFAULT;
-
 //{$IFDEF GAME_HACKS_ENABLED}??
     // Cxbx HACK: Width and Height sometimes set to 0xFFFF and 0 in Crazy Taxi 3
     // When it fails, it returns a success anyway and D3DResource::Register
@@ -4434,6 +4432,15 @@ begin
         'Width:  0 -> 256'#13#10 +
         'Height: 0 -> 256');
     end;
+
+//    // Dxbx hack : Any lineair texture that's not screen-sized becomes a potential render target :
+//    if (Width <> 640) or (Height <> 480) then
+//      if EmuXBFormatIsLinear(Format) then
+//        PCUsage := (D3DUSAGE_RENDERTARGET);
+
+    if (Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL)) > 0 then
+//    if (Usage and (D3DUSAGE_RENDERTARGET)) > 0 then
+      PCPool := D3DPOOL_DEFAULT;
 
     Result := IDirect3DDevice_CreateTexture
     (g_pD3DDevice,
@@ -6513,7 +6520,7 @@ begin
       NewFlags := NewFlags or D3DLOCK_READONLY;
 
     if (Flags and (not X_D3DLOCK_ALL_SUPPORTED)) > 0 then
-      DxbxKrnlCleanup('EmuIDirect3DTexture_LockRect: Unknown Flags! (0x%.08X)', [Flags and (not X_D3DLOCK_ALL_SUPPORTED)]);
+      DxbxKrnlCleanup('EmuD3DTexture_LockRect: Unknown Flags! (0x%.08X)', [Flags and (not X_D3DLOCK_ALL_SUPPORTED)]);
 
     try
       // Remove old lock(s)
@@ -6562,14 +6569,14 @@ function XTL_EmuD3DTexture_GetSurfaceLevel2
 ): PX_D3DResource; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  pSurfaceLevel: PX_D3DSurface;
+//  pSurfaceLevel: PX_D3DSurface;
   dwSize: DWORD;
   pRefCount: PDWORD;
 begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuIDirect3DTexture_GetSurfaceLevel2').
+    LogBegin('EmuD3DTexture_GetSurfaceLevel2 >>').
       _(pThis, 'pThis').
       _(Level, 'Level').
     LogEnd();
@@ -6587,17 +6594,15 @@ begin
     Inc(pRefCount^);
 
     Result := pThis;
+
+    EmuSwapFS(fsXbox);
   end
   else
   begin
     EmuSwapFS(fsXbox);
-    XTL_EmuD3DTexture_GetSurfaceLevel(pThis, Level, @pSurfaceLevel);
-    EmuSwapFS(fsWindows);
 
-    Result := pSurfaceLevel;
+    XTL_EmuD3DTexture_GetSurfaceLevel(pThis, Level, PPX_D3DSurface(@Result));
   end;
-
-  EmuSwapFS(fsXbox);
 end;
 
 
@@ -6618,7 +6623,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuIDirect3DTexture_LockRect').
+    LogBegin('EmuD3DTexture_LockRect').
       _(pThis, 'pThis').
       _(Level, 'Level').
       _(pLockedRect, 'pLockedRect').
@@ -6627,7 +6632,7 @@ begin
     LogEnd();
 
   if MayLog(lfUnit or lfDebug) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3DTexture_LockRect (pThis->Texture = 0x%8.8X)', [pThis.Emu.Texture]);
+    DbgPrintf('EmuD3D8 : EmuD3DTexture_LockRect (pThis->Texture = 0x%8.8X)', [pThis.Emu.Texture]);
 
   EmuVerifyResourceIsRegistered(pThis);
 
@@ -6653,7 +6658,7 @@ begin
       NewFlags := NewFlags or D3DLOCK_READONLY;
 
     if (Flags and (not X_D3DLOCK_ALL_SUPPORTED)) > 0 then
-      DxbxKrnlCleanup('EmuIDirect3DTexture_LockRect: Unknown Flags! (0x%.08X)', [Flags and (not X_D3DLOCK_ALL_SUPPORTED)]);
+      DxbxKrnlCleanup('EmuD3DTexture_LockRect: Unknown Flags! (0x%.08X)', [Flags and (not X_D3DLOCK_ALL_SUPPORTED)]);
 
     if IsRunning(TITLEID_UnrealChampionship)
     and ((Level = 6) or (Level = 7) or (Level = 8) or (Level = 9)) then
@@ -6696,7 +6701,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuIDirect3DTexture_GetSurfaceLevel').
+    LogBegin('EmuD3DTexture_GetSurfaceLevel').
       _(pThis, 'pThis').
       _(Level, 'Level').
       _(ppSurfaceLevel, 'ppSurfaceLevel').
@@ -6731,12 +6736,12 @@ begin
 
     if (FAILED(hRet)) then
     begin
-      EmuWarning('EmuIDirect3DTexture_GetSurfaceLevel Failed!');
+      EmuWarning('EmuD3DTexture_GetSurfaceLevel Failed!');
     end
     else
     begin
       if MayLog(lfUnit or lfReturnValue) then
-        DbgPrintf('EmuD3D8 : EmuIDirect3DTexture_GetSurfaceLevel := 0x%.08X', [ppSurfaceLevel^.Emu.Surface]);
+        DbgPrintf('EmuD3D8 : EmuD3DTexture_GetSurfaceLevel := 0x%.08X', [ppSurfaceLevel^.Emu.Surface]);
     end;
   end;
 
@@ -9074,19 +9079,19 @@ begin
     end;
  end;
 
-  // TODO -oCXBX: Follow that stencil!
-  if MayLog(lfUnit) then
-  begin
-    if Assigned(pRenderTarget) then pRenderTarget_EmuSurface := pRenderTarget.Emu.Surface else pRenderTarget_EmuSurface := nil;
-    if Assigned(pNewZStencil) then pNewZStencil_EmuSurface := pNewZStencil.Emu.Surface else pNewZStencil_EmuSurface := nil;
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderTarget' +
-      #13#10'(' +
-      #13#10'   pRenderTarget     : 0x%.08X (0x%.08X)' +
-      #13#10'   pNewZStencil      : 0x%.08X (0x%.08X)' +
-      #13#10');',
-      [ pRenderTarget, pRenderTarget_EmuSurface,
-        pNewZStencil,  pNewZStencil_EmuSurface]);
-  end;
+//  // TODO -oCXBX: Follow that stencil!
+//  if MayLog(lfUnit) then
+//  begin
+//    if Assigned(pRenderTarget) then pRenderTarget_EmuSurface := pRenderTarget.Emu.Surface else pRenderTarget_EmuSurface := nil;
+//    if Assigned(pNewZStencil) then pNewZStencil_EmuSurface := pNewZStencil.Emu.Surface else pNewZStencil_EmuSurface := nil;
+//    DbgPrintf('EmuD3D8 : EmuD3DDevice_SetRenderTarget' +
+//      #13#10'(' +
+//      #13#10'   pRenderTarget     : 0x%.08X (0x%.08X)' +
+//      #13#10'   pNewZStencil      : 0x%.08X (0x%.08X)' +
+//      #13#10');',
+//      [ pRenderTarget, pRenderTarget_EmuSurface,
+//        pNewZStencil,  pNewZStencil_EmuSurface]);
+//  end;
 
 {$IFDEF DXBX_USE_D3D9}
   Result := g_pD3DDevice.SetRenderTarget({RenderTargetIndex=}0, IDirect3DSurface(pPCRenderTarget));
@@ -9776,7 +9781,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    LogBegin('EmuIDirect3DTexture_GetLevelDesc').
+    LogBegin('EmuD3DTexture_GetLevelDesc').
       _(pThis, 'pThis').
       _(Level, 'Level').
       _(pDesc, 'pDesc').
@@ -11770,13 +11775,15 @@ exports
   XTL_EmuD3DPalette_Lock,
   XTL_EmuD3DPalette_Lock2,
 
-  XTL_EmuD3DPushBuffer_CopyRects,
-  XTL_EmuD3DPushBuffer_SetModelView,
-  XTL_EmuD3DPushBuffer_SetPalette,
-  XTL_EmuD3DPushBuffer_SetRenderState,
-  XTL_EmuD3DPushBuffer_SetVertexBlendModelView,
-  XTL_EmuD3DPushBuffer_SetVertexShaderConstant,
-  XTL_EmuD3DPushBuffer_SetVertexShaderInputDirect,
+// These pushbuffer functions are used to fill the fixup buffer;
+// Since we now support fixups, there's no need to patch them anymore :
+//  XTL_EmuD3DPushBuffer_CopyRects,
+//  XTL_EmuD3DPushBuffer_SetModelView,
+//  XTL_EmuD3DPushBuffer_SetPalette,
+//  XTL_EmuD3DPushBuffer_SetRenderState,
+//  XTL_EmuD3DPushBuffer_SetVertexBlendModelView,
+//  XTL_EmuD3DPushBuffer_SetVertexShaderConstant,
+//  XTL_EmuD3DPushBuffer_SetVertexShaderInputDirect,
 
   XTL_EmuD3DResource_AddRef,
   XTL_EmuD3DResource_BlockUntilNotBusy,

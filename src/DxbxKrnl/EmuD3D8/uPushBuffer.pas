@@ -55,6 +55,12 @@ procedure XTL_EmuExecutePushBuffer
   pFixup: PX_D3DFixup
 ); {NOPATCH}
 
+procedure XTL_EmuApplyPushBufferFixup
+(
+  pdwPushData: PDWORD;
+  pdwFixupData: PDWORD
+); {NOPATCH}
+
 procedure XTL_EmuExecutePushBufferRaw
 (
   pdwPushData: PDWORD
@@ -110,14 +116,13 @@ const lfUnit = lfCxbx or lfPushBuffer;
 
 procedure XTL_EmuExecutePushBuffer
 (
-    pPushBuffer: PX_D3DPushBuffer; 
+    pPushBuffer: PX_D3DPushBuffer;
     pFixup: PX_D3DFixup
 ); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   if (pFixup <> NULL) then
-//    DxbxKrnlCleanup('PushBuffer has fixups');
-    EmuWarning('PushBuffer has fixups');
+    XTL_EmuApplyPushBufferFixup(PDWORD(pPushBuffer.Data), PDWORD(pFixup.Data + pFixup.Run));
 
   XTL_EmuExecutePushBufferRaw(PDWORD(pPushBuffer.Data));
 end;
@@ -233,6 +238,45 @@ begin
     // Dxbx note : Only set this _after_ processing all levels :
     pPixelContainer.Common := pPixelContainer.Common and (not X_D3DCOMMON_ISLOCKED);
   end;
+end;
+
+procedure XTL_EmuApplyPushBufferFixup
+(
+  pdwPushData: PDWORD;
+  pdwFixupData: PDWORD
+); {NOPATCH}
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  SizeInBytes: UInt;
+  OffsetInBytes: UInt;
+begin
+  while True do
+  begin
+    SizeInBytes := pdwFixupData^;
+    if SizeInBytes = $FFFFFFFF then
+      Exit;
+
+    Inc(pdwFixupData);
+    OffsetInBytes := pdwFixupData^;
+    Inc(pdwFixupData);
+
+    memcpy({dest=}Pointer(UIntPtr(pdwPushData) + OffsetInBytes), {src=}pdwFixupData, SizeInBytes);
+    Inc(UIntPtr(pdwFixupData), SizeInBytes);
+  end;
+
+(*
+  When IDirect3DDevice8::RunPushBuffer is called with a fix-up object specified,
+  it will parse the fix-up data pointed to by Data and with a byte offset of Run.
+
+  The fix-up data is encoded as follows. The first DWORD is the size, in bytes,
+  of the push-buffer fix-up to be modified. The second DWORD is the offset, in bytes,
+  from the start of the push-buffer where the fix-up is to be modified.
+
+  The subsequent DWORDS are the data to be copied. This encoding repeats for every fix-up to be done,
+  until it terminates with a size value of 0xffffffff.
+
+  The offsets must be in an increasing order.
+*)
 end;
 
 {static} var pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8 = nil; // = XTL_PIDirect3DIndexBuffer8
