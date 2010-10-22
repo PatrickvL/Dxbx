@@ -1588,13 +1588,6 @@ function GeneratePatternTrie(const aFileList: TStrings; const aOnlyPatches: Bool
         VersionedXboxLibrary.LibName := LibName;
         aPatternTrie.VersionedLibraries.Add(VersionedXboxLibrary);
 
-        // Detect if this is a manually created (and thus incomplete) library.
-        // This fact is used in the symbol scanning code - incomplete patterns
-        // are not used as a 'definite' when scanning for symbols (especially
-        // when we have no version-exact patterns for a title) :
-        if PAnsiChar(Input.Memory)^ = ';' then
-          VersionedXboxLibrary.LibFlags := [lfIsIncomplete];
-
         // If the file is a .lib :
         if SameText(ExtractFileExt(FilePath), '.lib') then
         begin
@@ -1606,6 +1599,13 @@ function GeneratePatternTrie(const aFileList: TStrings; const aOnlyPatches: Bool
         else
           // Load pattern file into memory (assuming the file ext is .pat) :
           Input.LoadFromFile(FilePath);
+
+        // Detect if this is a manually created (and thus incomplete) library.
+        // This fact is used in the symbol scanning code - incomplete patterns
+        // are not used as a 'definite' when scanning for symbols (especially
+        // when we have no version-exact patterns for a title) :
+        if PAnsiChar(Input.Memory)^ = ';' then
+          VersionedXboxLibrary.LibFlags := [lfIsIncomplete];
 
         // Parse patterns in this file and append them to the trie :
         ParseAndAppendPatternsToTrie(Input.Memory, aPatternTrie, aOnlyPatches, VersionedXboxLibrary);
