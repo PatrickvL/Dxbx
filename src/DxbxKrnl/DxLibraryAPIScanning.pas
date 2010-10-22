@@ -1468,6 +1468,7 @@ begin
       else if Pos('XapiInitProcess', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 90
       else if Pos('_D3DDevice_SetRenderState_', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 80
       else if Pos('CreateDevice', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 78
+      else if Pos('_D3DXLoadSurfaceFromMemory@40', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 76
       else if Pos('_D3DDevice_', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 75
       else if Pos('D3D', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 70
 //      else if Pos('Sound', CurrentSymbol.Name) > 0 then CurrentSymbol.OrderingImportance := 60
