@@ -6946,8 +6946,8 @@ begin
 
   Result := g_pD3DDevice.CreateVertexBuffer(
     NewLength,
-    Usage, // XB2PC?
-    FVF,
+    0, // Usage, ignored according to Xbox docs
+    0, // FVF, ignored according to Xbox docs
     D3DPOOL_MANAGED, // TODO : If we supply Pool here, the PointSprites and Gamepad XDK samples crash!
     {ppVertexBuffer=}@(pD3DVertexBuffer.Emu.VertexBuffer)
     {$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF}
