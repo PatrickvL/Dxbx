@@ -743,20 +743,14 @@ function GetLogEntry(const aLogRoot: PLogStack): PLogStack;
 var
   CurrentRoot: PLogStack;
 begin
-  // We use a loop here, to make sure we're doing this thread-safe :
-  repeat
-    // First, let's see if we the pool contains anything at all :
-    Result := LogEntryPool;
-    if Result = nil then
-      Break;
-
-    // Prevent other threads from acessing the pool, by nilling it out for a short while :
-  until (InterlockedCompareExchangePointer({var}Pointer(LogEntryPool), {Exchange}nil, {Comperand}Result) = Result);
+  // Prevent other threads from acessing the pool, by nilling it out for a short while :
+  Result := InterlockedExchangePointer({var}Pointer(LogEntryPool), {Exchange}nil);
 
   // See if the above action gave us an entry :
   if Assigned(Result) then
   begin
     // We use a loop here, to make sure we're doing this thread-safe :
+    if Assigned(Result.Next) then
     repeat
       // We got an entry, so return the rest of the chain after it to the pool as fast as we can :
       CurrentRoot := LogEntryPool;
