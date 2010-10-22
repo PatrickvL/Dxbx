@@ -134,7 +134,7 @@ begin
 
   // TODO -oCxbx: Any other form of initialization?
 
-  ppEngine^ := PX_XACTEngine(DxbxMalloc( sizeof( X_XACTEngine ) ) );
+  ppEngine^ := PX_XACTEngine(XboxAlloc( sizeof( X_XACTEngine ) ) );
 
   EmuSwapFS(fsXbox);
 
@@ -180,7 +180,7 @@ begin
 
   // TODO -oCxbx: Implement
 
-  ppWaveBank^ := PX_XACTWaveBank( DxbxMalloc( sizeof( X_XACTWaveBank ) ) );
+  ppWaveBank^ := PX_XACTWaveBank( XboxAlloc( sizeof( X_XACTWaveBank ) ) );
 
   EmuSwapFS(fsXbox);
 
@@ -206,7 +206,7 @@ begin
 
   // TODO -oCxbx: Implement
 
-  ppWaveBank^ := PX_XACTWaveBank(DxbxMalloc( sizeof( X_XACTWaveBank ) ) );
+  ppWaveBank^ := PX_XACTWaveBank(XboxAlloc( sizeof( X_XACTWaveBank ) ) );
 
   EmuSwapFS(fsXbox);
 
@@ -234,7 +234,7 @@ begin
 
   // TODO -oCxbx: Implement
 
-  ppSoundBank^ := PX_XACTSoundBank( DxbxMalloc( sizeof( X_XACTSoundBank ) ) );
+  ppSoundBank^ := PX_XACTSoundBank( XboxAlloc( sizeof( X_XACTSoundBank ) ) );
 
   EmuSwapFS(fsXbox);
 
@@ -285,7 +285,8 @@ begin
       _(ppSoundSource, 'ppSoundSource').
     LogEnd();
 
-  ppSoundSource^ := PX_XACTSoundSource( malloc( sizeof( X_XACTSoundSource ) ) );
+  ppSoundSource^ := PX_XACTSoundSource( XboxAlloc( sizeof( X_XACTSoundSource ) ) );
+  // TODO : Where's the destructor for this?
 
   EmuSwapFS(fsXbox);
 
@@ -625,7 +626,7 @@ begin
   // to IXACTWaveBank is released.
 
 //  if(pWaveBank)
-//    free(pWaveBank);
+//    XboxFree(pWaveBank);
 
   EmuSwapFS(fsXbox);
 

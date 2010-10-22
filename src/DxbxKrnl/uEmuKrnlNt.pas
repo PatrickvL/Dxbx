@@ -1549,23 +1549,21 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfDxbx or lfKernel or lfFile) then
-    DbgPrintf('EmuKrnl : NtQueryDirectoryObject' +
-        #13#10'(' +
-        #13#10'   DirectoryHandle     : 0x%.08X' +
-        #13#10'   Buffer              : 0x%.08X' +
-        #13#10'   Length              : 0x%.08X' +
-        #13#10'   RestartScan         : 0x%.08X' +
-        #13#10'   Context             : 0x%.08X' +
-        #13#10'   ReturnLength        : 0x%.08X' +
-        #13#10');',
-        [DirectoryHandle, Buffer, Length, RestartScan, Context, ReturnLength]);
+    LogBegin('NtQueryDirectoryObject').
+       _(DirectoryHandle, 'DirectoryHandle').
+       _(Buffer, 'Buffer').
+       _(Length, 'Length').
+       _(RestartScan, 'RestartScan').
+       _(Context, 'Context').
+       _(ReturnLength, 'ReturnLength').
+    LogEnd();
 
   // redirect to Win2k/XP
   Result := JwaNative.NtQueryDirectoryObject(DirectoryHandle, Buffer, Length,
     {ReturnSingleEntry=}False, // TODO -oDxbx : Is this the correct value?
     RestartScan, Context, ReturnLength);
 
-  if (Result <> STATUS_SUCCESS) then
+  if (Result <> STATUS_SUCCESS) and (Result <> STATUS_NO_MORE_FILES) then
     EmuWarning('NtQueryDirectoryObject failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);

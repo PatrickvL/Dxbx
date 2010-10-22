@@ -773,13 +773,12 @@ end;
 procedure DxbxInitializePixelContainerYUY2(const pPixelContainer: PX_D3DPixelContainer);
 var
   dwSize: DWORD;
-  dwPtr: DWORD;
   pRefCount: PDWORD;
 begin
-  dwSize := g_dwOverlayP * g_dwOverlayH;
-  dwPtr := DWORD(DxbxMalloc(dwSize + sizeof(DWORD)));
-
-  pRefCount := PDWORD(dwPtr + dwSize);
+  // Dxbx addition : Ease the RefCount, by moving this to the start of the buffer :
+  dwSize := sizeof(DWORD) + (g_dwOverlayP * g_dwOverlayH);
+  pRefCount := XboxAlloc(dwSize);
+  ZeroMemory(pRefCount, dwSize);
 
   // initialize ref count
   pRefCount^ := 1;
@@ -788,10 +787,11 @@ begin
   pPixelContainer.Size := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
                        or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
                        or (g_dwOverlayP shl X_D3DSIZE_PITCH_SHIFT);
-  pPixelContainer.Common := 0;
+  // Dxbx addition : Initialize Common field properly :
+  pPixelContainer.Common := (pRefCount^ and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE;
   // Because YUY2 is not supported in hardware (in Direct3D8?), we'll actually mark this as a special fake texture (set highest bit)
   pPixelContainer.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
-  pPixelContainer.Emu.Lock := dwPtr;
+  pPixelContainer.Emu.Lock := UIntPtr(pRefCount);
 end;
 
 // TODO : Move to appropriate unit :
@@ -2269,7 +2269,8 @@ begin
 
   // TODO -oDxbx : Speed this up by re-using a previously memory block
 
-  Result := calloc(Count, sizeof(DWORD)); // Cxbx: new DWORD[Count]
+  Result := XboxAlloc(Count * sizeof(DWORD)); // Cxbx: new DWORD[Count] Dxbx: Put this in an Xbox heap
+  ZeroMemory(Result, Count * sizeof(DWORD));
   g_dwPrimaryPBCount := Count;
   g_pPrimaryPB := Result;
 
@@ -2288,7 +2289,7 @@ begin
 
   XTL_EmuExecutePushBufferRaw(g_pPrimaryPB);
 
-  Free(g_pPrimaryPB); // Cxbc: delete[]
+  XboxFree(g_pPrimaryPB); // Cxbc: delete[]
   g_pPrimaryPB := nil;
 
   Result := D3D_OK;
@@ -2902,12 +2903,15 @@ begin
   end;
 
   if FAILED(Result) then
-    {EmuWarning}DxbxKrnlCleanup('CreateImageSurface failed! ' + #13#10 + 'Format = 0x%8.8X', [Format])
-  else
-    DbgPrintf('Created image surface @ 0x%.08X [hRet = 0x%.08X]: %dx%d, format = 0x%.08X', [
-      ppBackBuffer^.Emu.Surface,
-      Result,
-      Width, Height, Ord(PCFormat)]);
+    DxbxKrnlCleanup('CreateImageSurface failed! ' + #13#10 + 'Format = 0x%8.8X', [Format]);
+
+  // Dxbx addition : Initialize Common field properly :
+  ppBackBuffer^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_SURFACE;
+
+  DbgPrintf('Created image surface @ 0x%.08X [hRet = 0x%.08X]: %dx%d, format = 0x%.08X', [
+    ppBackBuffer^.Emu.Surface,
+    Result,
+    Width, Height, Ord(PCFormat)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2928,7 +2932,7 @@ begin
       _(pRamp, 'pRamp').
     LogEnd();
 
-  pGammaRamp := PD3DGAMMARAMP(malloc(sizeof(D3DGAMMARAMP)));
+  pGammaRamp := PD3DGAMMARAMP(DxbxMalloc(sizeof(D3DGAMMARAMP)));
 
   g_pD3DDevice.GetGammaRamp({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} {out}pGammaRamp^);
 
@@ -2939,7 +2943,7 @@ begin
     pRamp.blue[v] := BYTE(pGammaRamp.blue[v]);
   end;
 
-  free(pGammaRamp);
+  DxbxFree(pGammaRamp);
 
   EmuSwapFS(fsXbox);
 end;
@@ -3145,7 +3149,8 @@ begin
 
   if FAILED(Result) then
   begin
-    EmuWarning('Unable to set viewport!');
+    if MayLog(lfUnit) then
+      EmuWarning('Unable to set viewport!');
     Result := D3D_OK;
   end;
 
@@ -3650,12 +3655,12 @@ begin
     LogEnd();
 
   // create emulated shader struct
-  pD3DVertexShader := PX_D3DVertexShader(DxbxMalloc(sizeof(X_D3DVertexShader)));
-  pVertexShader := PVERTEX_SHADER(DxbxMalloc(sizeof(VERTEX_SHADER)));
+  New(pD3DVertexShader);
+  ZeroMemory(pD3DVertexShader, sizeof(pD3DVertexShader^));
 
-  // TODO -oCXBX: Intelligently fill out these fields as necessary
-  ZeroMemory(pD3DVertexShader, sizeof(X_D3DVertexShader));
+  pVertexShader := PVERTEX_SHADER(XboxAlloc(sizeof(VERTEX_SHADER)));
   ZeroMemory(pVertexShader, sizeof(VERTEX_SHADER));
+  // TODO -oCXBX: Intelligently fill out these fields as necessary
 
   // CXBX HACK:
   // TODO -oCXBX: support this situation
@@ -3795,7 +3800,7 @@ begin
 
   DxbxFree(pRecompiledDeclaration);
 
-  pVertexShader.pDeclaration := PDWORD(DxbxMalloc(DeclarationSize));
+  pVertexShader.pDeclaration := PDWORD(XboxAlloc(DeclarationSize));
   memcpy(pVertexShader.pDeclaration, pDeclaration, DeclarationSize);
 
   pVertexShader.FunctionSize := 0;
@@ -3808,7 +3813,7 @@ begin
   begin
     if (pFunction <> NULL) then
     begin
-      pVertexShader.pFunction := PDWORD(DxbxMalloc(VertexShaderSize));
+      pVertexShader.pFunction := PDWORD(XboxAlloc(VertexShaderSize));
       memcpy(pVertexShader.pFunction, pFunction, VertexShaderSize);
       pVertexShader.FunctionSize := VertexShaderSize;
     end
@@ -4456,6 +4461,9 @@ begin
     end
     else
     begin
+      // Dxbx addition : Initialize Common field properly :
+      ppTexture^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE;
+
       // Dxbx addition : Request how many where created (as Levels could be 0) :
       Levels := IDirect3DTexture(ppTexture^.Emu.Texture).GetLevelCount();
 
@@ -4566,7 +4574,10 @@ begin
         PCFormat, D3DPOOL_MANAGED, @(ppVolumeTexture^.Emu.VolumeTexture));
 
     if (FAILED(hRet)) then
-      EmuWarning('CreateVolumeTexture Failed! (0x%.08X)', [hRet]);
+      DxbxKrnlCleanup('CreateVolumeTexture Failed! (0x%.08X)', [hRet]);
+
+    // Dxbx addition : Initialize Common field properly :
+    ppVolumeTexture^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE;
 
     if MayLog(lfUnit or lfReturnValue) then
       DbgPrintf('EmuD3D8 : Created Volume Texture: 0x%.08X (0x%.08X)', [@ppVolumeTexture, ppVolumeTexture^.Emu.VolumeTexture]);
@@ -4635,11 +4646,14 @@ begin
       PCFormat, D3DPOOL_MANAGED, @(ppCubeTexture^.Emu.CubeTexture)
   );
 
+  if (FAILED(Result)) then
+    DxbxKrnlCleanup('CreateCubeTexture Failed!');
+
+  // Dxbx addition : Initialize Common field properly :
+  ppCubeTexture^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE;
+
   if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : Created Cube Texture: 0x%.08X (0x%.08X)', [ppCubeTexture^, ppCubeTexture^.Emu.CubeTexture]);
-
-  if (FAILED(Result)) then
-    EmuWarning('CreateCubeTexture Failed!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -4675,25 +4689,24 @@ begin
       Length, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
       @(ppIndexBuffer^.Emu.IndexBuffer));
 
+  if (FAILED(hRet)) then
+    DxbxKrnlCleanup('CreateIndexBuffer Failed! (0x%.08X)', [hRet]);
+
+  // Dxbx addition : Initialize Common field properly :
+  ppIndexBuffer^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_INDEXBUFFER;
+
+  // update data ptr
+  pData := NULL;
+
+  IDirect3DIndexBuffer(ppIndexBuffer^.Emu.IndexBuffer).Lock(0, Length, {out} TLockData(pData), 0);
+
+  ppIndexBuffer^.Data := DWORD(pData);
+
+  // StrikerX3: experimenting...
+  IDirect3DIndexBuffer(ppIndexBuffer^.Emu.IndexBuffer).Unlock();
+
   if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : EmuIndexBuffer8 := 0x%.08X', [ppIndexBuffer^.Emu.IndexBuffer]);
-
-  if (FAILED(hRet)) then
-    EmuWarning('CreateIndexBuffer Failed! (0x%.08X)', [hRet]);
-
-  //
-  // update data ptr
-  //
-  begin
-    pData := NULL;
-
-    IDirect3DIndexBuffer(ppIndexBuffer^.Emu.IndexBuffer).Lock(0, Length, {out} TLockData(pData), 0);
-
-    ppIndexBuffer^.Data := DWORD(pData);
-
-    // StrikerX3: experimenting...
-    IDirect3DIndexBuffer(ppIndexBuffer^.Emu.IndexBuffer).Unlock();
-  end;
 
   EmuSwapFS(fsXbox);
 
@@ -4704,6 +4717,15 @@ end;
 function XTL_EmuD3DDevice_CreateIndexBuffer2(Length: UINT): PX_D3DIndexBuffer; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    LogBegin('XTL_EmuD3DDevice_CreateIndexBuffer2 >>').
+      _(Length, 'Length').
+    LogEnd();
+    EmuSwapFS(fsXbox);
+  end;
+
   Result := NULL;
 
   XTL_EmuD3DDevice_CreateIndexBuffer
@@ -4963,6 +4985,7 @@ begin
 
     // TODO -oDxbx : Shouldn't we do this too? :
     // g_EmuD3DActiveTexture[Stage] := pTexture;
+    // TODO -oDxbx : Or even call XTL_EmuD3DDevice_SetTexture which already does this (and more)?
 
 
     { MARKED OUT BY CXBX
@@ -5427,8 +5450,8 @@ begin
 
     // MARKED OUT BY CXBX
     // TODO -oCXBX: Should technically clean this up at some point..but on XP doesnt matter much
-//    DxbxFree(g_pIVBVertexBuffer);
-//    DxbxFree(g_IVBTable);
+//    SetLength(g_pIVBVertexBuffer, 0);
+//    SetLength(g_IVBTable, 0);
 
   EmuSwapFS(fsXbox);
 
@@ -5728,6 +5751,9 @@ begin
           Exit;
         end;
 
+        // Dxbx addition : Initialize Common field properly :
+        pVertexBuffer.Common := pVertexBuffer.Common or X_D3DCOMMON_TYPE_VERTEXBUFFER;
+
   {$IFDEF _DEBUG_TRACK_VB}
         g_VBTrackTotal.insert(pResource.Emu.VertexBuffer);
   {$ENDIF}
@@ -5745,6 +5771,7 @@ begin
 
         pResource.Data := ULONG(pData);
       end;
+
       if MayLog(lfUnit) then
         DbgPrintf('EmuIDirect3DResource_Register: Successfully Created VertexBuffer (0x%.08X)', [pResource.Emu.VertexBuffer]);
     end;
@@ -5784,6 +5811,9 @@ begin
           if (FAILED(hRet)) then
             DxbxKrnlCleanup('CreateIndexBuffer Failed!');
 
+          // Dxbx addition : Initialize Common field properly :
+          pIndexBuffer.Common := pIndexBuffer.Common or X_D3DCOMMON_TYPE_INDEXBUFFER;
+
           pData := nil;
 
           hRet := IDirect3DIndexBuffer(pResource.Emu.IndexBuffer).Lock(0, dwSize, {out}TLockData(pData), 0);
@@ -5791,7 +5821,7 @@ begin
           if (FAILED(hRet)) then
             DxbxKrnlCleanup('IndexBuffer Lock Failed!');
 
-          memcpy(pData, pBase, dwSize);
+          memcpy({dest=}pData, {src=}pBase, dwSize);
 
           IDirect3DIndexBuffer(pResource.Emu.IndexBuffer).Unlock();
 
@@ -5893,6 +5923,9 @@ begin
           if (FAILED(hRet)) then
             DxbxKrnlCleanup('CreateImageSurface Failed!');
 
+          // Dxbx addition : Initialize Common field properly :
+          pResource.Common := pResource.Common or X_D3DCOMMON_TYPE_SURFACE;
+
           if MayLog(lfUnit or lfReturnValue) then
           begin
             DbgPrintf('EmuIDirect3DResource_Register: Successfully Created ImageSurface(0x%.08X, 0x%.08X)', [pResource, pResource.Emu.Surface]);
@@ -5945,6 +5978,9 @@ begin
             if (FAILED(hRet)) then
               DxbxKrnlCleanup('CreateCubeTexture Failed!');
 
+            // Dxbx addition : Initialize Common field properly :
+            pResource.Common := pResource.Common or X_D3DCOMMON_TYPE_TEXTURE;
+
             if MayLog(lfUnit or lfReturnValue) then
               DbgPrintf('EmuIDirect3DResource_Register: Successfully Created CubeTexture(0x%.08X, 0x%.08X)', [pResource, pResource.Emu.CubeTexture]);
           end
@@ -5961,6 +5997,9 @@ begin
 
             if (FAILED(hRet)) then
               DxbxKrnlCleanup('CreateTexture Failed!');
+
+            // Dxbx addition : Initialize Common field properly :
+            pResource.Common := pResource.Common or X_D3DCOMMON_TYPE_TEXTURE;
 
             if MayLog(lfUnit or lfReturnValue) then
               DbgPrintf('EmuIDirect3DResource_Register: Successfully Created Texture (0x%.08X, 0x%.08X)', [pResource, pResource.Emu.Texture]);
@@ -6069,7 +6108,6 @@ function XTL_EmuD3DResource_AddRef
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   uRet: ULONG;
-  dwPtr: DWORD;
   pRefCount: PDWORD;
   pResource: XTL_PIDirect3DResource8;
 begin
@@ -6084,9 +6122,10 @@ begin
 
   if (IsSpecialResource(pThis.Data)) and (pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF > 0) then
   begin
-    dwPtr := DWORD(pThis.Emu.Lock);
-    pRefCount := PDWORD(dwPtr + g_dwOverlayP*g_dwOverlayH);
+    pRefCount := PDWORD(pThis.Emu.Lock);
+
     Inc(pRefCount^);
+    uRet := pRefCount^; // Dxbx addition : Return reference-count of special resources too!
   end
   else
   begin
@@ -6094,14 +6133,15 @@ begin
 
     if(pThis.Emu.Lock = $8000BEEF) then
     begin
-      Inc(pThis.Emu.Lock);
+      // Inc(pThis.Emu.Lock); // TODO : This gives $8000BEF0, which is otherwise unhandled! What to do?
       uRet := pThis.Emu.Lock;
     end
     else if (pResource <> nil) then
       uRet := IDirect3DResource(pResource)._AddRef();
 
+    // Update RefCount as present in the Common field :
     pThis.Common := (pThis.Common and (not X_D3DCOMMON_REFCOUNT_MASK))
-                 or ((pThis.Common and X_D3DCOMMON_REFCOUNT_MASK) + 1);
+                 or (uRet and X_D3DCOMMON_REFCOUNT_MASK);
   end;
 
   EmuSwapFS(fsXbox);
@@ -6146,25 +6186,28 @@ begin
   // HACK: Clone textures generated by D3DDevice::GetTexture2
   if (IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_TEXCLON) > 0)) then
   begin
+    // TODO -oDxbx : If we ever hit this, describing the test-case (XBE) would be nice for further debugging...
     EmuWarning('Deleting clone texture (from D3DDevice::GetTexture2)...');
 //    uRet = IDirect3DBaseTexture(pThis.Emu.BaseTexture)._Release();
-    Dispose(pThis);
+//    Dispose(pThis);
   end
   else if(IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
   begin
     dwPtr := DWORD(pThis.Emu.Lock);
-    pRefCount := PDWORD(dwPtr + g_dwOverlayP*g_dwOverlayH);
+    pRefCount := PDWORD(dwPtr);
 
     Dec(pRefCount^);
-    if pRefCount^ = 0 then
+    uRet := pRefCount^; // Dxbx addition : Return reference-count of special resources too!
+    if uRet = 0 then
     begin
       if (g_YuvSurface = pThis) then
         g_YuvSurface := NULL;
 
       // free memory associated with this special resource handle
-      DxbxFree(PVOID(dwPtr));
+      XboxFree(PVOID(dwPtr));
     end;
 
+    // TODO -oDxbx : Is this the right moment? Shouldn't we do this only when RefCount=0?
     EmuSwapFS(fsXbox);
     XTL_EmuD3DDevice_EnableOverlay(BOOL_FALSE);
     EmuSwapFS(fsWindows);
@@ -6175,9 +6218,9 @@ begin
 
     if (pThis.Emu.Lock = $8000BEEF) then
     begin
-      FreeMem(PVOID(pThis.Data)); // FreeMem, because XTL_EmuD3DDevice_CreatePalette2 used AllocMem
+      XboxFree(PVOID(pThis.Data));
       PVOID(pThis.Data) := nil; // Make sure the Data pointer can't be accessed anymore
-      Dec(pThis.Emu.Lock);
+      // Dec(pThis.Emu.Lock); // TODO : This gives $8000BEEE, which is otherwise unhandled! What to do?
       uRet := pThis.Emu.Lock;
     end
     else
@@ -6190,16 +6233,23 @@ begin
             if (g_EmuD3DResourceCache[v].Data = pThis.Data) then
             begin
               g_EmuD3DResourceCache[v].Data := 0;
+              g_EmuD3DResourceCache[v].Emu.Resource := nil; // Dxbx addition
               break;
             end;
           end;
+
+        // Dxbx addition : Because most Xbox resources don't need an
+        // explicit Unlock, we need to do that at release-time ourselves here :
+        IDirect3DResource(pResource)._AddRef();
+        uRet := IDirect3DResource(pResource)._Release();
+        if (uRet = 1) then
+          DxbxUnlockD3DResource(pThis);
 
 {$ifdef _DEBUG_TRACE_VB}
         Type_ := IDirect3DResource(pResource).GetType();
 {$endif}
 
         uRet := IDirect3DResource(pResource)._Release();
-
         if (uRet = 0) then
         begin
           if MayLog(lfUnit) then
@@ -6212,17 +6262,21 @@ begin
             g_VBTrackDisable.remove(pResource);
           end;
 {$endif}
-          //delete pThis;
-
           pThis.Emu.Resource := nil; // Dxbx addition - nil out after decreasing reference count
+
+          //delete pThis;
         end;
 
         pResource := nil; // Dxbx addition - nil out after decreasing reference count
       end;
     end;
 
-    pThis.Common := (pThis.Common and not X_D3DCOMMON_REFCOUNT_MASK) or ((pThis.Common and X_D3DCOMMON_REFCOUNT_MASK) - 1);
   end;
+
+  if uRet > 0 then
+    // Update RefCount as present in the Common field :
+    pThis.Common := (pThis.Common and (not X_D3DCOMMON_REFCOUNT_MASK))
+                 or (uRet and X_D3DCOMMON_REFCOUNT_MASK);
 
   EmuSwapFS(fsXbox);
 
@@ -6502,7 +6556,8 @@ begin
   if ((pThis <> nil) and IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
   begin
     pLockedRect.Pitch := g_dwOverlayP;
-    pLockedRect.pBits := PVOID(pThis.Emu.Lock);
+    // Dxbx addition : Skip RefCount (since it's at the start of the buffer) :
+    pLockedRect.pBits := PVOID(pThis.Emu.Lock + SizeOf(DWORD));
 
     hRet := D3D_OK;
   end
@@ -6568,10 +6623,8 @@ function XTL_EmuD3DTexture_GetSurfaceLevel2
   Level: UINT
 ): PX_D3DResource; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-//  pSurfaceLevel: PX_D3DSurface;
-  dwSize: DWORD;
-  pRefCount: PDWORD;
+//var
+//  pRefCount: PDWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -6581,16 +6634,15 @@ begin
       _(Level, 'Level').
     LogEnd();
 
+(* Dxbx note : This block is alredy present in XTL_EmuD3DTexture_GetSurfaceLevel too, so disable here :
   EmuVerifyResourceIsRegistered(pThis); // Dxbx addition
 
   // In a special situation, we are actually returning a memory ptr with high bit set
   if (IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
   begin
-    dwSize := g_dwOverlayP*g_dwOverlayH;
+    pRefCount := PDWORD(pThis.Emu.Lock);
 
-    pRefCount := PDWORD(DWORD(pThis.Emu.Lock) + dwSize);
-
-    // initialize ref count
+    // increase ref count
     Inc(pRefCount^);
 
     Result := pThis;
@@ -6598,6 +6650,7 @@ begin
     EmuSwapFS(fsXbox);
   end
   else
+*)
   begin
     EmuSwapFS(fsXbox);
 
@@ -6640,7 +6693,8 @@ begin
   if ((pThis <> nil) and IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
   begin
     pLockedRect.Pitch := g_dwOverlayP;
-    pLockedRect.pBits := PVOID(pThis.Emu.Lock);
+    // Dxbx addition : Skip RefCount (since it's at the start of the buffer) :
+    pLockedRect.pBits := PVOID(pThis.Emu.Lock + SizeOf(DWORD));
 
     hRet := D3D_OK;
   end
@@ -6694,7 +6748,6 @@ function XTL_EmuD3DTexture_GetSurfaceLevel
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
-  dwSize: DWORD;
   pRefCount: PDWORD;
   pTexture: XTL_PIDirect3DTexture8;
 begin
@@ -6712,11 +6765,9 @@ begin
   // if highest bit is set, this is actually a raw memory pointer (for YUY2 simulation)
   if (IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
   begin
-    dwSize := g_dwOverlayP*g_dwOverlayH;
+    pRefCount := PDWORD(pThis.Emu.Lock);
 
-    pRefCount := PDWORD(DWORD(pThis.Emu.Lock) + dwSize);
-
-    // initialize ref count
+    // increase ref count
     Inc(pRefCount^);
 
     ppSurfaceLevel^ := PX_D3DSurface(pThis);
@@ -6822,8 +6873,11 @@ begin
   if MayLog(lfUnit) then
     DbgPrintf('EmuD3D8 : EmuD3DDevice_Release();');
 
+  // Trick to get the current reference-count :
   g_pD3DDevice._AddRef();
   Result := g_pD3DDevice._Release();
+
+  // Is this the last reference to the D3DDevice?
   if (Result = 1) then
   begin
     // Dxbx addition :
@@ -6906,6 +6960,9 @@ begin
   end
   else
   begin
+    // Dxbx addition : Initialize Common field properly :
+    pD3DVertexBuffer.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_VERTEXBUFFER;
+
 {$ifdef _DEBUG_TRACK_VB}
     g_VBTrackTotal.insert(pD3DVertexBuffer.Emu.VertexBuffer);
 {$endif}
@@ -6929,6 +6986,8 @@ begin
     LogEnd();
     EmuSwapFS(fsXbox);
   end;
+
+  Result := NULL;
 
   XTL_EmuD3DDevice_CreateVertexBuffer(Length, 0, 0, D3DPOOL_MANAGED, @Result);
 end;
@@ -8176,7 +8235,8 @@ begin
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_SHADOWFUNC]^ := Value;
 
-  EmuWarning('ShadowFunc not implemented');
+  if MayLog(lfUnit) then
+    EmuWarning('ShadowFunc not implemented');
 
   EmuSwapFS(fsXbox);
 end;
@@ -8202,7 +8262,8 @@ begin
   begin
     g_fYuvEnabled := (Value <> BOOL_FALSE);
 
-    EmuWarning('EmuD3DDevice_SetRenderState_YuvEnable using overlay!');
+    if MayLog(lfUnit) then
+      EmuWarning('EmuD3DDevice_SetRenderState_YuvEnable using overlay!');
 
     EmuSwapFS(fsXbox);
     XTL_EmuD3DDevice_EnableOverlay(BOOL(g_fYuvEnabled));
@@ -8308,6 +8369,9 @@ begin
       _(Flags, 'Flags').
     LogEnd();
 
+  // TODO -oDxbx : Should we call EmuVerifyResourceIsRegistered here?
+  EmuVerifyResourceIsRegistered(ppVertexBuffer);
+
   pVertexBuffer := ppVertexBuffer.Emu.VertexBuffer;
 
   hRet := IDirect3DVertexBuffer(pVertexBuffer).Lock(OffsetToLock, SizeToLock, {out}TLockData(ppbData^), Flags);
@@ -8342,6 +8406,9 @@ begin
       _(ppVertexBuffer, 'ppVertexBuffer').
       _(Flags, 'Flags').
     LogEnd();
+
+  // TODO -oDxbx : Should we call EmuVerifyResourceIsRegistered here?
+  EmuVerifyResourceIsRegistered(ppVertexBuffer);
 
   pVertexBuffer := ppVertexBuffer^.Emu.VertexBuffer;
   pbData := NULL;
@@ -8690,7 +8757,10 @@ begin
     );
 
     if (FAILED(hRet)) then
-        DxbxKrnlCleanup('CreateIndexBuffer Failed!');
+      DxbxKrnlCleanup('CreateIndexBuffer Failed!');
+
+    // Dxbx addition : Initialize Common field properly :
+    g_pIndexBuffer.Common := g_pIndexBuffer.Common or X_D3DCOMMON_TYPE_INDEXBUFFER;
 
     pData := nil;
 
@@ -8775,7 +8845,7 @@ begin
       IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, VertexCount*SizeOf(Word), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
 
       if (pIndexBuffer = nil) then
-          DxbxKrnlCleanup('Could not create index buffer! (%d bytes)', [VertexCount*SizeOf(Word)]);
+        DxbxKrnlCleanup('Could not create index buffer! (%d bytes)', [VertexCount*SizeOf(Word)]);
 
       pbData := nil;
 
@@ -9101,13 +9171,14 @@ begin
 {$ENDIF}
 
   if FAILED(Result) then
-    EmuWarning('SetRenderTarget failed!' +
-            ' pRenderTarget = 0x%.08X, pPCRenderTarget = 0x%.08X,' +
-            ' pNewZStencil = 0x%.08X, pPCNewZStencil = 0x%.08X,' +
-            ' hRet = 0x%.08X',
-            [pRenderTarget, pPCRenderTarget,
-            pNewZStencil, pPCNewZStencil,
-            Result]);
+    if MayLog(lfUnit) then
+      EmuWarning('SetRenderTarget failed!' +
+                 ' pRenderTarget = 0x%.08X, pPCRenderTarget = 0x%.08X,' +
+                 ' pNewZStencil = 0x%.08X, pPCNewZStencil = 0x%.08X,' +
+                 ' hRet = 0x%.08X',
+                 [pRenderTarget, pPCRenderTarget,
+                  pNewZStencil, pPCNewZStencil,
+                  Result]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -9140,6 +9211,8 @@ const
   );
 var
   pPalette: PX_D3DPalette;
+const
+  RefCount = $8000BEEF;
 begin
   EmuSwapFS(fsWindows);
 
@@ -9150,9 +9223,11 @@ begin
 
   New({var PX_D3DPalette}pPalette);
   // ZeroMemory(pPalette,...) not nescessary, as we're filling each field already here :
-  pPalette.Common := 0;
-  pPalette.Data := DWORD(AllocMem(lk[Size] * sizeof(uint08)));
-  pPalette.Emu.Lock := $8000BEEF; // emulated reference count for palettes
+
+  // Dxbx addition : Initialize Common field properly :
+  pPalette.Common := (RefCount and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_PALETTE;
+  pPalette.Data := DWORD(XboxAlloc(lk[Size] * sizeof(uint08)));
+  pPalette.Emu.Lock := RefCount; // emulated reference count for palettes
 
   EmuSwapFS(fsXbox);
 
@@ -9366,17 +9441,17 @@ begin
     pVertexShader := PVERTEX_SHADER(pD3DVertexShader.Handle);
 
     RealHandle := pVertexShader.Handle;
-    DxbxFree(pVertexShader.pDeclaration);
+    XboxFree(pVertexShader.pDeclaration);
 
     if Assigned(pVertexShader.pFunction) then
     begin
-      DxbxFree(pVertexShader.pFunction);
+      XboxFree(pVertexShader.pFunction);
     end;
 
     XTL_FreeVertexDynamicPatch(pVertexShader);
 
-    DxbxFree(pVertexShader);
-    DxbxFree(pD3DVertexShader);
+    XboxFree(pVertexShader);
+    XboxFree(pD3DVertexShader);
 
 {$IFDEF DXBX_USE_D3D9}
     IDirect3DVertexShader9(RealHandle)._Release; // TODO -oDxbx : Is this correctly done instead of DeleteVertexShader() ?
@@ -9728,44 +9803,6 @@ function XTL_EmuDirect3D_AllocContiguousMemory
   dwAllocAttributes: DWORD
 ): PVOID; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Patrickvl  Done:100
-var
-  dwRet: DWORD;
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit or lfTrace) then
-    DbgPrintf( 'EmuD3D8 : EmuIDirect3D_AllocContiguousMemory' +
-        #13#10'(' +
-        #13#10'   dwSize             : 0x%.08X' +
-        #13#10'   dwAllocAttributes  : 0x%.08X' +
-        #13#10');',
-               [dwSize, dwAllocAttributes]);
-
-  //
-  // Cxbx NOTE: Kludgey (but necessary) solution:
-  //
-  // Since this memory must be aligned on a page boundary, we must allocate an extra page
-  // so that we can return a valid page aligned pointer
-  //
-
-  Result := DxbxMalloc(dwSize + PAGE_SIZE);
-
-  // align to page boundary
-  begin
-    dwRet := DWORD(Result);
-
-    Inc(dwRet, PAGE_SIZE - dwRet mod PAGE_SIZE);
-
-    g_AlignCache.insert({uiKey=}dwRet, {pResource=}Result);
-
-    Result := PVOID(dwRet);
-  end;
-
-  if MayLog(lfUnit or lfReturnValue) then
-    DbgPrintf('EmuD3D8 : EmuIDirect3D_AllocContiguousMemory returned 0x%.08X', [Result]);
-
-  EmuSwapFS(fsXbox);
-end;
 *)
 
 function XTL_EmuD3DTexture_GetLevelDesc
@@ -10011,7 +10048,12 @@ begin
       _(Flags, 'Flags').
     LogEnd();
 
-  IDirect3DResource(pThis.Emu.Resource).SetPrivateData(refGuid^, pData, SizeOfData, Flags);
+  if IsSpecialResource(pThis.Data) then
+    // TODO -oDxbx : How should we support this on special resources?
+    EmuWarning('SetPrivateData not supported on special resources!')
+  else
+    IDirect3DResource(pThis.Emu.Resource).SetPrivateData(refGuid^, pData, SizeOfData, Flags);
+
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
@@ -10036,7 +10078,12 @@ begin
       _(PSizeOfData, 'PSizeOfData').
     LogEnd();
 
-  IDirect3DResource(pThis.Emu.Resource).GetPrivateData(refguid^, pData, pSizeOfData^);
+  if IsSpecialResource(pThis.Data) then
+    // TODO -oDxbx : How should we support this on special resources?
+    EmuWarning('GetPrivateData not supported on special resources!')
+  else
+    IDirect3DResource(pThis.Emu.Resource).GetPrivateData(refguid^, pData, pSizeOfData^);
+
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
@@ -10057,7 +10104,12 @@ begin
       _(refguid, 'refguid').
     LogEnd();
 
-  IDirect3DResource(pThis.Emu.Resource).FreePrivateData(refguid^);
+  if IsSpecialResource(pThis.Data) then
+    // TODO -oDxbx : How should we support this on special resources?
+    EmuWarning('FreePrivateData not supported on special resources!')
+  else
+    IDirect3DResource(pThis.Emu.Resource).FreePrivateData(refguid^);
+
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
@@ -10373,6 +10425,30 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+
+function XTL_EmuD3DDevice_GetTexture
+(
+  dwStage: DWORD;
+  pTexture: PX_D3DResource
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:50
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_GetTexture').
+      _(dwStage, 'dwStage').
+      _(pTexture, 'pTexture').
+    LogEnd();
+
+  Result := D3D_OK;
+
+  // TODO -oDxbx : Is this a correct implementation?
+  pTexture := g_EmuD3DActiveTexture[dwStage];
+  pTexture.Data := (X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_TEXCLON);
+
+  EmuSwapFS(fsXbox);
+end;
 
 function XTL_EmuD3DDevice_GetTexture2
 (
@@ -11136,6 +11212,20 @@ function XTL_EmuD3DDevice_CreateSurface2(
 ): PX_D3DSurface; stdcall;
 // Branch:DXBX  Translator:PatrickvL  Done:50
 begin
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    LogBegin('XTL_EmuD3DDevice_CreateSurface2 >>').
+      _(Width, 'Width').
+      _(Height, 'Height').
+      _(Usage, 'Usage').
+      _(Format, 'Format').
+    LogEnd();
+    EmuSwapFS(fsXbox);
+  end;
+
+  Result := NULL;
+
   // TODO : What about Usage?
   {ignore}XTL_EmuD3DDevice_CreateImageSurface(Width, Height, Format, @Result); // Dxbx addition
 end;
@@ -11647,6 +11737,7 @@ exports
   XTL_EmuD3DDevice_GetRenderTarget2,
   XTL_EmuD3DDevice_GetShaderConstantMode,
   XTL_EmuD3DDevice_GetStreamSource2,
+  XTL_EmuD3DDevice_GetTexture,
   XTL_EmuD3DDevice_GetTexture2,
   XTL_EmuD3DDevice_GetTextureStageState,
   XTL_EmuD3DDevice_GetTile,

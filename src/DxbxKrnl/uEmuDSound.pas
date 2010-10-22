@@ -1010,7 +1010,7 @@ begin
   // Dxbx note : When and how should we create a IDirectSound3DBuffer ?
   // It will be needed to emulate SetConeAngles and other functions!
 
-  pDSBufferDesc := DirectSound.PDSBUFFERDESC(DxbxMalloc(sizeof(DSBUFFERDESC)));
+  pDSBufferDesc := DirectSound.PDSBUFFERDESC(XboxAlloc(sizeof(DSBUFFERDESC)));
   pDSBufferDescSpecial := NULL; // Dxbx not : Prevent W1036 Variable might not have been initialized
   bIsSpecial := false;
 
@@ -1034,7 +1034,7 @@ begin
 
     if (pdsbd.lpwfxFormat <> NULL) then
     begin
-      pDSBufferDesc.lpwfxFormat := {PWAVEFORMATEX}DxbxMalloc(sizeof(WAVEFORMATEX) + pdsbd.lpwfxFormat.cbSize);
+      pDSBufferDesc.lpwfxFormat := {PWAVEFORMATEX}XboxAlloc(sizeof(WAVEFORMATEX) + pdsbd.lpwfxFormat.cbSize);
       memcpy(pDSBufferDesc.lpwfxFormat, pdsbd.lpwfxFormat, sizeof(WAVEFORMATEX));
 
       if (pDSBufferDesc.lpwfxFormat.wFormatTag = X_WAVE_FORMAT_XBOX_ADPCM) then
@@ -1074,8 +1074,8 @@ begin
 
       // TODO -oCXBX: A better response to this scenario if possible.
 
-      pDSBufferDescSpecial := DirectSound.PDSBUFFERDESC(DxbxMalloc(sizeof(DSBUFFERDESC)));
-      pDSBufferDescSpecial.lpwfxFormat := PWAVEFORMATEX(DxbxMalloc(sizeof(WAVEFORMATEX)));
+      pDSBufferDescSpecial := DirectSound.PDSBUFFERDESC(XboxAlloc(sizeof(DSBUFFERDESC)));
+      pDSBufferDescSpecial.lpwfxFormat := PWAVEFORMATEX(XboxAlloc(sizeof(WAVEFORMATEX)));
 
       //memset(pDSBufferDescSpecial.lpwfxFormat, 0, sizeof(WAVEFORMATEX));
       //memset(pDSBufferDescSpecial, 0, sizeof(DSBUFFERDESC));
@@ -1093,7 +1093,7 @@ begin
       pDSBufferDescSpecial.dwBufferBytes := 3 * pDSBufferDescSpecial.lpwfxFormat.nAvgBytesPerSec;
 
       // MARKED OUT CXBX
-//    pDSBufferDesc.lpwfxFormat := (WAVEFORMATEX*)DxbxMalloc(sizeof(WAVEFORMATEX)/*+pdsbd.lpwfxFormat.cbSize*/);
+//    pDSBufferDesc.lpwfxFormat := (WAVEFORMATEX*)XboxAlloc(sizeof(WAVEFORMATEX)/*+pdsbd.lpwfxFormat.cbSize*/);
 
 ////  pDSBufferDesc.lpwfxFormat.cbSize := sizeof( WAVEFORMATEX );
 //    pDSBufferDesc.lpwfxFormat.nChannels := 1;
@@ -1222,7 +1222,7 @@ begin
   // TODO -oCXBX: Garbage Collection
   ppStream^ := TIDirectSoundStream.Create;
 
-  pDSBufferDesc := DirectSound.PDSBUFFERDESC(DxbxMalloc(sizeof(DSBUFFERDESC)));
+  pDSBufferDesc := DirectSound.PDSBUFFERDESC(XboxAlloc(sizeof(DSBUFFERDESC)));
 
   // convert from Xbox to PC DSound
   begin
@@ -1240,7 +1240,7 @@ begin
 
     if (pdssd.lpwfxFormat <> NULL) then
     begin
-      pDSBufferDesc.lpwfxFormat := PWAVEFORMATEX(DxbxMalloc(sizeof(WAVEFORMATEX)));
+      pDSBufferDesc.lpwfxFormat := PWAVEFORMATEX(XboxAlloc(sizeof(WAVEFORMATEX)));
       memcpy(pDSBufferDesc.lpwfxFormat, pdssd.lpwfxFormat, sizeof(WAVEFORMATEX));
     end;
 
@@ -2363,9 +2363,9 @@ begin
           end;
 
           if (Self.EmuBufferDesc.lpwfxFormat <> NULL) then
-            DxbxFree(Self.EmuBufferDesc.lpwfxFormat);
+            XboxFree(Self.EmuBufferDesc.lpwfxFormat);
 
-          DxbxFree(Self.EmuBufferDesc);
+          XboxFree(Self.EmuBufferDesc);
 
           Self.Free;
       end;
@@ -3771,9 +3771,9 @@ begin
       end;
 
       if (Self.EmuBufferDesc.lpwfxFormat <> NULL) then
-        DxbxFree(Self.EmuBufferDesc.lpwfxFormat);
+        XboxFree(Self.EmuBufferDesc.lpwfxFormat);
 
-      DxbxFree(Self.EmuBufferDesc);
+      XboxFree(Self.EmuBufferDesc);
 
       Self.Free;
     end;

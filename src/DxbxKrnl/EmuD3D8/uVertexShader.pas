@@ -2481,7 +2481,7 @@ var
 begin
   pShaderHeader := PVSH_SHADER_HEADER(pFunction);
   EOI := false;
-  pShader := PVSH_XBOX_SHADER(DxbxMalloc(sizeof(VSH_XBOX_SHADER)));
+  pShader := PVSH_XBOX_SHADER(DxbxCalloc(1, sizeof(VSH_XBOX_SHADER)));
   hRet := 0;
   pErrors := nil;
 
@@ -2499,7 +2499,6 @@ begin
     EmuWarning('Couldn''t allocate memory for vertex shader conversion buffer');
     hRet := E_OUTOFMEMORY;
   end;
-  memset(pShader, 0, sizeof(VSH_XBOX_SHADER));
   pShader.ShaderHeader := pShaderHeader^;
   case(pShaderHeader.Version) of
     VERSION_XVS: 

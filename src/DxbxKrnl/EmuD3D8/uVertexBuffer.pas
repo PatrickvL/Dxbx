@@ -741,7 +741,7 @@ begin
     // TODO -oCXBX: This is sometimes the number of indices, which isn't too good
     dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
     pNewVertexBuffer := NULL;
-    pNewData := DxbxMalloc(dwNewSize);
+    pNewData := XboxAlloc(dwNewSize);
     if (nil=pNewData) then
     begin
       DxbxKrnlCleanup('Couldn''t allocate the new stream zero buffer');
