@@ -36,6 +36,9 @@ uses
   uMutex;
 
 
+function XboxAlloc(x: Integer): Pointer;
+procedure XboxFree(x: Pointer);
+
 function DxbxMalloc(x: Integer): Pointer;
 function DxbxCalloc(x, y: Integer): Pointer;
 procedure DxbxFree(x: Pointer);
@@ -63,6 +66,16 @@ const DxbxRtlSizeHeap(Heap, Flags, pMem)       DxbxRtlSizeHeapDebug(Heap, Flags,
 *)
 
 {$ELSE !_DEBUG_ALLOC}
+
+function XboxAlloc(x: Integer): Pointer;
+begin
+  Result := DxbxMalloc(x); // TODO : Change this to call DxbxRtlAlloc (but with which heap?)
+end;
+
+procedure XboxFree(x: Pointer);
+begin
+  DxbxFree(x); // TODO : Change this to call DxbxRtlFree (but with which heap?)
+end;
 
 function DxbxMalloc(x: Integer): Pointer;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100

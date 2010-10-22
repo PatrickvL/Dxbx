@@ -686,7 +686,7 @@ begin
   EnterCriticalSection({var}DxbxLogLock);
   try
     try
-      OutputDebugString(PChar(aText));
+//      OutputDebugString(PChar(aText));
 
       if Assigned(ConsoleControl) or LogFileOpen then
       begin

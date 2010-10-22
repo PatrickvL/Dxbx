@@ -40,6 +40,7 @@ uses
   // Dxbx
   , uTypes
   , uDxbxUtils // iif
+  , uEmuAlloc
   , uResourceTracker
   , uEmuD3D8Types
   , uEmuD3D8Utils
@@ -215,7 +216,7 @@ begin
           iRect := Classes.Rect(0,0,0,0);
           iPoint := Classes.Point(0,0);
 
-          pTemp := malloc(dwHeight * dwPitch);
+          pTemp := DxbxMalloc(dwHeight * dwPitch);
 
           EmuXGUnswizzleRect
           (
@@ -227,7 +228,7 @@ begin
 
           IDirect3DTexture(pTexture).UnlockRect(v); // Dxbx fix : Cxbx unlocks level 0 each time!
 
-          free(pTemp);
+          DxbxFree(pTemp);
         end;
       end;
 
