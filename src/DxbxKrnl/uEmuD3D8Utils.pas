@@ -35,7 +35,9 @@ uses
 {$ENDIF}
   // Dxbx
   uTypes,
-  uEmuD3D8Types;
+  uLog,
+  uEmuD3D8Types,
+  uDxbxKrnlUtils;
 
 type
   PLPD3DXBUFFER = PID3DXBuffer; // = ^LPD3DXBUFFER;
@@ -79,6 +81,7 @@ function F2DW(const aValue: Float): DWORD; inline;
 
 function GetSurfaceSize(const aSurface: PD3DSurfaceDesc): LongWord;
 function GetVolumeSize(const aVolume: PD3DVolumeDesc): LongWord;
+function X_D3DPRIMITIVETYPE2String(const aValue: X_D3DPRIMITIVETYPE): string;
 
 implementation
 
@@ -154,6 +157,9 @@ begin
     Length, Usage, Format, Pool,
     ppIndexBuffer);
 {$ENDIF}
+
+  if (FAILED(Result)) then
+    DxbxKrnlCleanup('CreateIndexBuffer Failed! (0x%.08X) (Requested %d bytes)', [Result, Length]);
 end;
 
 function IDirect3DDevice_CreateTexture(const aDirect3DDevice: IDirect3DDevice;
@@ -336,6 +342,26 @@ begin
 {$ELSE}
   Result := aVolume.Size;
 {$ENDIF}
+end;
+
+function X_D3DPRIMITIVETYPE2String(const aValue: X_D3DPRIMITIVETYPE): string;
+begin
+  case aValue of
+    X_D3DPT_NONE: Result := 'X_D3DPT_NONE';
+    X_D3DPT_POINTLIST: Result := 'X_D3DPT_POINTLIST';
+    X_D3DPT_LINELIST: Result := 'X_D3DPT_LINELIST';
+    X_D3DPT_LINELOOP: Result := 'X_D3DPT_LINELOOP';
+    X_D3DPT_LINESTRIP: Result := 'X_D3DPT_LINESTRIP';
+    X_D3DPT_TRIANGLELIST: Result := 'X_D3DPT_TRIANGLELIST';
+    X_D3DPT_TRIANGLESTRIP: Result := 'X_D3DPT_TRIANGLESTRIP';
+    X_D3DPT_TRIANGLEFAN: Result := 'X_D3DPT_TRIANGLEFAN';
+    X_D3DPT_QUADLIST: Result := 'X_D3DPT_QUADLIST';
+    X_D3DPT_QUADSTRIP: Result := 'X_D3DPT_QUADSTRIP';
+    X_D3DPT_POLYGON: Result := 'X_D3DPT_POLYGON';
+    X_D3DPT_MAX: Result := 'X_D3DPT_MAX';
+    X_D3DPT_INVALID: Result := 'X_D3DPT_INVALID';
+  else Result := '';
+  end;
 end;
 
 end.
