@@ -1096,7 +1096,7 @@ var
 begin
   if DestRegister.IsAlpha then
   begin
-      if (Input1.Channel = PS_CHANNEL_BLUE) then
+    if (Input1.Channel = PS_CHANNEL_BLUE) then
       Input1ReadMask := '.b'
     else
       Input1ReadMask := '.a';
@@ -1160,10 +1160,16 @@ function RPSDisassembleScope.EmitMad(const OutputStr: string;
   const Input1, Input2: PPSInputRegister; const Input3: PPSRegisterObject): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  Result := 'mad' + OutputStr
-          + Input1.DisassembleInputRegister(@Self) + ', '
-          + Input2.DisassembleInputRegister(@Self) + ', '
-          + Input3.DisassembleRegister(@Self) + #13#10;
+  if Input3.Reg = PS_REGISTER_ZERO then
+    // EmitMul :
+    Result := 'mul' + OutputStr
+            + Input1.DisassembleInputRegister(@Self) + ', '
+            + Input2.DisassembleInputRegister(@Self) + #13#10
+  else
+    Result := 'mad' + OutputStr
+            + Input1.DisassembleInputRegister(@Self) + ', '
+            + Input2.DisassembleInputRegister(@Self) + ', '
+            + Input3.DisassembleRegister(@Self) + #13#10;
 end;
 
 function RPSDisassembleScope.EmitLrp(const OutputStr: string;
@@ -2455,7 +2461,6 @@ var
 begin
   PSIntermediate.Init(pPSDef);
   Result := PSIntermediate.DisassembleIntermediate();
-//  Result := ' '
 end;
 
 end.
