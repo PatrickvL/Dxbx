@@ -453,20 +453,25 @@ begin
     Inc(pdwPushData);
 
     if MayLog(lfUnit) then
-      DbgPrintf('  Method: 0x%.08X      Count: 0x%.08X', [dwMethod, dwCount]);
+      DbgPrintf('  Method: 0x%.08X   Count: 0x%.08X   PrimType: 0x%.03x %s', [
+        dwMethod, dwCount, Ord(XBPrimitiveType), X_D3DPRIMITIVETYPE2String(XBPrimitiveType)]);
 
     // Interpret GPU Instruction :
     case dwMethod of
 
+      D3DPUSH_NO_OPERATION:
+        Inc(pdwPushData, dwCount); // TODO -oDxbx: Is this correct, or should we skip only one DWORD?
+
       D3DPUSH_SET_BEGIN_END:
       begin
-        if (pdwPushData^ = 0) then
+        XBPrimitiveType := X_D3DPRIMITIVETYPE(pdwPushData^);
+        if (XBPrimitiveType = X_D3DPT_NONE) then
         begin
 {$ifdef _DEBUG_TRACK_PB}
           if (bShowPB) then
             DbgPrintf('  NVPB_SetBeginEnd(DONE)');
 {$endif}
-          break;  // done?
+//          break;  // done?
         end
         else
         begin
@@ -475,7 +480,6 @@ begin
             DbgPrintf('  NVPB_SetBeginEnd(PrimitiveType = %d)', [pdwPushData^]);
 {$endif}
 
-          XBPrimitiveType := X_D3DPRIMITIVETYPE(pdwPushData^);
           PCPrimitiveType := EmuPrimitiveType(XBPrimitiveType);
         end;
 
@@ -651,6 +655,9 @@ begin
       begin
         pIndexData := pdwPushData;
         Inc(pdwPushData, dwCount);
+//Debugging aid for Turok menu - this removes most of the black popping triangles (which should become Dinosaurs) :
+//if dwCount > $80 then
+//  Exit;
 
         if bInc then
           dwCount := dwCount * 2; // Convert DWORD count to WORD count
@@ -745,10 +752,13 @@ begin
 
           _RenderIndexedVertices;
         end;
-      end
+      end;
+
+      0:
+        Exit;
     else
       EmuWarning('Unknown PushBuffer Operation (0x%.04X, %d)', [dwMethod, dwCount]);
-      Exit;
+      Inc(pdwPushData, dwCount);
     end; // case
   end; // while true
 

@@ -307,24 +307,15 @@ begin
 end;
 
 function RLogStackHelper._(const aValue: X_D3DPRIMITIVETYPE; const aName: string = ''): PLogStack;
+var
+  Str: string;
 begin
   Result := SetName(aName, 'X_D3DPRIMITIVETYPE');
-  case aValue of
-    X_D3DPT_NONE: SetValue(UIntPtr(aValue), 'X_D3DPT_NONE');
-    X_D3DPT_POINTLIST: SetValue(UIntPtr(aValue), 'X_D3DPT_POINTLIST');
-    X_D3DPT_LINELIST: SetValue(UIntPtr(aValue), 'X_D3DPT_LINELIST');
-    X_D3DPT_LINELOOP: SetValue(UIntPtr(aValue), 'X_D3DPT_LINELOOP');
-    X_D3DPT_LINESTRIP: SetValue(UIntPtr(aValue), 'X_D3DPT_LINESTRIP');
-    X_D3DPT_TRIANGLELIST: SetValue(UIntPtr(aValue), 'X_D3DPT_TRIANGLELIST');
-    X_D3DPT_TRIANGLESTRIP: SetValue(UIntPtr(aValue), 'X_D3DPT_TRIANGLESTRIP');
-    X_D3DPT_TRIANGLEFAN: SetValue(UIntPtr(aValue), 'X_D3DPT_TRIANGLEFAN');
-    X_D3DPT_QUADLIST: SetValue(UIntPtr(aValue), 'X_D3DPT_QUADLIST');
-    X_D3DPT_QUADSTRIP: SetValue(UIntPtr(aValue), 'X_D3DPT_QUADSTRIP');
-    X_D3DPT_POLYGON: SetValue(UIntPtr(aValue), 'X_D3DPT_POLYGON');
-    X_D3DPT_MAX: SetValue(UIntPtr(aValue), 'X_D3DPT_MAX');
-    X_D3DPT_INVALID: SetValue(UIntPtr(aValue), 'X_D3DPT_INVALID');
-  else SetValue(UIntPtr(aValue));
-  end;
+  Str := X_D3DPRIMITIVETYPE2String(aValue);
+  if Str <> '' then
+    SetValue(UIntPtr(aValue), Str)
+  else
+    SetValue(UIntPtr(aValue));
 end;
 
 function RLogStackHelper._(const aValue: X_D3DFORMAT; const aName: string = ''): PLogStack;
@@ -4689,9 +4680,6 @@ begin
       Length, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
       @(ppIndexBuffer^.Emu.IndexBuffer));
 
-  if (FAILED(hRet)) then
-    DxbxKrnlCleanup('CreateIndexBuffer Failed! (0x%.08X)', [hRet]);
-
   // Dxbx addition : Initialize Common field properly :
   ppIndexBuffer^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_INDEXBUFFER;
 
@@ -5807,9 +5795,6 @@ begin
             dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
             @(pIndexBuffer.Emu.IndexBuffer)
           );
-
-          if (FAILED(hRet)) then
-            DxbxKrnlCleanup('CreateIndexBuffer Failed!');
 
           // Dxbx addition : Initialize Common field properly :
           pIndexBuffer.Common := pIndexBuffer.Common or X_D3DCOMMON_TYPE_INDEXBUFFER;
@@ -8756,9 +8741,6 @@ begin
         @(g_pIndexBuffer.Emu.IndexBuffer)
     );
 
-    if (FAILED(hRet)) then
-      DxbxKrnlCleanup('CreateIndexBuffer Failed!');
-
     // Dxbx addition : Initialize Common field properly :
     g_pIndexBuffer.Common := g_pIndexBuffer.Common or X_D3DCOMMON_TYPE_INDEXBUFFER;
 
@@ -8843,9 +8825,6 @@ begin
     if(not bActiveIB) then
     begin
       IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, VertexCount*SizeOf(Word), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
-
-      if (pIndexBuffer = nil) then
-        DxbxKrnlCleanup('Could not create index buffer! (%d bytes)', [VertexCount*SizeOf(Word)]);
 
       pbData := nil;
 
@@ -9147,7 +9126,7 @@ begin
     begin
       pPCNewZStencil := g_pCachedZStencilSurface.Emu.Surface;
     end;
- end;
+  end;
 
 //  // TODO -oCXBX: Follow that stencil!
 //  if MayLog(lfUnit) then
@@ -11002,10 +10981,9 @@ function XTL_EmuD3DCubeTexture_GetCubeMapSurface2
 (
   pThis: PX_D3DCubeTexture;
   FaceType: D3DCUBEMAP_FACES;
-  Level: UINT;
-  ppCubeMapSurface: PPX_D3DSurface
-): HRESULT; stdcall;
-// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+  Level: UINT
+): PX_D3DSurface; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -11014,10 +10992,14 @@ begin
       _(pThis, 'pThis').
       _(Ord(FaceType), 'FaceType').
       _(Level, 'Level').
-      _(ppCubeMapSurface, 'ppCubeMapSurface').
     LogEnd();
 
-  Result := IDirect3DCubeTexture(pThis.Emu.CubeTexture).GetCubeMapSurface(FaceType, Level, PIDirect3DSurface(ppCubeMapSurface^));
+  New(Result); // TODO -oDxbx : When should this be freeed? Isn't this a memory leak otherwise?
+  ZeroMemory(Result, SizeOf(Result^));
+
+  IDirect3DCubeTexture(pThis.Emu.CubeTexture).GetCubeMapSurface(FaceType, Level, PIDirect3DSurface(@Result.Emu.Surface));
+  Result.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_SURFACE;
+
   EmuSwapFS(fsXbox);
 end;
 
