@@ -4632,9 +4632,12 @@ begin
   ZeroMemory(ppCubeTexture^, SizeOf(ppCubeTexture^^));
 
   Result := IDirect3DDevice_CreateCubeTexture(g_pD3DDevice,
-      EdgeLength, Levels,
-      0,  // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
-      PCFormat, D3DPOOL_MANAGED, @(ppCubeTexture^.Emu.CubeTexture)
+      EdgeLength,
+      Levels,
+      Usage,  // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+      PCFormat,
+      D3DPOOL_DEFAULT, // Dxbx note : D3DPOOL_MANAGED makes CubeMap crash!
+      @(ppCubeTexture^.Emu.CubeTexture)
   );
 
   if (FAILED(Result)) then
