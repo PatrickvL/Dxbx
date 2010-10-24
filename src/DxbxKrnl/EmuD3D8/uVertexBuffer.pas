@@ -2042,24 +2042,28 @@ begin
               //
               pPixelData := pDest;
               dwDataSize := dwMipWidth * dwMipHeight * 4;
-              dwPaletteSize := 256 * 4; // Note: This is not allways true, it can be 256- 128- 64- or 32*4
+              dwPaletteSize := 256 * 4; // Cxbx Note: This is not allways true, it can be 256- 128- 64- or 32*4
 
               pTextureCache := DxbxMalloc(dwDataSize);
               pExpandedTexture := DxbxMalloc(dwDataSize);
-              pTexturePalette := DxbxMalloc(256 * 4);
+              pTexturePalette := DxbxMalloc(dwPaletteSize);
 
               // First we need to unswizzle the texture data
               EmuXGUnswizzleRect
               (
-                pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, pPixelData,
+                pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, {dest=}pPixelData,
                 LockedRect.Pitch, iRect, iPoint, dwBPP
               );
 
+              // TODO -oDxbx: Reduce this; EmuXGUnswizzleRect could target pTextureCache,
+              // g_pCurrentPalette doesn't have to be copied, and pExpandedTexture could
+              // be removed if we write to pPixelData directly. All we need is a testcase!
+
               // Copy the unswizzled data to a temporary buffer
-              memcpy(pTextureCache, pPixelData, dwDataSize);
+              memcpy({dest=}pTextureCache, pPixelData, dwDataSize);
 
               // Copy the currently selected palette's data to the buffer
-              memcpy(pTexturePalette, g_pCurrentPalette, dwPaletteSize);
+              memcpy({dest=}pTexturePalette, g_pCurrentPalette, dwPaletteSize);
 
               w := 0;
               c := 0;
@@ -2081,7 +2085,7 @@ begin
               end;
 
               // Copy the expanded texture back to the buffer
-              memcpy(pPixelData, pExpandedTexture, dwDataSize);
+              memcpy({dest=}pPixelData, pExpandedTexture, dwDataSize);
 
               // Flush unused data buffers
               DxbxFree(pTexturePalette); // pTexturePalette := nil;

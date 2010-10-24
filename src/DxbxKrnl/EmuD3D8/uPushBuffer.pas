@@ -333,7 +333,7 @@ var
         pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
       end;
 
-      hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, maxIBSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer(@pIndexBuffer));
+      hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, maxIBSize, {Usage=}0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer(@pIndexBuffer));
     end
     else
     begin
