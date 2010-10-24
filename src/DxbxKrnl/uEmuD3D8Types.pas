@@ -301,7 +301,93 @@ type
 
 type X_D3DMULTISAMPLE_TYPE = DWORD;
 type X_D3DSWAPEFFECT = D3DSWAPEFFECT; // Same as on Windows Direct3D
-type X_D3DFORMAT = type DWORD;
+
+const
+  // Xbox D3DFORMAT types :
+  // See http://wiki.beyondunreal.com/Legacy:Texture_Format
+
+  // Swizzled Formats
+
+  X_D3DFMT_L8 = $00;
+  X_D3DFMT_AL8 = $01;
+  X_D3DFMT_A1R5G5B5 = $02;
+  X_D3DFMT_X1R5G5B5 = $03;
+  X_D3DFMT_A4R4G4B4 = $04;
+  X_D3DFMT_R5G6B5 = $05;
+  X_D3DFMT_A8R8G8B8 = $06;
+  X_D3DFMT_X8R8G8B8 = $07;
+  X_D3DFMT_X8L8V8U8 = $07; // Alias
+  X_D3DFMT_P8 = $0B; // 8-bit Palletized
+  X_D3DFMT_A8 = $19;
+  X_D3DFMT_A8L8 = $1A;
+  X_D3DFMT_R6G5B5 = $27;
+  X_D3DFMT_L6V5U5 = $27; // Alias
+  X_D3DFMT_G8B8 = $28;
+  X_D3DFMT_V8U8 = $28; // Alias
+  X_D3DFMT_R8B8 = $29;
+  X_D3DFMT_D24S8 = $2A;
+  X_D3DFMT_F24S8 = $2B;
+  X_D3DFMT_D16 = $2C;
+  X_D3DFMT_D16_LOCKABLE = $2C; // Alias
+  X_D3DFMT_F16 = $2D;
+  X_D3DFMT_L16 = $32;
+  X_D3DFMT_V16U16 = $33;
+  X_D3DFMT_R5G5B5A1 = $38;
+  X_D3DFMT_R4G4B4A4 = $39;
+  X_D3DFMT_A8B8G8R8 = $3A;
+  X_D3DFMT_Q8W8V8U8 = $3A; // Alias
+  X_D3DFMT_B8G8R8A8 = $3B;
+  X_D3DFMT_R8G8B8A8 = $3C;
+
+  // YUV Formats
+
+  X_D3DFMT_YUY2 = $24;
+  X_D3DFMT_UYVY = $25;
+
+  // Compressed Formats
+
+  X_D3DFMT_DXT1 = $0C; // opaque/one-bit alpha
+  X_D3DFMT_DXT2 = $0E;
+  X_D3DFMT_DXT3 = $0E; // linear alpha
+  X_D3DFMT_DXT4 = $0F;
+  X_D3DFMT_DXT5 = $0F; // interpolated alpha
+
+  // Linear Formats
+
+  X_D3DFMT_LIN_A1R5G5B5 = $10;
+  X_D3DFMT_LIN_R5G6B5 = $11;
+  X_D3DFMT_LIN_A8R8G8B8 = $12;
+  X_D3DFMT_LIN_L8 = $13;
+  X_D3DFMT_LIN_R8B8 = $16;
+  X_D3DFMT_LIN_G8B8 = $17;
+  X_D3DFMT_LIN_V8U8 = $17; // Alias
+  X_D3DFMT_LIN_AL8 = $1B;
+  X_D3DFMT_LIN_X1R5G5B5 = $1C;
+  X_D3DFMT_LIN_A4R4G4B4 = $1D;
+  X_D3DFMT_LIN_X8R8G8B8 = $1E;
+  X_D3DFMT_LIN_X8L8V8U8 = $1E; // Alias
+  X_D3DFMT_LIN_A8 = $1F;
+  X_D3DFMT_LIN_A8L8 = $20;
+  X_D3DFMT_LIN_D24S8 = $2E;
+  X_D3DFMT_LIN_F24S8 = $2F;
+  X_D3DFMT_LIN_D16 = $30;
+  X_D3DFMT_LIN_F16 = $31;
+  X_D3DFMT_LIN_L16 = $35;
+  X_D3DFMT_LIN_V16U16 = $36;
+  X_D3DFMT_LIN_R6G5B5 = $37;
+  X_D3DFMT_LIN_L6V5U5 = $37; // Alias
+  X_D3DFMT_LIN_R5G5B5A1 = $3D;
+  X_D3DFMT_LIN_R4G4B4A4 = $3E;
+  X_D3DFMT_LIN_A8B8G8R8 = $3F;
+  X_D3DFMT_LIN_B8G8R8A8 = $40;
+  X_D3DFMT_LIN_R8G8B8A8 = $41;
+
+  X_D3DFMT_VERTEXDATA = $64;
+
+  X_D3DFMT_INDEX16 = DWord(D3DFMT_INDEX16); // Dxbx addition : Not an Xbox format, used internally
+
+type X_D3DFORMAT = X_D3DFMT_L8..High(DWORD)-3; // Unique declaration to make overloads possible
+
 type X_D3DPOOL = D3DPOOL; // alias
 
 type X_D3DSHADEMODE = (
@@ -1380,90 +1466,6 @@ type _X_STREAMINPUT = record
   X_STREAMINPUT = _X_STREAMINPUT;
   PX_STREAMINPUT = ^X_STREAMINPUT;
   PPX_STREAMINPUT = ^PX_STREAMINPUT;
-
-const
-  // Xbox D3DFORMAT types :
-  // See http://wiki.beyondunreal.com/Legacy:Texture_Format
-
-  // Swizzled Formats
-
-  X_D3DFMT_L8 = $00;
-  X_D3DFMT_AL8 = $01;
-  X_D3DFMT_A1R5G5B5 = $02;
-  X_D3DFMT_X1R5G5B5 = $03;
-  X_D3DFMT_A4R4G4B4 = $04;
-  X_D3DFMT_R5G6B5 = $05;
-  X_D3DFMT_A8R8G8B8 = $06;
-  X_D3DFMT_X8R8G8B8 = $07;
-  X_D3DFMT_X8L8V8U8 = $07; // Alias
-  X_D3DFMT_P8 = $0B; // 8-bit Palletized
-  X_D3DFMT_A8 = $19;
-  X_D3DFMT_A8L8 = $1A;
-  X_D3DFMT_R6G5B5 = $27;
-  X_D3DFMT_L6V5U5 = $27; // Alias
-  X_D3DFMT_G8B8 = $28;
-  X_D3DFMT_V8U8 = $28; // Alias
-  X_D3DFMT_R8B8 = $29;
-  X_D3DFMT_D24S8 = $2A;
-  X_D3DFMT_F24S8 = $2B;
-  X_D3DFMT_D16 = $2C;
-  X_D3DFMT_D16_LOCKABLE = $2C; // Alias
-  X_D3DFMT_F16 = $2D;
-  X_D3DFMT_L16 = $32;
-  X_D3DFMT_V16U16 = $33;
-  X_D3DFMT_R5G5B5A1 = $38;
-  X_D3DFMT_R4G4B4A4 = $39;
-  X_D3DFMT_A8B8G8R8 = $3A;
-  X_D3DFMT_Q8W8V8U8 = $3A; // Alias
-  X_D3DFMT_B8G8R8A8 = $3B;
-  X_D3DFMT_R8G8B8A8 = $3C;
-
-  // YUV Formats
-
-  X_D3DFMT_YUY2 = $24;
-  X_D3DFMT_UYVY = $25;
-
-  // Compressed Formats
-
-  X_D3DFMT_DXT1 = $0C; // opaque/one-bit alpha
-  X_D3DFMT_DXT2 = $0E;
-  X_D3DFMT_DXT3 = $0E; // linear alpha
-  X_D3DFMT_DXT4 = $0F;
-  X_D3DFMT_DXT5 = $0F; // interpolated alpha
-
-  // Linear Formats
-
-  X_D3DFMT_LIN_A1R5G5B5 = $10;
-  X_D3DFMT_LIN_R5G6B5 = $11;
-  X_D3DFMT_LIN_A8R8G8B8 = $12;
-  X_D3DFMT_LIN_L8 = $13;
-  X_D3DFMT_LIN_R8B8 = $16;
-  X_D3DFMT_LIN_G8B8 = $17;
-  X_D3DFMT_LIN_V8U8 = $17; // Alias
-  X_D3DFMT_LIN_AL8 = $1B;
-  X_D3DFMT_LIN_X1R5G5B5 = $1C;
-  X_D3DFMT_LIN_A4R4G4B4 = $1D;
-  X_D3DFMT_LIN_X8R8G8B8 = $1E;
-  X_D3DFMT_LIN_X8L8V8U8 = $1E; // Alias
-  X_D3DFMT_LIN_A8 = $1F;
-  X_D3DFMT_LIN_A8L8 = $20;
-  X_D3DFMT_LIN_D24S8 = $2E;
-  X_D3DFMT_LIN_F24S8 = $2F;
-  X_D3DFMT_LIN_D16 = $30;
-  X_D3DFMT_LIN_F16 = $31;
-  X_D3DFMT_LIN_L16 = $35;
-  X_D3DFMT_LIN_V16U16 = $36;
-  X_D3DFMT_LIN_R6G5B5 = $37;
-  X_D3DFMT_LIN_L6V5U5 = $37; // Alias
-  X_D3DFMT_LIN_R5G5B5A1 = $3D;
-  X_D3DFMT_LIN_R4G4B4A4 = $3E;
-  X_D3DFMT_LIN_A8B8G8R8 = $3F;
-  X_D3DFMT_LIN_B8G8R8A8 = $40;
-  X_D3DFMT_LIN_R8G8B8A8 = $41;
-
-  X_D3DFMT_VERTEXDATA = $64;
-
-  X_D3DFMT_INDEX16 = DWord(D3DFMT_INDEX16); // Dxbx addition : Not an Xbox format, used internally
 
 const
   X_D3DCLEAR_ZBUFFER = $00000001;
