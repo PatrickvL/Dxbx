@@ -785,6 +785,56 @@ begin
   pPixelContainer.Emu.Lock := UIntPtr(pRefCount);
 end;
 
+function DxbxXB2PC_D3DFormat(const Format: X_D3DFORMAT; const IsCube: Boolean = False): D3DFORMAT;
+begin
+  // Convert Format (Xbox->PC)
+  Result := EmuXB2PC_D3DFormat(Format);
+
+  // TODO -oCXBX: HACK: Devices that don't support this should somehow emulate it!
+  // TODO -oDxbx: Non-supported formats should be emulated in a generic way
+  case Result of
+    D3DFMT_D16:
+    begin
+      EmuWarning('D3DFMT_D16 is an unsupported texture format!');
+      Result := D3DFMT_R5G6B5; // CreateTexture
+      // Result := D3DFMT_X8R8G8B8; // CreateVolumeTexture, CreateCubeTexture, CheckDeviceMultiSampleType
+    end;
+    D3DFMT_P8:
+    begin
+      EmuWarning('D3DFMT_P8 is an unsupported texture format!');
+      Result := D3DFMT_X8R8G8B8;
+    end;
+    D3DFMT_D24S8:
+    begin
+      EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
+      Result := D3DFMT_X8R8G8B8;
+    end;
+    D3DFMT_YUY2:
+    begin
+      if IsCube then
+        DxbxKrnlCleanup('YUV not supported for cube textures');
+    end;
+  end;
+end;
+
+function DxbxFixupCreateParams(
+  const Format: X_D3DFORMAT;
+  var Usage: DWORD;
+  var Pool: X_D3DPOOL;
+  const IsCube: Boolean = False): D3DFORMAT;
+begin
+  Result := DxbxXB2PC_D3DFormat(Format, IsCube);
+
+  if Pool = D3DPOOL_MANAGED then
+  begin
+    // TODO : If Usage has to be updated too, do that here.
+
+    if (Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL)) > 0 then
+      // Dxbx note : D3DPOOL_MANAGED makes CubeMap crash!
+      {var}Pool := D3DPOOL_DEFAULT;
+  end;
+end;
+
 // TODO : Move to appropriate unit :
 procedure EmuXB2PC_D3DSURFACE_DESC(const SurfaceDesc: PX_D3DSURFACE_DESC; const pDesc: PD3DSURFACE_DESC; const CallerName: string);
 begin
@@ -4338,8 +4388,6 @@ function XTL_EmuD3DDevice_CreateTexture
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   PCFormat: D3DFORMAT;
-  PCUsage: DWORD;
-  PCPool: D3DPOOL;
   LockedRect: D3DLOCKED_RECT;
 begin
   EmuSwapFS(fsWindows);
@@ -4356,37 +4404,18 @@ begin
     LogEnd();
 
   // Convert Format (Xbox->PC)
-  PCFormat := EmuXB2PC_D3DFormat(Format);
-
-  // TODO -oCXBX: HACK: Devices that don't support this should somehow emulate it!
-  if (PCFormat = D3DFMT_D16) then
-  begin
-    EmuWarning('D3DFMT_D16 is an unsupported texture format!');
-    PCFormat := D3DFMT_R5G6B5;
-  end
-  else if (PCFormat = D3DFMT_P8) then
-  begin
-    EmuWarning('D3DFMT_P8 is an unsupported texture format!');
-    PCFormat := D3DFMT_X8R8G8B8;
-  end
-  else if (PCFormat = D3DFMT_D24S8) then
-  begin
-    EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
-    PCFormat := D3DFMT_X8R8G8B8;
-  end
-  else if (PCFormat = D3DFMT_YUY2) then
-  begin
-    // cache the overlay size
-    g_dwOverlayW := Width;
-    g_dwOverlayH := Height;
-    g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2;
-  end;
+  PCFormat := DxbxFixupCreateParams(Format, {var}Usage, {var}Pool);
 
   New({var PX_D3DTexture}ppTexture^);
   ZeroMemory(ppTexture^, SizeOf(ppTexture^^));
 
   if (PCFormat = D3DFMT_YUY2) then
   begin
+    // cache the overlay size
+    g_dwOverlayW := Width;
+    g_dwOverlayH := Height;
+    g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2;
+
     DxbxInitializePixelContainerYUY2(ppTexture^);
 
     g_YuvSurface := PX_D3DSurface(ppTexture^);
@@ -4396,9 +4425,7 @@ begin
   else // PCFormat <> D3DFMT_YUY2
   begin
     // TODO -oDxbx: Turok crashes when D3DUSAGE_DEPTHSTENCIL is forwarded to PC, so disable that for now :
-    PCUsage := Usage and (D3DUSAGE_RENDERTARGET);
-//    PCUsage := Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL);
-    PCPool := D3DPOOL_MANAGED;
+    Usage := Usage and (D3DUSAGE_RENDERTARGET);
 
     if ((g_D3DCaps.TextureCaps and D3DPTEXTURECAPS_POW2) <> 0) then
     begin
@@ -4434,15 +4461,13 @@ begin
 //      if EmuXBFormatIsLinear(Format) then
 //        PCUsage := (D3DUSAGE_RENDERTARGET);
 
-    if (Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL)) > 0 then
-//    if (Usage and (D3DUSAGE_RENDERTARGET)) > 0 then
-      PCPool := D3DPOOL_DEFAULT;
-
     Result := IDirect3DDevice_CreateTexture
     (g_pD3DDevice,
       Width, Height, Levels,
-      PCUsage, // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
-      PCFormat, PCPool, @(ppTexture^.Emu.Texture)
+      Usage, // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+      PCFormat,
+      Pool,
+      @(ppTexture^.Emu.Texture)
     );
 
     if (FAILED(Result)) then
@@ -4460,7 +4485,7 @@ begin
 
       if MayLog(lfUnit or lfReturnValue) then
         DbgPrintf('Texture created @ 0x%.08X [hRet = 0x%.08X]: %dx%d, %d levels, usage = 0x%.08X, format = 0x%.08X', [
-            ppTexture^.Emu.Texture, Result, Width, Height, Levels, Ord(PCUsage), Ord(PCFormat)]);
+            ppTexture^.Emu.Texture, Result, Width, Height, Levels, Ord(Usage), Ord(PCFormat)]);
 
       // Dxbx addition : Register all levels :
       while Levels > 0 do
@@ -4520,37 +4545,18 @@ begin
     LogEnd();
 
   // Convert Format (Xbox->PC)
-  PCFormat := EmuXB2PC_D3DFormat(Format);
-
-  // TODO -oCXBX: HACK: Devices that don't support this should somehow emulate it!
-  if (PCFormat = D3DFMT_D16) then
-  begin
-    EmuWarning('D3DFMT_16 is an unsupported texture format!');
-    PCFormat := D3DFMT_X8R8G8B8;
-  end
-  else if (PCFormat = D3DFMT_P8) then
-  begin
-    EmuWarning('D3DFMT_P8 is an unsupported texture format!');
-    PCFormat := D3DFMT_X8R8G8B8;
-  end
-  else if (PCFormat = D3DFMT_D24S8) then
-  begin
-    EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
-    PCFormat := D3DFMT_X8R8G8B8;
-  end
-  else if (PCFormat = D3DFMT_YUY2) then
-  begin
-    // cache the overlay size
-    g_dwOverlayW := Width;
-    g_dwOverlayH := Height;
-    g_dwOverlayP := RoundUp(g_dwOverlayW, 64)*2;
-  end;
+  PCFormat := DxbxFixupCreateParams(Format, {var}Usage, {var}Pool);
 
   New({PX_D3DVolumeTexture}ppVolumeTexture^);
   ZeroMemory(ppVolumeTexture^, SizeOf(ppVolumeTexture^^));
 
   if (PCFormat = D3DFMT_YUY2) then
   begin
+    // cache the overlay size
+    g_dwOverlayW := Width;
+    g_dwOverlayH := Height;
+    g_dwOverlayP := RoundUp(g_dwOverlayW, 64)*2;
+
     DxbxInitializePixelContainerYUY2(ppVolumeTexture^);
 
     hRet := D3D_OK;
@@ -4561,8 +4567,10 @@ begin
 
     hRet := IDirect3DDevice_CreateVolumeTexture(g_pD3DDevice,
         Width, Height, Depth, Levels,
-        0,  // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
-        PCFormat, D3DPOOL_MANAGED, @(ppVolumeTexture^.Emu.VolumeTexture));
+        Usage,  // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+        PCFormat,
+        Pool,
+        @(ppVolumeTexture^.Emu.VolumeTexture));
 
     if (FAILED(hRet)) then
       DxbxKrnlCleanup('CreateVolumeTexture Failed! (0x%.08X)', [hRet]);
@@ -4604,29 +4612,7 @@ begin
       _(ppCubeTexture, 'ppCubeTexture').
     LogEnd();
 
-  // Convert Format (Xbox->PC)
-  PCFormat := EmuXB2PC_D3DFormat(Format);
-
-  // TODO -oCXBX: HACK: Devices that don't support this should somehow emulate it!
-  if (PCFormat = D3DFMT_D16) then
-  begin
-    EmuWarning('D3DFMT_16 is an unsupported texture format!');
-    PCFormat := D3DFMT_X8R8G8B8;
-  end
-  else if (PCFormat = D3DFMT_P8) then
-  begin
-    EmuWarning('D3DFMT_P8 is an unsupported texture format!');
-    PCFormat := D3DFMT_X8R8G8B8;
-  end
-  else if (PCFormat = D3DFMT_D24S8) then
-  begin
-    EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
-    PCFormat := D3DFMT_X8R8G8B8;
-  end
-  else if (PCFormat = D3DFMT_YUY2) then
-  begin
-    DxbxKrnlCleanup('YUV not supported for cube textures');
-  end;
+  PCFormat := DxbxFixupCreateParams(Format, {var}Usage, {var}Pool, {IsCube=}True);
 
   New({var PX_D3DCubeTexture}ppCubeTexture^);
   ZeroMemory(ppCubeTexture^, SizeOf(ppCubeTexture^^));
@@ -4636,7 +4622,7 @@ begin
       Levels,
       Usage,  // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
       PCFormat,
-      D3DPOOL_DEFAULT, // Dxbx note : D3DPOOL_MANAGED makes CubeMap crash!
+      Pool, // Dxbx note : D3DPOOL_MANAGED makes CubeMap crash!
       @(ppCubeTexture^.Emu.CubeTexture)
   );
 
@@ -4676,11 +4662,13 @@ begin
       _(ppIndexBuffer, 'ppIndexBuffer').
     LogEnd();
 
+  // TODO -oDxbx : Is DxbxFixupCreateParams needed here too?
+
   New({var PX_D3DIndexBuffer}ppIndexBuffer^);
   ZeroMemory(ppIndexBuffer^, SizeOf(ppIndexBuffer^^));
 
   hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice,
-      Length, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
+      Length, {Usage=}0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
       @(ppIndexBuffer^.Emu.IndexBuffer));
 
   // Dxbx addition : Initialize Common field properly :
@@ -4722,7 +4710,7 @@ begin
   XTL_EmuD3DDevice_CreateIndexBuffer
   (
       Length,
-      0,
+      {Usage=}0,
       X_D3DFMT_INDEX16,
       D3DPOOL_MANAGED,
       @Result);
@@ -5795,7 +5783,7 @@ begin
         begin
           hRet := IDirect3DDevice_CreateIndexBuffer
           (g_pD3DDevice,
-            dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
+            dwSize, {Usage=}0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
             @(pIndexBuffer.Emu.IndexBuffer)
           );
 
@@ -5948,7 +5936,7 @@ begin
           begin
             EmuWarning('D3DFMT_P8 -> D3DFMT_A8R8G8B8');
 
-            CacheFormat := PCFormat; // Save this for later
+            CacheFormat := PCFormat; // Save this for later; See DxbxUpdatePixelContainer
             PCFormat := D3DFMT_A8R8G8B8; // ARGB
           end;
 
@@ -5960,7 +5948,7 @@ begin
                 [dwWidth, dwMipMapLevels, Ord(PCFormat), pResource.Emu.Texture]);
 
             hRet := IDirect3DDevice_CreateCubeTexture(g_pD3DDevice,
-              dwWidth, dwMipMapLevels, 0, PCFormat,
+              dwWidth, dwMipMapLevels, {Usage=}0, PCFormat,
               D3DPOOL_MANAGED, @(pResource.Emu.CubeTexture));
 
             if (FAILED(hRet)) then
@@ -5979,7 +5967,7 @@ begin
                 [dwWidth, dwHeight, dwMipMapLevels, Ord(PCFormat), @(pResource.Emu.Texture)]);
 
             hRet := IDirect3DDevice_CreateTexture(g_pD3DDevice,
-              dwWidth, dwHeight, dwMipMapLevels, 0, PCFormat,
+              dwWidth, dwHeight, dwMipMapLevels, {Usage=}0, PCFormat,
               D3DPOOL_MANAGED, @(pResource.Emu.Texture)
               );
 
@@ -6488,7 +6476,7 @@ begin
   begin
     pDesc.Format := X_D3DFMT_YUY2; // = EmuPC2XB_D3DFormat(D3DFMT_YUY2);
     pDesc.Type_ := X_D3DRTYPE_SURFACE;
-    pDesc.Usage := 0;
+    pDesc.Usage := D3DUSAGE_RENDERTARGET; // Dxbx : Guesswork, but probably better than 0
     pDesc.Size := g_dwOverlayP * g_dwOverlayH;
     pDesc.MultiSampleType := X_D3DMULTISAMPLE_TYPE(0);
     pDesc.Height := g_dwOverlayH;
@@ -6929,6 +6917,8 @@ begin
     NewLength := $2000; // temporarily assign a small buffer, which will be increased later
   end;
 
+  // TODO -oDxbx : Is DxbxFixupCreateParams needed here too?
+
   New({PX_D3DVertexBuffer}pD3DVertexBuffer);
   ZeroMemory(pD3DVertexBuffer, SizeOf(pD3DVertexBuffer^));
 
@@ -6977,7 +6967,7 @@ begin
 
   Result := NULL;
 
-  XTL_EmuD3DDevice_CreateVertexBuffer(Length, 0, 0, D3DPOOL_MANAGED, @Result);
+  XTL_EmuD3DDevice_CreateVertexBuffer(Length, {Usage=}0, {FVF=}0, D3DPOOL_MANAGED, @Result);
 end;
 
 function XTL_EmuD3DDevice_EnableOverlay
@@ -7427,7 +7417,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  if (Value > $00030000) then
+  if (Value > $000A0000) then // Dxbx note : Cxbx uses 0x00030000, which is not enough for the Strip XDK sample!
     DxbxKrnlCleanup('EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', [Value]);
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
@@ -9854,25 +9844,7 @@ begin
     EmuWarning('DeviceType := D3DDEVTYPE_FORCE_DWORD');
 
   // Convert SurfaceFormat (Xbox->PC)
-  PCSurfaceFormat := EmuXB2PC_D3DFormat(SurfaceFormat);
-
-  // TODO -oCXBX: HACK: Devices that don't support this should somehow emulate it!
-  // TODO -oDxbx: Non-supported formats should be emulated in a generic way
-  if (PCSurfaceFormat = D3DFMT_D16) then
-  begin
-    EmuWarning('D3DFMT_D16 is an unsupported texture format!');
-    PCSurfaceFormat := D3DFMT_X8R8G8B8;
-  end
-  else if (PCSurfaceFormat = D3DFMT_P8) then
-  begin
-    EmuWarning('D3DFMT_P8 is an unsupported texture format!');
-    PCSurfaceFormat := D3DFMT_X8R8G8B8;
-  end
-  else if (PCSurfaceFormat = D3DFMT_D24S8) then
-  begin
-    EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
-    PCSurfaceFormat := D3DFMT_X8R8G8B8;
-  end;
+  PCSurfaceFormat := DxbxXB2PC_D3DFormat(SurfaceFormat);
 
   if (Windowed <> BOOL_FALSE) then
     Windowed := BOOL_FALSE;
