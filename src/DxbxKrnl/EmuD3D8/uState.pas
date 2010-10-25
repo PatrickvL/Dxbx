@@ -865,6 +865,11 @@ begin
   // Check if the render state is mapped :
   if XTL_EmuMappedD3DRenderState[XboxRenderState] <> DummyRenderState then
   begin
+    // Skip unspecified deferred render states :
+    if  (XboxValue = X_D3DTSS_UNK)
+    and (XboxRenderState in [X_D3DRS_DEFERRED_FIRST..X_D3DRS_DEFERRED_LAST]) then
+      Exit;
+
     // Map the Xbox state to a PC state, and check if it's supported :
     PCRenderState := EmuXB2PC_D3DRS(XboxRenderState); // TODO : Speed this up using a lookup table
     if Ord(PCRenderState) <> Ord(D3DRS_UNSUPPORTED) then

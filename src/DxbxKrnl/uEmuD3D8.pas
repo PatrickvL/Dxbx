@@ -785,7 +785,7 @@ begin
   pPixelContainer.Emu.Lock := UIntPtr(pRefCount);
 end;
 
-function DxbxXB2PC_D3DFormat(const Format: X_D3DFORMAT; const IsCube: Boolean = False): D3DFORMAT;
+function DxbxXB2PC_D3DFormat(const Format: X_D3DFORMAT; const aResourceType: TD3DResourceType): D3DFORMAT;
 begin
   // Convert Format (Xbox->PC)
   Result := EmuXB2PC_D3DFormat(Format);
@@ -796,8 +796,12 @@ begin
     D3DFMT_D16:
     begin
       EmuWarning('D3DFMT_D16 is an unsupported texture format!');
-      Result := D3DFMT_R5G6B5; // CreateTexture
-      // Result := D3DFMT_X8R8G8B8; // CreateVolumeTexture, CreateCubeTexture, CheckDeviceMultiSampleType
+
+      if aResourceType = D3DRTYPE_TEXTURE then
+        Result := D3DFMT_R5G6B5
+      else
+        // D3DRTYPE_VOLUMETEXTURE, D3DRTYPE_CUBETEXTURE
+        Result := D3DFMT_X8R8G8B8; // also CheckDeviceMultiSampleType
     end;
     D3DFMT_P8:
     begin
@@ -811,27 +815,9 @@ begin
     end;
     D3DFMT_YUY2:
     begin
-      if IsCube then
+      if aResourceType = D3DRTYPE_CUBETEXTURE then
         DxbxKrnlCleanup('YUV not supported for cube textures');
     end;
-  end;
-end;
-
-function DxbxFixupCreateParams(
-  const Format: X_D3DFORMAT;
-  var Usage: DWORD;
-  var Pool: X_D3DPOOL;
-  const IsCube: Boolean = False): D3DFORMAT;
-begin
-  Result := DxbxXB2PC_D3DFormat(Format, IsCube);
-
-  if Pool = D3DPOOL_MANAGED then
-  begin
-    // TODO : If Usage has to be updated too, do that here.
-
-    if (Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL)) > 0 then
-      // Dxbx note : D3DPOOL_MANAGED makes CubeMap crash!
-      {var}Pool := D3DPOOL_DEFAULT;
   end;
 end;
 
@@ -4404,7 +4390,7 @@ begin
     LogEnd();
 
   // Convert Format (Xbox->PC)
-  PCFormat := DxbxFixupCreateParams(Format, {var}Usage, {var}Pool);
+  PCFormat := DxbxXB2PC_D3DFormat(Format, D3DRTYPE_TEXTURE);
 
   New({var PX_D3DTexture}ppTexture^);
   ZeroMemory(ppTexture^, SizeOf(ppTexture^^));
@@ -4426,6 +4412,7 @@ begin
   begin
     // TODO -oDxbx: Turok crashes when D3DUSAGE_DEPTHSTENCIL is forwarded to PC, so disable that for now :
     Usage := Usage and (D3DUSAGE_RENDERTARGET);
+    Pool := D3DPOOL_MANAGED; // ?
 
     if ((g_D3DCaps.TextureCaps and D3DPTEXTURECAPS_POW2) <> 0) then
     begin
@@ -4461,13 +4448,15 @@ begin
 //      if EmuXBFormatIsLinear(Format) then
 //        PCUsage := (D3DUSAGE_RENDERTARGET);
 
+    if (Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL)) > 0 then
+//    if (Usage and (D3DUSAGE_RENDERTARGET)) > 0 then
+      Pool := D3DPOOL_DEFAULT;
+
     Result := IDirect3DDevice_CreateTexture
     (g_pD3DDevice,
       Width, Height, Levels,
       Usage, // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
-      PCFormat,
-      Pool,
-      @(ppTexture^.Emu.Texture)
+      PCFormat, Pool, @(ppTexture^.Emu.Texture)
     );
 
     if (FAILED(Result)) then
@@ -4545,7 +4534,7 @@ begin
     LogEnd();
 
   // Convert Format (Xbox->PC)
-  PCFormat := DxbxFixupCreateParams(Format, {var}Usage, {var}Pool);
+  PCFormat := DxbxXB2PC_D3DFormat(Format, D3DRTYPE_VOLUMETEXTURE);
 
   New({PX_D3DVolumeTexture}ppVolumeTexture^);
   ZeroMemory(ppVolumeTexture^, SizeOf(ppVolumeTexture^^));
@@ -4567,10 +4556,8 @@ begin
 
     hRet := IDirect3DDevice_CreateVolumeTexture(g_pD3DDevice,
         Width, Height, Depth, Levels,
-        Usage,  // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
-        PCFormat,
-        Pool,
-        @(ppVolumeTexture^.Emu.VolumeTexture));
+        0,  // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+        PCFormat, D3DPOOL_MANAGED, @(ppVolumeTexture^.Emu.VolumeTexture));
 
     if (FAILED(hRet)) then
       DxbxKrnlCleanup('CreateVolumeTexture Failed! (0x%.08X)', [hRet]);
@@ -4612,7 +4599,7 @@ begin
       _(ppCubeTexture, 'ppCubeTexture').
     LogEnd();
 
-  PCFormat := DxbxFixupCreateParams(Format, {var}Usage, {var}Pool, {IsCube=}True);
+  PCFormat := DxbxXB2PC_D3DFormat(Format, D3DRTYPE_CUBETEXTURE);
 
   New({var PX_D3DCubeTexture}ppCubeTexture^);
   ZeroMemory(ppCubeTexture^, SizeOf(ppCubeTexture^^));
@@ -4622,7 +4609,7 @@ begin
       Levels,
       Usage,  // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
       PCFormat,
-      Pool, // Dxbx note : D3DPOOL_MANAGED makes CubeMap crash!
+      D3DPOOL_DEFAULT, // Dxbx note : D3DPOOL_MANAGED makes CubeMap crash!
       @(ppCubeTexture^.Emu.CubeTexture)
   );
 
@@ -4661,8 +4648,6 @@ begin
       _(Pool, 'Pool').
       _(ppIndexBuffer, 'ppIndexBuffer').
     LogEnd();
-
-  // TODO -oDxbx : Is DxbxFixupCreateParams needed here too?
 
   New({var PX_D3DIndexBuffer}ppIndexBuffer^);
   ZeroMemory(ppIndexBuffer^, SizeOf(ppIndexBuffer^^));
@@ -5706,7 +5691,7 @@ begin
 
         hRet := g_pD3DDevice.CreateVertexBuffer
         (
-          dwSize, 0, 0, D3DPOOL_MANAGED,
+          dwSize, {Usage=}0, {FVF=}0, D3DPOOL_MANAGED,
           {ppVertexBuffer=}@(pVertexBuffer.Emu.VertexBuffer)
           {$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF}
         );
@@ -6917,15 +6902,13 @@ begin
     NewLength := $2000; // temporarily assign a small buffer, which will be increased later
   end;
 
-  // TODO -oDxbx : Is DxbxFixupCreateParams needed here too?
-
   New({PX_D3DVertexBuffer}pD3DVertexBuffer);
   ZeroMemory(pD3DVertexBuffer, SizeOf(pD3DVertexBuffer^));
 
   Result := g_pD3DDevice.CreateVertexBuffer(
     NewLength,
-    0, // Usage, ignored according to Xbox docs
-    0, // FVF, ignored according to Xbox docs
+    {Usage=}0, // ignored according to Xbox docs
+    {FVF=}0, // ignored according to Xbox docs
     D3DPOOL_MANAGED, // TODO : If we supply Pool here, the PointSprites and Gamepad XDK samples crash!
     {ppVertexBuffer=}@(pD3DVertexBuffer.Emu.VertexBuffer)
     {$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF}
@@ -8730,7 +8713,7 @@ begin
 
     hRet := IDirect3DDevice_CreateIndexBuffer
     (g_pD3DDevice,
-        dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
+        dwSize, {Usage=}0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
         @(g_pIndexBuffer.Emu.IndexBuffer)
     );
 
@@ -9844,7 +9827,7 @@ begin
     EmuWarning('DeviceType := D3DDEVTYPE_FORCE_DWORD');
 
   // Convert SurfaceFormat (Xbox->PC)
-  PCSurfaceFormat := DxbxXB2PC_D3DFormat(SurfaceFormat);
+  PCSurfaceFormat := DxbxXB2PC_D3DFormat(SurfaceFormat, D3DRTYPE_SURFACE);
 
   if (Windowed <> BOOL_FALSE) then
     Windowed := BOOL_FALSE;
