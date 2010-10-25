@@ -774,10 +774,10 @@ begin
   // initialize ref count
   pRefCount^ := 1;
 
-  pPixelContainer.Format := X_D3DFMT_YUY2;
-  pPixelContainer.Size := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
-                       or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
-                       or (g_dwOverlayP shl X_D3DSIZE_PITCH_SHIFT);
+  pPixelContainer.Format := X_D3DFMT_YUY2 shl X_D3DFORMAT_FORMAT_SHIFT;
+  pPixelContainer.Size := ((( g_dwOverlayW         - 1)                           ) and X_D3DSIZE_WIDTH_MASK )
+                       or ((( g_dwOverlayH         - 1) shl X_D3DSIZE_HEIGHT_SHIFT) and X_D3DSIZE_HEIGHT_MASK)
+                       or ((((g_dwOverlayP div 64) - 1) shl X_D3DSIZE_PITCH_SHIFT ) and X_D3DSIZE_PITCH_MASK );
   // Dxbx addition : Initialize Common field properly :
   pPixelContainer.Common := (pRefCount^ and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE;
   // Because YUY2 is not supported in hardware (in Direct3D8?), we'll actually mark this as a special fake texture (set highest bit)
@@ -4604,12 +4604,17 @@ begin
   New({var PX_D3DCubeTexture}ppCubeTexture^);
   ZeroMemory(ppCubeTexture^, SizeOf(ppCubeTexture^^));
 
+  if (Usage and D3DUSAGE_RENDERTARGET) > 0 then
+    Pool := D3DPOOL_DEFAULT
+  else
+    Pool := D3DPOOL_MANAGED;
+  
   Result := IDirect3DDevice_CreateCubeTexture(g_pD3DDevice,
       EdgeLength,
       Levels,
       Usage,  // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
       PCFormat,
-      D3DPOOL_DEFAULT, // Dxbx note : D3DPOOL_MANAGED makes CubeMap crash!
+      Pool, // Dxbx note : D3DPOOL_MANAGED makes CubeMap crash!
       @(ppCubeTexture^.Emu.CubeTexture)
   );
 
@@ -5929,7 +5934,7 @@ begin
           begin
 
             if MayLog(lfUnit) then
-              DbgPrintf('CreateCubeTexture(%d,%d, 0,%d, D3DPOOL_MANAGED, 0x%.08X)',
+              DbgPrintf('CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_MANAGED, 0x%.08X)',
                 [dwWidth, dwMipMapLevels, Ord(PCFormat), pResource.Emu.Texture]);
 
             hRet := IDirect3DDevice_CreateCubeTexture(g_pD3DDevice,
@@ -8570,7 +8575,7 @@ begin
 
   XTL_EmuUpdateDeferredStates();
 
-//  EmuUnswizzleActiveTexture(); // This messes up textures in PSTest2_4627
+//  EmuUnswizzleActiveTexture(); // This messed up textures in PSTest2_4627, but not anymore since rev 1245
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
@@ -8634,7 +8639,7 @@ begin
 
   XTL_EmuUpdateDeferredStates();
 
-//  EmuUnswizzleActiveTexture(); // This messes up the letters in Chunktro
+//  EmuUnswizzleActiveTexture(); // This messed up the letters in Chunktro, but not anymore since rev 1245
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
@@ -8910,7 +8915,7 @@ begin
 
   XTL_EmuUpdateDeferredStates();
 
-//  EmuUnswizzleActiveTexture(); // This messes up the loading screen background image in Rayman Arena
+//  EmuUnswizzleActiveTexture(); // This messed up the loading screen background image in Rayman Arena, but not anymore since rev 1245
 
   if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
     EmuWarning('Unsupported PrimitiveType! (%d)', [Ord(PrimitiveType)]);
