@@ -2374,14 +2374,15 @@ begin
     // TODO : What indexes are for Original.PSConstant1 ?
   end;
 
-  if (Original.PSFinalCombinerInputsABCD > 0)
-  or (Original.PSFinalCombinerInputsEFG > 0) then
-  begin
-    if FinalCombiner.FinalCombinerC0Mapping < 8 then
-      Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC0Mapping, Original.PSFinalCombinerConstant0);
-    if FinalCombiner.FinalCombinerC1Mapping < 8 then
-      Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC1Mapping, Original.PSFinalCombinerConstant1);
-  end;
+// Emitting these causes black cogs in BumpDemo :
+//  if (Original.PSFinalCombinerInputsABCD > 0)
+//  or (Original.PSFinalCombinerInputsEFG > 0) then
+//  begin
+//    if FinalCombiner.FinalCombinerC0Mapping < 8 then
+//      Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC0Mapping, Original.PSFinalCombinerConstant0);
+//    if FinalCombiner.FinalCombinerC1Mapping < 8 then
+//      Result := Result + _EmitConstDef(FinalCombiner.FinalCombinerC1Mapping, Original.PSFinalCombinerConstant1);
+//  end;
 
   // Handle Texture declarations :
   Result := Result + DisassembleTextureModes(@Scope);
