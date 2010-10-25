@@ -128,7 +128,7 @@ begin
   XTL_EmuExecutePushBufferRaw(PDWORD(pPushBuffer.Data));
 end;
 
-// TODO -oDxbx: Find out why EmuUnswizzleActiveTexture messes up the callers stack (like in Cubemap sample)
+// Note Dxbx: Before, EmuUnswizzleActiveTexture messed up the callers stack (like in Cubemap sample), but not anymore since rev 1245
 procedure EmuUnswizzleActiveTexture(); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
