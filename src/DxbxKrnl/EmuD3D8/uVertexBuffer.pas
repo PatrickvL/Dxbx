@@ -718,7 +718,7 @@ begin
     begin
       DxbxKrnlCleanup('Couldn''t lock the original buffer');
     end;
-    g_pD3DDevice.CreateVertexBuffer(dwNewSize, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer(@pNewVertexBuffer){$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF});
+    g_pD3DDevice.CreateVertexBuffer(dwNewSize, {Usage=}0, {FVF=}0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer(@pNewVertexBuffer){$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF});
     if (FAILED(IDirect3DVertexBuffer(pNewVertexBuffer).Lock(0, 0, {out}TLockData(pNewData), 0))) then
     begin
       DxbxKrnlCleanup('Couldn''t lock the new buffer');
@@ -1069,7 +1069,7 @@ begin
     begin
       DxbxKrnlCleanup('Couldn''t lock original FVF buffer.');
     end;
-    g_pD3DDevice.CreateVertexBuffer(Desc.Size, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer(@pNewVertexBuffer){$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF});
+    g_pD3DDevice.CreateVertexBuffer(Desc.Size, {Usage=}0, {FVF=}0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer(@pNewVertexBuffer){$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF});
     if(FAILED(IDirect3DVertexBuffer(pNewVertexBuffer).Lock(0, 0, {out}TLockData(pData), 0))) then
     begin
       DxbxKrnlCleanup('Couldn''t lock new FVF buffer.');
@@ -1302,7 +1302,7 @@ begin
       dwNewSizeWR := dwNewSize + dwOriginalSizeWR - dwOriginalSize;
     end;
 
-    g_pD3DDevice.CreateVertexBuffer(dwNewSizeWR, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer(@(pStream.pPatchedStream)){$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF});
+    g_pD3DDevice.CreateVertexBuffer(dwNewSizeWR, {Usage=}0, {FVF=}0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer(@(pStream.pPatchedStream)){$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF});
 
     if (pStream.pOriginalStream <> nil) then
     begin
