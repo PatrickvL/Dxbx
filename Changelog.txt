@@ -7,6 +7,10 @@ Version 0.4 Release:
 - Menu configuration for log settings
 - Games loaded will be added to the gamelist.
 - Games in the gamelist can be started by pressing launch button
+- F12 for creating screenshotss
+- A lot of pixelshader fixes
+
+Again huge improvements...
 
 
 Version 0.3 Release:

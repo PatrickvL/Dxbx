@@ -7,7 +7,18 @@ Dxbx (a Delphi port of Cxbx) is an emulator for running Xbox games on Windows 20
 Emulating a Xbox is a daunting task, so there's no guarantee that any game will work.
 Emulation is done by a High-Level abstraction of the Xbox system.
 This means that any game that accesses the hardware directly will not work.
-TODO : Start a compatibilty list
+
+
+Compatibility list
+------------------
+
+Turok - Intro movie & start of main menu
+Rayman Arena - Intro & main menu
+Smashing Drive - Playable on Nvidia
+Gauntlet Dark Legacy - playable, with lots of glitches
+
+Probably a lot more, but not every game has been tested.
+Also a lot of homebrew is playable.
 
 
 Emulation Notes
@@ -28,9 +39,9 @@ Running under Linux using Wine is not tested, but it might just work. (Please le
 System requirements
 -------------------
 CPU: A 1Ghz Pentium or better should suffice.
-Memory: Running with less than 256 MB is not recommended.
-Video: TODO
-Controller: TODO
+Memory: Running with less than 512 MB is not recommended.
+Video: Gpu with directx 8 support
+Controller: Keyboard or Gamepad
 
 
 Developer Notes
