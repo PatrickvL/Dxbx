@@ -8,7 +8,11 @@ Version 0.4 Release:
 - Games loaded will be added to the gamelist.
 - Games in the gamelist can be started by pressing launch button
 - F12 for creating screenshotss
-- A lot of pixelshader fixes
+- Pixel shader emulation
+- Speedups in function-patching.
+- Software overlay mode speedups & full-screen stretching.
+- XbeExplorer feature : Goto address
+- XbeExplorer feature : Manual extraction of function patterns
 
 Again huge improvements...
 
