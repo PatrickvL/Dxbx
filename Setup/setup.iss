@@ -47,6 +47,7 @@ Source: "..\resource\StoredTrie.dpt"; DestDir: "{app}"; Flags: ignoreversion; Co
 
 Source: "..\Readme.txt"; DestDir: "{app}";  Flags: isreadme; Components: main
 Source: "..\Changelog.txt"; DestDir: "{app}"; Flags: isreadme; Components: main
+Source: "..\Compatibility list.txt"; DestDir: "{app}"; Flags: isreadme; Components: main
 
 Source: "..\bin\Tools\*"; DestDir: "{app}\Tools"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: main
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files

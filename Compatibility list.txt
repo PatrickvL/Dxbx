@@ -1,8 +1,10 @@
 Dxbx compatibility
 ------------------
 
-Not a single game works yet.
-We use Turok Evolution for testing purposes during development.
+Turok - Intro movie & start of main menu
+Rayman Arena - Intro & main menu
+Smashing Drive - Playable on Nvidia
+Gauntlet Dark Legacy - playable, with lots of glitches
 
-Note, that Dxbx has no controller support yet.
-So you won't be able to *do* anything yet!
+Probably a lot more, but not every game has been tested.
+Also a lot of homebrew is playable.

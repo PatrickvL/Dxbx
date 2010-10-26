@@ -9,18 +9,6 @@ Emulation is done by a High-Level abstraction of the Xbox system.
 This means that any game that accesses the hardware directly will not work.
 
 
-Compatibility list
-------------------
-
-Turok - Intro movie & start of main menu
-Rayman Arena - Intro & main menu
-Smashing Drive - Playable on Nvidia
-Gauntlet Dark Legacy - playable, with lots of glitches
-
-Probably a lot more, but not every game has been tested.
-Also a lot of homebrew is playable.
-
-
 Emulation Notes
 ---------------
 The Dxbx project implements a different function detection method, which has both positive and negative consequences:
