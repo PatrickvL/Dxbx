@@ -25,13 +25,14 @@ object frm_Main: Tfrm_Main
   PixelsPerInch = 96
   TextHeight = 13
   object ImageIcon: TImage
-    Left = 659
-    Top = 120
+    Left = 655
+    Top = 134
     Width = 128
     Height = 128
     Anchors = [akTop, akRight]
     Center = True
     Stretch = True
+    Transparent = True
   end
   object ImageLogo: TImage
     Left = 671
@@ -95,16 +96,22 @@ object frm_Main: Tfrm_Main
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelInner = bvNone
     BevelOuter = bvNone
+    BiDiMode = bdLeftToRight
     BorderStyle = bsNone
+    Ctl3D = False
     DefaultColWidth = 120
-    DrawingStyle = gdsGradient
+    DefaultDrawing = False
+    DrawingStyle = gdsClassic
     FixedColor = clGray
     FixedCols = 0
     RowCount = 99
     GradientEndColor = clGray
     GradientStartColor = clBlack
+    GridLineWidth = 0
     Options = [goColSizing, goRowSelect]
+    ParentBiDiMode = False
     ParentColor = True
+    ParentCtl3D = False
     TabOrder = 1
     OnClick = dgXbeInfosClick
     OnDblClick = dgXbeInfosDblClick
