@@ -326,10 +326,18 @@ begin
     X_D3DFMT_D24S8: // Swizzled
       Result := D3DFMT_D24S8;
 
+    X_D3DFMT_LIN_F24S8, // Linear - Dxbx addition
     X_D3DFMT_F24S8: // Swizzled
     begin
       EmuWarning('X_D3DFMT_F24S8 -> D3DFMT_D24S8');
       Result := D3DFMT_D24S8; // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
+    end;
+
+    X_D3DFMT_LIN_F16, // Linear - Dxbx addition
+    X_D3DFMT_F16: // Swizzled - Dxbx addition
+    begin
+      EmuWarning('X_D3DFMT_F16 -> D3DFMT_D16');
+      Result := D3DFMT_D16; // NOTE: Hack!! PC does not have D3DFMT_F16 (Float vs Int)
     end;
 
     X_D3DFMT_LIN_D16, // Linear
