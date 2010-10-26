@@ -205,6 +205,12 @@ type
 
     OldLBWindowProc: TWndMethod;
     BackgroundImage: TBitmap;
+    GUISelBg: TJPEGImage;
+    GUISelBgLeft: TJPEGImage;
+    GUISelBgRight: TJPEGImage;
+    GUIHeadBgImg: TJPEGImage;
+    GUIHeadSepImg: TJPEGImage;
+
     function GetEmuWindowHandle(const aEmuDisplayMode: Integer = 1): THandle;
     procedure LaunchXBE;
     procedure CloseXbe;
@@ -442,10 +448,27 @@ begin
 
   dgXbeInfos.ColCount := 5;
 
+
+  // GUI stuff...
+
+
+
   BackgroundImage := TBitmap.Create;
 
   UpdateBackground;
   UpdateLaunchButton;
+
+  GUISelBg := TJPEGImage.Create;
+  GUISelBgLeft := TJPEGImage.Create;
+  GUISelBgRight := TJPEGImage.Create;
+  GUIHeadBgImg := TJPEGImage.Create;
+  GUIHeadSepImg := TJPEGImage.Create;
+
+  GUISelBg.LoadFromResourceName(MainInstance, 'GUIGridSelBg');
+  GUISelBgLeft.LoadFromResourceName(MainInstance, 'GUIGridSelBgLeft');
+  GUISelBgRight.LoadFromResourceName(MainInstance, 'GUIGridSelBgRight');
+  GUIHeadBgImg.LoadFromResourceName(MainInstance, 'GUIHeadBgImg');
+  GUIHeadSepImg.LoadFromResourceName(MainInstance, 'GUIHeadSepImg');
 
   FApplicationDir := ExtractFilePath(Application.ExeName);
 
@@ -586,10 +609,10 @@ begin
   BackgroundImage.Canvas.FillRect(BackgroundImage.Canvas.ClipRect);
 
   // Draw the left side of the header :
-  JPEGImage := GetJPEGResource('GUIHeaderLeft');
+  JPEGImage := GetJPEGResource('GUIHeader');
   BackgroundImage.Canvas.Draw(0, 0, JPEGImage);
   MinWidth := JPEGImage.Width;
-
+              {
   // Draw the right side of the header :
   JPEGImage := GetJPEGResource('GUIHeaderRight');
   BackgroundImage.Canvas.Draw(Width - JPEGImage.Width, 0, JPEGImage);
@@ -600,17 +623,21 @@ begin
   BackgroundImage.Canvas.Draw((Width - JPEGImage.Width) div 2, 0, JPEGImage);
 
   // Make sure the form can't be resized any smaller than the sum of header-image widths :
-  Inc(MinWidth, JPEGImage.Width);
+  Inc(MinWidth, JPEGImage.Width);  }
   Constraints.MinWidth := MinWidth;
 
   // Draw a nice little gradient just above the grid :
-  BackgroundImage.Canvas.Pen.Width := 2;
+  BackgroundImage.Canvas.Pen.Width := 1;
   GradientHorizontalLineCanvas(BackgroundImage.Canvas, [clBlack, clXboxGreen, clXboxGreen, clXboxGreen, clBlack], 0, dgXbeInfos.Top - 2, Width);
 
   // Draw a (tiled!) grating as background for the info-pane :
   JPEGImage := GetJPEGResource('GUIBackgroundGrating');
   BackgroundImage.Canvas.Brush.Bitmap := TProtectedJPEGImage(JPEGImage).Bitmap;
   BackgroundImage.Canvas.FillRect(Types.Rect(dgXbeInfos.Width, dgXbeInfos.Top, Width, dgXbeInfos.Top + dgXbeInfos.Height));
+  // Draw nice stuff
+  JPEGImage := GetJPEGResource('GUIGameIconFrame');
+  BackgroundImage.Canvas.Draw(dgXbeInfos.Width+3, dgXbeInfos.Top, JPEGImage);
+
 end; // UpdateBackground
 
 function Tfrm_Main.GetCellText(aCol, aRow: Integer): string;
@@ -677,8 +704,8 @@ begin
   // All this will render XdkTracker obsolete, and might one day
   // even function as a complete database of everything related to
   // Xbox1 emulation!
-  if FileExists(aXbeInfo.FileName) then
-    LoadXbe(aXbeInfo.FileName)
+  if LoadXbe(aXbeInfo.FileName) then
+    //
   else
   begin
     m_Xbe := nil;
@@ -695,7 +722,75 @@ procedure Tfrm_Main.dgXbeInfosDrawCell(Sender: TObject; ACol, ARow: Integer; Rec
 var
   Where: TRect;
   Format: UINT;
+  cPos, cPosf: Integer;
+  lf: TLogFont;
 begin
+
+  cPos := Rect.Left;
+  dgXbeInfos.Canvas.Brush.Style := bsClear;
+  dgXbeInfos.Canvas.Font.Size := 10;
+  dgXbeInfos.Canvas.Font.Color := clWhite;
+  GetObject(dgXbeInfos.Canvas.Font.Handle, sizeof(TLogFont), @lf);
+  lf.lfQuality := ANTIALIASED_QUALITY or PROOF_QUALITY;
+  lf.lfFaceName := 'Verdana';
+  dgXbeInfos.Canvas.Font.Handle := CreateFontIndirect(lf);
+  if ARow = 0 then
+  begin
+
+    while cPos < Rect.Right do
+    begin
+      dgXbeInfos.Canvas.Draw(cPos,0,GUIHeadBgImg);
+      Inc(cPos);
+    end;
+
+    dgXbeInfos.Canvas.Draw(cPos-2,1,GUIHeadSepImg);
+
+    // Should only be done once?
+
+
+    //drawgrid1.Canvas.TextFlags := DT_RIGHT;
+    //dgXbeInfos.Canvas.TextRect(Rect, Rect.Left+5,Rect.Top+8, 'Title');
+    //drawgrid1.Canvas.TextOut(Rect.Left+2, Rect.Top+4, 'A');
+
+  end
+  else
+  begin
+    if (dgXbeInfos.Selection.Top = ARow) then
+    begin
+    cPos := Rect.Left;
+    cPosf := 0;
+      if ACol = 0 then
+      begin
+        dgXbeInfos.Canvas.Draw(Rect.Left, Rect.Top, GUISelBgLeft);
+        cPos := cPos + GUISelBgLeft.Width;
+      end;
+
+      if ACol = dgXbeInfos.ColCount-1 then
+      begin
+        cPosf := GUISelBgRight.Width;
+        dgXbeInfos.Canvas.Draw(Rect.Right-cPosf, Rect.Top, GUISelBgRight);
+      end;
+
+      cPosf := Rect.Right - cPosf;
+
+      while cPos < cPosf do
+      begin
+        dgXbeInfos.Canvas.Draw(cPos,Rect.Top,GUISelBg);
+        Inc(cPos);
+      end;
+
+    end
+    else
+    begin
+      //dgXbeInfos.Canvas.Brush.Color := clBlack;
+      dgXbeInfos.Canvas.Pen.Color := clBlack;
+      dgXbeInfos.Canvas.Rectangle(0, Rect.Top, dgXbeInfos.Width, Rect.Bottom);
+    end;
+  end;
+
+
+  /// ----
+   {
   if gdFixed in State then
   begin
     // Put gradient lines next to the header columns :
@@ -703,13 +798,13 @@ begin
     TDrawGrid(Sender).Canvas.Pen.Width := 2;
     GradientVerticalLineCanvas(TDrawGrid(Sender).Canvas, [clBlack, clXboxGreen, clGray], Where.Right-2, Where.Top, Where.Bottom - Where.Top);
     // Render titles in bold :
-    TDrawGrid(Sender).Canvas.Font.Style := [fsBold];
+    //TDrawGrid(Sender).Canvas.Font.Style := [fsBold];
   end;
-
+  }
   // Draw cell's text :
   Where := Rect;
   InflateRect(Where, -4, -4);
-  Inc(Where.Top, 3);
+  //Inc(Where.Top, 3);
   if aCol = 2 then // Align 'Version' column right :
     Format := DT_RIGHT
   else
@@ -1336,13 +1431,12 @@ var
   XbeXml: string;
 begin
   if XbeOpenDialog.Execute then
-  begin
-    LoadXbe(XbeOpenDialog.FileName);
-
-    DxbxXml.CreateXmlXbeDumpAsText(XbeXml, m_Xbe, XbeOpenDialog.FileName);
-    LoadXBEListByXml(XbeXml);
-    UpdateFilter;
-  end;
+    if LoadXbe(XbeOpenDialog.FileName) then
+    begin
+      DxbxXml.CreateXmlXbeDumpAsText(XbeXml, m_Xbe, XbeOpenDialog.FileName);
+      LoadXBEListByXml(XbeXml);
+      UpdateFilter;
+    end;
 end;
 
 procedure Tfrm_Main.actCloseXbeExecute(Sender: TObject);
@@ -1526,6 +1620,11 @@ end;
 
 function Tfrm_Main.LoadXbe(const aFileName: string): Boolean;
 begin
+  // This is to prevent loading files dropped in to GUI from a container :
+  Result := FileExists(aFileName);
+  if not Result then
+    Exit;
+
   CloseXbe();
   Result := OpenXbe(aFileName, {var}m_Xbe);
   if Result then
@@ -1618,6 +1717,38 @@ begin
   begin
     if not m_XBE.ExportIconBitmap(ImageIcon.Picture.Bitmap) then
       ImageIcon.Picture.Assign(GetJPEGResource('GUIIconNotAvailable'));
+
+      // Round of the corners a bit :
+      ImageIcon.Picture.Bitmap.Transparent := True;
+      ImageIcon.Picture.Bitmap.TransparentColor := clRed;
+
+      for i := 0 to 3 do
+      begin
+         ImageIcon.Picture.Bitmap.Canvas.Pixels[0,I] := clRed;
+         ImageIcon.Picture.Bitmap.Canvas.Pixels[0,ImageIcon.Picture.Width-I] := clRed;
+         ImageIcon.Picture.Bitmap.Canvas.Pixels[ImageIcon.Picture.Width-1,I] := clRed;
+         ImageIcon.Picture.Bitmap.Canvas.Pixels[ImageIcon.Picture.Width-1,ImageIcon.Picture.Height-I] := clRed;
+      end;
+
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[1,0] := clRed;
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[1,1] := clRed;
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[3,0] := clRed;
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[2,0] := clRed;
+
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[ImageIcon.Picture.Width-2,0] := clRed;
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[ImageIcon.Picture.Width-2,1] := clRed;
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[ImageIcon.Picture.Width-3,0] := clRed;
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[ImageIcon.Picture.Width-4,0] := clRed;
+
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[1,ImageIcon.Picture.Height-1] := clRed;
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[1,ImageIcon.Picture.Height-2] := clRed;
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[2,ImageIcon.Picture.Height-1] := clRed;
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[3,ImageIcon.Picture.Height-1] := clRed;
+
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[ImageIcon.Picture.Width-2,ImageIcon.Picture.Height-1] := clRed;
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[ImageIcon.Picture.Width-2,ImageIcon.Picture.Height-2] := clRed;
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[ImageIcon.Picture.Width-3,ImageIcon.Picture.Height-1] := clRed;
+      ImageIcon.Picture.Bitmap.Canvas.Pixels[ImageIcon.Picture.Width-4,ImageIcon.Picture.Height-1] := clRed;
 
     ImageIcon.Show;
   end
