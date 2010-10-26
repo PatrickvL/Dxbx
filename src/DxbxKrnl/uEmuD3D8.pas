@@ -2022,42 +2022,75 @@ begin
   end;
 end; // EmuVerifyResourceIsRegistered
 
-// ensure a given width/height are powers of 2
-procedure EmuAdjustPower2(dwWidth: PUINT; dwHeight: PUINT);
+procedure EmuAdjustTextureDimensions(ResourceType: D3DRESOURCETYPE; dwWidth: PUINT; dwHeight: PUINT);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
+  NeedsConversion: Boolean;
   NewWidth, NewHeight: UINT;
   v: int;
   mask: int;
 begin
-  NewWidth := 0; NewHeight := 0;
-
-  for v := 0 to 32-1 do
-  begin
-    mask := 1 shl v;
-
-    if (dwWidth^ and mask) > 0 then
-      NewWidth := mask;
-
-    if (dwHeight^ and mask) > 0 then
-      NewHeight := mask;
+  NeedsConversion := False;
+  case ResourceType of
+    D3DRTYPE_SURFACE,
+    D3DRTYPE_VOLUME,
+    D3DRTYPE_TEXTURE:
+      NeedsConversion := ((g_D3DCaps.TextureCaps and D3DPTEXTURECAPS_POW2) <> 0);
+    D3DRTYPE_VOLUMETEXTURE:
+      NeedsConversion := False; // Not influenced by D3DPTEXTURECAPS_POW2
+    D3DRTYPE_CUBETEXTURE:
+      NeedsConversion := ((g_D3DCaps.TextureCaps and D3DPTEXTURECAPS_CUBEMAP_POW2) <> 0);
   end;
 
-  if (dwWidth^ <> NewWidth) then
+  if NeedsConversion then
   begin
-    NewWidth := NewWidth shl 1;
-    EmuWarning('Needed to resize width (%d->%d)', [dwWidth^, NewWidth]);
+    // Ensure a given width/height are powers of 2 :
+    NewWidth := 0; NewHeight := 0;
+
+    for v := 0 to 32-1 do
+    begin
+      mask := 1 shl v;
+
+      if (dwWidth^ and mask) > 0 then
+        NewWidth := mask;
+
+      if (dwHeight^ and mask) > 0 then
+        NewHeight := mask;
+    end;
+
+    if (dwWidth^ <> NewWidth) then
+    begin
+      NewWidth := NewWidth shl 1;
+      EmuWarning('Needed to resize width (%d->%d)', [dwWidth^, NewWidth]);
+    end;
+
+    if (dwHeight^ <> NewHeight) then
+    begin
+      NewHeight := NewHeight shl 1;
+      EmuWarning('Needed to resize height (%d->%d)', [dwHeight^, NewHeight]);
+    end;
+
+    dwWidth^ := NewWidth;
+    dwHeight^ := NewHeight;
   end;
 
-  if (dwHeight^ <> NewHeight) then
+  // Dxbx addition : Ensure the square-requirement when needed :
+  NeedsConversion := ((g_D3DCaps.TextureCaps and D3DPTEXTURECAPS_SQUAREONLY) <> 0);
+  if NeedsConversion then
   begin
-    NewHeight := NewHeight shl 1;
-    EmuWarning('Needed to resize height (%d->%d)', [dwHeight^, NewHeight]);
+    // If squary textures are required, copy the longest dimension to the other :
+    if dwWidth^ > dwHeight^ then
+    begin
+      EmuWarning('Needed to square height (%d->%d)', [dwHeight^, dwWidth^]);
+      dwHeight^ := dwWidth^;
+    end
+    else
+    begin
+      EmuWarning('Needed to square width (%d->%d)', [dwWidth^, dwHeight^]);
+      dwWidth^ := dwHeight^;
+    end;
   end;
-
-  dwWidth^ := NewWidth;
-  dwHeight^ := NewHeight;
-end; // EmuAdjustPower2
+end; // EmuAdjustTextureDimensions
 
 procedure DumpPresentationParameters(pPresentationParameters: PX_D3DPRESENT_PARAMETERS);
 begin
@@ -2910,6 +2943,9 @@ begin
 
   PCFormat := EmuXB2PC_D3DFormat(Format);
 
+  // Dxbx addition :
+  EmuAdjustTextureDimensions(D3DRTYPE_SURFACE, @Width, @Height);
+
   Result := IDirect3DDevice_CreateImageSurface(g_pD3DDevice,
     Width,
     Height,
@@ -2921,6 +2957,9 @@ begin
     EmuWarning('CreateImageSurface: D3DFMT_LIN_D24S8 -> D3DFMT_A8R8G8B8');
 
     PCFormat := D3DFMT_A8R8G8B8;
+
+    // Dxbx addition :
+    EmuAdjustTextureDimensions(D3DRTYPE_SURFACE, @Width, @Height);
 
     Result := IDirect3DDevice_CreateImageSurface(g_pD3DDevice,
       Width,
@@ -3729,7 +3768,7 @@ begin
   end;
 
   if MayLog(lfUnit) then
-   DbgPrintf('MaxVertexShaderConst = %d', [g_D3DCaps.MaxVertexShaderConst]);
+    DbgPrintf('MaxVertexShaderConst = %d', [g_D3DCaps.MaxVertexShaderConst]);
 
   if (SUCCEEDED(hRet)) then
   begin
@@ -3763,6 +3802,7 @@ begin
       );
 {$ENDIF}
     end;
+
     if Assigned(pRecompiledBuffer) then
     begin
       ID3DXBuffer(pRecompiledBuffer)._Release();
@@ -4414,10 +4454,7 @@ begin
     Usage := Usage and (D3DUSAGE_RENDERTARGET);
     Pool := D3DPOOL_MANAGED; // ?
 
-    if ((g_D3DCaps.TextureCaps and D3DPTEXTURECAPS_POW2) <> 0) then
-    begin
-      EmuAdjustPower2(@Width, @Height);
-    end;
+    EmuAdjustTextureDimensions(D3DRTYPE_TEXTURE, @Width, @Height);
 
 //{$IFDEF GAME_HACKS_ENABLED}??
     // Cxbx HACK: Width and Height sometimes set to 0xFFFF and 0 in Crazy Taxi 3
@@ -4552,7 +4589,8 @@ begin
   end
   else // PCFormat <> D3DFMT_YUY2
   begin
-    EmuAdjustPower2(@Width, @Height);
+    // Dxbx addition :
+    EmuAdjustTextureDimensions(D3DRTYPE_VOLUMETEXTURE, @Width, @Height);
 
     hRet := IDirect3DDevice_CreateVolumeTexture(g_pD3DDevice,
         Width, Height, Depth, Levels,
@@ -4608,7 +4646,10 @@ begin
     Pool := D3DPOOL_DEFAULT
   else
     Pool := D3DPOOL_MANAGED;
-  
+
+  // Dxbx addition :
+  EmuAdjustTextureDimensions(D3DRTYPE_CUBETEXTURE, @EdgeLength, @EdgeLength);
+
   Result := IDirect3DDevice_CreateCubeTexture(g_pD3DDevice,
       EdgeLength,
       Levels,
