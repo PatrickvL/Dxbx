@@ -9,6 +9,8 @@ OutputBaseFilename=setup
 SetupIconFile=..\resource\Dxbx.ico
 Compression=lzma
 SolidCompression=yes
+WizardImageFile=..\resource\dxbx_setup.bmp
+WizardSmallImageFile=..\resource\dxbx_setup_icon.bmp
 
 
 [Languages]
