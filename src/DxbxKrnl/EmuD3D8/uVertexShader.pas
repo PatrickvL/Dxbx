@@ -315,7 +315,11 @@ type _VSH_IMD_PARAMETER = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Active: boolean;
     Parameter: VSH_PARAMETER;
-    IsA0X: boolean;
+    // There is only a single address register in Microsoft® DirectX® 8.0.
+    // The address register, designated as a0.x, may be used as signed
+    // integer offset in relative addressing into the constant register file.
+    //     c[a0.x + n]
+    IndexesWithA0_X: boolean;
   end; // size = 36 (as in Cxbx)
   VSH_IMD_PARAMETER = _VSH_IMD_PARAMETER;
   PVSH_IMD_PARAMETER = ^VSH_IMD_PARAMETER;
@@ -854,7 +858,7 @@ begin
   Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, ', %s%s', [
                 _neg[pParameter.Parameter.Neg],
                 VshGetRegisterName(pParameter.Parameter.ParameterType)]));
-  if (pParameter.Parameter.ParameterType = PARAM_C) and (pParameter.IsA0X) then
+  if (pParameter.Parameter.ParameterType = PARAM_C) and (pParameter.IndexesWithA0_X) then
   begin
     // Only display the offset if it's not 0.
     if (pParameter.Parameter.Address) > 0 then
@@ -1050,7 +1054,7 @@ procedure VshAddParameter(pParameter: PVSH_PARAMETER;
 begin
   pIntermediateParameter.Parameter := pParameter^;
   pIntermediateParameter.Active := TRUE;
-  pIntermediateParameter.IsA0X := a0x;
+  pIntermediateParameter.IndexesWithA0_X := a0x;
 end;
 
 procedure VshAddParameters(pInstruction: PVSH_SHADER_INSTRUCTION;
@@ -1422,7 +1426,7 @@ begin
       if (pIntermediate.Parameters[k].Active) then
       begin
         if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_C) and
-           (not pIntermediate.Parameters[k].IsA0X) then
+           (not pIntermediate.Parameters[k].IndexesWithA0_X) then
         begin
           if (pIntermediate.Parameters[k].Parameter.Address = X_VSCM_RESERVED_CONSTANT2{=-37}) then
           begin
@@ -1486,14 +1490,15 @@ begin
       pIntermediate := @pShader.Intermediate[i];
 
       // Find instructions outputting to oPos.
+      // (?opcode? oPos.[mask], ...)
       if (pIntermediate.Output.Type_ = IMD_OUTPUT_O) and
          (pIntermediate.Output.Address = Word(Ord(OREG_OPOS))) then
       begin
-        // Redirect output to r11.
+        // Redirect output to r11. (?opcode? r11.[mask], ...)
         pIntermediate.Output.Type_    := IMD_OUTPUT_R;
         pIntermediate.Output.Address  := 11;
 
-        // Scale r11 to r10. (mul r10.[mask], r11, c58)
+        // Scale r11 to r10. (mul r10.[mask], r11, c58)   r10 = r11 * c58
         MulIntermediate.IsCombined        := FALSE;
         MulIntermediate.InstructionType   := IMD_MAC;
         MulIntermediate.MAC               := MAC_MUL;
@@ -1503,33 +1508,38 @@ begin
         MulIntermediate.Output.Mask[1]    := pIntermediate.Output.Mask[1];
         MulIntermediate.Output.Mask[2]    := pIntermediate.Output.Mask[2];
         MulIntermediate.Output.Mask[3]    := pIntermediate.Output.Mask[3];
+        // Set first parameter :
         MulIntermediate.Parameters[0].Active                  := TRUE;
-        MulIntermediate.Parameters[0].IsA0X                   := FALSE;
+        MulIntermediate.Parameters[0].IndexesWithA0_X         := FALSE;
         MulIntermediate.Parameters[0].Parameter.ParameterType := PARAM_R;
         MulIntermediate.Parameters[0].Parameter.Address       := 11;
         MulIntermediate.Parameters[0].Parameter.Neg           := FALSE;
         VshSetSwizzle(@MulIntermediate.Parameters[0], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
+        // Set second parameter :
         MulIntermediate.Parameters[1].Active                  := TRUE;
-        MulIntermediate.Parameters[1].IsA0X                   := FALSE;
+        MulIntermediate.Parameters[1].IndexesWithA0_X         := FALSE;
         MulIntermediate.Parameters[1].Parameter.ParameterType := PARAM_C;
         // Dxbx note : Cxbx calls ConvertCRegister(58) here, but doing a conversion seems incorrect.
         // That, and the constant address is also corrected afterwards, so use the original :
         MulIntermediate.Parameters[1].Parameter.Address       := X_VSCM_RESERVED_CONSTANT1{=-38};
         MulIntermediate.Parameters[1].Parameter.Neg           := FALSE;
         VshSetSwizzle(@MulIntermediate.Parameters[1], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
+        // Disable third parameter :
         MulIntermediate.Parameters[2].Active                  := FALSE;
+        // Insert this instruction :
         Inc(i); VshInsertIntermediate(pShader, @MulIntermediate, i);
 
         // Add offset with r10 to oPos (add oPos.[mask], r10, c59)
+        // Start with a copy of the previous multiplication :
         AddIntermediate := MulIntermediate;
         AddIntermediate.MAC               := MAC_ADD;
         AddIntermediate.Output.Type_      := IMD_OUTPUT_O;
         AddIntermediate.Output.Address    := Ord(OREG_OPOS);
-        AddIntermediate.Parameters[0].Parameter.ParameterType := PARAM_R;
         AddIntermediate.Parameters[0].Parameter.Address       := 10;
         // Dxbx note : Cxbx calls ConvertCRegister(59) here, but doing a conversion seems incorrect.
         // That, and the constant address is also corrected afterwards, so use the original :
         AddIntermediate.Parameters[1].Parameter.Address       := X_VSCM_RESERVED_CONSTANT2{=-37};
+        // Insert this instruction :
         Inc(i); VshInsertIntermediate(pShader, @AddIntermediate, i);
       end;
 
@@ -1665,7 +1675,7 @@ begin
         VshSetOutputMask(@pIntermediate.Output, TRUE, TRUE, TRUE, TRUE);
 
         TmpIntermediate.MAC := MAC_ADD;
-        TmpIntermediate.Parameters[0].IsA0X := FALSE;
+        TmpIntermediate.Parameters[0].IndexesWithA0_X := FALSE;
         TmpIntermediate.Parameters[0].Parameter.ParameterType := PARAM_R;
         TmpIntermediate.Parameters[0].Parameter.Address := outRegister;
         TmpIntermediate.Parameters[0].Parameter.Neg := FALSE;
@@ -1679,7 +1689,7 @@ begin
         TmpIntermediate := pIntermediate^;
         pIntermediate.MAC := MAC_DP3;
         TmpIntermediate.MAC := MAC_ADD;
-        TmpIntermediate.Parameters[0].IsA0X := FALSE;
+        TmpIntermediate.Parameters[0].IndexesWithA0_X := FALSE;
         TmpIntermediate.Parameters[0].Parameter.ParameterType := PARAM_R;
         TmpIntermediate.Parameters[0].Parameter.Address := TmpIntermediate.Output.Address;
         TmpIntermediate.Parameters[0].Parameter.Neg := FALSE;
@@ -1714,6 +1724,11 @@ begin
     Inc(i);
   end; // while
 
+//  // Dxbx fix : Prevent using
+//  RUsage[9] := True;
+
+  // r12 is a special thirteenth register that can be use to read back the current value of oPos.
+  // r12 can only be used as an input register and oPos can only be used as an output register.
   R12Replacement := -1;
   if (RUsage[12]) then
   begin
@@ -1733,6 +1748,8 @@ begin
       Result := FALSE;
       Exit;
     end;
+
+    DbgVshPrintf('Replacing r12 with r%d'#13#10, [R12Replacement]);
 
     if pShader.IntermediateCount > 0 then // Dxbx addition, to prevent underflow
     for j := 0 to pShader.IntermediateCount - 1 do
@@ -1756,20 +1773,21 @@ begin
             // Found a r12 used as a parameter; replace
             pIntermediate.Parameters[k].Parameter.Address := R12Replacement;
           end
-          else if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_C) and
-                  (pIntermediate.Parameters[k].Parameter.Address = ({58=}X_VSCM_RESERVED_CONSTANT1{=-38}+X_VSCM_CORRECTION{=96})) and
-                  (not pIntermediate.Parameters[k].IsA0X) then
-          begin
-            // Found c-38, replace it with r12.w
-            pIntermediate.Parameters[k].Parameter.ParameterType := PARAM_R;
-            pIntermediate.Parameters[k].Parameter.Address := R12Replacement;
-            VshSetSwizzle(@pIntermediate.Parameters[k], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-          end;
+// Dxbx fix : C-38 is readily available to us!
+//          else if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_C) and
+//                  (pIntermediate.Parameters[k].Parameter.Address = ({58=}X_VSCM_RESERVED_CONSTANT1{=-38}+X_VSCM_CORRECTION{=96})) and
+//                  (not pIntermediate.Parameters[k].IndexesWithA0_X) then
+//          begin
+//            // Found c-38, replace it with r12.w
+//            pIntermediate.Parameters[k].Parameter.ParameterType := PARAM_R;
+//            pIntermediate.Parameters[k].Parameter.Address := R12Replacement;
+//            VshSetSwizzle(@pIntermediate.Parameters[k], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+//          end;
         end;
       end;
     end;
 
-    // Insert mov oPos, r## in the end
+    // Append (mov oPos, r##) at the end
     pOPosWriteBack := VshNewIntermediate(pShader);
     pOPosWriteBack.InstructionType := IMD_ILU;
     pOPosWriteBack.ILU := ILU_MOV;
@@ -2564,7 +2582,7 @@ begin
         {pInclude=}nil,
         {Flags=}0,//D3DXSHADER_SKIPVALIDATION, // TODO -oDxbx : Restore this once everything works again
 {$ELSE}
-        {Flags=}D3DXASM_SKIPVALIDATION,
+        {Flags=}0,//D3DXASM_SKIPVALIDATION,
         {ppConstants=}NULL,
 {$ENDIF}
         {ppCompiledShader=}PID3DXBuffer(ppRecompiled),
