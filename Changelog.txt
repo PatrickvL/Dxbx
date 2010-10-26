@@ -2,7 +2,7 @@ DXBX Changelog, this changelog has been implemented from version 0.0.9
 So the changes from version 0.0.8 and below are not documented.
 
 Version 0.4 Release:
-- Rewrite of pattern scanning and detection
+- Rewrite of pattern scanning and symbol detection
 - Menu option to skip cache file
 - Menu configuration for log settings
 - Games loaded will be added to the gamelist.
@@ -13,6 +13,7 @@ Version 0.4 Release:
 - Software overlay mode speedups & full-screen stretching.
 - XbeExplorer feature : Goto address
 - XbeExplorer feature : Manual extraction of function patterns
+- Major speedup in 'logging-disabled' mode
 
 Again huge improvements...
 
