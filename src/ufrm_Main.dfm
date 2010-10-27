@@ -45,11 +45,10 @@ object frm_Main: Tfrm_Main
   end
   object lblXbeInformation: TLabel
     Left = 642
-    Top = 277
-    Width = 153
-    Height = 244
+    Top = 304
+    Width = 4
+    Height = 13
     Anchors = [akTop, akRight]
-    AutoSize = False
     Font.Charset = ANSI_CHARSET
     Font.Color = clWhite
     Font.Height = -11
@@ -62,18 +61,17 @@ object frm_Main: Tfrm_Main
     Left = 645
     Top = 530
     Width = 150
-    Height = 45
+    Height = 44
     Anchors = [akRight, akBottom]
     OnClick = imgLaunchButtonClick
     OnMouseDown = imgLaunchButtonMouseDown
     OnMouseEnter = imgLaunchButtonMouseEnter
     OnMouseLeave = imgLaunchButtonMouseLeave
     OnMouseMove = imgLaunchButtonMouseMove
-    ExplicitLeft = 642
   end
   object lblFreeTextFilter: TLabel
-    Left = 8
-    Top = 536
+    Left = 12
+    Top = 548
     Width = 119
     Height = 13
     Anchors = [akLeft, akBottom]
@@ -119,8 +117,8 @@ object frm_Main: Tfrm_Main
     OnKeyDown = dgXbeInfosKeyDown
   end
   object cbFreeTextFilter: TComboBox
-    Left = 133
-    Top = 533
+    Left = 137
+    Top = 545
     Width = 201
     Height = 21
     Anchors = [akLeft, akBottom]

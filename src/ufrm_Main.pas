@@ -608,22 +608,21 @@ begin
   BackgroundImage.Canvas.Brush.Color := Color;
   BackgroundImage.Canvas.FillRect(BackgroundImage.Canvas.ClipRect);
 
-  // Draw the left side of the header :
+  // Draw the logo background
+  JPEGImage := GetJPEGResource('GUIHeaderBg');
+  BackgroundImage.Canvas.Brush.Bitmap := TProtectedJPEGImage(JPEGImage).Bitmap;
+  BackgroundImage.Canvas.FillRect(Types.Rect(0, 0, Width, JPEGImage.Height));
+
+  // Draw the footer bg
+  // JPEGImage := GetJPEGResource('GUIFooterBg');
+  // BackgroundImage.Canvas.DrawStretch?
+
+
+  // Draw the logo in the center :
   JPEGImage := GetJPEGResource('GUIHeader');
-  BackgroundImage.Canvas.Draw(0, 0, JPEGImage);
+  BackgroundImage.Canvas.Draw((Width-JPEGImage.Width) div 2, 0, JPEGImage);
   MinWidth := JPEGImage.Width;
-              {
-  // Draw the right side of the header :
-  JPEGImage := GetJPEGResource('GUIHeaderRight');
-  BackgroundImage.Canvas.Draw(Width - JPEGImage.Width, 0, JPEGImage);
-  Inc(MinWidth, JPEGImage.Width);
 
-  // Draw the center of the header :
-  JPEGImage := GetJPEGResource('GUIHeaderCenter');
-  BackgroundImage.Canvas.Draw((Width - JPEGImage.Width) div 2, 0, JPEGImage);
-
-  // Make sure the form can't be resized any smaller than the sum of header-image widths :
-  Inc(MinWidth, JPEGImage.Width);  }
   Constraints.MinWidth := MinWidth;
 
   // Draw a nice little gradient just above the grid :
@@ -632,8 +631,15 @@ begin
 
   // Draw a (tiled!) grating as background for the info-pane :
   JPEGImage := GetJPEGResource('GUIBackgroundGrating');
+  BackgroundImage.Canvas.Brush.Bitmap := nil;
   BackgroundImage.Canvas.Brush.Bitmap := TProtectedJPEGImage(JPEGImage).Bitmap;
-  BackgroundImage.Canvas.FillRect(Types.Rect(dgXbeInfos.Width, dgXbeInfos.Top, Width, dgXbeInfos.Top + dgXbeInfos.Height));
+  //BackgroundImage.Canvas.FillRect(Types.Rect(dgXbeInfos.Width, dgXbeInfos.Top, Width, dgXbeInfos.Top + dgXbeInfos.Height));
+
+  // Draw the info-pane:
+  JPEGImage := GetJPEGResource('GUIBackgroundInfoPane');
+
+  BackgroundImage.Canvas.Draw(dgXbeInfos.Width+3, dgXbeInfos.Top + 170, JPEGImage);
+
   // Draw nice stuff
   JPEGImage := GetJPEGResource('GUIGameIconFrame');
   BackgroundImage.Canvas.Draw(dgXbeInfos.Width+3, dgXbeInfos.Top, JPEGImage);
