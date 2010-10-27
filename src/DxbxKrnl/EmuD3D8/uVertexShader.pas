@@ -545,7 +545,7 @@ procedure DbgVshPrintf(aStr: string); overload;
 begin
 {$ifdef _DEBUG_TRACK_VS}
   if MayLog(lfUnit) then
-    DbgPrintf(aStr);
+    printf(aStr);
 {$endif}
 end;
 
@@ -554,7 +554,7 @@ procedure DbgVshPrintf(aStr: string; Args: array of const); overload;
 begin
 {$ifdef _DEBUG_TRACK_VS}
   if MayLog(lfUnit) then
-    DbgPrintf(aStr, Args);
+    printf(aStr, Args);
 {$endif}
 end;
 

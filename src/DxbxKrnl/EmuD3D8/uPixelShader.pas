@@ -1836,8 +1836,22 @@ begin
   or (InputF.Reg = PS_REGISTER_FOG)
   or (InputG.Reg = PS_REGISTER_FOG) then
   begin
-    Result := Result + '; final combiner - FOG detected - NOT EMULATED!'#13#10;
-    aScope.FogReg := PS_REGISTER_C0; // TODO : Detect this beforehand and use a constant register (if one is available!)
+    Result := Result + '; final combiner - FOG not emulated, using 1.'#13#10;
+//    aScope.FogReg := PS_REGISTER_ONE; // TODO : Detect this beforehand and use a constant register (if one is available!)
+    if (InputA.Reg = PS_REGISTER_FOG) then
+      InputA.Reg := PS_REGISTER_ONE;
+    if (InputB.Reg = PS_REGISTER_FOG) then
+      InputB.Reg := PS_REGISTER_ONE;
+    if (InputC.Reg = PS_REGISTER_FOG) then
+      InputC.Reg := PS_REGISTER_ONE;
+    if (InputD.Reg = PS_REGISTER_FOG) then
+      InputD.Reg := PS_REGISTER_ONE;
+    if (InputE.Reg = PS_REGISTER_FOG) then
+      InputE.Reg := PS_REGISTER_ONE;
+    if (InputF.Reg = PS_REGISTER_FOG) then
+      InputF.Reg := PS_REGISTER_ONE;
+    if (InputG.Reg = PS_REGISTER_FOG) then
+      InputG.Reg := PS_REGISTER_ONE;
   end;
 
   // Handle PS_REGISTER_EF_PROD :
@@ -1859,7 +1873,7 @@ begin
         else
           ; // TODO : See if R0 or R1 is available - use it for E*F or stop
 
-    if aScope.EFReg > PS_REGISTER_ONE then
+    if aScope.EFReg <= PS_REGISTER_R1 then
       Result := Result + 'mul ' + PSRegToStr(aScope, aScope.EFReg) + ', ' + InputE.DisassembleInputRegister(aScope) + ', ' + InputF.DisassembleInputRegister(aScope) + #13#10
 //    Result := Result + aScope.EmitMul(PSRegToStr(aScope, aScope.EFReg), @InputE, @InputF)
     else
