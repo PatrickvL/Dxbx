@@ -1421,8 +1421,8 @@ const X_VSCM_192              = $01; // Enables constants -96..-1 on top of 0..9
 const X_VSCM_192FIXEDPIPELINE = $02; // Unsupported?
 const X_VSCM_NONERESERVED     = $10; // Do not reserve constant -38 and -37
 
-const X_VSCM_RESERVED_CONSTANT1 = -38; // Becomes 58 after correction
-const X_VSCM_RESERVED_CONSTANT2 = -37; // Becomes 59 after correction
+const X_VSCM_RESERVED_CONSTANT1 = -38; // Becomes 58 after correction, contains Scale v
+const X_VSCM_RESERVED_CONSTANT2 = -37; // Becomes 59 after correction, contains Offset
 
 const X_VSCM_CORRECTION = 96; // Add 96 to arrive at the range 0..191 (instead of 96..95)
 

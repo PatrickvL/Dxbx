@@ -4020,27 +4020,34 @@ begin
   if g_BuildVersion <= 4361 then
     Inc(Register_, X_VSCM_CORRECTION{=96});
 
+  // Check we're not getting past the current upper bound :
+  hRet := iif((g_VertexShaderConstantMode and X_VSCM_192) > 0, 192, 96);
+  if (Register_ < 0) or (Register_ >= hRet) then
+    hRet := D3DERR_INVALIDCALL
+  else
+  begin
 {$IFDEF DXBX_USE_D3D9}
-  hRet := g_pD3DDevice.SetVertexShaderConstantF
-  (
-    Register_,
-    PSingle(pConstantData),
-    ConstantCount
-  );
+    hRet := g_pD3DDevice.SetVertexShaderConstantF
+    (
+      Register_,
+      PSingle(pConstantData),
+      ConstantCount
+    );
 {$ELSE}
-  hRet := g_pD3DDevice.SetVertexShaderConstant
-  (
-    Register_,
-    pConstantData,
-    ConstantCount
-  );
+    hRet := g_pD3DDevice.SetVertexShaderConstant
+    (
+      Register_,
+      pConstantData,
+      ConstantCount
+    );
 {$ENDIF}
 
-  if (FAILED(hRet)) then
-  begin
-    EmuWarning('We''re lying about setting a vertex shader constant!');
+    if (FAILED(hRet)) then
+    begin
+      EmuWarning('We''re lying about setting a vertex shader constant!');
 
-    hRet := D3D_OK;
+      hRet := D3D_OK;
+    end;
   end;
 
   EmuSwapFS(fsXbox);
@@ -4168,6 +4175,8 @@ begin
       _(pHandle, 'pHandle').
     LogEnd();
 
+  // TODO -oDxbx : Delay this until drawing time, so we can support ModifyPixelShader
+
   // Attempt to recompile PixelShader
   ConvertedPixelShader := AnsiString(XTL_EmuRecompilePshDef(pPSDef));
 
@@ -4249,6 +4258,8 @@ begin
     LogBegin('EmuD3DDevice_SetPixelShader').
       _(Handle, 'Handle').
     LogEnd();
+
+  // TODO -oDxbx : Delay this until drawing time, so we can support ModifyPixelShader
 
   // redirect to windows d3d
   Result := D3D_OK;

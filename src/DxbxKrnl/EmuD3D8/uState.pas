@@ -836,6 +836,9 @@ var
 begin
   Result := XboxValue;
 
+  if (X_D3DRS_PS_FIRST <= XboxRenderState) and (XboxRenderState <= X_D3DRS_PS_LAST) then
+    ; // TODO -oDxbx : Dirty the current PixelShader, so we can support ModifyPixelShader
+
   // Handle the pixel shader constants first :
   if (X_D3DRS_PSCONSTANT0_0 <= XboxRenderState) and (XboxRenderState <= X_D3DRS_PSCONSTANT1_7) then
   begin
