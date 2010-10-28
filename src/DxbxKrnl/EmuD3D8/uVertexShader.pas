@@ -41,6 +41,7 @@ uses
   // Dxbx
   , uTypes
   , uDxbxKrnlUtils
+  , uState // for g_BuildVersion
   , uEmuD3D8Types
   , uEmuD3D8Utils
   , uEmuAlloc
@@ -1428,6 +1429,7 @@ begin
         if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_C) and
            (not pIntermediate.Parameters[k].IndexesWithA0_X) then
         begin
+          // TODO : Add correction?
           if (pIntermediate.Parameters[k].Parameter.Address = X_VSCM_RESERVED_CONSTANT2{=-37}) then
           begin
             // Found c-37, remove the instruction
@@ -1611,7 +1613,8 @@ begin
     // Make constant registers range from 0 to 191 instead of -96 to 95
     if (pIntermediate.Output.Type_ = IMD_OUTPUT_C) then
     begin
-      Inc(pIntermediate.Output.Address, X_VSCM_CORRECTION{=96});
+      if g_BuildVersion > 4361 then
+        Inc(pIntermediate.Output.Address, X_VSCM_CORRECTION{=96});
     end;
 
     for j := 0 to 3-1 do
@@ -1626,7 +1629,8 @@ begin
       begin
         // Dxbx fix : PARAM_C correction shouldn't depend on Active!
         // Make constant registers range from 0 to 191 instead of -96 to 95
-        Inc(pIntermediate.Parameters[j].Parameter.Address, X_VSCM_CORRECTION{=96});
+        if g_BuildVersion > 4361 then
+          Inc(pIntermediate.Parameters[j].Parameter.Address, X_VSCM_CORRECTION{=96});
       end else
       if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_V) then
       begin

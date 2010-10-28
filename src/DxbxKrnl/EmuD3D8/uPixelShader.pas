@@ -431,6 +431,54 @@ type PS_GLOBALFLAGS =
     PS_GLOBALFLAGS_TEXMODE_ADJUST=        $0001  // adjust texture modes according to set texture
 );
 
+(*
+type _PSH_PARAMETER_TYPE =
+(
+    PARAM_UNKNOWN = 0,
+    PARAM_R,
+    PARAM_T,
+    PARAM_V,
+    PARAM_C
+);
+PSH_PARAMETER_TYPE = _PSH_PARAMETER_TYPE;
+
+type _PSH_IMD_OUTPUT_TYPE =
+(
+    IMD_OUTPUT_DISCARD,
+    IMD_OUTPUT_R,
+    IMD_OUTPUT_T,
+    IMD_OUTPUT_V
+);
+
+type _PSH_IMD_OUTPUT = record
+    Type_: PSH_IMD_OUTPUT_TYPE;
+    Mask: Dxbx4Booleans;
+    Address: UInt16;
+  end; // size = 12 (as in Cxbx)
+  PSH_IMD_OUTPUT = _PSH_IMD_OUTPUT;
+  PPSH_IMD_OUTPUT = ^PSH_IMD_OUTPUT;
+
+type _PSH_IMD_PARAMETER = record
+    Active: boolean;
+    ParameterType: PSH_PARAMETER_TYPE;      // Parameter type, R, T, V or C
+    Neg: boolean;                           // TRUE if negated, FALSE if not
+//    Swizzle: array [0..4-1] of VSH_SWIZZLE; // The four swizzles
+    Address: int16;                         // Register address
+  end; // size = 36 (as in Cxbx)
+  PSH_IMD_PARAMETER = _PSH_IMD_PARAMETER;
+  PPSH_IMD_PARAMETER = ^PSH_IMD_PARAMETER;
+
+  TPSH_IMD_PARAMETERArray = array [0..(MaxInt div SizeOf(PSH_IMD_PARAMETER)) - 1] of PSH_IMD_PARAMETER;
+  PPSH_IMD_PARAMETERs = ^TPSH_IMD_PARAMETERArray;
+
+type _PSH_INTERMEDIATE_FORMAT = record
+    IsCombined: boolean;
+    ILU: VSH_ILU;
+    Output: PSH_IMD_OUTPUT;
+    Parameters: array [0..3-1] of PSH_IMD_PARAMETER;
+  end;
+*)
+
 type
   PPSDisassembleScope = ^RPSDisassembleScope;
 
@@ -797,8 +845,6 @@ end;
 function PSRegToStr(const aScope: PPSDisassembleScope; const aReg: PS_REGISTER): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  Assert((PS_REGISTER_C0 <= aReg) and (aReg <= PS_REGISTER_EF_PROD));
-
   case aReg of
     PS_REGISTER_C0: Result := aScope.C0RegStr;
     PS_REGISTER_C1: Result := aScope.C1RegStr;
@@ -814,7 +860,8 @@ begin
     PS_REGISTER_V1R0_SUM: Result := PSRegToStr(aScope, aScope.V1R0Reg); // Uses a temporary register
     PS_REGISTER_EF_PROD: Result := PSRegToStr(aScope, aScope.EFReg); // Uses a temporary register
   else
-    Result := '';
+//    Assert((PS_REGISTER_C0 <= aReg) and (aReg <= PS_REGISTER_EF_PROD));
+    Result := '0';
   end;
 end;
 
@@ -1213,6 +1260,9 @@ begin
   Result := aScope.EmitMul(@Self, @Input1, @Input2);
 end;
 
+var
+  Emitted_dp3: Boolean = False;
+
 function RPSCombinerOutput.CombineStageInputDot(const aScope: PPSDisassembleScope): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
@@ -1223,7 +1273,7 @@ begin
 
   // Because "dp3" needs the color/vector pipeline, no color component outputing opcode can be co-issued with it.
   // So, we need to skip adding '+' after this, by signalling this via the OutputWriteMask :
-  aScope.OutputWriteMask := '';
+  Emitted_dp3 := True;
 end;
 
 function RPSCombinerOutput.DisassembleCombinerOutput(const aScope: PPSDisassembleScope): string;
@@ -1284,8 +1334,9 @@ begin
       if  (OutputAB.Input2.Reg = PS_REGISTER_ONE)
       and (OutputCD.Input2.Reg = PS_REGISTER_ONE) then
         Result := Result + 'cnd' + SumOutputString + 'r0.a, ' +
-          OutputAB.Input1.DisassembleInputRegister(aScope) + ', ' +
-          OutputCD.Input1.DisassembleInputRegister(aScope) + #13#10
+          // Note : AB and CD reversed like in 'depth.psh' from FocusBlur sample :
+          OutputCD.Input1.DisassembleInputRegister(aScope) + ', ' +
+          OutputAB.Input1.DisassembleInputRegister(aScope) + #13#10
       else
       if  (OutputAB.Input1.Reg = PS_REGISTER_ONE)
       and (OutputCD.Input2.Reg = PS_REGISTER_ONE) then
@@ -1367,6 +1418,7 @@ function RPSCombinerOutputMuxSum.SumTry4Regs(const aScope: PPSDisassembleScope; 
 var
   ABCheck: Boolean;
   CDCheck: Boolean;
+  TmpInstructionOutputCombiner: string;
 begin
   Result := '';
   // All four inputs need to be read, so find a temporary register and use a two-step simulation.
@@ -1382,12 +1434,18 @@ begin
     // the other (writeable) inputs, as long as these aren't used any further.
     Exit;
 
+  // We're going to write two statements to get one result, so make sure that
+  // the output modifier is only applied to the second of those two statements :
+  TmpInstructionOutputCombiner := aScope.InstructionOutputCombiner;
+  aScope.InstructionOutputCombiner := '';
+
   // We have at least one side NOT reading from the SUM output register;
   if ABCheck then
   begin
     // AB does read from the SUM output register (so CD doesn't),
     // so calculate AB first via the temp register and "mad" it to C*D :
     Result := aScope.EmitMul(@Self, @OutputAB.Input1, @OutputAB.Input2);
+    aScope.InstructionOutputCombiner := TmpInstructionOutputCombiner;
     Result := Result + aScope.EmitMad(SumOutputString, @OutputCD.Input1, @OutputCD.Input2, @Self);
   end
   else
@@ -1395,6 +1453,7 @@ begin
     // Here, we know AB doesn't read from the SUM output register, so we calculate C*D first
     // (no matter if they read from the SUM output register or not) and "mad" it to A*B :
     Result := aScope.EmitMul(@Self, @OutputCD.Input1, @OutputCD.Input2);
+    aScope.InstructionOutputCombiner := TmpInstructionOutputCombiner;
     Result := Result + aScope.EmitMad(SumOutputString, @OutputAB.Input1, @OutputAB.Input2, @Self);
   end;
 end;
@@ -1721,6 +1780,12 @@ begin
       Result := Result + OutputSUM.OutputCD.DisassembleCombinerOutput(aScope);
   end;
 
+  if Emitted_dp3 then
+  begin
+    aScope.OutputWriteMask := '';
+    Emitted_dp3 := False;
+  end;
+
   // Do we need to calculate SUM ?
   if OutputSUM.Reg > PS_REGISTER_DISCARD then
   begin
@@ -1837,7 +1902,7 @@ begin
   or (InputG.Reg = PS_REGISTER_FOG) then
   begin
     Result := Result + '; final combiner - FOG not emulated, using 1.'#13#10;
-//    aScope.FogReg := PS_REGISTER_ONE; // TODO : Detect this beforehand and use a constant register (if one is available!)
+//    aScope.FogReg := PS_REGISTER_C0; // TODO : Detect this beforehand and use a constant register (if one is available!)
     if (InputA.Reg = PS_REGISTER_FOG) then
       InputA.Reg := PS_REGISTER_ONE;
     if (InputB.Reg = PS_REGISTER_FOG) then
@@ -2359,8 +2424,9 @@ function RPSIntermediate.DisassembleIntermediate(): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   LogFlags: TLogFlags;
-  i: Integer;
+  i, j: Integer;
   Scope: RPSDisassembleScope;
+  ConstUnused: array [$0..$F] of Boolean;
 begin
   // Azurik likes to create and destroy the same shader every frame! O_o
   LogFlags := lfUnit;
@@ -2380,12 +2446,26 @@ begin
   // 1.3 allows the use of texm3x2depth (which can occur sometimes)
   Result := 'ps.1.3'#13#10;
 
+  for j := $0 to $F do
+    ConstUnused[j] := True;
+
+  j := 0;
   for i := 0 to 8-1 do
   begin
     // Define constants directly after the version instruction and before any other instruction :
-    if Original.PSConstant0[i] > 0 then
-      Result := Result + _EmitConstDef(i, Original.PSConstant0[i]);
-    // TODO : What indexes are for Original.PSConstant1 ?
+    j := ((Original.PSC0Mapping shr (i * 4)) and $f);
+    if (j < 8) and ConstUnused[j] then
+    begin
+      Result := Result + _EmitConstDef(j, Original.PSConstant0[i]);
+      ConstUnused[j] := False;
+    end;
+
+    j := ((Original.PSC1Mapping shr (i * 4)) and $f);
+    if (j < 8) and ConstUnused[j] then
+    begin
+      Result := Result + _EmitConstDef(j, Original.PSConstant1[i]);
+      ConstUnused[j] := False;
+    end;
   end;
 
 // Emitting these causes black cogs in BumpDemo :
