@@ -1,14 +1,16 @@
 [Setup]
 AppName=XBE Explorer
-AppVerName=XBE Explorer 1.0
+AppVerName=XBE Explorer 1.1
 AppPublisher=PatrickvL
 DefaultDirName={pf}\DXBX
 DefaultGroupName=DXBX
 OutputDir=..
 OutputBaseFilename=XBEExplorer_Setup
-SetupIconFile=..\resource\Cxbx.ico
+SetupIconFile=..\resource\Dxbx.ico
 Compression=lzma
 SolidCompression=yes
+WizardImageFile=..\resource\dxbx_setup.bmp
+WizardSmallImageFile=..\resource\dxbx_setup_icon.bmp
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
