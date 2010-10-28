@@ -1,6 +1,11 @@
 Dxbx compatibility
 ------------------
 
+Version 0.5
+
+
+Version 0.4
+
 Turok - Intro movie & start of main menu
 Rayman Arena - Intro & main menu
 Smashing Drive - Playable on Nvidia
