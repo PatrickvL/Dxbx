@@ -2449,7 +2449,6 @@ begin
   for j := $0 to $F do
     ConstUnused[j] := True;
 
-  j := 0;
   for i := 0 to 8-1 do
   begin
     // Define constants directly after the version instruction and before any other instruction :

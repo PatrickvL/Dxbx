@@ -803,11 +803,11 @@ begin
         // D3DRTYPE_VOLUMETEXTURE, D3DRTYPE_CUBETEXTURE
         Result := D3DFMT_X8R8G8B8; // also CheckDeviceMultiSampleType
     end;
-    D3DFMT_P8:
-    begin
-      EmuWarning('D3DFMT_P8 is an unsupported texture format!');
-      Result := D3DFMT_X8R8G8B8;
-    end;
+//    D3DFMT_P8:
+//    begin
+//      EmuWarning('D3DFMT_P8 is an unsupported texture format!');
+//      Result := D3DFMT_X8R8G8B8;
+//    end;
     D3DFMT_D24S8:
     begin
       EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
@@ -5892,7 +5892,7 @@ begin
 
       X_Format := X_D3DFORMAT((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
       PCFormat := EmuXB2PC_D3DFormat(X_Format);
-      CacheFormat := {XTL.}D3DFORMAT(0);
+      CacheFormat := D3DFMT_UNKNOWN; // Means 'not important' as it's not used in DxbxUpdatePixelContainer
       // TODO -oCXBX: check for dimensions
 
       // TODO -oCXBX: HACK: Temporary?
@@ -5979,7 +5979,7 @@ begin
             EmuWarning('D3DFMT_P8 -> D3DFMT_A8R8G8B8');
 
             CacheFormat := PCFormat; // Save this for later; See DxbxUpdatePixelContainer
-            PCFormat := D3DFMT_A8R8G8B8; // ARGB
+            PCFormat := D3DFMT_L8; // Quick hack, suggested by Dustin 'Josh Reggin' to get somewhat better textures in Gauntlet Dark Legacy
           end;
 
           if (bCubemap) then
