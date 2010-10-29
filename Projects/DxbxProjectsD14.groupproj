@@ -24,6 +24,9 @@
 			<Projects Include="d14\XBEExplorer.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="d14\SvnBuilder.dproj">
+				<Dependencies/>
+			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -95,14 +98,23 @@
 		<Target Name="XBEExplorer:Make">
 			<MSBuild Targets="Make" Projects="d14\XBEExplorer.dproj"/>
 		</Target>
+		<Target Name="SvnBuilder">
+			<MSBuild Projects="d14\SvnBuilder.dproj"/>
+		</Target>
+		<Target Name="SvnBuilder:Clean">
+			<MSBuild Targets="Clean" Projects="d14\SvnBuilder.dproj"/>
+		</Target>
+		<Target Name="SvnBuilder:Make">
+			<MSBuild Targets="Make" Projects="d14\SvnBuilder.dproj"/>
+		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="XdkTracker;XIso;TranslationChecker;PatternTrieBuilder;DxbxKrnl;Dxbx;XBEExplorer"/>
+			<CallTarget Targets="XdkTracker;XIso;TranslationChecker;PatternTrieBuilder;DxbxKrnl;Dxbx;XBEExplorer;SvnBuilder"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="XdkTracker:Clean;XIso:Clean;TranslationChecker:Clean;PatternTrieBuilder:Clean;DxbxKrnl:Clean;Dxbx:Clean;XBEExplorer:Clean"/>
+			<CallTarget Targets="XdkTracker:Clean;XIso:Clean;TranslationChecker:Clean;PatternTrieBuilder:Clean;DxbxKrnl:Clean;Dxbx:Clean;XBEExplorer:Clean;SvnBuilder:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="XdkTracker:Make;XIso:Make;TranslationChecker:Make;PatternTrieBuilder:Make;DxbxKrnl:Make;Dxbx:Make;XBEExplorer:Make"/>
+			<CallTarget Targets="XdkTracker:Make;XIso:Make;TranslationChecker:Make;PatternTrieBuilder:Make;DxbxKrnl:Make;Dxbx:Make;XBEExplorer:Make;SvnBuilder:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>
