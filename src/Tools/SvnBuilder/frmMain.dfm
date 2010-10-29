@@ -2,7 +2,7 @@ object Main: TMain
   Left = 0
   Top = 0
   Caption = 'SVNBuilder'
-  ClientHeight = 445
+  ClientHeight = 340
   ClientWidth = 372
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -16,39 +16,9 @@ object Main: TMain
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object btnDelphiCompiler: TSpeedButton
-    Left = 335
-    Top = 24
-    Width = 23
-    Height = 22
-    Caption = '...'
-    OnClick = btnDelphiCompilerClick
-  end
-  object btnSvnExecutable: TSpeedButton
-    Left = 335
-    Top = 66
-    Width = 23
-    Height = 22
-    Caption = '...'
-    OnClick = btnSvnExecutableClick
-  end
-  object lblDelphiCompiler: TLabel
-    Left = 16
-    Top = 8
-    Width = 73
-    Height = 13
-    Caption = 'Delphi Compiler'
-  end
-  object lblSvn: TLabel
-    Left = 16
-    Top = 51
-    Width = 74
-    Height = 13
-    Caption = 'Svn executable'
-  end
   object btnRefreshRivisions: TSpeedButton
     Left = 167
-    Top = 185
+    Top = 85
     Width = 32
     Height = 32
     Glyph.Data = {
@@ -129,91 +99,72 @@ object Main: TMain
   end
   object lblRevisions: TLabel
     Left = 16
-    Top = 173
+    Top = 73
     Width = 45
     Height = 13
     Caption = 'Revisions'
   end
   object Bevel1: TBevel
     Left = 16
-    Top = 154
+    Top = 54
     Width = 342
     Height = 10
     Shape = bsBottomLine
   end
   object lblRevLog: TLabel
     Left = 16
-    Top = 216
+    Top = 116
     Width = 57
     Height = 13
     Caption = 'RevisionLog'
   end
-  object Bevel2: TBevel
-    Left = 16
-    Top = 94
-    Width = 342
-    Height = 10
-    Shape = bsBottomLine
-  end
   object btnOutputPath: TSpeedButton
     Left = 335
-    Top = 126
+    Top = 26
     Width = 23
     Height = 22
     Caption = '...'
+    OnClick = btnOutputPathClick
   end
   object lblOutputPath: TLabel
     Left = 16
-    Top = 111
+    Top = 11
     Width = 59
     Height = 13
     Caption = 'Output path'
   end
-  object edtDelphiCompier: TEdit
+  object cmbRevisions: TComboBox
     Left = 16
-    Top = 24
-    Width = 313
+    Top = 89
+    Width = 145
     Height = 21
     TabOrder = 0
   end
-  object edtSvnExecutable: TEdit
-    Left = 16
-    Top = 67
-    Width = 313
-    Height = 21
-    TabOrder = 1
-  end
-  object cmbRevisions: TComboBox
-    Left = 16
-    Top = 189
-    Width = 145
-    Height = 21
-    TabOrder = 2
-  end
   object memRevLog: TMemo
     Left = 16
-    Top = 234
+    Top = 134
     Width = 342
     Height = 165
-    TabOrder = 3
+    TabOrder = 1
   end
   object btnGetAndCompile: TButton
     Left = 233
-    Top = 405
+    Top = 305
     Width = 125
     Height = 25
     Caption = 'Get and Compile'
-    TabOrder = 4
+    TabOrder = 2
+    OnClick = btnGetAndCompileClick
   end
   object edtOutputPath: TEdit
     Left = 16
-    Top = 127
+    Top = 27
     Width = 313
     Height = 21
-    TabOrder = 5
+    TabOrder = 3
   end
   object OpenDialog: TOpenDialog
     Left = 48
-    Top = 248
+    Top = 148
   end
 end

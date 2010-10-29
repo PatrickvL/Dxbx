@@ -1,0 +1,59 @@
+package svnide;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'Subversion client designtime'}
+{$LIBSUFFIX '100'}
+{$DESIGNONLY}
+{$IMPLICITBUILD ON}
+{$DEFINE DEBUG}
+
+requires
+  rtl,
+  svn,
+  svnui,
+  designide,
+  vcl,
+  xmlrtl,
+  vclactnband,
+  vclx,
+  VirtualTreesD10,
+  SynEdit_R2006;
+
+contains
+  SvnIDEClient in 'SvnIDEClient.pas',
+  SvnIDEHistory in 'SvnIDEHistory.pas',
+  SvnEditorViewFrame in 'SvnEditorViewFrame.pas',
+  SvnEditorView in 'SvnEditorView.pas',
+  SvnToolForm in 'SvnToolForm.pas',
+  SvnListView in 'SvnListView.pas',
+  SvnNotifyFrame in 'SvnNotifyFrame.pas',
+  SvnStatusListViewFrame in 'SvnStatusListViewFrame.pas',
+  SvnBaseFrame in 'SvnBaseFrame.pas',
+  SvnTreeView in 'SvnTreeView.pas',
+  SvnOptionsDialog in 'SvnOptionsDialog.pas',
+  SvnLogMessagePrompt in 'SvnLogMessagePrompt.pas',
+  SvnSimpleFrame in 'SvnSimpleFrame.pas',
+  SvnDiff3Frame in 'SvnDiff3Frame.pas';
+
+end.
