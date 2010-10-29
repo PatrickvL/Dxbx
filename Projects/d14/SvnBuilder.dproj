@@ -47,6 +47,9 @@
 			<DCCReference Include="..\..\src\Tools\SvnBuilder\frmMain.pas">
 				<Form>Main</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\Libraries\DelphiSvn\SvnClient.pas"/>
+			<DCCReference Include="..\..\Libraries\DelphiSvn\apr.pas"/>
+			<DCCReference Include="..\..\Libraries\DelphiSvn\svn_client.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

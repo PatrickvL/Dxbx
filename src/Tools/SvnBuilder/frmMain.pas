@@ -3,35 +3,34 @@ unit frmMain;
 interface
 
 uses
+  // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, StdCtrls, Buttons, IniFiles;
+  Dialogs, ExtCtrls, StdCtrls, Buttons, IniFiles, FileCtrl,
+  // Dxbx
+  SvnClient
+  ;
 
 type
   TMain = class(TForm)
-    edtDelphiCompier: TEdit;
-    edtSvnExecutable: TEdit;
-    btnDelphiCompiler: TSpeedButton;
-    btnSvnExecutable: TSpeedButton;
     cmbRevisions: TComboBox;
     memRevLog: TMemo;
     btnGetAndCompile: TButton;
-    lblDelphiCompiler: TLabel;
-    lblSvn: TLabel;
     btnRefreshRivisions: TSpeedButton;
     lblRevisions: TLabel;
     Bevel1: TBevel;
     lblRevLog: TLabel;
-    Bevel2: TBevel;
     edtOutputPath: TEdit;
     btnOutputPath: TSpeedButton;
     lblOutputPath: TLabel;
     OpenDialog: TOpenDialog;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure btnDelphiCompilerClick(Sender: TObject);
-    procedure btnSvnExecutableClick(Sender: TObject);
+    procedure btnOutputPathClick(Sender: TObject);
+    procedure btnGetAndCompileClick(Sender: TObject);
   private
     { Private declarations }
+    SvnClient: TSvnClient;
+
     FDelphiCompiler: string;
     FSvn: string;
     FOutputPath: string;
@@ -40,6 +39,8 @@ type
 
     procedure ReadSettings;
     procedure SaveSettings;
+
+    procedure GetSvnRevisionList;
 
   public
     { Public declarations }
@@ -57,31 +58,40 @@ const
 
 { TMain }
 
-procedure TMain.btnDelphiCompilerClick(Sender: TObject);
+procedure TMain.btnGetAndCompileClick(Sender: TObject);
 begin
-  if OpenDialog.Execute then
-  begin
-
-  end;
+  if DirectoryExists(FOutputPath) then
+    SvnClient.Checkout('http://dxbx.svn.sourceforge.net/svnroot/dxbx',
+                       FOutputPath);
+  else
+    MessageDlg('Output path not found!', mtWarning, [mbOk], 0);
 end;
 
-procedure TMain.btnSvnExecutableClick(Sender: TObject);
+procedure TMain.btnOutputPathClick(Sender: TObject);
+var
+  options : TSelectDirOpts;
+  chosenDirectory : string;
 begin
-  if OpenDialog.Execute then
-  begin
-
-  end;
+  SelectDirectory(FOutputPath, options, 0);
 end;
 
 procedure TMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   SaveSettings;
+  FreeAndNil(SvnClient);
 end;
 
 procedure TMain.FormCreate(Sender: TObject);
 begin
   FApplicationDir := ExtractFilePath(Application.ExeName);
+  SvnClient := TSvnClient.Create;
+
   ReadSettings;
+  GetSvnRevisionList;
+end;
+
+procedure TMain.GetSvnRevisionList;
+begin
 end;
 
 procedure TMain.ReadSettings;
@@ -90,8 +100,6 @@ var
 begin
   IniFile := TIniFile.Create(FApplicationDir + 'SVNBuilder.Ini');
   try
-    FDelphiCompiler := IniFile.ReadString(C_SETTINGS, 'DelphiCompiler', '');
-    FSvn := IniFile.ReadString(C_SETTINGS, 'SVN', '');
     FOutputPath := IniFile.ReadString(C_SETTINGS, 'OutputPath', '');
   finally
     FreeAndNil({var}IniFile);
@@ -104,8 +112,6 @@ var
 begin
   IniFile := TIniFile.Create(FApplicationDir + 'SVNBuilder.Ini');
   try
-    IniFile.WriteString(C_SETTINGS, 'DelphiCompiler', FDelphiCompiler);
-    IniFile.WriteString(C_SETTINGS, 'SVN', FSvn);
     IniFile.WriteString(C_SETTINGS, 'OutputPath', FOutputPath);
   finally
     FreeAndNil(IniFile);
