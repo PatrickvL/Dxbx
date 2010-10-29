@@ -221,7 +221,7 @@ var
   // cached palette size
   g_dwCurrentPaletteSize: DWORD = DWORD(-1);
 
-  g_VertexShaderConstantMode: X_VERTEXSHADERCONSTANTMODE = X_VSCM_192;
+  g_VertexShaderConstantMode: X_VERTEXSHADERCONSTANTMODE = X_D3DSCM_192CONSTANTS;
 
 // cached Direct3D tiles
 // g_EmuD3DTileCache (8 tiles maximum)
@@ -548,7 +548,7 @@ begin
   g_pCurrentPalette := nil;
   g_dwCurrentPaletteSize := DWORD(-1);
 
-  g_VertexShaderConstantMode := X_VSCM_192;
+  g_VertexShaderConstantMode := X_D3DSCM_192CONSTANTS;
 
   ZeroMemory(@g_EmuD3DTileCache, SizeOf(g_EmuD3DTileCache));
 
@@ -3754,7 +3754,7 @@ begin
     hRet := XTL_EmuRecompileVshFunction(PDWORD(pFunction),
                                         @pRecompiledBuffer,
                                         @VertexShaderSize,
-                                        (g_VertexShaderConstantMode and X_VSCM_NONERESERVED) > 0); // Dxbx fix
+                                        (g_VertexShaderConstantMode and X_D3DSCM_NORESERVEDCONSTANTS) > 0); // Dxbx fix
     if (SUCCEEDED(hRet)) then
     begin
       pRecompiledFunction := PDWORD(ID3DXBuffer(pRecompiledBuffer).GetBufferPointer());
@@ -4003,7 +4003,7 @@ begin
   begin
     if MayLog(lfUnit) then
         DbgPrintf('SetVertexShaderConstant, c%d (c%d) = { %f, %f, %f, %f }',
-               [Register_ + X_VSCM_CORRECTION{=96} + i, Register_ + i, // Dxbx fix
+               [Register_ + X_D3DSCM_CORRECTION{=96} + i, Register_ + i, // Dxbx fix
                Pfloats(pConstantData)[4 * i],
                Pfloats(pConstantData)[4 * i + 1],
                Pfloats(pConstantData)[4 * i + 2],
@@ -4018,13 +4018,16 @@ begin
   // incremented with 96 (even though the code for these samples supplies 0, maybe there's a
   // macro responsible for that?)
   if g_BuildVersion <= 4361 then
-    Inc(Register_, X_VSCM_CORRECTION{=96});
+    Inc(Register_, X_D3DSCM_CORRECTION{=96});
 
-  // Check we're not getting past the current upper bound :
-  hRet := iif((g_VertexShaderConstantMode and X_VSCM_192) > 0, 192, 96);
-  if (Register_ < 0) or (Register_ >= hRet) then
-    hRet := D3DERR_INVALIDCALL
-  else
+// TODO -oDxbx : This looks correct, but removes the mist from Turok menu's, so disable it for now :
+//  // Check we're not getting past the current upper bound :
+//  hRet := X_D3DVS_CONSTREG_COUNT;
+//  if (g_VertexShaderConstantMode and X_D3DSCM_192CONSTANTS) > 0 then
+//    Dec(hRet, X_D3DSCM_CORRECTION);
+//  if (Register_ < (hRet-X_D3DVS_CONSTREG_COUNT)) or (Register_ >= hRet) then
+//    hRet := D3DERR_INVALIDCALL
+//  else
   begin
 {$IFDEF DXBX_USE_D3D9}
     hRet := g_pD3DDevice.SetVertexShaderConstantF
@@ -8558,18 +8561,18 @@ begin
 
   // Store viewport offset and scale in constant registers 58 (c-38) and
   // 59 (c-37) used for screen space transformation.
-  if (g_VertexShaderConstantMode and X_VSCM_NONERESERVED) = 0 then // Dxbx fix
+  if (g_VertexShaderConstantMode and X_D3DSCM_NORESERVEDCONSTANTS) = 0 then // Dxbx fix
   begin
     // TODO -oCXBX: Proper solution.
 //    with vScale do begin x := 2.0 / 640; y := -2.0 / 480; z := 0.0; w := 0.0; end;
 //    with vOffset do begin x := -1.0; y := 1.0; z := 0.0; w := 1.0; end;
 
 {$IFDEF DXBX_USE_D3D9}
-    g_pD3DDevice.SetVertexShaderConstantF({58=}X_VSCM_RESERVED_CONSTANT1{=-38}+X_VSCM_CORRECTION{=96}, @vScale, 1);
-    g_pD3DDevice.SetVertexShaderConstantF({59=}X_VSCM_RESERVED_CONSTANT2{=-37}+X_VSCM_CORRECTION{=96}, @vOffset, 1);
+    g_pD3DDevice.SetVertexShaderConstantF({58=}X_D3DSCM_RESERVED_CONSTANT1{=-38}+X_D3DSCM_CORRECTION{=96}, @vScale, 1);
+    g_pD3DDevice.SetVertexShaderConstantF({59=}X_D3DSCM_RESERVED_CONSTANT2{=-37}+X_D3DSCM_CORRECTION{=96}, @vOffset, 1);
 {$ELSE}
-    g_pD3DDevice.SetVertexShaderConstant({58=}X_VSCM_RESERVED_CONSTANT1{=-38}+X_VSCM_CORRECTION{=96}, @vScale, 1);
-    g_pD3DDevice.SetVertexShaderConstant({59=}X_VSCM_RESERVED_CONSTANT2{=-37}+X_VSCM_CORRECTION{=96}, @vOffset, 1);
+    g_pD3DDevice.SetVertexShaderConstant({58=}X_D3DSCM_RESERVED_CONSTANT1{=-38}+X_D3DSCM_CORRECTION{=96}, @vScale, 1);
+    g_pD3DDevice.SetVertexShaderConstant({59=}X_D3DSCM_RESERVED_CONSTANT2{=-37}+X_D3DSCM_CORRECTION{=96}, @vOffset, 1);
 {$ENDIF}
   end;
 
@@ -9562,7 +9565,7 @@ begin
   // should indeed be done version-dependantly (like in SetVertexShaderConstant);
   // It seems logical that these two mirror eachother, but it could well be different:
   if g_BuildVersion <= 4361 then
-    Inc(Register_, X_VSCM_CORRECTION{=96});
+    Inc(Register_, X_D3DSCM_CORRECTION{=96});
 
 {$IFDEF DXBX_USE_D3D9}
   Result := g_pD3DDevice.GetVertexShaderConstantF

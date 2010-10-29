@@ -1430,7 +1430,7 @@ begin
            (not pIntermediate.Parameters[k].IndexesWithA0_X) then
         begin
           // TODO : Add correction?
-          if (pIntermediate.Parameters[k].Parameter.Address = X_VSCM_RESERVED_CONSTANT2{=-37}) then
+          if (pIntermediate.Parameters[k].Parameter.Address = X_D3DSCM_RESERVED_CONSTANT2{=-37}) then
           begin
             // Found c-37, remove the instruction
             if (k = 2) and
@@ -1463,7 +1463,7 @@ begin
             DbgVshPrintf('Deleted mad oPos.xyz, r12, r1.x, c-37'#13#10);
             break;
           end
-          else if (pIntermediate.Parameters[k].Parameter.Address = X_VSCM_RESERVED_CONSTANT1{=-38}) then
+          else if (pIntermediate.Parameters[k].Parameter.Address = X_D3DSCM_RESERVED_CONSTANT1{=-38}) then
           begin
             VshDeleteIntermediate(pShader, i);
             PosC38 := i;
@@ -1523,7 +1523,7 @@ begin
         MulIntermediate.Parameters[1].Parameter.ParameterType := PARAM_C;
         // Dxbx note : Cxbx calls ConvertCRegister(58) here, but doing a conversion seems incorrect.
         // That, and the constant address is also corrected afterwards, so use the original :
-        MulIntermediate.Parameters[1].Parameter.Address       := X_VSCM_RESERVED_CONSTANT1{=-38};
+        MulIntermediate.Parameters[1].Parameter.Address       := X_D3DSCM_RESERVED_CONSTANT1{=-38};
         MulIntermediate.Parameters[1].Parameter.Neg           := FALSE;
         VshSetSwizzle(@MulIntermediate.Parameters[1], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
         // Disable third parameter :
@@ -1540,7 +1540,7 @@ begin
         AddIntermediate.Parameters[0].Parameter.Address       := 10;
         // Dxbx note : Cxbx calls ConvertCRegister(59) here, but doing a conversion seems incorrect.
         // That, and the constant address is also corrected afterwards, so use the original :
-        AddIntermediate.Parameters[1].Parameter.Address       := X_VSCM_RESERVED_CONSTANT2{=-37};
+        AddIntermediate.Parameters[1].Parameter.Address       := X_D3DSCM_RESERVED_CONSTANT2{=-37};
         // Insert this instruction :
         Inc(i); VshInsertIntermediate(pShader, @AddIntermediate, i);
       end;
@@ -1614,7 +1614,7 @@ begin
     if (pIntermediate.Output.Type_ = IMD_OUTPUT_C) then
     begin
       if g_BuildVersion > 4361 then
-        Inc(pIntermediate.Output.Address, X_VSCM_CORRECTION{=96});
+        Inc(pIntermediate.Output.Address, X_D3DSCM_CORRECTION{=96});
     end;
 
     for j := 0 to 3-1 do
@@ -1630,7 +1630,7 @@ begin
         // Dxbx fix : PARAM_C correction shouldn't depend on Active!
         // Make constant registers range from 0 to 191 instead of -96 to 95
         if g_BuildVersion > 4361 then
-          Inc(pIntermediate.Parameters[j].Parameter.Address, X_VSCM_CORRECTION{=96});
+          Inc(pIntermediate.Parameters[j].Parameter.Address, X_D3DSCM_CORRECTION{=96});
       end else
       if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_V) then
       begin
@@ -1779,7 +1779,7 @@ begin
           end
 // Dxbx fix : C-38 is readily available to us!
 //          else if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_C) and
-//                  (pIntermediate.Parameters[k].Parameter.Address = ({58=}X_VSCM_RESERVED_CONSTANT1{=-38}+X_VSCM_CORRECTION{=96})) and
+//                  (pIntermediate.Parameters[k].Parameter.Address = ({58=}X_D3DSCM_RESERVED_CONSTANT1{=-38}+X_D3DSCM_CORRECTION{=96})) and
 //                  (not pIntermediate.Parameters[k].IndexesWithA0_X) then
 //          begin
 //            // Found c-38, replace it with r12.w
