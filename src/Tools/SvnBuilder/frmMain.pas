@@ -27,6 +27,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnOutputPathClick(Sender: TObject);
     procedure btnGetAndCompileClick(Sender: TObject);
+    procedure btnRefreshRivisionsClick(Sender: TObject);
   private
     { Private declarations }
     SvnClient: TSvnClient;
@@ -36,6 +37,9 @@ type
     FOutputPath: string;
 
     FApplicationDir: string;
+
+    function GetRevisionNm: Integer;
+    function isValidRevision(RevisionNm: Integer): Boolean;
 
     procedure ReadSettings;
     procedure SaveSettings;
@@ -55,14 +59,24 @@ implementation
 
 const
   C_SETTINGS = 'Settings';
+  C_DXBXPATH = 'http://dxbx.svn.sourceforge.net/svnroot/dxbx';
 
 { TMain }
 
 procedure TMain.btnGetAndCompileClick(Sender: TObject);
 begin
   if DirectoryExists(FOutputPath) then
-    SvnClient.Checkout('http://dxbx.svn.sourceforge.net/svnroot/dxbx',
-                       FOutputPath);
+  begin
+    if isValidRevision(GetRevisionNm) then
+      SvnClient.Checkout(C_DXBXPATH,
+                         FOutputPath,
+                         nil,
+                         True,
+                         False,
+                         GetRevisionNm)
+    else
+      MessageDlg('No valid revision inserted!', mtWarning, [mbOk], 0);
+  end
   else
     MessageDlg('Output path not found!', mtWarning, [mbOk], 0);
 end;
@@ -73,6 +87,11 @@ var
   chosenDirectory : string;
 begin
   SelectDirectory(FOutputPath, options, 0);
+end;
+
+procedure TMain.btnRefreshRivisionsClick(Sender: TObject);
+begin
+  GetSvnRevisionList;
 end;
 
 procedure TMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -90,8 +109,34 @@ begin
   GetSvnRevisionList;
 end;
 
-procedure TMain.GetSvnRevisionList;
+function TMain.GetRevisionNm: Integer;
 begin
+  StrToInt(cmbRevisions.Text);
+end;
+
+procedure TMain.GetSvnRevisionList;
+var
+  RevisionNm: Integer;
+  i: integer;
+begin
+  cmbRevisions.Clear;
+
+  if SvnClient.IsPathVersioned(C_DXBXPATH) then
+  begin
+    RevisionNm := SvnClient.GetPathRevision(C_DXBXPATH).Value.number;
+
+    // Todo, make this a configuration option, how much history
+    for i := RevisionNm downto RevisionNm - 100 do
+    begin
+      cmbRevisions.AddItem(IntToStr(RevisionNm), nil);
+    end;
+  end;
+end;
+
+function TMain.isValidRevision(RevisionNm: Integer): Boolean;
+begin
+  // Todo: create real revision nm check
+  Result := True;
 end;
 
 procedure TMain.ReadSettings;

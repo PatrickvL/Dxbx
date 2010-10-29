@@ -427,6 +427,7 @@ type
       Delimiter: Char = DefaultPropValDelimiter);
     procedure Initialize(const AConfigDir: string = ''; Auth: PSvnAuthBaton = nil);
     function IsPathVersioned(const PathName: string): Boolean;
+    function GetPathRevision(const PathName: string): TSvnOptRevision;
     procedure List(const PathName: string; Depth: TSvnDepth; FetchLocks: Boolean; DirEntryFields: DWORD = SVN_DIRENT_ALL;
       Callback: TSvnListCallback = nil; Revision: TSvnRevNum = -1; PegRevision: TSvnRevNum = -1; SubPool: PAprPool = nil); overload;
     procedure List(const PathName: string; Depth: TSvnDepth; FetchLocks: Boolean; ListStrings: TStrings;
@@ -3269,6 +3270,39 @@ begin
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
+
+function TSvnClient.GetPathRevision(const PathName: string): TSvnOptRevision;
+var
+  SubPool: PAprPool;
+  TruePath: PAnsiChar;
+  Revision, PegRevision: TSvnOptRevision;
+  SvnError: PSvnError;
+
+begin
+  if (PathName = '') or (GetFileAttributes(PChar(PathName)) = Cardinal(-1)) then // path does not exist
+    Exit;
+
+  if not Initialized then
+    Initialize;
+
+  AprCheck(apr_pool_create_ex(SubPool, FPool, nil, FAllocator));
+  try
+    FillChar(PegRevision, SizeOf(TSvnOptRevision), 0);
+    PegRevision.Kind := svnOptRevisionUnspecified;
+    FillChar(Revision, SizeOf(TSvnOptRevision), 0);
+    Revision.Kind := svnOptRevisionUnspecified;
+    AprCheck(apr_filepath_merge(TruePath, '', PAnsiChar(AnsiString(PathName)), APR_FILEPATH_TRUENAME, SubPool));
+    FCancelled := False;
+    SvnError := svn_client_info(TruePath, @PegRevision, @Revision, DummyInfoReceiver, nil, False, Ctx, SubPool);
+
+    if not Assigned(SvnError) then
+      Result := Revision
+
+  finally
+    apr_pool_destroy(SubPool);
+  end;
+
+end;
 
 procedure TSvnClient.GetProps(Props: PAprArrayHeader; Strings: TStrings; SubPool: PAprPool = nil;
   Delimiter: Char = DefaultPropValDelimiter);

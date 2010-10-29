@@ -1,7 +1,7 @@
 object Main: TMain
   Left = 0
   Top = 0
-  Caption = 'SVNBuilder'
+  Caption = 'Dxbx - SVNBuilder'
   ClientHeight = 340
   ClientWidth = 372
   Color = clBtnFace
@@ -96,6 +96,7 @@ object Main: TMain
       000000000000000000000000000000000000000000000000002E000000830005
       04C101251BEA003C2EFD003C2FFD01251BEA000604C2000000840000002F0000
       0000000000000000000000000000000000000000000000000000}
+    OnClick = btnRefreshRivisionsClick
   end
   object lblRevisions: TLabel
     Left = 16
@@ -145,6 +146,7 @@ object Main: TMain
     Top = 134
     Width = 342
     Height = 165
+    ScrollBars = ssBoth
     TabOrder = 1
   end
   object btnGetAndCompile: TButton
