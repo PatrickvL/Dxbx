@@ -861,7 +861,7 @@ begin
     PS_REGISTER_EF_PROD: Result := PSRegToStr(aScope, aScope.EFReg); // Uses a temporary register
   else
 //    Assert((PS_REGISTER_C0 <= aReg) and (aReg <= PS_REGISTER_EF_PROD));
-    Result := '0';
+    Result := 'c7'; // TODO : FocusBlur sample needs a zero in 'cnd' opcode
   end;
 end;
 
