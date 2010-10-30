@@ -1121,7 +1121,7 @@ var
 begin
   VshVerifyBufferBounds(pShader);
 
-  for i := pShader.IntermediateCount downto pos do
+  for i := pShader.IntermediateCount downto Pos do
   begin
     pShader.Intermediate[i + 1] := pShader.Intermediate[i];
   end;
@@ -1845,7 +1845,7 @@ begin
   Result := 0;
   while PDWords(pDeclaration)[Result] <> DEF_VSH_END do
     Inc(Result);
-  Inc(Result);
+  Inc(Result); // Dxbx note : Multiply-by-size is done by the (only) caller
 end;
 
 {$IFDEF DXBX_USE_D3D9}
