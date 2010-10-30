@@ -4730,8 +4730,7 @@ begin
 
   // update data ptr
   pData := NULL;
-  hRet := IDirect3DIndexBuffer(ppIndexBuffer^.Emu.IndexBuffer).Lock(0, Length, {out}TLockData(pData), 0);
-  if (FAILED(hRet)) then
+  if (FAILED(IDirect3DIndexBuffer(ppIndexBuffer^.Emu.IndexBuffer).Lock(0, Length, {out}TLockData(pData), 0))) then
     DxbxKrnlCleanup('EmuIDirect3DResource_Register: IndexBuffer Lock Failed!');
 
   ppIndexBuffer^.Data := DWORD(pData);
@@ -6106,7 +6105,7 @@ begin
     begin
       pFixup := PX_D3DFixup(pResource);
 
-      DxbxKrnlCleanup('IDirect3DResource::Register -> X_D3DCOMMON_TYPE_FIXUP is not yet supported' +
+      DxbxKrnlCleanup('EmuIDirect3DResource_Register: X_D3DCOMMON_TYPE_FIXUP is not yet supported' +
                 #13#10'0x%.08X (pFixup->Common)' +
                 #13#10'0x%.08X (pFixup->Data)' +
                 #13#10'0x%.08X (pFixup->Lock)' +
@@ -8510,7 +8509,7 @@ begin
   if (StreamNumber = 0) then
     g_pVertexBuffer := pStreamData;
 
-//  pPCVertexBuffer := NULL;
+  pPCVertexBuffer := NULL;
 
   if (pStreamData <> NULL) then
   begin
@@ -8524,10 +8523,9 @@ begin
 {$ifdef _DEBUG_TRACK_VB}
     g_bVBSkipStream := g_VBTrackDisable.exists(pPCVertexBuffer);
 {$endif}
-
-    Result := g_pD3DDevice.SetStreamSource(StreamNumber, IDirect3DVertexBuffer(pPCVertexBuffer), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0, {$ENDIF} Stride);
   end;
 
+  Result := g_pD3DDevice.SetStreamSource(StreamNumber, IDirect3DVertexBuffer(pPCVertexBuffer), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0, {$ENDIF} Stride);
   if FAILED(RESULT) then
     DxbxKrnlCleanup('SetStreamSource Failed!');
 
@@ -8764,7 +8762,7 @@ begin
       _(pIndexData, 'pIndexData').
     LogEnd();
 // Test only the smallest of 3 X_D3DPT_TRIANGLESTRIP calls done by MatrixPaletteSkinning :
-if (PrimitiveType <> X_D3DPT_TRIANGLESTRIP) or (VertexCount < 300) then
+//if (PrimitiveType <> X_D3DPT_TRIANGLESTRIP) or (VertexCount < 300) then
 begin
   // update index buffer, if necessary
   if (g_pIndexBuffer <> nil) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
