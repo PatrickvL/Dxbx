@@ -135,7 +135,7 @@ var
   pPixelContainer: PX_D3DPixelContainer;
   XBFormat: DWord;
   dwBPP: DWord;
-  pTexture: XTL_PIDirect3DTexture8;
+  pPCTexture: XTL_PIDirect3DTexture8;
   dwLevelCount: DWord;
   v: uint32;
   SurfaceDesc: D3DSURFACE_DESC;
@@ -178,18 +178,18 @@ begin
     //
 
     begin
-      pTexture := pPixelContainer.Emu.Texture;
+      pPCTexture := pPixelContainer.Emu.Texture;
 
-      dwLevelCount := IDirect3DTexture(pTexture).GetLevelCount();
+      dwLevelCount := IDirect3DTexture(pPCTexture).GetLevelCount();
 
       if dwLevelCount > 0 then // Dxbx addition, to prevent underflow
       for v := 0 to dwLevelCount - 1 do
       begin
 // Dxbx note : The code in this block makes Cubemap crash (this somehow overwrites the callers stack)
         // Dxbx addition : Remove lock for each level separately :
-        IDirect3DTexture(pTexture).UnlockRect(v);
+        IDirect3DTexture(pPCTexture).UnlockRect(v);
 
-        hRet := IDirect3DTexture(pTexture).GetLevelDesc(v, {out}SurfaceDesc);
+        hRet := IDirect3DTexture(pPCTexture).GetLevelDesc(v, {out}SurfaceDesc);
 
         if (FAILED(hRet)) then
           continue;
@@ -204,7 +204,7 @@ begin
           //  break;
           //DxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', [SurfaceDesc.Format]);
 
-          hRet := IDirect3DTexture(pTexture).LockRect(v, {out}LockedRect, NULL, 0);
+          hRet := IDirect3DTexture(pPCTexture).LockRect(v, {out}LockedRect, NULL, 0);
 
           if (FAILED(hRet)) then
             continue;
@@ -226,7 +226,7 @@ begin
 
           memcpy({dest=}LockedRect.pBits, {src=}pTemp, dwPitch * dwHeight);
 
-          IDirect3DTexture(pTexture).UnlockRect(v); // Dxbx fix : Cxbx unlocks level 0 each time!
+          IDirect3DTexture(pPCTexture).UnlockRect(v); // Dxbx fix : Cxbx unlocks level 0 each time!
 
           DxbxFree(pTemp);
         end;

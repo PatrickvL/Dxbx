@@ -907,7 +907,7 @@ var
   Stage: int;
   XboxValue: DWORD;
   PCValue: DWORD;
-  pTexture: XTL_PIDirect3DBaseTexture8;
+  pPCTexture: XTL_PIDirect3DBaseTexture8;
 begin
   // Generic transfer of all Xbox deferred render states to PC :
   for State := X_D3DRS_DEFERRED_FIRST to X_D3DRS_DEFERRED_LAST do
@@ -960,9 +960,9 @@ begin
     if (XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSPRITEENABLE]^ = DWord(BOOL_TRUE)) then // Dxbx note : DWord cast to prevent warning
     begin
       // set the point sprites texture
-      g_pD3DDevice.GetTexture(3, PIDirect3DBaseTexture(@pTexture));
-      g_pD3DDevice.SetTexture(0, IDirect3DBaseTexture(pTexture));
-      // TODO -oDXBX: Should we clear the pTexture interface (and how)?
+      g_pD3DDevice.GetTexture(3, PIDirect3DBaseTexture(@pPCTexture));
+      g_pD3DDevice.SetTexture(0, IDirect3DBaseTexture(pPCTexture));
+      // TODO -oDXBX: Should we clear the pPCTexture interface (and how)?
 
       // disable all other stages
       IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 1, X_D3DTSS_COLOROP, D3DTOP_DISABLE);

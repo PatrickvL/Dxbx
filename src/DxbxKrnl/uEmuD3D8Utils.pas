@@ -24,6 +24,7 @@ interface
 uses
   // Delphi
   Windows,
+  SysUtils, // Format
   // DirectX
   Direct3D, // PD3DCOLOR
 {$IFDEF DXBX_USE_D3D9}
@@ -82,6 +83,8 @@ function F2DW(const aValue: Float): DWORD; inline;
 function GetSurfaceSize(const aSurface: PD3DSurfaceDesc): LongWord;
 function GetVolumeSize(const aVolume: PD3DVolumeDesc): LongWord;
 function X_D3DPRIMITIVETYPE2String(const aValue: X_D3DPRIMITIVETYPE): string;
+function CommonToStr(const Common: DWORD): string;
+function ResourceToString(const aValue: PX_D3DResource): string;
 
 implementation
 
@@ -361,6 +364,50 @@ begin
     X_D3DPT_MAX: Result := 'X_D3DPT_MAX';
     X_D3DPT_INVALID: Result := 'X_D3DPT_INVALID';
   else Result := '';
+  end;
+end;
+
+function CommonToStr(const Common: DWORD): string;
+var
+  Value: DWORD;
+begin
+  Result := Format('RefCount=%d', [Common and X_D3DCOMMON_REFCOUNT_MASK]);
+  Value := (Common and X_D3DCOMMON_TYPE_MASK);
+  case Value of
+    X_D3DCOMMON_TYPE_VERTEXBUFFER: Result := Result + ', VERTEXBUFFER';
+    X_D3DCOMMON_TYPE_INDEXBUFFER : Result := Result + ', INDEXBUFFER';
+    X_D3DCOMMON_TYPE_PUSHBUFFER  : Result := Result + ', PUSHBUFFER';
+    X_D3DCOMMON_TYPE_PALETTE     : Result := Result + ', PALETTE';
+    X_D3DCOMMON_TYPE_TEXTURE     : Result := Result + ', TEXTURE';
+    X_D3DCOMMON_TYPE_SURFACE     : Result := Result + ', SURFACE';
+    X_D3DCOMMON_TYPE_FIXUP       : Result := Result + ', FIXUP';
+  end;
+  Value := (Common and X_D3DCOMMON_INTREFCOUNT_MASK) shr X_D3DCOMMON_INTREFCOUNT_SHIFT;
+  if (Common and X_D3DCOMMON_D3DCREATED) > 0 then Result := Result + ', X_D3DCOMMON_D3DCREATED';
+  if (Common and X_D3DCOMMON_ISLOCKED) = X_D3DCOMMON_ISLOCKED then Result := Result + ', X_D3DCOMMON_ISLOCKED';
+end;
+
+function ResourceToString(const aValue: PX_D3DResource): string;
+var
+  Flag: DWORD;
+begin
+  Result := Format('0x%.08x', [UIntPtr(aValue)]);
+  if Assigned(aValue) then
+  begin
+    Result := Result + Format(' (Common=0x%.08x Data=0x%.08x Emu=0x%.08x : ', [
+              aValue.Common, aValue.Data, aValue.Emu.Lock]);
+    Result := Result + CommonToStr(aValue.Common);
+    if IsSpecialResource(aValue.Data) then
+    begin
+      Flag := aValue.Data and (not X_D3DRESOURCE_DATA_FLAG_SPECIAL);
+      if (Flag and X_D3DRESOURCE_DATA_FLAG_SURFACE) > 0 then Result := Result + ', Surface';
+      if (Flag and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0 then Result := Result + ', YUV memory surface';
+      if (Flag and X_D3DRESOURCE_DATA_FLAG_D3DREND) > 0 then Result := Result + ', D3D Render Target';
+      if (Flag and X_D3DRESOURCE_DATA_FLAG_D3DSTEN) > 0 then Result := Result + ', D3D Stencil Surface';
+      if (Flag and X_D3DRESOURCE_DATA_FLAG_TEXCLON) > 0 then Result := Result + ', Cloned resource';
+    end;
+
+    Result := Result + ')';
   end;
 end;
 

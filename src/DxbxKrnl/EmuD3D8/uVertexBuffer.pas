@@ -587,6 +587,7 @@ begin
       begin
         m_pStreams[uiStream].pOriginalStream := pOrigVertexBuffer;
         m_pStreams[uiStream].uiOrigStride := uiStride;
+        //??DxbxUnlockD3DResource(pCachedStream_);
         g_pD3DDevice.SetStreamSource(uiStream, IDirect3DVertexBuffer(pCachedStream_.Stream.pPatchedStream), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0, {$ENDIF} pCachedStream_.Stream.uiNewStride);
         IDirect3DVertexBuffer(pCachedStream_.Stream.pPatchedStream)._AddRef();
         IDirect3DVertexBuffer(pCachedStream_.Stream.pOriginalStream)._AddRef();
