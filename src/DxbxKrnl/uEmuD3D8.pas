@@ -577,7 +577,8 @@ begin
   if not Result then
     Exit;
 
-  if IsSpecialResource(pResource.Data) then
+  if IsSpecialResource(pResource.Data)
+  or (pResource.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then // Dxbx addition
     Exit;
 
   case (IDirect3DResource(pResource.Emu.Resource).GetType()) of
@@ -1651,7 +1652,7 @@ begin
 
           g_pD3DDevice.EndScene();
 
-          while (g_pD3DDevice._Release() <> 0) do ;
+          while (g_pD3DDevice._Release() > 0) do ;
 
           Pointer(g_pD3DDevice) := nil; // Cast to prevent automatic refcounting from clearing the object (we did that above)
           g_pDummyBuffer := nil;
@@ -1957,8 +1958,8 @@ begin
           // cleanup directdraw surface
           if (g_pDDSPrimary7 <> nil) then
           begin
-            IDirectDrawSurface7(g_pDDSPrimary7)._Release();
-            g_pDDSPrimary7 := nil;
+            if IDirectDrawSurface7(g_pDDSPrimary7)._Release() = 0 then
+              g_pDDSPrimary7 := nil;
           end;
         end;
 
@@ -3937,7 +3938,7 @@ end;
 
 function XTL_EmuD3DDevice_SetPixelShaderConstant
 (
-  Register_: X_D3DVSDE;
+  Register_: DWORD;
   {CONST} pConstantData: PVOID;
   ConstantCount: DWORD
 ): HRESULT; stdcall;
@@ -4070,7 +4071,7 @@ end;
 procedure XTL_EmuD3DDevice_SetVertexShaderConstant1(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}const pConstantData: PVOID;
-  {1 ECX}Register_: DWORD
+  {1 ECX}Register_: X_D3DVSDE
   ); register; // VALIDATED fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -4078,7 +4079,7 @@ begin
   begin
     EmuSwapFS(fsWindows);
 
-    LogBegin('EmuD3DDevice_SetVertexShaderConstant1').
+    LogBegin('EmuD3DDevice_SetVertexShaderConstant1 >>').
       _(Register_, 'Register').
       _(pConstantData, 'pConstantData').
     LogEnd();
@@ -4093,7 +4094,7 @@ end;
 procedure XTL_EmuD3DDevice_SetVertexShaderConstant4(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}const pConstantData: PVOID;
-  {1 ECX}Register_: DWORD
+  {1 ECX}Register_: X_D3DVSDE//DWORD
   ); register; // VALIDATED fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -4101,7 +4102,7 @@ begin
   begin
     EmuSwapFS(fsWindows);
 
-    LogBegin('EmuD3DDevice_SetVertexShaderConstant4').
+    LogBegin('EmuD3DDevice_SetVertexShaderConstant4 >>').
       _(Register_, 'Register').
       _(pConstantData, 'pConstantData').
     LogEnd();
@@ -4125,7 +4126,7 @@ begin
   begin
     EmuSwapFS(fsWindows);
 
-    LogBegin('EmuD3DDevice_SetVertexShaderConstantNotInline').
+    LogBegin('EmuD3DDevice_SetVertexShaderConstantNotInline >>').
       _(Register_, 'Register').
       _(pConstantData, 'pConstantData').
       _(ConstantCount, 'ConstantCount').
@@ -4347,7 +4348,7 @@ begin
   // Fixed Pipeline, or Recompiled Programmable Pipeline
   else
   begin
-    g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}nil{$ELSE}Handle{$ENDIF});
+    Result := g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}nil{$ELSE}Handle{$ENDIF});
   end;
 
   if FAILED(Result) then
@@ -4767,7 +4768,8 @@ begin
       {Usage=}0,
       X_D3DFMT_INDEX16,
       D3DPOOL_MANAGED,
-      @Result);
+      @Result
+  );
 end;
 
 
@@ -7036,15 +7038,15 @@ begin
     // cleanup overlay clipper
     if (g_pDDClipper7 <> nil) then
     begin
-      IDirectDrawClipper(g_pDDClipper7)._Release();
-      g_pDDClipper7 := nil;
+      if IDirectDrawClipper(g_pDDClipper7)._Release() = 0 then
+        g_pDDClipper7 := nil;
     end;
 
     // cleanup overlay surface
     if Assigned(g_pDDSOverlay7) then
     begin
-      IDirectDrawSurface7(g_pDDSOverlay7)._Release();
-      g_pDDSOverlay7 := nil;
+      if IDirectDrawSurface7(g_pDDSOverlay7)._Release() = 0 then
+        g_pDDSOverlay7 := nil;
     end;
   end
   else
@@ -8825,7 +8827,7 @@ begin
   FatalError := false;
 
   {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, @FatalError);
-//  VertexCount := VPDesc.dwVertexCount; // TODO -oDxbx : Shouldn't we use the new VertexCount?!?
+  VertexCount := VPDesc.dwVertexCount; // TODO -oDxbx : Should we indeed use the new VertexCount?!?
 
   {$ifdef _DEBUG_TRACK_VB}
   if not g_bVBSkipStream then
@@ -8878,7 +8880,7 @@ begin
     begin
       // Dxbx note : Cxbx does this in reverse, but this is more efficient :
       uiStartIndex := DWORD(pIndexData) div SizeOf(Word);
-      uiNumVertices := uiStartIndex + VertexCount; // TODO -oDxbx : Is adding uiStartIndex actually correct???
+      uiNumVertices := {uiStartIndex + }VertexCount; // TODO -oDxbx : Is adding uiStartIndex indeed incorrect???
     end;
 
     if (IsValidCurrentShader()) and not FatalError then
