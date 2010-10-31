@@ -612,7 +612,7 @@ begin
 
   if (nil=pPatchDesc.pVertexStreamZeroData) then
   begin
-    IDirect3DVertexBuffer(pOrigVertexBuffer)._Release();
+    IDirect3DVertexBuffer(pOrigVertexBuffer)._Release(); // Because we used GetStreamSource
     pOrigVertexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
   end;
 
@@ -961,8 +961,8 @@ begin
     if Assigned(pStream.pPatchedStream) then
     begin
       // The stream was already primitive patched, release the previous vertex buffer to avoid memory leaks
-      IDirect3DVertexBuffer(pStream.pPatchedStream)._Release();
-      pStream.pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
+      if IDirect3DVertexBuffer(pStream.pPatchedStream)._Release() = 0 then
+        pStream.pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
     pStream.pPatchedStream := pNewVertexBuffer;
   end
@@ -1097,43 +1097,37 @@ begin
   begin
     pUVData := Puint08(pData + (uiVertex * uiStride) + uiOffset);
 
-//    if (dwTexN >= 1) then
+    if (dwTexN >= 1) then
     begin
       if (bTexIsLinear[0]) then
       begin
         PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[0].Size and X_D3DSIZE_WIDTH_MASK) + 1);
         PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[0].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
       end;
-//    end;
 
-    if (dwTexN >= 2) then
-    begin
-      Inc(PByte(pUVData), sizeof(FLOAT) * 2);
-      if (bTexIsLinear[1]) then
+      if (dwTexN >= 2) then
       begin
-        PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[1].Size and X_D3DSIZE_WIDTH_MASK) + 1);
-        PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[1].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
-      end;
-//    end;
+        if (bTexIsLinear[1]) then
+        begin
+          PFLOATs(pUVData)[2] := PFLOATs(pUVData)[2] / (( pLinearPixelContainer[1].Size and X_D3DSIZE_WIDTH_MASK) + 1);
+          PFLOATs(pUVData)[3] := PFLOATs(pUVData)[3] / (((pLinearPixelContainer[1].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
+        end;
 
-    if (dwTexN >= 3) then
-    begin
-      Inc(PByte(pUVData), sizeof(FLOAT) * 2);
-      if (bTexIsLinear[2]) then
-      begin
-        PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[2].Size and X_D3DSIZE_WIDTH_MASK) + 1);
-        PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[2].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
-      end;
-//    end;
+        if (dwTexN >= 3) then
+        begin
+          if (bTexIsLinear[2]) then
+          begin
+            PFLOATs(pUVData)[4] := PFLOATs(pUVData)[4] / (( pLinearPixelContainer[2].Size and X_D3DSIZE_WIDTH_MASK) + 1);
+            PFLOATs(pUVData)[5] := PFLOATs(pUVData)[5] / (((pLinearPixelContainer[2].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
+          end;
 
-    if((dwTexN >= 4) and bTexIsLinear[3]) then
-    begin
-      Inc(PByte(pUVData), sizeof(FLOAT) * 2);
-      PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[3].Size and X_D3DSIZE_WIDTH_MASK) + 1);
-      PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[3].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
-    end;
-    end;
-    end;
+          if((dwTexN >= 4) and bTexIsLinear[3]) then
+          begin
+            PFLOATs(pUVData)[6] := PFLOATs(pUVData)[6] / (( pLinearPixelContainer[3].Size and X_D3DSIZE_WIDTH_MASK) + 1);
+            PFLOATs(pUVData)[7] := PFLOATs(pUVData)[7] / (((pLinearPixelContainer[3].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
+          end;
+        end;
+      end;
     end;
   end;
 
@@ -1147,8 +1141,7 @@ begin
     end;
     if Assigned(pStream.pPatchedStream) then
     begin
-      if IDirect3DVertexBuffer(pStream.pPatchedStream)._Release() = 0 then
-        pStream.pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
+      IDirect3DVertexBuffer(pStream.pPatchedStream)._Release();
     end;
 
     pStream.pPatchedStream := pNewVertexBuffer;
@@ -1493,14 +1486,14 @@ begin
 
     if (m_pStreams[uiStream].pOriginalStream <> NULL) then
     begin
-      IDirect3DVertexBuffer(m_pStreams[uiStream].pOriginalStream)._Release();
-      m_pStreams[uiStream].pOriginalStream := nil; // Dxbx addition - nil out after decreasing reference count
+      if IDirect3DVertexBuffer(m_pStreams[uiStream].pOriginalStream)._Release() = 0 then
+        m_pStreams[uiStream].pOriginalStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
 
     if (m_pStreams[uiStream].pPatchedStream <> NULL) then
     begin
-      IDirect3DVertexBuffer(m_pStreams[uiStream].pPatchedStream)._Release();
-      m_pStreams[uiStream].pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
+      if IDirect3DVertexBuffer(m_pStreams[uiStream].pPatchedStream)._Release() = 0 then
+        m_pStreams[uiStream].pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
 
     if (not m_pStreams[uiStream].bUsedCached) then
