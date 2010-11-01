@@ -1,11 +1,6 @@
 program SvnBuilder;
 
 uses
-  madExcept,
-  madLinkDisAsm,
-  madListHardware,
-  madListProcesses,
-  madListModules,
   Forms,
   frmMain in '..\..\src\Tools\SvnBuilder\frmMain.pas' {Main},
   SvnClient in '..\..\Libraries\DelphiSvn\SvnClient.pas',

@@ -31,9 +31,6 @@ type
   private
     { Private declarations }
     SvnClient: TSvnClient;
-
-    FDelphiCompiler: string;
-    FSvn: string;
     FOutputPath: string;
 
     FApplicationDir: string;
@@ -84,7 +81,6 @@ end;
 procedure TMain.btnOutputPathClick(Sender: TObject);
 var
   options : TSelectDirOpts;
-  chosenDirectory : string;
 begin
   SelectDirectory(FOutputPath, options, 0);
 end;
@@ -111,7 +107,7 @@ end;
 
 function TMain.GetRevisionNm: Integer;
 begin
-  StrToInt(cmbRevisions.Text);
+  Result := StrToInt(cmbRevisions.Text);
 end;
 
 procedure TMain.GetSvnRevisionList;
