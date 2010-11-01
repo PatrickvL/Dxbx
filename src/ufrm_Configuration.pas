@@ -289,6 +289,7 @@ begin
   edt_VideoResolution.ItemIndex := VideoResolutionIndex;
   edt_AudioAdapter.ItemIndex := FXBSound.GetSoundAdapter;
 
+  chkMute.Checked := FXBSound.GetMute;
   chk_FullScreen.Checked :=  FXBVideo.GetFullscreen;
   chk_VSync.Checked := FXBVideo.GetVSync;
   chk_HardwareYUV.Checked := FXBVideo.GetHardwareYUV;
