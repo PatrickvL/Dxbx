@@ -380,7 +380,6 @@ var
     SearchRec: TSearchRec;
   begin
     SymbolList.Clear;
-    CRC32Init();
     CacheFileName := SymbolCacheFolder
             // TitleID
             + IntToHex(MyXBE.m_Certificate.dwTitleId, 8)
