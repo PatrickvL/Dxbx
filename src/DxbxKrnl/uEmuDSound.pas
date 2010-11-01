@@ -655,13 +655,6 @@ begin
       IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
     end;
 
-(*
-    if g_XBSound.GetMute then
-      IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).SetVolume(DSBVOLUME_MIN)
-    else
-      IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).SetVolume(g_SoundVolume);
-*)
-
     IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).SetCurrentPosition(0);
     IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).Play(0, 0, 0);
   end;
@@ -1134,12 +1127,6 @@ begin
 
   // TODO -oCXBX: Garbage Collection
   ppBuffer^ := TIDirectSoundBuffer.Create;
-
-  if g_XBSound.GetMute then
-    ppBuffer^.SetVolume(DSBVOLUME_MIN)
-  else
-    ppBuffer^.SetVolume(g_SoundVolume);
-
   ppBuffer^.EmuDirectSoundBuffer8 := nil;
   ppBuffer^.EmuBuffer := nil;
   ppBuffer^.EmuBufferDesc := iif(bIsSpecial, pDSBufferDescSpecial, pDSBufferDesc);
@@ -1236,12 +1223,6 @@ begin
     LogEnd();
 
   // TODO -oCXBX: Garbage Collection
-  ppStream^ := TIDirectSoundStream.Create;
-  if g_XBSound.GetMute then
-    ppStream^.SetVolume(DSBVOLUME_MIN)
-  else
-    ppStream^.SetVolume(g_SoundVolume);
-
   pDSBufferDesc := DirectSound.PDSBUFFERDESC(XboxAlloc(sizeof(DSBUFFERDESC)));
 
   // convert from Xbox to PC DSound

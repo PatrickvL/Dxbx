@@ -210,6 +210,7 @@ procedure EmuShared.Load;
 begin
   m_XBController.Load(PAnsiChar('Software\Dxbx\XBController'));
   m_XBVideo.Load(PAnsiChar('Software\Dxbx\XBVideo'));
+  m_XBSound.Load(PAnsiChar('Software\Dxbx\XBSound'));
   LoadExtraSettings('Software\Dxbx\Settings');
 
   // 'load' the default logflags :
@@ -251,6 +252,7 @@ procedure EmuShared.Save;
 begin
   m_XBController.Save(PAnsiChar('Software\Dxbx\XBController'));
   m_XBVideo.Save(PAnsiChar('Software\Dxbx\XBVideo'));
+  M_XBSound.Save(PAnsiChar('Software\Dxbx\XBSound'));
   SaveExtraSettings('Software\Dxbx\Settings');
 end;
 
