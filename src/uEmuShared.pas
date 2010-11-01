@@ -36,6 +36,7 @@ uses
   , uLog
   , uMutex
   , uXbVideo
+  , uXBSound
   , uXBController
 {$IFDEF DXBX_DLL}
   , uDxbxKrnlUtils // DxbxKrnlCleanup
@@ -70,6 +71,10 @@ type EmuShared = object(Mutex)
     procedure GetXBVideo(video: PXBVideo);
     procedure SetXBVideo(const video: PXBVideo);
 
+    // Xbox Sound Accesors
+    procedure GetXBSound(sound: PXBSound);
+    procedure SetXBSound(const sound: PXBSound);
+
     // Xbox Controller Accessors
     procedure GetXBController(ctrl: PXBController);
     procedure SetXBController(const ctrl: PXBController);
@@ -81,6 +86,7 @@ type EmuShared = object(Mutex)
     // Shared configuration
     m_XBController: XBController;
     m_XBVideo: XBVideo;
+    m_XBSound: XBSound;
     m_XbePath: array [0..DXBX_MAX_PATH - 1] of _char;
   public
     m_ActiveLogFlags: TLogFlags;
@@ -275,11 +281,25 @@ end;
 
 // Xbox Video Accessors
 
+procedure EmuShared.GetXBSound(sound: PXBSound);
+begin
+  Lock();
+  sound^ := {shared}m_XBSound;
+  Unlock();
+end;
+
 procedure EmuShared.GetXBVideo(video: PXBVideo);
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   Lock();
   video^ := {shared}m_XBVideo;
+  Unlock();
+end;
+
+procedure EmuShared.SetXBSound(const sound: PXBSound);
+begin
+  Lock();
+  {shared}m_XBSound := sound^;
   Unlock();
 end;
 

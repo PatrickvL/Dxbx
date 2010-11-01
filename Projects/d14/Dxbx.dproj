@@ -157,6 +157,7 @@
 			<DCCReference Include="..\..\src\uImportGames.pas">
 				<Form>frm_XBEList</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\src\uXbSound.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
