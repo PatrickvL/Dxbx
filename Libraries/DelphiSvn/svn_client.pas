@@ -6321,7 +6321,7 @@ begin
     SetLength(FErrors, Length(FErrors) + 1);
 
     if Assigned(E^.message) then
-      S := E^.message
+      S := String(E^.message)
     else
       S := GetSvnErrorMessage(E^.apr_err);
 

@@ -685,7 +685,7 @@ function BlameReceiver(baton: Pointer; line_no: Int64; revision: TSvnRevNum; aut
 begin
   Result := nil;
   if revision <> SVN_INVALID_REVNUM then
-    TSvnClient(baton).DoBlame(line_no, revision, author, date, line);
+    TSvnClient(baton).DoBlame(line_no, revision, string(author), string(date), string(line));
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -726,7 +726,7 @@ begin
     LockData.expiration_date := DateTimeToAprTime(0);
   end;
 
-  TSvnClient(baton).DoList(Path, DirEntry, Locked, LockData, abs_path);
+  TSvnClient(baton).DoList(string(Path), DirEntry, Locked, LockData, string(abs_path));
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -745,8 +745,8 @@ begin
   try
     Item.FOwner := baton;
     Item.FRevision := revision;
-    Item.FAuthor := author;
-    Item.FLogMessage := message;
+    Item.FAuthor := string(author);
+    Item.FLogMessage := string(message);
     if Assigned(date) and (date^ <> #0) then
     begin
       SvnCheck(svn_time_from_cstring(Time, date, pool));
@@ -985,7 +985,7 @@ procedure SvnContextNotify(baton: Pointer; path: PAnsiChar; action: TSvnWcNotify
   mime_type: PAnsiChar; content_state, prop_state: TSvnWCNotifyState; revision: TSvnRevNum); cdecl;
 
 begin
-  TSvnClient(baton).DoNotify(path, mime_type, action, kind, content_state, prop_state, revision);
+  TSvnClient(baton).DoNotify(string(path), string(mime_type), action, kind, content_state, prop_state, revision);
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1603,30 +1603,30 @@ begin
   if Assigned(Status.entry) then
   begin
     FBaseRevision := Status.entry^.revision;
-    FURL := Status.entry^.url;
-    FRepository := Status.entry^.repos;
-    FUUID := Status.entry^.uuid;
+    FURL := string(Status.entry^.url);
+    FRepository := string(Status.entry^.repos);
+    FUUID := string(Status.entry^.uuid);
     FKind := Status.entry^.kind;
     FSchedule := Status.entry^.schedule;
     FCopied := Status.entry^.copied;
     FDeleted := Status.entry^.deleted;
     FAbsent := Status.entry^.absent;
     FIncomplete := Status.entry^.incomplete;
-    FCopiedFromURL := Status.entry^.copyfrom_url;
+    FCopiedFromURL := string(Status.entry^.copyfrom_url);
     FCopiedFromRevision := Status.entry^.copyfrom_rev;
-    FConflictOldFile := Status.entry^.conflict_old;
-    FConflictNewFile := Status.entry^.conflict_new;
-    FConflictWorkingFile := Status.entry^.conflict_wrk;
-    FPropRejectFile := Status.entry^.prejfile;
+    FConflictOldFile := string(Status.entry^.conflict_old);
+    FConflictNewFile := string(Status.entry^.conflict_new);
+    FConflictWorkingFile := string(Status.entry^.conflict_wrk);
+    FPropRejectFile := string(Status.entry^.prejfile);
     FTextTime := AprTimeToDateTime(Status.entry^.text_time);
     FPropTime := AprTimeToDateTime(Status.entry^.prop_time);
-    FCheckSum := Status.entry^.checksum;
+    FCheckSum := string(Status.entry^.checksum);
     FCommittedRevision := Status.entry^.cmt_rev;
-    FCommitAuthor := Status.entry^.cmt_author;
+    FCommitAuthor := string(Status.entry^.cmt_author);
     FCommitTime := AprTimeToDateTime(Status.entry^.cmt_date);
-    FLockToken := Status.entry^.lock_token;
-    FLockOwner := Status.entry^.lock_owner;
-    FLockComment := Status.entry^.lock_comment;
+    FLockToken := string(Status.entry^.lock_token);
+    FLockOwner := string(Status.entry^.lock_owner);
+    FLockComment := string(Status.entry^.lock_comment);
     FLockTime := AprTimeToDateTime(Status.entry^.lock_creation_date);
   end
   else
@@ -1667,10 +1667,10 @@ begin
   FRemotePropStatus := Status.repos_prop_status;
   if Assigned(Status.repos_lock) then
   begin
-    FLockPath := Status.repos_lock^.path;
-    FLockToken := Status.repos_lock^.token;
-    FLockOwner := Status.repos_lock^.owner;
-    FLockComment := Status.repos_lock^.comment;
+    FLockPath := string(Status.repos_lock^.path);
+    FLockToken := string(Status.repos_lock^.token);
+    FLockOwner := string(Status.repos_lock^.owner);
+    FLockComment := string(Status.repos_lock^.comment);
     FLockDAVComment := Status.repos_lock^.is_dav_comment;
     FLockTime := AprTimeToDateTime(Status.repos_lock^.creation_date);
     FLockExpirationTime := AprTimeToDateTime(Status.repos_lock^.expiration_date);
@@ -1685,10 +1685,10 @@ begin
     FLockTime := 0;
     FLockExpirationTime := 0;
   end;
-  FURL := Status.url;
+  FURL := string(Status.url);
 
   FLastCommitRevision := Status.ood_last_cmt_rev;
-  FLastCommitAuthor := Status.ood_last_cmt_author;
+  FLastCommitAuthor := string(Status.ood_last_cmt_author);
   FLastCommitTime := AprTimeToDateTime(Status.ood_last_cmt_date);
 
   if IsDirectory and (FTextStatus = svnWcStatusUnversioned) and FSvnClient.RecurseUnversioned then
@@ -1951,10 +1951,10 @@ var
 begin
   case Status.text_status of
     svnWcStatusUnversioned:
-      FReloadUnversioned.Add(TSvnItem.Create(FSvnClient, nil, Path, Status));
+      FReloadUnversioned.Add(TSvnItem.Create(FSvnClient, nil, string(Path), Status));
     svnWcStatusExternal:
       begin
-        Child := TSvnItem.Create(FSvnClient, nil, Path, Status);
+        Child := TSvnItem.Create(FSvnClient, nil, string(Path), Status);
         FReloadExternals.Add(Child);
         if FReloadRecursive then
           FReloadGlobalExternals.Add(Child);
@@ -1985,7 +1985,7 @@ begin
         end
         else if FReloadRecursive then
         begin
-          ChildsParentPath := SvnExtractFilePath(Path);
+          ChildsParentPath := SvnExtractFilePath(string(Path));
           ParentPath := SvnIncludeTrailingPathDelimiter(Parent.SvnPathName);
           while not AnsiSameText(ChildsParentPath, ParentPath) do
           begin
@@ -2006,7 +2006,7 @@ begin
 
       if Assigned(Parent) then
       begin
-        Child := TSvnItem.Create(FSvnClient, Parent, Path, Status);
+        Child := TSvnItem.Create(FSvnClient, Parent, string(Path), Status);
         if Child.Kind = svnNodeDir then
         begin
           AddUnversionedItems(Child);
@@ -2017,7 +2017,7 @@ begin
       else if FReloadRecursive then // not found in current stack, try externals
       begin
         for I := 0 to FReloadGlobalExternals.Count - 1 do
-          if AnsiSameText(Path, TSvnItem(FReloadGlobalExternals[I]).SvnPathName) then
+          if AnsiSameText(string(Path), TSvnItem(FReloadGlobalExternals[I]).SvnPathName) then
           begin
             Parent := FReloadGlobalExternals[I];
             FReloadGlobalExternals.Delete(I);
@@ -2477,12 +2477,12 @@ begin
   SvnListItem.HasProps := DirEntry.has_props;
   SvnListItem.CreatedRevision := DirEntry.created_rev;
   SvnListItem.Time := AprTimeToDateTime(DirEntry.time);
-  SvnListItem.LastAuthor := DirEntry.last_author;
+  SvnListItem.LastAuthor := string(DirEntry.last_author);
   SvnListItem.Locked := Locked;
-  SvnListItem.LockPath := LockData.path;
-  SvnListItem.LockToken := LockData.token;
-  SvnListItem.LockOwner := LockData.owner;
-  SvnListItem.LockComment := LockData.comment;
+  SvnListItem.LockPath := string(LockData.path);
+  SvnListItem.LockToken := string(LockData.token);
+  SvnListItem.LockOwner := string(LockData.owner);
+  SvnListItem.LockComment := string(LockData.comment);
   SvnListItem.LockDAVComment := LockData.is_dav_comment;
   SvnListItem.LockTime := AprTimeToDateTime(LockData.creation_date);
   SvnListItem.LockExpirationTime := AprTimeToDateTime(LockData.expiration_date);
@@ -2836,7 +2836,7 @@ begin
   Result := False;
   if Assigned(FStatusCallback) then
   begin
-    Item := TSvnItem.Create(Self, nil, Path, Status);
+    Item := TSvnItem.Create(Self, nil, string(Path), Status);
     try
       FStatusCallback(Self, Item, Result);
     except
@@ -3051,7 +3051,7 @@ begin
       False, False, nil, FCtx, SubPool));
     }
     if Assigned(CommitInfo) and Assigned(CommitInfo^.post_commit_err) and (CommitInfo^.post_commit_err^ <> #0) then
-      raise Exception.Create(CommitInfo^.post_commit_err);
+      raise Exception.Create(string(CommitInfo^.post_commit_err));
   finally
     if NewPool then
       apr_pool_destroy(SubPool);
@@ -3088,7 +3088,7 @@ begin
     FCancelled := False;
     SvnCheck(svn_client_commit3(CommitInfo, Targets, Recurse, KeepLocks, FCtx, SubPool));
     if Assigned(CommitInfo) and Assigned(CommitInfo^.post_commit_err) and (CommitInfo^.post_commit_err^ <> #0) then
-      raise Exception.Create(CommitInfo^.post_commit_err);
+      raise Exception.Create(string(CommitInfo^.post_commit_err));
 
     Result := Assigned(CommitInfo) and (CommitInfo^.revision <> SVN_INVALID_REVNUM);
   finally
@@ -3124,7 +3124,7 @@ begin
     FCancelled := False;
     SvnCheck(svn_client_delete3(CommitInfo, Paths, Force, KeepLocal, nil, FCtx, SubPool));
     if Assigned(CommitInfo) and Assigned(CommitInfo^.post_commit_err) and (CommitInfo^.post_commit_err^ <> #0) then
-      raise Exception.Create(CommitInfo^.post_commit_err);
+      raise Exception.Create(string(CommitInfo^.post_commit_err));
   finally
     if NewPool then
       apr_pool_destroy(SubPool);
@@ -3663,7 +3663,7 @@ begin
     SvnCheck(svn_client_move5(CommitInfo, SrcPaths, PAnsiChar(AnsiString(NativePathToSvnPath(DstPath))),
       True, False, False, nil, FCtx, SubPool));
     if Assigned(CommitInfo) and Assigned(CommitInfo^.post_commit_err) and (CommitInfo^.post_commit_err^ <> #0) then
-      raise Exception.Create(CommitInfo^.post_commit_err);
+      raise Exception.Create(string(CommitInfo^.post_commit_err));
   finally
     if NewPool then
       apr_pool_destroy(SubPool);
@@ -3684,7 +3684,7 @@ begin
     AprCheck(apr_pool_create_ex(SubPool, FPool, nil, FAllocator));
   try
     AprCheck(apr_filepath_merge(SvnPath, '', PAnsiChar(AnsiString(NativePath)), APR_FILEPATH_TRUENAME, SubPool));
-    Result := SvnPath;
+    Result := string(SvnPath);
   finally
     if NewPool then
       apr_pool_destroy(SubPool);
@@ -3863,7 +3863,7 @@ begin
     AprCheck(apr_pool_create_ex(SubPool, FPool, nil, FAllocator));
   try
     AprCheck(apr_filepath_merge(NativePath, '', PAnsiChar(AnsiString(SvnPath)), APR_FILEPATH_NATIVE, SubPool));
-    Result := NativePath;
+    Result := string(NativePath);
   finally
     if NewPool then
       apr_pool_destroy(SubPool);
