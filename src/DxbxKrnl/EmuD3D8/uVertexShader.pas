@@ -1563,9 +1563,10 @@ var
   TmpIntermediate: VSH_INTERMEDIATE_FORMAT;
   R12Replacement: int16;
   pOPosWriteBack: PVSH_INTERMEDIATE_FORMAT;
-  outRegister: int;
+  DPHReplacement: int;
   swizzle: int;
 begin
+  DPHReplacement := -1;
   for i := 0 to VSH_XBOX_MAX_R_REGISTER_COUNT - 1 do
     RUsage[i] := FALSE;
 
@@ -1648,45 +1649,47 @@ begin
       // Replace dph with dp3 and add
       if (pIntermediate.Output.Type_ <> IMD_OUTPUT_R) then
       begin
-        // TODO -oCXBX: Complete dph support
-        EmuWarning('Can''t simulate dph for other than output r registers (yet)');
-
         // attempt to find unused register...
-        outRegister := -1;
-        for j := 11 downto 0 do
+        if DPHReplacement = -1 then
         begin
-          if (not RUsage[j]) then
+          for j := 11 downto 0 do
           begin
-            outRegister := j;
-            break;
+            if (not RUsage[j]) then
+            begin
+              DPHReplacement := j;
+              RUsage[DPHReplacement] := True;
+              break;
+            end;
+          end;
+
+          // return failure if there are no available registers
+          if (DPHReplacement = -1) then
+          begin
+            EmuWarning('Vertex shader uses all r registers, dph impossible to convert!');
+            Result := FALSE;
+            Exit;
           end;
         end;
 
-        // return failure if there are no available registers
-        if (outRegister = -1) then
-        begin
-          Result := FALSE;
-          Exit;
-        end;
-        
-        TmpIntermediate := pIntermediate^;
+       TmpIntermediate := pIntermediate^;
 
         // modify the instructions
-        // the register value is not needed beyond these instructions so setting the usage flag should not be necessary (??)
         pIntermediate.MAC := MAC_DP3;
         pIntermediate.Output.Type_ := IMD_OUTPUT_R;
-        pIntermediate.Output.Address := outRegister;
+        pIntermediate.Output.Address := DPHReplacement;
         VshSetOutputMask(@pIntermediate.Output, TRUE, TRUE, TRUE, TRUE);
 
         TmpIntermediate.MAC := MAC_ADD;
         TmpIntermediate.Parameters[0].IndexesWithA0_X := FALSE;
         TmpIntermediate.Parameters[0].Parameter.ParameterType := PARAM_R;
-        TmpIntermediate.Parameters[0].Parameter.Address := outRegister;
+        TmpIntermediate.Parameters[0].Parameter.Address := DPHReplacement;
         TmpIntermediate.Parameters[0].Parameter.Neg := FALSE;
         // VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
         VshSetSwizzle(@TmpIntermediate.Parameters[1], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
         //VshSetOutputMask(@TmpIntermediate.Output, FALSE, FALSE, FALSE, TRUE);
         VshInsertIntermediate(pShader, @TmpIntermediate, i + 1);
+
+        DbgVshPrintf('Replaced dph with dp3+add (via r%d)'#13#10, [TmpIntermediate.Parameters[0].Parameter.Address]);
       end
       else
       begin
@@ -1721,7 +1724,10 @@ begin
         VshSetSwizzle(@TmpIntermediate.Parameters[1], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
         //VshSetOutputMask(@TmpIntermediate.Output, FALSE, FALSE, FALSE, TRUE);
         VshInsertIntermediate(pShader, @TmpIntermediate, i + 1);
+
+        DbgVshPrintf('Replaced dph with dp3+add'#13#10);
       end;
+
       Inc(i);
     end; // if
 
