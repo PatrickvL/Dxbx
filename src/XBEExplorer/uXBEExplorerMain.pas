@@ -380,11 +380,14 @@ var
     SearchRec: TSearchRec;
   begin
     SymbolList.Clear;
+    CRC32Init();
     CacheFileName := SymbolCacheFolder
             // TitleID
             + IntToHex(MyXBE.m_Certificate.dwTitleId, 8)
             // TODO : + CRC32 over XbeHeader :
             + '_*'
+            // TitleName
+            + '_' + GetReadableTitle(@MyXBE.m_Certificate)
             + SymbolCacheFileExt;
     if SysUtils.FindFirst(CacheFileName, faAnyFile, SearchRec) = 0 then
     begin
@@ -613,7 +616,6 @@ var
       'dwHeadSharedRefCountAddr', 'dwTailSharedRefCountAddr', 'bzSectionDigest']);
     Grid.Parent := Result;
     Grid.Align := alTop;
-    Grid.Height := Height div 2;
     Grid.RowCount := 4;
     Grid.Options := Grid.Options + [goRowSelect];
     Grid.FixedRows := 3;
@@ -664,6 +666,12 @@ var
 
       Inc(o, SizeOf(TXbeSectionHeader));
     end;
+
+    // Resize grid to fit :
+    o := GetSystemMetrics(SM_CYHSCROLL);
+    for i := 0 to Grid.RowCount - 1 do
+      Inc(o, Grid.RowHeights[i] + 1);
+    Grid.Height := o + 4;
 
     Splitter := TSplitter.Create(Self);
     Splitter.Parent := Result;
