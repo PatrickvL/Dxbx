@@ -908,8 +908,8 @@ end;
 //----------------------------------------------------------------------------------------------------------------------
 
 function FileAttrStr(Attr: Cardinal): string;
-
 begin
+  {$WARN SYMBOL_PLATFORM OFF}
   Result := '';
   if Attr and faReadOnly <> 0 then
     Result := Result + 'R';
@@ -919,6 +919,7 @@ begin
     Result := Result + 'S';
   if Attr and faArchive <> 0 then
     Result := Result + 'A';
+  {$WARN SYMBOL_PLATFORM ON}
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -3022,7 +3023,7 @@ end;
 procedure TSvnClient.Copy(SourcesNames: TStrings; const DstPath: string; SubPool: PAprPool = nil);
 var
   NewPool: Boolean;
-  Sources: PAprArrayHeader;
+  {Sources: PAprArrayHeader;}
   CommitInfo: PSvnCommitInfo;
   SrcRevision: TSvnOptRevision;
 
@@ -3037,7 +3038,7 @@ begin
   if NewPool then
     AprCheck(apr_pool_create_ex(SubPool, FPool, nil, FAllocator));
   try
-    Sources := PathNamesToAprArray(SourcesNames, SubPool);
+    {Sources := PathNamesToAprArray(SourcesNames, SubPool); }
     CommitInfo := nil;
     FCancelled := False;
     FillChar(SrcRevision, SizeOf(TSvnOptRevision), 0);
