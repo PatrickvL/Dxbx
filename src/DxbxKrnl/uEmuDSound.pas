@@ -566,7 +566,7 @@ var g_pDSound8RefCount: int = 0;
 var g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE-1] of PX_CDirectSoundBuffer;
 var g_pDSoundStreamCache: array [0..SOUNDSTREAM_CACHE_SIZE-1] of PX_CDirectSoundStream;
 var g_bDSoundCreateCalled: Boolean = false; // Dxbx note : Boolean is simpler than Cxbx's int.
-var g_SoundVolume: Long;
+var g_SoundVolume: Long = DSBVOLUME_MAX;
 {implementation}
 
 const lfUnit = lfCxbx or lfSound;
@@ -654,6 +654,13 @@ begin
 
       IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
     end;
+
+(*
+    if g_XBSound.GetMute then
+      IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).SetVolume(DSBVOLUME_MIN)
+    else
+      IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).SetVolume(g_SoundVolume);
+*)
 
     IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).SetCurrentPosition(0);
     IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).Play(0, 0, 0);
@@ -1131,10 +1138,7 @@ begin
   if g_XBSound.GetMute then
     ppBuffer^.SetVolume(DSBVOLUME_MIN)
   else
-  begin
-    g_SoundVolume := DSBVOLUME_MAX;
     ppBuffer^.SetVolume(g_SoundVolume);
-  end;
 
   ppBuffer^.EmuDirectSoundBuffer8 := nil;
   ppBuffer^.EmuBuffer := nil;
@@ -1236,10 +1240,7 @@ begin
   if g_XBSound.GetMute then
     ppStream^.SetVolume(DSBVOLUME_MIN)
   else
-  begin
-    g_SoundVolume := DSBVOLUME_MAX;
     ppStream^.SetVolume(g_SoundVolume);
-  end;
 
   pDSBufferDesc := DirectSound.PDSBUFFERDESC(XboxAlloc(sizeof(DSBUFFERDESC)));
 
@@ -2453,13 +2454,16 @@ begin
       _(lVolume, 'lVolume').
     LogEnd();
 
-  if g_XBSound.GetMute then
+  Result := DS_OK;
+  g_SoundVolume := lVolume;
+
+  if Assigned(Self.EmuDirectSoundBuffer8) then
   begin
-    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(DSBVOLUME_MIN);
-    g_SoundVolume := lVolume;
-  end
-  else
+    if g_XBSound.GetMute then
+      lVolume := DSBVOLUME_MIN;
+
     Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume);
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2469,6 +2473,8 @@ function TIDirectSoundBuffer.SetPitch
     lPitch: LONG
 ): HRESULT; stdcall; // virtual;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  lFrequency: Double;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2478,18 +2484,33 @@ begin
       _(lPitch, 'lPitch').
     LogEnd();
 
-  if g_XBSound.GetMute then
+  // TODO -oCXBX: Translate params, then make the PC DirectSound call
+  if Assigned(Self.EmuDirectSoundBuffer8) then
   begin
-    // TODO -oCXBX: Translate params, then make the PC DirectSound call
-    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(DSBVOLUME_MIN);
-    g_SoundVolume := lPitch;
+    // pBuffer->SetPitch(-8192); // Play the sound two octaves lower (12 kHz)
+    // pBuffer->SetPitch(-4096); // Play the sound one octaves lower (24 kHz)
+    // pBuffer->SetPitch(    0); // Play the sound at 48 kHz (no pitch bend, 48 kHz)
+    // pBuffer->SetPitch( 4096); // Play the sound one octave higher (96 kHz)
+    // pBuffer->SetPitch( 8192); // Play the sound two octaves higher (192 kHz)
+    //
+    // A way to figure out the value for lPitch would be to calculate the base pitch of the voice
+    // (log2(nSamplesPerSecond/48000)), add (or subtract) the number of octaves you want to change
+    // (for example, -1 if you want to go down one octave), and convert the value to register format (multiply by 4096).
+    //
+    // Internally, SetFrequency calls SetPitch, so they are equivalent methods and will override each other.
+    // Calling SetPitch with the value zero is the same as calling SetFrequency with the value of 48000.
+
+    // TODO -oDxbx : Is this the right way to convert pitch into frequency?  Probably not....
+    // Source : http://en.wikipedia.org/wiki/Note
+    lFrequency := lPitch;
+    lFrequency := (lFrequency / 4096.0);
+    lFrequency := (lFrequency * lFrequency) * 440.0;
+    lFrequency := lFrequency + 48000.0;
+
+    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetFrequency(Round(lFrequency));
   end
   else
-  begin
-    // TODO -oCXBX: Translate params, then make the PC DirectSound call
-    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lPitch);
-  end;
-
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2618,7 +2639,10 @@ begin
       _(pMixBins, 'pMixBins').
     LogEnd();
 
-  // TODO -oCXBX: Actually do something
+  if g_XBSound.GetMute then
+    //??
+  else
+    ; // TODO -oCXBX: Actually do something
 
   EmuSwapFS(fsXbox);
 
@@ -4007,19 +4031,12 @@ begin
       _(lVolume, 'lVolume').
     LogEnd();
 
+  Result := DS_OK;
+  g_SoundVolume := lVolume;
   if  (Self <> nil)
-  and (Self.EmuDirectSoundBuffer8 <> NULL) then
-  begin
-    if g_XBSound.GetMute then
-    begin
-      Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(DSBVOLUME_MIN);
-      g_SoundVolume := lVolume;
-    end
-    else
-      Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume);
-  end
-  else
-    Result := DS_OK;
+  and (Self.EmuDirectSoundBuffer8 <> NULL)
+  and (not g_XBSound.GetMute) then
+    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume);
 
   EmuSwapFS(fsXbox);
 end;
@@ -4536,6 +4553,10 @@ begin
     LogEnd();
 
   // TODO -oCXBX: Actually implement
+  if Assigned(pVoiceProps) then
+  begin
+//    pVoiceProps.???
+  end;
 
   EmuSwapFS(fsXbox);
 
