@@ -1128,6 +1128,14 @@ begin
   // TODO -oCXBX: Garbage Collection
   ppBuffer^ := TIDirectSoundBuffer.Create;
 
+  if g_XBSound.GetMute then
+    ppBuffer^.SetVolume(DSBVOLUME_MIN)
+  else
+  begin
+    g_SoundVolume := DSBVOLUME_MAX;
+    ppBuffer^.SetVolume(g_SoundVolume);
+  end;
+
   ppBuffer^.EmuDirectSoundBuffer8 := nil;
   ppBuffer^.EmuBuffer := nil;
   ppBuffer^.EmuBufferDesc := iif(bIsSpecial, pDSBufferDescSpecial, pDSBufferDesc);
@@ -1225,6 +1233,13 @@ begin
 
   // TODO -oCXBX: Garbage Collection
   ppStream^ := TIDirectSoundStream.Create;
+  if g_XBSound.GetMute then
+    ppStream^.SetVolume(DSBVOLUME_MIN)
+  else
+  begin
+    g_SoundVolume := DSBVOLUME_MAX;
+    ppStream^.SetVolume(g_SoundVolume);
+  end;
 
   pDSBufferDesc := DirectSound.PDSBUFFERDESC(XboxAlloc(sizeof(DSBUFFERDESC)));
 
@@ -2440,7 +2455,7 @@ begin
 
   if g_XBSound.GetMute then
   begin
-    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(0);
+    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(DSBVOLUME_MIN);
     g_SoundVolume := lVolume;
   end
   else
@@ -2466,7 +2481,7 @@ begin
   if g_XBSound.GetMute then
   begin
     // TODO -oCXBX: Translate params, then make the PC DirectSound call
-    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(0);
+    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(DSBVOLUME_MIN);
     g_SoundVolume := lPitch;
   end
   else
@@ -3997,7 +4012,7 @@ begin
   begin
     if g_XBSound.GetMute then
     begin
-      Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(0);
+      Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(DSBVOLUME_MIN);
       g_SoundVolume := lVolume;
     end
     else
