@@ -27,12 +27,14 @@ uses
   Dialogs, StdCtrls, ComCtrls, ExtCtrls, jpeg, IniFiles
   // DirectX
   , DirectDraw
+  , DirectSound
   // Dxbx
   , uLog
   , ufrm_About // GetJPEGResource
   , uTypes
   , uXBController
   , uXbVideo
+  , uXBSound
   , uEmuShared, ImgList
   ;
 
@@ -114,6 +116,12 @@ type
     SaveDialog1: TSaveDialog;
     btnDisableAll: TButton;
     btnEnableAll: TButton;
+    TabSheet4: TTabSheet;
+    GroupBox3: TGroupBox;
+    Label1: TLabel;
+    Label4: TLabel;
+    edt_AudioAdapter: TComboBox;
+    chkMute: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
     procedure btnOkClick(Sender: TObject);
@@ -132,6 +140,7 @@ type
   private
     MyDirectDraw: IDirectDraw7;
     FXBVideo : XBVideo;
+    FXBSound : XBSound;
     FXBController: XBController;
     FHasChanges: Boolean;
     FBusyConfiguring: Boolean;
@@ -156,11 +165,18 @@ var
 implementation
 
 function EnumDevices(lpGUID: PGUID; lpDriverDescription: PAnsiChar;
-  lpDriverName: PAnsiChar; lpContext: Pointer; Monitor: HMonitor): Windows.BOOL; stdcall;
+  lpDriverName: PAnsiChar; lpContext: Pointer): Windows.BOOL; stdcall;
 begin
   TStrings(lpContext).Add(string(AnsiString(lpDriverDescription)));
   Result := True;
 end; // EnumDevices
+
+function EnumDevicesEx(lpGUID: PGUID; lpDriverDescription: PAnsiChar;
+  lpDriverName: PAnsiChar; lpContext: Pointer; Monitor: HMonitor): Windows.BOOL; stdcall;
+begin
+  TStrings(lpContext).Add(string(AnsiString(lpDriverDescription)));
+  Result := True;
+end; // EnumDevicesEx
 
 function EnumDisplayModesCallBack(const lpDDSurfaceDesc: TDDSurfaceDesc2;
   lpContext: Pointer): HResult; stdcall;
@@ -207,6 +223,7 @@ begin
 
   g_EmuShared.GetXBVideo(@FXBVideo);
   g_EmuShared.GetXBController(@FXBController);
+  g_EmuShared.GetXBSound(@FXBSound);
 
   // Draw the controller image :
   Image1.Canvas.Brush.Color := clWhite;
@@ -247,7 +264,11 @@ begin
   _Register(btn_RightThumb, XBCTRL_OBJECT_RTHUMB);
 
   // Retrieve possible video modes :
-  DirectDrawEnumerateExA(EnumDevices, edt_DisplayAdapter.Items, 0);
+  DirectDrawEnumerateExA(EnumDevicesEx, edt_DisplayAdapter.Items, 0);
+
+  // Retrieve possible
+  DirectSoundEnumerateA(EnumDevices, edt_AudioAdapter.Items);
+
   DirectDrawCreate(nil, {out}tempDirectDraw, MyDirectDraw);
   try
     tempDirectDraw.QueryInterface(IID_IDIRECTDRAW7, {out}MyDirectDraw);
@@ -266,6 +287,7 @@ begin
   edt_DisplayAdapter.ItemIndex := FXBVideo.GetDisplayAdapter;
   edt_Direct3dDevice.ItemIndex := FXBVideo.GetDirect3DDevice;
   edt_VideoResolution.ItemIndex := VideoResolutionIndex;
+  edt_AudioAdapter.ItemIndex := FXBSound.GetSoundAdapter;
 
   chk_FullScreen.Checked :=  FXBVideo.GetFullscreen;
   chk_VSync.Checked := FXBVideo.GetVSync;
@@ -533,6 +555,11 @@ begin
 
   // Publish the XBVideo settings via shared memory :
   g_EmuShared.SetXBVideo(@FXBVideo);
+
+  // Publish the XBSound settings via shared memory :
+  FXBSound.SetMute(chkMute.Checked);
+  FXBSound.SetSoundAdapter(edt_AudioAdapter.ItemIndex);
+  g_EmuShared.SetXBSound(@FXBSound);
 
   // Publish the Controller settings via shared memory :
   g_EmuShared.SetXBController(@FXBController);

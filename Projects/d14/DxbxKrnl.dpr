@@ -98,7 +98,8 @@ uses
   uPixelShader in '..\..\src\DxbxKrnl\EmuD3D8\uPixelShader.pas',
   uXDVDFS in '..\..\src\uXDVDFS.pas',
   uFileSystem in '..\..\src\uFileSystem.pas',
-  uEmuXactEng in '..\..\src\DxbxKrnl\uEmuXactEng.pas';
+  uEmuXactEng in '..\..\src\DxbxKrnl\uEmuXactEng.pas',
+  uXbSound in '..\..\src\uXbSound.pas';
 
 {$IMAGEBASE $10000000}
 

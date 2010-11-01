@@ -47,7 +47,8 @@ uses
   uData in '..\..\src\Tools\XdkTracker\src\uData.pas',
   VistaIconFix in '..\..\src\VistaIconFix.pas',
   ufrm_Configuration in '..\..\src\ufrm_Configuration.pas' {fmConfiguration},
-  uImportGames in '..\..\src\uImportGames.pas' {frm_XBEList};
+  uImportGames in '..\..\src\uImportGames.pas' {frm_XBEList},
+  uXbSound in '..\..\src\uXbSound.pas';
 
 {$R *.RES}
 

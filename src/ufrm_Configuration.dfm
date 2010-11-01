@@ -33,11 +33,13 @@ object fmConfiguration: TfmConfiguration
     TabOrder = 0
     OnChange = TreeView1Change
     Items.NodeData = {
-      0303000000320000000000000000000000FFFFFFFFFFFFFFFF00000000000000
+      0304000000320000000000000000000000FFFFFFFFFFFFFFFF00000000000000
       0000000000010A43006F006E00740072006F006C006C00650072002800000000
       00000000000000FFFFFFFFFFFFFFFF0000000000000000000000000105560069
-      00640065006F002C0000000000000000000000FFFFFFFFFFFFFFFF0000000000
-      0000000000000001074C006F006700670069006E006700}
+      00640065006F00280000000000000000000000FFFFFFFFFFFFFFFF0000000000
+      00000000000000010553006F0075006E0064002C0000000000000000000000FF
+      FFFFFFFFFFFFFF00000000000000000000000001074C006F006700670069006E
+      006700}
   end
   object btnOk: TButton
     Left = 557
@@ -77,7 +79,7 @@ object fmConfiguration: TfmConfiguration
     Top = 8
     Width = 554
     Height = 441
-    ActivePage = TabSheet3
+    ActivePage = TabSheet4
     Anchors = [akLeft, akTop, akRight, akBottom]
     Style = tsFlatButtons
     TabOrder = 1
@@ -295,7 +297,7 @@ object fmConfiguration: TfmConfiguration
         546
         410)
       object GroupBox1: TGroupBox
-        Left = 3
+        Left = 0
         Top = 0
         Width = 434
         Height = 166
@@ -399,6 +401,58 @@ object fmConfiguration: TfmConfiguration
         end
       end
     end
+    object TabSheet4: TTabSheet
+      Caption = 'Sound'
+      ImageIndex = 3
+      DesignSize = (
+        546
+        410)
+      object GroupBox3: TGroupBox
+        Left = 0
+        Top = 0
+        Width = 434
+        Height = 166
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        Caption = 'Direct Sound Configuration'
+        TabOrder = 0
+        object Label1: TLabel
+          Left = 8
+          Top = 24
+          Width = 110
+          Height = 13
+          Alignment = taRightJustify
+          AutoSize = False
+          Caption = 'Audio Adapter:'
+        end
+        object Label4: TLabel
+          Left = 8
+          Top = 64
+          Width = 110
+          Height = 13
+          Alignment = taRightJustify
+          AutoSize = False
+          Caption = 'Other Options:'
+        end
+        object edt_AudioAdapter: TComboBox
+          Left = 128
+          Top = 21
+          Width = 297
+          Height = 21
+          Style = csDropDownList
+          TabOrder = 0
+          OnChange = ChangeClick
+        end
+        object chkMute: TCheckBox
+          Left = 128
+          Top = 60
+          Width = 109
+          Height = 17
+          Caption = 'Mute sound'
+          TabOrder = 1
+          OnClick = ChangeClick
+        end
+      end
+    end
     object TabSheet3: TTabSheet
       Caption = 'Logging'
       ImageIndex = 2
@@ -480,8 +534,8 @@ object fmConfiguration: TfmConfiguration
     end
   end
   object ImageList1: TImageList
-    Left = 568
-    Top = 128
+    Left = 32
+    Top = 220
     Bitmap = {
       494C010103000500040010001000FFFFFFFFFF00FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
@@ -622,11 +676,11 @@ object fmConfiguration: TfmConfiguration
       FFFFC21FCE0F0000FFFFFF9FFE1F0000}
   end
   object OpenDialog1: TOpenDialog
-    Left = 400
-    Top = 24
+    Left = 36
+    Top = 100
   end
   object SaveDialog1: TSaveDialog
-    Left = 472
-    Top = 25
+    Left = 36
+    Top = 157
   end
 end
