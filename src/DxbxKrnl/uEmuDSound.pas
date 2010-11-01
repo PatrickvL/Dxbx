@@ -34,6 +34,8 @@ uses
   , DirectSound
   , DirectMusic
   // Dxbx
+  , uEmuShared
+  , uXBSound
   , uTypes
   , uLog
   , uDxbxUtils // ReadSystemTimeIntoLargeInteger
@@ -558,12 +560,13 @@ type
   LPDIRECTSOUNDSTREAM = XTL_PIDirectSoundStream;
 
 // Static Variable(s)
+var g_XBSound: XBSound;
 var g_pDSound8: XTL_LPDIRECTSOUND8 = NULL;
 var g_pDSound8RefCount: int = 0;
 var g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE-1] of PX_CDirectSoundBuffer;
 var g_pDSoundStreamCache: array [0..SOUNDSTREAM_CACHE_SIZE-1] of PX_CDirectSoundStream;
 var g_bDSoundCreateCalled: Boolean = false; // Dxbx note : Boolean is simpler than Cxbx's int.
-
+var g_SoundVolume: Long;
 {implementation}
 
 const lfUnit = lfCxbx or lfSound;
@@ -766,6 +769,8 @@ var
 begin
   Result := DS_OK;
 
+  g_EmuShared.GetXBSound(@g_XBSound);
+
   if (nil=g_pDSound8) then
   begin
     if (not FromOriginalDSoundCreate) then
@@ -792,7 +797,6 @@ begin
     // clear sound stream cache
     for v := 0 to SOUNDSTREAM_CACHE_SIZE-1 do
       g_pDSoundStreamCache[v] := nil;
-
     g_pDSound8RefCount := 1;
   end
   else
@@ -2434,8 +2438,13 @@ begin
       _(lVolume, 'lVolume').
     LogEnd();
 
-  Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume);
-//  Result := DS_OK;
+  if g_XBSound.GetMute then
+  begin
+    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(0);
+    g_SoundVolume := lVolume;
+  end
+  else
+    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2454,8 +2463,18 @@ begin
       _(lPitch, 'lPitch').
     LogEnd();
 
-  // TODO -oCXBX: Translate params, then make the PC DirectSound call
-  Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lPitch);
+  if g_XBSound.GetMute then
+  begin
+    // TODO -oCXBX: Translate params, then make the PC DirectSound call
+    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(0);
+    g_SoundVolume := lPitch;
+  end
+  else
+  begin
+    // TODO -oCXBX: Translate params, then make the PC DirectSound call
+    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lPitch);
+  end;
+
 
   EmuSwapFS(fsXbox);
 end;
@@ -3975,7 +3994,15 @@ begin
 
   if  (Self <> nil)
   and (Self.EmuDirectSoundBuffer8 <> NULL) then
-    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume)
+  begin
+    if g_XBSound.GetMute then
+    begin
+      Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(0);
+      g_SoundVolume := lVolume;
+    end
+    else
+      Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume);
+  end
   else
     Result := DS_OK;
 
