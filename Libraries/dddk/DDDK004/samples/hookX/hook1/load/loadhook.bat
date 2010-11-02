@@ -1,0 +1,1 @@
+load.exe hook1 hook1 "%CD%\hook1.sys"
