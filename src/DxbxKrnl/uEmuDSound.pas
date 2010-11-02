@@ -1144,6 +1144,12 @@ begin
 
   hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(iif(bIsSpecial, pDSBufferDescSpecial, pDSBufferDesc)^, @(ppBuffer^.EmuDirectSoundBuffer8), NULL);
 
+  if g_XBSound.GetMute then
+    ppBuffer^.SetVolume(DSBVOLUME_MIN)
+  else
+    ppBuffer^.SetVolume(DSBVOLUME_MAX);
+
+
   if (FAILED(hRet)) then
   begin
     EmuWarning('CreateSoundBuffer Failed!');
@@ -1290,6 +1296,12 @@ begin
 
   if (FAILED(hRet)) then
     EmuWarning('CreateSoundBuffer Failed!');
+
+
+  if g_XBSound.GetMute then
+    ppStream^.SetVolume(DSBVOLUME_MIN)
+  else
+    ppStream^.SetVolume(DSBVOLUME_MAX);
 
   // cache this sound stream
   begin
@@ -2437,12 +2449,13 @@ begin
     LogEnd();
 
   Result := DS_OK;
-  g_SoundVolume := lVolume;
-
   if Assigned(Self.EmuDirectSoundBuffer8) then
   begin
     if g_XBSound.GetMute then
-      lVolume := DSBVOLUME_MIN;
+      lVolume := DSBVOLUME_MIN
+    else
+      g_SoundVolume := lVolume;
+
 
     Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume);
   end;
@@ -4014,11 +4027,13 @@ begin
     LogEnd();
 
   Result := DS_OK;
-  g_SoundVolume := lVolume;
   if  (Self <> nil)
   and (Self.EmuDirectSoundBuffer8 <> NULL)
   and (not g_XBSound.GetMute) then
+  begin
+    g_SoundVolume := lVolume;
     Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume);
+  end;
 
   EmuSwapFS(fsXbox);
 end;
