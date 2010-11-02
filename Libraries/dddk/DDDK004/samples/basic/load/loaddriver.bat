@@ -1,0 +1,1 @@
+load.exe driver driver "%CD%\driver.sys"
