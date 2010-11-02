@@ -636,7 +636,10 @@ begin
     or (g_pDSoundStreamCache[v].EmuDirectSoundBuffer8 = nil) then
       continue;
 
-    // TODO : Unlock existing lock (on what?)
+    // unlock existing lock
+    if (g_pDSoundStreamCache[v].EmuLockPtr1 <> nil) then
+        IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).
+          Unlock(g_pDSoundStreamCache[v].EmuLockPtr1, g_pDSoundStreamCache[v].EmuLockBytes1, g_pDSoundStreamCache[v].EmuLockPtr2, g_pDSoundStreamCache[v].EmuLockBytes2);
 
     hRet := IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).
       Lock(0, g_pDSoundStreamCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
