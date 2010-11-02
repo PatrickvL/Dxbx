@@ -1223,6 +1223,7 @@ begin
     LogEnd();
 
   // TODO -oCXBX: Garbage Collection
+  ppStream^ := TIDirectSoundStream.Create;
   pDSBufferDesc := DirectSound.PDSBUFFERDESC(XboxAlloc(sizeof(DSBUFFERDESC)));
 
   // convert from Xbox to PC DSound
