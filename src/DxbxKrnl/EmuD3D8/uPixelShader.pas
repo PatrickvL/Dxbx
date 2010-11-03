@@ -2323,9 +2323,11 @@ begin
 
   // Convert the texture mode to a texture addressing instruction :
   case PSTextureModes[aScope.Stage] of
+{$IFNDEF DXBX_USE_D3D9}
     PS_TEXTUREMODES_PROJECT2D: Result := 'tex';
     PS_TEXTUREMODES_PROJECT3D: Result := 'tex'; // Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
     PS_TEXTUREMODES_CUBEMAP: Result := 'tex'; // Note : If we use 'texreg2rgb', that requires ps.1.2 (we're still using ps.1.1)
+{$ENDIF}
     PS_TEXTUREMODES_PASSTHRU: Result := 'textcoord';
     PS_TEXTUREMODES_CLIPPLANE: Result := 'texkill';
     PS_TEXTUREMODES_BUMPENVMAP: Result := 'texbem';
@@ -2402,6 +2404,16 @@ var
   Stage: int;
 begin
   Result := '';
+
+{$IFDEF DXBX_USE_D3D9}
+  for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
+  begin
+    aScope.Stage := Stage;
+    if PSTextureModes[aScope.Stage] <> PS_TEXTUREMODES_NONE then
+      Result := Result + Format('dcl t%d.xyzw'#13#10, [Stage]);
+  end;
+{$ENDIF}
+
   for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
   begin
     aScope.Stage := Stage;
@@ -2444,7 +2456,12 @@ begin
   // First things first, set the pixel shader version
   // 1.1 allows reading from 2 textures (which we use in 'cnd') and reading from the .b (blue) channel
   // 1.3 allows the use of texm3x2depth (which can occur sometimes)
+  // 2.0 allows up to r12, c32 and t8
+{$IFDEF DXBX_USE_D3D9}
+  Result := 'ps_2_0'#13#10;
+{$ELSE}
   Result := 'ps.1.3'#13#10;
+{$ENDIF}
 
   for j := $0 to $F do
     ConstUnused[j] := True;

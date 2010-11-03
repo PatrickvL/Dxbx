@@ -95,21 +95,21 @@ uses
   , uState
   , uVertexShader;
 
-const D3DPUSH_METHOD_MASK = $3FFFF; // 18 bits
-const D3DPUSH_COUNT_SHIFT = 18;
-const D3DPUSH_COUNT_MASK = $FFF; // 12 bits
-const D3DPUSH_NOINCREMENT_FLAG = $40000000;
+const NV2A_METHOD_MASK = $3FFFF; // 18 bits
+const NV2A_COUNT_SHIFT = 18;
+const NV2A_COUNT_MASK = $FFF; // 12 bits
+const NV2A_NOINCREMENT_FLAG = $40000000;
 // Dxbx note : What does the last bit (mask $80000000) mean?
-const D3DPUSH_MAX_COUNT = 2047;
+const NV2A_MAX_COUNT = 2047;
 
-const D3DPUSH_NO_OPERATION                = $00000100; // Parameter must be zero
-const D3DPUSH_SET_BEGIN_END               = $000017fc; // Parameter is D3DPRIMITIVETYPE or 0 to end
-const D3DPUSH_INLINE_ARRAY                = $00001818; // Use NOINCREMENT_FLAG
-const D3DPUSH_SET_TRANSFORM_CONSTANT_LOAD = $00001ea4; // Add 96 to constant index parameter
-const D3DPUSH_SET_TRANSFORM_CONSTANT      = $00000b80; // Can't use NOINCREMENT_FLAG, maximum of 32 writes
-
-const NVPB_InlineIndexArray = $1800;
-const NVPB_FixLoop = $1808;
+const NV2A_NO_OPERATION                = $00000100; // Parameter must be zero
+const NV2A_SET_BEGIN_END               = $000017fc; // Parameter is D3DPRIMITIVETYPE or 0 to end
+const NV2A_InlineIndexArray            = $00001800;
+const NV2A_FixLoop                     = $00001808;
+const NV2A_DRAW_ARRAYS                 = $00001810;
+const NV2A_INLINE_ARRAY                = $00001818; // Use NOINCREMENT_FLAG
+const NV2A_SET_TRANSFORM_CONSTANT_LOAD = $00001ea4; // Add 96 to constant index parameter
+const NV2A_SET_TRANSFORM_CONSTANT      = $00000b80; // Can't use NOINCREMENT_FLAG, maximum of 32 writes
 
 const lfUnit = lfCxbx or lfPushBuffer;
 
@@ -446,10 +446,10 @@ begin
 
   while (true) do
   begin
-    // Decode push buffer contents (inverse of D3DPUSH_ENCODE) :
-    dwCount := (pdwPushData^ shr D3DPUSH_COUNT_SHIFT) and D3DPUSH_COUNT_MASK;
-    dwMethod := (pdwPushData^ and D3DPUSH_METHOD_MASK);
-    bInc := (pdwPushData^ and D3DPUSH_NOINCREMENT_FLAG) > 0;
+    // Decode push buffer contents (inverse of NV2A_ENCODE) :
+    dwCount := (pdwPushData^ shr NV2A_COUNT_SHIFT) and NV2A_COUNT_MASK;
+    dwMethod := (pdwPushData^ and NV2A_METHOD_MASK);
+    bInc := (pdwPushData^ and NV2A_NOINCREMENT_FLAG) > 0;
     Inc(pdwPushData);
 
     if MayLog(lfUnit) then
@@ -459,17 +459,17 @@ begin
     // Interpret GPU Instruction :
     case dwMethod of
 
-      D3DPUSH_NO_OPERATION:
+      NV2A_NO_OPERATION:
         Inc(pdwPushData, dwCount); // TODO -oDxbx: Is this correct, or should we skip only one DWORD?
 
-      D3DPUSH_SET_BEGIN_END:
+      NV2A_SET_BEGIN_END:
       begin
         XBPrimitiveType := X_D3DPRIMITIVETYPE(pdwPushData^);
         if (XBPrimitiveType = X_D3DPT_NONE) then
         begin
 {$ifdef _DEBUG_TRACK_PB}
           if (bShowPB) then
-            DbgPrintf('  NVPB_SetBeginEnd(DONE)');
+            DbgPrintf('  NV2A_SetBeginEnd(DONE)');
 {$endif}
 //          break;  // done?
         end
@@ -477,7 +477,7 @@ begin
         begin
 {$IFDEF _DEBUG_TRACK_PB}
           if (bShowPB) then
-            DbgPrintf('  NVPB_SetBeginEnd(PrimitiveType = %d)', [pdwPushData^]);
+            DbgPrintf('  NV2A_SetBeginEnd(PrimitiveType = %d)', [pdwPushData^]);
 {$endif}
 
           PCPrimitiveType := EmuPrimitiveType(XBPrimitiveType);
@@ -487,7 +487,7 @@ begin
         Inc(pdwPushData, dwCount);
       end;
 
-      D3DPUSH_INLINE_ARRAY:
+      NV2A_INLINE_ARRAY:
       begin
         pVertexData := pdwPushData;
         Inc(pdwPushData, dwCount);
@@ -554,7 +554,7 @@ begin
 {$ifdef _DEBUG_TRACK_PB}
         if (bShowPB) then
         begin
-          DbgPrintf('  NVPB_InlineVertexArray(...)');
+          DbgPrintf('  NV2A_InlineVertexArray(...)');
           DbgPrintf('  dwCount : %d', [dwCount]);
           DbgPrintf('  dwVertexShader : 0x%08X', [dwVertexShader]);
         end;
@@ -594,7 +594,7 @@ begin
         end;
       end;
 
-      NVPB_FixLoop:
+      NV2A_FixLoop:
       begin
         pwVal := PWORDs(pdwPushData);
         Inc(pdwPushData, dwCount);
@@ -602,7 +602,7 @@ begin
 {$ifdef _DEBUG_TRACK_PB}
         if (bShowPB) then
         begin
-          DbgPrintf('  NVPB_FixLoop(%d)', [dwCount]);
+          DbgPrintf('  NV2A_FixLoop(%d)', [dwCount]);
           DbgPrintf('');
           DbgPrintf('  Index Array Data...');
 
@@ -651,7 +651,7 @@ begin
 
       end;
 
-      NVPB_InlineIndexArray:
+      NV2A_InlineIndexArray:
       begin
         pIndexData := pdwPushData;
         Inc(pdwPushData, dwCount);
@@ -665,7 +665,7 @@ begin
 {$ifdef _DEBUG_TRACK_PB}
         if (bShowPB) then
         begin
-          DbgPrintf('  NVPB_InlineIndexArray(0x%.08X, %d)...', [pIndexData, dwCount]);
+          DbgPrintf('  NV2A_InlineIndexArray(0x%.08X, %d)...', [pIndexData, dwCount]);
           DbgPrintf('');
           DbgPrintf('  Index Array Data...');
 
