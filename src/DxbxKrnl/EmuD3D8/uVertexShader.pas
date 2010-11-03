@@ -59,6 +59,12 @@ const
   VSH_XBOX_MAX_R_REGISTER_COUNT = 12 + 1; // Use r12 to read back the current value of oPos, allows to treat oPos as a thirteenth temporary register.
   VSH_XBOX_MAX_V_REGISTER_COUNT = 16;
 
+{$IFDEF DXBX_USE_D3D9}
+  VSH_NATIVE_MAX_R_REGISTER_COUNT = 12;
+{$ELSE}
+  VSH_NATIVE_MAX_R_REGISTER_COUNT = 32; // vs.3.0 has at least 32 registers
+{$ENDIF}
+
 // nv2a microcode header
 type _VSH_SHADER_HEADER = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -80,7 +86,7 @@ const VSH_INSTRUCTION_SIZE_BYTES = VSH_INSTRUCTION_SIZE * sizeof(DWORD);
 // ****************************************************************************
 
 // Local macros
-const VERSION_VS =                      $F0;  // vs.1.1, not an official value
+const VERSION_VS =                      $F0;  // vs.1.1, not an official value (Dxbx extension : 3.0)
 const VERSION_XVS =                     $20;  // Xbox vertex shader
 const VERSION_XVSS =                    $73;  // Xbox vertex state shader
 const VERSION_XVSW =                    $77;  // Xbox vertex read/write shader
@@ -146,26 +152,49 @@ VSH_FIELD_NAME = _VSH_FIELD_NAME;
 
 type _VSH_OREG_NAME = 
 (
-    OREG_OPOS,
-    OREG_UNUSED1,
-    OREG_UNUSED2,
-    OREG_OD0,
-    OREG_OD1,
-    OREG_OFOG,
-    OREG_OPTS,
-    OREG_OB0,
-    OREG_OB1,
-    OREG_OT0,
-    OREG_OT1,
-    OREG_OT2,
-    OREG_OT3,
-    OREG_UNUSED3,
-    OREG_UNUSED4,
-    OREG_A0X // = 15 - all values of the 4 bits are used
+    OREG_OPOS,    //  0
+    OREG_UNUSED1, //  1
+    OREG_UNUSED2, //  2
+    OREG_OD0,     //  3
+    OREG_OD1,     //  4
+    OREG_OFOG,    //  5
+    OREG_OPTS,    //  6
+    OREG_OB0,     //  7
+    OREG_OB1,     //  8
+    OREG_OT0,     //  9
+    OREG_OT1,     // 10
+    OREG_OT2,     // 11
+    OREG_OT3,     // 12
+    OREG_UNUSED3, // 13
+    OREG_UNUSED4, // 14
+    OREG_A0X      // 15 - all values of the 4 bits are used
 );
 VSH_OREG_NAME = _VSH_OREG_NAME;
 
-type _VSH_PARAMETER_TYPE = 
+{$IFDEF DXBX_USE_D3D9}
+const OREG_MAPPING: array [VSH_OREG_NAME] of Integer = (
+     0, // OREG_OPOS
+    -1, // OREG_UNUSED1
+    -1, // OREG_UNUSED2
+     1, // OREG_OD0
+     2, // OREG_OD1
+     3, // OREG_OFOG
+     4, // OREG_OPTS
+     5, // OREG_OB0
+     6, // OREG_OB1
+     7, // OREG_OT0
+     8, // OREG_OT1
+     9, // OREG_OT2
+    10, // OREG_OT3
+    -1, // OREG_UNUSED3
+    -1, // OREG_UNUSED4
+    11 // OREG_A0X
+  );
+
+  VSH_XBOX_MAX_O_REGISTER_COUNT = Ord(High(VSH_OREG_NAME));
+{$ENDIF}
+
+type _VSH_PARAMETER_TYPE =
 (
     PARAM_UNKNOWN = 0,
     PARAM_R,
@@ -363,6 +392,7 @@ type _VSH_XBOX_SHADER = record
 {$IFDEF DXBX_USE_D3D9}
 var // TODO -oDxbx : Make this threadsafe (not global) !
   RegVUsage: array [0..VSH_XBOX_MAX_V_REGISTER_COUNT-1] of Boolean; // Dxbx addition, to support D3D9
+  RegOUsage: array [0..VSH_XBOX_MAX_O_REGISTER_COUNT-1] of Boolean; // Dxbx addition, to support D3D9
 {$ENDIF}
 
 // Local constants
@@ -929,7 +959,13 @@ begin
   DisassemblyPos := 0;
   case pShader.ShaderHeader.Version of
     VERSION_VS:
+    begin
+{$IFDEF DXBX_USE_D3D9}
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'vs.3.0'#13#10));
+{$ELSE}
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'vs.1.1'#13#10));
+{$ENDIF}
+    end;
     VERSION_XVS:
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'xvs.1.1'#13#10));
     VERSION_XVSS:
@@ -972,6 +1008,30 @@ begin
           DclStr := '; dcl_unknown';
         end;
         Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s v%d'#13#10, [DclStr, i]));
+      end;
+    end;
+
+    for i := 0 to VSH_XBOX_MAX_O_REGISTER_COUNT - 1 do
+    begin
+      // Test if this Output-register is actually used :
+      if RegOUsage[i] then
+      begin
+        case VSH_OREG_NAME(i) of
+          OREG_OPOS: DclStr := 'dcl_position o%d.xyzw'#13#10;
+          OREG_OD0: DclStr := 'dcl_color0 o%d.xyzw'#13#10;
+          OREG_OD1: DclStr := 'dcl_color1 o%d.xyzw'#13#10;
+          OREG_OFOG: DclStr := 'dcl_fog o%d.w'#13#10;
+          OREG_OPTS: DclStr := 'dcl_psize o%d'#13#10;
+          OREG_OB0: DclStr := 'dcl_color2 o%d.xyzw'#13#10;
+          OREG_OB1: DclStr := 'dcl_color3 o%d.xyzw'#13#10;
+          OREG_OT0: DclStr := 'dcl_texcoord0 o%d.xyzw'#13#10;
+          OREG_OT1: DclStr := 'dcl_texcoord1 o%d.xyzw'#13#10;
+          OREG_OT2: DclStr := 'dcl_texcoord2 o%d.xyzw'#13#10;
+          OREG_OT3: DclStr := 'dcl_texcoord3 o%d.xyzw'#13#10;
+        else
+          DclStr := '; dcl_unknown o%d'#13#10;
+        end;
+        Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, DclStr, [OREG_MAPPING[VSH_OREG_NAME(i)]]));
       end;
     end;
   end;
@@ -1026,7 +1086,14 @@ begin
           if (Integer(pIntermediate.Output.Address) > Ord(HIGH(VSH_OREG_NAME))) then
             // don't add anything
           else
-            Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s', [OReg_Name[VSH_OREG_NAME(pIntermediate.Output.Address)]]));
+          begin
+{$IFDEF DXBX_USE_D3D9}
+            if IsConverted then
+              Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'o%d', [OREG_MAPPING[VSH_OREG_NAME(pIntermediate.Output.Address)]]))
+            else
+{$ENDIF}
+              Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s', [OReg_Name[VSH_OREG_NAME(pIntermediate.Output.Address)]]));
+          end;
       else
         DxbxKrnlCleanup('Invalid output register in vertex shader!');
       end;
@@ -1555,7 +1622,7 @@ function VshConvertShader(pShader: PVSH_XBOX_SHADER;
                           bNoReservedConstants: boolean): boolean;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
-  RUsage: array [0..VSH_XBOX_MAX_R_REGISTER_COUNT-1] of boolean;
+  RUsage: array [0..VSH_NATIVE_MAX_R_REGISTER_COUNT] of boolean; // Not -1, to get 1 extra (at least 13: r0-r12)
   i: int;
   j: int;
   k: int;
@@ -1567,12 +1634,15 @@ var
   swizzle: int;
 begin
   DPHReplacement := -1;
-  for i := 0 to VSH_XBOX_MAX_R_REGISTER_COUNT - 1 do
+  for i := 0 to VSH_NATIVE_MAX_R_REGISTER_COUNT do // Not -1, to get 1 extra (at least r12)
     RUsage[i] := FALSE;
 
 {$IFDEF DXBX_USE_D3D9}
   for i := 0 to VSH_XBOX_MAX_V_REGISTER_COUNT - 1 do
     RegVUsage[i] := FALSE;
+
+  for i := 0 to VSH_XBOX_MAX_O_REGISTER_COUNT - 1 do
+    RegOUsage[i] := FALSE;
 {$ENDIF}
 
   // TODO -oCXBX: What about state shaders and such?
@@ -1618,6 +1688,11 @@ begin
         Inc(pIntermediate.Output.Address, X_D3DSCM_CORRECTION{=96});
     end;
 
+{$IFDEF DXBX_USE_D3D9}
+    if (pIntermediate.Output.Type_ = IMD_OUTPUT_O) then
+      RegOUsage[pIntermediate.Output.Address] := TRUE;
+{$ENDIF}
+
     for j := 0 to 3-1 do
     begin
       if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_R) then
@@ -1652,7 +1727,7 @@ begin
         // attempt to find unused register...
         if DPHReplacement = -1 then
         begin
-          for j := 11 downto 0 do
+          for j := VSH_NATIVE_MAX_R_REGISTER_COUNT-1 downto 0 do
           begin
             if (not RUsage[j]) then
             begin
@@ -1743,7 +1818,7 @@ begin
   if (RUsage[12]) then
   begin
     // Sigh, they absolutely had to use r12, didn't they?
-    for i := 11 downto 0 do
+    for i := VSH_NATIVE_MAX_R_REGISTER_COUNT-1 downto 0 do
     begin
       if (not RUsage[i]) then
       begin
