@@ -53,13 +53,17 @@ type Dxbx4Booleans = array [0..4-1] of boolean;
 
 // Types from VertexShader.h :
 
+{$IFDEF DXBX_USE_D3D9}
+  {.$DEFINE DXBX_USE_VS30} // Separate the port to Vertex Shader model 3.0 from the port to Direct3D9
+{$ENDIF}
+
 const
   VSH_XBOX_MAX_A_REGISTER_COUNT = 1;
   VSH_XBOX_MAX_C_REGISTER_COUNT = 96;
   VSH_XBOX_MAX_R_REGISTER_COUNT = 12 + 1; // Use r12 to read back the current value of oPos, allows to treat oPos as a thirteenth temporary register.
   VSH_XBOX_MAX_V_REGISTER_COUNT = 16;
 
-{$IFDEF DXBX_USE_D3D9}
+{$IFDEF DXBX_USE_VS30}
   VSH_NATIVE_MAX_R_REGISTER_COUNT = 32; // vs.3.0 has at least 32 registers
 {$ELSE}
   VSH_NATIVE_MAX_R_REGISTER_COUNT = 12;
@@ -171,7 +175,7 @@ type _VSH_OREG_NAME =
 );
 VSH_OREG_NAME = _VSH_OREG_NAME;
 
-{$IFDEF DXBX_USE_D3D9}
+{$IFDEF DXBX_USE_VS30}
 const OREG_MAPPING: array [VSH_OREG_NAME] of Integer = (
      0, // OREG_OPOS
     -1, // OREG_UNUSED1
@@ -192,7 +196,7 @@ const OREG_MAPPING: array [VSH_OREG_NAME] of Integer = (
   );
 
   VSH_XBOX_MAX_O_REGISTER_COUNT = Ord(High(VSH_OREG_NAME));
-{$ENDIF}
+{$ENDIF DXBX_USE_VS30}
 
 type _VSH_PARAMETER_TYPE =
 (
@@ -392,7 +396,11 @@ type _VSH_XBOX_SHADER = record
 {$IFDEF DXBX_USE_D3D9}
 var // TODO -oDxbx : Make this threadsafe (not global) !
   RegVUsage: array [0..VSH_XBOX_MAX_V_REGISTER_COUNT-1] of Boolean; // Dxbx addition, to support D3D9
-  RegOUsage: array [0..VSH_XBOX_MAX_O_REGISTER_COUNT-1] of Boolean; // Dxbx addition, to support D3D9
+{$ENDIF}
+
+{$IFDEF DXBX_USE_VS30}
+var
+  RegOUsage: array [0..VSH_XBOX_MAX_O_REGISTER_COUNT-1] of Boolean; // Dxbx addition, to support VS3.0
 {$ENDIF}
 
 // Local constants
@@ -960,7 +968,7 @@ begin
   case pShader.ShaderHeader.Version of
     VERSION_VS:
     begin
-{$IFDEF DXBX_USE_D3D9}
+{$IFDEF DXBX_USE_VS30}
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'vs.3.0'#13#10));
 {$ELSE}
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'vs.1.1'#13#10));
@@ -1011,6 +1019,7 @@ begin
       end;
     end;
 
+{$IFDEF DXBX_USE_VS30}
     for i := 0 to VSH_XBOX_MAX_O_REGISTER_COUNT - 1 do
     begin
       // Test if this Output-register is actually used :
@@ -1034,8 +1043,9 @@ begin
         Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, DclStr, [OREG_MAPPING[VSH_OREG_NAME(i)]]));
       end;
     end;
+{$ENDIF DXBX_USE_VS30}
   end;
-{$ENDIF}
+{$ENDIF DXBX_USE_D3D9}
 
   // Dxbx note : Translated 'for' to 'while', because loop condition is a complex expression :
   i := 0; while (i < pShader.IntermediateCount) and ((i < 128) or (not IsConverted)) do
@@ -1087,7 +1097,7 @@ begin
             // don't add anything
           else
           begin
-{$IFDEF DXBX_USE_D3D9}
+{$IFDEF DXBX_USE_VS30}
             if IsConverted then
               Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'o%d', [OREG_MAPPING[VSH_OREG_NAME(pIntermediate.Output.Address)]]))
             else
@@ -1196,7 +1206,7 @@ begin
   Inc(pShader.IntermediateCount);
 end;
 
-procedure VshDeleteIntermediate(pShader: PVSH_XBOX_SHADER; 
+procedure VshDeleteIntermediate(pShader: PVSH_XBOX_SHADER;
                                 Pos: uint16);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
@@ -1640,7 +1650,9 @@ begin
 {$IFDEF DXBX_USE_D3D9}
   for i := 0 to VSH_XBOX_MAX_V_REGISTER_COUNT - 1 do
     RegVUsage[i] := FALSE;
+{$ENDIF}
 
+{$IFDEF DXBX_USE_VS30}
   for i := 0 to VSH_XBOX_MAX_O_REGISTER_COUNT - 1 do
     RegOUsage[i] := FALSE;
 {$ENDIF}
@@ -1688,7 +1700,7 @@ begin
         Inc(pIntermediate.Output.Address, X_D3DSCM_CORRECTION{=96});
     end;
 
-{$IFDEF DXBX_USE_D3D9}
+{$IFDEF DXBX_USE_VS30}
     if (pIntermediate.Output.Type_ = IMD_OUTPUT_O) then
       RegOUsage[pIntermediate.Output.Address] := TRUE;
 {$ENDIF}
