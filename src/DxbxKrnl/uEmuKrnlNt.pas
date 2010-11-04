@@ -408,6 +408,17 @@ type
     NtObjAttrPtr: JwaWinType.POBJECT_ATTRIBUTES;
   end;
 
+procedure DxbxInitializePartition0(const aPath: string);
+var
+  i: Integer;
+begin
+  i := FileCreate(aPath);
+  FileSeek(i, 512 * 1024, 0);
+  SetEndOfFile(i);
+  FileClose(i);
+  DbgPrintf('EmuKrnl : Initialized config partition (0) to : ' + aPath);
+end;
+
 function DxbxObjectAttributesToNT(ObjectAttributes: POBJECT_ATTRIBUTES; var NativeObjectAttributes: RNativeObjectAttributes; const aFileAPIName: string = ''): NTSTATUS;
 var
   OriginalPath: string;
@@ -510,9 +521,13 @@ begin
     // Check for special case : Partition0
     if StartsWithText(XboxFullPath, DeviceHarddisk0Partition0) then
     begin
-      DxbxKrnlCleanup('Partition0 access not implemented yet! Tell PatrickvL what title triggers this.');
-      // TODO : Redirect raw sector-access to the 'Partition0_ConfigData.bin' file
+      // Redirect raw sector-access to the 'Partition0_ConfigData.bin' file :
+      RelativePath := 'Partition0_ConfigData.bin';
+
       // (This file probably needs to be pre-initialized somehow too).
+      // For now, just create an empty file of 512 KB :
+      if not FileExists(NativePath + RelativePath) then
+        DxbxInitializePartition0(NativePath + RelativePath);
     end;
 
     if MayLog(lfUnit or lfReturnValue or lfFile) then
