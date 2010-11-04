@@ -11,7 +11,7 @@ object frm_Main: Tfrm_Main
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  Menu = MainMenu1
+  Menu = d
   OldCreateOrder = False
   Position = poScreenCenter
   Visible = True
@@ -46,8 +46,8 @@ object frm_Main: Tfrm_Main
   object lblXbeInformation: TLabel
     Left = 642
     Top = 304
-    Width = 4
-    Height = 13
+    Width = 3
+    Height = 14
     Anchors = [akTop, akRight]
     Font.Charset = ANSI_CHARSET
     Font.Color = clWhite
@@ -127,13 +127,16 @@ object frm_Main: Tfrm_Main
     OnKeyPress = cbFreeTextFilterKeyPress
     OnSelect = cbFreeTextFilterSelect
   end
-  object MainMenu1: TMainMenu
+  object d: TMainMenu
     Left = 8
     Top = 12
     object mnu_File: TMenuItem
       Caption = '&File'
       object mnu_OpenXbe: TMenuItem
         Action = actOpenXbe
+      end
+      object mnu_ImportXbes: TMenuItem
+        Action = actImportXbes
       end
       object mnu_CloseXbe: TMenuItem
         Action = actCloseXbe
@@ -381,6 +384,11 @@ object frm_Main: Tfrm_Main
       Category = 'View'
       Caption = '&None'
       OnExecute = actDebugGuiNoneExecute
+    end
+    object actImportXbes: TAction
+      Category = 'File'
+      Caption = 'Import Xbe`s from dir'
+      OnExecute = actImportXbesExecute
     end
   end
   object XbeOpenDialog: TOpenDialog
