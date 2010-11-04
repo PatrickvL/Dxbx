@@ -26,7 +26,7 @@ uses
   Windows, SysUtils, StrUtils, Classes, Messages, Controls, StdCtrls, ComCtrls, ExtCtrls,
   Types, GraphUtil,
   Grids, Menus, ActnList, Forms, Dialogs, Graphics, jpeg,
-  ShellAPI, IniFiles,
+  ShellAPI, IniFiles, ShlObj,
   xmldom, XMLIntf, msxmldom, XMLDoc,
   // Jedi Win32API
   JwaWinType,
@@ -52,7 +52,7 @@ const
 
 type
   Tfrm_Main = class(TForm)
-    MainMenu1: TMainMenu;
+    d: TMainMenu;
     mnu_File: TMenuItem;
     Exit1: TMenuItem;
     N1: TMenuItem;
@@ -133,6 +133,8 @@ type
     actDebugGuiNone: TAction;
     mnu_DebugOutputGuiNone: TMenuItem;
     mnu_DebugOutputKernelNone: TMenuItem;
+    mnu_ImportXbes: TMenuItem;
+    actImportXbes: TAction;
     procedure actStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -171,15 +173,21 @@ type
     procedure actClearGameListExecute(Sender: TObject);
     procedure actDebugKernelNoneExecute(Sender: TObject);
     procedure actDebugGuiNoneExecute(Sender: TObject);
+    procedure actImportXbesExecute(Sender: TObject);
   protected
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
     procedure WndProc(var Message: TMessage); override;
     procedure StopEmulation;
   private
+
     procedure SaveXBEList(const aFilePath, aPublishedBy: string);
     Function ImportXBEGameList(aImportFilePath: string = ''; aUseImportDialog: Boolean = False): Integer;
     function FindByFileName(const aFileName: string): Integer;
     function FindByName(const aName: string): Integer;
+
+    procedure FindFiles(FilesList: TStringList; StartDir, FileMask: string);
+    function BrowseDialog (const Title: string; const Flag: integer): string;
+
 //    function ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
     function FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
     function _ReadXBEInfoFromNode(const XBEInfoNode: IXMLNode): TXBEInfo;
@@ -189,6 +197,7 @@ type
     function StartTool(aToolName: string; const aParameters: string = ''): Boolean;
     procedure ShowXbeInfo(const aXbeInfo: TXbeInfo);
     function LoadXbe(const aFileName: string): Boolean;
+    procedure OpenXbeFile(aFileName: string = '');
   private
     MyXBEList: TStringList;
     ApplicationDir: string;
@@ -243,6 +252,33 @@ var
   frm_Main: Tfrm_Main;
 
 implementation
+
+function BrowseDialogCallBack
+  (Wnd: HWND; uMsg: UINT; lParam, lpData: LPARAM):
+  integer stdcall;
+var
+  wa, rect : TRect;
+  dialogPT : TPoint;
+begin
+  //center in work area
+  if uMsg = BFFM_INITIALIZED then
+  begin
+    wa := Screen.WorkAreaRect;
+    GetWindowRect(Wnd, Rect);
+    dialogPT.X := ((wa.Right-wa.Left) div 2) -
+                  ((rect.Right-rect.Left) div 2);
+    dialogPT.Y := ((wa.Bottom-wa.Top) div 2) -
+                  ((rect.Bottom-rect.Top) div 2);
+    MoveWindow(Wnd,
+               dialogPT.X,
+               dialogPT.Y,
+               Rect.Right - Rect.Left,
+               Rect.Bottom - Rect.Top,
+               True);
+  end;
+
+  Result := 0;
+end;
 
 function GetTitleSpecificKernelDebugFilePath: string;
 begin
@@ -369,6 +405,31 @@ begin
           Handled := True;
         end;
       end;
+  end;
+end;
+
+function Tfrm_Main.BrowseDialog(const Title: string;
+  const Flag: integer): string;
+var
+  lpItemID : PItemIDList;
+  BrowseInfo : TBrowseInfo;
+  DisplayName : array[0..MAX_PATH] of char;
+  TempPath : array[0..MAX_PATH] of char;
+begin
+  Result:='';
+  FillChar(BrowseInfo, sizeof(TBrowseInfo), #0);
+  with BrowseInfo do begin
+    hwndOwner := Application.Handle;
+    pszDisplayName := @DisplayName;
+    lpszTitle := PChar(Title);
+    ulFlags := Flag;
+    lpfn := BrowseDialogCallBack;
+  end;
+  lpItemID := SHBrowseForFolder(BrowseInfo);
+  if lpItemId <> nil then begin
+    SHGetPathFromIDList(lpItemID, TempPath);
+    Result := TempPath;
+    GlobalFreePtr(lpItemID);
   end;
 end;
 
@@ -1239,6 +1300,46 @@ begin
   // TODO : Add other non-duplicate tests here
 end;
 
+procedure Tfrm_Main.FindFiles(FilesList: TStringList; StartDir,
+  FileMask: string);
+var
+  SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+    StartDir := StartDir + '\';
+
+  { Build a list of the files in directory StartDir
+     (not the directories!)                         }
+
+  IsFound :=
+    FindFirst(StartDir+FileMask, faAnyFile-faDirectory, SR) = 0;
+  while IsFound do begin
+    FilesList.Add(StartDir + SR.Name);
+    IsFound := FindNext(SR) = 0;
+  end;
+  FindClose(SR);
+
+  // Build a list of subdirectories
+  DirList := TStringList.Create;
+  IsFound := FindFirst(StartDir+'*.*', faAnyFile, SR) = 0;
+  while IsFound do begin
+    if ((SR.Attr and faDirectory) <> 0) and
+         (SR.Name[1] <> '.') then
+      DirList.Add(StartDir + SR.Name);
+    IsFound := FindNext(SR) = 0;
+  end;
+  FindClose(SR);
+
+  // Scan the list of subdirectories
+  for i := 0 to DirList.Count - 1 do
+    FindFiles(FilesList, DirList[i], FileMask);
+
+  DirList.Free;
+end;
+
 (*function Tfrm_Main.ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
 var
   i: Integer;
@@ -1363,6 +1464,31 @@ begin
   end;
 end;
 
+procedure Tfrm_Main.actImportXbesExecute(Sender: TObject);
+var
+  sFolder : string;
+  XbeFiles: TStringList;
+  i: integer;
+begin
+  sFolder := BrowseDialog('Select a folder', BIF_RETURNONLYFSDIRS);
+
+  if sFolder <> '' then
+  begin
+    XbeFiles := TStringList.Create;
+    try
+      FindFiles(XbeFiles, sFolder, '*.xbe');
+
+      for i := 0 to XbeFiles.Count -1 do
+      begin
+        OpenXbeFile(XbeFiles[i]);
+      end;
+
+    finally
+      FreeAndNil(XbeFiles);
+    end;
+  end;
+end;
+
 // actFileXbeInfoExecute
 
 procedure Tfrm_Main.actConsoleDebugGuiExecute(Sender: TObject);
@@ -1453,16 +1579,9 @@ begin
 end;
 
 procedure Tfrm_Main.actOpenXbeExecute(Sender: TObject);
-var
-  XbeXml: string;
 begin
   if XbeOpenDialog.Execute then
-    if LoadXbe(XbeOpenDialog.FileName) then
-    begin
-      DxbxXml.CreateXmlXbeDumpAsText(XbeXml, m_Xbe, XbeOpenDialog.FileName);
-      LoadXBEListByXml(XbeXml);
-      UpdateFilter;
-    end;
+    OpenXbeFile(XbeOpenDialog.FileName);
 end;
 
 procedure Tfrm_Main.actCloseXbeExecute(Sender: TObject);
@@ -2021,6 +2140,19 @@ begin
   g_EmuShared.m_BypassSymbolCache := not g_EmuShared.m_BypassSymbolCache;
   g_EmuShared.Save;
   AdjustMenu;
+end;
+
+procedure Tfrm_Main.OpenXbeFile(aFileName: string);
+var
+  XbeXml: string;
+begin
+  if FileExists(aFileName) then
+    if LoadXbe(aFileName) then
+    begin
+      DxbxXml.CreateXmlXbeDumpAsText(XbeXml, m_Xbe, aFileName);
+      LoadXBEListByXml(XbeXml);
+      UpdateFilter;
+    end;
 end;
 
 // Tfrm_Main.LoadXBEList
