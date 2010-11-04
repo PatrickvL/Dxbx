@@ -1152,6 +1152,7 @@ begin
   else
     ppBuffer^.SetVolume(DSBVOLUME_MAX);
 
+  DxbxHackUpdateSoundBuffers;
 
   if (FAILED(hRet)) then
   begin
@@ -1305,6 +1306,8 @@ begin
     ppStream^.SetVolume(DSBVOLUME_MIN)
   else
     ppStream^.SetVolume(DSBVOLUME_MAX);
+
+  DxbxHackUpdateSoundStreams;
 
   // cache this sound stream
   begin
