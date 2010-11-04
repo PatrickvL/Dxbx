@@ -659,7 +659,17 @@ begin
     end;
 
     IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).SetCurrentPosition(0);
+
+    if g_XBSound.GetMute then
+      IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).SetVolume(DSBVOLUME_MIN)
+    else
+      IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).SetVolume(g_SoundVolume);
+
+
     IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).Play(0, 0, 0);
+
+
+
   end;
 end;
 
@@ -711,7 +721,13 @@ begin
     IDirectSoundBuffer(pBuffer.EmuDirectSoundBuffer8).SetCurrentPosition(dwPlayCursor);
 
     if (dwStatus and DSBSTATUS_PLAYING) > 0 then
+    begin
+      if g_XBSound.GetMute then
+        IDirectSoundBuffer(pBuffer.EmuDirectSoundBuffer8).SetVolume(DSBVOLUME_MIN)
+      else
+        IDirectSoundBuffer(pBuffer.EmuDirectSoundBuffer8).SetVolume(g_SoundVolume);
       IDirectSoundBuffer(pBuffer.EmuDirectSoundBuffer8).Play(0, 0, pBuffer.EmuPlayFlags);
+    end
   end;
 end;
 
@@ -760,7 +776,13 @@ begin
     IDirectSoundBuffer(pStream.EmuDirectSoundBuffer8).SetCurrentPosition(dwPlayCursor);
 
     if (dwStatus and DSBSTATUS_PLAYING) > 0 then
+    begin
+      if g_XBSound.GetMute then
+        IDirectSoundBuffer(pStream.EmuDirectSoundBuffer8).SetVolume(DSBVOLUME_MIN)
+      else
+        IDirectSoundBuffer(pStream.EmuDirectSoundBuffer8).SetVolume(g_SoundVolume);
       IDirectSoundBuffer(pStream.EmuDirectSoundBuffer8).Play(0, 0, pStream.EmuPlayFlags);
+    end;
   end;
 end;
 
@@ -1245,7 +1267,6 @@ begin
 
     pDSBufferDesc.dwSize := sizeof(DSBUFFERDESC);
     pDSBufferDesc.dwFlags := (pdssd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
-//    pDSBufferDesc.dwFlags := DSBCAPS_CTRLVOLUME;
     pDSBufferDesc.dwBufferBytes := DSBSIZE_MIN;
 
     pDSBufferDesc.dwReserved := 0;
@@ -2464,6 +2485,7 @@ begin
 
 
     Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume);
+    DxbxHackUpdateSoundBuffers;
   end;
 
   EmuSwapFS(fsXbox);
@@ -3048,7 +3070,12 @@ begin
   end
   else
   begin
+    if g_XBSound.GetMute then
+      IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(DSBVOLUME_MIN)
+    else
+      IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(g_SoundVolume);
     hRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).Play(0, 0, dwFlags);
+
   end;
 
   Self.EmuPlayFlags := dwFlags;
@@ -4039,6 +4066,7 @@ begin
   begin
     g_SoundVolume := lVolume;
     Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume);
+    DxbxHackUpdateSoundStreams;
   end;
 
   EmuSwapFS(fsXbox);
