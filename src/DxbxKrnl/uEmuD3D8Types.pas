@@ -883,10 +883,10 @@ const X_D3DCOMMON_TYPE_SURFACE       = $00050000;
 const X_D3DCOMMON_TYPE_FIXUP         = $00060000;
 const X_D3DCOMMON_INTREFCOUNT_MASK   = $00780000;
 const X_D3DCOMMON_INTREFCOUNT_SHIFT  = 19;
+const X_D3DCOMMON_VIDEOMEMORY        = $00800000; // Not used.
 const X_D3DCOMMON_D3DCREATED         = $01000000;
-const X_D3DCOMMON_ISLOCKED           = $02000010; // Surface is currently locked (potential unswizzle candidate)
-//??const X_D3DCOMMON_ISLOCKED           = $02000000; // Surface is currently locked (potential unswizzle candidate)
-const X_D3DCOMMON_UNUSED_MASK        = $FE000000;
+const X_D3DCOMMON_ISLOCKED           = $02000000; // Surface is currently locked (potential unswizzle candidate)
+const X_D3DCOMMON_UNUSED_MASK        = $FC000000;
 const X_D3DCOMMON_UNUSED_SHIFT       = 25;
 
 // special resource data flags (must set _SPECIAL *AND* specific flag(s))
@@ -980,7 +980,7 @@ X_D3DPALETTESIZE = _X_D3DPALETTESIZE;
 type X_D3DPixelContainer = object(X_D3DResource)
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
-    Format: X_D3DFORMAT; // Format information about the texture.
+    Format: DWORD; // Format information about the texture.
     Size: DWORD; // Size of a non power-of-2 texture, must be zero otherwise
   end; // size = 20 (as in Cxbx)
   PX_D3DPixelContainer = ^X_D3DPixelContainer;

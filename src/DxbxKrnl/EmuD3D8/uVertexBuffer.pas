@@ -196,7 +196,7 @@ procedure DxbxUpdatePixelContainer(
   bCompressed: BOOL_;
   dwCompressedSize: DWORD;
   bCubemap: BOOL_;
-  CacheFormat: D3DFORMAT
+  CacheFormat: X_D3DFORMAT
   ); {NOPATCH}
 
 procedure CRC32Init;
@@ -1842,7 +1842,7 @@ procedure DxbxUpdatePixelContainer(
   bCompressed: BOOL_;
   dwCompressedSize: DWORD;
   bCubemap: BOOL_;
-  CacheFormat: D3DFORMAT
+  CacheFormat: X_D3DFORMAT
   ); {NOPATCH}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
@@ -1862,12 +1862,9 @@ var
   pDest: PByte;
 
   // Palette conversion variables (expanding D3DFMT_P8 to D3DFMT_A8R8G8B8) :
-  pPixelData: PByte;
   dwDataSize: DWORD;
   dwPaletteSize: DWORD;
   pTextureCache: PBytes;
-  pExpandedTexture: PBytes;
-  pTexturePalette: PBytes;
   w: uint32;
   v: uint32;
   c: uint32;
@@ -1937,38 +1934,27 @@ begin
           end
           else
           begin
-            if (CacheFormat = D3DFMT_P8) then // Palette
+            if False{(CacheFormat = X_D3DFMT_P8)} then // Palette
             begin
               EmuWarning('Unsupported texture format D3DFMT_P8, expanding to D3DFMT_A8R8G8B8');
 
-              //
-              // create texture resource
-              //
-              pPixelData := pDest;
-              dwDataSize := dwMipWidth * dwMipHeight * 4;
+              // TODO -oDxbx : Create a new (larger) texture resource, but in such a way that
+              // the original P8 texture is also still available, in order to allow the Xbe
+              // to still make changes!
+
+              dwDataSize := dwMipWidth * dwMipHeight;// * 4;
               dwPaletteSize := 256 * 4; // Cxbx Note: This is not allways true, it can be 256- 128- 64- or 32*4
 
+              // First we need to unswizzle the texture data to a temporary buffer :
               pTextureCache := DxbxMalloc(dwDataSize);
-              pExpandedTexture := DxbxMalloc(dwDataSize);
-              pTexturePalette := DxbxMalloc(dwPaletteSize);
-
-              // First we need to unswizzle the texture data
               EmuXGUnswizzleRect
               (
-                pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, {dest=}pPixelData,
+                pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, pTextureCache,
                 LockedRect.Pitch, iRect, iPoint, dwBPP
               );
 
-              // TODO -oDxbx: Reduce this; EmuXGUnswizzleRect could target pTextureCache,
-              // g_pCurrentPalette doesn't have to be copied, and pExpandedTexture could
-              // be removed if we write to pPixelData directly. All we need is a testcase!
-
-              // Copy the unswizzled data to a temporary buffer
-              memcpy({dest=}pTextureCache, pPixelData, dwDataSize);
-
-              // Copy the currently selected palette's data to the buffer
-              memcpy({dest=}pTexturePalette, g_pCurrentPalette, dwPaletteSize);
-
+              // Lookup the colors of the paletted pixels in the current pallette
+              // and write the expanded color back to the texture :
               w := 0;
               c := 0;
               if (dwDataSize div 4) > 0 then // Dxbx addition, to prevent underflow
@@ -1980,20 +1966,15 @@ begin
                   c := 0;
                 end;
                 p := Byte(pTextureCache[w]);
-                pExpandedTexture[y * 4 + 0] := pTexturePalette[p * 4 + 0];
-                pExpandedTexture[y * 4 + 1] := pTexturePalette[p * 4 + 1];
-                pExpandedTexture[y * 4 + 2] := pTexturePalette[p * 4 + 2];
-                pExpandedTexture[y * 4 + 3] := pTexturePalette[p * 4 + 3];
+                pDest[y * 4 + 0] := g_pCurrentPalette[p * 4 + 0];
+                pDest[y * 4 + 1] := g_pCurrentPalette[p * 4 + 1];
+                pDest[y * 4 + 2] := g_pCurrentPalette[p * 4 + 2];
+                pDest[y * 4 + 3] := g_pCurrentPalette[p * 4 + 3];
                 w := w + 1;
                 c := c + 1;
               end;
 
-              // Copy the expanded texture back to the buffer
-              memcpy({dest=}pPixelData, pExpandedTexture, dwDataSize);
-
               // Flush unused data buffers
-              DxbxFree(pTexturePalette); // pTexturePalette := nil;
-              DxbxFree(pExpandedTexture); // pExpandedTexture := nil;
               DxbxFree(pTextureCache); // pTextureCache := nil;
             end
             else
@@ -2083,7 +2064,7 @@ begin
 
       DxbxUpdatePixelContainer(pPixelContainer, X_D3DCOMMON_TYPE_TEXTURE,
         dwWidth, dwHeight, dwBPP, dwDepth, dwPitch, dwMipMapLevels,
-        bSwizzled, bCompressed, dwCompressedSize, {bCubeMap=}False, {CacheFormat=}EmuXB2PC_D3DFormat(X_Format));
+        bSwizzled, bCompressed, dwCompressedSize, {bCubeMap=}False, {CacheFormat=}X_Format);
 
     end;
 
