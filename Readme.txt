@@ -37,6 +37,17 @@ Developer Notes
 See Developer.txt
 
 
+
+ShortKey`s
+--------------
+F3  = Toggle Mute
+F8  = Toggle Logging
+F9  = Toggle Pushbuffer
+F10 = 
+F11 = Toggle Wireframe
+F12 = Create Shotshots
+
+
 Special thanks
 --------------
 We would like to send our regards to :

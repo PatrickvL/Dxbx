@@ -22,6 +22,12 @@ unit uEmuDSound;
 
 interface
 
+uses
+  uXBSound;
+
+
+var g_XBSound: XBSound;
+
 {}implementation{}
 
 uses
@@ -35,7 +41,6 @@ uses
   , DirectMusic
   // Dxbx
   , uEmuShared
-  , uXBSound
   , uTypes
   , uLog
   , uDxbxUtils // ReadSystemTimeIntoLargeInteger
@@ -560,7 +565,6 @@ type
   LPDIRECTSOUNDSTREAM = XTL_PIDirectSoundStream;
 
 // Static Variable(s)
-var g_XBSound: XBSound;
 var g_pDSound8: XTL_LPDIRECTSOUND8 = NULL;
 var g_pDSound8RefCount: int = 0;
 var g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE-1] of PX_CDirectSoundBuffer;

@@ -57,6 +57,7 @@ uses
   // Dxbx
   uConsts,
   uXbVideo,
+  uEmuDSound,
   uTypes, // Use after uXBVideo, to declare BOOL correctly!
   uDxbxUtils,
   uLog,
@@ -1413,6 +1414,13 @@ begin
           begin
             ToggleFauxFullscreen(hWnd);
           end;
+        end;
+        VK_F3:
+        begin
+          if g_XBSound.GetMute then
+            g_XBSound.SetMute(False)
+          else
+            g_XBSound.SetMute(True);
         end;
         VK_F8:
         begin
