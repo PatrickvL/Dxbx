@@ -4726,13 +4726,16 @@ begin
       Length, {Usage=}0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
       @(ppIndexBuffer^.Emu.IndexBuffer));
 
+  if (FAILED(hRet)) then
+    DxbxKrnlCleanup('XTL_EmuD3DDevice_CreateIndexBuffer: IndexBuffer Create Failed!');
+
   // Dxbx addition : Initialize Common field properly :
   ppIndexBuffer^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_INDEXBUFFER;
 
   // update data ptr
   pData := NULL;
   if (FAILED(IDirect3DIndexBuffer(ppIndexBuffer^.Emu.IndexBuffer).Lock(0, Length, {out}TLockData(pData), 0))) then
-    DxbxKrnlCleanup('EmuIDirect3DResource_Register: IndexBuffer Lock Failed!');
+    DxbxKrnlCleanup('XTL_EmuD3DDevice_CreateIndexBuffer: IndexBuffer Lock Failed!');
 
   ppIndexBuffer^.Data := DWORD(pData);
 
@@ -5833,6 +5836,9 @@ begin
           hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice,
             dwSize, {Usage=}0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
             @(pIndexBuffer.Emu.IndexBuffer));
+
+          if (FAILED(hRet)) then
+            DxbxKrnlCleanup('EmuIDirect3DResource_Register: IndexBuffer Create Failed!');
 
           // Dxbx addition : Initialize Common field properly :
           pIndexBuffer.Common := pIndexBuffer.Common or X_D3DCOMMON_TYPE_INDEXBUFFER;
@@ -8777,6 +8783,9 @@ begin
         @(g_pIndexBuffer.Emu.IndexBuffer)
     );
 
+    if (FAILED(hRet)) then
+      DxbxKrnlCleanup('EmuD3DDevice_DrawIndexedVertices: IndexBuffer Create Failed!');
+
     // Dxbx addition : Initialize Common field properly :
     g_pIndexBuffer.Common := g_pIndexBuffer.Common or X_D3DCOMMON_TYPE_INDEXBUFFER;
 
@@ -8810,12 +8819,10 @@ begin
 //    DxbxKrnlCleanup('DrawIndexedVertices : Unknown primitive type: 0x%.02X', [Ord(PrimitiveType)]);
 //  end;
 
-
   if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
     EmuWarning('Unsupported PrimitiveType! (%d)', [DWORD(PrimitiveType)]);
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
-
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
   VPDesc.dwOffset := 0;
@@ -8827,7 +8834,7 @@ begin
   FatalError := false;
 
   {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, @FatalError);
-  VertexCount := VPDesc.dwVertexCount; // TODO -oDxbx : Should we indeed use the new VertexCount?!?
+  VertexCount := VPDesc.dwVertexCount; // Dxbx addition : Use the new VertexCount
 
   {$ifdef _DEBUG_TRACK_VB}
   if not g_bVBSkipStream then
@@ -8858,7 +8865,8 @@ begin
     // TODO -oCXBX: caching (if it becomes noticably slow to recreate the buffer each time)
     if(not bActiveIB) then
     begin
-      IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, VertexCount*SizeOf(Word), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pPCIndexBuffer);
+      if (FAILED(IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, VertexCount*SizeOf(Word), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pPCIndexBuffer))) then
+        DxbxKrnlCleanup('DrawIndexedVertices: IndexBuffer Create Failed!');
 
       pbData := nil;
 
@@ -8880,7 +8888,7 @@ begin
     begin
       // Dxbx note : Cxbx does this in reverse, but this is more efficient :
       uiStartIndex := DWORD(pIndexData) div SizeOf(Word);
-      uiNumVertices := {uiStartIndex + }VertexCount; // TODO -oDxbx : Is adding uiStartIndex indeed incorrect???
+      uiNumVertices := uiStartIndex + VertexCount; // Note Dxbx : uiStartIndex MUST be added (tested with Gamepad 4361)
     end;
 
     if (IsValidCurrentShader()) and not FatalError then
@@ -8896,28 +8904,6 @@ begin
         uiStartIndex,
         VPDesc.dwPrimitiveCount
       );
-      (* Cxbx has this commented out :
-      if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
-      begin
-        g_pD3DDevice.DrawPrimitive
-        (
-          EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwPrimitiveCount
-        );
-      end
-      else
-      begin
-        g_pD3DDevice.DrawIndexedPrimitive
-        (
-          EmuPrimitiveType(VPDesc.PrimitiveType),
-{$IFDEF DXBX_USE_D3D9}
-          {BaseVertexIndex=}0,
-{$ENDIF}
-          {MinVertexIndex=}0,
-          uiNumVertices,
-          uiStartIndex,
-          VPDesc.dwPrimitiveCount
-        );
-      end; *)
     end;
 
     if(not bActiveIB) then

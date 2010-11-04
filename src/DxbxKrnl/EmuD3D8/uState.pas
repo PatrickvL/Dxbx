@@ -423,6 +423,7 @@ begin
     $00001e60: Result := X_D3DRS_PSCOMBINERCOUNT;
     $00001e74: Result := X_D3DRS_PSDOTMAPPING;
     $00001e78: Result := X_D3DRS_PSINPUTTEXTURE;
+    // Missing : $0000????: Result := X_D3DRS_PSTEXTUREMODES;
   else
     int(Result) := -1;
   end;

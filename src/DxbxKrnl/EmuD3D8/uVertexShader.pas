@@ -60,9 +60,9 @@ const
   VSH_XBOX_MAX_V_REGISTER_COUNT = 16;
 
 {$IFDEF DXBX_USE_D3D9}
-  VSH_NATIVE_MAX_R_REGISTER_COUNT = 12;
-{$ELSE}
   VSH_NATIVE_MAX_R_REGISTER_COUNT = 32; // vs.3.0 has at least 32 registers
+{$ELSE}
+  VSH_NATIVE_MAX_R_REGISTER_COUNT = 12;
 {$ENDIF}
 
 // nv2a microcode header
@@ -1809,9 +1809,6 @@ begin
     Inc(i);
   end; // while
 
-//  // Dxbx fix : Prevent using
-//  RUsage[9] := True;
-
   // r12 is a special thirteenth register that can be use to read back the current value of oPos.
   // r12 can only be used as an input register and oPos can only be used as an output register.
   R12Replacement := -1;
@@ -2653,7 +2650,8 @@ begin
 
 //{$IFDEF GAME_HACKS_ENABLED}??
     // HACK: Azurik. Prevent Direct3D from trying to assemble this.
-    if(0=strcmp(pShaderDisassembly, 'vs.1.1'#13#10)) then
+    // Check if there where no opcodes :
+    if pShader.IntermediateCount = 0 then
     begin
       EmuWarning('Cannot assemble empty vertex shader!');
       hRet := D3DXERR_INVALIDDATA;
