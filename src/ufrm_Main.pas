@@ -1319,6 +1319,7 @@ begin
   while IsFound do begin
     FilesList.Add(StartDir + SR.Name);
     IsFound := FindNext(SR) = 0;
+    Application.ProcessMessages;
   end;
   FindClose(SR);
 
@@ -1330,6 +1331,7 @@ begin
          (SR.Name[1] <> '.') then
       DirList.Add(StartDir + SR.Name);
     IsFound := FindNext(SR) = 0;
+    Application.ProcessMessages;
   end;
   FindClose(SR);
 
