@@ -1238,14 +1238,14 @@ begin
 
   // convert from Xbox to PC DSound
   begin
-    dwAcceptableMask := X_DSSTREAMCAPS_CTRL3D; // TODO -oCXBX: Note 0x00040000 is being ignored (X_DSSTREAMCAPS_LOCDEFER)
+    dwAcceptableMask := X_DSBCAPS_CTRL3D or X_DSBCAPS_CTRLFREQUENCY or X_DSBCAPS_CTRLVOLUME or X_DSBCAPS_CTRLPOSITIONNOTIFY or X_DSBCAPS_MIXIN or X_DSBCAPS_LOCDEFER;
 
     if (pdssd.dwFlags and (not dwAcceptableMask)) > 0 then
         EmuWarning('Use of unsupported pdssd.dwFlags mask(s) (0x%.08X)', [pdssd.dwFlags and (not dwAcceptableMask)]);
 
     pDSBufferDesc.dwSize := sizeof(DSBUFFERDESC);
-// MARKED OUT CXBX        pDSBufferDesc.dwFlags = (pdssd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
-    pDSBufferDesc.dwFlags := DSBCAPS_CTRLVOLUME;
+    pDSBufferDesc.dwFlags := (pdssd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
+//    pDSBufferDesc.dwFlags := DSBCAPS_CTRLVOLUME;
     pDSBufferDesc.dwBufferBytes := DSBSIZE_MIN;
 
     pDSBufferDesc.dwReserved := 0;
