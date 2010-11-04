@@ -601,7 +601,7 @@ begin
       end;
       if (pCachedStream_.dwPrimitiveCount > 0) then
       begin
-        // The primitives were patched, draw with the correct number of primimtives from the cache
+        // The primitives were patched, draw with the correct number of primitives from the cache
         pPatchDesc.dwPrimitiveCount := pCachedStream_.dwPrimitiveCount;
       end;
       bApplied := true;
@@ -1097,35 +1097,32 @@ begin
   begin
     pUVData := Puint08(pData + (uiVertex * uiStride) + uiOffset);
 
-    if (dwTexN >= 1) then
+    if (bTexIsLinear[0]) then
     begin
-      if (bTexIsLinear[0]) then
+      PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[0].Size and X_D3DSIZE_WIDTH_MASK) + 1);
+      PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[0].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
+    end;
+
+    if (dwTexN >= 2) then
+    begin
+      if (bTexIsLinear[1]) then
       begin
-        PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[0].Size and X_D3DSIZE_WIDTH_MASK) + 1);
-        PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[0].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
+        PFLOATs(pUVData)[2] := PFLOATs(pUVData)[2] / (( pLinearPixelContainer[1].Size and X_D3DSIZE_WIDTH_MASK) + 1);
+        PFLOATs(pUVData)[3] := PFLOATs(pUVData)[3] / (((pLinearPixelContainer[1].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
       end;
 
-      if (dwTexN >= 2) then
+      if (dwTexN >= 3) then
       begin
-        if (bTexIsLinear[1]) then
+        if (bTexIsLinear[2]) then
         begin
-          PFLOATs(pUVData)[2] := PFLOATs(pUVData)[2] / (( pLinearPixelContainer[1].Size and X_D3DSIZE_WIDTH_MASK) + 1);
-          PFLOATs(pUVData)[3] := PFLOATs(pUVData)[3] / (((pLinearPixelContainer[1].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
+          PFLOATs(pUVData)[4] := PFLOATs(pUVData)[4] / (( pLinearPixelContainer[2].Size and X_D3DSIZE_WIDTH_MASK) + 1);
+          PFLOATs(pUVData)[5] := PFLOATs(pUVData)[5] / (((pLinearPixelContainer[2].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
         end;
 
-        if (dwTexN >= 3) then
+        if((dwTexN >= 4) and bTexIsLinear[3]) then
         begin
-          if (bTexIsLinear[2]) then
-          begin
-            PFLOATs(pUVData)[4] := PFLOATs(pUVData)[4] / (( pLinearPixelContainer[2].Size and X_D3DSIZE_WIDTH_MASK) + 1);
-            PFLOATs(pUVData)[5] := PFLOATs(pUVData)[5] / (((pLinearPixelContainer[2].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
-          end;
-
-          if((dwTexN >= 4) and bTexIsLinear[3]) then
-          begin
-            PFLOATs(pUVData)[6] := PFLOATs(pUVData)[6] / (( pLinearPixelContainer[3].Size and X_D3DSIZE_WIDTH_MASK) + 1);
-            PFLOATs(pUVData)[7] := PFLOATs(pUVData)[7] / (((pLinearPixelContainer[3].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
-          end;
+          PFLOATs(pUVData)[6] := PFLOATs(pUVData)[6] / (( pLinearPixelContainer[3].Size and X_D3DSIZE_WIDTH_MASK) + 1);
+          PFLOATs(pUVData)[7] := PFLOATs(pUVData)[7] / (((pLinearPixelContainer[3].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
         end;
       end;
     end;
@@ -1340,7 +1337,7 @@ begin
       dwRemainingSize);
   end;
 
-  // Quad list
+  // Quad list; Convert each quad to two triangles :
   if (pPatchDesc.PrimitiveType = X_D3DPT_QUADLIST) then
   begin
     // Calculate where the new vertices should go :
@@ -1389,6 +1386,7 @@ begin
 
     // Finally, correct dwVertexCount to take the new vertices into account :
     pPatchDesc.dwVertexCount := pPatchDesc.dwPrimitiveCount * VERTICES_PER_TRIANGLE;
+    // Dxbx Note : When drawing a QUADLIST, EmuPrimitiveType(PrimitiveType) will return D3D_TRIANGLELIST
   end
   // LineLoop
   else if (pPatchDesc.PrimitiveType = X_D3DPT_LINELOOP) then

@@ -103,13 +103,13 @@ const NV2A_NOINCREMENT_FLAG = $40000000;
 const NV2A_MAX_COUNT = 2047;
 
 const NV2A_NO_OPERATION                = $00000100; // Parameter must be zero
+const NV2A_SET_TRANSFORM_CONSTANT      = $00000b80; // Can't use NOINCREMENT_FLAG, maximum of 32 writes
 const NV2A_SET_BEGIN_END               = $000017fc; // Parameter is D3DPRIMITIVETYPE or 0 to end
 const NV2A_InlineIndexArray            = $00001800;
 const NV2A_FixLoop                     = $00001808;
 const NV2A_DRAW_ARRAYS                 = $00001810;
 const NV2A_INLINE_ARRAY                = $00001818; // Use NOINCREMENT_FLAG
 const NV2A_SET_TRANSFORM_CONSTANT_LOAD = $00001ea4; // Add 96 to constant index parameter
-const NV2A_SET_TRANSFORM_CONSTANT      = $00000b80; // Can't use NOINCREMENT_FLAG, maximum of 32 writes
 
 const lfUnit = lfCxbx or lfPushBuffer;
 
@@ -446,7 +446,7 @@ begin
 
   while (true) do
   begin
-    // Decode push buffer contents (inverse of NV2A_ENCODE) :
+    // Decode push buffer contents (inverse of D3DPUSH_ENCODE) :
     dwCount := (pdwPushData^ shr NV2A_COUNT_SHIFT) and NV2A_COUNT_MASK;
     dwMethod := (pdwPushData^ and NV2A_METHOD_MASK);
     bInc := (pdwPushData^ and NV2A_NOINCREMENT_FLAG) > 0;
