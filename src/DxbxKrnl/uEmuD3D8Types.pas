@@ -386,7 +386,9 @@ const
 
   X_D3DFMT_INDEX16 = DWord(D3DFMT_INDEX16); // Dxbx addition : Not an Xbox format, used internally
 
-type X_D3DFORMAT = X_D3DFMT_L8..High(DWORD)-3; // Unique declaration to make overloads possible
+  X_D3DFMT_UNKNOWN = $FFFFFFFF-3;  // Unique declaration to make overloads possible
+
+type X_D3DFORMAT = X_D3DFMT_L8..X_D3DFMT_UNKNOWN;
 
 type X_D3DPOOL = D3DPOOL; // alias
 
