@@ -217,7 +217,7 @@ var
   g_VertexShaderSlots: array [0..D3DVS_XBOX_NR_ADDRESS_SLOTS{=136} - 1] of DWORD;
 
   // cached palette pointer
-  g_pCurrentPalette: PVOID;
+  g_pCurrentPalette: PBytes;
   // cached palette size
   g_dwCurrentPaletteSize: DWORD = DWORD(-1);
 
@@ -785,40 +785,46 @@ begin
   // initialize ref count
   pRefCount^ := 1;
 
+  // Dxbx addition : Initialize Common field properly :
+  pPixelContainer.Common := (pRefCount^ and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE or X_D3DCOMMON_D3DCREATED;
+  // Because YUY2 is not supported in hardware (in Direct3D8?), we'll actually mark this as a special fake texture (set highest bit)
+  pPixelContainer.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
+  pPixelContainer.Emu.Lock := UIntPtr(pRefCount);
   pPixelContainer.Format := X_D3DFMT_YUY2 shl X_D3DFORMAT_FORMAT_SHIFT;
   pPixelContainer.Size := ((( g_dwOverlayW         - 1)                           ) and X_D3DSIZE_WIDTH_MASK )
                        or ((( g_dwOverlayH         - 1) shl X_D3DSIZE_HEIGHT_SHIFT) and X_D3DSIZE_HEIGHT_MASK)
                        or ((((g_dwOverlayP div 64) - 1) shl X_D3DSIZE_PITCH_SHIFT ) and X_D3DSIZE_PITCH_MASK );
-  // Dxbx addition : Initialize Common field properly :
-  pPixelContainer.Common := (pRefCount^ and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE;
-  // Because YUY2 is not supported in hardware (in Direct3D8?), we'll actually mark this as a special fake texture (set highest bit)
-  pPixelContainer.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
-  pPixelContainer.Emu.Lock := UIntPtr(pRefCount);
 end;
 
-function DxbxXB2PC_D3DFormat(const Format: X_D3DFORMAT; const aResourceType: TD3DResourceType): D3DFORMAT;
+type
+  PX_D3DFORMAT = ^X_D3DFORMAT;
+
+function DxbxXB2PC_D3DFormat(const X_Format: X_D3DFORMAT; const aResourceType: TD3DResourceType; const CacheFormat: PX_D3DFORMAT = nil): D3DFORMAT;
 begin
+  if Assigned(CacheFormat) then
+    CacheFormat^ := X_Format; // Save this for later; DxbxUpdatePixelContainer should convert when needed!
+
   // Convert Format (Xbox->PC)
-  Result := EmuXB2PC_D3DFormat(Format);
+  Result := EmuXB2PC_D3DFormat(X_Format);
 
   // TODO -oCXBX: HACK: Devices that don't support this should somehow emulate it!
   // TODO -oDxbx: Non-supported formats should be emulated in a generic way
+  // TODO -oDxbx : Check device caps too!
   case Result of
+    D3DFMT_P8:
+    begin
+      EmuWarning('D3DFMT_P8 is an unsupported texture format!');
+      Result := D3DFMT_L8;
+    end;
     D3DFMT_D16:
     begin
       EmuWarning('D3DFMT_D16 is an unsupported texture format!');
-
       if aResourceType = D3DRTYPE_TEXTURE then
         Result := D3DFMT_R5G6B5
       else
         // D3DRTYPE_VOLUMETEXTURE, D3DRTYPE_CUBETEXTURE
         Result := D3DFMT_X8R8G8B8; // also CheckDeviceMultiSampleType
     end;
-//    D3DFMT_P8:
-//    begin
-//      EmuWarning('D3DFMT_P8 is an unsupported texture format!');
-//      Result := D3DFMT_X8R8G8B8;
-//    end;
     D3DFMT_D24S8:
     begin
       EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
@@ -829,6 +835,9 @@ begin
       if aResourceType = D3DRTYPE_CUBETEXTURE then
         DxbxKrnlCleanup('YUV not supported for cube textures');
     end;
+  else
+    if Assigned(CacheFormat) then
+      CacheFormat^ := X_D3DFMT_UNKNOWN; // Means 'not important' as it's not used in DxbxUpdatePixelContainer
   end;
 end;
 
@@ -2983,7 +2992,7 @@ begin
     DxbxKrnlCleanup('CreateImageSurface failed! ' + #13#10 + 'Format = 0x%8.8X', [Format]);
 
   // Dxbx addition : Initialize Common field properly :
-  ppBackBuffer^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_SURFACE;
+  ppBackBuffer^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_SURFACE or X_D3DCOMMON_D3DCREATED;
 
   if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : CreateImageSurface: Successfully Created BackBuffer : ' + ResourceToString(ppBackBuffer^));
@@ -4528,7 +4537,7 @@ begin
     else
     begin
       // Dxbx addition : Initialize Common field properly :
-      ppTexture^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE;
+      ppTexture^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE or X_D3DCOMMON_D3DCREATED;
 
       // Dxbx addition : Request how many where created (as Levels could be 0) :
       Levels := IDirect3DTexture(ppTexture^.Emu.Texture).GetLevelCount();
@@ -4547,7 +4556,7 @@ begin
           if Levels = 0 then
           begin
             ppTexture^.Data := DWORD(LockedRect.pBits);
-            ppTexture^.Format := Ord(Format) shl X_D3DFORMAT_FORMAT_SHIFT;
+            ppTexture^.Format := Ord(Format) shl X_D3DFORMAT_FORMAT_SHIFT; // TODO : Also set other flags, like MIPMAP, USIZE and others
           end;
 
           g_DataToTexture.insert(DWORD(LockedRect.pBits), ppTexture^);
@@ -4605,7 +4614,7 @@ begin
     // cache the overlay size
     g_dwOverlayW := Width;
     g_dwOverlayH := Height;
-    g_dwOverlayP := RoundUp(g_dwOverlayW, 64)*2;
+    g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2;
 
     DxbxInitializePixelContainerYUY2(ppVolumeTexture^);
 
@@ -4625,7 +4634,7 @@ begin
       DxbxKrnlCleanup('CreateVolumeTexture Failed! (0x%.08X)', [hRet]);
 
     // Dxbx addition : Initialize Common field properly :
-    ppVolumeTexture^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE;
+    ppVolumeTexture^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE or X_D3DCOMMON_D3DCREATED;
 
     if MayLog(lfUnit or lfReturnValue) then
       DbgPrintf('EmuD3D8 : CreateVolumeTexture : Successfully Created Volume Texture : ' + ResourceToString(ppVolumeTexture^));
@@ -4687,7 +4696,7 @@ begin
     DxbxKrnlCleanup('CreateCubeTexture Failed!');
 
   // Dxbx addition : Initialize Common field properly :
-  ppCubeTexture^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE;
+  ppCubeTexture^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE or X_D3DCOMMON_D3DCREATED;
 
   if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : CreateCubeTexture : Successfully Created Cube Texture : ' + ResourceToString(ppCubeTexture^));
@@ -4730,7 +4739,7 @@ begin
     DxbxKrnlCleanup('XTL_EmuD3DDevice_CreateIndexBuffer: IndexBuffer Create Failed!');
 
   // Dxbx addition : Initialize Common field properly :
-  ppIndexBuffer^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_INDEXBUFFER;
+  ppIndexBuffer^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_INDEXBUFFER or X_D3DCOMMON_D3DCREATED;
 
   // update data ptr
   pData := NULL;
@@ -5694,7 +5703,7 @@ var
   pData: PBYTE;
   X_Format: X_D3DFORMAT;
   PCFormat: D3DFORMAT;
-  CacheFormat: D3DFORMAT;
+  CacheFormat: X_D3DFORMAT;
   dwWidth: DWORD;
   dwHeight: DWORD;
   dwBPP: DWORD;
@@ -5903,24 +5912,11 @@ begin
       pPixelContainer := PX_D3DPixelContainer(pResource);
 
       X_Format := X_D3DFORMAT((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
-      PCFormat := EmuXB2PC_D3DFormat(X_Format);
-      CacheFormat := D3DFMT_UNKNOWN; // Means 'not important' as it's not used in DxbxUpdatePixelContainer
-      // TODO -oCXBX: check for dimensions
 
-      // TODO -oCXBX: HACK: Temporary?
-      if (X_Format = X_D3DFMT_LIN_D24S8) then // = $2E
-      begin
-        {DxbxKrnlCleanup}EmuWarning('D3DFMT_LIN_D24S8 not yet supported!');
-        X_Format := X_D3DFMT_LIN_A8R8G8B8; // = $12
-        PCFormat := D3DFMT_A8R8G8B8;
-      end;
-
-      if(X_Format = X_D3DFMT_LIN_D16) then // = 0x30
-      begin
-        {DxbxKrnlCleanup}EmuWarning('D3DFMT_LIN_D16 not yet supported!');
-        X_Format := X_D3DFMT_LIN_R5G6B5; // = 0x11;
-        PCFormat := D3DFMT_R5G6B5;
-      end;
+      if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
+        PCFormat := DxbxXB2PC_D3DFormat(X_Format, D3DRTYPE_SURFACE, @CacheFormat)
+      else
+        PCFormat := DxbxXB2PC_D3DFormat(X_Format, D3DRTYPE_TEXTURE, @CacheFormat);
 
       DxbxGetFormatRelatedVariables(pPixelContainer, X_Format,
         {var}dwWidth, {var}dwHeight, {var}dwBPP, {var}dwDepth, {var}dwPitch, {var}dwMipMapLevels,
@@ -5982,18 +5978,6 @@ begin
             dwMipMapLevels := 3;
           end;
 
-          // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
-          // Since most modern graphics cards does not support
-          // palette based textures we need to expand it to
-          // ARGB texture format
-          if (PCFormat = D3DFMT_P8) then //Palette
-          begin
-            EmuWarning('D3DFMT_P8 -> D3DFMT_A8R8G8B8');
-
-            CacheFormat := PCFormat; // Save this for later; See DxbxUpdatePixelContainer
-            PCFormat := D3DFMT_L8; // Quick hack, suggested by Dustin 'Josh Reggin' to get somewhat better textures in Gauntlet Dark Legacy
-          end;
-
           if (bCubemap) then
           begin
             if MayLog(lfUnit) then
@@ -6018,6 +6002,9 @@ begin
             if MayLog(lfUnit) then
               DbgPrintf('CreateTexture(%d,%d,%d, 0,%d, D3DPOOL_MANAGED, 0x%.08X)',
                 [dwWidth, dwHeight, dwMipMapLevels, Ord(PCFormat), @(pPixelContainer.Emu.Texture)]);
+
+//            if CacheFormat = X_D3DFMT_P8 then
+//              PCFormat := D3DFMT_A8R8G8B8;
 
             hRet := IDirect3DDevice_CreateTexture(g_pD3DDevice,
               dwWidth, dwHeight, dwMipMapLevels, {Usage=}0, PCFormat,
@@ -6751,7 +6738,7 @@ begin
         EmuWarning('LockRect Failed!');
 
       // Dxbx addition : Initialize Common field properly :
-      pThis.Common := pThis.Common or X_D3DCOMMON_ISLOCKED;
+      pThis.Common := pThis.Common or X_D3DCOMMON_ISLOCKED or $10; // Dxbx : Set a RefCount too (was in X_D3DCOMMON_ISLOCKED before!)
     end;
   end;
 
@@ -6986,7 +6973,7 @@ begin
   else
   begin
     // Dxbx addition : Initialize Common field properly :
-    pD3DVertexBuffer.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_VERTEXBUFFER;
+    pD3DVertexBuffer.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_VERTEXBUFFER or X_D3DCOMMON_D3DCREATED;
 
 {$ifdef _DEBUG_TRACK_VB}
     g_VBTrackTotal.insert(pD3DVertexBuffer.Emu.VertexBuffer);
@@ -9202,7 +9189,7 @@ begin
   // ZeroMemory(pPalette,...) not nescessary, as we're filling each field already here :
 
   // Dxbx addition : Initialize Common field properly :
-  pPalette.Common := (RefCount and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_PALETTE;
+  pPalette.Common := (RefCount and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_PALETTE or X_D3DCOMMON_D3DCREATED;
   pPalette.Data := DWORD(XboxAlloc(lk[Size] * sizeof(uint08)));
   pPalette.Emu.Lock := RefCount; // emulated reference count for palettes
 
@@ -10974,8 +10961,10 @@ begin
   ZeroMemory(Result, SizeOf(Result^));
 
   IDirect3DCubeTexture(pThis.Emu.CubeTexture).GetCubeMapSurface(FaceType, Level, PIDirect3DSurface(@Result.Emu.Surface));
+
   // Dxbx addition : Initialize Common field properly :
   Result.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_SURFACE;
+  // TODO -oDxbx : Set other fields too, like Format
 
   EmuSwapFS(fsXbox);
 end;

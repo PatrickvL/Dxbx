@@ -383,8 +383,9 @@ begin
     X_D3DCOMMON_TYPE_FIXUP       : Result := Result + ', FIXUP';
   end;
   Value := (Common and X_D3DCOMMON_INTREFCOUNT_MASK) shr X_D3DCOMMON_INTREFCOUNT_SHIFT;
+  if (Common and X_D3DCOMMON_VIDEOMEMORY) > 0 then Result := Result + ', X_D3DCOMMON_VIDEOMEMORY';
   if (Common and X_D3DCOMMON_D3DCREATED) > 0 then Result := Result + ', X_D3DCOMMON_D3DCREATED';
-  if (Common and X_D3DCOMMON_ISLOCKED) = X_D3DCOMMON_ISLOCKED then Result := Result + ', X_D3DCOMMON_ISLOCKED';
+  if (Common and X_D3DCOMMON_ISLOCKED) > 0 then Result := Result + ', X_D3DCOMMON_ISLOCKED';
 end;
 
 function ResourceToString(const aValue: PX_D3DResource): string;
