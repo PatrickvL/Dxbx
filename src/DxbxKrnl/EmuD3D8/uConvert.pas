@@ -356,7 +356,7 @@ begin
     X_D3DFMT_VERTEXDATA:
       Result := D3DFMT_VERTEXDATA;
 
-    X_D3DFORMAT($FFFFFFFF):
+    X_D3DFMT_UNKNOWN:
       Result := D3DFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
 
     X_D3DFMT_INDEX16: // Dxbx addition : Pass-through internal format that shouldn't raise a warning :
@@ -412,7 +412,7 @@ begin
       Result := X_D3DFMT_D16_LOCKABLE; // Swizzled
 
     D3DFMT_UNKNOWN:
-      Result := X_D3DFORMAT($FFFFFFFF);
+      Result := X_D3DFMT_UNKNOWN;
 
 // Dxbx additions :
     D3DFMT_L6V5U5:

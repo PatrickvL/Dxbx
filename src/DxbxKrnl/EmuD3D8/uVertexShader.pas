@@ -983,8 +983,17 @@ begin
   end;
 
 {$IFDEF DXBX_USE_D3D9}
+  Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '; Input usage declarations :'#13#10));
+  j := 0;
   if IsConverted then
   begin
+    // TODO -oDxbx : We have a bit of a problem here, as there's no reliable way
+    // to determine what usage the input vertex registers have exactly (some cases
+    // might be logical, like a single use to fill a color output register, the
+    // input is probably a color register too then). Another method to determine
+    // the type of input register usage, is to look at the D3DVSD_REG / D3DVSDT_*
+    // registration. (How to get that here?)
+
     for i := 0 to VSH_XBOX_MAX_V_REGISTER_COUNT - 1 do
     begin
       // Test if this v-register is actually used :
@@ -992,17 +1001,17 @@ begin
       begin
         case i of
           0: DclStr := 'dcl_position';
-          1: DclStr := 'dcl_blendweight';
-          2: DclStr := 'dcl_normal';
-          3: DclStr := 'dcl_color'; // This is Xbox 'Diffuse', is it correctly mapped?
+//          1: DclStr := 'dcl_blendweight';
+//          2: DclStr := 'dcl_normal';
+          else{3:} DclStr := 'dcl_color' + IntToStr(j); Inc(j); // This is Xbox 'Diffuse', is it correctly mapped?
   //        Specular 4
-          5: DclStr := 'dcl_fog';
+//          5: DclStr := 'dcl_fog';
   //      7: ; // Back Diffuse - Xbox ext.
   //      8: ; // Back Specular - Xbox ext.
-          9: DclStr := 'dcl_texcoord0';
-          10: DclStr := 'dcl_texcoord1';
-          11: DclStr := 'dcl_texcoord2';
-          12: DclStr := 'dcl_texcoord3';
+//          9: DclStr := 'dcl_texcoord0';
+//          10: DclStr := 'dcl_texcoord1';
+//          11: DclStr := 'dcl_texcoord2';
+//          12: DclStr := 'dcl_texcoord3';
 
   // Available in Direct3D9, but unmapped to Xbox :
   //       0: DclStr := 'dcl_blendindices';
@@ -1012,14 +1021,15 @@ begin
   //       0: DclStr := 'dcl_tessfactor';
   //       0: DclStr := 'dcl_depth';
   //       0: DclStr := 'dcl_sample';
-        else
-          DclStr := '; dcl_unknown';
+//        else
+//          DclStr := '; dcl_unknown';
         end;
         Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s v%d'#13#10, [DclStr, i]));
       end;
     end;
 
 {$IFDEF DXBX_USE_VS30}
+    Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '; Output usage declarations :'#13#10));
     for i := 0 to VSH_XBOX_MAX_O_REGISTER_COUNT - 1 do
     begin
       // Test if this Output-register is actually used :
@@ -1029,7 +1039,7 @@ begin
           OREG_OPOS: DclStr := 'dcl_position o%d.xyzw'#13#10;
           OREG_OD0: DclStr := 'dcl_color0 o%d.xyzw'#13#10;
           OREG_OD1: DclStr := 'dcl_color1 o%d.xyzw'#13#10;
-          OREG_OFOG: DclStr := 'dcl_fog o%d.w'#13#10;
+          OREG_OFOG: DclStr := 'dcl_fog o%d'#13#10; // .w ?
           OREG_OPTS: DclStr := 'dcl_psize o%d'#13#10;
           OREG_OB0: DclStr := 'dcl_color2 o%d.xyzw'#13#10;
           OREG_OB1: DclStr := 'dcl_color3 o%d.xyzw'#13#10;
@@ -1044,6 +1054,8 @@ begin
       end;
     end;
 {$ENDIF DXBX_USE_VS30}
+
+    Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '; Recompiled opcodes :'#13#10));
   end;
 {$ENDIF DXBX_USE_D3D9}
 
