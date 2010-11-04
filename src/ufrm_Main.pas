@@ -179,6 +179,7 @@ type
     procedure SaveXBEList(const aFilePath, aPublishedBy: string);
     Function ImportXBEGameList(aImportFilePath: string = ''; aUseImportDialog: Boolean = False): Integer;
     function FindByFileName(const aFileName: string): Integer;
+    function FindByName(const aName: string): Integer;
 //    function ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
     function FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
     function _ReadXBEInfoFromNode(const XBEInfoNode: IXMLNode): TXBEInfo;
@@ -432,6 +433,15 @@ function Tfrm_Main.FindByFileName(const aFileName: string): Integer;
 begin
   for Result := 0 to MyXBEList.Count - 1 do
     if SameText(TXBEInfo(MyXBEList.Objects[Result]).FileName, aFileName) then
+      Exit;
+
+  Result := -1;
+end;
+
+function Tfrm_Main.FindByName(const aName: string): Integer;
+begin
+  for Result := 0 to MyXBEList.Count - 1 do
+    if MyXBEList.Strings[Result] = aName then
       Exit;
 
   Result := -1;
@@ -821,6 +831,17 @@ end; // dgXbeInfosDrawCell
 procedure Tfrm_Main.dgXbeInfosKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 var
   i: Integer;
+
+  procedure RemoveGameFromList(aIndex: Integer);
+  begin
+    if MessageDlg('Remove title from list?', mtConfirmation, [mbYes, mbNo], -1) = mrYes then
+    begin
+      MyXBEList.Objects[i].Free;
+      MyXBEList.Delete(i);
+      UpdateFilter;
+    end;
+  end;
+
 begin
   case Key of
     VK_RETURN: // Enter means Launch:
@@ -835,15 +856,14 @@ begin
       begin
         i := FindByFileName(m_Xbe.XbePath);
         if i >= 0 then
-        begin
-          if MessageDlg('Remove title from list?', mtConfirmation, [mbYes, mbNo], -1) = mrYes then
-          begin
-            MyXBEList.Objects[i].Free;
-            MyXBEList.Delete(i);
-            UpdateFilter;
-          end;
-        end;
+          RemoveGameFromList(i);
       end
+      else
+      begin
+        i := FindByName(EnabledItems[dgXbeInfos.Row - 1].Title);
+        if i >= 0 then
+          RemoveGameFromList(i);
+      end;
     end;
   end;
 end;
