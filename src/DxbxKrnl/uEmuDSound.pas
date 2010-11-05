@@ -1173,13 +1173,6 @@ begin
 
   hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(iif(bIsSpecial, pDSBufferDescSpecial, pDSBufferDesc)^, @(ppBuffer^.EmuDirectSoundBuffer8), NULL);
 
-  if g_XBSound.GetMute then
-    ppBuffer^.SetVolume(DSBVOLUME_MIN)
-  else
-    ppBuffer^.SetVolume(DSBVOLUME_MAX);
-
-  DxbxHackUpdateSoundBuffers;
-
   if (FAILED(hRet)) then
   begin
     EmuWarning('CreateSoundBuffer Failed!');
@@ -1325,14 +1318,6 @@ begin
 
   if (FAILED(hRet)) then
     EmuWarning('CreateSoundBuffer Failed!');
-
-
-  if g_XBSound.GetMute then
-    ppStream^.SetVolume(DSBVOLUME_MIN)
-  else
-    ppStream^.SetVolume(DSBVOLUME_MAX);
-
-  DxbxHackUpdateSoundStreams;
 
   // cache this sound stream
   begin
