@@ -217,6 +217,8 @@ begin
     X_D3DFMT_LIN_A8R8G8B8, // 0x12
     X_D3DFMT_LIN_X8R8G8B8, // 0x1E
     X_D3DFMT_LIN_D24S8,    // 0x2E
+    X_D3DFMT_YUY2,         // 0x24 Added by Dxbx (YUV Formats are also linear)
+    X_D3DFMT_UYVY,         // 0x25 Added by Dxbx (YUV Formats are also linear)
     X_D3DFMT_LIN_F24S8,    // 0x2F Added by Dxbx
     X_D3DFMT_LIN_V16U16,   // 0x36 Added by Dxbx
     X_D3DFMT_LIN_A8B8G8R8, // 0x3F

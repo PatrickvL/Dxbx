@@ -100,6 +100,7 @@ const NV2A_COUNT_SHIFT = 18;
 const NV2A_COUNT_MASK = $FFF; // 12 bits
 const NV2A_NOINCREMENT_FLAG = $40000000;
 // Dxbx note : What does the last bit (mask $80000000) mean?
+
 const NV2A_MAX_COUNT = 2047;
 
 const NV2A_NO_OPERATION                = $00000100; // Parameter must be zero
@@ -112,6 +113,13 @@ const NV2A_INLINE_ARRAY                = $00001818; // Use NOINCREMENT_FLAG
 const NV2A_SET_TRANSFORM_CONSTANT_LOAD = $00001ea4; // Add 96 to constant index parameter
 
 const lfUnit = lfCxbx or lfPushBuffer;
+
+procedure D3DPUSH_DECODE(const dwPushData: DWORD; out dwCount, dwMethod: DWORD; out bInc: BOOL_);
+begin
+  dwCount  := (dwPushData shr NV2A_COUNT_SHIFT) and NV2A_COUNT_MASK;
+  dwMethod := (dwPushData and NV2A_METHOD_MASK);
+  bInc     := (dwPushData and NV2A_NOINCREMENT_FLAG) > 0;
+end;
 
 // From PushBuffer.cpp :
 
@@ -447,9 +455,7 @@ begin
   while (true) do
   begin
     // Decode push buffer contents (inverse of D3DPUSH_ENCODE) :
-    dwCount := (pdwPushData^ shr NV2A_COUNT_SHIFT) and NV2A_COUNT_MASK;
-    dwMethod := (pdwPushData^ and NV2A_METHOD_MASK);
-    bInc := (pdwPushData^ and NV2A_NOINCREMENT_FLAG) > 0;
+    D3DPUSH_DECODE(pdwPushData^, {out}dwCount, {out}dwMethod, {out}bInc);
     Inc(pdwPushData);
 
     if MayLog(lfUnit) then

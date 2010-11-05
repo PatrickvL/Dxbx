@@ -143,11 +143,6 @@ const
   D3DVSDT_NONE        = D3DDECLTYPE_UNUSED;    // No stream data
 
 
-function D3DVSD_SKIP(_DWORDCount: DWord): DWord;
-function D3DVSD_REG(_VertexRegister, _Type: DWord): DWord;
-function D3DVSD_TESSUV(_VertexRegister: DWord): DWord;
-function D3DVSD_TESSNORMAL(_VertexRegisterIn, _VertexRegisterOut: DWord): DWord;
-
 const
   // Dxbx note : Dirty little hack : Map the old D3DVSDE values to new D3DDECLUSAGE values,
   // to ease the implementation of Xb2PCRegisterType (which also determines an index for D3D9)
@@ -303,6 +298,33 @@ type X_D3DMULTISAMPLE_TYPE = DWORD;
 type X_D3DSWAPEFFECT = D3DSWAPEFFECT; // Same as on Windows Direct3D
 
 const
+(*
+  Xbox1 D3DFORMAT notes
+  ---------------------
+
+  The Xbox1 D3DFORMAT type consists of 4 different format categories :
+  1. Swizzled (improves data locality, incompatible with native Direct3D)
+  2. Compressed (DXT compression, giving 4:1 reduction on 4x4 pixel blocks)
+  3. Linear (compatible with native Direct3D)
+  4. Depth (Fixed or Floating point, stored Linear or Swizzled)
+
+  Requirements\Format      Swizzled  Compressed  Linear  Depth   Notes
+
+  Power-of-two required?   YES       YES         NO      NO
+  Mipmap supported?        YES       YES         NO      YES     Linear has MipmapLevels=1
+  CubeMaps supported?      YES       YES         NO      NO      Cubemaps have 6 faces
+  Supports volumes?        YES       YES         NO      NO      Volumes have 3 dimensions, Textures have 2
+  Can be a rendertarget?   YES       YES         YES     LINEAR  Depth buffers can only be rendered to if stored Linear
+
+  Implications :
+  - CubeMaps must be square
+  - Volumes cannot be cube mapped and vice versa
+
+  Maximum dimensions :
+  2D : 4096x4096
+  3D : 512x512x512
+
+*)
   // Xbox D3DFORMAT types :
   // See http://wiki.beyondunreal.com/Legacy:Texture_Format
 
@@ -879,7 +901,7 @@ const X_D3DCOMMON_TYPE_INDEXBUFFER   = $00010000;
 const X_D3DCOMMON_TYPE_PUSHBUFFER    = $00020000;
 const X_D3DCOMMON_TYPE_PALETTE       = $00030000;
 const X_D3DCOMMON_TYPE_TEXTURE       = $00040000;
-const X_D3DCOMMON_TYPE_SURFACE       = $00050000;
+const X_D3DCOMMON_TYPE_SURFACE       = $00050000; // Also covers Volume resources
 const X_D3DCOMMON_TYPE_FIXUP         = $00060000;
 const X_D3DCOMMON_INTREFCOUNT_MASK   = $00780000;
 const X_D3DCOMMON_INTREFCOUNT_SHIFT  = 19;
@@ -898,6 +920,7 @@ const X_D3DRESOURCE_DATA_FLAG_D3DSTEN = $00000008; // D3D Stencil Surface
 const X_D3DRESOURCE_DATA_FLAG_TEXCLON = $00000010; // HACK: Cloned resource
 
 function IsSpecialResource(x: DWORD): Boolean; // forward
+function IsResourcePixelContainer(const aResource: PX_D3DResource): Boolean;
 
 // special resource lock flags
 const X_D3DRESOURCE_LOCK_FLAG_NOSIZE  = $EFFFFFFF;
@@ -992,18 +1015,18 @@ const X_D3DFORMAT_DMACHANNEL_MASK     = $00000003;
 const X_D3DFORMAT_DMACHANNEL_A        = $00000001;      // DMA channel A - the default for all system memory
 const X_D3DFORMAT_DMACHANNEL_B        = $00000002;      // DMA channel B - unused
 const X_D3DFORMAT_CUBEMAP             = $00000004;      // Set if the texture if a cube map
-const X_D3DFORMAT_BORDERSOURCE_COLOR  = $00000008;
-const X_D3DFORMAT_DIMENSION_MASK      = $000000F0;      // # of dimensions
+const X_D3DFORMAT_BORDERSOURCE_COLOR  = $00000008;      // If set, uses D3DTSS_BORDERCOLOR as a border
+const X_D3DFORMAT_DIMENSION_MASK      = $000000F0;      // # of dimensions, must be 2 or 3
 const X_D3DFORMAT_DIMENSION_SHIFT     = 4;
-const X_D3DFORMAT_FORMAT_MASK         = $0000FF00;      // See X_D3DFMT_*
+const X_D3DFORMAT_FORMAT_MASK         = $0000FF00;      // D3DFORMAT - See X_D3DFMT_* above
 const X_D3DFORMAT_FORMAT_SHIFT        = 8;
-const X_D3DFORMAT_MIPMAP_MASK         = $000F0000;
+const X_D3DFORMAT_MIPMAP_MASK         = $000F0000;      // # mipmap levels (always 1 for surfaces)
 const X_D3DFORMAT_MIPMAP_SHIFT        = 16;
-const X_D3DFORMAT_USIZE_MASK          = $00F00000;      // Log 2 of the U size of the base texture
+const X_D3DFORMAT_USIZE_MASK          = $00F00000;      // Log2 of the U size of the base texture (only set for swizzled or compressed)
 const X_D3DFORMAT_USIZE_SHIFT         = 20;
-const X_D3DFORMAT_VSIZE_MASK          = $0F000000;      // Log 2 of the V size of the base texture
+const X_D3DFORMAT_VSIZE_MASK          = $0F000000;      // Log2 of the V size of the base texture (only set for swizzled or compressed)
 const X_D3DFORMAT_VSIZE_SHIFT         = 24;
-const X_D3DFORMAT_PSIZE_MASK          = $F0000000;      // Log 2 of the P size of the base texture
+const X_D3DFORMAT_PSIZE_MASK          = $F0000000;      // Log2 of the P size of the base texture (only set for swizzled or compressed)
 const X_D3DFORMAT_PSIZE_SHIFT         = 28;
 
 // pixel container "size" masks
@@ -1535,36 +1558,11 @@ begin
  Result := (x and X_D3DRESOURCE_DATA_FLAG_SPECIAL) = X_D3DRESOURCE_DATA_FLAG_SPECIAL;
 end;
 
-{$IFDEF DXBX_USE_D3D9}
-function D3DVSD_MAKETOKENTYPE(tokenType: TD3DVSDTokenType): DWord;
+function IsResourcePixelContainer(const aResource: PX_D3DResource): Boolean;
 begin
-  Result:= ((DWord(tokenType) shl D3DVSD_TOKENTYPESHIFT) and D3DVSD_TOKENTYPEMASK);
+  Result := ((aResource.Common and X_D3DCOMMON_TYPE_MASK) = X_D3DCOMMON_TYPE_TEXTURE)
+         or ((aResource.Common and X_D3DCOMMON_TYPE_MASK) = X_D3DCOMMON_TYPE_SURFACE);
 end;
-
-function D3DVSD_SKIP(_DWORDCount: DWord): DWord;
-begin
-  Result:= D3DVSD_MAKETOKENTYPE(D3DVSD_TOKEN_STREAMDATA) or $10000000 or (_DWORDCount shl D3DVSD_SKIPCOUNTSHIFT);
-end;
-
-function D3DVSD_REG( _VertexRegister, _Type: DWord): DWord;
-begin
-  Result:= D3DVSD_MAKETOKENTYPE(D3DVSD_TOKEN_STREAMDATA) or ((_Type shl D3DVSD_DATATYPESHIFT) or _VertexRegister);
-end;
-
-function D3DVSD_TESSUV(_VertexRegister: DWord): DWord;
-begin
-  Result:= D3DVSD_MAKETOKENTYPE(D3DVSD_TOKEN_TESSELLATOR) or $10000000 or
-           ($01 shl D3DVSD_DATATYPESHIFT) or _VertexRegister;
-end;
-
-function D3DVSD_TESSNORMAL(_VertexRegisterIn, _VertexRegisterOut: DWord): DWord;
-begin
-  Result:= D3DVSD_MAKETOKENTYPE(D3DVSD_TOKEN_TESSELLATOR) or
-           (_VertexRegisterIn shl D3DVSD_VERTEXREGINSHIFT) or
-           ($02 shl D3DVSD_DATATYPESHIFT) or _VertexRegisterOut;
-end;
-{$ENDIF}
 
 end.
-
 
