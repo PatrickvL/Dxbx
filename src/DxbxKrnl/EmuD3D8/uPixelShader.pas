@@ -590,8 +590,9 @@ type
     EFReg: PS_REGISTER;
     function EmitConstant(const OutputStr: string; const MulResult: int): string;
     function EmitMov(const OutputStr: string; const Input: PPSRegisterObject): string;
-    function EmitAdd(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
-    function EmitSub(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
+    function EmitAddOutputs(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
+    function EmitAdd(const OutputStr: string; const Input1, Input2: PPSInputRegister): string;
+    function EmitSub(const OutputStr: string; const Input1, Input2: PPSInputRegister): string;
     function EmitMul(const DestRegister: PPSRegisterObject; const Input1, Input2: PPSInputRegister): string;
     function EmitMad(const OutputStr: string; const Input1, Input2: PPSInputRegister; const Input3: PPSRegisterObject): string;
     function EmitLrp(const OutputStr: string; const Input1, Input2, Input3: PPSInputRegister): string;
@@ -612,7 +613,7 @@ type
     CombinerHasUniqueC0: Boolean;
     CombinerHasUniqueC1: Boolean;
 
-    Combiners: array [0..8-1] of RPSCombinerStage;
+    Combiners: array [0..X_PSH_COMBINECOUNT-1] of RPSCombinerStage;
 
     FinalCombiner: RPSFinalCombiner;
 
@@ -1114,7 +1115,7 @@ begin
     Result := 'mov ' + OutputStr + ', ' + Result + #13#10;
 end;
 
-function RPSDisassembleScope.EmitAdd(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
+function RPSDisassembleScope.EmitAddOutputs(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   if Input2.Reg = PS_REGISTER_ZERO then
@@ -1123,13 +1124,22 @@ begin
     Result := 'add' + OutputStr + Input1.DisassembleRegister(@Self) + ', ' + Input2.DisassembleRegister(@Self) + #13#10;
 end;
 
-function RPSDisassembleScope.EmitSub(const OutputStr: string; const Input1, Input2: PPSRegisterObject): string;
+function RPSDisassembleScope.EmitAdd(const OutputStr: string; const Input1, Input2: PPSInputRegister): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   if Input2.Reg = PS_REGISTER_ZERO then
     Result := EmitMov(OutputStr, Input1)
   else
-    Result := 'sub' + OutputStr + Input1.DisassembleRegister(@Self) + ', ' + Input2.DisassembleRegister(@Self) + #13#10;
+    Result := 'add' + OutputStr + Input1.DisassembleInputRegister(@Self) + ', ' + Input2.DisassembleInputRegister(@Self) + #13#10;
+end;
+
+function RPSDisassembleScope.EmitSub(const OutputStr: string; const Input1, Input2: PPSInputRegister): string;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  if Input2.Reg = PS_REGISTER_ZERO then
+    Result := EmitMov(OutputStr, Input1)
+  else
+    Result := 'sub' + OutputStr + Input1.DisassembleInputRegister(@Self) + ', ' + Input2.DisassembleInputRegister(@Self) + #13#10;
 end;
 
 function RPSDisassembleScope.EmitMul(const DestRegister: PPSRegisterObject;
@@ -1498,7 +1508,7 @@ begin
   if ABCheck and CDCheck then
   begin
     // AB and CD where both calculated, so just "add" these :
-    Result := aScope.EmitAdd(SumOutputString, @OutputAB, @OutputCD);
+    Result := aScope.EmitAddOutputs(SumOutputString, @OutputAB, @OutputCD);
     Exit;
   end;
 
@@ -2127,6 +2137,7 @@ begin
                   Original.PSFinalCombinerConstants]);
 end;
 
+
 procedure RPSIntermediate.Decode(pPSDef: PX_D3DPIXELSHADERDEF);
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
@@ -2155,19 +2166,22 @@ begin
   CombinerHasUniqueC0 := (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C0) > 0;
   CombinerHasUniqueC1 := (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C1) > 0;
 
-  for i := 0 to 8 - 1 do
+  for i := 0 to X_PSH_COMBINECOUNT - 1 do
   begin
     Combiners[i].RGB.Decode(pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i]);
     Combiners[i].Alpha.Decode(pPSDef.PSAlphaInputs[i], pPSDef.PSAlphaOutputs[i], {IsAlpha=}True);
 
     // Decode & map the C0 and C1 registers :
     if CombinerHasUniqueC0 then
-      Combiners[i].C0Mapping := (pPSDef.PSC0Mapping shr (i * 4)) and $f
+// Disable the mapping, as it doesn't seem right (generates $f constants?!)
+//      Combiners[i].C0Mapping := (pPSDef.PSC0Mapping shr (i * 4)) and $f
+      Combiners[i].C0Mapping := (i * 2)
     else
       Combiners[i].C0Mapping := 0;
 
     if CombinerHasUniqueC1 then
-      Combiners[i].C1Mapping := (pPSDef.PSC1Mapping shr (i * 4)) and $f
+//      Combiners[i].C1Mapping := (pPSDef.PSC1Mapping shr (i * 4)) and $f
+      Combiners[i].C0Mapping := (i * 2) + 1
     else
       Combiners[i].C1Mapping := 1;
   end;
@@ -2438,7 +2452,8 @@ var
   LogFlags: TLogFlags;
   i, j: Integer;
   Scope: RPSDisassembleScope;
-  ConstUnused: array [$0..$F] of Boolean;
+  ConstUsed: array [0..X_PSH_CONSTANTCOUNT-1] of Boolean;
+  ConstEmitted: array [0..X_PSH_CONSTANTCOUNT-1] of Boolean;
 begin
   // Azurik likes to create and destroy the same shader every frame! O_o
   LogFlags := lfUnit;
@@ -2463,24 +2478,30 @@ begin
   Result := 'ps.1.3'#13#10;
 {$ENDIF}
 
-  for j := $0 to $F do
-    ConstUnused[j] := True;
+  for j := 0 to X_PSH_CONSTANTCOUNT - 1 do
+  begin
+    ConstEmitted[j] := False;
+    ConstUsed[j] := True;
+    // TODO -oDxbx: Determine ConstUsed during decoding (probably more like the vertex shader decoding)
+    // As long as we don't do this, Turok shows much more black as there are too many
+    // constants 'def'ined...
+  end;
 
-  for i := 0 to 8-1 do
+  for i := 0 to X_PSH_COMBINECOUNT-1 do
   begin
     // Define constants directly after the version instruction and before any other instruction :
-    j := ((Original.PSC0Mapping shr (i * 4)) and $f);
-    if (j < 8) and ConstUnused[j] then
+    j := Combiners[i].C0Mapping;
+    if (j < X_PSH_CONSTANTCOUNT) and ConstUsed[j] and (not ConstEmitted[j]) then
     begin
       Result := Result + _EmitConstDef(j, Original.PSConstant0[i]);
-      ConstUnused[j] := False;
+      ConstEmitted[j] := True;
     end;
 
-    j := ((Original.PSC1Mapping shr (i * 4)) and $f);
-    if (j < 8) and ConstUnused[j] then
+    j := Combiners[i].C1Mapping;
+    if (j < X_PSH_CONSTANTCOUNT) and ConstUsed[j] and (not ConstEmitted[j]) then
     begin
       Result := Result + _EmitConstDef(j, Original.PSConstant1[i]);
-      ConstUnused[j] := False;
+      ConstEmitted[j] := True;
     end;
   end;
 
