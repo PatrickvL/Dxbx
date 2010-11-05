@@ -1146,6 +1146,14 @@ type D3DVBLANKCALLBACK = procedure (const pData: PD3DVBLANKDATA); cdecl;
 // D3DSWAPCALLBACK
 type D3DSWAPCALLBACK = procedure (const pData: PD3DSWAPDATA); cdecl;
 
+type
+  X_D3D__Device = record
+    Put: PDWORD;
+    Threshold: PDWORD;
+    // Unknown
+  end;
+  PX_D3D__Device = ^X_D3D__Device;
+
 // X_D3DRENDERSTATETYPE values
 
 // Dxbx note : These declarations are from XDK version 5933, the most recent and complete version.
