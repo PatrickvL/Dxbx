@@ -1416,6 +1416,9 @@ const X_D3DTSS_DEFERRED_LAST = X_D3DTSS_TEXTURETRANSFORMFLAGS;
 const X_D3DTS_STAGECOUNT = 4; // Dxbx addition
 const X_D3DTS_STAGESIZE = 32; // Dxbx addition
 
+const X_PSH_COMBINECOUNT = 8; // Dxbx addition
+const X_PSH_CONSTANTCOUNT = 8; // Dxbx addition
+
 // X_D3DTEXTUREOP values :
 const X_D3DTOP_DISABLE = 1;
 const X_D3DTOP_SELECTARG1 = 2;
