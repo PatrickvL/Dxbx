@@ -2745,21 +2745,33 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3DDevice_BeginStateBig(): HRESULT; stdcall;
+function XTL_EmuD3DDevice_BeginStateBig(
+  Count: DWORD
+  ): PDWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  ret: ULONG;
 begin
+  // Dxbx note : BeginStateBig is called when BeginState (which is otherwise inlined)
+  // receives a Count >= 128. Otherwise, BeginState just does something like this :
+  //
+  //   Result := D3D__Device.Put;
+  //   if (Result >= D3D__Device.Threshold) then
+  //     Result := D3DDevice_MakeSpace();
+  //
+  // EndState is always inlined and does :
+  //
+  //   D3D__Device.Put := pPush;
+
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_BeginStateBig').LogEnd();
-
-  ret := g_pD3DDevice.BeginStateBlock();
+    LogBegin('EmuD3DDevice_BeginStateBig').
+      _(Count, 'Count').
+    LogEnd();
 
   DxbxKrnlCleanup('BeginStateBig is not implemented');
+  Result := nil;
+
   EmuSwapFS(fsXbox);
-  Result := ret;
 end;
 
 function XTL_EmuD3DDevice_CaptureStateBlock(Token: DWORD): HRESULT; stdcall;
@@ -4951,7 +4963,10 @@ begin
   for v := 0 to X_D3DTS_STAGECOUNT-1 do
   begin
     if (StageLookup[v] = Method) then
+    begin
       Stage := v;
+      Break;
+    end;
   end;
 
   if (Stage = DWord(-1)) then

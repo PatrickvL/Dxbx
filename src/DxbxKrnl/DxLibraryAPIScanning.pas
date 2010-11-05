@@ -1770,16 +1770,31 @@ procedure TSymbolManager.LookupGlobalEmulationSymbols;
 var
   Symbol: TSymbolInformation;
   s, v: int;
+
+  function _Find(const aSymbolName: string): Pointer;
+  begin
+    Symbol := FindSymbolWithAddress(aSymbolName);
+    if Assigned(Symbol) then
+    begin
+      Result := Symbol.Address;
+      if MayLog(lfUnit) then
+        DbgPrintf('HLE: $%.08X -> %s',
+          [Result, aSymbolName]);
+    end
+    else
+    begin
+      EmuWarning('HLE : Can''t find ' + aSymbolName);
+      Result := nil;
+    end;
+  end;
+
 begin
   if MayLog(lfUnit) then
     DbgPrintf('DxbxHLE : Determining special symbols');
 
   // locate D3DDeferredTextureState
   begin
-    XTL_EmuD3DDeferredTextureState := nil;
-    Symbol := FindSymbolWithAddress('_D3D__TextureState');
-    if Assigned(Symbol) then
-      XTL_EmuD3DDeferredTextureState := Symbol.Address;
+    XTL_EmuD3DDeferredTextureState := _Find('_D3D__TextureState');
 
     if Assigned(XTL_EmuD3DDeferredTextureState) then
     begin
@@ -1788,14 +1803,10 @@ begin
         for v := 0 to X_D3DTS_STAGESIZE-1 do
           XTL_EmuD3DDeferredTextureState[s, v] := X_D3DTSS_UNK;
       end;
-
-      if MayLog(lfUnit) then
-        DbgPrintf('HLE: $%.08X -> EmuD3DDeferredTextureState',
-          [XTL_EmuD3DDeferredTextureState]);
-    end
-    else
-      EmuWarning('EmuD3DDeferredTextureState was not found!');
+    end;
   end;
+
+  XTL_D3D__Device := _Find('_D3D__Device');
 
   // Locate the RenderState structure, and map all it's variables XDK version-independently :
   begin
@@ -1808,23 +1819,9 @@ begin
       EmuWarning('EmuD3DDeferredRenderState was not found!');
   end;
 
-  // locate XapiProcessHeap
-  begin
-    // Resolve the address of the _XapiProcessHeap symbol (at least referenced once, from XapiInitProcess) :
-    Symbol := FindSymbolWithAddress('_XapiProcessHeap');
-    if Assigned(Symbol) then
-      // and remember that in a global :
-      XTL_EmuXapiProcessHeap := Symbol.Address;
+  // Resolve the address of the _XapiProcessHeap symbol (at least referenced once, from XapiInitProcess) :
+  XTL_EmuXapiProcessHeap := _Find('_XapiProcessHeap');
 
-    if MayLog(lfUnit) then
-    begin
-      if Assigned(XTL_EmuXapiProcessHeap) then
-        DbgPrintf('HLE: $%.08X -> XapiProcessHeap',
-          [XTL_EmuXapiProcessHeap])
-      else
-        DbgPrintf('HLE : Can''t find XapiProcessHeap!');
-    end;
-  end;
 end; // LookupGlobalEmulationSymbols
 
 ///
