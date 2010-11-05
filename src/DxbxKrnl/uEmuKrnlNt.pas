@@ -526,8 +526,8 @@ begin
 
       // (This file probably needs to be pre-initialized somehow too).
       // For now, just create an empty file of 512 KB :
-      if not FileExists(NativePath + RelativePath) then
-        DxbxInitializePartition0(NativePath + RelativePath);
+      if not FileExists(NativePath + string(RelativePath)) then
+        DxbxInitializePartition0(NativePath + string(RelativePath));
     end;
 
     if MayLog(lfUnit or lfReturnValue or lfFile) then
