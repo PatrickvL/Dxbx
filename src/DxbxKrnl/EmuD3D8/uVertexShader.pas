@@ -983,22 +983,28 @@ begin
   end;
 
 {$IFDEF DXBX_USE_D3D9}
-  Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '; Input usage declarations :'#13#10));
-  j := 0;
   if IsConverted then
   begin
+    Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '; Input usage declarations :'#13#10));
     // TODO -oDxbx : We have a bit of a problem here, as there's no reliable way
     // to determine what usage the input vertex registers have exactly (some cases
     // might be logical, like a single use to fill a color output register, the
     // input is probably a color register too then). Another method to determine
     // the type of input register usage, is to look at the D3DVSD_REG / D3DVSDT_*
     // registration. (How to get that here?)
-
+    j := 0;
     for i := 0 to VSH_XBOX_MAX_V_REGISTER_COUNT - 1 do
     begin
       // Test if this v-register is actually used :
       if RegVUsage[i] then
       begin
+        // TODO -oDxbx : We have a bit of a problem here, as there's no reliable way
+        // to determine what usage the input vertex registers have exactly (some cases
+        // might be logical, like a single use to fill a color output register, the
+        // input is probably a color register too then). Another method to determine
+        // the type of input register usage, is to look at the D3DVSD_REG / D3DVSDT_*
+        // registration. (How to get that here?)
+
         case i of
           0: DclStr := 'dcl_position';
 //          1: DclStr := 'dcl_blendweight';

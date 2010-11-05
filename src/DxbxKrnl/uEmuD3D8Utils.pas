@@ -400,12 +400,13 @@ begin
     Result := Result + CommonToStr(aValue.Common);
     if IsSpecialResource(aValue.Data) then
     begin
+      Result := Result + ', Special:';
       Flag := aValue.Data and (not X_D3DRESOURCE_DATA_FLAG_SPECIAL);
-      if (Flag and X_D3DRESOURCE_DATA_FLAG_SURFACE) > 0 then Result := Result + ', Surface';
-      if (Flag and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0 then Result := Result + ', YUV memory surface';
-      if (Flag and X_D3DRESOURCE_DATA_FLAG_D3DREND) > 0 then Result := Result + ', D3D Render Target';
-      if (Flag and X_D3DRESOURCE_DATA_FLAG_D3DSTEN) > 0 then Result := Result + ', D3D Stencil Surface';
-      if (Flag and X_D3DRESOURCE_DATA_FLAG_TEXCLON) > 0 then Result := Result + ', Cloned resource';
+      if (Flag and X_D3DRESOURCE_DATA_FLAG_SURFACE) > 0 then Result := Result + ' Surface';
+      if (Flag and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0 then Result := Result + ' YUV memory surface';
+      if (Flag and X_D3DRESOURCE_DATA_FLAG_D3DREND) > 0 then Result := Result + ' D3D Render Target';
+      if (Flag and X_D3DRESOURCE_DATA_FLAG_D3DSTEN) > 0 then Result := Result + ' D3D Stencil Surface';
+      if (Flag and X_D3DRESOURCE_DATA_FLAG_TEXCLON) > 0 then Result := Result + ' Cloned resource';
     end;
 
     Result := Result + ')';
