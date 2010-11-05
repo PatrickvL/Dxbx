@@ -1675,6 +1675,8 @@ begin
     RegOUsage[i] := FALSE;
 {$ENDIF}
 
+  // TODO -oDxbx : Xbox can write to OREG_OD0 and OREG_OD1, while Direct3D8 marks these as read-only; How to fix that?
+
   // TODO -oCXBX: What about state shaders and such?
   pShader.ShaderHeader.Version := VERSION_VS;
 

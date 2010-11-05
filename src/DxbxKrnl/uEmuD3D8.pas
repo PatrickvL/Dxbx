@@ -321,83 +321,15 @@ begin
 end;
 
 function RLogStackHelper._(const aValue: X_D3DFORMAT; const aName: string = ''): PLogStack;
+var
+  Str: string;
 begin
   Result := SetName(aName, 'X_D3DFORMAT');
-  case aValue of
-    // Swizzled Formats
-    X_D3DFMT_L8: SetValue(UIntPtr(aValue), 'X_D3DFMT_L8');
-    X_D3DFMT_AL8: SetValue(UIntPtr(aValue), 'X_D3DFMT_AL8');
-    X_D3DFMT_A1R5G5B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_A1R5G5B5');
-    X_D3DFMT_X1R5G5B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_X1R5G5B5');
-    X_D3DFMT_A4R4G4B4: SetValue(UIntPtr(aValue), 'X_D3DFMT_A4R4G4B4');
-    X_D3DFMT_R5G6B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_R5G6B5');
-    X_D3DFMT_A8R8G8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_A8R8G8B8');
-    X_D3DFMT_X8R8G8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_X8R8G8B8');
-//    X_D3DFMT_X8L8V8U8 = $07; // Alias
-    X_D3DFMT_P8: SetValue(UIntPtr(aValue), 'X_D3DFMT_P8');
-    X_D3DFMT_A8: SetValue(UIntPtr(aValue), 'X_D3DFMT_A8');
-    X_D3DFMT_A8L8: SetValue(UIntPtr(aValue), 'X_D3DFMT_A8L8');
-    X_D3DFMT_R6G5B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_R6G5B5');
-//    X_D3DFMT_L6V5U5 = $27; // Alias
-    X_D3DFMT_G8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_G8B8');
-//    X_D3DFMT_V8U8 = $28; // Alias
-    X_D3DFMT_R8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_R8B8');
-    X_D3DFMT_D24S8: SetValue(UIntPtr(aValue), 'X_D3DFMT_D24S8');
-    X_D3DFMT_F24S8: SetValue(UIntPtr(aValue), 'X_D3DFMT_F24S8');
-    X_D3DFMT_D16: SetValue(UIntPtr(aValue), 'X_D3DFMT_D16');
-//    X_D3DFMT_D16_LOCKABLE = $2C; // Alias
-    X_D3DFMT_F16: SetValue(UIntPtr(aValue), 'X_D3DFMT_F16');
-    X_D3DFMT_L16: SetValue(UIntPtr(aValue), 'X_D3DFMT_L16');
-    X_D3DFMT_V16U16: SetValue(UIntPtr(aValue), 'X_D3DFMT_V16U16');
-    X_D3DFMT_R5G5B5A1: SetValue(UIntPtr(aValue), 'X_D3DFMT_R5G5B5A1');
-    X_D3DFMT_R4G4B4A4: SetValue(UIntPtr(aValue), 'X_D3DFMT_R4G4B4A4');
-    X_D3DFMT_A8B8G8R8: SetValue(UIntPtr(aValue), 'X_D3DFMT_A8B8G8R8');
-//    X_D3DFMT_Q8W8V8U8 = $3A; // Alias
-    X_D3DFMT_B8G8R8A8: SetValue(UIntPtr(aValue), 'X_D3DFMT_B8G8R8A8');
-    X_D3DFMT_R8G8B8A8: SetValue(UIntPtr(aValue), 'X_D3DFMT_R8G8B8A8');
-
-    // YUV Formats
-    X_D3DFMT_YUY2: SetValue(UIntPtr(aValue), 'X_D3DFMT_YUY2');
-    X_D3DFMT_UYVY: SetValue(UIntPtr(aValue), 'X_D3DFMT_UYVY');
-    // Compressed Formats
-    X_D3DFMT_DXT1: SetValue(UIntPtr(aValue), 'X_D3DFMT_DXT1');
-    X_D3DFMT_DXT2: SetValue(UIntPtr(aValue), 'X_D3DFMT_DXT2');
-//    X_D3DFMT_DXT3 = $0E; // linear alpha
-    X_D3DFMT_DXT4: SetValue(UIntPtr(aValue), 'X_D3DFMT_DXT4');
-//    X_D3DFMT_DXT5 = $0F; // interpolated alpha
-
-    // Linear Formats
-    X_D3DFMT_LIN_A1R5G5B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_A1R5G5B5');
-    X_D3DFMT_LIN_R5G6B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_R5G6B5');
-    X_D3DFMT_LIN_A8R8G8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_A8R8G8B8');
-    X_D3DFMT_LIN_L8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_L8');
-    X_D3DFMT_LIN_R8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_R8B8');
-    X_D3DFMT_LIN_G8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_G8B8');
-//    X_D3DFMT_LIN_V8U8 = $17; // Alias
-    X_D3DFMT_LIN_AL8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_AL8');
-    X_D3DFMT_LIN_X1R5G5B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_X1R5G5B5');
-    X_D3DFMT_LIN_A4R4G4B4: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_A4R4G4B4');
-    X_D3DFMT_LIN_X8R8G8B8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_X8R8G8B8');
-//    X_D3DFMT_LIN_X8L8V8U8 = $1E; // Alias
-    X_D3DFMT_LIN_A8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_A8');
-    X_D3DFMT_LIN_A8L8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_A8L8');
-    X_D3DFMT_LIN_D24S8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_D24S8');
-    X_D3DFMT_LIN_F24S8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_F24S8');
-    X_D3DFMT_LIN_D16: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_D16');
-    X_D3DFMT_LIN_F16: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_F16');
-    X_D3DFMT_LIN_L16: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_L16');
-    X_D3DFMT_LIN_V16U16: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_V16U16');
-    X_D3DFMT_LIN_R6G5B5: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_R6G5B5');
-//    X_D3DFMT_LIN_L6V5U5 = $37; // Alias
-    X_D3DFMT_LIN_R5G5B5A1: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_R5G5B5A1');
-    X_D3DFMT_LIN_R4G4B4A4: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_R4G4B4A4');
-    X_D3DFMT_LIN_A8B8G8R8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_A8B8G8R8');
-    X_D3DFMT_LIN_B8G8R8A8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_B8G8R8A8');
-    X_D3DFMT_LIN_R8G8B8A8: SetValue(UIntPtr(aValue), 'X_D3DFMT_LIN_R8G8B8A8');
-
-    X_D3DFMT_VERTEXDATA: SetValue(UIntPtr(aValue), 'X_D3DFMT_VERTEXDATA');
-  else SetValue(UIntPtr(aValue));
-  end;
+  Str := X_D3DFORMAT2String(aValue);
+  if Str <> '' then
+    SetValue(UIntPtr(aValue), Str)
+  else
+    SetValue(UIntPtr(aValue));
 end;
 
 function RLogStackHelper._(const aValue: D3DDEVTYPE; const aName: string = ''): PLogStack;
@@ -780,7 +712,7 @@ var
 begin
   // Dxbx addition : Ease the RefCount, by moving this to the start of the buffer :
   dwSize := sizeof(DWORD) + (g_dwOverlayP * g_dwOverlayH);
-  pRefCount := XboxAlloc(dwSize);
+  pRefCount := XboxAlloc(dwSize); // TODO : Honor D3DSURFACE_ALIGNMENT and the 'contiguous memory' requirement (use D3D_AllocContiguousMemory?)
   ZeroMemory(pRefCount, dwSize);
 
   // initialize ref count
@@ -790,9 +722,11 @@ begin
   pPixelContainer.Common := (pRefCount^ and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE or X_D3DCOMMON_D3DCREATED;
   // Because YUY2 is not supported in hardware (in Direct3D8?), we'll actually mark this as a special fake texture (set highest bit)
   pPixelContainer.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
-  pPixelContainer.Emu.Lock := UIntPtr(pRefCount);
-  pPixelContainer.Format := X_D3DFMT_YUY2 shl X_D3DFORMAT_FORMAT_SHIFT;
-  pPixelContainer.Size := ((( g_dwOverlayW         - 1)                           ) and X_D3DSIZE_WIDTH_MASK )
+  pPixelContainer.Emu.Lock := UIntPtr(pRefCount); // The data follows directly after the refcount
+  pPixelContainer.Format := (X_D3DFMT_YUY2 shl X_D3DFORMAT_FORMAT_SHIFT)
+                         or (1 shl X_D3DFORMAT_MIPMAP_SHIFT); // Surfaces have 1 mipmap level
+  //  YUV formats have no USIZE, VSIZE and PSIZE in Format, but WIDTh, HEIGHT and PITCH in Size :
+  pPixelContainer.Size := ((( g_dwOverlayW         - 1){shl X_D3DSIZE_WIDTH_SHIFT}) and X_D3DSIZE_WIDTH_MASK )
                        or ((( g_dwOverlayH         - 1) shl X_D3DSIZE_HEIGHT_SHIFT) and X_D3DSIZE_HEIGHT_MASK)
                        or ((((g_dwOverlayP div 64) - 1) shl X_D3DSIZE_PITCH_SHIFT ) and X_D3DSIZE_PITCH_MASK );
 end;
@@ -1417,10 +1351,7 @@ begin
         end;
         VK_F3:
         begin
-          if g_XBSound.GetMute then
-            g_XBSound.SetMute(False)
-          else
-            g_XBSound.SetMute(True);
+          g_XBSound.SetMute(not g_XBSound.GetMute());
         end;
         VK_F8:
         begin
@@ -2219,6 +2150,7 @@ begin
     DbgPrintf('EmuD3D8 : EmuD3DDevice_KickPushBuffer();');
 
   Unimplemented('EmuD3DDevice_KickPushBuffer');
+  // TODO -oDxbx : Locate the current PushBuffer address, and supply that to RunPushBuffer (without a fixup)
 
   EmuSwapFS(fsXbox);
 end;
@@ -4554,6 +4486,12 @@ begin
         DbgPrintf('Texture created @ 0x%.08X [hRet = 0x%.08X]: %dx%d, %d levels, usage = 0x%.08X, format = 0x%.08X', [
             ppTexture^.Emu.Texture, Result, Width, Height, Levels, Ord(Usage), Ord(PCFormat)]);
 
+      ppTexture^.Format := (Ord(Format) shl X_D3DFORMAT_FORMAT_SHIFT)
+                        or (Log2(Width) shl X_D3DFORMAT_USIZE_SHIFT)
+                        or (Log2(Height) shl X_D3DFORMAT_VSIZE_SHIFT)
+                        or (Log2(Height) shl X_D3DFORMAT_VSIZE_SHIFT)
+                        or (Levels shl X_D3DFORMAT_MIPMAP_SHIFT);
+
       // Dxbx addition : Register all levels :
       while Levels > 0 do
       begin
@@ -4562,10 +4500,7 @@ begin
         if IDirect3DTexture(ppTexture^.Emu.Texture).LockRect(Levels, {out}LockedRect, NULL, 0) = D3D_OK then
         begin
           if Levels = 0 then
-          begin
             ppTexture^.Data := DWORD(LockedRect.pBits);
-            ppTexture^.Format := Ord(Format) shl X_D3DFORMAT_FORMAT_SHIFT; // TODO : Also set other flags, like MIPMAP, USIZE and others
-          end;
 
           g_DataToTexture.insert(DWORD(LockedRect.pBits), ppTexture^);
 
@@ -5746,6 +5681,15 @@ begin
 
 //  hRet := D3D_OK;
 
+  // Dxbx note : Before a call to this Register function, an application should have called
+  // one of XGSetCubeTextureHeader/XGSetSurfaceHeader/XGSetTextureHeader/XGSetVolumeTextureHeader
+  // to initialize the resource header with format, dimensions and stuff. Next it should have
+  // called D3D_AllocContiguousMemory (to allocate a correctly aligned buffer memory for the resource).
+  // Then (on the Xbox) Register just sets the Data field (and modifies no other resource header fields).
+  //
+  // PS: For other resources, similar XGSet* functions exist:
+  // XGSetFixupHeader, XGSetIndexBufferHeader, XGSetPaletteHeader, XGSetPushBufferHeader and XGSetVertexBufferHeader.
+
   pResource := pThis;
 
   dwCommonType := pResource.Common and X_D3DCOMMON_TYPE_MASK;
@@ -5800,9 +5744,6 @@ begin
           Exit;
         end;
 
-        // Dxbx addition : Initialize Common field properly :
-        pVertexBuffer.Common := pVertexBuffer.Common or X_D3DCOMMON_TYPE_VERTEXBUFFER;
-
   {$IFDEF _DEBUG_TRACK_VB}
         g_VBTrackTotal.insert(pVertexBuffer.Emu.VertexBuffer);
   {$ENDIF}
@@ -5856,9 +5797,6 @@ begin
 
           if (FAILED(hRet)) then
             DxbxKrnlCleanup('EmuIDirect3DResource_Register: IndexBuffer Create Failed!');
-
-          // Dxbx addition : Initialize Common field properly :
-          pIndexBuffer.Common := pIndexBuffer.Common or X_D3DCOMMON_TYPE_INDEXBUFFER;
 
           // update data ptr
           pData := nil;
@@ -5928,7 +5866,7 @@ begin
 
       DxbxGetFormatRelatedVariables(pPixelContainer, X_Format,
         {var}dwWidth, {var}dwHeight, {var}dwBPP, {var}dwDepth, {var}dwPitch, {var}dwMipMapLevels,
-        {var}bSwizzled, {var}bCompressed, {var}dwCompressedSize);
+        {var}bSwizzled, {var}bCompressed, {var}dwCompressedSize, {var}bCubeMap);
 
       if (X_Format = X_D3DFMT_YUY2) then
       begin
@@ -5942,8 +5880,6 @@ begin
       end
       else // X_Format <> X_D3DFMT_YUY2
       begin
-        bCubemap := (pPixelContainer.Format and X_D3DFORMAT_CUBEMAP) > 0;
-
         // create the happy little texture
         if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
         begin
@@ -5956,9 +5892,6 @@ begin
 
           if (FAILED(hRet)) then
             DxbxKrnlCleanup('EmuIDirect3DResource_Register: CreateImageSurface Failed!');
-
-          // Dxbx addition : Initialize Common field properly :
-          pPixelContainer.Common := pPixelContainer.Common or X_D3DCOMMON_TYPE_SURFACE;
 
           if MayLog(lfUnit or lfReturnValue) then
           begin
@@ -5999,9 +5932,6 @@ begin
             if (FAILED(hRet)) then
               DxbxKrnlCleanup('EmuIDirect3DResource_Register: CreateCubeTexture Failed!');
 
-            // Dxbx addition : Initialize Common field properly :
-            pPixelContainer.Common := pPixelContainer.Common or X_D3DCOMMON_TYPE_TEXTURE;
-
             if MayLog(lfUnit or lfReturnValue) then
               DbgPrintf('EmuIDirect3DResource_Register: Successfully Created CubeTexture : ' + ResourceToString(pPixelContainer));
           end
@@ -6021,9 +5951,6 @@ begin
 
             if (FAILED(hRet)) then
               DxbxKrnlCleanup('EmuIDirect3DResource_Register: CreateTexture Failed!');
-
-            // Dxbx addition : Initialize Common field properly :
-            pPixelContainer.Common := pPixelContainer.Common or X_D3DCOMMON_TYPE_TEXTURE;
 
             if MayLog(lfUnit or lfReturnValue) then
               DbgPrintf('EmuIDirect3DResource_Register: Successfully Created Texture : ' + ResourceToString(pPixelContainer));
@@ -11063,7 +10990,7 @@ begin
     pDesc.Size := g_dwOverlayP * g_dwOverlayH;
     pDesc.Height := g_dwOverlayH;
     pDesc.Width := g_dwOverlayW;
-    pDesc.Depth := 4; //??
+    pDesc.Depth := 4;
 
     Result := D3D_OK;
   end

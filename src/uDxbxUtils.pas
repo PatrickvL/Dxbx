@@ -182,6 +182,7 @@ function PointerToString(const aPointer: Pointer): string;
 function FloatToString(const aValue: float): string;
 
 function QuadPart(const aValue: PLARGE_INTEGER): Int64;
+function Log2(aValue: DWORD): DWORD; overload;
 
 type
   // Free interpretation of http://edn.embarcadero.com/article/29173
@@ -1016,6 +1017,17 @@ begin
     Result := aValue.QuadPart
   else
     Result := 0;
+end;
+
+function Log2(aValue: DWORD): DWORD;
+begin
+  Result := 1;
+  while aValue >= 2 do
+  begin
+    Inc(Result);
+    aValue := aValue div 2;
+  end;
+  Dec(Result);
 end;
 
 function DebugModeToString(const aDebugMode: TDebugMode): string;

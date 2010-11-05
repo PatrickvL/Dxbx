@@ -180,7 +180,8 @@ procedure DxbxGetFormatRelatedVariables(
   var dwMipMapLevels: DWORD;
   var bSwizzled: BOOL_;
   var bCompressed: BOOL_;
-  var dwCompressedSize: DWORD); {NOPATCH}
+  var dwCompressedSize: DWORD;
+  var bCubeMap: BOOL_); {NOPATCH}
 
 procedure DxbxUpdatePixelContainer(
   pPixelContainer: PX_D3DPixelContainer;
@@ -195,7 +196,7 @@ procedure DxbxUpdatePixelContainer(
   bSwizzled: BOOL_;
   bCompressed: BOOL_;
   dwCompressedSize: DWORD;
-  bCubemap: BOOL_;
+  bCubeMap: BOOL_;
   CacheFormat: X_D3DFORMAT
   ); {NOPATCH}
 
@@ -1756,13 +1757,15 @@ procedure DxbxGetFormatRelatedVariables(
   var dwMipMapLevels: DWORD;
   var bSwizzled: BOOL_;
   var bCompressed: BOOL_;
-  var dwCompressedSize: DWORD); {NOPATCH}
+  var dwCompressedSize: DWORD;
+  var bCubeMap: BOOL_); {NOPATCH}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   v: uint32;
 begin
   dwWidth := 1; dwHeight := 1; dwBPP := 1; dwDepth := 1; dwPitch := 0; dwMipMapLevels := 1;
   bSwizzled := FALSE; bCompressed := FALSE; dwCompressedSize := 0;
+  bCubeMap := (pPixelContainer.Format and X_D3DFORMAT_CUBEMAP) > 0;
 
   // Interpret Width/Height/BPP
   bSwizzled := EmuXBFormatIsSwizzled(X_Format, @dwBPP);
@@ -1794,12 +1797,9 @@ begin
     end
     else
     begin
-      if EmuXBFormatIsYUV(X_Format) then
-        dwBPP := 4
-      else
-        // Linear
-        if not EmuXBFormatIsLinear(X_Format, @dwBPP) then
-          DxbxKrnlCleanup('0x%.08X is not a supported format!', [X_Format]);
+      // The rest should be linear (this also includes the YUV formats) :
+      if not EmuXBFormatIsLinear(X_Format, @dwBPP) then
+        DxbxKrnlCleanup('0x%.08X is not a supported format!', [X_Format]);
 
       dwWidth := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
       dwHeight := ((pPixelContainer.Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
@@ -1841,7 +1841,7 @@ procedure DxbxUpdatePixelContainer(
   bSwizzled: BOOL_;
   bCompressed: BOOL_;
   dwCompressedSize: DWORD;
-  bCubemap: BOOL_;
+  bCubeMap: BOOL_;
   CacheFormat: X_D3DFORMAT
   ); {NOPATCH}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
@@ -2043,6 +2043,7 @@ var
   bSwizzled: BOOL_;
   bCompressed: BOOL_;
   dwCompressedSize: DWORD;
+  bCubeMap: BOOL_;
 begin
   //
   // DEBUGGING
@@ -2060,12 +2061,11 @@ begin
     begin
       DxbxGetFormatRelatedVariables(pPixelContainer, X_Format,
         {var}dwWidth, {var}dwHeight, {var}dwBPP, {var}dwDepth, {var}dwPitch, {var}dwMipMapLevels,
-        {var}bSwizzled, {var}bCompressed, {var}dwCompressedSize);
+        {var}bSwizzled, {var}bCompressed, {var}dwCompressedSize, {var}bCubeMap);
 
       DxbxUpdatePixelContainer(pPixelContainer, X_D3DCOMMON_TYPE_TEXTURE,
         dwWidth, dwHeight, dwBPP, dwDepth, dwPitch, dwMipMapLevels,
-        bSwizzled, bCompressed, dwCompressedSize, {bCubeMap=}False, {CacheFormat=}X_Format);
-
+        bSwizzled, bCompressed, dwCompressedSize, bCubeMap, {CacheFormat=}X_Format);
     end;
 
     DxbxUnlockD3DResource(pPixelContainer); // Dxbx addition

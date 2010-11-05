@@ -83,6 +83,7 @@ function F2DW(const aValue: Float): DWORD; inline;
 function GetSurfaceSize(const aSurface: PD3DSurfaceDesc): LongWord;
 function GetVolumeSize(const aVolume: PD3DVolumeDesc): LongWord;
 function X_D3DPRIMITIVETYPE2String(const aValue: X_D3DPRIMITIVETYPE): string;
+function X_D3DFORMAT2String(const aValue: X_D3DFORMAT): string;
 function CommonToStr(const Common: DWORD): string;
 function ResourceToString(const aValue: PX_D3DResource): string;
 
@@ -367,25 +368,153 @@ begin
   end;
 end;
 
+function X_D3DFORMAT2String(const aValue: X_D3DFORMAT): string;
+begin
+  case aValue of
+    // Swizzled Formats
+    X_D3DFMT_L8: Result := 'X_D3DFMT_L8';
+    X_D3DFMT_AL8: Result := 'X_D3DFMT_AL8';
+    X_D3DFMT_A1R5G5B5: Result := 'X_D3DFMT_A1R5G5B5';
+    X_D3DFMT_X1R5G5B5: Result := 'X_D3DFMT_X1R5G5B5';
+    X_D3DFMT_A4R4G4B4: Result := 'X_D3DFMT_A4R4G4B4';
+    X_D3DFMT_R5G6B5: Result := 'X_D3DFMT_R5G6B5';
+    X_D3DFMT_A8R8G8B8: Result := 'X_D3DFMT_A8R8G8B8';
+    X_D3DFMT_X8R8G8B8: Result := 'X_D3DFMT_X8R8G8B8';
+//    X_D3DFMT_X8L8V8U8 = $07; // Alias
+    X_D3DFMT_P8: Result := 'X_D3DFMT_P8';
+    X_D3DFMT_A8: Result := 'X_D3DFMT_A8';
+    X_D3DFMT_A8L8: Result := 'X_D3DFMT_A8L8';
+    X_D3DFMT_R6G5B5: Result := 'X_D3DFMT_R6G5B5';
+//    X_D3DFMT_L6V5U5 = $27; // Alias
+    X_D3DFMT_G8B8: Result := 'X_D3DFMT_G8B8';
+//    X_D3DFMT_V8U8 = $28; // Alias
+    X_D3DFMT_R8B8: Result := 'X_D3DFMT_R8B8';
+    X_D3DFMT_D24S8: Result := 'X_D3DFMT_D24S8';
+    X_D3DFMT_F24S8: Result := 'X_D3DFMT_F24S8';
+    X_D3DFMT_D16: Result := 'X_D3DFMT_D16';
+//    X_D3DFMT_D16_LOCKABLE = $2C; // Alias
+    X_D3DFMT_F16: Result := 'X_D3DFMT_F16';
+    X_D3DFMT_L16: Result := 'X_D3DFMT_L16';
+    X_D3DFMT_V16U16: Result := 'X_D3DFMT_V16U16';
+    X_D3DFMT_R5G5B5A1: Result := 'X_D3DFMT_R5G5B5A1';
+    X_D3DFMT_R4G4B4A4: Result := 'X_D3DFMT_R4G4B4A4';
+    X_D3DFMT_A8B8G8R8: Result := 'X_D3DFMT_A8B8G8R8';
+//    X_D3DFMT_Q8W8V8U8 = $3A; // Alias
+    X_D3DFMT_B8G8R8A8: Result := 'X_D3DFMT_B8G8R8A8';
+    X_D3DFMT_R8G8B8A8: Result := 'X_D3DFMT_R8G8B8A8';
+
+    // YUV Formats
+    X_D3DFMT_YUY2: Result := 'X_D3DFMT_YUY2';
+    X_D3DFMT_UYVY: Result := 'X_D3DFMT_UYVY';
+    // Compressed Formats
+    X_D3DFMT_DXT1: Result := 'X_D3DFMT_DXT1';
+    X_D3DFMT_DXT2: Result := 'X_D3DFMT_DXT2';
+//    X_D3DFMT_DXT3 = $0E; // linear alpha
+    X_D3DFMT_DXT4: Result := 'X_D3DFMT_DXT4';
+//    X_D3DFMT_DXT5 = $0F; // interpolated alpha
+
+    // Linear Formats
+    X_D3DFMT_LIN_A1R5G5B5: Result := 'X_D3DFMT_LIN_A1R5G5B5';
+    X_D3DFMT_LIN_R5G6B5: Result := 'X_D3DFMT_LIN_R5G6B5';
+    X_D3DFMT_LIN_A8R8G8B8: Result := 'X_D3DFMT_LIN_A8R8G8B8';
+    X_D3DFMT_LIN_L8: Result := 'X_D3DFMT_LIN_L8';
+    X_D3DFMT_LIN_R8B8: Result := 'X_D3DFMT_LIN_R8B8';
+    X_D3DFMT_LIN_G8B8: Result := 'X_D3DFMT_LIN_G8B8';
+//    X_D3DFMT_LIN_V8U8 = $17; // Alias
+    X_D3DFMT_LIN_AL8: Result := 'X_D3DFMT_LIN_AL8';
+    X_D3DFMT_LIN_X1R5G5B5: Result := 'X_D3DFMT_LIN_X1R5G5B5';
+    X_D3DFMT_LIN_A4R4G4B4: Result := 'X_D3DFMT_LIN_A4R4G4B4';
+    X_D3DFMT_LIN_X8R8G8B8: Result := 'X_D3DFMT_LIN_X8R8G8B8';
+//    X_D3DFMT_LIN_X8L8V8U8 = $1E; // Alias
+    X_D3DFMT_LIN_A8: Result := 'X_D3DFMT_LIN_A8';
+    X_D3DFMT_LIN_A8L8: Result := 'X_D3DFMT_LIN_A8L8';
+    X_D3DFMT_LIN_D24S8: Result := 'X_D3DFMT_LIN_D24S8';
+    X_D3DFMT_LIN_F24S8: Result := 'X_D3DFMT_LIN_F24S8';
+    X_D3DFMT_LIN_D16: Result := 'X_D3DFMT_LIN_D16';
+    X_D3DFMT_LIN_F16: Result := 'X_D3DFMT_LIN_F16';
+    X_D3DFMT_LIN_L16: Result := 'X_D3DFMT_LIN_L16';
+    X_D3DFMT_LIN_V16U16: Result := 'X_D3DFMT_LIN_V16U16';
+    X_D3DFMT_LIN_R6G5B5: Result := 'X_D3DFMT_LIN_R6G5B5';
+//    X_D3DFMT_LIN_L6V5U5 = $37; // Alias
+    X_D3DFMT_LIN_R5G5B5A1: Result := 'X_D3DFMT_LIN_R5G5B5A1';
+    X_D3DFMT_LIN_R4G4B4A4: Result := 'X_D3DFMT_LIN_R4G4B4A4';
+    X_D3DFMT_LIN_A8B8G8R8: Result := 'X_D3DFMT_LIN_A8B8G8R8';
+    X_D3DFMT_LIN_B8G8R8A8: Result := 'X_D3DFMT_LIN_B8G8R8A8';
+    X_D3DFMT_LIN_R8G8B8A8: Result := 'X_D3DFMT_LIN_R8G8B8A8';
+
+    X_D3DFMT_VERTEXDATA: Result := 'X_D3DFMT_VERTEXDATA';
+  else Result := '';
+  end;
+end;
+
 function CommonToStr(const Common: DWORD): string;
 var
   Value: DWORD;
 begin
-  Result := Format('RefCount=%d', [Common and X_D3DCOMMON_REFCOUNT_MASK]);
+  Result := '';
+  Value := Common and X_D3DCOMMON_REFCOUNT_MASK;
+  if Value > 1 then Result := Format(' RefCount=%d', [Value]);
+
   Value := (Common and X_D3DCOMMON_TYPE_MASK);
   case Value of
-    X_D3DCOMMON_TYPE_VERTEXBUFFER: Result := Result + ', VERTEXBUFFER';
-    X_D3DCOMMON_TYPE_INDEXBUFFER : Result := Result + ', INDEXBUFFER';
-    X_D3DCOMMON_TYPE_PUSHBUFFER  : Result := Result + ', PUSHBUFFER';
-    X_D3DCOMMON_TYPE_PALETTE     : Result := Result + ', PALETTE';
-    X_D3DCOMMON_TYPE_TEXTURE     : Result := Result + ', TEXTURE';
-    X_D3DCOMMON_TYPE_SURFACE     : Result := Result + ', SURFACE';
-    X_D3DCOMMON_TYPE_FIXUP       : Result := Result + ', FIXUP';
+    X_D3DCOMMON_TYPE_VERTEXBUFFER: Result := Result + ' VERTEXBUFFER';
+    X_D3DCOMMON_TYPE_INDEXBUFFER : Result := Result + ' INDEXBUFFER';
+    X_D3DCOMMON_TYPE_PUSHBUFFER  : Result := Result + ' PUSHBUFFER';
+    X_D3DCOMMON_TYPE_PALETTE     : Result := Result + ' PALETTE';
+    X_D3DCOMMON_TYPE_TEXTURE     : Result := Result + ' TEXTURE';
+    X_D3DCOMMON_TYPE_SURFACE     : Result := Result + ' SURFACE';
+    X_D3DCOMMON_TYPE_FIXUP       : Result := Result + ' FIXUP';
   end;
+
   Value := (Common and X_D3DCOMMON_INTREFCOUNT_MASK) shr X_D3DCOMMON_INTREFCOUNT_SHIFT;
-  if (Common and X_D3DCOMMON_VIDEOMEMORY) > 0 then Result := Result + ', X_D3DCOMMON_VIDEOMEMORY';
-  if (Common and X_D3DCOMMON_D3DCREATED) > 0 then Result := Result + ', X_D3DCOMMON_D3DCREATED';
-  if (Common and X_D3DCOMMON_ISLOCKED) > 0 then Result := Result + ', X_D3DCOMMON_ISLOCKED';
+  if Value > 0 then Result := Result + Format(' IntRefCount=%d', [Value]);
+
+  if (Common and X_D3DCOMMON_VIDEOMEMORY) > 0 then Result := Result + ' VIDEOMEMORY';
+  if (Common and X_D3DCOMMON_D3DCREATED) > 0 then Result := Result + ' D3DCREATED';
+  if (Common and X_D3DCOMMON_ISLOCKED) > 0 then Result := Result + ' ISLOCKED';
+end;
+
+function ResourceFormatToStr(const ResourceFormat: DWORD): string;
+var
+  Value: DWORD;
+begin
+  Result := '';
+
+  if (ResourceFormat and X_D3DFORMAT_CUBEMAP) > 0 then Result := Result + ' CUBEMAP';
+  if (ResourceFormat and X_D3DFORMAT_BORDERSOURCE_COLOR) > 0 then Result := Result + ' BORDER';
+
+  Value := (ResourceFormat and X_D3DFORMAT_DIMENSION_MASK) shr X_D3DFORMAT_DIMENSION_SHIFT;
+  if Value > 2 then Result := Result + Format(' %dD', [Value]);
+
+  Value := (ResourceFormat and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
+  Result := Result + Format(' FORMAT=%s', [X_D3DFORMAT2String(Value)]);
+
+  Value := (ResourceFormat and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
+  if Value > 1 then Result := Result + Format(' MIPMAP=%d', [Value]);
+
+  Value := (ResourceFormat and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT;
+  if Value > 0 then Result := Result + Format(' USIZE=%d', [Value]);
+
+  Value := (ResourceFormat and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT;
+  if Value > 0 then Result := Result + Format(' VSIZE=%d', [Value]);
+
+  Value := (ResourceFormat and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT;
+  if Value > 0 then Result := Result + Format(' PSIZE=%d', [Value]);
+end;
+
+function ResourceSizeToStr(const ResourceSize: DWORD): string;
+var
+  Value: DWORD;
+begin
+  Result := '';
+  Value := (ResourceSize and X_D3DSIZE_WIDTH_MASK) {shr X_D3DSIZE_WIDTH_SHIFT};
+  if Value > 0 then Result := Result + Format(' WIDTH=%d', [Value]);
+
+  Value := (ResourceSize and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT;
+  if Value > 0 then Result := Result + Format(' HEIGHT=%d', [Value]);
+
+  Value := (ResourceSize and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT;
+  if Value > 0 then Result := Result + Format(' PITCH=%d', [Value]);
 end;
 
 function ResourceToString(const aValue: PX_D3DResource): string;
@@ -395,18 +524,32 @@ begin
   Result := Format('0x%.08x', [UIntPtr(aValue)]);
   if Assigned(aValue) then
   begin
-    Result := Result + Format(' (Common=0x%.08x Data=0x%.08x Emu=0x%.08x : ', [
+    Result := Result + Format(' (Common=%.08x Data=%.08x Emu=%.08x', [
               aValue.Common, aValue.Data, aValue.Emu.Lock]);
-    Result := Result + CommonToStr(aValue.Common);
     if IsSpecialResource(aValue.Data) then
     begin
-      Result := Result + ', Special:';
+      Result := Result + ' :' + CommonToStr(aValue.Common);
+      Result := Result + ' IsSpecial:';
       Flag := aValue.Data and (not X_D3DRESOURCE_DATA_FLAG_SPECIAL);
       if (Flag and X_D3DRESOURCE_DATA_FLAG_SURFACE) > 0 then Result := Result + ' Surface';
       if (Flag and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0 then Result := Result + ' YUV memory surface';
       if (Flag and X_D3DRESOURCE_DATA_FLAG_D3DREND) > 0 then Result := Result + ' D3D Render Target';
       if (Flag and X_D3DRESOURCE_DATA_FLAG_D3DSTEN) > 0 then Result := Result + ' D3D Stencil Surface';
       if (Flag and X_D3DRESOURCE_DATA_FLAG_TEXCLON) > 0 then Result := Result + ' Cloned resource';
+    end
+    else
+    begin
+      if IsResourcePixelContainer(aValue) then
+      begin
+        Result := Result + Format(' Format=%.08x Size=%.08x :', [
+                  PX_D3DPixelContainer(aValue).Format, PX_D3DPixelContainer(aValue).Size]);
+
+        Result := Result + CommonToStr(aValue.Common);
+        Result := Result + ResourceFormatToStr(PX_D3DPixelContainer(aValue).Format);
+        Result := Result + ResourceSizeToStr(PX_D3DPixelContainer(aValue).Size);
+      end
+      else
+        Result := Result + ' :' + CommonToStr(aValue.Common);
     end;
 
     Result := Result + ')';
