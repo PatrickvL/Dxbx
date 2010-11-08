@@ -2181,7 +2181,7 @@ begin
 
     if CombinerHasUniqueC1 then
 //      Combiners[i].C1Mapping := (pPSDef.PSC1Mapping shr (i * 4)) and $f
-      Combiners[i].C0Mapping := (i * 2) + 1
+      Combiners[i].C1Mapping := (i * 2) + 1
     else
       Combiners[i].C1Mapping := 1;
   end;
