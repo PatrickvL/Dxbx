@@ -128,13 +128,13 @@ type VertexPatcher = object
     // Returns the number of streams of a patch
     function GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
     // Caches a patched stream
-    procedure CacheStream(pPatchDesc: PVertexPatchDesc; 
+    procedure CacheStream(pPatchDesc: PVertexPatchDesc;
                           uiStream: UINT);
     // Frees a cached, patched stream
     procedure FreeCachedStream(pStream: Pvoid);
     // Tries to apply a previously patched stream from the cache
-    function ApplyCachedStream(pPatchDesc: PVertexPatchDesc; 
-                               uiStream: UINT; 
+    function ApplyCachedStream(pPatchDesc: PVertexPatchDesc;
+                               uiStream: UINT;
                                pbFatalError: P_bool): _bool;
     // Patches the types of the stream
     function PatchStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
@@ -154,7 +154,9 @@ type _D3DIVB = record
     Position: TD3DXVECTOR3; // Position
     Rhw: FLOAT; // Rhw
     Blend1: FLOAT; // Blend1
-    // Dxbx note : Shouldn't we add Blend2, Blend3 and Blend4 for D3DFVF_XYZB2, D3DFVF_XYZB3 and D3DFVF_XYZB4 ?!
+    Blend2: FLOAT; // Dxbx addition TODO : Where should we set these?
+    Blend3: FLOAT; // Dxbx addition
+    Blend4: FLOAT; // Dxbx addition
     dwSpecular: DWORD; // Specular
     dwDiffuse: DWORD; // Diffuse
     Normal: TD3DXVECTOR3; // Normal
@@ -459,7 +461,7 @@ begin
 end;
 
 function VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc;
-                                         uiStream: UINT; 
+                                         uiStream: UINT;
                                          pbFatalError: P_bool): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -1607,7 +1609,46 @@ begin
         Inc(PFLOAT(pdwVB), 4);
 
         if MayLog(lfUnit or lfTrace) then
-          DbgPrintf('IVB Position := {%f, %f, %f, %f', [g_IVBTable_v.Position.x, g_IVBTable_v.Position.y, g_IVBTable_v.Position.z, g_IVBTable_v.Blend1]);
+          DbgPrintf('IVB Position := {%f, %f, %f, %f}', [g_IVBTable_v.Position.x, g_IVBTable_v.Position.y, g_IVBTable_v.Position.z, g_IVBTable_v.Blend1]);
+      end
+      else if(dwPos = D3DFVF_XYZB2) then
+      begin
+        PFLOATs(pdwVB)[0] := g_IVBTable_v.Position.x;
+        PFLOATs(pdwVB)[1] := g_IVBTable_v.Position.y;
+        PFLOATs(pdwVB)[2] := g_IVBTable_v.Position.z;
+        PFLOATs(pdwVB)[3] := g_IVBTable_v.Blend1;
+        PFLOATs(pdwVB)[4] := g_IVBTable_v.Blend2;
+        Inc(PFLOAT(pdwVB), 5);
+
+        if MayLog(lfUnit or lfTrace) then
+          DbgPrintf('IVB Position := {%f, %f, %f, %f, %f}', [g_IVBTable_v.Position.x, g_IVBTable_v.Position.y, g_IVBTable_v.Position.z, g_IVBTable_v.Blend1, g_IVBTable_v.Blend2]);
+      end
+      else if(dwPos = D3DFVF_XYZB3) then
+      begin
+        PFLOATs(pdwVB)[0] := g_IVBTable_v.Position.x;
+        PFLOATs(pdwVB)[1] := g_IVBTable_v.Position.y;
+        PFLOATs(pdwVB)[2] := g_IVBTable_v.Position.z;
+        PFLOATs(pdwVB)[3] := g_IVBTable_v.Blend1;
+        PFLOATs(pdwVB)[4] := g_IVBTable_v.Blend2;
+        PFLOATs(pdwVB)[5] := g_IVBTable_v.Blend3;
+        Inc(PFLOAT(pdwVB), 6);
+
+        if MayLog(lfUnit or lfTrace) then
+          DbgPrintf('IVB Position := {%f, %f, %f, %f, %f, %f}', [g_IVBTable_v.Position.x, g_IVBTable_v.Position.y, g_IVBTable_v.Position.z, g_IVBTable_v.Blend1, g_IVBTable_v.Blend2, g_IVBTable_v.Blend3]);
+      end
+      else if(dwPos = D3DFVF_XYZB4) then
+      begin
+        PFLOATs(pdwVB)[0] := g_IVBTable_v.Position.x;
+        PFLOATs(pdwVB)[1] := g_IVBTable_v.Position.y;
+        PFLOATs(pdwVB)[2] := g_IVBTable_v.Position.z;
+        PFLOATs(pdwVB)[3] := g_IVBTable_v.Blend1;
+        PFLOATs(pdwVB)[4] := g_IVBTable_v.Blend2;
+        PFLOATs(pdwVB)[5] := g_IVBTable_v.Blend3;
+        PFLOATs(pdwVB)[6] := g_IVBTable_v.Blend4;
+        Inc(PFLOAT(pdwVB), 7);
+
+        if MayLog(lfUnit or lfTrace) then
+          DbgPrintf('IVB Position := {%f, %f, %f, %f, %f, %f, %f}', [g_IVBTable_v.Position.x, g_IVBTable_v.Position.y, g_IVBTable_v.Position.z, g_IVBTable_v.Blend1, g_IVBTable_v.Blend2, g_IVBTable_v.Blend3, g_IVBTable_v.Blend4]);
       end
       else
       begin
