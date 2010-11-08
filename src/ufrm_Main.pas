@@ -1483,6 +1483,7 @@ begin
       for i := 0 to XbeFiles.Count -1 do
       begin
         OpenXbeFile(XbeFiles[i]);
+        Application.ProcessMessages;
       end;
 
     finally
