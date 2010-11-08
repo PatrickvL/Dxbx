@@ -930,7 +930,7 @@ const X_D3DLOCK_NOFLUSH  = $00000010; // Xbox extension
 const X_D3DLOCK_NOOVERWRITE = $00000020;
 const X_D3DLOCK_TILED = $00000040; // Xbox extension
 const X_D3DLOCK_READONLY = $00000080;
-const X_D3DLOCK_ALL_SUPPORTED = X_D3DLOCK_TILED or X_D3DLOCK_READONLY;
+const X_D3DLOCK_ALL_SUPPORTED = X_D3DLOCK_NOOVERWRITE or X_D3DLOCK_TILED or X_D3DLOCK_READONLY;
 
 
 const X_D3DMULTISAMPLE_NONE = $0011;
@@ -1146,13 +1146,36 @@ type D3DVBLANKCALLBACK = procedure (const pData: PD3DVBLANKDATA); cdecl;
 // D3DSWAPCALLBACK
 type D3DSWAPCALLBACK = procedure (const pData: PD3DSWAPDATA); cdecl;
 
-type
-  X_D3D__Device = record
-    Put: PDWORD;
-    Threshold: PDWORD;
-    // Unknown
-  end;
-  PX_D3D__Device = ^X_D3D__Device;
+const // DWORD Indexes for XTL_D3D__Device :
+  X_D3DDevice_PixelShader_Put = 0;
+  X_D3DDevice_PixelShader_Threshold = 4/4;
+  // These are derived from XDK 5931. TODO : Investigate other XDK versions :
+  X_D3DDevice_Active_PixelShader = 1924/4; // Pointer
+  X_D3DDevice_RenderState_PSTextureModes = 1936/4; // DWORD
+  X_D3DDevice_Active_VertexShader = 1944/4; // Pointer
+  X_D3DDevice_Active_Indices = 1952/4; // Pointer
+  X_D3DDevice_ProjectionViewportMatrix = 2432/4; // $40 bytes = SizeOf(D3DMATRIX)
+  X_D3DDevice_RefCount = 2360/4; // DWORD
+  X_D3DDevice_ModelView = 2496/4; // $40 bytes = SizeOf(D3DMATRIX)
+  X_D3DDevice_Active_Transform = 3168/4; // $40 bytes = SizeOf(D3DMATRIX)
+  X_D3DDevice_Viewport = 3808/4; // 24 bytes = SizeOf(D3DVIEWPORT8
+  X_D3DDevice_Active_Material = 3840/4; // $44 bytes = SizeOf(D3DMATERIAL8).
+  X_D3DDevice_Active_BackMaterial = 3908/4; // $44 bytes = SizeOf(D3DMATERIAL8).
+  X_D3DDevice_Active_Stage0Texture = 3976/4; // PD3DBaseTexture
+  X_D3DDevice_Active_Stage1Texture = 3980/4; // PD3DBaseTexture
+  X_D3DDevice_Active_Stage2Texture = 3984/4; // PD3DBaseTexture
+  X_D3DDevice_Active_Stage3Texture = 3988/4; // PD3DBaseTexture
+  X_D3DDevice_Active_Palette = 3992/4; // PD3DPalette
+  X_D3DDevice_ShaderConstantMode = 6440/4; // DWORD
+  X_D3DDevice_Stipple = 6524/4; // $80 bytes = SizeOf(?)
+  X_D3DDevice_WaitCallback = 6652/4; // Pointer
+  X_D3DDevice_Active_RenderTarget = 6660/4; // Pointer
+  X_D3DDevice_Active_DepthStencilSurface = 6664/4; // Pointer
+
+  X_D3DDevice_SwapCallback = 7604/4;
+  X_D3DDevice_VerticalBlankCallback = 7608/4;
+
+  X_D3DDevice_MaxIndex = 9376/4; // SizeOf(D3DDevice) = 9376
 
 // X_D3DRENDERSTATETYPE values
 
@@ -1560,6 +1583,9 @@ const
   X_D3DCOLORWRITEENABLE_BLUE  = (1 shl 0);
   X_D3DCOLORWRITEENABLE_ALPHA = (1 shl 24);
   X_D3DCOLORWRITEENABLE_ALL   = $01010101; // Xbox ext.
+
+type Dxbx4Booleans = array [0..4-1] of boolean;
+  PDxbx4Booleans = ^Dxbx4Booleans;
 
 implementation
 

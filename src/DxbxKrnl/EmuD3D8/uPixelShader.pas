@@ -432,17 +432,64 @@ type PS_GLOBALFLAGS =
 );
 
 (*
-type _PSH_PARAMETER_TYPE =
+type PSH_OPCODE =
 (
-    PARAM_UNKNOWN = 0,
+    // Direct3D8 arithmetic instructions :
+    PO_ADD,
+    PO_CMP,
+    PO_CND,
+    PO_DP3,  // dp3 d, s1,s2                : d=s0 dot s1 (replicated to all channels, .rgb=color only, .a=color+alpha)
+    PO_DP4,  // dp3 d, s1,s2                : d.r=d.g=d.b=d.a=(s1.r*s2.r)+(s1.g*s2.g)+(s1.b*s2.b)+(s1.a*s2.a)
+    PO_LRP,
+    PO_MAD,
+    PO_MOV,
+    PO_MUL,
+    PO_NOP,
+    PO_SUB,
+    // Xbox1 opcodes :
+    PO_XMMA,
+    PO_XMMC,
+    PO_XDM,
+    PO_XDD,
+    PO_XFC
+);
+
+var PSH_OPCODE_DEFS: array [PSH_OPCODE] of record mn: string; _Out, _In: Int; note: string end = (
+  (mn:'add';  _Out:1; _In:2; note:'d0=s0+s1'),
+  (mn:'cmp';  _Out:1; _In:3; note:'d0=(s0>=0?s1:s2)'),
+  (mn:'cnd';  _Out:1; _In:3; note:'d1=(s0.a>0.5?s1:s2)'), // 1st input must be 'r0.a'
+  (mn:'dp3';  _Out:1; _In:2; note:''),
+  (mn:'dp4';  _Out:1; _In:2; note:''),
+  (mn:'lrp';  _Out:1; _In:3; note:'d0=s0*(s1-s2)+s2'),
+  (mn:'mad';  _Out:1; _In:3; note:'d0=s0*s1+s2'),
+  (mn:'mov';  _Out:1; _In:2; note:'d0=s0'),
+  (mn:'mul';  _Out:1; _In:2; note:'d0=s0*s1'),
+  (mn:'nop';  _Out:0; _In:0; note:''),
+  (mn:'sub';  _Out:1; _In:2; note:'d0=s0-s1'),
+  (mn:'xmma'; _Out:3; _In:4; note:'d0=s0*s1, d1=s2*s3, d2=(s0*s1)+(s2*s3)'),
+  (mn:'xmmc'; _Out:3; _In:4; note:'d0=s0*s1, d1=s2*s3, d2=(r0.a>0.5)?(s0*s1):(s2*s3)'),
+  (mn:'xdm';  _Out:2; _In:4; note:'d0=s0 dot s1, d1=s2*s3'),
+  (mn:'xdd';  _Out:2; _In:4; note:'d0=s0 dot s1, d1=s2 dot s3'),
+  (mn:'xfc';  _Out:1; _In:7; note:'r0.rgb=s0*s1+(1-s0)*s2+s3, r0.a=s6.a, prod=s4*s5, sum=r0+v1')
+  );
+
+type PSH_PARAMETER_TYPE =
+(
+//    PARAM_UNKNOWN, // = 0
     PARAM_R,
     PARAM_T,
     PARAM_V,
     PARAM_C
 );
-PSH_PARAMETER_TYPE = _PSH_PARAMETER_TYPE;
 
-type _PSH_IMD_OUTPUT_TYPE =
+var PSH_PARAMETER_TYPE_Str: array [PSH_PARAMETER_TYPE] of string = (
+    'r',
+    't',
+    'v',
+    'c'
+);
+
+type PSH_IMD_OUTPUT_TYPE =
 (
     IMD_OUTPUT_DISCARD,
     IMD_OUTPUT_R,
@@ -450,35 +497,109 @@ type _PSH_IMD_OUTPUT_TYPE =
     IMD_OUTPUT_V
 );
 
-type _PSH_IMD_OUTPUT = record
+var PSH_IMD_OUTPUT_TYPE_Str: array [PSH_IMD_OUTPUT_TYPE] of string = (
+    'discard',
+    'r',
+    't',
+    'v'
+);
+
+type PSH_INST_MODIFIER = (
+  INMOD_NONE,
+  INMOD_BIAS,
+  INMOD_X2,
+  INMOD_BX2,
+  INMOD_X4,
+  INMOD_D2
+);
+
+var PSH_INST_MODIFIER_Str: array [PSH_INST_MODIFIER] of string = (
+  '',
+  '_bias',
+  '_x2',
+  '_bx2',
+  '_x4',
+  '_d2'
+);
+
+// Four argument modifiers (applied in this order) :
+// 1: Inversion (invert or negate : '1-' or '-')
+// 2: Apply bias ('_bias')
+// 3: Apply scale ('_x2', '_bx2', '_x4', or '_d2')
+// 4: Apply clamp ('_sat')
+type PSH_ARG_MODIFIER = (
+  ARGMOD_IDENTITY,        // y = x
+
+  ARGMOD_BIAS,            // y =  x-0.5  -> 0..1 > -0.5..0.5
+
+  ARGMOD_INVERT,          // y = 1-x     -> 0..1 >    1..0
+  ARGMOD_NEGATE,          // y = -x      -> 0..1 >    0..-1
+
+
+  ARGMOD_SCALE_X2,        // y =  x*2    -> 0..1 >    0..2
+  ARGMOD_SCALE_BX2,       // y = (x*2)-1 -> 0..1 >   -1..1
+  ARGMOD_SCALE_X4,        // y =  x*4    -> 0..1 >    0..4
+  ARGMOD_SCALE_D2,        // y =  x/2    -> 0..1 >    0..0.5
+
+  ARGMOD_SATURATE         // Xbox - not available in PS1.3
+
+  ARGMOD_ALPHA_REPLICATE,
+  ARGMOD_BLUE_REPLICATE,  // PS1.1-PS1.3 only allow this if destination writemask = .a
+
+);
+
+var PSH_ARG_MODIFIER_Str: array [PSH_ARG_MODIFIER] of string = (
+  '%s',
+  '%s_bias',
+  '1-%s',
+  '-%s',
+  '%s_x2',
+  '%s_bx2',
+  '%s_x4',
+  '%s_d2',
+  '%s_sat',
+  '%s_.a',
+  '%s_.b'
+);
+
+type PSH_IMD_OUTPUT = record
+    Active: boolean;
     Type_: PSH_IMD_OUTPUT_TYPE;
-    Mask: Dxbx4Booleans;
     Address: UInt16;
-  end; // size = 12 (as in Cxbx)
-  PSH_IMD_OUTPUT = _PSH_IMD_OUTPUT;
+//    Mask: Dxbx4Booleans;
+    function ToString: string;
+  end;
   PPSH_IMD_OUTPUT = ^PSH_IMD_OUTPUT;
 
-type _PSH_IMD_PARAMETER = record
+type PSH_IMD_PARAMETER = record
     Active: boolean;
     ParameterType: PSH_PARAMETER_TYPE;      // Parameter type, R, T, V or C
-    Neg: boolean;                           // TRUE if negated, FALSE if not
-//    Swizzle: array [0..4-1] of VSH_SWIZZLE; // The four swizzles
     Address: int16;                         // Register address
-  end; // size = 36 (as in Cxbx)
-  PSH_IMD_PARAMETER = _PSH_IMD_PARAMETER;
+    Modifier: PSH_ARG_MODIFIER;
+//    Swizzle: array [0..4-1] of VSH_SWIZZLE; // The four swizzles
+    function ToString: string;
+  end;
   PPSH_IMD_PARAMETER = ^PSH_IMD_PARAMETER;
 
   TPSH_IMD_PARAMETERArray = array [0..(MaxInt div SizeOf(PSH_IMD_PARAMETER)) - 1] of PSH_IMD_PARAMETER;
   PPSH_IMD_PARAMETERs = ^TPSH_IMD_PARAMETERArray;
 
-type _PSH_INTERMEDIATE_FORMAT = record
+type PSH_INTERMEDIATE_FORMAT = record
     IsCombined: boolean;
-    ILU: VSH_ILU;
-    Output: PSH_IMD_OUTPUT;
+    Opcode: PSH_OPCODE;
+    Modifier: PSH_INST_MODIFIER;
+    Output: array [0..2-1] of PSH_IMD_OUTPUT;
     Parameters: array [0..3-1] of PSH_IMD_PARAMETER;
+    function ToString: string;
+  end;
+
+type PSH_XBOX_SHADER = record
+    ShaderHeader: PSH_SHADER_HEADER;
+    IntermediateCount: uint16;
+    Intermediate: array [0..PSH_MAX_INTERMEDIATE_COUNT -1] of PSH_INTERMEDIATE_FORMAT;
+    function ToString: string;
   end;
 *)
-
 type
   PPSDisassembleScope = ^RPSDisassembleScope;
 
@@ -807,6 +928,56 @@ const PS_GlobalFlagsStr: array [PS_GLOBALFLAGS] of P_char =
     'PS_GLOBALFLAGS_NO_TEXMODE_ADJUST',     // 0x0000L, // don't adjust texture modes
     'PS_GLOBALFLAGS_TEXMODE_ADJUST'         // 0x0001L, // adjust texture modes according to set texture
 );
+
+(*
+function PSH_IMD_OUTPUT.ToString: string;
+begin
+  Result := PSH_IMD_OUTPUT_TYPE_Str[Type_];
+  if Type_ > IMD_OUTPUT_DISCARD then
+    Result := Result + IntToStr(Address);
+end;
+
+function PSH_IMD_PARAMETER.ToString: string;
+begin
+  Result := Format(PSH_ARG_MODIFIER_Str[Modifier], [PSH_PARAMETER_TYPE_Str[ParameterType] + IntToStr(Address)]);
+end;
+
+function PSH_INTERMEDIATE_FORMAT.ToString: string;
+var
+  i: Integer;
+begin
+  if IsCombined then
+    Result := '+'
+  else
+    Result := '';
+
+  Result := Result + PSH_OPCODE_DEFS[Opcode].mn + PSH_INST_MODIFIER_Str[Modifier]
+
+  for i := 0 to PSH_OPCODE_DEFS[Opcode]._Out do
+    if i = 0 then
+      Result := Result + ' ' + Self.Output[i].ToString
+    else
+      Result := Result + ',' + Self.Output[i].ToString;
+
+  for i := 0 to PSH_OPCODE_DEFS[Opcode]._In do
+    if i = 0 then
+      Result := Result + ' ' + Self.Parameters[i].ToString
+    else
+      Result := Result + ',' + Self.Parameters[i].ToString;
+
+  Result := Result + ' ; ' + PSH_OPCODE_DEFS[Opcode].note;
+end;
+
+function PSH_XBOX_SHADER.ToString: string;
+var
+  i: Integer;
+begin
+  Result := 'ps.1.3'#13#10;
+  for i := 0 to IntermediateCount-1 do
+    Result := Result + Intermediate[i] + #13#10;
+end;
+
+*)
 
 function PSCombinerOutputFlagsToStr(const dwFlags: DWORD; IsAlpha: Boolean = False): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100

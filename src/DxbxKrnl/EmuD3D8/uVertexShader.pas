@@ -40,6 +40,7 @@ uses
 {$ENDIF}
   // Dxbx
   , uTypes
+  , uDxbxUtils // iif
   , uDxbxKrnlUtils
   , uState // for g_BuildVersion
   , uEmuD3D8Types
@@ -47,9 +48,6 @@ uses
   , uEmuAlloc
   , uEmu;
 
-
-type Dxbx4Booleans = array [0..4-1] of boolean;
-  PDxbx4Booleans = ^Dxbx4Booleans;
 
 // Types from VertexShader.h :
 
@@ -434,14 +432,14 @@ const g_FieldMapping: array [VSH_FIELD_NAME] of VSH_FIELDMAPPING =
     ( FieldName:FLD_C_SWZ_Z;          SubToken:2;   StartBit: 4;     BitLength:2 ), // VSH_SWIZZLE
     ( FieldName:FLD_C_SWZ_W;          SubToken:2;   StartBit: 2;     BitLength:2 ), // VSH_SWIZZLE
     ( FieldName:FLD_C_R_HIGH;         SubToken:2;   StartBit: 0;     BitLength:2 ), // Forms FLD_C_R together with
-    ( FieldName:FLD_C_R_LOW;          SubToken:3;   StartBit:30;     BitLength:2 ), // this (to bridge a DWord).
+    ( FieldName:FLD_C_R_LOW;          SubToken:3;   StartBit:30;     BitLength:2 ), // this (to bridge a DWord). c0..c15
     ( FieldName:FLD_C_MUX;            SubToken:3;   StartBit:28;     BitLength:2 ), // VSH_PARAMETER_TYPE
     // Output
     ( FieldName:FLD_OUT_MAC_MASK_X;   SubToken:3;   StartBit:27;     BitLength:1 ), // Boolean
     ( FieldName:FLD_OUT_MAC_MASK_Y;   SubToken:3;   StartBit:26;     BitLength:1 ), // Boolean
     ( FieldName:FLD_OUT_MAC_MASK_Z;   SubToken:3;   StartBit:25;     BitLength:1 ), // Boolean
     ( FieldName:FLD_OUT_MAC_MASK_W;   SubToken:3;   StartBit:24;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_OUT_R;            SubToken:3;   StartBit:20;     BitLength:4 ), // Dxbx note : Why 4 bits?
+    ( FieldName:FLD_OUT_R;            SubToken:3;   StartBit:20;     BitLength:4 ), // Dxbx note : 4 bits to select r0..r15
     ( FieldName:FLD_OUT_ILU_MASK_X;   SubToken:3;   StartBit:19;     BitLength:1 ), // Boolean
     ( FieldName:FLD_OUT_ILU_MASK_Y;   SubToken:3;   StartBit:18;     BitLength:1 ), // Boolean
     ( FieldName:FLD_OUT_ILU_MASK_Z;   SubToken:3;   StartBit:17;     BitLength:1 ), // Boolean
@@ -2205,7 +2203,7 @@ begin
 
   if (CurrentStream >= 0) then
   begin
-    DbgVshPrintf('NeedPatching: %d'#13#10, [Ord(pPatchData.NeedPatching)]);
+    DbgVshPrintf(#9'// NeedPatching: %s'#13#10, [iif(pPatchData.NeedPatching, 'YES', 'NO')]);
 
     pStreamPatch := pPatchData.StreamPatchData.pStreamPatches[CurrentStream];
 
@@ -2237,6 +2235,17 @@ begin
   // D3DVSD_STREAM
   else
   begin
+    // new stream
+    // copy current data to structure
+    if (VshAddStreamPatch(pPatchData)) then
+    begin
+      // Reset fields for next patch :
+      pPatchData.ConvertedStride := 0;
+      pPatchData.TypePatchData.NbrTypes := 0;
+      pPatchData.NeedPatching := FALSE;
+      pPatchData.StreamPatchData.NbrStreams := 0; // Dxbx addition
+    end;
+
     StreamNumber := VshGetVertexStream(pToken^);
     DbgVshPrintf(#9'D3DVSD_STREAM(%d),'#13#10, [StreamNumber]);
 
@@ -2249,15 +2258,6 @@ begin
     pRecompiled^.Usage := D3DDECLUSAGE(0);
     pRecompiled^.UsageIndex := 0;
 {$ENDIF}
-
-    // new stream
-    // copy current data to structure
-    if (VshAddStreamPatch(pPatchData)) then
-    begin
-      pPatchData.ConvertedStride := 0;
-      pPatchData.TypePatchData.NbrTypes := 0;
-      pPatchData.NeedPatching := FALSE;
-    end;
 
     Inc(pPatchData.StreamPatchData.NbrStreams);
   end;
@@ -2575,9 +2575,8 @@ begin
     Inc(pDeclaration, Step);
     Inc(pRecompiled, Step);
   end;
-  DbgVshPrintf(#9'D3DVSD_END()'#13#10'};'#13#10);
-
   VshAddStreamPatch(@PatchData);
+  DbgVshPrintf(#9'D3DVSD_END()'#13#10'};'#13#10);
 
   DbgVshPrintf('NbrStreams: %d'#13#10, [PatchData.StreamPatchData.NbrStreams]);
 

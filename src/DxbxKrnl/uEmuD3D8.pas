@@ -574,6 +574,8 @@ begin
   end;
 end;
 
+// Dxbx Note: This code is taken from EmuExecutePushBufferRaw and occured
+// in EmuFlushIVB too, so it's generalize in this single implementation.
 function DxbxFVFToVertexSizeInBytes(const dwVertexShader: DWORD; bIncludeTextures: Boolean = True): uint;
 var
   NrTextures: Integer;
@@ -6572,6 +6574,9 @@ begin
 
     NewFlags := 0;
 
+    if (Flags and X_D3DLOCK_NOOVERWRITE) > 0 then
+      NewFlags := NewFlags or D3DLOCK_NOOVERWRITE;
+
     if (Flags and X_D3DLOCK_READONLY) > 0 then
       NewFlags := NewFlags or D3DLOCK_READONLY;
 
@@ -8402,7 +8407,6 @@ function XTL_EmuD3DVertexBuffer_Lock2
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   pPCVertexBuffer: XTL_PIDirect3DVertexBuffer8;
-  pbData: PBYTE;
   hRet: HRESULT;
 begin
   EmuSwapFS(fsWindows);
@@ -8418,24 +8422,23 @@ begin
 
   pPCVertexBuffer := pVertexBuffer.Emu.VertexBuffer;
 
-  pbData := NULL;
-  hRet := IDirect3DVertexBuffer(pPCVertexBuffer).Lock(0, 0, {out}TLockData(pbData), EmuXB2PC_D3DLock(Flags)); // Fixed flags check, Battlestar Galactica now displays graphics correctly
+  hRet := IDirect3DVertexBuffer(pPCVertexBuffer).Lock(0, 0, {out}TLockData(pVertexBuffer.Data), EmuXB2PC_D3DLock(Flags)); // Fixed flags check, Battlestar Galactica now displays graphics correctly
 
   if (FAILED(hRet)) then
     EmuWarning('VertexBuffer Lock2 Failed!');
 
   if MayLog(lfUnit or lfReturnValue) then
   begin
-    DbgPrintf('VertexBuffer 0x%.08X was locked (2): hRet = 0x%.08x', [
+    DbgPrintf('VertexBuffer 0x%.08X was locked (2): hRet=0x%.08x Data=0x%.08X', [
           pPCVertexBuffer,
-          hRet
+          hRet,
+          pVertexBuffer.Data
           ]);
-    DbgPrintf('pbData : 0x%.08X', [pbData]);
   end;
 
   EmuSwapFS(fsXbox);
 
-  Result := pbData;
+  Result := PByte(pVertexBuffer.Data);
 end;
 
 function XTL_EmuD3DDevice_GetStreamSource2
