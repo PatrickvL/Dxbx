@@ -154,9 +154,9 @@ type _D3DIVB = record
     Position: TD3DXVECTOR3; // Position
     Rhw: FLOAT; // Rhw
     Blend1: FLOAT; // Blend1
-    Blend2: FLOAT; // Dxbx addition TODO : Where should we set these?
-    Blend3: FLOAT; // Dxbx addition
-    Blend4: FLOAT; // Dxbx addition
+    Blend2: FLOAT; // Dxbx addition : for D3DFVF_XYZB2 TODO : Where should we set these?
+    Blend3: FLOAT; // Dxbx addition : for D3DFVF_XYZB3
+    Blend4: FLOAT; // Dxbx addition : for D3DFVF_XYZB4
     dwSpecular: DWORD; // Specular
     dwDiffuse: DWORD; // Diffuse
     Normal: TD3DXVECTOR3; // Normal
@@ -2097,8 +2097,8 @@ begin
 
     X_Format := X_D3DFORMAT(((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT));
 
-    // TODO -oDxbx: Why is X_Format checked against the invalid value $CD here?
-    if (X_Format <> $CD) and (IDirect3DResource(pPixelContainer.Emu.Resource).GetType() = D3DRTYPE_TEXTURE) then
+    if (X_Format <> $CD) then // TODO -oDxbx: Why is X_Format checked against the invalid value $CD here?
+    if (IDirect3DResource(pPixelContainer.Emu.Resource).GetType() = D3DRTYPE_TEXTURE) then
     begin
       DxbxGetFormatRelatedVariables(pPixelContainer, X_Format,
         {var}dwWidth, {var}dwHeight, {var}dwBPP, {var}dwDepth, {var}dwPitch, {var}dwMipMapLevels,

@@ -37,15 +37,25 @@ Developer Notes
 See Developer.txt
 
 
+Shortcut keys (interface)
+-------------------------
+Alt+F4 = Terminate Application
+Alt+S  = Focus filter
+Enter  = Start Emulation
+F5     = Start Emulation
 
-ShortKey`s
---------------
-F3  = Toggle Mute
-F8  = Toggle Logging
-F9  = Toggle Pushbuffer
-F10 = 
-F11 = Toggle Wireframe
-F12 = Create Shotshots
+
+Shortcut keys (during emulation)
+--------------------------------
+Alt+F4    = Terminate Application
+Alt+Enter = Enter Fullscreen
+ESC       = Leave Fullscreen
+F3        = Toggle Mute
+F6        = Stop Emulation
+F8        = Toggle Logging
+F9        = Toggle Pushbuffer
+F11       = Toggle Solid/Wireframe/Dot rendering
+F12       = Create Screenshot
 
 
 Special thanks
