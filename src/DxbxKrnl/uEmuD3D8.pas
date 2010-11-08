@@ -2940,23 +2940,6 @@ begin
       PIDirect3DSurface(@(ppBackBuffer^.Emu.Surface)));
   end;
 
-  if FAILED(Result) and (Format = X_D3DFMT_LIN_D16) then
-  begin
-    EmuWarning('CreateImageSurface: D3DFMT_LIN_D16 -> D3DFMT_D16');
-
-    PCFormat := D3DFMT_A8R8G8B8;
-
-    // Dxbx addition :
-    EmuAdjustTextureDimensions(D3DRTYPE_SURFACE, @Width, @Height);
-
-    Result := IDirect3DDevice_CreateImageSurface(g_pD3DDevice,
-      Width,
-      Height,
-      PCFormat,
-      PIDirect3DSurface(@(ppBackBuffer^.Emu.Surface)));
-  end;
-
-
   if FAILED(Result) then
     DxbxKrnlCleanup('CreateImageSurface failed! ' + #13#10 + 'Format = 0x%8.8X', [Format]);
 
