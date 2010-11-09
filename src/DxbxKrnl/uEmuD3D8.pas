@@ -1981,9 +1981,6 @@ begin
 //        if Assigned(g_pCachedZStencilSurface.Emu.Surface) then
 //          PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).DepthStencilSurface := g_pCachedZStencilSurface;
 
-        // Initialize the Xbox RenderState structure with default values :
-        DxbxInitializeDefaultRenderStates(g_EmuCDPD.pPresentationParameters);
-
         g_pD3DDevice.CreateVertexBuffer
         (
           {Length=}1,
@@ -2006,10 +2003,6 @@ begin
         // initially, show a black screen
         g_pD3DDevice.Clear(0, nil, D3DCLEAR_TARGET or D3DCLEAR_ZBUFFER, $FF000000, 1.0, 0);
         DxbxPresent(nil, nil, 0, nil);
-
-        // Transfer the default render states (set above) over to PC side :
-        for v := X_D3DRS_FIRST to X_D3DRS_LAST do
-          DxbxTransferRenderState(X_D3DRENDERSTATETYPE(v));
 
         // signal completion
         g_EmuCDPD.bReady := false;
@@ -2213,6 +2206,8 @@ function XTL_EmuDirect3D_CreateDevice
     ppReturnedDeviceInterface: XTL_PPIDirect3DDevice8
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  v: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2249,6 +2244,20 @@ begin
   // Wait until proxy is completed
   while g_EmuCDPD.bReady do
     Sleep(10); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
+
+  // Initialize the Xbox RenderState structure with default values :
+//  if Assigned(@XTL_D3D_InitializeD3dState) then
+//  begin
+//    EmuSwapFS(fsXbox);
+//    XTL_D3D_InitializeD3dState(); // This crashes on the access to D3D__pDevice+6688 (probably the ZStencilSurface resource pointer)
+//    EmuSwapFS(fsWindows);
+//  end
+//  else
+    DxbxInitializeDefaultRenderStates(g_EmuCDPD.pPresentationParameters);
+
+  // Transfer the default render states (set above) over to PC side :
+  for v := X_D3DRS_FIRST to X_D3DRS_LAST do
+    DxbxTransferRenderState(X_D3DRENDERSTATETYPE(v));
 
   EmuSwapFS(fsXbox);
 

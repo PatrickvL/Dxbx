@@ -75,7 +75,14 @@ type TD3DDeferredTextureState = array [0..X_D3DTS_STAGECOUNT-1, 0..X_D3DTS_STAGE
 var XTL_EmuD3DDeferredTextureState: PD3DDeferredTextureState;
 
 // The Xbox1 D3D__Device :
-var XTL_D3D__Device: PDWORDs = nil;
+var XTL_D3D__pDevice: PDWORDs = nil;
+
+var XTL_D3D__RenderState: PDWORDs = nil;
+
+type
+  D3D_InitializeD3dState = function(): int; cdecl;
+
+var XTL_D3D_InitializeD3dState: D3D_InitializeD3dState;
 
 
 const DEFAULT_XDK_VERSION = 4627; // TODO -oDxbx : Make this configurable
