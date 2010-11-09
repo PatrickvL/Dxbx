@@ -1792,35 +1792,31 @@ begin
   if MayLog(lfUnit) then
     DbgPrintf('DxbxHLE : Determining special symbols');
 
-  // locate D3DDeferredTextureState
-  begin
-    XTL_EmuD3DDeferredTextureState := _Find('_D3D__TextureState');
+  // Resolve the address of the _XapiProcessHeap symbol (at least referenced once, from XapiInitProcess) :
+  XTL_EmuXapiProcessHeap := _Find('_XapiProcessHeap');
 
-    if Assigned(XTL_EmuD3DDeferredTextureState) then
+  // Locate a few important D3D addresses :
+  XTL_D3D__pDevice := _Find('_D3D__pDevice');
+  XTL_D3D__RenderState := _Find('_D3D__RenderState');
+  XTL_EmuD3DDeferredTextureState := _Find('_D3D__TextureState');
+  XTL_D3D_InitializeD3dState := _Find('?InitializeD3dState@D3D@@YGXXZ'); // a function
+
+  // TODO : Most of the above are REQUIRED - so break out if not found!
+
+  // Initialize D3DDeferredTextureState
+  if Assigned(XTL_EmuD3DDeferredTextureState) then
+  begin
+    for s := 0 to X_D3DTS_STAGECOUNT-1 do
     begin
-      for s := 0 to X_D3DTS_STAGECOUNT-1 do
-      begin
-        for v := 0 to X_D3DTS_STAGESIZE-1 do
-          XTL_EmuD3DDeferredTextureState[s, v] := X_D3DTSS_UNK;
-      end;
+      for v := 0 to X_D3DTS_STAGESIZE-1 do
+        XTL_EmuD3DDeferredTextureState[s, v] := X_D3DTSS_UNK;
     end;
   end;
 
-  XTL_D3D__Device := _Find('_D3D__Device');
-
-  // Locate the RenderState structure, and map all it's variables XDK version-independently :
-  begin
-    // Just search for _D3D__RenderState itself !
-    Symbol := FindSymbolWithAddress('_D3D__RenderState');
-    if Assigned(Symbol) then
-      // Build up a mapping table based on this :
-      DxbxBuildRenderStateMappingTable(Symbol.Address)
-    else
-      EmuWarning('EmuD3DDeferredRenderState was not found!');
-  end;
-
-  // Resolve the address of the _XapiProcessHeap symbol (at least referenced once, from XapiInitProcess) :
-  XTL_EmuXapiProcessHeap := _Find('_XapiProcessHeap');
+  // Map all RenderState  variables XDK version-independently :
+  if Assigned(XTL_D3D__RenderState) then
+    // Build up a mapping table based on this :
+    DxbxBuildRenderStateMappingTable(XTL_D3D__RenderState)
 
 end; // LookupGlobalEmulationSymbols
 

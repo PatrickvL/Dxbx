@@ -1146,17 +1146,25 @@ type D3DVBLANKCALLBACK = procedure (const pData: PD3DVBLANKDATA); cdecl;
 // D3DSWAPCALLBACK
 type D3DSWAPCALLBACK = procedure (const pData: PD3DSWAPDATA); cdecl;
 
-const // DWORD Indexes for XTL_D3D__Device :
+const // DWORD Indexes for XTL_D3D__pDevice (aka D3D__pDevice) :
   X_D3DDevice_PixelShader_Put = 0;
   X_D3DDevice_PixelShader_Threshold = 4/4;
+  X_D3DDevice_Flags = 8/4; // DWORD; BeginStateBlock or's $20, EndStateBlock and's (not $20)
+
   // These are derived from XDK 5931. TODO : Investigate other XDK versions :
   X_D3DDevice_Active_PixelShader = 1924/4; // Pointer
   X_D3DDevice_RenderState_PSTextureModes = 1936/4; // DWORD
-  X_D3DDevice_Active_VertexShader = 1944/4; // Pointer
+  X_D3DDevice_Active_VertexShader = 1944/4; // Pointer - read by D3DDevice_GetVertexShader
   X_D3DDevice_Active_Indices = 1952/4; // Pointer
   X_D3DDevice_ProjectionViewportMatrix = 2432/4; // $40 bytes = SizeOf(D3DMATRIX)
   X_D3DDevice_RefCount = 2360/4; // DWORD
-  X_D3DDevice_ModelView = 2496/4; // $40 bytes = SizeOf(D3DMATRIX)
+
+  X_D3DDevice_ModelView = 2496/4; // $40 bytes = SizeOf(D3DMATRIX) - read by D3DDevice_GetModelView
+
+  X_D3DDevice_Active_VertexShaderHandle = 2816/4; // DWORD - read by D3DDevice_GetVertexShaderInput
+  X_D3DDevice_Active_VertexShaderStreamCount = 2820/4; // UINT - read by D3DDevice_GetVertexShaderInput
+  X_D3DDevice_Active_VertexShaderStreamInput = 2824/4; // PD3DSTREAM_INPUT - read by D3DDevice_GetVertexShaderInput
+
   X_D3DDevice_Active_Transform = 3168/4; // $40 bytes = SizeOf(D3DMATRIX)
   X_D3DDevice_Viewport = 3808/4; // 24 bytes = SizeOf(D3DVIEWPORT8
   X_D3DDevice_Active_Material = 3840/4; // $44 bytes = SizeOf(D3DMATERIAL8).
@@ -1166,11 +1174,24 @@ const // DWORD Indexes for XTL_D3D__Device :
   X_D3DDevice_Active_Stage2Texture = 3984/4; // PD3DBaseTexture
   X_D3DDevice_Active_Stage3Texture = 3988/4; // PD3DBaseTexture
   X_D3DDevice_Active_Palette = 3992/4; // PD3DPalette
-  X_D3DDevice_ShaderConstantMode = 6440/4; // DWORD
+  X_D3DDevice_ShaderConstantMode = 6440/4; // DWORD - read by D3DDevice_GetShaderConstantMode
+
+  // D3DDevice_GetCopyRectsState:
+  X_D3DDevice_CopyRectState = 6444/4; // $20 bytes = SizeOf(D3DCOPYRECTSTATE)
+  X_D3DDevice_CopyRectRopState = 6476/4; //  $20 bytes = SizeOf(D3DCOPYRECTROPSTATE)
+
   X_D3DDevice_Stipple = 6524/4; // $80 bytes = SizeOf(?)
   X_D3DDevice_WaitCallback = 6652/4; // Pointer
-  X_D3DDevice_Active_RenderTarget = 6660/4; // Pointer
-  X_D3DDevice_Active_DepthStencilSurface = 6664/4; // Pointer
+
+  X_D3DDevice_Active_RenderTarget = 6660/4; // PX_D3DResource
+  X_D3DDevice_Active_DepthStencilSurface = 6664/4; // PX_D3DResource
+
+  X_D3DDevice_BackBufferCount= 6672/4; // Integer
+  X_D3DDevice_BackBuffer = 6676/4; // PX_D3DSurface
+  X_D3DDevice_FrontBuffer = 6680/4; // PX_D3DSurface
+  X_D3DDevice_ZStencilSurface = 6688/4; // PX_D3DSurface
+
+  X_D3DDevice_RegisterBase = 7208/4; // Pointer, returned by D3DPERF_GetRegisterBase
 
   X_D3DDevice_SwapCallback = 7604/4;
   X_D3DDevice_VerticalBlankCallback = 7608/4;
