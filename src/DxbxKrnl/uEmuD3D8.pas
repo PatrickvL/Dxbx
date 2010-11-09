@@ -500,6 +500,104 @@ begin
   ZeroMemory(@g_EmuCDPD, SizeOf(g_EmuCDPD));
 end;
 
+procedure DxbxDumpD3DCaps(const aD3DCaps: D3DCAPS);
+begin
+  DbgPrintf('DxbxDumpD3DCaps');
+  (* Device Info *)
+  DbgPrintf('  %-28s = 0x%.08X', ['DeviceType', Ord(aD3DCaps.DeviceType)]);
+  DbgPrintf('  %-28s = 0x%.08X', ['AdapterOrdinal', aD3DCaps.AdapterOrdinal]);
+
+  (* Caps from DX7 Draw *)
+  DbgPrintf('  %-28s = 0x%.08X', ['Caps', aD3DCaps.Caps]);
+  DbgPrintf('  %-28s = 0x%.08X', ['Caps2', aD3DCaps.Caps2]);
+  DbgPrintf('  %-28s = 0x%.08X', ['Caps3', aD3DCaps.Caps3]);
+  DbgPrintf('  %-28s = 0x%.08X', ['PresentationIntervals', aD3DCaps.PresentationIntervals]);
+
+  (* Cursor Caps *)
+  DbgPrintf('  %-28s = 0x%.08X', ['CursorCaps', aD3DCaps.CursorCaps]);
+
+  (* 3D Device Caps *)
+  DbgPrintf('  %-28s = 0x%.08X', ['DevCaps', aD3DCaps.DevCaps]);
+  DbgPrintf('  %-28s = 0x%.08X', ['PrimitiveMiscCaps', aD3DCaps.PrimitiveMiscCaps]);
+  DbgPrintf('  %-28s = 0x%.08X', ['RasterCaps', aD3DCaps.RasterCaps]);
+  DbgPrintf('  %-28s = 0x%.08X', ['ZCmpCaps', aD3DCaps.ZCmpCaps]);
+  DbgPrintf('  %-28s = 0x%.08X', ['SrcBlendCaps', aD3DCaps.SrcBlendCaps]);
+  DbgPrintf('  %-28s = 0x%.08X', ['DestBlendCaps', aD3DCaps.DestBlendCaps]);
+  DbgPrintf('  %-28s = 0x%.08X', ['AlphaCmpCaps', aD3DCaps.AlphaCmpCaps]);
+  DbgPrintf('  %-28s = 0x%.08X', ['ShadeCaps', aD3DCaps.ShadeCaps]);
+  DbgPrintf('  %-28s = 0x%.08X', ['TextureCaps', aD3DCaps.TextureCaps]);
+  DbgPrintf('  %-28s = 0x%.08X', ['TextureFilterCaps', aD3DCaps.TextureFilterCaps]);               // D3DPTFILTERCAPS for IDirect3DTexture8's
+  DbgPrintf('  %-28s = 0x%.08X', ['CubeTextureFilterCaps', aD3DCaps.CubeTextureFilterCaps]);       // D3DPTFILTERCAPS for IDirect3DCubeTexture8's
+  DbgPrintf('  %-28s = 0x%.08X', ['VolumeTextureFilterCaps', aD3DCaps.VolumeTextureFilterCaps]);   // D3DPTFILTERCAPS for IDirect3DVolumeTexture8's
+  DbgPrintf('  %-28s = 0x%.08X', ['TextureAddressCaps', aD3DCaps.TextureAddressCaps]);             // D3DPTFILTERCAPS for IDirect3DTexture8's
+  DbgPrintf('  %-28s = 0x%.08X', ['VolumeTextureAddressCaps', aD3DCaps.VolumeTextureAddressCaps]); // D3DPTFILTERCAPS for IDirect3DVolumeTexture8's
+
+  DbgPrintf('  %-28s = 0x%.08X', ['LineCaps', aD3DCaps.LineCaps]);                                 // D3DLINECAPS
+
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxTextureWidth', aD3DCaps.MaxTextureWidth]);
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxTextureHeight', aD3DCaps.MaxTextureHeight]);
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxVolumeExtent', aD3DCaps.MaxVolumeExtent]);
+
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxTextureRepeat', aD3DCaps.MaxTextureRepeat]);
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxTextureAspectRatio', aD3DCaps.MaxTextureAspectRatio]);
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxAnisotropy', aD3DCaps.MaxAnisotropy]);
+  DbgPrintf('  %-28s = %f',      ['MaxVertexW', aD3DCaps.MaxVertexW]);
+
+  DbgPrintf('  %-28s = %f',      ['GuardBandLeft', aD3DCaps.GuardBandLeft]);
+  DbgPrintf('  %-28s = %f',      ['GuardBandTop', aD3DCaps.GuardBandTop]);
+  DbgPrintf('  %-28s = %f',      ['GuardBandRight', aD3DCaps.GuardBandRight]);
+  DbgPrintf('  %-28s = %f',      ['GuardBandBottom', aD3DCaps.GuardBandBottom]);
+
+  DbgPrintf('  %-28s = %f',      ['ExtentsAdjust', aD3DCaps.ExtentsAdjust]);
+  DbgPrintf('  %-28s = 0x%.08X', ['StencilCaps', aD3DCaps.StencilCaps]);
+
+  DbgPrintf('  %-28s = 0x%.08X', ['FVFCaps', aD3DCaps.FVFCaps]);
+  DbgPrintf('  %-28s = 0x%.08X', ['TextureOpCaps', aD3DCaps.TextureOpCaps]);
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxTextureBlendStages', aD3DCaps.MaxTextureBlendStages]);
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxSimultaneousTextures', aD3DCaps.MaxSimultaneousTextures]);
+
+  DbgPrintf('  %-28s = 0x%.08X', ['VertexProcessingCaps', aD3DCaps.VertexProcessingCaps]);
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxActiveLights', aD3DCaps.MaxActiveLights]);
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxUserClipPlanes', aD3DCaps.MaxUserClipPlanes]);
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxVertexBlendMatrices', aD3DCaps.MaxVertexBlendMatrices]);
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxVertexBlendMatrixIndex', aD3DCaps.MaxVertexBlendMatrixIndex]);
+
+  DbgPrintf('  %-28s = %f',      ['MaxPointSize', aD3DCaps.MaxPointSize]);
+
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxPrimitiveCount', aD3DCaps.MaxPrimitiveCount]);         // max number of primitives per DrawPrimitive call
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxVertexIndex', aD3DCaps.MaxVertexIndex]);
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxStreams', aD3DCaps.MaxStreams]);
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxStreamStride', aD3DCaps.MaxStreamStride]);             // max stride for SetStreamSource
+
+  DbgPrintf('  %-28s = 0x%.08X', ['VertexShaderVersion', aD3DCaps.VertexShaderVersion]);
+  DbgPrintf('  %-28s = 0x%.08X', ['MaxVertexShaderConst', aD3DCaps.MaxVertexShaderConst]);   // number of vertex shader constant registers
+
+  DbgPrintf('  %-28s = 0x%.08X', ['PixelShaderVersion', aD3DCaps.PixelShaderVersion]);
+  DbgPrintf('  %-28s = %f',      ['MaxPixelShaderValue', aD3DCaps.MaxPixelShaderValue]);     // max value of pixel shader arithmetic component
+  // TODO : Also (conditionally) add D3D9 caps, and convert most flags to strings
+end;
+
+procedure DxbxDumpNativeRenderStates();
+var
+  XState: X_D3DRENDERSTATETYPE;
+  PCState: D3DRENDERSTATETYPE;
+  Value: DWORD;
+begin
+  DbgPrintf('DxbxDumpNativeRenderStates :');
+  // Go via the Xbox states for now, as we don't have a 'ToString' function for all native render states :
+  for XState := X_D3DRS_FIRST to X_D3DRS_LAST do
+  begin
+    // See if this renderstate is supported on Native D3D :
+    PCState := EmuXB2PC_D3DRS(XState);
+    if PCState = D3DRS_UNSUPPORTED then
+      Continue;
+
+    // Get the value and print it :
+    g_pD3DDevice.GetRenderState(PCState, {out}Value);
+    DbgPrintf('  %-28s = 0x%.08X;', [DxbxRenderStateXB2String[XState], Value]);
+  end;
+end;
+
 // Generic unlocking of a D3DResource.
 //
 // Dxbx Note : As suggested by StrikerX3, we should call this for any resource
@@ -1079,6 +1177,8 @@ begin
     DevType := iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF);
     g_pD3D.GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, {out}g_D3DCaps);
   end;
+
+  DxbxDumpD3DCaps(g_D3DCaps);
 
   SetFocus(g_hEmuWindow);
 
@@ -1775,6 +1875,8 @@ begin
         // TODO -oDxbx : g_pD3DDevice is already (indirectly) assigned here,
         // what happens with it's reference-count? This needs investigation.
         Pointer(g_pD3DDevice) := g_EmuCDPD.ppReturnedDeviceInterface^;
+
+        DxbxDumpNativeRenderStates();
 
         // default NULL guid
         ZeroMemory(@g_ddguid, sizeof(GUID));
@@ -7524,6 +7626,11 @@ begin
   // TODO -oDxbx : Update the D3D DirtyFlags too?
 
   IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, X_D3DTSS_BORDERCOLOR, Value);
+
+//  // TODO : Test if this stage's texture was created with the X_D3DFORMAT_BORDERCOLOR flag before doing this :
+//  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, X_D3DTSS_ADDRESSU, D3DTADDRESS_BORDER);
+//  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, X_D3DTSS_ADDRESSV, D3DTADDRESS_BORDER);
+//  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, X_D3DTSS_ADDRESSW, D3DTADDRESS_BORDER);
 
   EmuSwapFS(fsXbox);
 end;
