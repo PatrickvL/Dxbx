@@ -1152,7 +1152,7 @@ const // DWORD Indexes for XTL_D3D__pDevice (aka D3D__pDevice) :
   X_D3DDevice_Flags = 8/4; // DWORD; BeginStateBlock or's $20, EndStateBlock and's (not $20)
 
   // These are derived from XDK 5931. TODO : Investigate other XDK versions :
-  X_D3DDevice_Active_PixelShader = 1924/4; // Pointer
+  X_D3DDevice_Active_PixelShader = 1924/4; // PHandle - read by D3DDevice_GetPixelShader
   X_D3DDevice_RenderState_PSTextureModes = 1936/4; // DWORD
   X_D3DDevice_Active_VertexShader = 1944/4; // Pointer - read by D3DDevice_GetVertexShader
   X_D3DDevice_Active_Indices = 1952/4; // Pointer

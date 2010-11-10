@@ -383,6 +383,19 @@ procedure XTL_EmuXGUnswizzleRect
 begin
   EmuSwapFS(fsWindows);
 
+  if MayLog(lfUnit) then
+    LogBegin('EmuXapi : EmuXGUnswizzleRect').
+      _(pSrcBuff, 'pSrcBuff').
+      _(dwWidth, 'dwWidth').
+      _(dwHeight, 'dwHeight').
+      _(dwDepth, 'dwDepth').
+      _(pDstBuff, 'pDstBuff').
+      _(dwPitch, 'dwPitch').
+      _(Pointer(@rSrc), 'rSrc').
+      _(Pointer(@poDst), 'poDst').
+      _(dwBPP, 'dwBPP').
+    LogEnd();
+
   EmuXGUnswizzleRect(
     pSrcBuff,
     dwWidth,
