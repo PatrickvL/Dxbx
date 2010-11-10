@@ -840,7 +840,7 @@ begin
 
   // Finally, get a0.x indirect constant addressing
   pInstruction.a0x := Boolean(VshGetField(pShaderToken, FLD_A0X) > 0);
-end;
+end; // VshParseInstruction
 
 // Print functions
 function VshGetRegisterName(ParameterType: VSH_PARAMETER_TYPE): _char;

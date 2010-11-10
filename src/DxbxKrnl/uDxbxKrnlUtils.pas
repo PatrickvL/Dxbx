@@ -94,7 +94,12 @@ begin
     while i > 0 do
     begin
       if (0=strncmp(pSectionName, PAnsiChar(Result.dwSectionNameAddr), XBE_SECTIONNAME_MAXLENGTH)) then
-        Break;
+      begin
+        // Dxbx Note : Delphi 2010 has a bug: If this Exit is NOT surrounded by a begin/end pair,
+        // calling Exit just leaves the statement-block, resulting in the reset of Result - so
+        // LEAVE THESE begin/end intact!!!  -PatrickvL 2010-11-10
+        Exit;
+      end;
 
       Inc(Result);
       Dec(i);
