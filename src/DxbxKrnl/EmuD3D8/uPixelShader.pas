@@ -23,7 +23,7 @@ interface
 
 {$INCLUDE Dxbx.inc}
 
-{.$DEFINE PS_REWRITE}
+{$DEFINE PS_REWRITE}
 
 uses
   // Delphi
@@ -461,8 +461,8 @@ type PSH_OPCODE =
 );
 
 var PSH_OPCODE_DEFS: array [PSH_OPCODE] of record mn: string; _Out, _In: Int; note: string end = (
-  (mn:'ps';  _Out:0; _In:1; note:''),
-  (mn:'def';  _Out:0; _In:1; note:''),
+  (mn:'ps';  _Out:0; _In:0; note:''),
+  (mn:'def';  _Out:1; _In:4; note:''),
   (mn:'tex';  _Out:1; _In:1; note:''),
 
   (mn:'add';  _Out:1; _In:2; note:'d0=s0+s1'),
@@ -472,7 +472,7 @@ var PSH_OPCODE_DEFS: array [PSH_OPCODE] of record mn: string; _Out, _In: Int; no
   (mn:'dp4';  _Out:1; _In:2; note:''),
   (mn:'lrp';  _Out:1; _In:3; note:'d0=s0*(s1-s2)+s2'),
   (mn:'mad';  _Out:1; _In:3; note:'d0=s0*s1+s2'),
-  (mn:'mov';  _Out:1; _In:2; note:'d0=s0'),
+  (mn:'mov';  _Out:1; _In:1; note:'d0=s0'),
   (mn:'mul';  _Out:1; _In:2; note:'d0=s0*s1'),
   (mn:'nop';  _Out:0; _In:0; note:''),
   (mn:'sub';  _Out:1; _In:2; note:'d0=s0-s1'),
@@ -486,7 +486,7 @@ var PSH_OPCODE_DEFS: array [PSH_OPCODE] of record mn: string; _Out, _In: Int; no
 
 type PSH_PARAMETER_TYPE =
 (
-//    PARAM_UNKNOWN, // = 0
+    PARAM_CONST,
     PARAM_R,
     PARAM_T,
     PARAM_V,
@@ -494,6 +494,7 @@ type PSH_PARAMETER_TYPE =
 );
 
 var PSH_PARAMETER_TYPE_Str: array [PSH_PARAMETER_TYPE] of string = (
+    '',
     'r',
     't',
     'v',
@@ -573,20 +574,21 @@ var PSH_ARG_MODIFIER_Str: array [PSH_ARG_MODIFIER] of string = (
 );
 
 type PSH_IMD_OUTPUT = record
-    Active: boolean;
+//    Active: boolean;
     Type_: PSH_IMD_OUTPUT_TYPE;             // discard, R, T, V
     Address: UInt16;
     Mask: Dxbx4Booleans;
-    procedure Decode(const Value: DWORD; aIsAlpha: Boolean);
+    function Decode(const Value: DWORD; aIsAlpha: Boolean): Boolean;
     function ToString: string;
   end;
   PPSH_IMD_OUTPUT = ^PSH_IMD_OUTPUT;
 
 type PSH_IMD_PARAMETER = record
-    Active: boolean;
+//    Active: boolean;
     ParameterType: PSH_PARAMETER_TYPE;      // Parameter type, R, T, V or C
     Address: int16;                         // Register address
     Modifiers: PSH_ARG_MODIFIERs;
+    Mask: Dxbx4Booleans;
 //    Swizzle: array [0..4-1] of VSH_SWIZZLE; // The four swizzles
     procedure Decode(const Value: DWORD; aIsAlpha: Boolean);
     function ToString: string;
@@ -602,17 +604,20 @@ type PSH_INTERMEDIATE_FORMAT = record
     Modifier: PSH_INST_MODIFIER;
     Output: array [0..3-1] of PSH_IMD_OUTPUT;
     Parameters: array [0..4-1] of PSH_IMD_PARAMETER;
-    procedure Decode(PSInputs, PSOutputs: DWORD; IsAlpha: Boolean = False);
+    function Decode(PSInputs, PSOutputs: DWORD; IsAlpha: Boolean = False): Boolean;
     function ToString: string;
   end;
   PPSH_INTERMEDIATE_FORMAT = ^PSH_INTERMEDIATE_FORMAT;
 
 type PSH_XBOX_SHADER = record
 //    ShaderHeader: PSH_SHADER_HEADER;
-    IntermediateCount: uint16;
     Intermediate: array of PSH_INTERMEDIATE_FORMAT;
     function NewIntermediate(): PPSH_INTERMEDIATE_FORMAT;
+    procedure InsertIntermediate(pIntermediate: PPSH_INTERMEDIATE_FORMAT; Index: Int);
+    procedure DeleteLastIntermediate;
     procedure Decode(pPSDef: PX_D3DPIXELSHADERDEF);
+    procedure ConvertXboxToNative;
+    procedure RemoveConstants;
     function ToString: string;
   end;
 {$ENDIF PS_REWRITE}
@@ -948,15 +953,28 @@ const PS_GlobalFlagsStr: array [PS_GLOBALFLAGS] of P_char =
 
 {$IFDEF PS_REWRITE}
 
+const
+  CONST_MIN_TWO = 4;
+  CONST_MIN_ONE = -2;
+  CONST_MIN_HALF = -1;
+  CONST_ZERO = 0;
+  CONST_POS_HALF = 1;
+  CONST_POS_ONE = 2;
+  CONST_POS_TWO = 4;
+
 { PSH_IMD_OUTPUT }
 
-procedure PSH_IMD_OUTPUT.Decode(const Value: DWORD; aIsAlpha: Boolean);
+function PSH_IMD_OUTPUT.Decode(const Value: DWORD; aIsAlpha: Boolean): Boolean;
 begin
-  Active := True;
+  Result := True;
+//  Active := True;
   Address := 0;
   case PS_REGISTER(Value) of
     PS_REGISTER_DISCARD:
+    begin
       Type_ := IMD_OUTPUT_DISCARD;
+      Result := False;
+    end;
     PS_REGISTER_V0:
       Type_ := IMD_OUTPUT_V;
     PS_REGISTER_V1:
@@ -1003,11 +1021,14 @@ begin
   Result := PSH_IMD_OUTPUT_TYPE_Str[Type_];
   if Type_ > IMD_OUTPUT_DISCARD then
   begin
-    Result := Result + IntToStr(Address) + '.';
-    if Mask[0] then Result := Result + 'r';
-    if Mask[1] then Result := Result + 'g';
-    if Mask[2] then Result := Result + 'b';
-    if Mask[3] then Result := Result + 'a';
+    if Mask[0]  or Mask[1]  or Mask[2] or Mask[3] then
+    begin
+      Result := Result + IntToStr(Address) + '.';
+      if Mask[0] then Result := Result + 'r';
+      if Mask[1] then Result := Result + 'g';
+      if Mask[2] then Result := Result + 'b';
+      if Mask[3] then Result := Result + 'a';
+    end;
   end;
 end;
 
@@ -1015,47 +1036,128 @@ end;
 
 procedure PSH_IMD_PARAMETER.Decode(const Value: DWORD; aIsAlpha: Boolean);
 var
+  Reg: PS_REGISTER;
   InputMapping: PS_INPUTMAPPING;
+  Channel: PS_CHANNEL;
 begin
-  Active := True;
+//  Active := True;
   Address := 0;
-//  case Value and PS_NoChannelMask of
-//  end;
 
-  InputMapping := PS_INPUTMAPPING(Value and $e0);
+  Reg := PS_REGISTER(Value and $F);
+  if Reg = PS_REGISTER_ZERO then
+    Reg := PS_REGISTER(Value and $E0);
 
+  case Reg of
+    PS_REGISTER_ZERO:
+      ParameterType := PARAM_CONST;
+    PS_REGISTER_C0:
+      ParameterType := PARAM_C;
+    PS_REGISTER_C1:
+    begin
+      ParameterType := PARAM_C;
+      Address := 1;
+    end;
+    PS_REGISTER_V0:
+      ParameterType := PARAM_V;
+    PS_REGISTER_V1:
+    begin
+      ParameterType := PARAM_V;
+      Address := 1;
+    end;
+    PS_REGISTER_T0:
+      ParameterType := PARAM_T;
+    PS_REGISTER_T1:
+    begin
+      ParameterType := PARAM_T;
+      Address := 1;
+    end;
+    PS_REGISTER_T2:
+    begin
+      ParameterType := PARAM_T;
+      Address := 2;
+    end;
+    PS_REGISTER_T3:
+    begin
+      ParameterType := PARAM_T;
+      Address := 3;
+    end;
+    PS_REGISTER_R0:
+      ParameterType := PARAM_R;
+    PS_REGISTER_R1:
+    begin
+      ParameterType := PARAM_R;
+      Address := 1;
+    end;
+    PS_REGISTER_ONE:
+    begin
+      ParameterType := PARAM_CONST;
+      Address := 2;
+    end;
+    PS_REGISTER_NEGATIVE_ONE:
+    begin
+      ParameterType := PARAM_CONST;
+      Address := -2;
+    end;
+    PS_REGISTER_ONE_HALF:
+    begin
+      ParameterType := PARAM_CONST;
+      Address := 1;
+    end;
+    PS_REGISTER_NEGATIVE_ONE_HALF:
+    begin
+      ParameterType := PARAM_CONST;
+      Address := -1;
+    end;
+  else
+    DbgPrintf('INVALID INPUT!');
+  end;
 
-//    ARGMOD_BIAS,
-//
-//    ARGMOD_SCALE_X2, ARGMOD_SCALE_BX2, ARGMOD_SCALE_X4, ARGMOD_SCALE_D2,
-//
-//    ARGMOD_SATURATE,
-//
-//    ARGMOD_ALPHA_REPLICATE, ARGMOD_BLUE_REPLICATE];
+  Mask[0] := False;
+  Mask[1] := False;
+  Mask[2] := False;
+  Mask[3] := False;
+  if ParameterType > PARAM_CONST then
+  begin
+    Channel := PS_CHANNEL(Value and Ord(PS_CHANNEL_ALPHA));
+    if Channel = PS_CHANNEL_ALPHA then
+      Mask[3] := True
+    else // PS_CHANNEL_BLUE (only valid for Alpha step) :
+      if aIsAlpha then
+        Mask[2] := True;
 
-  case InputMapping of
-    PS_INPUTMAPPING_UNSIGNED_IDENTITY:
-      Modifiers := [ARGMOD_IDENTITY];
-    PS_INPUTMAPPING_UNSIGNED_INVERT:
-      Modifiers := [ARGMOD_INVERT];
-//    PS_INPUTMAPPING_EXPAND_NORMAL:
-//      Modifiers := [ARGMOD_IDENTITY];
-    PS_INPUTMAPPING_EXPAND_NEGATE:
-      Modifiers := [ARGMOD_NEGATE];
-//    PS_INPUTMAPPING_HALFBIAS_NORMAL:
-//      Modifiers := [ARGMOD_IDENTITY];
-//    PS_INPUTMAPPING_HALFBIAS_NEGATE:
-//      Modifiers := [ARGMOD_IDENTITY];
-    PS_INPUTMAPPING_SIGNED_IDENTITY:
-      Modifiers := [ARGMOD_IDENTITY];
-    PS_INPUTMAPPING_SIGNED_NEGATE:
-      Modifiers := [ARGMOD_NEGATE];
+    InputMapping := PS_INPUTMAPPING(Value and $e0);
+
+  //    ARGMOD_BIAS,
+  //
+  //    ARGMOD_SCALE_X2, ARGMOD_SCALE_BX2, ARGMOD_SCALE_X4, ARGMOD_SCALE_D2,
+  //
+  //    ARGMOD_SATURATE,
+  //
+  //    ARGMOD_ALPHA_REPLICATE, ARGMOD_BLUE_REPLICATE];
+
+    case InputMapping of
+      PS_INPUTMAPPING_UNSIGNED_IDENTITY:
+        Modifiers := [ARGMOD_IDENTITY];
+      PS_INPUTMAPPING_UNSIGNED_INVERT:
+        Modifiers := [ARGMOD_INVERT];
+      PS_INPUTMAPPING_EXPAND_NORMAL:
+        Modifiers := [ARGMOD_SCALE_BX2];
+      PS_INPUTMAPPING_EXPAND_NEGATE:
+        Modifiers := [ARGMOD_NEGATE];
+      PS_INPUTMAPPING_HALFBIAS_NORMAL:
+        Modifiers := [ARGMOD_BIAS];
+  //    PS_INPUTMAPPING_HALFBIAS_NEGATE:
+  //      Modifiers := [ARGMOD_IDENTITY];
+      PS_INPUTMAPPING_SIGNED_IDENTITY:
+        Modifiers := [ARGMOD_IDENTITY];
+      PS_INPUTMAPPING_SIGNED_NEGATE:
+        Modifiers := [ARGMOD_NEGATE];
+    end;
   end;
 (*
   inherited Decode(Value and PS_NoChannelMask, aIsAlpha);
 
   Channel := PS_CHANNEL(Value and Ord(PS_CHANNEL_ALPHA));
-  InputMapping := PS_INPUTMAPPING(Value and $e0);
 
   // Remove the above flags from the register :
   Reg := PS_REGISTER(Ord(Reg) and $f);
@@ -1118,24 +1220,43 @@ function PSH_IMD_PARAMETER.ToString: string;
 var
   Modifier: PSH_ARG_MODIFIER;
 begin
+  if ParameterType = PARAM_CONST then
+  begin
+    Result := Format('%.0f', [Address / 2.0]);
+    Exit;
+  end;
+
   Result := PSH_PARAMETER_TYPE_Str[ParameterType] + IntToStr(Address);
+
   for Modifier := Low(PSH_ARG_MODIFIER) to High(PSH_ARG_MODIFIER) do
     if Modifier in Modifiers then
       Result := Format(PSH_ARG_MODIFIER_Str[Modifier], [Result]);
+
+  if Mask[0]  or Mask[1]  or Mask[2] or Mask[3] then
+  begin
+    Result := Result + '.';
+    if Mask[0] then Result := Result + 'r';
+    if Mask[1] then Result := Result + 'g';
+    if Mask[2] then Result := Result + 'b';
+    if Mask[3] then Result := Result + 'a';
+  end;
 end;
 
 { PSH_INTERMEDIATE_FORMAT }
 
-procedure PSH_INTERMEDIATE_FORMAT.Decode(PSInputs, PSOutputs: DWORD; IsAlpha: Boolean = False);
+function PSH_INTERMEDIATE_FORMAT.Decode(PSInputs, PSOutputs: DWORD; IsAlpha: Boolean = False): Boolean;
 var
   CombinerOutputFlags: DWORD;
   i: int;
 begin
-  Self.IsCombined := False;
+  Result := False;
+  Self.IsCombined := IsAlpha {and Previous is not combined};
 
   // Decode first two outputs :
-  Output[0].Decode((PSOutputs shr 4) and $F, IsAlpha);
-  Output[1].Decode((PSOutputs shr 0) and $F, IsAlpha);
+  if Output[0].Decode((PSOutputs shr 4) and $F, IsAlpha) then
+    Result := True;
+  if Output[1].Decode((PSOutputs shr 0) and $F, IsAlpha) then
+    Result := True;
 
   // Get the combiner output flags :
   CombinerOutputFlags := PS_COMBINEROUTPUT(PSOutputs shr 12);
@@ -1162,34 +1283,39 @@ begin
       Self.Opcode := PO_XMMC;
 
     // This has a 3rd output, set that already :
-    Output[2].Decode((PSOutputs shr 8) and $F, IsAlpha);
+    if Output[2].Decode((PSOutputs shr 8) and $F, IsAlpha) then
+      Result := True;
   end;
 
-  Self.Modifier := INMOD_NONE;
-  case PS_COMBINEROUTPUT(Ord(CombinerOutputFlags) and $38) of
-    PS_COMBINEROUTPUT_IDENTITY:         ;
-    PS_COMBINEROUTPUT_BIAS:             Self.Modifier := INMOD_BIAS;
-    PS_COMBINEROUTPUT_SHIFTLEFT_1:      Self.Modifier := INMOD_X2;
-    PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS: Self.Modifier := INMOD_BX2;
-    PS_COMBINEROUTPUT_SHIFTLEFT_2:      Self.Modifier := INMOD_X4;
-    PS_COMBINEROUTPUT_SHIFTRIGHT_1:     Self.Modifier := INMOD_D2;
+  if Result then
+  begin
+    Self.Modifier := INMOD_NONE;
+    case PS_COMBINEROUTPUT(Ord(CombinerOutputFlags) and $38) of
+      PS_COMBINEROUTPUT_IDENTITY:         ;
+      PS_COMBINEROUTPUT_BIAS:             Self.Modifier := INMOD_BIAS;
+      PS_COMBINEROUTPUT_SHIFTLEFT_1:      Self.Modifier := INMOD_X2;
+      PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS: Self.Modifier := INMOD_BX2;
+      PS_COMBINEROUTPUT_SHIFTLEFT_2:      Self.Modifier := INMOD_X4;
+      PS_COMBINEROUTPUT_SHIFTRIGHT_1:     Self.Modifier := INMOD_D2;
+    end;
+
+  //  // Note : Doesn't this only apply to Alpha channel? :
+  //  if (CombinerOutputFlags and PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA) > 0 then // False=Alpha-to-Alpha, True=Blue-to-Alpha then
+  //    Output[0].Modifiers := Output[0].Modifiers + [ARGMOD_BLUE_REPLICATE];
+  //
+  //  if (CombinerOutputFlags and PS_COMBINEROUTPUT_CD_BLUE_TO_ALPHA) > 0 then // False=Alpha-to-Alpha, True=Blue-to-Alpha then
+  //    Output[1].Modifiers := Output[1].Modifiers + [ARGMOD_BLUE_REPLICATE];
+
+    // Decode all four inputs :
+    for i := 0 to PSH_OPCODE_DEFS[Self.Opcode]._In - 1 do
+      Self.Parameters[i].Decode((PSInputs shr ((3-i) * 8)) and $FF, IsAlpha);
   end;
-
-//  // Note : Doesn't this only apply to Alpha channel? :
-//  if (CombinerOutputFlags and PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA) > 0 then // False=Alpha-to-Alpha, True=Blue-to-Alpha then
-//    Output[0].Modifiers := Output[0].Modifiers + [ARGMOD_BLUE_REPLICATE];
-//
-//  if (CombinerOutputFlags and PS_COMBINEROUTPUT_CD_BLUE_TO_ALPHA) > 0 then // False=Alpha-to-Alpha, True=Blue-to-Alpha then
-//    Output[1].Modifiers := Output[1].Modifiers + [ARGMOD_BLUE_REPLICATE];
-
-  // Decode all four inputs :
-  for i := 0 to PSH_OPCODE_DEFS[Self.Opcode]._In - 1 do
-    Self.Parameters[i].Decode((PSInputs shr ((4-i) * 8)) and $FF, IsAlpha);
 end;
 
 function PSH_INTERMEDIATE_FORMAT.ToString: string;
 var
   i: Integer;
+  SeparatorChar: Char;
 begin
   if IsCombined then
     Result := '+'
@@ -1198,30 +1324,69 @@ begin
 
   Result := Result + PSH_OPCODE_DEFS[Opcode].mn + PSH_INST_MODIFIER_Str[Modifier];
 
-  for i := 0 to PSH_OPCODE_DEFS[Opcode]._Out do
-    if i = 0 then
-      Result := Result + ' ' + Self.Output[i].ToString
-    else
-      Result := Result + ',' + Self.Output[i].ToString;
+  // Output a comma-separated list of output registers :
+  SeparatorChar := ' ';
+  for i := 0 to PSH_OPCODE_DEFS[Opcode]._Out - 1 do
+  begin
+    Result := Result + SeparatorChar + Self.Output[i].ToString;
+    SeparatorChar := ',';
+  end;
 
-  for i := 0 to PSH_OPCODE_DEFS[Opcode]._In do
-    if i = 0 then
-      Result := Result + ' ' + Self.Parameters[i].ToString
-    else
-      Result := Result + ',' + Self.Parameters[i].ToString;
+  // If this opcode has both output and input, put a space between them :
+  if (PSH_OPCODE_DEFS[Opcode]._Out > 0) and (PSH_OPCODE_DEFS[Opcode]._In > 0) then
+  begin
+    Result := Result + ',';
+    SeparatorChar := ' ';
+  end;
 
-  Result := Result + ' ; ' + PSH_OPCODE_DEFS[Opcode].note;
+  // Output a comma-separated list of parameters :
+  for i := 0 to PSH_OPCODE_DEFS[Opcode]._In - 1 do
+  begin
+    Result := Result + SeparatorChar + Parameters[i].ToString;
+    SeparatorChar := ',';
+  end;
+
+  if PSH_OPCODE_DEFS[Opcode].note <> '' then
+    Result := Result + ' ; ' + PSH_OPCODE_DEFS[Opcode].note;
 end;
 
 { PSH_XBOX_SHADER }
 
 function PSH_XBOX_SHADER.NewIntermediate(): PPSH_INTERMEDIATE_FORMAT;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  IntermediateCount: uint16;
 begin
-  Inc(IntermediateCount);
-  SetLength(Intermediate, IntermediateCount);
-  Result := @Intermediate[IntermediateCount - 1];
+  IntermediateCount := Length(Intermediate) ;
+  SetLength(Intermediate, IntermediateCount + 1);
+  Result := @Intermediate[IntermediateCount];
   ZeroMemory(Result, sizeof(PSH_INTERMEDIATE_FORMAT));
+end;
+
+procedure PSH_XBOX_SHADER.InsertIntermediate(pIntermediate: PPSH_INTERMEDIATE_FORMAT; Index: Int);
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  i: Integer;
+begin
+  i := Length(Intermediate);
+  SetLength(Intermediate, i + 1);
+
+  while i >= Index do
+  begin
+    Intermediate[i + 1] := Intermediate[i];
+    Dec(i);
+  end;
+
+  Intermediate[Index] := pIntermediate^;
+end;
+
+procedure PSH_XBOX_SHADER.DeleteLastIntermediate;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  IntermediateCount: uint16;
+begin
+  IntermediateCount := Length(Intermediate) ;
+  SetLength(Intermediate, IntermediateCount - 1);
 end;
 
 procedure PSH_XBOX_SHADER.Decode(pPSDef: PX_D3DPIXELSHADERDEF);
@@ -1230,6 +1395,7 @@ var
   i: int;
   NumberOfCombiners: int;
 begin
+  ZeroMemory(@Self, SizeOf(Self));
 //  for i := 0 to X_D3DTS_STAGECOUNT-1 do
 //  begin
 //    PSTextureModes[i] := PS_TEXTUREMODES((pPSDef.PSTextureModes shr (i*5)) and $1F);
@@ -1277,21 +1443,109 @@ begin
 
   for i := 0 to NumberOfCombiners - 1 do
   begin
-    NewIntermediate.Decode(pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i]);
-    NewIntermediate.Decode(pPSDef.PSAlphaInputs[i], pPSDef.PSAlphaOutputs[i], {IsAlpha=}True);
+    if not NewIntermediate.Decode(pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i]) then
+      DeleteLastIntermediate;
+
+    if not NewIntermediate.Decode(pPSDef.PSAlphaInputs[i], pPSDef.PSAlphaOutputs[i], {IsAlpha=}True) then
+      DeleteLastIntermediate;
   end;
 
   // TODO:
-  // Insert tex* and def instructions
-  // Add xfc instruction
-  //
-  // Remove no-ops
-  // Merge idential .rgb .a instructions
-  // Convert x-opcodes to native opcodes
-  // Convert numeric arguments (-2, -1, 0, 1, 2) into modifiers on the other argument
-  // Insert mov r0.a, t0.a if r0.a is read before it's written
-  // Move independent .a channel instructions upwards to enable channel-combining
-  // Mark .a instructions as 'Combined' if the follow an .rgb instruction
+  // - Insert tex* and def instructions
+  // - Add xfc instruction
+  // - Remove no-ops
+  // - Merge idential .rgb .a instructions
+  // - Mark .a instructions as 'Combined' if the follow an .rgb instruction
+  // - Convert numeric arguments (-2, -1, 0, 1, 2) into modifiers on the other argument
+
+  // Only when converting, insert these :
+  // - Insert mov r0.a, t0.a if r0.a is read before it's written (and if the shader doesn't do it self)
+  // - Convert xbox-opcodes to native opcodes []
+  ConvertXboxToNative;
+  RemoveConstants;
+  // - Move independent .a channel instructions upwards to enable channel-combining
+end;
+
+procedure PSH_XBOX_SHADER.ConvertXboxToNative;
+var
+  i: Int;
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+  Ins: PSH_INTERMEDIATE_FORMAT;
+begin
+  i := Length(Intermediate);
+  while i > 0 do
+  begin
+    Dec(i);
+    Cur := @(Intermediate[i]);
+    case Cur.Opcode of
+      PO_XMMA:
+      begin
+        // Is the add ignored?
+        if Cur.Output[2].Type_ = IMD_OUTPUT_DISCARD then
+        begin
+          if Cur.Output[1].Type_ = IMD_OUTPUT_DISCARD then
+            Cur.Opcode := PO_MUL;
+        end
+        else // Add is stored...
+        // Are the first and second outputs ignored?
+        if  (Cur.Output[0].Type_ = IMD_OUTPUT_DISCARD)
+        and (Cur.Output[1].Type_ = IMD_OUTPUT_DISCARD) then
+        begin
+          // Is the 2nd parameter constant 1 ?
+          if  (Cur.Parameters[1].ParameterType = PARAM_CONST)
+          and (Cur.Parameters[1].Address = CONST_POS_ONE) then
+          begin
+            // Is the 4th parameter constan1 ?
+            if  (Cur.Parameters[3].ParameterType = PARAM_CONST)
+            and (Cur.Parameters[3].Address = CONST_POS_ONE) then
+            begin
+              // Change s2=(d0*1)+(d2*1) into s0=d0+d1 :
+              Cur.Opcode := PO_ADD;
+              Cur.Output[0] := Cur.Output[2];
+              Cur.Parameters[1] := Cur.Parameters[2];
+            end;
+          end;
+        end;
+      end;
+      PO_XMMC: ;
+      PO_XDM: ;
+      PO_XDD:
+      begin
+        Cur.Opcode := PO_DP3;
+        Ins := Cur^;
+        Ins.Output[0] := Cur.Output[1];
+        Ins.Parameters[0] := Cur.Parameters[2];
+        Ins.Parameters[1] := Cur.Parameters[3];
+        InsertIntermediate(@Ins, i+1);
+      end;
+      PO_XFC: ;
+    end;
+  end;
+end;
+
+procedure PSH_XBOX_SHADER.RemoveConstants;
+var
+  i: Int;
+begin
+  for i := 0 to Length(Intermediate) - 1 do
+  begin
+    case Intermediate[i].Opcode of
+      PO_MUL:
+      begin
+        // Is this a multiply-by-const?
+        if  (Intermediate[i].Parameters[1].ParameterType = PARAM_CONST)
+        and (Intermediate[i].Parameters[1].Address = CONST_POS_ONE) then
+          Intermediate[i].Opcode := PO_MOV
+        else
+        if  (Intermediate[i].Parameters[0].ParameterType = PARAM_CONST)
+        and (Intermediate[i].Parameters[0].Address = CONST_POS_ONE) then
+        begin
+          Intermediate[i].Opcode := PO_MOV;
+          Intermediate[i].Parameters[0] := Intermediate[i].Parameters[1];
+        end;
+      end; // MUL
+    end; // case
+  end; // for
 end;
 
 function PSH_XBOX_SHADER.ToString: string;
@@ -1299,7 +1553,7 @@ var
   i: Integer;
 begin
   Result := 'ps.1.3'#13#10;
-  for i := 0 to IntermediateCount-1 do
+  for i := 0 to Length(Intermediate)-1 do
     Result := Result + Intermediate[i].ToString + #13#10;
 end;
 
@@ -3088,9 +3342,20 @@ function XTL_EmuRecompilePshDef(pPSDef: PX_D3DPIXELSHADERDEF): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   PSIntermediate: RPSIntermediate;
+{$IFDEF PS_REWRITE}
+  New: PSH_XBOX_SHADER;
+{$ENDIF}
 begin
   PSIntermediate.Init(pPSDef);
   Result := PSIntermediate.DisassembleIntermediate();
+{$IFDEF PS_REWRITE}
+  if MayLog(lfUnit) then
+  begin
+    DbgPrintf('New decoding :');
+    New.Decode(pPSDef);
+    DbgPrintf(New.ToString);
+  end;
+{$ENDIF}
 end;
 
 end.
