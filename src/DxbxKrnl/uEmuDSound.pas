@@ -473,7 +473,7 @@ type
     {VMT 0x80}function PauseEx(rtTimestamp: REFERENCE_TIME; dwPause: DWORD): HRESULT; virtual; stdcall; // Unsupported
     {VMT 0x84}function SetPlayRegion(dwPlayStart, dwPlayLength: DWORD): HRESULT; virtual; stdcall; // Unsupported
     {VMT 0x88}function SetLoopRegion(dwLoopStart, dwLoopLength: DWORD): HRESULT; virtual; stdcall; // Unsupported
-    {VMT 0x8C}function GetStatus(pdwStatus: DWORD): HRESULT; virtual; stdcall; // IDirectSoundBuffer
+    {VMT 0x8C}function GetStatus(pdwStatus: LPDWORD): HRESULT; virtual; stdcall; // IDirectSoundBuffer
     {VMT 0x90}function GetCurrentPosition(pdwPlayCursor: LPDWORD; pdwWriteCursor: LPDWORD): HRESULT; virtual; stdcall; // IDirectSoundBuffer
     {VMT 0x94}function SetCurrentPosition(dwPlayCursor: DWORD): HRESULT; virtual; stdcall; // IDirectSoundBuffer
     {VMT 0x98}function SetBufferData(pvBufferData: LPVOID; dwBufferBytes: DWORD): HRESULT; virtual; stdcall; // Unsupported
@@ -3277,7 +3277,7 @@ end;
 
 function TIDirectSoundBuffer.GetStatus
 (
-    pdwStatus: DWORD
+    pdwStatus: LPDWORD
 ) : HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -3295,7 +3295,7 @@ begin
 
   if (Self <> nil) and (Self.EmuDirectSoundBuffer8 <> nil) then
   begin
-    hRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).GetStatus({out}pdwStatus);
+    hRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).GetStatus({out}pdwStatus^);
   end
   else
   begin
