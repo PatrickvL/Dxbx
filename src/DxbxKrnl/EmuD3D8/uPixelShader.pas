@@ -574,7 +574,6 @@ var PSH_ARG_MODIFIER_Str: array [PSH_ARG_MODIFIER] of string = (
 );
 
 type PSH_IMD_OUTPUT = record
-//    Active: boolean;
     Type_: PSH_IMD_OUTPUT_TYPE;             // discard, R, T, V
     Address: UInt16;
     Mask: Dxbx4Booleans;
@@ -584,7 +583,6 @@ type PSH_IMD_OUTPUT = record
   PPSH_IMD_OUTPUT = ^PSH_IMD_OUTPUT;
 
 type PSH_IMD_PARAMETER = record
-//    Active: boolean;
     ParameterType: PSH_PARAMETER_TYPE;      // Parameter type, R, T, V or C
     Address: int16;                         // Register address
     Modifiers: PSH_ARG_MODIFIERs;
@@ -605,6 +603,7 @@ type PSH_INTERMEDIATE_FORMAT = record
     Output: array [0..3-1] of PSH_IMD_OUTPUT;
     Parameters: array [0..4-1] of PSH_IMD_PARAMETER;
     function Decode(PSInputs, PSOutputs: DWORD; IsAlpha: Boolean = False): Boolean;
+    function DecodeFinalCombiner(aPSFinalCombinerInputsABCD, aPSFinalCombinerInputsEFG: DWORD): Boolean;
     function ToString: string;
   end;
   PPSH_INTERMEDIATE_FORMAT = ^PSH_INTERMEDIATE_FORMAT;
@@ -616,8 +615,14 @@ type PSH_XBOX_SHADER = record
     procedure InsertIntermediate(pIntermediate: PPSH_INTERMEDIATE_FORMAT; Index: Int);
     procedure DeleteLastIntermediate;
     procedure Decode(pPSDef: PX_D3DPIXELSHADERDEF);
-    procedure ConvertXboxToNative;
-    procedure RemoveConstants;
+    procedure ConvertXboxShaderToNative;
+    procedure ConvertXMMToNative_No3Rd(i: Integer);
+    procedure ConvertXMMAToNative(i: Integer);
+    procedure ConvertXMMCToNative(i: Integer);
+    procedure ConvertXMDToNative(i: Integer);
+    procedure ConvertXDDToNative(i: Integer);
+    procedure ConvertXFCToNative(i: Integer);
+    procedure ConvertConstants;
     function ToString: string;
   end;
 {$ENDIF PS_REWRITE}
@@ -967,7 +972,6 @@ const
 function PSH_IMD_OUTPUT.Decode(const Value: DWORD; aIsAlpha: Boolean): Boolean;
 begin
   Result := True;
-//  Active := True;
   Address := 0;
   case PS_REGISTER(Value) of
     PS_REGISTER_DISCARD:
@@ -1040,13 +1044,11 @@ var
   InputMapping: PS_INPUTMAPPING;
   Channel: PS_CHANNEL;
 begin
-//  Active := True;
-  Address := 0;
-
   Reg := PS_REGISTER(Value and $F);
   if Reg = PS_REGISTER_ZERO then
     Reg := PS_REGISTER(Value and $E0);
 
+  Address := 0;
   case Reg of
     PS_REGISTER_ZERO:
       ParameterType := PARAM_CONST;
@@ -1312,6 +1314,37 @@ begin
   end;
 end;
 
+function PSH_INTERMEDIATE_FORMAT.DecodeFinalCombiner(aPSFinalCombinerInputsABCD, aPSFinalCombinerInputsEFG: DWORD): Boolean;
+var
+  i: Integer;
+begin
+  Self.Opcode := PO_XFC;
+
+  // Set the output to r0.rgb :
+  Self.Output[0].Type_ := IMD_OUTPUT_R;
+  Self.Output[0].Address := 0;
+  Self.Output[0].Mask[0] := True;
+  Self.Output[0].Mask[1] := True;
+  Self.Output[0].Mask[2] := True;
+  Self.Output[0].Mask[3] := False;
+
+  // Decode A,B,C and D :
+  for i := 0 to 4 - 1 do
+    Self.Parameters[i].Decode((aPSFinalCombinerInputsABCD shr ((3-i) * 8)) and $FF, {IsAlpha=}False);
+
+  // Decode E,F and G :
+  for i := 0 to 3 - 1 do
+    Self.Parameters[4+i].Decode((aPSFinalCombinerInputsEFG shr ((3-i) * 8)) and $FF, {IsAlpha=}False);
+
+//  FinalCombinerFlags := PS_FINALCOMBINERSETTING((aPSFinalCombinerInputsEFG shr 0) and $FF);
+//
+//  FinalCombinerC0Mapping := (PSFinalCombinerConstants shr 0) and $F;
+//  FinalCombinerC1Mapping := (PSFinalCombinerConstants shr 4) and $F;
+//  dwPS_GLOBALFLAGS := (PSFinalCombinerConstants shr 8) and $1;
+
+  Result := True;
+end;
+
 function PSH_INTERMEDIATE_FORMAT.ToString: string;
 var
   i: Integer;
@@ -1450,80 +1483,218 @@ begin
       DeleteLastIntermediate;
   end;
 
+  if (pPSDef.PSFinalCombinerInputsABCD > 0)
+  or (pPSDef.PSFinalCombinerInputsEFG > 0) then
+    if not NewIntermediate.DecodeFinalCombiner(pPSDef.PSFinalCombinerInputsABCD, pPSDef.PSFinalCombinerInputsEFG) then
+      DeleteLastIntermediate;
+
   // TODO:
   // - Insert tex* and def instructions
-  // - Add xfc instruction
-  // - Remove no-ops
   // - Merge idential .rgb .a instructions
-  // - Mark .a instructions as 'Combined' if the follow an .rgb instruction
-  // - Convert numeric arguments (-2, -1, 0, 1, 2) into modifiers on the other argument
+
+  if MayLog(lfUnit) then
+  begin
+    DbgPrintf('New decoding - Parse result :');
+    DbgPrintf(ToString);
+  end;
 
   // Only when converting, insert these :
+  // - Remove no-ops
+  // - Mark .a instructions as 'Combined' if the follow an .rgb instruction
+  // - Convert numeric arguments (-2, -1, 0, 1, 2) into modifiers on the other argument
   // - Insert mov r0.a, t0.a if r0.a is read before it's written (and if the shader doesn't do it self)
   // - Convert xbox-opcodes to native opcodes []
-  ConvertXboxToNative;
-  RemoveConstants;
   // - Move independent .a channel instructions upwards to enable channel-combining
+  ConvertXboxShaderToNative;
+
+  if MayLog(lfUnit) then
+  begin
+    DbgPrintf('New decoding - Converted result :');
+    DbgPrintf(ToString);
+  end;
 end;
 
-procedure PSH_XBOX_SHADER.ConvertXboxToNative;
+procedure PSH_XBOX_SHADER.ConvertXboxShaderToNative;
 var
   i: Int;
-  Cur: PPSH_INTERMEDIATE_FORMAT;
-  Ins: PSH_INTERMEDIATE_FORMAT;
 begin
+  // First, convert all Xbox-only opcodes :
   i := Length(Intermediate);
   while i > 0 do
   begin
     Dec(i);
-    Cur := @(Intermediate[i]);
-    case Cur.Opcode of
-      PO_XMMA:
-      begin
-        // Is the add ignored?
-        if Cur.Output[2].Type_ = IMD_OUTPUT_DISCARD then
-        begin
-          if Cur.Output[1].Type_ = IMD_OUTPUT_DISCARD then
-            Cur.Opcode := PO_MUL;
-        end
-        else // Add is stored...
-        // Are the first and second outputs ignored?
-        if  (Cur.Output[0].Type_ = IMD_OUTPUT_DISCARD)
-        and (Cur.Output[1].Type_ = IMD_OUTPUT_DISCARD) then
-        begin
-          // Is the 2nd parameter constant 1 ?
-          if  (Cur.Parameters[1].ParameterType = PARAM_CONST)
-          and (Cur.Parameters[1].Address = CONST_POS_ONE) then
-          begin
-            // Is the 4th parameter constan1 ?
-            if  (Cur.Parameters[3].ParameterType = PARAM_CONST)
-            and (Cur.Parameters[3].Address = CONST_POS_ONE) then
-            begin
-              // Change s2=(d0*1)+(d2*1) into s0=d0+d1 :
-              Cur.Opcode := PO_ADD;
-              Cur.Output[0] := Cur.Output[2];
-              Cur.Parameters[1] := Cur.Parameters[2];
-            end;
-          end;
-        end;
-      end;
-      PO_XMMC: ;
-      PO_XDM: ;
-      PO_XDD:
-      begin
-        Cur.Opcode := PO_DP3;
-        Ins := Cur^;
-        Ins.Output[0] := Cur.Output[1];
-        Ins.Parameters[0] := Cur.Parameters[2];
-        Ins.Parameters[1] := Cur.Parameters[3];
-        InsertIntermediate(@Ins, i+1);
-      end;
-      PO_XFC: ;
+    case Intermediate[i].Opcode of
+      PO_XMMA: ConvertXMMAToNative(i);
+      PO_XMMC: ConvertXMMCToNative(i);
+      PO_XDM: ConvertXMDToNative(i);
+      PO_XDD: ConvertXDDToNative(i);
+      PO_XFC: ConvertXFCToNative(i);
     end;
   end;
+
+  // Resolve all differences :
+  ConvertConstants;
+  // FixupWritesToReadOnlyRegisters; // Xbox may write to V1, while Native doesn't allow that - fix via a free register
 end;
 
-procedure PSH_XBOX_SHADER.RemoveConstants;
+procedure PSH_XBOX_SHADER.ConvertXMMToNative_No3Rd(i: Integer);
+var
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+  Ins: PSH_INTERMEDIATE_FORMAT;
+begin
+  // This function is meant for cases where XMMA/XMMC discard the 3rd output :
+  Cur := @(Intermediate[i]);
+  Assert(Cur.Output[2].Type_ = IMD_OUTPUT_DISCARD);
+
+  // The opcode must unconditionally change into a MUL :
+  Cur.Opcode := PO_MUL;
+
+  // Is the second output ignored?
+  if Cur.Output[1].Type_ = IMD_OUTPUT_DISCARD then
+  begin
+    // Is the first output ignored?
+    if Cur.Output[0].Type_ = IMD_OUTPUT_DISCARD then
+      // Change the instruction to a no-op :
+      Cur.Opcode := PO_NOP // TODO : Delete this index instead (or remove NOP's later)
+    else
+      ; // Do nothing; The first output (and first two parameters) are already in-place
+
+    // We're done :
+    Exit;
+  end;
+
+  // Is the first output ignored?
+  if Cur.Output[0].Type_ = IMD_OUTPUT_DISCARD then
+  begin
+    // Change the opcode to a MUL, and move the second set of arguments back to the begin :
+    Cur.Opcode := PO_MUL;
+    Cur.Output[0] := Cur.Output[1];
+    Cur.Parameters[0] := Cur.Parameters[2];
+    Cur.Parameters[1] := Cur.Parameters[3];
+
+    Exit;
+  end;
+
+  // Create a second MUL opcode for the second result :
+  Ins := Cur^;
+  Ins.Output[0] := Cur.Output[1];
+  Ins.Parameters[0] := Cur.Parameters[2];
+  Ins.Parameters[1] := Cur.Parameters[3];
+  InsertIntermediate(@Ins, i+1);
+end;
+
+procedure PSH_XBOX_SHADER.ConvertXMMAToNative(i: Integer);
+var
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+begin
+  Cur := @(Intermediate[i]);
+
+  // Is the 3rd (Add) argument ignored?
+  if Cur.Output[2].Type_ = IMD_OUTPUT_DISCARD then
+  begin
+    ConvertXMMToNative_No3Rd(i);
+    Exit;
+  end;
+
+  // Add is stored...
+
+  // Are the first and second outputs ignored?
+  if  (Cur.Output[0].Type_ = IMD_OUTPUT_DISCARD)
+  and (Cur.Output[1].Type_ = IMD_OUTPUT_DISCARD) then
+  begin
+    // Is the 2nd parameter constant 1 ?
+    if  (Cur.Parameters[1].ParameterType = PARAM_CONST)
+    and (Cur.Parameters[1].Address = CONST_POS_ONE) then
+    begin
+      // The opcode must unconditionally output to the 3rd XMM's output :
+      Cur.Output[0] := Cur.Output[2];
+
+      // Is the 4th parameter constant 1 ?
+      if  (Cur.Parameters[3].ParameterType = PARAM_CONST)
+      and (Cur.Parameters[3].Address = CONST_POS_ONE) then
+      begin
+        // Change d2=(s0*1)+(s2*1) into d2=s0+s1 :
+        Cur.Opcode := PO_ADD;
+        //Cur.Parameters[0] := Cur.Parameters[0];
+        Cur.Parameters[1] := Cur.Parameters[2];
+        Exit;
+      end;
+
+      // Is the 3rd parameter constant 1 ?
+      if  (Cur.Parameters[2].ParameterType = PARAM_CONST)
+      and (Cur.Parameters[2].Address = CONST_POS_ONE) then
+      begin
+        // Change d2=(s0*1)+(1*s3) into d2=s0+s3 :
+        Cur.Opcode := PO_ADD;
+        //Cur.Parameters[0] := Cur.Parameters[0];
+        Cur.Parameters[1] := Cur.Parameters[3];
+        Exit;
+      end;
+
+      // Change d2=(s0*1)+(s2*s3) into d2=s2*s3+s0 :
+      Cur.Opcode := PO_MAD;
+      Cur.Parameters[1] := Cur.Parameters[3]; // s'1=s3 (done)
+      Cur.Parameters[3] := Cur.Parameters[0]; // s3 =s0 (temporary)
+      Cur.Parameters[0] := Cur.Parameters[2]; // s'0=s2 (done)
+      Cur.Parameters[2] := Cur.Parameters[3]; // s'2=s3=s0 (done, using temp)
+      Exit;
+    end;
+
+    // TODO : LRP
+    Exit;
+  end;
+
+  // TODO
+end;
+
+procedure PSH_XBOX_SHADER.ConvertXMMCToNative(i: Integer);
+var
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+begin
+  Cur := @(Intermediate[i]);
+
+  // Is the 3rd (Select) argument ignored?
+  if Cur.Output[2].Type_ = IMD_OUTPUT_DISCARD then
+  begin
+    ConvertXMMToNative_No3Rd(i);
+    Exit;
+  end;
+
+  // Select is stored...
+
+  // TODO
+end;
+
+procedure PSH_XBOX_SHADER.ConvertXMDToNative(i: Integer);
+var
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+begin
+  Cur := @(Intermediate[i]);
+end;
+
+procedure PSH_XBOX_SHADER.ConvertXDDToNative(i: Integer);
+var
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+  Ins: PSH_INTERMEDIATE_FORMAT;
+begin
+  Cur := @(Intermediate[i]);
+
+  Cur.Opcode := PO_DP3;
+  Ins := Cur^;
+  Ins.Output[0] := Cur.Output[1];
+  Ins.Parameters[0] := Cur.Parameters[2];
+  Ins.Parameters[1] := Cur.Parameters[3];
+  InsertIntermediate(@Ins, i+1);
+end;
+
+procedure PSH_XBOX_SHADER.ConvertXFCToNative(i: Integer);
+var
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+begin
+  Cur := @(Intermediate[i]);
+end;
+
+procedure PSH_XBOX_SHADER.ConvertConstants;
 var
   i: Int;
 begin
@@ -3349,12 +3520,7 @@ begin
   PSIntermediate.Init(pPSDef);
   Result := PSIntermediate.DisassembleIntermediate();
 {$IFDEF PS_REWRITE}
-  if MayLog(lfUnit) then
-  begin
-    DbgPrintf('New decoding :');
-    New.Decode(pPSDef);
-    DbgPrintf(New.ToString);
-  end;
+  New.Decode(pPSDef);
 {$ENDIF}
 end;
 
