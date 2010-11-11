@@ -1300,6 +1300,35 @@ begin
     else
       Self.Opcode := PO_XDM;
 
+    // Note : All arguments are already in-place for these two opcodes.
+
+    // No 3rd output; Assert that (PSOutputs shr 8) and $F = PS_REGISTER_DISCARD ?
+  end
+  else
+  if (CombinerOutputFlags and PS_COMBINEROUTPUT_CD_DOT_PRODUCT) > 0 then // False=Multiply, True=DotProduct
+  begin
+    // The first operation is a multiply, but the second is a dot-product;
+
+    // There's no opcode for that, but we can reverse the two and still use XDM :
+    Self.Opcode := PO_XDM;
+
+    // Swap output 0 with 1 :
+    Self.Output[2] := Self.Output[0]; // d'2=d0 (temp)
+    Self.Output[0] := Self.Output[1]; // d'0=d1
+    Self.Output[1] := Self.Output[2]; // d'1=d0 (via d'2)
+
+    // Swap parameters 0 and 1 with Parameters 2 and 3 :
+    Self.Parameters[4] := Self.Parameters[0]; // s'4=s0 (temp)
+    Self.Parameters[5] := Self.Parameters[1]; // s'5=s1 (temp)
+
+    Self.Parameters[0] := Self.Parameters[2]; // s'0=s2
+    Self.Parameters[1] := Self.Parameters[3]; // s'1=s3
+
+    Self.Parameters[2] := Self.Parameters[4]; // s'2=s0 (via s'4)
+    Self.Parameters[3] := Self.Parameters[5]; // s'3=s1 (via s'5)
+
+    // TODO : Maybe a SwapOutput and SwapParameter are in order?
+
     // No 3rd output; Assert that (PSOutputs shr 8) and $F = PS_REGISTER_DISCARD ?
   end
   else
