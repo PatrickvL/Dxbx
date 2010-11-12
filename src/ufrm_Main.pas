@@ -283,7 +283,11 @@ end;
 function GetTitleSpecificKernelDebugFilePath: string;
 begin
   // Was DXBX_KERNEL_DEBUG_FILENAME
-  Result := Format('DxbxKrnl %s (%d).txt', [m_szAsciiTitle, SvnRevision]);
+
+  if KernelDebugFilePath[Length(KernelDebugFilePath) -1] = '\' then
+    Result := KernelDebugFilePath + Format('DxbxKrnl %s (%d).txt', [m_szAsciiTitle, SvnRevision])
+  else
+    Result := KernelDebugFilePath + Format('\DxbxKrnl %s (%d).txt', [m_szAsciiTitle, SvnRevision]);
 end;
 
 procedure GradientHorizontalLineCanvas(const ACanvas: TCanvas;
@@ -1585,7 +1589,6 @@ begin
   if KernelDebugFilePath <> '' then
   begin
     KernelDebugMode := dmFile;
-    KernelDebugFilePath := ExtractFilePath(SaveDialog.FileName);
     AdjustMenu;
   end;
 end; // actFileDebugKernelExecute
