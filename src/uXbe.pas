@@ -298,6 +298,7 @@ type _XBE_SECTIONHEADER = packed record
   private
     MyFile: TMemoryStream;
     FRawData: MathPtr;
+    FIsValid: boolean;
     m_KernelLibraryVersion: XBE_LIBRARYVERSION;
     m_XAPILibraryVersion: XBE_LIBRARYVERSION;
     procedure ConstructorInit;
@@ -315,8 +316,9 @@ type _XBE_SECTIONHEADER = packed record
 
     property RawData: MathPtr read FRawData;
     property FileSize: Int64 read GetFileSize;
+    property isValid: boolean read FisValid;
     class function FileExists(aFileName: string): Boolean;
-    
+
     constructor Create(const aFileName: string);
     destructor Destroy; override;
 
@@ -324,7 +326,7 @@ type _XBE_SECTIONHEADER = packed record
 
     function DetermineDumpFileName: string;
     function DumpInformation(FileName: string = ''): Boolean;
-    
+
     function GetAddr(x_dwVirtualAddress: DWord): Integer;
     function GetAddrStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): string;
     function GetAddrWStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): WideString;
@@ -426,17 +428,20 @@ begin
 end;
 
 function OpenXbe(aFileName: string; var aXbe: TXbe{; var aExeFileName, aXbeFileName: string}): Boolean;
+var
+  isValid: boolean;
 begin
   Result := False;
   if Assigned(aXbe) or not (TXbe.FileExists(aFileName)) then
     Exit;
 
-{  aExeFileName := '';
-  aXbeFileName := aFileName;}
   {var}aXbe := TXbe.Create({aXbe}aFileName);
   try
-    XbeLoaded();
-    Result := True;
+    if aXbe.isValid then
+    begin
+      XbeLoaded();
+      Result := True;
+    end;
   except
     FreeAndNil(aXbe);
     raise;
@@ -532,12 +537,14 @@ var
   I: DWord;
   Drive: PLogicalVolume;
 begin
+  FisValid := True;
   ConstructorInit();
 
   Drive := Drives.D;
   if not Drive.OpenImage(aFileName, {out}FileName) then
   begin
     MessageDlg(DxbxFormat('Could not open path : %s', [aFileName]), mtError, [mbOk], 0);
+    FisValid := False;
     Exit;
   end;
 
@@ -561,6 +568,7 @@ begin
   if MyFile.Size = 0 then
   begin
     MessageDlg(DxbxFormat('Could not open %s file', [sFileType]), mtError, [mbOk], 0);
+    FisValid := False;
     Exit;
   end;
 
@@ -573,6 +581,7 @@ begin
   if MyFile.Size < SizeOf(m_Header) then
   begin
     MessageDlg(DxbxFormat('Unexpected end of file while reading %s Image Header', [sFileType]), mtError, [mbOk], 0);
+    FisValid := False;
     Exit;
   end;
 
@@ -584,6 +593,7 @@ begin
   if m_Header.dwMagic <> _MagicNumber then
   begin
     MessageDlg(DxbxFormat('Invalid magic number in %s file', [sFileType]), mtError, [mbOk], 0);
+    FisValid := False;
     Exit;
   end;
 
