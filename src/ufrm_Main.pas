@@ -913,7 +913,7 @@ begin
     VK_DELETE: // Delete key means : ask to remove active xbe from list
     begin
       Key := 0;
-      if Assigned(m_Xbe) then
+      if Assigned(m_Xbe) and m_Xbe.isValid then
       begin
         i := FindByFileName(m_Xbe.XbePath);
         if i >= 0 then
@@ -1647,7 +1647,7 @@ procedure Tfrm_Main.actXbeExplorerExecute(Sender: TObject);
 var
   Parameters: string;
 begin
-  if Assigned(m_Xbe) then
+  if Assigned(m_Xbe) and m_Xbe.isValid then
     Parameters := AnsiQuotedStr(m_Xbe.XbePath, '"')
   else
     Parameters := '';
@@ -1664,7 +1664,7 @@ procedure Tfrm_Main.actXdkTrackerXbeInfoExecute(Sender: TObject);
 var
   DumpFilePath: string;
 begin
-  if Assigned(m_Xbe) then
+  if Assigned(m_Xbe) and m_Xbe.isValid then
   begin
     DumpFilePath := FApplicationDir + 'Tools\Dump.dat';
     DxbxXml.CreateXmlXbeDump(DumpFilePath, m_Xbe);
@@ -1748,7 +1748,7 @@ procedure Tfrm_Main.AdjustMenu;
 begin
   // Update File menu actions :
   actOpenXbe.Enabled := True;
-  actCloseXbe.Enabled := Assigned(m_Xbe);
+  actCloseXbe.Enabled := Assigned(m_Xbe) and m_Xbe.isValid;
 
   mnu_RecentXbefiles.Enabled := (mnu_RecentXbefiles.Count > 0);
 
@@ -1773,7 +1773,7 @@ begin
 
   // Update Edit menu actions (should be done after actXdkTracker update) :
   mnu_Patch.Enabled := False;
-  mnu_DumpxbeinfoTo.Enabled := Assigned(m_Xbe);
+  mnu_DumpxbeinfoTo.Enabled := Assigned(m_Xbe) and m_Xbe.isValid;
 
   mnu_BypassSymbolCache.Checked := g_EmuShared.m_BypassSymbolCache;
 end; // AdjustMenu
@@ -1832,7 +1832,7 @@ end; // LoadXbe
 
 procedure Tfrm_Main.CloseXbe;
 begin
-  if Assigned(m_Xbe) then
+  if Assigned(m_Xbe) and m_Xbe.isValid then
   begin
     FreeAndNil(m_Xbe);
 
@@ -1899,12 +1899,12 @@ var
   LibName: string;
   Version: string;
 begin
-  if Assigned(m_XBE) and m_XBE.ExportLogoBitmap(ImageLogo.Picture.Bitmap) then
+  if Assigned(m_XBE) and m_xbe.isValid and m_XBE.ExportLogoBitmap(ImageLogo.Picture.Bitmap) then
     ImageLogo.Show
   else
     ImageLogo.Hide;
 
-  if Assigned(m_XBE) then
+  if Assigned(m_XBE) and m_xbe.isValid then
   begin
     if not m_XBE.ExportIconBitmap(ImageIcon.Picture.Bitmap) then
       ImageIcon.Picture.Assign(GetJPEGResource('GUIIconNotAvailable'));
@@ -1946,7 +1946,7 @@ begin
   else
     ImageIcon.Hide;
 
-  if Assigned(m_XBE) then
+  if Assigned(m_XBE) and m_Xbe.isValid then
   begin
     lblXbeInformation.Caption := Format(
       '%s'#13 +
