@@ -1528,21 +1528,64 @@ begin
   AdjustMenu;
 end; // actConsoleDebugKernelExecute
 
+function BrowseCallbackProc(hwnd: HWND; uMsg: UINT; lParam: LPARAM; lpData: LPARAM): Integer; stdcall;
+begin
+  if (uMsg = BFFM_INITIALIZED) then
+    SendMessage(hwnd, BFFM_SETSELECTION, 1, lpData);
+  BrowseCallbackProc := 0;
+end;
+
+function GetFolderDialog(Handle: Integer; Caption: string; var strFolder: string): Boolean;
+const
+  BIF_STATUSTEXT           = $0004;
+  BIF_NEWDIALOGSTYLE       = $0040;
+  BIF_RETURNONLYFSDIRS     = $0080;
+  BIF_SHAREABLE            = $0100;
+  BIF_USENEWUI             = BIF_EDITBOX or BIF_NEWDIALOGSTYLE;
+
+var
+  BrowseInfo: TBrowseInfo;
+  ItemIDList: PItemIDList;
+  JtemIDList: PItemIDList;
+  Path: PChar;
+begin
+  Result := False;
+  Path := StrAlloc(MAX_PATH);
+  SHGetSpecialFolderLocation(Handle, CSIDL_DESKTOP, JtemIDList);
+  with BrowseInfo do
+  begin
+    hwndOwner := GetActiveWindow;
+    pidlRoot := JtemIDList;
+    SHGetSpecialFolderLocation(hwndOwner, CSIDL_DESKTOP, JtemIDList);
+
+    { return display name of item selected }
+    pszDisplayName := StrAlloc(MAX_PATH);
+
+    { set the title of dialog }
+    lpszTitle := PChar(Caption);//'Select the folder';
+    { flags that control the return stuff }
+    lpfn := @BrowseCallbackProc;
+    { extra info that's passed back in callbacks }
+    lParam := LongInt(PChar(strFolder));
+  end;
+
+  ItemIDList := SHBrowseForFolder(BrowseInfo);
+
+  if (ItemIDList <> nil) then
+    if SHGetPathFromIDList(ItemIDList, Path) then
+    begin
+      strFolder := Path;
+      Result := True
+    end;
+end;
+
 procedure Tfrm_Main.actFileDebugKernelExecute(Sender: TObject);
 begin
-  // TODO : Change this into a folder-selection dialog (filename is generated) :
+  GetFolderDialog(Application.Handle, 'Select a folder', KernelDebugFilePath);
   if KernelDebugFilePath <> '' then
-    SaveDialog.InitialDir := KernelDebugFilePath;
-
-  SaveDialog.FileName := ExtractFileName(GetTitleSpecificKernelDebugFilePath);
-
-  SaveDialog.Filter := DIALOG_FILTER_TEXT;
-  if SaveDialog.Execute then
   begin
-    //CloseLogs;
     KernelDebugMode := dmFile;
     KernelDebugFilePath := ExtractFilePath(SaveDialog.FileName);
-    //CreateLogs(KernelDebugMode, KernelDebugFileName);
     AdjustMenu;
   end;
 end; // actFileDebugKernelExecute
