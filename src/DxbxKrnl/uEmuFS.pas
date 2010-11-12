@@ -127,6 +127,10 @@ procedure EmuSwapFS();
 var
   CurrentFS: Word;
 begin
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
+  Exit;
+{$ENDIF}
+
   asm
     mov ax, fs:[DxbxFS_SwapFS]
     mov fs, ax
@@ -170,6 +174,10 @@ procedure EmuSwapFS(const aSwapTo: TSwapFS);
 var
   InXboxFS: Boolean;
 begin
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
+  Exit;
+{$ENDIF}
+
   InXboxFS := EmuIsXboxFS;
   if (aSwapTo = fsSwap)
   or ((aSwapTo = fsWindows) = InXboxFS) then
@@ -190,6 +198,10 @@ end;
 procedure EmuInitFS();
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
+  Exit;
+{$ENDIF}
+
   EmuInitLDT();
 end;
 
@@ -213,6 +225,10 @@ end;
 
 function DumpXboxFS(const aFS: PKPCR): string;
 begin
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
+  Exit;
+{$ENDIF}
+
   with aFS.NtTib do
     Result := DxbxFormat(
       '$%.02x KPCR.NT_TIB.ExceptionList: PEXCEPTION_REGISTRATION_RECORD = $%.08x'#13#10 +
@@ -277,6 +293,10 @@ end;
 
 function DumpCurrentFS(): string;
 begin
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
+  Exit;
+{$ENDIF}
+
   Result := DxbxFormat('FS = $%.04x ($%.08x)', [GetFS(), GetTIB()]);
   if EmuIsXboxFS then
     Result := Result + ' (Xbox FS)'#13#10 + DumpXboxFS(GetTIB())
@@ -300,6 +320,10 @@ var
   NewPcr: PKPCR;
   EThread: PETHREAD;
 begin
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
+  Exit;
+{$ENDIF}
+
   if MayLog(lfUnit or lfExtreme) then
     DbgPrintf('Entering EmuGenerateFS() : '#13#10 + DumpCurrentFS());
 
@@ -432,6 +456,10 @@ var
   wSwapFS: uint16;
   pTLSData: Puint08;
 begin
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
+  Exit;
+{$ENDIF}
+
   wSwapFS := GetTIBEntryWord(DxbxFS_SwapFS);
   if wSwapFS = 0 then
     Exit;

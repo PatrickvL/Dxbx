@@ -229,7 +229,7 @@ callComplete:
       EmuSwapFS(fsXbox);
 
       pfnNotificationRoutine({Create=}BOOL_FALSE);
- 
+
       EmuSwapFS(fsWindows);
     end;
   end;
@@ -239,6 +239,26 @@ callComplete:
   Result := 0;
 end; // PCSTProxy
 //pragma warning(pop)
+
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
+function Dxbx_Emu_mainXapiStartup(
+  lpvParameter: LPVOID
+): HRESULT; stdcall;
+begin
+  if Assigned(@XTL_Org_XapiInitProcess) then
+    XTL_Org_XapiInitProcess();
+  if Assigned(@XTL_Org_rtinit) then
+    XTL_Org_rtinit();
+  if Assigned(@XTL_Org_cinit) then
+    XTL_Org_cinit();
+
+  XTL_Org_main(0, nil, nil);
+
+//  XapiBootToDash(XLD_LAUNCH_DASHBOARD_ERROR, XLD_ERROR_INVALID_XBE, 0);
+
+  Result := STATUS_SUCCESS;
+end;
+{$ENDIF}
 
 ////
 
@@ -368,6 +388,14 @@ begin
 
   // create thread, using our special proxy technique
   begin
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
+    if Addr(StartAddress) = XTL_Emu_mainXapiStartup then
+    begin
+      Addr(StartAddress) := Addr(Dxbx_Emu_mainXapiStartup);
+      DbgPrintf('Skipping _mainXapiStartup@4, calling our version...');
+    end;
+{$ENDIF}
+
     // PCSTProxy is responsible for cleaning up this pointer
     iPCSTProxyParam.StartAddress := Addr(StartAddress);
     iPCSTProxyParam.StartContext := StartContext;

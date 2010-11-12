@@ -50,6 +50,7 @@
 {.$DEFINE DXBX_RECTYPE} // Include RecType info in PatternTrie
 {.$DEFINE DXBX_TRIE_COMPRESS_STRINGS} // Apply prefix reduction to string stored in the Trie
 {.$DEFINE DXBX_TRACE_MEMLEAKS} // Enable memleak-tracing (FastMM4 needed)
+{.$DEFINE DXBX_DISABLE_FS_FIXUP} // Skips all LDT and FS initialization (and fixes _main call)
 
 
 // Apply our default compiler options before jedi.inc goes ahead :

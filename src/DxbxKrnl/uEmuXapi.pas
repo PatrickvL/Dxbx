@@ -54,6 +54,15 @@ uses
 var
   XTL_EmuXapiProcessHeap: PPVOID;
 
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
+  XTL_Emu_mainXapiStartup: PVOID;
+
+  XTL_Org_XapiInitProcess: function (): int; stdcall;
+  XTL_Org_rtinit: function (): int; stdcall;
+  XTL_Org_cinit: function (): int; stdcall;
+  XTL_Org_main: function (argc: int; argv, envp: pointer): int; stdcall;
+{$ENDIF}
+
 type
   LPTIMECALLBACK = TFNTIMECALLBACK;
 
@@ -1349,7 +1358,7 @@ function XTL_EmuCreateFiber
 (
   dwStackSize: DWORD;
   lpStartRoutine: LPFIBER_START_ROUTINE;
-  lpParameter: LPVOID          
+  lpParameter: LPVOID
 ): LPVOID; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -1436,9 +1445,9 @@ begin
   // used in EmuXGetSectionHandleA.
 
   Result := NULL;
-  
+
   // TODO : We should probably use a lock here, to make access to the SectionHeader thread-safe
-  
+
   SectionHeader := PXBE_SECTIONHEADER(hSection);
   if Assigned(SectionHeader) then // TODO -oDxbx : Check section handle more thoroughly than this
   begin
@@ -1473,7 +1482,7 @@ begin
     LogEnd();
 
   // TODO : We should probably use a lock here, to make access to the SectionHeader thread-safe
-  
+
   SectionHeader := PXBE_SECTIONHEADER(hSection);
   if Assigned(SectionHeader) and (SectionHeader.dwSectionRefCount > 0) then
   begin
@@ -2066,7 +2075,7 @@ end;
 //  MARKED BY Cxbx : not necessary?
 function XTL_EmuXCalculateSignatureBeginEx
 (
-    dwFlags: DWord; 
+    dwFlags: DWord;
     dwAltTitleId: DWord
 ): HANDLE; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -2089,7 +2098,7 @@ end;
 function XTL_EmuXCalculateSignatureUpdate
 (
   hCalcSig: HANDLE;
-  pbData: Byte; 
+  pbData: Byte;
   cbData: ULONG
 ): DWord; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
