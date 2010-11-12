@@ -1794,6 +1794,14 @@ begin
 
   // Resolve the address of the _XapiProcessHeap symbol (at least referenced once, from XapiInitProcess) :
   XTL_EmuXapiProcessHeap := _Find('_XapiProcessHeap');
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
+  XTL_Emu_mainXapiStartup := _Find('_mainXapiStartup@4');
+
+  Pointer(@XTL_Org_XapiInitProcess) := _Find('_XapiInitProcess@0');
+  Pointer(@XTL_Org_rtinit) := _Find('_rtinit');
+  Pointer(@XTL_Org_cinit) := _Find('_cinit');
+  Pointer(@XTL_Org_main) := _Find('_main');
+{$ENDIF}
 
   // Locate a few important D3D addresses :
   XTL_D3D__pDevice := _Find('_D3D__pDevice');
