@@ -1735,6 +1735,7 @@ begin
       begin
         // Dxbx fix : PARAM_C correction shouldn't depend on Active!
         // Make constant registers range from 0 to 191 instead of -96 to 95
+        if not pIntermediate.Parameters[j].IndexesWithA0_X then // Test : don't correct c[a0.x] indexes?
         if g_BuildVersion > 4361 then
           Inc(pIntermediate.Parameters[j].Parameter.Address, X_D3DSCM_CORRECTION{=96});
       end else

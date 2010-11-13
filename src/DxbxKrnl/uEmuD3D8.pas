@@ -3873,7 +3873,6 @@ begin
                                          @DeclarationSize,
                                          (pFunction = NULL),
                                          @pVertexShader.VertexDynamicPatch);
-
   if (SUCCEEDED(hRet) and Assigned(pFunction)) then
   begin
     hRet := XTL_EmuRecompileVshFunction(PDWORD(pFunction),
@@ -4046,10 +4045,13 @@ begin
     //hRet := D3D_OK;    // marked out cxbx
   end;
 
+  if MayLog(lfUnit or lfReturnValue) then
+    DbgPrintf('EmuD3D8 : CreateVertexShader: Successfully Created shader : Handle=0x%.08X (VertexShader=0x%.08X)', [pHandle^, pVertexShader]);
+
   EmuSwapFS(fsXbox);
 
   Result := hRet;
-end;
+end; // XTL_EmuD3DDevice_CreateVertexShader
 
 function XTL_EmuD3DDevice_SetPixelShaderConstant
 (
@@ -4837,6 +4839,11 @@ begin
       _(ppIndexBuffer, 'ppIndexBuffer').
     LogEnd();
 
+  if Format <> X_D3DFMT_INDEX16 then
+    DxbxKrnlCleanup('XTL_EmuD3DDevice_CreateIndexBuffer: Unsupported index format!')
+  else
+    DbgPrintf('Number of indexes : %d', [Length div SizeOf(Word)]);
+
   New({var PX_D3DIndexBuffer}ppIndexBuffer^);
   ZeroMemory(ppIndexBuffer^, SizeOf(ppIndexBuffer^^));
 
@@ -4894,7 +4901,7 @@ begin
 end;
 
 
-function XTL_EmuD3DDevice_SetIndices
+  function XTL_EmuD3DDevice_SetIndices
 (
   pIndexData: PX_D3DIndexBuffer;
   BaseVertexIndex: UINT
@@ -5960,6 +5967,8 @@ begin
         end
         else
         begin
+          DbgPrintf('EmuIDirect3DResource_Register: Number of indexes : %d', [dwSize div SizeOf(Word)]);
+
           hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice,
             dwSize, {Usage=}0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
             @(pIndexBuffer.Emu.IndexBuffer));
@@ -8838,12 +8847,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3DDevice_DrawIndexedVertices
+//D3DMINLINE HRESULT WINAPI D3DDevice::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT MinIndex, UINT NumIndices, UINT StartIndex, UINT PrimitiveCount)
+// { D3DDevice_DrawIndexedVertices(PrimitiveType, D3DVERTEXCOUNT(PrimitiveType, PrimitiveCount), D3D__IndexData + StartIndex); return S_OK; }
+procedure XTL_EmuD3DDevice_DrawIndexedVertices
 (
   PrimitiveType: X_D3DPRIMITIVETYPE;
   VertexCount: UINT;
   pIndexData: PWORD
-): HRESULT; stdcall;
+); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   dwSize: DWORD;
@@ -8871,6 +8882,8 @@ begin
     LogEnd();
 // Test only the smallest of 3 X_D3DPT_TRIANGLESTRIP calls done by MatrixPaletteSkinning :
 //if (PrimitiveType <> X_D3DPT_TRIANGLESTRIP) or (VertexCount < 300) then
+//if pIndexData <> nil then // This skips 1st subset of a mesh
+//if pIndexData = nil then // Draws only 1st subset of a mesh; Shows glitch in MatrixPaletteSkinning:F11 (wireframe),A (circeling snake)
 begin
   // update index buffer, if necessary
   if (g_pIndexBuffer <> nil) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
@@ -8987,6 +9000,7 @@ begin
     else
     begin
       // Dxbx note : Cxbx does this in reverse, but this is more efficient :
+      // TODO -oDxbx: Should we use g_pIndexBuffer or pPCIndexBuffer, as set by SetIndices?
       uiStartIndex := DWORD(pIndexData) div SizeOf(Word);
       uiNumVertices := uiStartIndex + VertexCount; // Note Dxbx : uiStartIndex MUST be added (tested with Gamepad 4361)
     end;
@@ -9020,7 +9034,6 @@ begin
   VertPatch.Restore();
 end;
   EmuSwapFS(fsXbox);
-  Result := D3D_OK;
 end;
 
 procedure XTL_EmuD3DDevice_DrawIndexedVerticesUP
