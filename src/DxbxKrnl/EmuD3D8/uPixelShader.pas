@@ -595,38 +595,30 @@ const
   MASK_RGB = MASK_R or MASK_G or MASK_B;
   MASK_RGBA = MASK_R or MASK_G or MASK_B or MASK_A;
 
-type PSH_IMD_OUTPUT = record
-    Type_: PSH_ARGUMENT_TYPE;             // discard, R, T, V
-    Address: Int16;
-    Mask: DWORD;
-    function ToString: string;
-    function Decode(const Value: DWORD; aMask: DWORD): Boolean;
-  end;
-  PPSH_IMD_OUTPUT = ^PSH_IMD_OUTPUT;
+type
+  TArgumentType = (atInput, atOutput, atFinalCombiner);
 
-type PSH_IMD_PARAMETER = record
-    ParameterType: PSH_ARGUMENT_TYPE;      // Parameter type, R, T, V or C
-    Address: Int16;                        // Register address
+type PSH_IMD_ARGUMENT = object
+    Type_: PSH_ARGUMENT_TYPE; // For parameters: R, T, V or C  For output : Discard, R, T or V
+    Address: Int16;           // Register address
+    Mask: DWORD;
     Modifiers: PSH_ARG_MODIFIERs;
     Multiplier: Float;
-    Mask: DWORD;
-//    Swizzle: array [0..4-1] of VSH_SWIZZLE; // The four swizzles
     function ToString: string;
-    procedure Decode(const Value: DWORD; aMask: DWORD);
+    function Decode(const Value: DWORD; aMask: DWORD; ArgumentType: TArgumentType): Boolean;
     function IsConstFactor(const aMultiplier: Float): Boolean;
-    procedure CopyFromOutput(const aOutput: PSH_IMD_OUTPUT);
   end;
-  PPSH_IMD_PARAMETER = ^PSH_IMD_PARAMETER;
+  PPSH_IMD_ARGUMENT = ^PSH_IMD_ARGUMENT;
 
-  TPSH_IMD_PARAMETERArray = array [0..(MaxInt div SizeOf(PSH_IMD_PARAMETER)) - 1] of PSH_IMD_PARAMETER;
-  PPSH_IMD_PARAMETERs = ^TPSH_IMD_PARAMETERArray;
+  TPSH_IMD_ARGUMENTArray = array [0..(MaxInt div SizeOf(PSH_IMD_ARGUMENT)) - 1] of PSH_IMD_ARGUMENT;
+  PPSH_IMD_ARGUMENTs = ^TPSH_IMD_ARGUMENTArray;
 
 type PSH_INTERMEDIATE_FORMAT = record
     IsCombined: boolean;
     Opcode: PSH_OPCODE;
     Modifier: PSH_INST_MODIFIER;
-    Output: array [0..3-1] of PSH_IMD_OUTPUT; // 3 = xmm* output count
-    Parameters: array [0..7-1] of PSH_IMD_PARAMETER; // 7 = xfc parameter count
+    Output: array [0..3-1] of PSH_IMD_ARGUMENT; // 3 = xmm* output count
+    Parameters: array [0..7-1] of PSH_IMD_ARGUMENT; // 7 = xfc parameter count
     function ToString: string;
     procedure SwapParameter(const Index1, Index2: Int);
     procedure SwapOutput();
@@ -1003,92 +995,24 @@ const
   CONST_POS_ONE = 2;
   CONST_POS_TWO = 4;
 
-{ PSH_IMD_OUTPUT }
+{ PSH_IMD_ARGUMENT }
 
-function PSH_IMD_OUTPUT.ToString: string;
+function PSH_IMD_ARGUMENT.ToString: string;
+var
+  Modifier: PSH_ARG_MODIFIER;
 begin
+  if Type_ = PARAM_CONST then
+  begin
+    Result := Format('%.0f', [Multiplier]);
+    Exit;
+  end;
+
   Result := PSH_ARGUMENT_TYPE_Str[Type_];
 
   if Type_ >= PARAM_R then
     Result := Result + IntToStr(Address);
 
   if Type_ > PARAM_DISCARD then
-    if (Mask > 0) and (Mask <> MASK_RGBA) then
-    begin
-      Result := Result + '.';
-      if (Mask and MASK_R) > 0 then Result := Result + 'r';
-      if (Mask and MASK_G) > 0 then Result := Result + 'g';
-      if (Mask and MASK_B) > 0 then Result := Result + 'b';
-      if (Mask and MASK_A) > 0 then Result := Result + 'a';
-    end;
-end;
-
-function PSH_IMD_OUTPUT.Decode(const Value: DWORD; aMask: DWORD): Boolean;
-begin
-  Result := True;
-  Address := 0;
-  case PS_REGISTER(Value) of
-    PS_REGISTER_DISCARD:
-    begin
-      Type_ := PARAM_DISCARD;
-      Result := False;
-    end;
-    PS_REGISTER_V0:
-      Type_ := PARAM_V;
-    PS_REGISTER_V1:
-    begin
-      Type_ := PARAM_V;
-      Address := 1;
-    end;
-    PS_REGISTER_T0:
-      Type_ := PARAM_T;
-    PS_REGISTER_T1:
-    begin
-      Type_ := PARAM_T;
-      Address := 1;
-    end;
-    PS_REGISTER_T2:
-    begin
-      Type_ := PARAM_T;
-      Address := 2;
-    end;
-    PS_REGISTER_T3:
-    begin
-      Type_ := PARAM_T;
-      Address := 3;
-    end;
-    PS_REGISTER_R0:
-      Type_ := PARAM_R;
-    PS_REGISTER_R1:
-    begin
-      Type_ := PARAM_R;
-      Address := 1;
-    end;
-  else
-    DbgPrintf('INVALID OUTPUT PARAMETER!');
-  end;
-
-  Mask := aMask;
-end;
-
-{ PSH_IMD_PARAMETER }
-
-function PSH_IMD_PARAMETER.ToString: string;
-var
-  Modifier: PSH_ARG_MODIFIER;
-begin
-  if ParameterType = PARAM_CONST then
-  begin
-    Result := Format('%.0f', [Multiplier]);
-    Exit;
-  end;
-
-  Result := PSH_ARGUMENT_TYPE_Str[ParameterType];
-
-  if ParameterType >= PARAM_R then
-    Result := Result + IntToStr(Address);
-
-  if ParameterType > PARAM_DISCARD then
   begin
     for Modifier := Low(PSH_ARG_MODIFIER) to High(PSH_ARG_MODIFIER) do
       if Modifier in Modifiers then
@@ -1105,102 +1029,140 @@ begin
   end;
 end;
 
-procedure PSH_IMD_PARAMETER.Decode(const Value: DWORD; aMask: DWORD);
+function PSH_IMD_ARGUMENT.Decode(const Value: DWORD; aMask: DWORD; ArgumentType: TArgumentType): Boolean;
 var
   Reg: PS_REGISTER;
   InputMapping: PS_INPUTMAPPING;
   Channel: PS_CHANNEL;
 begin
-  Reg := PS_REGISTER(Value and $F);
-  if Reg = PS_REGISTER_ZERO then
-    Reg := PS_REGISTER(Value and $E0);
-
+  Result := True;
   Address := 0;
+  Modifiers := [ARGMOD_IDENTITY];
   Multiplier := 1.0;
+
+  Reg := PS_REGISTER(Value and $F);
+
+  if ArgumentType = atOutput then
+  begin
+    // Output arguments may not write to C0 or C1, prevent that :
+    if (Reg = PS_REGISTER_C0) or (Reg = PS_REGISTER_C1) then
+      Reg := PS_REGISTER_DXBX_PROD; // unhandled case - will reach "invalid" else-block
+  end
+  else
+  begin
+    // Input arguments (normal or final combiners) can use the extended PS_REGISTER values :
+    if Reg = PS_REGISTER_ZERO then
+      Reg := PS_REGISTER(Value and $E0);
+
+    // 'Signed Identity' flag on PS_REGISTER_ZERO has no meaning, treat as zero :
+    if Reg = PS_REGISTER_DXBX_PROD then
+      Reg := PS_REGISTER_ZERO;
+
+    // Prevent decoding final combiner registers outside that mode :
+    if (ArgumentType <> atFinalCombiner) then
+      if (Reg = PS_REGISTER_FOG) or (Reg = PS_REGISTER_V1R0_SUM) or (Reg = PS_REGISTER_EF_PROD) then
+        Reg := PS_REGISTER_DXBX_PROD; // unhandled case - will reach "invalid" else-block
+  end;
+
   case Reg of
-    PS_REGISTER_DXBX_PROD, // 'Signed Identity' flag on PS_REGISTER_ZERO has no meaning, treat as zero :
     PS_REGISTER_ZERO:
     begin
-      ParameterType := PARAM_CONST;
+      if ArgumentType = atOutput then
+      begin
+        // Mark output arguments as 'discard' and return that fact :
+        Type_ := PARAM_DISCARD;
+        Result := False;
+      end
+      else
+        Type_ := PARAM_CONST;
+
       Address := CONST_ZERO;
       Multiplier := 0.0;
     end;
     PS_REGISTER_C0:
-      ParameterType := PARAM_C;
+      Type_ := PARAM_C;
     PS_REGISTER_C1:
     begin
-      ParameterType := PARAM_C;
+      Type_ := PARAM_C;
       Address := 1;
     end;
     PS_REGISTER_V0:
-      ParameterType := PARAM_V;
+      Type_ := PARAM_V;
     PS_REGISTER_V1:
     begin
-      ParameterType := PARAM_V;
+      Type_ := PARAM_V;
       Address := 1;
     end;
     PS_REGISTER_T0:
-      ParameterType := PARAM_T;
+      Type_ := PARAM_T;
     PS_REGISTER_T1:
     begin
-      ParameterType := PARAM_T;
+      Type_ := PARAM_T;
       Address := 1;
     end;
     PS_REGISTER_T2:
     begin
-      ParameterType := PARAM_T;
+      Type_ := PARAM_T;
       Address := 2;
     end;
     PS_REGISTER_T3:
     begin
-      ParameterType := PARAM_T;
+      Type_ := PARAM_T;
       Address := 3;
     end;
     PS_REGISTER_R0:
-      ParameterType := PARAM_R;
+      Type_ := PARAM_R;
     PS_REGISTER_R1:
     begin
-      ParameterType := PARAM_R;
+      Type_ := PARAM_R;
       Address := 1;
     end;
+    // Registers only available when ArgumentType <> atOutput (Reg is capped otherwise) :
     PS_REGISTER_ONE:
     begin
-      ParameterType := PARAM_CONST;
+      Type_ := PARAM_CONST;
       Address := CONST_POS_ONE;
       Multiplier := 1.0;
     end;
     PS_REGISTER_NEGATIVE_ONE:
     begin
-      ParameterType := PARAM_CONST;
+      Type_ := PARAM_CONST;
       Address := CONST_NEG_ONE;
       Multiplier := -1.0;
     end;
     PS_REGISTER_ONE_HALF:
     begin
-      ParameterType := PARAM_CONST;
+      Type_ := PARAM_CONST;
       Address := CONST_POS_HALF;
       Multiplier := 0.5;
     end;
     PS_REGISTER_NEGATIVE_ONE_HALF:
     begin
-      ParameterType := PARAM_CONST;
+      Type_ := PARAM_CONST;
       Address := CONST_NEG_HALF;
       Multiplier := -0.5;
     end;
-
-    // These are only valid for the final combiner :
+    // Registers only available when ArgumentType = atFinalCombiner (Reg is capped otherwise) :
     PS_REGISTER_FOG:
-      ParameterType := PARAM_FOG;
+      Type_ := PARAM_FOG;
     PS_REGISTER_V1R0_SUM:
-      ParameterType := PARAM_V1R0_SUM;
+      Type_ := PARAM_V1R0_SUM;
     PS_REGISTER_EF_PROD:
-      ParameterType := PARAM_EF_PROD;
+      Type_ := PARAM_EF_PROD;
   else
-    DbgPrintf('INVALID INPUT PARAMETER!');
+    DbgPrintf('INVALID ARGUMENT!');
+
+    Result := False;
+  end;
+
+  if ArgumentType = atOutput then
+  begin
+    Mask := aMask;
+    Exit;
   end;
 
   Mask := 0;
-  if ParameterType > PARAM_CONST then
+  if Type_ > PARAM_CONST then
   begin
     Channel := PS_CHANNEL(Value and Ord(PS_CHANNEL_ALPHA));
     if Channel = PS_CHANNEL_ALPHA then
@@ -1249,20 +1211,10 @@ begin
   end;
 end;
 
-function PSH_IMD_PARAMETER.IsConstFactor(const aMultiplier: Float): Boolean;
+function PSH_IMD_ARGUMENT.IsConstFactor(const aMultiplier: Float): Boolean;
 begin
-  Result := (ParameterType = PARAM_CONST)
+  Result := (Type_ = PARAM_CONST)
         and (Multiplier = aMultiplier);
-end;
-
-procedure PSH_IMD_PARAMETER.CopyFromOutput(const aOutput: PSH_IMD_OUTPUT);
-begin
-  ParameterType := aOutput.Type_;
-  Address := aOutput.Address;
-  Mask := aOutput.Mask;
-  // TODO : Are these set correctly? :
-  Modifiers := [ARGMOD_IDENTITY];
-  Multiplier := 1.0;
 end;
 
 { PSH_INTERMEDIATE_FORMAT }
@@ -1308,7 +1260,7 @@ end;
 procedure PSH_INTERMEDIATE_FORMAT.SwapParameter(const Index1, Index2: Int);
 // Swaps two parameters.
 var
-  TmpParameters: PSH_IMD_PARAMETER;
+  TmpParameters: PSH_IMD_ARGUMENT;
 begin
   TmpParameters := Parameters[Index1];
   Parameters[Index1] := Parameters[Index2];
@@ -1318,7 +1270,7 @@ end;
 procedure PSH_INTERMEDIATE_FORMAT.SwapOutput();
 // Swaps the two outputs, along with their arguments.
 var
-  TmpOutput: PSH_IMD_OUTPUT;
+  TmpOutput: PSH_IMD_ARGUMENT;
 begin
   // Swap output 0 with 1 :
   TmpOutput := Output[0];
@@ -1335,8 +1287,8 @@ function PSH_INTERMEDIATE_FORMAT.MoveDiscardParameterRight(const Index1, Index2:
 begin
   Result := False;
 
-  if  (Parameters[Index1].ParameterType <= PARAM_DISCARD)
-  and (Parameters[Index2].ParameterType > PARAM_DISCARD) then
+  if  (Parameters[Index1].Type_ <= PARAM_DISCARD)
+  and (Parameters[Index2].Type_ > PARAM_DISCARD) then
   begin
     SwapParameter(Index1, Index2);
     Result := True;
@@ -1384,9 +1336,9 @@ begin
   Self.IsCombined := aMask = MASK_A;
 
   // Decode first two outputs :
-  if Output[0].Decode((PSOutputs shr 4) and $F, aMask) then
+  if Output[0].Decode((PSOutputs shr 4) and $F, aMask, atOutput) then
     Result := True;
-  if Output[1].Decode((PSOutputs shr 0) and $F, aMask) then
+  if Output[1].Decode((PSOutputs shr 0) and $F, aMask, atOutput) then
     Result := True;
 
   // Get the combiner output flags :
@@ -1427,7 +1379,7 @@ begin
       Self.Opcode := PO_XMMC;
 
     // This has a 3rd output, set that already :
-    if Output[2].Decode((PSOutputs shr 8) and $F, aMask) then
+    if Output[2].Decode((PSOutputs shr 8) and $F, aMask, atOutput) then
       Result := True;
   end;
 
@@ -1452,7 +1404,7 @@ begin
 
     // Decode all four inputs :
     for i := 0 to PSH_OPCODE_DEFS[Self.Opcode]._In - 1 do
-      Self.Parameters[i].Decode((PSInputs shr ((3-i) * 8)) and $FF, aMask);
+      Self.Parameters[i].Decode((PSInputs shr ((3-i) * 8)) and $FF, aMask, atInput);
   end;
 end;
 
@@ -1469,11 +1421,11 @@ begin
 
   // Decode A,B,C and D :
   for i := 0 to 4 - 1 do
-    Self.Parameters[i].Decode((aPSFinalCombinerInputsABCD shr ((3-i) * 8)) and $FF, MASK_RGB{?});
+    Self.Parameters[i].Decode((aPSFinalCombinerInputsABCD shr ((3-i) * 8)) and $FF, MASK_RGB{?}, atFinalCombiner);
 
   // Decode E,F and G :
   for i := 0 to 3 - 1 do
-    Self.Parameters[4+i].Decode((aPSFinalCombinerInputsEFG shr ((3-i) * 8)) and $FF, MASK_RGB{?});
+    Self.Parameters[4+i].Decode((aPSFinalCombinerInputsEFG shr ((3-i) * 8)) and $FF, MASK_RGB{?}, atFinalCombiner);
 
   Result := True;
 end;
@@ -1784,8 +1736,8 @@ begin
     // Add needs to be stored, change the XMMA into an ADD :
     Cur := @(Intermediate[i+2]);
     Cur.Opcode := PO_ADD;
-    Cur.Parameters[0].CopyFromOutput(Cur.Output[0]);
-    Cur.Parameters[1].CopyFromOutput(Cur.Output[1]);
+    Cur.Parameters[0] := Cur.Output[0];
+    Cur.Parameters[1] := Cur.Output[1];
     Cur.Output[0] := Cur.Output[2];
   end;
 end;
@@ -1800,13 +1752,13 @@ begin
     // Add needs to be stored, change the XMMC into an CND :
     Cur := @(Intermediate[i+2]);
     Cur.Opcode := PO_CND;
-    Cur.Parameters[0].ParameterType := PARAM_R;
+    Cur.Parameters[0].Type_ := PARAM_R;
     Cur.Parameters[0].Address := 0;
     Cur.Parameters[0].Modifiers := [ARGMOD_IDENTITY];
     Cur.Parameters[0].Multiplier := 1.0;
     Cur.Parameters[0].Mask := MASK_A;
-    Cur.Parameters[1].CopyFromOutput(Cur.Output[0]);
-    Cur.Parameters[2].CopyFromOutput(Cur.Output[1]);
+    Cur.Parameters[1] := Cur.Output[0];
+    Cur.Parameters[2] := Cur.Output[1];
     Cur.Output[0] := Cur.Output[2];
   end;
 end;
@@ -1877,17 +1829,17 @@ begin
   NeedsSum := False;
   for i := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 do
   begin
-    case Cur.Parameters[i].ParameterType of
+    case Cur.Parameters[i].Type_ of
       PARAM_V1R0_SUM:
       begin
-        Cur.Parameters[i].ParameterType := PARAM_R;
+        Cur.Parameters[i].Type_ := PARAM_R;
         Cur.Parameters[i].Address := FakeRegNr_Sum;
         NeedsSum := True;
       end;
 
       PARAM_EF_PROD:
       begin
-        Cur.Parameters[i].ParameterType := PARAM_R;
+        Cur.Parameters[i].Type_ := PARAM_R;
         Cur.Parameters[i].Address := FakeRegNr_Prod;
         NeedsProd := True;
       end;
@@ -1919,12 +1871,12 @@ begin
     Ins.Output[0].Address := FakeRegNr_Sum;
     Ins.Output[0].Mask := MASK_RGBA;
 
-    Ins.Parameters[0].ParameterType := PARAM_R;
+    Ins.Parameters[0].Type_ := PARAM_R;
     Ins.Parameters[0].Address := 0;
     if ((FinalCombinerFlags and PS_FINALCOMBINERSETTING_COMPLEMENT_R0) > 0) then
       Ins.Parameters[0].Modifiers := [ARGMOD_INVERT]; // (1-r0) is used as an input to the sum rather than r0
 
-    Ins.Parameters[1].ParameterType := PARAM_V;
+    Ins.Parameters[1].Type_ := PARAM_V;
     Ins.Parameters[1].Address := 1;
     if ((FinalCombinerFlags and PS_FINALCOMBINERSETTING_COMPLEMENT_V1) > 0) then
       Ins.Parameters[1].Modifiers := [ARGMOD_INVERT]; // (1-v1) is used as an input to the sum rather than v1
@@ -2060,14 +2012,14 @@ begin
       PO_MOV:
       begin
         // NOP-out MOV's that read & write to the same register :
-        if  (Cur.Output[0].Type_ = Cur.Parameters[0].ParameterType)
+        if  (Cur.Output[0].Type_ = Cur.Parameters[0].Type_)
         and (Cur.Output[0].Address = Cur.Parameters[0].Address)
         and (Cur.Output[0].Mask = Cur.Parameters[0].Mask)
         // TODO : Add a check if Modifier and Multiplier cancel eachother out (which makes it a no-op too)
         and (Cur.Modifier = INSMOD_NONE)
         and (Cur.Parameters[0].Multiplier = 1.0) then
         begin
-          DeleteIntermediate(i);
+          Cur.Opcode := PO_NOP; // This nop will be removed in a recursive fixup
           Result := True;
           Continue;
         end;
@@ -2077,7 +2029,7 @@ begin
         begin
           // Fixup via "sub d0=v0,v0" :
           Cur.Opcode := PO_SUB;
-          Cur.Parameters[0].ParameterType := PARAM_V;
+          Cur.Parameters[0].Type_ := PARAM_V;
           Cur.Parameters[0].Address := 0;
           Cur.Parameters[0].Modifiers := [];
           Cur.Parameters[1] := Cur.Parameters[0];
@@ -2089,7 +2041,7 @@ begin
         begin
           // Fixup via "sub d0=1-v0,-v0" :
           Cur.Opcode := PO_SUB;
-          Cur.Parameters[0].ParameterType := PARAM_V;
+          Cur.Parameters[0].Type_ := PARAM_V;
           Cur.Parameters[0].Address := 0;
           Cur.Parameters[0].Modifiers := [ARGMOD_INVERT];
           Cur.Parameters[1] := Cur.Parameters[0];
