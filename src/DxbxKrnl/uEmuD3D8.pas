@@ -7364,7 +7364,10 @@ begin
         // Manually translate the YUY2 formatted input surface into the RGB buffer of the pre-determined output surface :
         if (OverlayBufferSurface.LockRect({out}LockedRectDest, NULL, 0) = D3D_OK) then
         begin
-          pCurByte := Puint08(pSurface.Emu.Lock);
+          // Since this is a manual X_D3DRESOURCE_DATA_FLAG_YUVSURF,
+          // skip the refcount we put at the begin, to get to the source data:
+          pCurByte := Puint08(pSurface.Emu.Lock + SizeOf(DWORD));
+
           pDest2 := Puint08(LockedRectDest.pBits);
           dx:=0;
           dwImageSize := g_dwOverlayP*g_dwOverlayH;
