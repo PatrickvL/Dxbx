@@ -1009,10 +1009,24 @@ type
   PETHREAD = ^ETHREAD;
 
 const
+  SIZE_OF_FN_REGISTERS = 80; // Doubtfull, $80 would be more logical...
   SIZE_OF_FX_REGISTERS = 128;
 
 // DXBX Addition
-type _FLOATING_SAVE_AREA = record
+type _FNSAVE_FORMAT = record
+    {0x00}ControlWord: ULONG;
+    {0x04}StatusWord: ULONG;
+    {0x08}TagWord: ULONG;
+    {0x0C}ErrorOffset: ULONG;
+    {0x10}ErrorSelector: ULONG;
+    {0x14}DataOffset: ULONG;
+    {0x18}DataSelector: ULONG;
+    {0x1C}RegisterArea: array [0..SIZE_OF_FN_REGISTERS-1] of UCHAR;
+  end; {=0x6C}
+  FNSAVE_FORMAT = _FNSAVE_FORMAT;
+  PFNSAVE_FORMAT = ^FNSAVE_FORMAT;
+
+type _FXSAVE_FORMAT = record
     {0x000}ControlWord: USHORT;
     {0x002}StatusWord: USHORT;
     {0x004}TagWord: USHORT;
@@ -1022,18 +1036,23 @@ type _FLOATING_SAVE_AREA = record
     {0x010}DataOffset: ULONG;
     {0x014}DataSelector: ULONG;
     {0x018}MXCsr: ULONG;
-    {0x01C}Reserved2: ULONG;
+    {0x01C}MXCsrMask: ULONG; // Was Reserved2
     {0x020}RegisterArea: array [0..SIZE_OF_FX_REGISTERS-1] of UCHAR;
-    {0x0A0}XmmRegisterArea: array [0..SIZE_OF_FX_REGISTERS-1] of UCHAR;
+    {0x0A0}Reserved3: array [0..SIZE_OF_FX_REGISTERS-1] of UCHAR; // Was XmmRegisterArea
     {0x120}Reserved4: array [0..224-1] of UCHAR;
-    {0x200}Cr0NpxState: ULONG;
-  end; {=0x204}
-  FLOATING_SAVE_AREA = _FLOATING_SAVE_AREA;
+    {0x200}Align16Byte: array [0..8-1] of UCHAR;
+  end; {=0x208}
+  FXSAVE_FORMAT = _FXSAVE_FORMAT;
+  PFXSAVE_FORMAT = ^FXSAVE_FORMAT;
 
 // DXBX Addition
 type _FX_SAVE_AREA  = record
-    {0x000}FloatSave: FLOATING_SAVE_AREA;
-    {0x204}Align16Byte: array [0..3-1] of ULONG;
+    {union}case Integer of
+      0: ( {0x00}FnArea: _FNSAVE_FORMAT);
+      1: ( {0x00}FxArea: _FXSAVE_FORMAT;
+    {0x208}NpxSavedCpu: ULONG;
+    {0x20C}Cr0NpxState: ULONG;
+    ); // close last union case
   end; {=0x210}
   FX_SAVE_AREA = _FX_SAVE_AREA;
   PFX_SAVE_AREA = ^FX_SAVE_AREA;
