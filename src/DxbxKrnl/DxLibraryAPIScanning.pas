@@ -102,7 +102,7 @@ type
     FailReason: string;
     IsApproximation: Boolean;
     PatchedBy: string;
-    function IsOperator: Boolean;
+    function IsRepeatedSymbol: Boolean;
     property Length: Cardinal read GetLength;
     property SymbolReferenceCount: Integer read GetSymbolReferenceCount;
     property SymbolReferences[const aIndex: Integer]: PStoredSymbolReference read GetSymbolReference;
@@ -320,11 +320,10 @@ begin
 {$ENDIF}
 end;
 
-function TSymbolInformation.IsOperator: Boolean;
+function TSymbolInformation.IsRepeatedSymbol: Boolean;
 begin
-  Result := (System.Length(Name) >= 2)
-        and (Name[1] = '?')
-        and (Name[2] = '?');
+  Result := (StrnCmp(PChar(Name), '??', 2) = 0)
+         or (StrnCmp(PChar(Name), '__SEH_', 6) = 0)
 end;
 
 { TSymbolManager }
@@ -1115,7 +1114,7 @@ const
   CR_APPROXIMATION = 0;
 
   CR_ADDRESS_MATCH = 1;
-  CR_OPERATOR_IGNORED = 2;
+  CR_SYMBOL_IGNORED = 2;
   CR_DATA_OKAY = 3;
   CR_ALL_CHECKS_OKAY = 4;
 
@@ -1201,9 +1200,9 @@ begin
     DbgPrintf('Test: CheckFunctionAtAddressAndRegister(%s, $%.08x, %s)', [
       CurrentSymbol.Name, UIntPtr(aAddress), Prefix]);
 
-  if CurrentSymbol.IsOperator then
+  if CurrentSymbol.IsRepeatedSymbol then
   begin
-    Result := CR_OPERATOR_IGNORED;
+    Result := CR_SYMBOL_IGNORED;
     Exit;
   end;
 
@@ -1271,8 +1270,9 @@ begin
     // Retrieve an object for the symbol being referenced :
     Referenced[i].Symbol := FindOrAddVersionedSymbol(CurrentSymbol.StoredLibraryFunction.AvailableInVersions, Referenced[i].StoredSymbolReference.NameIndex, Function_);
 
-    // Skip operators (they're often compiled-in on multiple places, like 'operator new' and 'operator new[]') :
-    if Referenced[i].Symbol.IsOperator then
+    // Skip operators (they're often compiled-in on multiple places, like 'operator new' and 'operator new[]')
+    // And other symbols thatn can appear multiple times (like __SEH_prolog and __SEH_epilog) :
+    if Referenced[i].Symbol.IsRepeatedSymbol then
       Continue;
 
     Referenced[i].ReferencedAddress := GetReferencedSymbolAddress(aAddress, Referenced[i].StoredSymbolReference);
@@ -1380,6 +1380,16 @@ begin
         // to prevent removal of previously registered symbols!) :
         if Result = CR_ADDRESS_ALREADY_SET then
           // skip these
+(*
+          DbgPrintf('FAILED $%.08x;%s [-$%.08x] %s %s at $%.08x', [
+            Referenced[i].ReferencedAddress,
+            CurrentReferencedSymbol.Name,
+            UIntPtr(Referenced[i].ReferencedAddress) + CurrentReferencedSymbol.Length - 1,
+            CurrentReferencedSymbol.Discovery,
+            CurrentReferencedSymbol.FailReason,
+            CurrentReferencedSymbol.Address
+            ])
+*)
         else
           AddIntermediateSymbolRegistration(CurrentReferencedSymbol, Referenced[i].ReferencedAddress, {IsFailureRegistration=}True);
 
