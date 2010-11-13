@@ -806,28 +806,28 @@ const
 
 type _X_D3DPIXELSHADERDEF = record // <- blueshogun 10/1/07
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-    PSAlphaInputs: array [0..8-1] of DWORD;  // Alpha inputs for each stage
-    PSFinalCombinerInputsABCD: DWORD;        // Final combiner inputs
-    PSFinalCombinerInputsEFG: DWORD;         // Final combiner inputs (continued)
-    PSConstant0: array [0..8-1] of DWORD;    // C0 for each stage
-    PSConstant1: array [0..8-1] of DWORD;    // C1 for each stage
-    PSAlphaOutputs: array [0..8-1] of DWORD; // Alpha output for each stage
-    PSRGBInputs: array [0..8-1] of DWORD;    // RGB inputs for each stage
-    PSCompareMode: DWORD;                    // Compare modes for clipplane texture mode
-    PSFinalCombinerConstant0: DWORD;         // C0 in final combiner
-    PSFinalCombinerConstant1: DWORD;         // C1 in final combiner
-    PSRGBOutputs: array [0..8-1] of DWORD;   // Stage 0 RGB outputs
-    PSCombinerCount: DWORD;                  // Active combiner count (Stages 0-7)
-    PSTextureModes: DWORD;                   // Texture addressing modes
-    PSDotMapping: DWORD;                     // Input mapping for dot product modes
-    PSInputTexture: DWORD;                   // Texture source for some texture modes
+    {0x000}PSAlphaInputs: array [0..8-1] of DWORD;  // X_D3DRS_PSALPHAINPUTS0..X_D3DRS_PSALPHAINPUTS7 : Alpha inputs for each stage
+    {0x020}PSFinalCombinerInputsABCD: DWORD;        // X_D3DRS_PSFINALCOMBINERINPUTSABCD : Final combiner inputs
+    {0x024}PSFinalCombinerInputsEFG: DWORD;         // X_D3DRS_PSFINALCOMBINERINPUTSEFG : Final combiner inputs (continued)
+    {0x028}PSConstant0: array [0..8-1] of DWORD;    // X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7 : C0 for each stage
+    {0x048}PSConstant1: array [0..8-1] of DWORD;    // X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7 : C1 for each stage
+    {0x068}PSAlphaOutputs: array [0..8-1] of DWORD; // X_D3DRS_PSALPHAOUTPUTS0..X_D3DRS_PSALPHAOUTPUTS7 : Alpha output for each stage
+    {0x088}PSRGBInputs: array [0..8-1] of DWORD;    // X_D3DRS_PSRGBINPUTS0..X_D3DRS_PSRGBINPUTS7 : RGB inputs for each stage
+    {0x0A8}PSCompareMode: DWORD;                    // X_D3DRS_PSCOMPAREMODE : Compare modes for clipplane texture mode
+    {0x0AC}PSFinalCombinerConstant0: DWORD;         // X_D3DRS_PSFINALCOMBINERCONSTANT0 : C0 in final combiner
+    {0x0B0}PSFinalCombinerConstant1: DWORD;         // X_D3DRS_PSFINALCOMBINERCONSTANT1 : C1 in final combiner
+    {0x0B4}PSRGBOutputs: array [0..8-1] of DWORD;   // X_D3DRS_PSRGBOUTPUTS0..X_D3DRS_PSRGBOUTPUTS7 : Stage 0-7 RGB outputs
+    {0x0D4}PSCombinerCount: DWORD;                  // X_D3DRS_PSCOMBINERCOUNT : Active combiner count (Stages 0-7)
+    {0x0D8}PSTextureModes: DWORD;                   // X_D3DRS_PSTEXTUREMODES: Texture addressing modes
+    {0x0DC}PSDotMapping: DWORD;                     // X_D3DRS_PSDOTMAPPING : Input mapping for dot product modes
+    {0x0E0}PSInputTexture: DWORD;                   // X_D3DRS_PSINPUTTEXTURE : Texture source for some texture modes
 
     // These last three DWORDs are used to define how Direct3D8 pixel shader constants map to the constant
     // registers in each combiner stage. They are used by the Direct3D run-time software but not by the hardware.
-    PSC0Mapping: DWORD;                      // Mapping of c0 regs to D3D constants
-    PSC1Mapping: DWORD;                      // Mapping of c1 regs to D3D constants
-    PSFinalCombinerConstants: DWORD;         // Final combiner constant mapping
-  end; // size = 240 (as in Cxbx)
+    {0x0E4}PSC0Mapping: DWORD;                      // Mapping of c0 regs to D3D constants
+    {0x0E8}PSC1Mapping: DWORD;                      // Mapping of c1 regs to D3D constants
+    {0x0EC}PSFinalCombinerConstants: DWORD;         // Final combiner constant mapping
+  end; // size = $F0=240 (as in Cxbx)
   X_D3DPIXELSHADERDEF = _X_D3DPIXELSHADERDEF;
   PX_D3DPIXELSHADERDEF = ^X_D3DPIXELSHADERDEF;
 
@@ -1153,11 +1153,71 @@ const // DWORD Indexes for XTL_D3D__pDevice (aka D3D__pDevice) :
 
   // These are derived from XDK 5931. TODO : Investigate other XDK versions :
   X_D3DDevice_Active_PixelShader = 1924/4; // PHandle - read by D3DDevice_GetPixelShader
+  X_D3DDevice_Active_FinalCombiner = 1928/4; // LONGBOOL - Correlates with D3DDIRTYFLAG_SPECFOG_COMBINER
   X_D3DDevice_RenderState_PSTextureModes = 1936/4; // DWORD
   X_D3DDevice_Active_VertexShader = 1944/4; // Pointer - read by D3DDevice_GetVertexShader
   X_D3DDevice_Active_Indices = 1952/4; // Pointer
-  X_D3DDevice_ProjectionViewportMatrix = 2432/4; // $40 bytes = SizeOf(D3DMATRIX)
+
+  // These D3DDevice offsets are set via SetPixelShaderConstant (which converts 4 floats into a D3DCOLOR) :
+  X_D3DDevice_PixelShaderConstant0 = 2276/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant1 = 2280/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant2 = 2284/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant3 = 2288/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant4 = 2292/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant5 = 2296/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant6 = 2300/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant7 = 2304/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant8 = 2308/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant9 = 2312/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant10 = 2316/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant11 = 2320/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant12 = 2324/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant13 = 2328/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant14 = 2332/4; // D3DCOLOR
+  X_D3DDevice_PixelShaderConstant15 = 2336/4; // D3DCOLOR
+  // NOTE : SetPixelShaderConstant also tests the constant-mappings of the active pixel shader definition.
+  // These are PSC0Mapping, PSC1Mapping and PSFinalCombinerConstants, which map to 18 D3D__RenderState slots.
+  // Every mapping that matches the constant number currently being set, recieves the D3DCOLOR value too.
+  //
+  // This is done by writing the D3DCOLOR value to the corresponding D3D__RenderState offset, plus an
+  // accompanying command is writen to the pushbuffer (which recieves the same D3DCOLOR as argument) :
+  //
+  // For PSC0Mapping:
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT0_0] is written, and $40A60 is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT0_1] is written, and $40A64 is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT0_2] is written, and $40A68 is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT0_3] is written, and $40A6C is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT0_4] is written, and $40A70 is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT0_5] is written, and $40A74 is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT0_6] is written, and $40A78 is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT0_7] is written, and $40A7C is pushed
+  // For PSC1Mapping:
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT1_0] is written, and $40A80 is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT1_1] is written, and $40A84 is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT1_2] is written, and $40A88 is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT1_3] is written, and $40A8C is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT1_4] is written, and $40A90 is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT1_5] is written, and $40A94 is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT1_6] is written, and $40A98 is pushed
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT1_7] is written, and $40A9C is pushed
+  // For PSFinalCombinerConstants:
+  //   D3D__RenderState[X_D3DRS_PSFINALCOMBINERCONSTANT0] is written, and $41E20 is pushed
+  //   D3D__RenderState[X_D3DRS_PSFINALCOMBINERCONSTANT1] is written, and $41E24 is pushed
+  //
+  // Example : SetPixelShaderConstant(7,pFloats,8) converts two sets of 4 floats into a D3DCOLOR
+  // and writes these to X_D3DDevice_PixelShaderConstant7 and X_D3DDevice_PixelShaderConstant8.
+  //
+  // If PSC1Mapping contained 0xAFFFFFF9, then the following is done :
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT1_0] := X_D3DDevice_PixelShaderConstant7 (and a push of $40A80)
+  //   D3D__RenderState[X_D3DRS_PSCONSTANT1_7] := X_D3DDevice_PixelShaderConstant8 (and a push of $40A9C)
+  // (This also means that if constant 15=$f where to be set, all other X_D3DRS_PSCONSTANT slots would be written and pushed.)
+
+  X_D3DDevice_CurrentPixelShaderResource_Common = 2340/4; // DWORD
+  X_D3DDevice_CurrentPixelShaderResource_Data = 2344/4; // DWORD
+  X_D3DDevice_CurrentPixelShaderResource_Lock = 2348/4; // PX_D3DPIXELSHADERDEF
+
   X_D3DDevice_RefCount = 2360/4; // DWORD
+  X_D3DDevice_ProjectionViewportMatrix = 2432/4; // $40 bytes = SizeOf(D3DMATRIX)
 
   X_D3DDevice_ModelView = 2496/4; // $40 bytes = SizeOf(D3DMATRIX) - read by D3DDevice_GetModelView
 
@@ -1274,7 +1334,7 @@ const X_D3DRS_PSRGBOUTPUTS5               = 50;
 const X_D3DRS_PSRGBOUTPUTS6               = 51;
 const X_D3DRS_PSRGBOUTPUTS7               = 52;
 const X_D3DRS_PSCOMBINERCOUNT             = 53;
-const X_D3DRS_PS_RESERVED                 = 54; // Dxbx note : This takes the slot of X_D3DPIXELSHADERDEF.PSTextureModes
+const X_D3DRS_PS_RESERVED                 = 54; // Dxbx note : This takes the slot of X_D3DPIXELSHADERDEF.PSTextureModes, set by D3DDevice_SetRenderState_LogicOp?
 const X_D3DRS_PSDOTMAPPING                = 55;
 const X_D3DRS_PSINPUTTEXTURE              = 56;
 // End of "pixel-shader" render states, continuing with "simple" render states :

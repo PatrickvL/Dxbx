@@ -11604,7 +11604,7 @@ end;
 
 function XTL_EmuD3DDevice_GetPixelShaderConstant
 (
-  Register_: X_D3DVSDE;
+  Register_: DWORD;
   pConstantData: PVOID;
   ConstantCount: DWORD
 ): HRESULT; stdcall;
