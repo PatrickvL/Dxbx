@@ -49,7 +49,7 @@ function EmuXB2PC_D3DRS(Value: X_D3DRENDERSTATETYPE): D3DRENDERSTATETYPE;
 procedure DxbxBuildRenderStateMappingTable(const aD3DRenderState: PDWORDs); {NOPATCH}
 procedure DxbxInitializeDefaultRenderStates(const aParameters: PX_D3DPRESENT_PARAMETERS); {NOPATCH}
 
-function DxbxVersionAdjust_D3DRS(const Value: X_D3DRENDERSTATETYPE): X_D3DRENDERSTATETYPE; {NOPATCH}
+function DxbxVersionAdjust_D3DRS(const XboxRenderState_VersionDependent: X_D3DRENDERSTATETYPE): X_D3DRENDERSTATETYPE; {NOPATCH}
 function Dxbx_SetRenderState(const XboxRenderState: X_D3DRenderStateType; const XboxValue: DWORD): DWORD; {NOPATCH}
 function DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE): HResult;
 
@@ -776,10 +776,10 @@ begin
 end;
 
 // Converts the input render state from a version-dependent into a version-neutral value.
-function DxbxVersionAdjust_D3DRS(const Value: X_D3DRENDERSTATETYPE): X_D3DRENDERSTATETYPE; {NOPATCH}
+function DxbxVersionAdjust_D3DRS(const XboxRenderState_VersionDependent: X_D3DRENDERSTATETYPE): X_D3DRENDERSTATETYPE; {NOPATCH}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  Result := DxbxMapActiveVersionToMostRecent[Value];
+  Result := DxbxMapActiveVersionToMostRecent[XboxRenderState_VersionDependent];
 end;
 
 const
