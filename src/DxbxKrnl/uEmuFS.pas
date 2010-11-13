@@ -495,7 +495,8 @@ begin
   Assert(SizeOf(NT_TIB) = $1C);
   Assert(SizeOf(KTHREAD) = $110);
   Assert(SizeOf(ETHREAD) = $140);
-  Assert(SizeOf(FLOATING_SAVE_AREA) = $204);
+  Assert(SizeOf(FNSAVE_FORMAT) = $6C);
+  Assert(SizeOf(FXSAVE_FORMAT) = $208);
   Assert(SizeOf(FX_SAVE_AREA) = $210);
   Assert(SizeOf(KPRCB) = $25C);
   Assert(SizeOf(KPCR) = $284);
