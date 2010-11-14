@@ -23,7 +23,7 @@ interface
 
 {$INCLUDE Dxbx.inc}
 
-{$DEFINE PS_REWRITE}
+{.$DEFINE PS_REWRITE}
 
 uses
   // Delphi
@@ -443,6 +443,7 @@ type PS_GLOBALFLAGS =
 
 type PSH_OPCODE =
 (
+    PO_COMMENT,
     PO_PS,
     PO_DEF,
     PO_TEX,
@@ -466,29 +467,30 @@ type PSH_OPCODE =
     PO_XFC
 );
 
-var PSH_OPCODE_DEFS: array [PSH_OPCODE] of record mn: string; _Out, _In: Int; note: string end = (
+var PSH_OPCODE_DEFS: array [PSH_OPCODE] of record mn: string; _Out, _In: int; note: string end = (
   // Pixel shader header opcodes (must be specified in this order) :
-  (mn:'ps';   _Out:0; _In:0; note:''), // Must occur once; Xbox needs an x prefix (xps), Native needs a 1.3 suffix (ps.1.3)
-  (mn:'def';  _Out:1; _In:4; note:''), // Output must be a PARAM_C, arguments must be 4 floats [0.00f .. 1.00f]
-  (mn:'tex';  _Out:1; _In:0; note:''), // TODO : Add all other texture opcodes here (most also have 1 input)
+  ({PO_COMMENT}mn:';'; _Out:0; _In:0; note:''), //
+  ({PO_PS}  mn:'ps';   _Out:0; _In:0; note:''), // Must occur once; Xbox needs an x prefix (xps), Native needs a 1.3 suffix (ps.1.3)
+  ({PO_DEF} mn:'def';  _Out:1; _In:4; note:''), // Output must be a PARAM_C, arguments must be 4 floats [0.00f .. 1.00f]
+  ({PO_TEX} mn:'tex';  _Out:1; _In:0; note:''), // TODO : Add all other texture opcodes here (most also have 1 input)
   // Arithmetic opcodes :
-  (mn:'add';  _Out:1; _In:2; note:'d0=s0+s1'),
-  (mn:'cmp';  _Out:1; _In:3; note:'d0=(s0>=0?s1:s2)'),
-  (mn:'cnd';  _Out:1; _In:3; note:'d1=(s0.a>0.5?s1:s2)'), // 1st input must be 'r0.a'
-  (mn:'dp3';  _Out:1; _In:2; note:'d0=s0 dot3 s1'),
-  (mn:'dp4';  _Out:1; _In:2; note:'d0=s0 dot4 s1'),
-  (mn:'lrp';  _Out:1; _In:3; note:'d0=s0*(s1-s2)+s2'),
-  (mn:'mad';  _Out:1; _In:3; note:'d0=s0*s1+s2'),
-  (mn:'mov';  _Out:1; _In:1; note:'d0=s0'),
-  (mn:'mul';  _Out:1; _In:2; note:'d0=s0*s1'),
-  (mn:'nop';  _Out:0; _In:0; note:''),
-  (mn:'sub';  _Out:1; _In:2; note:'d0=s0-s1'),
+  ({PO_ADD} mn:'add';  _Out:1; _In:2; note:'d0=s0+s1'),
+  ({PO_CMP} mn:'cmp';  _Out:1; _In:3; note:'d0=(s0>=0?s1:s2)'),
+  ({PO_CND} mn:'cnd';  _Out:1; _In:3; note:'d1=(s0.a>0.5?s1:s2)'), // 1st input must be 'r0.a'
+  ({PO_DP3} mn:'dp3';  _Out:1; _In:2; note:'d0=s0 dot3 s1'),
+  ({PO_DP4} mn:'dp4';  _Out:1; _In:2; note:'d0=s0 dot4 s1'),
+  ({PO_LRP} mn:'lrp';  _Out:1; _In:3; note:'d0=s0*s1+(1-s0)*s2=s0*(s1-s2)+s2'),
+  ({PO_MAD} mn:'mad';  _Out:1; _In:3; note:'d0=s0*s1+s2'),
+  ({PO_MOV} mn:'mov';  _Out:1; _In:1; note:'d0=s0'),
+  ({PO_MUL} mn:'mul';  _Out:1; _In:2; note:'d0=s0*s1'),
+  ({PO_NOP} mn:'nop';  _Out:0; _In:0; note:''),
+  ({PO_SUB} mn:'sub';  _Out:1; _In:2; note:'d0=s0-s1'),
   // Xbox-only (NV2A) opcodes :
-  (mn:'xmma'; _Out:3; _In:4; note:'d0=s0*s1, d1=s2*s3, d2=(s0*s1)+(s2*s3)'),
-  (mn:'xmmc'; _Out:3; _In:4; note:'d0=s0*s1, d1=s2*s3, d2=(r0.a>0.5)?(s0*s1):(s2*s3)'),
-  (mn:'xdm';  _Out:2; _In:4; note:'d0=s0 dot s1, d1=s2*s3'),
-  (mn:'xdd';  _Out:2; _In:4; note:'d0=s0 dot s1, d1=s2 dot s3'),
-  (mn:'xfc';  _Out:1; _In:7; note:'r0.rgb=s0*s1+(1-s0)*s2+s3, r0.a=s6.a, prod=s4*s5, sum=r0+v1')
+  ({PO_XMMA}mn:'xmma'; _Out:3; _In:4; note:'d0=s0*s1, d1=s2*s3, d2=(s0*s1)+(s2*s3)'),
+  ({PO_XMMC}mn:'xmmc'; _Out:3; _In:4; note:'d0=s0*s1, d1=s2*s3, d2=(r0.a>0.5)?(s0*s1):(s2*s3)'),
+  ({PO_XDM} mn:'xdm';  _Out:2; _In:4; note:'d0=s0 dot s1, d1=s2*s3'),
+  ({PO_XDD} mn:'xdd';  _Out:2; _In:4; note:'d0=s0 dot s1, d1=s2 dot s3'),
+  ({PO_XFC} mn:'xfc';  _Out:0; _In:7; note:'r0.rgb=s0*s1+(1-s0)*s2+s3, r0.a=s6.a, prod=s4*s5, sum=r0+v1')
   );
 
 type PSH_ARGUMENT_TYPE =
@@ -604,9 +606,10 @@ type PSH_IMD_ARGUMENT = object
     Mask: DWORD;
     Modifiers: PSH_ARG_MODIFIERs;
     Multiplier: Float;
+    function GetConstValue: Float;
     function ToString: string;
     function Decode(const Value: DWORD; aMask: DWORD; ArgumentType: TArgumentType): Boolean;
-    function IsConstFactor(const aMultiplier: Float): Boolean;
+    procedure Invert;
   end;
   PPSH_IMD_ARGUMENT = ^PSH_IMD_ARGUMENT;
 
@@ -614,43 +617,55 @@ type PSH_IMD_ARGUMENT = object
   PPSH_IMD_ARGUMENTs = ^TPSH_IMD_ARGUMENTArray;
 
 type PSH_INTERMEDIATE_FORMAT = record
+    CombinerStageNr: int;
     IsCombined: boolean;
     Opcode: PSH_OPCODE;
+    CommentString: string;
     Modifier: PSH_INST_MODIFIER;
     Output: array [0..3-1] of PSH_IMD_ARGUMENT; // 3 = xmm* output count
     Parameters: array [0..7-1] of PSH_IMD_ARGUMENT; // 7 = xfc parameter count
+    procedure Initialize;
     function ToString: string;
-    procedure SwapParameter(const Index1, Index2: Int);
+    procedure SwapParameter(const Index1, Index2: int);
     procedure SwapOutput();
-    function MoveDiscardParameterRight(const Index1, Index2: Int): Boolean;
-    function MoveDiscardOutputsRight(): Boolean;
+    function MoveLesserParameterRight(const Index1, Index2: int): Boolean;
+    function XMoveDiscardOutputsRight(): Boolean;
     procedure CopySecondOpcodeToFirst(const aOpcode: PSH_OPCODE);
-    function Decode(PSInputs, PSOutputs: DWORD; aMask: DWORD): Boolean;
+    function Decode(CombinerStageNr, PSInputs, PSOutputs: DWORD; aMask: DWORD): Boolean;
     function DecodeFinalCombiner(aPSFinalCombinerInputsABCD, aPSFinalCombinerInputsEFG: DWORD): Boolean;
   end;
   PPSH_INTERMEDIATE_FORMAT = ^PSH_INTERMEDIATE_FORMAT;
 
 type PSH_XBOX_SHADER = record
-    IntermediateCount: Integer;
+    IntermediateCount: int;
     Intermediate: array[0..63] of PSH_INTERMEDIATE_FORMAT; // ...should be enough slots to hold all possible shaders
+
     FinalCombinerFlags: PS_FINALCOMBINERSETTING;
+    CombinerCountFlags: DWORD; // For PS_COMBINERCOUNTFLAGS
+//  CombinerMuxesOnMsb: Boolean; // Read from CombinerCountFlags
+    CombinerHasUniqueC0: Boolean;
+    CombinerHasUniqueC1: Boolean;
     function ToString: string;
     procedure Log(const PhaseStr: string);
     function NewIntermediate(): PPSH_INTERMEDIATE_FORMAT;
-    procedure InsertIntermediate(pIntermediate: PPSH_INTERMEDIATE_FORMAT; Index: Int);
-    procedure DeleteIntermediate(Index: Int);
+    procedure InsertIntermediate(pIntermediate: PPSH_INTERMEDIATE_FORMAT; Index: int);
+    procedure DeleteIntermediate(Index: int);
     procedure DeleteLastIntermediate;
     procedure Decode(pPSDef: PX_D3DPIXELSHADERDEF);
     function MoveConstsRight: Boolean;
     procedure ConvertXboxShaderToNative;
-    function ConvertXMMToNative_Except3RdOutput(i: Integer): Boolean;
-    procedure ConvertXMMAToNative(i: Integer);
-    procedure ConvertXMMCToNative(i: Integer);
-    procedure ConvertXDMToNative(i: Integer);
-    procedure ConvertXDDToNative(i: Integer);
-    procedure ConvertXFCToNative(i: Integer);
+    function ConvertXMMToNative_Except3RdOutput(i: int): Boolean;
+    procedure ConvertXMMAToNative(i: int);
+    procedure ConvertXMMCToNative(i: int);
+    procedure ConvertXDMToNative(i: int);
+    procedure ConvertXDDToNative(i: int);
+    procedure ConvertXFCToNative(i: int);
+    function CombineInstructions(): Boolean;
     function RemoveNops(): Boolean;
-    function ResolveFakeRegisters(): Boolean;
+    function SimplifyMOV(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
+    function SimplifyADD(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
+    function SimplifyMUL(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
+    function SimplifyLRP(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
     function FixupPixelShader(): Boolean;
   end;
 {$ENDIF PS_REWRITE}
@@ -997,13 +1012,46 @@ const
 
 { PSH_IMD_ARGUMENT }
 
+function PSH_IMD_ARGUMENT.GetConstValue: Float;
+begin
+  if Type_ <> PARAM_CONST then
+  begin
+    // Anything other than a const returns a value never checked for :
+    Result := 100000;
+    Exit;
+  end;
+
+  Result := Multiplier;
+
+  // y = 1-x     -> 0..1 >    1..0
+  if (Modifiers * [ARGMOD_INVERT]) <> [] then Result := 1.0-Result;
+
+  // y = -x      -> 0..1 >    0..-1
+  if (Modifiers * [ARGMOD_NEGATE]) <> [] then Result := -Result;
+
+  // y =  x-0.5  -> 0..1 > -0.5..0.5
+  if (Modifiers * [ARGMOD_BIAS]) <> [] then Result := Result-0.5;
+
+  // y =  x*2    -> 0..1 >    0..2
+  if (Modifiers * [ARGMOD_SCALE_X2]) <> [] then Result := Result*2.0;
+
+  // y = (x*2)-1 -> 0..1 >   -1..1
+  if (Modifiers * [ARGMOD_SCALE_BX2]) <> [] then Result := (Result*2.0)-1.0;
+
+  // y =  x*4    -> 0..1 >    0..4
+  if (Modifiers * [ARGMOD_SCALE_X4]) <> [] then Result := Result*4.0;
+
+  // y =  x/2    -> 0..1 >    0..0.5
+  if (Modifiers * [ARGMOD_SCALE_D2]) <> [] then Result := Result/2.0;
+end;
+
 function PSH_IMD_ARGUMENT.ToString: string;
 var
   Modifier: PSH_ARG_MODIFIER;
 begin
   if Type_ = PARAM_CONST then
   begin
-    Result := Format('%.0f', [Multiplier]);
+    Result := Format('%.0f', [GetConstValue]);
     Exit;
   end;
 
@@ -1037,6 +1085,7 @@ var
 begin
   Result := True;
   Address := 0;
+  Mask := aMask; // TODO : UNBELIEVABLE! If this line is enabled, Rayman crashes on it's 24th pixelshader!?!
   Modifiers := [ARGMOD_IDENTITY];
   Multiplier := 1.0;
 
@@ -1157,11 +1206,10 @@ begin
 
   if ArgumentType = atOutput then
   begin
-    Mask := aMask;
+//    Mask := aMask;
     Exit;
   end;
 
-  Mask := 0;
   if Type_ > PARAM_CONST then
   begin
     Channel := PS_CHANNEL(Value and Ord(PS_CHANNEL_ALPHA));
@@ -1211,19 +1259,38 @@ begin
   end;
 end;
 
-function PSH_IMD_ARGUMENT.IsConstFactor(const aMultiplier: Float): Boolean;
+procedure PSH_IMD_ARGUMENT.Invert;
 begin
-  Result := (Type_ = PARAM_CONST)
-        and (Multiplier = aMultiplier);
+  if (Modifiers * [ARGMOD_INVERT]) = [] then
+    Modifiers := Modifiers + [ARGMOD_INVERT]
+  else
+    Modifiers := Modifiers - [ARGMOD_INVERT];
 end;
 
 { PSH_INTERMEDIATE_FORMAT }
 
+procedure PSH_INTERMEDIATE_FORMAT.Initialize;
+var
+  i: int;
+begin
+  ZeroMemory(@Self, sizeof(Self));
+  for i := Low(Output) to High(Output) do
+    Output[i].Multiplier := 1.0;
+  for i := Low(Parameters) to High(Parameters) do
+    Parameters[i].Multiplier := 1.0;
+end;
+
 function PSH_INTERMEDIATE_FORMAT.ToString: string;
 var
-  i: Integer;
+  i: int;
   SeparatorChar: Char;
 begin
+  if Opcode = PO_COMMENT then
+  begin
+    Result := '; ' + CommentString;
+    Exit;
+  end;
+
   if IsCombined then
     Result := '+'
   else
@@ -1257,7 +1324,7 @@ begin
     Result := Result + ' ; ' + PSH_OPCODE_DEFS[Opcode].note;
 end;
 
-procedure PSH_INTERMEDIATE_FORMAT.SwapParameter(const Index1, Index2: Int);
+procedure PSH_INTERMEDIATE_FORMAT.SwapParameter(const Index1, Index2: int);
 // Swaps two parameters.
 var
   TmpParameters: PSH_IMD_ARGUMENT;
@@ -1282,7 +1349,7 @@ begin
   SwapParameter(1, 3);
 end;
 
-function PSH_INTERMEDIATE_FORMAT.MoveDiscardParameterRight(const Index1, Index2: Int): Boolean;
+function PSH_INTERMEDIATE_FORMAT.MoveLesserParameterRight(const Index1, Index2: int): Boolean;
 // Swaps discarded (and const) parameters to the right position, to ease later conversions.
 begin
   Result := False;
@@ -1295,7 +1362,7 @@ begin
   end;
 end;
 
-function PSH_INTERMEDIATE_FORMAT.MoveDiscardOutputsRight(): Boolean;
+function PSH_INTERMEDIATE_FORMAT.XMoveDiscardOutputsRight(): Boolean;
 // Swap discards and constants to the right position, to ease later conversions.
 begin
   Result := False;
@@ -1310,11 +1377,11 @@ begin
   end;
 
   // Also try to swap the parameters to the first operation :
-  if MoveDiscardParameterRight(0, 1) then
+  if MoveLesserParameterRight(0, 1) then
     Result := True;
 
   // Idem for the parameters to second operation :
-  if MoveDiscardParameterRight(2, 3) then
+  if MoveLesserParameterRight(2, 3) then
     Result := True;
 end;
 
@@ -1327,12 +1394,13 @@ begin
   Parameters[1] := Parameters[3];
 end;
 
-function PSH_INTERMEDIATE_FORMAT.Decode(PSInputs, PSOutputs: DWORD; aMask: DWORD): Boolean;
+function PSH_INTERMEDIATE_FORMAT.Decode(CombinerStageNr, PSInputs, PSOutputs: DWORD; aMask: DWORD): Boolean;
 var
   CombinerOutputFlags: DWORD;
   i: int;
 begin
   Result := False;
+  Self.CombinerStageNr := CombinerStageNr;
   Self.IsCombined := aMask = MASK_A;
 
   // Decode first two outputs :
@@ -1410,14 +1478,9 @@ end;
 
 function PSH_INTERMEDIATE_FORMAT.DecodeFinalCombiner(aPSFinalCombinerInputsABCD, aPSFinalCombinerInputsEFG: DWORD): Boolean;
 var
-  i: Integer;
+  i: int;
 begin
   Self.Opcode := PO_XFC;
-
-  // Set the output to r0.rgb :
-  Self.Output[0].Type_ := PARAM_R;
-  Self.Output[0].Address := 0;
-  Self.Output[0].Mask := MASK_RGBA;
 
   // Decode A,B,C and D :
   for i := 0 to 4 - 1 do
@@ -1434,7 +1497,7 @@ end;
 
 function PSH_XBOX_SHADER.ToString: string;
 var
-  i: Integer;
+  i: int;
 begin
   Result := 'ps.1.3'#13#10;
 //
@@ -1459,14 +1522,14 @@ function PSH_XBOX_SHADER.NewIntermediate(): PPSH_INTERMEDIATE_FORMAT;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   Result := @Intermediate[IntermediateCount];
-  ZeroMemory(Result, sizeof(PSH_INTERMEDIATE_FORMAT));
+  Result.Initialize;
   Inc(IntermediateCount);
 end;
 
-procedure PSH_XBOX_SHADER.InsertIntermediate(pIntermediate: PPSH_INTERMEDIATE_FORMAT; Index: Int);
+procedure PSH_XBOX_SHADER.InsertIntermediate(pIntermediate: PPSH_INTERMEDIATE_FORMAT; Index: int);
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
-  i: Integer;
+  i: int;
 begin
   i := IntermediateCount - 1;
   while i >= Index do
@@ -1479,10 +1542,10 @@ begin
   Inc(IntermediateCount);
 end;
 
-procedure PSH_XBOX_SHADER.DeleteIntermediate(Index: Int);
+procedure PSH_XBOX_SHADER.DeleteIntermediate(Index: int);
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
-  i: Integer;
+  i: int;
 begin
   for i := Index to IntermediateCount - 2 do
     Intermediate[i] := Intermediate[i + 1];
@@ -1522,11 +1585,11 @@ begin
 //  PSInputTexture[3] := (pPSDef.PSInputTexture shr 20) and $3; // Stage 3 can only use stage 0, 1 or 2
 
   NumberOfCombiners := (pPSDef.PSCombinerCount shr 0) and $F;
-//  CombinerCountFlags := (pPSDef.PSCombinerCount shr 8);
-//
+  CombinerCountFlags := (pPSDef.PSCombinerCount shr 8);
+
 //  CombinerMuxesOnMsb := (CombinerCountFlags and PS_COMBINERCOUNT_MUX_MSB) > 0;
-//  CombinerHasUniqueC0 := (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C0) > 0;
-//  CombinerHasUniqueC1 := (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C1) > 0;
+  CombinerHasUniqueC0 := (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C0) > 0;
+  CombinerHasUniqueC1 := (CombinerCountFlags and PS_COMBINERCOUNT_UNIQUE_C1) > 0;
 
 //  for i := 0 to X_PSH_COMBINECOUNT - 1 do
 //  begin
@@ -1535,17 +1598,14 @@ begin
 //
 //    // Decode & map the C0 and C1 registers :
 //    if CombinerHasUniqueC0 then
-//// Disable the mapping, as it doesn't seem right (generates $f constants?!)
-////      Combiners[i].C0Mapping := (pPSDef.PSC0Mapping shr (i * 4)) and $f
-//      Combiners[i].C0Mapping := (i * 2)
+//      Combiners[i].C0Mapping := i // X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7
 //    else
 //      Combiners[i].C0Mapping := 0;
 //
 //    if CombinerHasUniqueC1 then
-////      Combiners[i].C1Mapping := (pPSDef.PSC1Mapping shr (i * 4)) and $f
-//      Combiners[i].C1Mapping := (i * 2) + 1
+//      Combiners[i].C1Mapping := i + 8 // X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7
 //    else
-//      Combiners[i].C1Mapping := 1;
+//      Combiners[i].C1Mapping := 8;
 //  end;
 
   for i := 0 to NumberOfCombiners - 1 do
@@ -1553,15 +1613,15 @@ begin
     if  ((pPSDef.PSRGBInputs[i] and PS_NoChannelsMask) = (pPSDef.PSAlphaInputs[i] and PS_NoChannelsMask))
     and (pPSDef.PSRGBOutputs[i] = pPSDef.PSAlphaOutputs[i]) then
     begin
-      if not NewIntermediate.Decode(pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i], MASK_RGBA) then
+      if not NewIntermediate.Decode(i, pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i], MASK_RGBA) then
         DeleteLastIntermediate;
     end
     else
     begin
-      if not NewIntermediate.Decode(pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i], MASK_RGB) then
+      if not NewIntermediate.Decode(i, pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i], MASK_RGB) then
         DeleteLastIntermediate;
 
-      if not NewIntermediate.Decode(pPSDef.PSAlphaInputs[i], pPSDef.PSAlphaOutputs[i], MASK_A) then
+      if not NewIntermediate.Decode(i, pPSDef.PSAlphaInputs[i], pPSDef.PSAlphaOutputs[i], MASK_A) then
         DeleteLastIntermediate;
     end;
   end;
@@ -1596,8 +1656,7 @@ begin
   if FixupPixelShader then
     Log('FixupPixelShader');
 
-  // Only when converting, insert these :
-  // - Insert mov r0.a, t0.a if r0.a is read before it's written (and if the shader doesn't do it self)
+  // TODO : Conversion steps :
   // - Convert numeric arguments (-2, -1, 0, 1, 2) into modifiers on the other argument
   // - Merge idential .rgb .a instructions
   // - Move independent .a channel instructions upwards to enable channel-combining
@@ -1610,7 +1669,7 @@ end;
 
 function PSH_XBOX_SHADER.MoveConstsRight: Boolean;
 var
-  i: Int;
+  i: int;
 begin
   Result := False;
   // Convert all Xbox opcodes into native opcodes :
@@ -1620,10 +1679,18 @@ begin
     Dec(i);
 
     case Intermediate[i].Opcode of
+      PO_ADD,
+      PO_DP3,
+      PO_DP4,
+      PO_MUL,
+      PO_SUB: // All these opcodes have two swappable parameters, so try that :
+        if Intermediate[i].MoveLesserParameterRight(0, 1) then
+          Result := True;
+
       PO_XMMA,
       PO_XMMC,
       PO_XDD:
-        if Intermediate[i].MoveDiscardOutputsRight() then
+        if Intermediate[i].XMoveDiscardOutputsRight() then
           Result := True;
 
       PO_XDM:
@@ -1631,10 +1698,10 @@ begin
         // Parameters may be swapped for both dot and mul,
         // but the opcodes themselves may not, as we handle
         // both XDM operations separately below :
-        if Intermediate[i].MoveDiscardParameterRight(0, 1) then
+        if Intermediate[i].MoveLesserParameterRight(0, 1) then
           Result := True;
 
-        if Intermediate[i].MoveDiscardParameterRight(2, 3) then
+        if Intermediate[i].MoveLesserParameterRight(2, 3) then
           Result := True;
       end;
     end;
@@ -1642,29 +1709,129 @@ begin
 end;
 
 procedure PSH_XBOX_SHADER.ConvertXboxShaderToNative;
+const
+  MAX_ADDRESS = 8;
 var
-  i: Int;
+  i, j: int;
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+  NewIns: PSH_INTERMEDIATE_FORMAT;
+  CurArg: PPSH_IMD_ARGUMENT;
+  RegUsage: array [PSH_ARGUMENT_TYPE, 0..MAX_ADDRESS] of DWORD;
 begin
-  // Convert all Xbox opcodes into native opcodes :
+  // Mark only R0 (and discard) as initially 'read', as these may not result in a removal :
+  ZeroMemory(@RegUsage, SizeOf(RegUsage));
+  RegUsage[PARAM_R, 0] := MASK_RGBA;
+  for i := 0 to MAX_ADDRESS do
+    RegUsage[PARAM_DISCARD, i] := MASK_RGBA;
+
+  // Do a bottom-to-top pass, converting all xbox opcodes into a native set of opcodes :
+  NewIns.Initialize;
   i := IntermediateCount;
   while i > 0 do
   begin
     Dec(i);
+    Cur := @(Intermediate[i]);
 
-    case Intermediate[i].Opcode of
+    // Loop over the input arguments :
+    for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 do
+    begin
+      CurArg := @(Cur.Parameters[j]);
+
+      // Remove useless flag, to ease up later comparisions :
+      CurArg.Modifiers := CurArg.Modifiers - [ARGMOD_IDENTITY];
+
+      // Keep track of all register reads, so that we can discard useless writes :
+      if CurArg.Address < MAX_ADDRESS then
+        RegUsage[CurArg.Type_, CurArg.Address] := RegUsage[CurArg.Type_, CurArg.Address] or CurArg.Mask;
+
+      // Handle C0 and C1 (as we need to map these two to actual constants) :
+      if CurArg.Type_ = PARAM_C then
+      begin
+        // See if C0 has a unique index per combiner stage :
+        if CombinerHasUniqueC0 and (CurArg.Address = 0) then
+          // C0 actually ranges from c0 to c7, one for each possible combiner stage :
+          Inc(CurArg.Address, Cur.CombinerStageNr);
+
+        // See if C1 has a unique index per combiner stage :
+        if CombinerHasUniqueC1 and (CurArg.Address = 1) then
+          // C1 actually ranges from c8 to c15, one for each possible combiner stage :
+          Inc(CurArg.Address, 8 + Cur.CombinerStageNr - 1);
+      end;
+    end;
+
+    // Loop over the output arguments :
+    for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._Out - 1 do
+    begin
+      CurArg := @(Cur.Output[j]);
+
+      // Remove useless flag, to ease up later comparisions :
+      CurArg.Modifiers := CurArg.Modifiers - [ARGMOD_IDENTITY];
+
+      // Discard useless writes :
+      if  (CurArg.Address < MAX_ADDRESS)
+      and ((RegUsage[CurArg.Type_, CurArg.Address] and CurArg.Mask) = 0) then
+      begin
+        DbgPrintf('; Removed useless assignment to register ' + CurArg.ToString);
+        CurArg.Type_ := PARAM_DISCARD;
+      end;
+    end;
+
+    // Convert all Xbox opcodes into native opcodes :
+    NewIns.Opcode := PO_COMMENT;
+    NewIns.CommentString := Cur.ToString;
+    case Cur.Opcode of
       PO_XMMA: ConvertXMMAToNative(i);
       PO_XMMC: ConvertXMMCToNative(i);
       PO_XDM: ConvertXDMToNative(i);
       PO_XDD: ConvertXDDToNative(i);
-      PO_XFC: ConvertXFCToNative(i);
+      PO_XFC: ConvertXFCToNative(i); // Can only occur once, as the last instruction
+    end;
+    InsertIntermediate(@NewIns, i);
+  end;
+
+  // Detect a read of r0.a without a write, as we need to insert a "MOV r0.a, t0.a" as default (like the xbox has) :
+  for i := 0 to IntermediateCount - 1 do
+  begin
+    Cur := @(Intermediate[i]);
+
+    // Check if r0.a is written to by this opcode :
+    for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._Out - 1 do
+    begin
+      CurArg := @(Cur.Parameters[j]);
+      if  (CurArg.Type_ = PARAM_R)
+      and (CurArg.Address = 0)
+      and ((CurArg.Mask and MASK_A) > 0) then
+        // Then we don't have to insert a default :
+        Exit;
+    end;
+
+    // Check if r0.a is read by this opcode
+    for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 do
+    begin
+      CurArg := @(Cur.Parameters[j]);
+      if  (CurArg.Type_ = PARAM_R)
+      and (CurArg.Address = 0)
+      and ((CurArg.Mask and MASK_A) > 0) then
+      begin
+        // Insert a new opcode : MOV r0.a, t0.a
+        NewIns.Opcode := PO_MOV;
+        NewIns.Output[0].Type_ := PARAM_R;
+        NewIns.Output[0].Address := 0;
+        NewIns.Output[0].Mask := MASK_A;
+        NewIns.Parameters[0] := NewIns.Output[0];
+        NewIns.Parameters[0].Type_ := PARAM_T;
+        NewIns.CommentString := 'Inserted r0.a default';
+        InsertIntermediate(@NewIns, i-1);
+        Exit;
+      end;
     end;
   end;
 end;
 
-function PSH_XBOX_SHADER.ConvertXMMToNative_Except3RdOutput(i: Integer): Boolean;
+function PSH_XBOX_SHADER.ConvertXMMToNative_Except3RdOutput(i: int): Boolean;
 var
   Cur: PPSH_INTERMEDIATE_FORMAT;
-  InsertPos: Integer;
+  InsertPos: int;
   Ins: PSH_INTERMEDIATE_FORMAT;
 begin
   Result := False;
@@ -1682,7 +1849,13 @@ begin
     // Is the second output ignored?
     if Cur.Output[1].Type_ = PARAM_DISCARD then
     begin
-      // The first output is just a MUL, it's output (and first two parameters) are already in-place, so we're done :
+      // If the first output is also ignored :
+      if Cur.Output[0].Type_ = PARAM_DISCARD then
+        // The complete opcode can already be removed early on :
+        DeleteIntermediate(i)
+      else
+        ;// The first output is just a MUL, it's output (and first two parameters) are already in-place, so we're done
+
       Exit;
     end;
     Inc(InsertPos);
@@ -1726,7 +1899,7 @@ begin
   // opcode(s) will probably require the initial opcode's removal!
 end;
 
-procedure PSH_XBOX_SHADER.ConvertXMMAToNative(i: Integer);
+procedure PSH_XBOX_SHADER.ConvertXMMAToNative(i: int);
 var
   Cur: PPSH_INTERMEDIATE_FORMAT;
 begin
@@ -1736,13 +1909,14 @@ begin
     // Add needs to be stored, change the XMMA into an ADD :
     Cur := @(Intermediate[i+2]);
     Cur.Opcode := PO_ADD;
+    Cur.Modifier := INSMOD_NONE;
     Cur.Parameters[0] := Cur.Output[0];
     Cur.Parameters[1] := Cur.Output[1];
     Cur.Output[0] := Cur.Output[2];
   end;
 end;
 
-procedure PSH_XBOX_SHADER.ConvertXMMCToNative(i: Integer);
+procedure PSH_XBOX_SHADER.ConvertXMMCToNative(i: int);
 var
   Cur: PPSH_INTERMEDIATE_FORMAT;
 begin
@@ -1752,18 +1926,22 @@ begin
     // Add needs to be stored, change the XMMC into an CND :
     Cur := @(Intermediate[i+2]);
     Cur.Opcode := PO_CND;
+    Cur.Modifier := INSMOD_NONE;
+    // Begin the input of CND with the required r0.a parameter :
     Cur.Parameters[0].Type_ := PARAM_R;
     Cur.Parameters[0].Address := 0;
     Cur.Parameters[0].Modifiers := [ARGMOD_IDENTITY];
     Cur.Parameters[0].Multiplier := 1.0;
     Cur.Parameters[0].Mask := MASK_A;
+    // Follow that with the 2 selection registers :
     Cur.Parameters[1] := Cur.Output[0];
     Cur.Parameters[2] := Cur.Output[1];
+    // And put the result it in the final register :
     Cur.Output[0] := Cur.Output[2];
   end;
 end;
 
-procedure PSH_XBOX_SHADER.ConvertXDMToNative(i: Integer);
+procedure PSH_XBOX_SHADER.ConvertXDMToNative(i: int);
 var
   Cur: PPSH_INTERMEDIATE_FORMAT;
   Ins: PSH_INTERMEDIATE_FORMAT;
@@ -1787,7 +1965,7 @@ begin
     Cur.Opcode := PO_DP3;
 end;
 
-procedure PSH_XBOX_SHADER.ConvertXDDToNative(i: Integer);
+procedure PSH_XBOX_SHADER.ConvertXDDToNative(i: int);
 var
   Cur: PPSH_INTERMEDIATE_FORMAT;
   Ins: PSH_INTERMEDIATE_FORMAT;
@@ -1808,20 +1986,27 @@ begin
   end;
 end;
 
-procedure PSH_XBOX_SHADER.ConvertXFCToNative(i: Integer);
+procedure PSH_XBOX_SHADER.ConvertXFCToNative(i: int);
 var
   Cur: PSH_INTERMEDIATE_FORMAT;
-  InsertPos: Integer;
+  InsertPos: int;
   Ins: PSH_INTERMEDIATE_FORMAT;
+  CurArg: PPSH_IMD_ARGUMENT;
   NeedsProd: Boolean;
   NeedsSum: Boolean;
 begin
-  // Get a copy of RFC and remove it already :
+  // Get a copy of XFC and remove it already :
   Cur := Intermediate[i];
+
+  // Set the output to r0.rgb :
+  Cur.Output[0].Type_ := PARAM_R;
+  Cur.Output[0].Address := 0;
+  Cur.Output[0].Mask := MASK_RGB; // Alpha is determined via s6.a
+
   DeleteIntermediate(i);
 
   // Make sure the new instruction is empty and will be inserted at the end :
-  ZeroMemory(@Ins, SizeOf(Ins));
+  Ins.Initialize;
   InsertPos := i;
 
   // See if the final combiner uses the prod or sum input parameters :
@@ -1829,27 +2014,38 @@ begin
   NeedsSum := False;
   for i := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 do
   begin
-    case Cur.Parameters[i].Type_ of
+    CurArg := @(Cur.Parameters[i]);
+
+    // Fix "Invalid src swizzle" :
+    if CurArg.Mask = MASK_RGB then
+      CurArg.Mask := MASK_RGBA;
+
+    case CurArg.Type_ of
       PARAM_V1R0_SUM:
       begin
-        Cur.Parameters[i].Type_ := PARAM_R;
-        Cur.Parameters[i].Address := FakeRegNr_Sum;
+        CurArg.Type_ := PARAM_R;
+        CurArg.Address := FakeRegNr_Sum;
         NeedsSum := True;
       end;
 
       PARAM_EF_PROD:
       begin
-        Cur.Parameters[i].Type_ := PARAM_R;
-        Cur.Parameters[i].Address := FakeRegNr_Prod;
+        CurArg.Type_ := PARAM_R;
+        CurArg.Address := FakeRegNr_Prod;
         NeedsProd := True;
       end;
 
       PARAM_FOG:
       begin
-        // TODO : ???
+        // Fixup FOG register :
+        CurArg.Type_ := PARAM_CONST;
+        CurArg.Address := 0;
+        CurArg.Modifiers := [];
+        CurArg.Multiplier := 1.0;
+        Cur.CommentString := 'final combiner - FOG not emulated, using 1.';
       end;
     end;
-  end;
+  end; // for input
 
   // See if s6 is something else than 'r0.a' :
   if Cur.Parameters[6].ToString <> 'r0.a' then
@@ -1885,6 +2081,7 @@ begin
       Ins.Modifier := INSMOD_SAT; // V1+R0 sum clamped to [0,1]
 
     InsertIntermediate(@Ins, InsertPos);
+    Inc(InsertPos);
   end;
 
   if NeedsProd then
@@ -1897,9 +2094,22 @@ begin
     Ins.Parameters[0] := Cur.Parameters[4]; // E
     Ins.Parameters[1] := Cur.Parameters[5]; // F
     InsertIntermediate(@Ins, InsertPos);
+    Inc(InsertPos);
   end;
 
-  // TODO : Handle final combiner, namely : r0.rgb=s0*s1+(1-s0)*s2+s3
+  // The final combiner calculates : r0.rgb=s0*s1+(1-s0)*s2+s3
+  // Change that into a LRP + ADD, and let the optimizer reduce it :
+  // Add a new opcode that calculates r0.rgb=s0*s1+(1-s0)*s2 :
+  Ins := Cur;
+  Ins.Opcode := PO_LRP;
+  InsertIntermediate(@Ins, InsertPos);
+  Inc(InsertPos);
+
+  Ins.Opcode := PO_ADD;
+  Ins.Output[0] := Cur.Output[0]; // = r0.rgb
+  Ins.Parameters[0] := Cur.Output[0]; // = r0.rgb
+  Ins.Parameters[1] := Cur.Parameters[3]; // =s3 from XFC
+  InsertIntermediate(@Ins, InsertPos);
 end;
 
 function PSH_XBOX_SHADER.RemoveNops(): Boolean;
@@ -1917,6 +2127,10 @@ begin
 
     // See if this opcode writes to any of it's outputs :
     begin
+      // Skip opcodes that have no output, but should stay anyway :
+      if Cur.Opcode in [PO_COMMENT, PO_XFC] then
+        Continue;
+
       HasOutput := False;
       for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._Out - 1 do
         if  (Cur.Output[j].Type_ <> PARAM_DISCARD) then
@@ -1937,7 +2151,43 @@ begin
   end;
 end;
 
-function PSH_XBOX_SHADER.ResolveFakeRegisters(): Boolean;
+function PSH_XBOX_SHADER.CombineInstructions(): Boolean;
+
+  function _CanLerp(Mul1, Mul2, AddOpcode: PPSH_INTERMEDIATE_FORMAT; Left, Right: int): Boolean;
+  var
+    ParamLeft, ParamRight: PPSH_IMD_ARGUMENT;
+  begin
+    // Check if Left and Right are the same register :
+    Result := False;
+    ParamLeft := @Mul1.Parameters[Left];
+    ParamRight := @Mul2.Parameters[Right];
+    if  (ParamLeft.Type_ <> ParamRight.Type_) or (ParamLeft.Address <> ParamRight.Address) then
+      Exit;
+
+    // Is the left argument inverted and the right not (or the other way around) ?
+    if (ParamLeft.Modifiers * [ARGMOD_INVERT]) <> (ParamRight.Modifiers * [ARGMOD_INVERT]) then
+    begin
+      // In that case, already move the arguments over to AddOpcode so we create a LRP :
+      AddOpcode.Parameters[0] := ParamLeft^;
+      AddOpcode.Parameters[1] := Mul1.Parameters[1-Left];
+      AddOpcode.Parameters[2] := Mul2.Parameters[3-Right];
+      Result := True;
+    end;
+  end;
+
+  function _CanMad(ConstOne: int; Mul1, Mul2, AddOpcode: PPSH_INTERMEDIATE_FORMAT): Boolean;
+  begin
+    // Check if the given parameter is 1 :
+    Result := Mul1.Parameters[ConstOne].GetConstValue = 1.0;
+    if Result then
+    begin
+      // Put the other 3 parameters int the resulting opcode, so we can make it a MAD :
+      AddOpcode.Parameters[0] := Mul2.Parameters[0];
+      AddOpcode.Parameters[1] := Mul2.Parameters[1];
+      AddOpcode.Parameters[2] := Mul1.Parameters[1-ConstOne];
+    end;
+  end;
+
 var
   i: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
@@ -1950,37 +2200,88 @@ begin
     Dec(i);
     Cur := @(Intermediate[i]);
 
-    // TODO : This is quick and dirty, needs more rigorous checking :
+    // TODO : Fixup C8..C15 constants - ps.1.3 goes only up to C7 (PS.3.0 has 224, but need complete Direct3D9 port)
+    // With a bit of luck, the C8..C15 constants are identical to one or more of C0..C7, in which case we could
+    // switch them over (hopeing that no SetPixelShaderConstant call updates these).
+
+    // Check if there are two consecutive opcodes reading from a fake R register;
+    // We outputted these ourselves, in order to ease the conversion and profit
+    // from having generic optimizations in one place :
     if  (Cur.Output[0].Type_ = PARAM_R)
     and (Cur.Output[0].Address > 1)
     and (Intermediate[i+1].Output[0].Type_ = PARAM_R)
     and (Intermediate[i+1].Output[0].Address > 1) then
     begin
+      // Did we output those from a CND opcode (originally XMMC) ?
       if (Intermediate[i+2].Opcode = PO_CND) then
       begin
         if  (Cur.Opcode = PO_MOV)
-        and (Intermediate[i+1].Opcode = PO_MOV) then
+        and (Intermediate[i+1].Opcode = Cur.Opcode)
+        and (Intermediate[i+1].Modifier = Cur.Modifier) then
         begin
+          Intermediate[i+2].Modifier := Cur.Modifier;
           Intermediate[i+2].Parameters[1] := Cur.Parameters[0];
           Intermediate[i+2].Parameters[2] := Intermediate[i+1].Parameters[0];
           DeleteIntermediate(i);
           DeleteIntermediate(i);
+          DbgPrintf('; Changed temporary MUL,MUL,CND via MOV,MOV,CND into a single CND');
           Result := True;
           Continue;
         end;
       end;
 
+      // Did we output those from a ADD opcode (originally XMMA) ?
       if (Intermediate[i+2].Opcode = PO_ADD) then
       begin
         if  (Cur.Opcode = PO_MUL)
-        and (Intermediate[i+1].Opcode = PO_MUL) then
+        and (Intermediate[i+1].Opcode = Cur.Opcode)
+        and (Intermediate[i+1].Modifier = Cur.Modifier) then
         begin
-          Intermediate[i+2].Opcode := PO_LRP;
-          Intermediate[i+2].Parameters[0] := Cur.Parameters[0];
-          Intermediate[i+2].Parameters[1] := Cur.Parameters[1];
-          Intermediate[i+2].Parameters[2] := Intermediate[i+1].Parameters[0];
-          DeleteIntermediate(i);
-          DeleteIntermediate(i);
+          // Check if we can lerp - we just need the same register on both sides that's inverted on the other :
+          if _CanLerp(Cur, @Intermediate[i+1], @Intermediate[i+2], 0, 2)
+          or _CanLerp(Cur, @Intermediate[i+1], @Intermediate[i+2], 1, 2)
+          or _CanLerp(Cur, @Intermediate[i+1], @Intermediate[i+2], 0, 3)
+          or _CanLerp(Cur, @Intermediate[i+1], @Intermediate[i+2], 1, 3) then
+          begin
+            // The lerp can be done, and the correct parameters are already set to Intermediate[i+2],
+            // so all we need to do now, it fixup the rest and remove the two MOV's :
+            Intermediate[i+2].Opcode := PO_LRP;
+            Intermediate[i+2].Modifier := Cur.Modifier;
+            DeleteIntermediate(i);
+            DeleteIntermediate(i);
+            DbgPrintf('; Changed temporary MUL,MUL,ADD into a single LRP');
+            Result := True;
+            Continue;
+          end;
+
+          // Check if we can mad - we just need a constant 1 in one argument :
+          if _CanMad(0, Cur, @Intermediate[i+1], @Intermediate[i+2])
+          or _CanMad(1, Cur, @Intermediate[i+1], @Intermediate[i+2])
+          or _CanMad(0, @Intermediate[i+1], Cur, @Intermediate[i+2])
+          or _CanMad(1, @Intermediate[i+1], Cur, @Intermediate[i+2]) then
+          begin
+            // The lerp can be done, and the correct parameters are already set to Intermediate[i+2],
+            // so all we need to do now, it fixup the rest and remove the two MOV's :
+            Intermediate[i+2].Opcode := PO_MAD;
+            Intermediate[i+2].Modifier := Cur.Modifier;
+            DeleteIntermediate(i);
+            DeleteIntermediate(i);
+            DbgPrintf('; Changed temporary MUL,MUL,ADD into a single MAD');
+            Result := True;
+            Continue;
+          end;
+
+          // No single opcode possible, so change it into a MUL + MAD :
+          // The first mul may write to the last output register (without a modifier) :
+          Cur.Modifier := INSMOD_NONE;
+          Cur.Output[0] := Intermediate[i+2].Output[0];
+          // Change the second MUL into a MAD :
+          Intermediate[i+1].Opcode := PO_MAD;
+          Intermediate[i+1].Output[0] := Intermediate[i+2].Output[0];
+          Intermediate[i+1].Parameters[2] := Cur.Output[0];
+          // Remove the trailing ADD :
+          DeleteIntermediate(i+2);
+          DbgPrintf('; Changed temporary MUL,MUL,ADD into a MUL,MAD');
           Result := True;
           Continue;
         end;
@@ -1989,6 +2290,178 @@ begin
   end;
 end;
 
+function PSH_XBOX_SHADER.SimplifyMOV(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
+var
+  CanSimplify: Boolean;
+begin
+  Result := False;
+
+  // NOP-out MOV's that read & write to the same register :
+  if  (Cur.Output[0].Type_ = Cur.Parameters[0].Type_)
+  and (Cur.Output[0].Address = Cur.Parameters[0].Address)
+  and (Cur.Output[0].Mask = Cur.Parameters[0].Mask) then
+  begin
+    if Cur.Output[0].Type_ = PARAM_CONST then
+      CanSimplify := Cur.Output[0].GetConstValue = Cur.Parameters[0].GetConstValue
+    else
+      CanSimplify := (Cur.Output[0].Modifiers = Cur.Parameters[0].Modifiers)
+                 and (Cur.Output[0].Multiplier = Cur.Parameters[0].Multiplier);
+
+    if CanSimplify then
+    begin
+      Cur.Opcode := PO_NOP; // This nop will be removed in a recursive fixup
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  // Does this MOV put a 0 (zero) in the output?
+  if Cur.Parameters[0].GetConstValue = 0.0 then
+  begin
+    // Fixup via "sub d0=v0,v0" :
+    Cur.Opcode := PO_SUB;
+    Cur.Parameters[0].Type_ := PARAM_V;
+    Cur.Parameters[0].Address := 0;
+    Cur.Parameters[0].Modifiers := [];
+    Cur.Parameters[1] := Cur.Parameters[0];
+    Exit;
+  end;
+
+  // Does this MOV put a 1 (one) in the output?
+  if Cur.Parameters[0].GetConstValue = 1.0 then
+  begin
+    // Fixup via "sub d0=1-v0,-v0" :
+    Cur.Opcode := PO_SUB;
+    Cur.Parameters[0].Type_ := PARAM_V;
+    Cur.Parameters[0].Address := 0;
+    Cur.Parameters[0].Modifiers := [ARGMOD_INVERT];
+    Cur.Parameters[1] := Cur.Parameters[0];
+    Cur.Parameters[1].Modifiers := [ARGMOD_NEGATE];
+    Exit;
+  end;
+
+  // TODO : Simulate other factors (like -2.0, -1.0, -0.5, 0.5 and 2.0)?
+(*
+  // TODO : We can remove this MOV entirely if the input is not changed while
+  // the output is read, up until the output is re-written; We can change all
+  // these occurances into a read from the input of this MOV instead.
+  begin
+    CanOptimize := False;
+    j := i + 1;
+    while j < IntermediateCount do
+    begin
+      CanOptimize := True;
+      if Intermediate[j].OutputsTo(Cur.Output[0]) then
+        Break;
+
+      CanOptimize := False;
+      Inc(j);
+    end;
+
+    if CanOptimize then
+    begin
+      while j > i do
+      begin
+        // TODO : For Intermediate[j].Parameters, change all occurrances of Cur.Parameters[0] into Cur.Output[0]
+        Dec(j);
+      end;
+
+      DeleteIntermediate(i);
+    end;
+  end;
+*)
+end;
+
+function PSH_XBOX_SHADER.SimplifyADD(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
+begin
+  Result := False;
+
+  // Is this an addition of 0+s1 ?
+  if Cur.Parameters[0].GetConstValue = 0.0 then
+  begin
+    // Change it into a MOV (the first argument is the second one from the ADD) :
+    Cur.Opcode := PO_MOV;
+    Cur.Parameters[0] := Cur.Parameters[1];
+    Result := True;
+    Exit;
+  end;
+
+  // Is this an addition of s0+0 ?
+  if Cur.Parameters[1].GetConstValue = 0.0 then
+  begin
+    // Change it into a MOV (the first argument is already in-place)
+    Cur.Opcode := PO_MOV;
+    Result := True;
+    Exit;
+  end;
+end; // PO_ADD
+
+function PSH_XBOX_SHADER.SimplifyMUL(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
+begin
+  Result := False;
+
+  // Is the result of this multiplication zero ?
+  if (Cur.Parameters[0].GetConstValue = 0.0)
+  or (Cur.Parameters[1].GetConstValue = 0.0) then
+  begin
+    // Change it into a MOV (the 0 argument will be resolve in a recursive MOV fixup) :
+    Cur.Opcode := PO_MOV;
+    Cur.Parameters[0].Type_ := PARAM_CONST;
+    Cur.Parameters[0].Address := 0;
+    Cur.Parameters[0].Multiplier := 0.0;
+    Result := True;
+    Exit;
+  end;
+
+  // Is this a multiply-by-const 1 ?
+  if (Cur.Parameters[1].GetConstValue = 1.0) then
+  begin
+    // Change it into a simple MOV :
+    Cur.Opcode := PO_MOV;
+    Result := True;
+    Exit;
+  end;
+
+  // Is this a multiply-by-const 1 ?
+  if (Cur.Parameters[0].GetConstValue = 1.0) then
+  begin
+    // Change it into a simple MOV :
+    Cur.Opcode := PO_MOV;
+    Cur.Parameters[0] := Cur.Parameters[1];
+    Result := True;
+    Exit;
+  end;
+
+  // TODO : What about multiplications by other factors (like -2.0, -1.0, -0.5, 0.5 and 2.0)?
+end; // MUL
+
+function PSH_XBOX_SHADER.SimplifyLRP(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
+begin
+  Result := False;
+
+  // LRP calculates : d0=s0*s1+(1-s0)*s2 which can also be read as : d0=s0*(s1-s2)+s2
+
+  // Is the right part ((1-s0)*s2) zero?
+  if (Cur.Parameters[0].GetConstValue = 1.0) or (Cur.Parameters[2].GetConstValue = 0.0) then
+  begin
+    // Change it into a MUL (calculating the left part : s0*s1 :
+    Cur.Opcode := PO_MUL;
+    Result := True;
+    Exit;
+  end;
+
+  // Is the left part (s0*s1) zero?
+  if (Cur.Parameters[0].GetConstValue = 0.0) or (Cur.Parameters[1].GetConstValue = 0.0) then
+  begin
+    // Change it into a MUL (calculating the right part : (1-s0)*s2) :
+    Cur.Opcode := PO_MUL;
+    Cur.Parameters[0].Invert;
+    Cur.Parameters[1] := Cur.Parameters[2];
+    Result := True;
+    Exit;
+  end;
+end; // LRP
+
 function PSH_XBOX_SHADER.FixupPixelShader(): Boolean;
 var
   i: int;
@@ -1996,88 +2469,50 @@ var
 begin
   Result := RemoveNops();
 
-  if ResolveFakeRegisters() then
+  // TODO : Fixup writes to read-only registers (V0, V1) via another free register (if possible)
+  // TODO : Fixup the usage of non-existent register numbers (like FakeRegNr_Sum and FakeRegNr_Prod)
+  // TODO : Fixup the usage of the unsupported INSMOD_BIAS and INSMOD_BX2 instruction modifiers
+  // TODO : Use the INSMOD_SAT instruction modifier instead of the ARGMOD_SATURATE argument modifier
+  // TODO : Shift independent instructions up or down so the alpha write combiner can be used more often
+  // TODO : Condense constants registers, to avoid the non-existant C8-C15 (requires a mapping in SetPixelShaderConstant too...)
+
+  if MoveConstsRight then
     Result := True;
 
+  // Simplify instructions, which can help to compress the result :
   i := IntermediateCount;
   while i > 0 do
   begin
     Dec(i);
     Cur := @(Intermediate[i]);
 
-    // TODO : Fixup writes to read-only registers via another free register
-    // TODO : Fixup the usage of non-existent register numbers (like FakeRegNr_Sum and FakeRegNr_Prod)
-
     case Cur.Opcode of
       PO_MOV:
-      begin
-        // NOP-out MOV's that read & write to the same register :
-        if  (Cur.Output[0].Type_ = Cur.Parameters[0].Type_)
-        and (Cur.Output[0].Address = Cur.Parameters[0].Address)
-        and (Cur.Output[0].Mask = Cur.Parameters[0].Mask)
-        // TODO : Add a check if Modifier and Multiplier cancel eachother out (which makes it a no-op too)
-        and (Cur.Modifier = INSMOD_NONE)
-        and (Cur.Parameters[0].Multiplier = 1.0) then
-        begin
-          Cur.Opcode := PO_NOP; // This nop will be removed in a recursive fixup
+        if SimplifyMOV(Cur) then
           Result := True;
-          Continue;
-        end;
 
-        // Does this MOV put a 0 (zero) in the output?
-        if Cur.Parameters[0].IsConstFactor(0.0) then
-        begin
-          // Fixup via "sub d0=v0,v0" :
-          Cur.Opcode := PO_SUB;
-          Cur.Parameters[0].Type_ := PARAM_V;
-          Cur.Parameters[0].Address := 0;
-          Cur.Parameters[0].Modifiers := [];
-          Cur.Parameters[1] := Cur.Parameters[0];
-          Continue;
-        end;
-
-        // Does this MOV put a 1 (one) in the output?
-        if Cur.Parameters[0].IsConstFactor(1.0) then
-        begin
-          // Fixup via "sub d0=1-v0,-v0" :
-          Cur.Opcode := PO_SUB;
-          Cur.Parameters[0].Type_ := PARAM_V;
-          Cur.Parameters[0].Address := 0;
-          Cur.Parameters[0].Modifiers := [ARGMOD_INVERT];
-          Cur.Parameters[1] := Cur.Parameters[0];
-          Cur.Parameters[1].Modifiers := [ARGMOD_NEGATE];
-          Continue;
-        end;
-
-        // TODO : Simulate IsConstFactor(-1.0)
-
-      end; // MOV
-
+      PO_ADD:
+        if SimplifyADD(Cur) then
+          Result := True;
       PO_MUL:
-      begin
-        // Is the result of this multiplication zero ?
-        if Cur.Parameters[1].IsConstFactor(0.0) then
-        begin
-          Cur.Opcode := PO_MOV;
-          Cur.Parameters[1] := Cur.Parameters[0];
+        if SimplifyMUL(Cur) then
           Result := True;
-          Continue;
-        end;
 
-        // Is this a multiply-by-const 1 ?
-        if Cur.Parameters[1].IsConstFactor(1.0) then
-        begin
-          Cur.Opcode := PO_MOV;
+      PO_LRP:
+        if SimplifyLRP(Cur) then
           Result := True;
-          Continue;
-        end;
-      end; // MUL
     end; // case
   end; // for
 
+  if CombineInstructions() then
+    Result := True;
+
   // If the above code made any alteration, repeat it as some changes require a followup (like MUL>MOV>NOP) :
   if Result then
+  begin
+    Log('Fixup intermediate result');
     FixupPixelShader();
+  end;
 end;
 
 {$ENDIF PS_REWRITE}
@@ -3449,17 +3884,14 @@ begin
 
     // Decode & map the C0 and C1 registers :
     if CombinerHasUniqueC0 then
-// Disable the mapping, as it doesn't seem right (generates $f constants?!)
-//      Combiners[i].C0Mapping := (pPSDef.PSC0Mapping shr (i * 4)) and $f
-      Combiners[i].C0Mapping := (i * 2)
+      Combiners[i].C0Mapping := i // X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7
     else
       Combiners[i].C0Mapping := 0;
 
     if CombinerHasUniqueC1 then
-//      Combiners[i].C1Mapping := (pPSDef.PSC1Mapping shr (i * 4)) and $f
-      Combiners[i].C1Mapping := (i * 2) + 1
+      Combiners[i].C1Mapping := i + 8 // X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7
     else
-      Combiners[i].C1Mapping := 1;
+      Combiners[i].C1Mapping := 8;
   end;
 
   FinalCombiner.Decode(pPSDef.PSFinalCombinerInputsABCD, pPSDef.PSFinalCombinerInputsEFG, pPSDef.PSFinalCombinerConstants);
@@ -3735,7 +4167,7 @@ function RPSIntermediate.DisassembleIntermediate(): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   LogFlags: TLogFlags;
-  i, j: Integer;
+  i, j: int;
   Scope: RPSDisassembleScope;
   ConstUsed: array [0..X_PSH_CONSTANTCOUNT-1] of Boolean;
   ConstEmitted: array [0..X_PSH_CONSTANTCOUNT-1] of Boolean;
@@ -3772,7 +4204,7 @@ begin
     // constants 'def'ined...
   end;
 
-  for i := 0 to X_PSH_COMBINECOUNT-1 do
+  for i := 0 to NumberOfCombiners-1 do
   begin
     // Define constants directly after the version instruction and before any other instruction :
     j := Combiners[i].C0Mapping;
@@ -3883,7 +4315,7 @@ begin
   Result := PSIntermediate.DisassembleIntermediate();
 {$IFDEF PS_REWRITE}
   New.Decode(pPSDef);
-//  Result := New.ToString;
+  Result := New.ToString;
 {$ENDIF}
 end;
 
