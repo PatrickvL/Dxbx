@@ -2,7 +2,7 @@ object fmConfiguration: TfmConfiguration
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
-  BorderStyle = bsDialog
+  BorderStyle = bsSingle
   Caption = 'Dxbx - Configuration'
   ClientHeight = 495
   ClientWidth = 729
@@ -12,6 +12,7 @@ object fmConfiguration: TfmConfiguration
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  Menu = MainMenu1
   OldCreateOrder = False
   Position = poScreenCenter
   OnCloseQuery = FormCloseQuery
@@ -74,22 +75,18 @@ object fmConfiguration: TfmConfiguration
     TabOrder = 2
     OnClick = btnApplyClick
   end
-  object PageControl1: TPageControl
+  object ConfigControl: TPageControl
     Left = 167
     Top = 8
     Width = 554
     Height = 441
-    ActivePage = TabSheet4
+    ActivePage = TabSheet3
     Anchors = [akLeft, akTop, akRight, akBottom]
     Style = tsFlatButtons
     TabOrder = 1
-    OnChange = PageControl1Change
+    OnChange = ConfigControlChange
     object TabSheet1: TTabSheet
       Caption = 'Controller'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Image1: TImage
         Left = 0
         Top = 0
@@ -297,10 +294,6 @@ object fmConfiguration: TfmConfiguration
     object TabSheet2: TTabSheet
       Caption = 'Video'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         546
         410)
@@ -464,10 +457,6 @@ object fmConfiguration: TfmConfiguration
     object TabSheet3: TTabSheet
       Caption = 'Logging'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object GroupBox2: TGroupBox
         Left = 3
         Top = 0
@@ -506,40 +495,22 @@ object fmConfiguration: TfmConfiguration
           OnClick = lstLoggingClick
           OnDrawItem = lstLoggingDrawItem
         end
-        object btnLoadLogConfig: TButton
+        object btnDisableAll: TButton
           Left = 455
           Top = 24
           Width = 75
           Height = 25
-          Caption = 'Load Config'
-          TabOrder = 1
-          OnClick = btnLoadLogConfigClick
-        end
-        object btnSaveLogConfig: TButton
-          Left = 455
-          Top = 55
-          Width = 75
-          Height = 25
-          Caption = 'Save Config'
-          TabOrder = 2
-          OnClick = btnSaveLogConfigClick
-        end
-        object btnDisableAll: TButton
-          Left = 455
-          Top = 112
-          Width = 75
-          Height = 25
           Caption = '&Disable All'
-          TabOrder = 3
+          TabOrder = 1
           OnClick = btnDisableAllClick
         end
         object btnEnableAll: TButton
           Left = 455
-          Top = 143
+          Top = 55
           Width = 75
           Height = 25
           Caption = '&Enable All'
-          TabOrder = 4
+          TabOrder = 2
           OnClick = btnEnableAllClick
         end
       end
@@ -549,7 +520,7 @@ object fmConfiguration: TfmConfiguration
     Left = 32
     Top = 220
     Bitmap = {
-      494C010103000500040010001000FFFFFFFFFF00FFFFFFFFFFFFFFFF424D3600
+      494C010103000500080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -685,7 +656,8 @@ object fmConfiguration: TfmConfiguration
       FC7FFD1F80F30000F03FFC1F00730000003F081F00010000001F001F00010000
       000F000080000000000700000000000000078002000000000003800000000000
       0001C00100010000EF01C003000F0000CF01C00F80030000FF87C30F80030000
-      FFFFC21FCE0F0000FFFFFF9FFE1F0000}
+      FFFFC21FCE0F0000FFFFFF9FFE1F000000000000000000000000000000000000
+      000000000000}
   end
   object OpenDialog1: TOpenDialog
     Left = 36
@@ -694,5 +666,30 @@ object fmConfiguration: TfmConfiguration
   object SaveDialog1: TSaveDialog
     Left = 36
     Top = 157
+  end
+  object MainMenu1: TMainMenu
+    Left = 40
+    Top = 304
+    object mnuConfig: TMenuItem
+      Caption = '&Config'
+      object mnuLoadConfig: TMenuItem
+        Action = actLoadConfig
+      end
+      object mnuSaveConfig: TMenuItem
+        Action = actSaveConfig
+      end
+    end
+  end
+  object ActionList1: TActionList
+    Left = 96
+    Top = 376
+    object actLoadConfig: TAction
+      Caption = 'Load config from file'
+      OnExecute = actLoadConfigExecute
+    end
+    object actSaveConfig: TAction
+      Caption = 'Save config to file'
+      OnExecute = actSaveConfigExecute
+    end
   end
 end

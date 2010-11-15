@@ -35,7 +35,7 @@ uses
   , uXBController
   , uXbVideo
   , uXBSound
-  , uEmuShared, ImgList
+  , uEmuShared, ImgList, Menus, ActnList
   ;
 
 // The Xbox controller image is borrowed from http://halo.wikia.com/wiki/Halo_Controls
@@ -67,7 +67,7 @@ type
     btnOk: TButton;
     btnCancel: TButton;
     btnApply: TButton;
-    PageControl1: TPageControl;
+    ConfigControl: TPageControl;
     TabSheet1: TTabSheet;
     TabSheet2: TTabSheet;
     btn_X: TPanel;
@@ -110,8 +110,6 @@ type
     GroupBox2: TGroupBox;
     lstLogging: TListView;
     ImageList1: TImageList;
-    btnLoadLogConfig: TButton;
-    btnSaveLogConfig: TButton;
     OpenDialog1: TOpenDialog;
     SaveDialog1: TSaveDialog;
     btnDisableAll: TButton;
@@ -122,6 +120,13 @@ type
     Label4: TLabel;
     edt_AudioAdapter: TComboBox;
     chkMute: TCheckBox;
+    MainMenu1: TMainMenu;
+    ActionList1: TActionList;
+    mnuConfig: TMenuItem;
+    mnuLoadConfig: TMenuItem;
+    mnuSaveConfig: TMenuItem;
+    actLoadConfig: TAction;
+    actSaveConfig: TAction;
     procedure FormCreate(Sender: TObject);
     procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
     procedure btnOkClick(Sender: TObject);
@@ -129,14 +134,15 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure btnCancelClick(Sender: TObject);
     procedure ChangeClick(Sender: TObject);
-    procedure PageControl1Change(Sender: TObject);
+    procedure ConfigControlChange(Sender: TObject);
     procedure lstLoggingDrawItem(Sender: TCustomListView; Item: TListItem;
       Rect: TRect; State: TOwnerDrawState);
     procedure lstLoggingClick(Sender: TObject);
     procedure btnLoadLogConfigClick(Sender: TObject);
-    procedure btnSaveLogConfigClick(Sender: TObject);
     procedure btnDisableAllClick(Sender: TObject);
     procedure btnEnableAllClick(Sender: TObject);
+    procedure actSaveConfigExecute(Sender: TObject);
+    procedure actLoadConfigExecute(Sender: TObject);
   private
     MyDirectDraw: IDirectDraw7;
     FXBVideo : XBVideo;
@@ -150,6 +156,7 @@ type
 
     procedure SaveLogConfig;
     procedure LoadLogConfig;
+    procedure RefreshMenu;
 
     procedure AddAllLogItems;
     procedure AddLogItem(aName: string; aLogStatus: lsStatus; aLogFlag: TLogFlags);
@@ -157,10 +164,18 @@ type
     procedure ConfigureControllerInput(Sender: TObject);
     procedure SetHasChanges(aValue: Boolean);
     property HasChanges: Boolean read FHasChanges write SetHasChanges;
+
+
   end;
 
 var
   fmConfiguration: TfmConfiguration;
+
+const
+  idx_controller = 0;
+  idx_video = 1;
+  idx_sound = 2;
+  idx_logging = 3;
 
 implementation
 
@@ -301,6 +316,7 @@ begin
 
   // Reset changes flag
   HasChanges := False;
+  RefreshMenu;
 end;
 
 procedure TfmConfiguration.LoadLogConfig;
@@ -357,9 +373,10 @@ begin
   Item.SubItemImages[Ord(TLogStatus(Item.Data).Status)] := Ord(TLogStatus(Item.Data).Status);
 end;
 
-procedure TfmConfiguration.PageControl1Change(Sender: TObject);
+procedure TfmConfiguration.ConfigControlChange(Sender: TObject);
 begin
-  TreeView1.Items[PageControl1.ActivePageIndex].Selected := True;
+  TreeView1.Items[ConfigControl.ActivePageIndex].Selected := True;
+  RefreshMenu;
 end;
 
 procedure TfmConfiguration.RefreshItem(Item: TListItem);
@@ -371,6 +388,21 @@ begin
   Item.SubItemImages[2] := -1;
 
   Item.SubItemImages[Ord(TLogStatus(Item.Data).Status)] := Ord(TLogStatus(Item.Data).Status);
+end;
+
+procedure TfmConfiguration.RefreshMenu;
+var
+  ConfigItem: string;
+begin
+  case ConfigControl.ActivePageIndex of
+    idx_controller: ConfigItem := 'controller';
+    idx_video: ConfigItem := 'video';
+    idx_sound: ConfigItem := 'sound';
+    idx_logging: ConfigItem := 'logging';
+  end;
+
+  actLoadConfig.Caption := format('Load %s config from file', [ConfigItem]);
+  actSaveConfig.Caption := format('Save %s config from file', [ConfigItem]);
 end;
 
 procedure TfmConfiguration.SaveLogConfig;
@@ -481,6 +513,26 @@ begin
 
     // Make sure everything is rendered :
     Application.ProcessMessages;
+  end;
+end;
+
+procedure TfmConfiguration.actLoadConfigExecute(Sender: TObject);
+begin
+  case ConfigControl.ActivePageIndex of
+    idx_controller: ;
+    idx_video: ;
+    idx_sound: ;
+    idx_logging: LoadLogConfig;
+  end;
+end;
+
+procedure TfmConfiguration.actSaveConfigExecute(Sender: TObject);
+begin
+  case ConfigControl.ActivePageIndex of
+    idx_controller: ;
+    idx_video: ;
+    idx_sound: ;
+    idx_logging: SaveLogConfig;
   end;
 end;
 
@@ -607,7 +659,7 @@ end;
 procedure TfmConfiguration.TreeView1Change(Sender: TObject; Node: TTreeNode);
 begin
   // Switch to the tab corresponding to the selected tree node :
-  PageControl1.ActivePageIndex := Node.Index;
+  ConfigControl.ActivePageIndex := Node.Index;
 end;
 
 procedure TfmConfiguration.ChangeStatusAllSettings(aStatus: lsStatus);
@@ -641,11 +693,6 @@ begin
     Apply;
 
   Close;
-end;
-
-procedure TfmConfiguration.btnSaveLogConfigClick(Sender: TObject);
-begin
-  SaveLogConfig;
 end;
 
 procedure TfmConfiguration.btnCancelClick(Sender: TObject);
