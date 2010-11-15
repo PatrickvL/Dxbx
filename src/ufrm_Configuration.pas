@@ -155,7 +155,15 @@ type
     procedure ChangeStatusAllSettings(aStatus: lsStatus);
 
     procedure SaveLogConfig;
+    procedure SaveVideoConfig;
+    procedure SaveSoundConfig;
+    procedure SaveControllerConfig;
+
     procedure LoadLogConfig;
+    procedure LoadVideoConfig;
+    procedure LoadSoundConfig;
+    procedure LoadControllerConfig;
+
     procedure RefreshMenu;
 
     procedure AddAllLogItems;
@@ -319,12 +327,19 @@ begin
   RefreshMenu;
 end;
 
+procedure TfmConfiguration.LoadControllerConfig;
+begin
+
+end;
+
 procedure TfmConfiguration.LoadLogConfig;
 var
   IniFile: TIniFile;
   lIndex: Integer;
   LogStatus: TLogStatus;
 begin
+  OpenDialog1.Filter := 'Logging config (*.lcf)|*.lcf';
+
   if OpenDialog1.Execute then
   begin
     IniFile := TIniFile.Create(OpenDialog1.FileName);
@@ -334,6 +349,59 @@ begin
       LogStatus := TLogStatus(lstLogging.Items[lIndex].Data);
       LogStatus.Status := lsStatus(IniFile.ReadInteger('Logging', LogStatus.Name, Ord(lsIgnored)));
       RefreshItem(lstLogging.Items[lIndex]);
+    end;
+
+    HasChanges := True;
+  end;
+end;
+
+procedure TfmConfiguration.LoadSoundConfig;
+var
+  IniFile: TIniFile;
+  lIndex: Integer;
+  LogStatus: TLogStatus;
+begin
+  OpenDialog1.Filter := 'Sound config (*.scf)|*.scf';
+
+  if OpenDialog1.Execute then
+  begin
+    IniFile := TIniFile.Create(OpenDialog1.FileName);
+    try
+
+      edt_AudioAdapter.ItemIndex := IniFile.ReadInteger('Sound', 'Adapter', 0);
+      chkMute.Checked := IniFile.ReadBool('Sound', 'Mute', False);
+
+    finally
+      FreeAndNil(IniFile);
+    end;
+
+    HasChanges := True;
+  end;
+
+end;
+
+procedure TfmConfiguration.LoadVideoConfig;
+var
+  IniFile: TIniFile;
+  lIndex: Integer;
+  LogStatus: TLogStatus;
+begin
+  OpenDialog1.Filter := 'Video config (*.vcf)|*.vcf';
+
+  if OpenDialog1.Execute then
+  begin
+    IniFile := TIniFile.Create(OpenDialog1.FileName);
+    try
+
+      edt_DisplayAdapter.ItemIndex := IniFile.ReadInteger('Video', 'Adapter', 0);
+      edt_Direct3dDevice.ItemIndex := IniFile.ReadInteger('Video', 'Device', 0);
+      edt_VideoResolution.ItemIndex := IniFile.ReadInteger('Video', 'Resolution', 0);
+      chk_FullScreen.Checked := IniFile.ReadBool('Video', 'FullScreen', True);
+      chk_HardwareYUV.Checked := IniFile.ReadBool('Video', 'YUV', True);
+      chk_VSync.Checked := IniFile.ReadBool('Video', 'VSYNC', True);
+
+    finally
+      FreeAndNil(IniFile);
     end;
 
     HasChanges := True;
@@ -405,12 +473,19 @@ begin
   actSaveConfig.Caption := format('Save %s config from file', [ConfigItem]);
 end;
 
+procedure TfmConfiguration.SaveControllerConfig;
+begin
+
+end;
+
 procedure TfmConfiguration.SaveLogConfig;
 var
   IniFile: TIniFile;
   lIndex: Integer;
   LogStatus: TLogStatus;
 begin
+  SaveDialog1.Filter := 'Logging config (*.lcf)|*.lcf';
+
   if SaveDialog1.Execute then
   begin
     IniFile := TIniFile.Create(SaveDialog1.FileName);
@@ -426,6 +501,52 @@ begin
     end;
 
   end;
+end;
+
+procedure TfmConfiguration.SaveSoundConfig;
+var
+  IniFile: TIniFile;
+  lIndex: Integer;
+  LogStatus: TLogStatus;
+begin
+  SaveDialog1.Filter := 'Sound config (*.scf)|*.scf';
+
+  if SaveDialog1.Execute then
+  begin
+    IniFile := TIniFile.Create(SaveDialog1.FileName);
+    try
+      IniFile.WriteInteger('Sound', 'Adapter', edt_AudioAdapter.ItemIndex);
+      IniFile.WriteBool('Sound', 'Mute', chkMute.Checked);
+    finally
+      FreeAndNil(IniFile);
+    end;
+  end;
+end;
+
+procedure TfmConfiguration.SaveVideoConfig;
+var
+  IniFile: TIniFile;
+  lIndex: Integer;
+  LogStatus: TLogStatus;
+begin
+  SaveDialog1.Filter := 'Video config (*.vcf)|*.vcf';
+
+  if SaveDialog1.Execute then
+  begin
+    IniFile := TIniFile.Create(SaveDialog1.FileName);
+    try
+      IniFile.WriteInteger('Video', 'Adapter', edt_DisplayAdapter.ItemIndex);
+      IniFile.WriteInteger('Video', 'Device', edt_Direct3dDevice.ItemIndex);
+      IniFile.WriteInteger('Video', 'Resolution', edt_VideoResolution.ItemIndex);
+      IniFile.WriteBool('Video', 'FullScreen', chk_FullScreen.Checked);
+      IniFile.WriteBool('Video', 'YUV', chk_HardwareYUV.Checked);
+      IniFile.WriteBool('Video', 'VSYNC', chk_VSync.Checked);
+    finally
+      FreeAndNil(IniFile);
+    end;
+
+  end;
+
 end;
 
 procedure TfmConfiguration.SetHasChanges(aValue: Boolean);
@@ -520,8 +641,8 @@ procedure TfmConfiguration.actLoadConfigExecute(Sender: TObject);
 begin
   case ConfigControl.ActivePageIndex of
     idx_controller: ;
-    idx_video: ;
-    idx_sound: ;
+    idx_video: LoadVideoConfig;
+    idx_sound: LoadSoundConfig;
     idx_logging: LoadLogConfig;
   end;
 end;
@@ -530,8 +651,8 @@ procedure TfmConfiguration.actSaveConfigExecute(Sender: TObject);
 begin
   case ConfigControl.ActivePageIndex of
     idx_controller: ;
-    idx_video: ;
-    idx_sound: ;
+    idx_video: SaveVideoConfig;
+    idx_sound: SaveSoundConfig;
     idx_logging: SaveLogConfig;
   end;
 end;
