@@ -1204,15 +1204,13 @@ begin
   for v := m_dwInputDeviceCount - 1 downto 0 do
   begin
     IDirectInputDevice8(m_InputDevice[v].m_Device).Unacquire();
-    IDirectInputDevice8(m_InputDevice[v].m_Device)._Release();
-    m_InputDevice[v].m_Device := nil;
+    IDirectInputDevice8(m_InputDevice[v].m_Device) := nil;
   end;
 
   m_dwInputDeviceCount := 0;
   if (m_pDirectInput8 <> nil) then
   begin
-    IDirectInput8(m_pDirectInput8)._Release();
-    m_pDirectInput8 := nil;
+    IDirectInput8(m_pDirectInput8) := nil;
   end;
 end;
 
