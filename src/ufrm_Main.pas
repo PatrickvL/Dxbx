@@ -283,11 +283,11 @@ end;
 function GetTitleSpecificKernelDebugFilePath: string;
 begin
   // Was DXBX_KERNEL_DEBUG_FILENAME
+  if KernelDebugFilePath <> '' then
+    if KernelDebugFilePath[Length(KernelDebugFilePath) -1] = '\' then
+      KernelDebugFilePath := KernelDebugFilePath + '\';
 
-  if KernelDebugFilePath[Length(KernelDebugFilePath) -1] = '\' then
-    Result := KernelDebugFilePath + Format('DxbxKrnl %s (%d).txt', [m_szAsciiTitle, SvnRevision])
-  else
-    Result := KernelDebugFilePath + Format('\DxbxKrnl %s (%d).txt', [m_szAsciiTitle, SvnRevision]);
+  Result := KernelDebugFilePath + Format('DxbxKrnl %s (%d).txt', [m_szAsciiTitle, SvnRevision])
 end;
 
 procedure GradientHorizontalLineCanvas(const ACanvas: TCanvas;
