@@ -10,7 +10,7 @@ uses
   uError,
   uTypes;
 
-// class: XBController
+// class: XBSound
 type
   XBSound = object(Error)
   private
@@ -36,7 +36,7 @@ type
 
 implementation
 
-{ XBController }
+{ XBSound }
 
 procedure XBSound.Finalize;
 // Branch:Dxbx  Revision:0.5  Translator:Shadow_tj  Done:100
