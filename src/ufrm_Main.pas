@@ -284,7 +284,7 @@ function GetTitleSpecificKernelDebugFilePath: string;
 begin
   // Was DXBX_KERNEL_DEBUG_FILENAME
   if KernelDebugFilePath <> '' then
-    if KernelDebugFilePath[Length(KernelDebugFilePath) -1] = '\' then
+    if LastChar(KernelDebugFilePath) = '\' then
       KernelDebugFilePath := KernelDebugFilePath + '\';
 
   Result := KernelDebugFilePath + Format('DxbxKrnl %s (%d).txt', [m_szAsciiTitle, SvnRevision])
@@ -549,7 +549,7 @@ begin
 
   MyXBEList := TStringList.Create;
   MyXBEList.CaseSensitive := False;
-  if LoadXBEListByFile(FApplicationDir + cXDK_TRACKER_DATA_FILE) > 0 then
+  if LoadXBEListByFile(GetDxbxBasePath + '\' + cXDK_TRACKER_DATA_FILE) > 0 then
     UpdateFilter;
 
   PEmuShared(nil).Init;
@@ -600,7 +600,7 @@ end; // FormCreate
 procedure Tfrm_Main.FormDestroy(Sender: TObject);
 begin
   WriteSettingsIni();
-  SaveXBEListByFile(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aPublishedBy=}'');
+  SaveXBEListByFile(GetDxbxBasePath + '\' + cXDK_TRACKER_DATA_FILE, {aPublishedBy=}'');
   CloseXbe();
   CloseLogs();
 end;
@@ -1848,6 +1848,7 @@ end;
 procedure Tfrm_Main.ReopenXbe(Sender: TObject);
 var
   TempItem: TMenuItem;
+  XbeXml: string;
 begin
   TempItem := Sender as TMenuItem;
   if not TXbe.FileExists(TempItem.Hint) then
@@ -1858,11 +1859,7 @@ begin
   end;
 
   CloseXbe();
-  if not OpenXbe(TempItem.Hint, {var}m_Xbe) then
-  begin
-    MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
-    Exit;
-  end;
+  OpenXbeFile(TempItem.Hint);
 end; // ReopenXbe
 
 procedure Tfrm_Main.RecentXbeAdd(aFileName: string);
