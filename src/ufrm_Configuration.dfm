@@ -87,6 +87,10 @@ object fmConfiguration: TfmConfiguration
     OnChange = ConfigControlChange
     object TabSheet1: TTabSheet
       Caption = 'Controller'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Image1: TImage
         Left = 0
         Top = 0
@@ -294,6 +298,10 @@ object fmConfiguration: TfmConfiguration
     object TabSheet2: TTabSheet
       Caption = 'Video'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         546
         410)
@@ -457,6 +465,10 @@ object fmConfiguration: TfmConfiguration
     object TabSheet3: TTabSheet
       Caption = 'Logging'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox2: TGroupBox
         Left = 3
         Top = 0
@@ -520,7 +532,7 @@ object fmConfiguration: TfmConfiguration
     Left = 32
     Top = 220
     Bitmap = {
-      494C010103000500080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101030005000C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
