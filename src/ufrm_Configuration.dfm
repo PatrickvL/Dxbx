@@ -80,7 +80,7 @@ object fmConfiguration: TfmConfiguration
     Top = 8
     Width = 554
     Height = 441
-    ActivePage = TabSheet3
+    ActivePage = TabSheet4
     Anchors = [akLeft, akTop, akRight, akBottom]
     Style = tsFlatButtons
     TabOrder = 1
@@ -664,6 +664,7 @@ object fmConfiguration: TfmConfiguration
     Top = 100
   end
   object SaveDialog1: TSaveDialog
+    Filter = 'Sound config (*.scf)|*.scf'
     Left = 36
     Top = 157
   end
