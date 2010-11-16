@@ -169,6 +169,7 @@ function RoundUp(dwValue, dwMult: DWord): DWord;
 function FixInvalidFilePath(const aFilePath: string): string;
 
 function RecapitalizeString(const aString: string): string;
+function TitleToNiceFilename(const aTitle: string): string;
 
 function DebugModeToString(const aDebugMode: TDebugMode): string;
 
@@ -499,6 +500,18 @@ begin
       NrOfUppercase := 0;
     end;
   end; // for
+end;
+
+function TitleToNiceFilename(const aTitle: string): string;
+begin
+  // Fixup invalid filename characters :
+  Result := FixInvalidFilePath(aTitle);
+
+  // Replace '_' with space :
+  Result := StringReplace(Result, '_', ' ', [rfReplaceAll]);
+
+  // Try to capitalize string better :
+  Result := RecapitalizeString(Result);
 end;
 
 procedure Swap(var aElement1, aElement2);

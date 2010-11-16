@@ -777,14 +777,7 @@ function TXbe.DetermineDumpFileName: string;
 begin
   Result := GetReadableTitle(@m_Certificate);
 
-  // Fixup invalid filename characters :
-  Result := FixInvalidFilePath(Result);
-
-  // Replace '_' with space :
-  Result := StringReplace(Result, '_', ' ', [rfReplaceAll]);
-
-  // Try to capitalize string better :
-  Result := RecapitalizeString(Result);
+  Result := TitleToNiceFilename(Result);
 
   // Include game region (and possibly version) :
   if (m_Certificate.dwVersion > 0)
