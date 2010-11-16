@@ -670,6 +670,9 @@ type PSH_XBOX_SHADER = record
     function SimplifyMUL(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
     function SimplifyLRP(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
     function FixupPixelShader(): Boolean;
+    function FixInvalidSrcSwizzle(): Boolean;
+    function FixMissingR0a(): Boolean;
+    function FixCoIssuedOpcodes(): Boolean;
   end;
 {$ENDIF PS_REWRITE}
 
@@ -1675,6 +1678,15 @@ begin
   if FixupPixelShader then
     Log('FixupPixelShader');
 
+  if FixInvalidSrcSwizzle then
+    Log('FixInvalidSrcSwizzle');
+
+  if FixMissingR0a then
+    Log('FixMissingR0a');
+
+  if FixCoIssuedOpcodes then
+    Log('FixCoIssuedOpcodes');
+
   Log('End result');
 end;
 
@@ -1777,6 +1789,10 @@ begin
       // Remove useless flag, to ease up later comparisions :
       CurArg.Modifiers := CurArg.Modifiers - [ARGMOD_IDENTITY];
 
+      // Meanwhile, fix "Invalid src swizzle" :
+      if CurArg.Mask = MASK_RGB then
+        CurArg.Mask := MASK_RGBA;
+
       // Keep track of all register reads, so that we can discard useless writes :
       if CurArg.Address < MAX_ADDRESS then
         RegUsage[CurArg.Type_, CurArg.Address] := RegUsage[CurArg.Type_, CurArg.Address] or CurArg.Mask;
@@ -1874,44 +1890,6 @@ begin
 
     if NewIns.CommentString <> '' then
       InsertIntermediate(@NewIns, i);
-  end;
-
-  // Detect a read of r0.a without a write, as we need to insert a "MOV r0.a, t0.a" as default (like the xbox has) :
-  for i := 0 to IntermediateCount - 1 do
-  begin
-    Cur := @(Intermediate[i]);
-
-    // Check if r0.a is written to by this opcode :
-    for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._Out - 1 do
-    begin
-      CurArg := @(Cur.Parameters[j]);
-      if  (CurArg.Type_ = PARAM_R)
-      and (CurArg.Address = 0)
-      and ((CurArg.Mask and MASK_A) > 0) then
-        // Then we don't have to insert a default :
-        Exit;
-    end;
-
-    // Check if r0.a is read by this opcode
-    for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 do
-    begin
-      CurArg := @(Cur.Parameters[j]);
-      if  (CurArg.Type_ = PARAM_R)
-      and (CurArg.Address = 0)
-      and ((CurArg.Mask and MASK_A) > 0) then
-      begin
-        // Insert a new opcode : MOV r0.a, t0.a
-        NewIns.Initialize(PO_MOV);
-        NewIns.Output[0].Type_ := PARAM_R;
-        NewIns.Output[0].Address := 0;
-        NewIns.Output[0].Mask := MASK_A;
-        NewIns.Parameters[0] := NewIns.Output[0];
-        NewIns.Parameters[0].Type_ := PARAM_T;
-        NewIns.CommentString := 'Inserted r0.a default';
-        InsertIntermediate(@NewIns, i-1);
-        Exit;
-      end;
-    end;
   end;
 end; // ConvertXboxShaderToNative
 
@@ -2088,21 +2066,12 @@ begin
   DeleteIntermediate(i);
   InsertPos := i;
 
-  // Set the output to r0.rgb (as r0.a is determined via s6.a) :
-  Cur.Output[0].Type_ := PARAM_R;
-  Cur.Output[0].Address := 0;
-  Cur.Output[0].Mask := MASK_RGB;
-
   // See if the final combiner uses the prod or sum input parameters :
   NeedsProd := False;
   NeedsSum := False;
   for i := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 do
   begin
     CurArg := @(Cur.Parameters[i]);
-
-    // Meanwhile, fix "Invalid src swizzle" :
-    if CurArg.Mask = MASK_RGB then
-      CurArg.Mask := MASK_RGBA;
 
     // Check for the three final-combiner-specific argument types :
     case CurArg.Type_ of
@@ -2132,18 +2101,6 @@ begin
       end;
     end;
   end; // for input
-
-  // See if s6 is something else than 'r0.a' :
-  if Cur.Parameters[6].ToString <> 'r0.a' then
-  begin
-    // Add a new opcode that moves s6 over to r0.a :
-    Ins.Initialize(PO_MOV);
-    Ins.Output[0].Type_ := PARAM_R;
-    Ins.Output[0].Address := 0;
-    Ins.Output[0].Mask := MASK_A;
-    Ins.Parameters[0] := Cur.Parameters[6];
-    InsertIntermediate(@Ins, InsertPos);
-  end;
 
   if NeedsSum then
   begin
@@ -2187,6 +2144,11 @@ begin
   // Change that into a LRP + ADD, and let the optimizer reduce it;
 
   // Add a new opcode that calculates r0.rgb=s0*s1 + (1-s0)*s2 via a LRP :
+  // Set the output to r0.rgb (as r0.a is determined via s6.a) :
+  Cur.Output[0].Type_ := PARAM_R;
+  Cur.Output[0].Address := 0;
+  Cur.Output[0].Mask := MASK_RGB;
+
   Ins := Cur;
   Ins.Opcode := PO_LRP;
   Ins.Modifier := INSMOD_NONE;
@@ -2200,6 +2162,20 @@ begin
   Ins.Parameters[0] := Cur.Output[0]; // = r0.rgb
   Ins.Parameters[1] := Cur.Parameters[3]; // =s3 from XFC
   InsertIntermediate(@Ins, InsertPos);
+  Inc(InsertPos);
+
+  // See if s6 is something else than 'r0.a' :
+  if Cur.Parameters[6].ToString <> 'r0.a' then
+  begin
+    // Add a new opcode that moves s6 over to r0.a :
+    Ins.Initialize(PO_MOV);
+    Ins.Output[0].Type_ := PARAM_R;
+    Ins.Output[0].Address := 0;
+    Ins.Output[0].Mask := MASK_A;
+    Ins.Parameters[0] := Cur.Parameters[6];
+    InsertIntermediate(@Ins, InsertPos);
+    Inc(InsertPos);
+  end;
 end;
 
 function PSH_XBOX_SHADER.RemoveNops(): Boolean;
@@ -2620,6 +2596,113 @@ begin
     FixupPixelShader();
   end;
 end; // FixupPixelShader
+
+function PSH_XBOX_SHADER.FixInvalidSrcSwizzle(): Boolean;
+var
+  i, j: int;
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+  CurArg: PPSH_IMD_ARGUMENT;
+begin
+  Result := False;
+  for i := 0 to IntermediateCount - 1 do
+  begin
+    Cur := @(Intermediate[i]);
+    // Is this an arithmetic opcode?
+    if Cur.Opcode > PO_TEX then
+    begin
+      // Loop over the input arguments :
+      for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 do
+      begin
+        CurArg := @(Cur.Parameters[j]);
+
+        // Fix "Invalid src swizzle" :
+        if CurArg.Mask = MASK_RGB then
+        begin
+          CurArg.Mask := MASK_RGBA;
+          Result := True;
+        end;
+      end;
+    end;
+  end;
+end;
+
+function PSH_XBOX_SHADER.FixMissingR0a(): Boolean;
+var
+  NeedsR0aDefault: Boolean;
+  i, j: int;
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+  CurArg: PPSH_IMD_ARGUMENT;
+  NewIns: PSH_INTERMEDIATE_FORMAT;
+begin
+  Result := False;
+  // Detect a read of r0.a without a write, as we need to insert a "MOV r0.a, t0.a" as default (like the xbox has) :
+  NeedsR0aDefault := True;
+  i := IntermediateCount;
+  while (i > 0) and NeedsR0aDefault do
+  begin
+    Dec(i);
+    Cur := @(Intermediate[i]);
+    if Cur.Opcode = PO_DEF then
+      Break;
+
+    // Check if r0.a is written to by this opcode :
+    for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._Out - 1 do
+    begin
+      CurArg := @(Cur.Output[j]);
+      if  (CurArg.Type_ = PARAM_R)
+      and (CurArg.Address = 0)
+      and ((CurArg.Mask and MASK_A) > 0) then
+      begin
+        // Then we don't have to insert a default :
+        NeedsR0aDefault := False;
+        Break;
+      end;
+    end;
+  end;
+
+  if NeedsR0aDefault then
+  begin
+    // Insert a new opcode : MOV r0.a, t0.a
+    NewIns.Initialize(PO_MOV);
+    NewIns.Output[0].Type_ := PARAM_R;
+    NewIns.Output[0].Address := 0;
+    NewIns.Output[0].Mask := MASK_A;
+    NewIns.Parameters[0] := NewIns.Output[0];
+    NewIns.Parameters[0].Type_ := PARAM_T;
+    NewIns.CommentString := 'Inserted r0.a default';
+    InsertIntermediate(@NewIns, i);
+    Result := True;
+  end;
+end; // FixMissingR0a
+
+function PSH_XBOX_SHADER.FixCoIssuedOpcodes(): Boolean;
+var
+  PrevMask: DWORD;
+  i: int;
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+begin
+  Result := False;
+
+  // Start with Alpha, so the first opcode doesn't become a write-combined opcode (which isn't possible) :
+  PrevMask := MASK_A;
+  // TODO : We could try to bubble some opcodes up and/or down if possible, to combine better.
+  for i := 0 to IntermediateCount - 1 do
+  begin
+    Cur := @(Intermediate[i]);
+    // Is this an arithmetic opcode?
+    if Cur.Opcode > PO_TEX then
+    begin
+      // Set IsCombined only when previous opcode doesn't write to Alpha, while this opcode writes only to Alpha :
+      if Cur.IsCombined <> ((PrevMask and MASK_A) = 0) and (Cur.Output[0].Mask = MASK_A) then
+      begin
+        Cur.IsCombined := not Cur.IsCombined;
+        Result := True;
+      end;
+
+      PrevMask := Cur.Output[0].Mask;
+    end;
+  end;
+end;
 
 {$ENDIF PS_REWRITE}
 
