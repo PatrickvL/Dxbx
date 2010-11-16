@@ -639,7 +639,7 @@ type PSH_INTERMEDIATE_FORMAT = record
 
 type PSH_XBOX_SHADER = record
     IntermediateCount: int;
-    Intermediate: array[0..63] of PSH_INTERMEDIATE_FORMAT; // ...should be enough slots to hold all possible shaders
+    Intermediate: array[0..X_PSH_COMBINECOUNT * 3] of PSH_INTERMEDIATE_FORMAT; // ...should be enough slots to hold all possible shaders
 
     FinalCombinerFlags: PS_FINALCOMBINERSETTING;
     CombinerCountFlags: DWORD; // For PS_COMBINERCOUNTFLAGS
@@ -1005,10 +1005,16 @@ const PS_GlobalFlagsStr: array [PS_GLOBALFLAGS] of P_char =
 {$IFDEF PS_REWRITE}
 
 const
+  XFC_COMBINERSTAGENR = X_PSH_COMBINECOUNT; // Always call XFC 'stage 9', 1 after
+
   PSH_XBOX_MAX_C_REGISTER_COUNT = 16;
   PSH_XBOX_MAX_R_REGISTER_COUNT = 2;
   PSH_XBOX_MAX_T_REGISTER_COUNT = 4;
   PSH_XBOX_MAX_V_REGISTER_COUNT = 2;
+
+  // Two extra constants are possible in the final combiner - give them fake numbers :
+  X_PSH_CONSTANT_FC0 = PSH_XBOX_MAX_C_REGISTER_COUNT + 1;
+  X_PSH_CONSTANT_FC1 = X_PSH_CONSTANT_FC0 + 1;
 
 const
   CONST_NEG_TWO = 4;
@@ -1509,6 +1515,7 @@ var
   i: int;
 begin
   Self.Opcode := PO_XFC;
+  Self.CombinerStageNr := XFC_COMBINERSTAGENR;
 
   // Decode A,B,C and D :
   for i := 0 to 4 - 1 do
@@ -1740,15 +1747,17 @@ var
   NewIns: PSH_INTERMEDIATE_FORMAT;
   CurArg: PPSH_IMD_ARGUMENT;
   ConstColor: D3DCOLOR;
-  ConstUse: array [0..PSH_XBOX_MAX_C_REGISTER_COUNT-1] of Boolean;
   RegUsage: array [PSH_ARGUMENT_TYPE, 0..MAX_ADDRESS] of DWORD;
+  IsConstDeclared: array [0..X_PSH_CONSTANT_FC1-1] of Boolean;
 begin
   // Mark only R0 (and discard) as initially 'read', as these may not result in a removal :
-  ZeroMemory(@ConstUse, SizeOf(ConstUse));
   ZeroMemory(@RegUsage, SizeOf(RegUsage));
   RegUsage[PARAM_R, 0] := MASK_RGBA;
   for i := 0 to MAX_ADDRESS do
     RegUsage[PARAM_DISCARD, i] := MASK_RGBA;
+
+  // Keep track of which constants are already 'DEF'ined :
+  ZeroMemory(@IsConstDeclared, SizeOf(IsConstDeclared));
 
   // Do a bottom-to-top pass, converting all xbox opcodes into a native set of opcodes :
   i := IntermediateCount;
@@ -1775,40 +1784,60 @@ begin
       // Handle C0 and C1 (as we need to map these two to actual constants) :
       if CurArg.Type_ = PARAM_C then
       begin
-        // See if C0 has a unique index per combiner stage :
         if (CurArg.Address = 0) then
         begin
-          if CombinerHasUniqueC0 then
-            // C0 actually ranges from c0 to c7, one for each possible combiner stage :
-            // X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7
-            Inc(CurArg.Address, Cur.CombinerStageNr);
-
-          ConstColor := pPSDef.PSConstant0[CurArg.Address];
-        end
-        else
-        // See if C1 has a unique index per combiner stage :
-        if (CurArg.Address = 1) then
-        begin
-          if CombinerHasUniqueC1 then
+          if Cur.CombinerStageNr = XFC_COMBINERSTAGENR then
           begin
-            // C1 actually ranges from c8 to c15, one for each possible combiner stage :
-            // X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7
-            Inc(CurArg.Address, 8 + Cur.CombinerStageNr - 1);
-            ConstColor := pPSDef.PSConstant1[CurArg.Address - 8];
+            // TODO : Is the final combiner C0 als influenced by CombinerHasUniqueC0 ?
+            CurArg.Address := X_PSH_CONSTANT_FC0;
+            ConstColor := pPSDef.PSFinalCombinerConstant0;
           end
           else
-            ConstColor := pPSDef.PSConstant1[1];
+          begin
+            // See if C0 has a unique index per combiner stage :
+            if CombinerHasUniqueC0 then
+              // C0 actually ranges from c0 to c7, one for each possible combiner stage :
+              // X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7
+              Inc(CurArg.Address, Cur.CombinerStageNr);
+
+            ConstColor := pPSDef.PSConstant0[CurArg.Address];
+          end;
+        end
+        else
+        begin
+          // See if C1 has a unique index per combiner stage :
+          Assert(CurArg.Address = 1);
+
+          if Cur.CombinerStageNr = XFC_COMBINERSTAGENR then
+          begin
+            // TODO : Is the final combiner C1 als influenced by CombinerHasUniqueC1 ?
+            CurArg.Address := X_PSH_CONSTANT_FC1;
+            ConstColor := pPSDef.PSFinalCombinerConstant1;
+          end
+          else
+          begin
+            if CombinerHasUniqueC1 then
+            begin
+              // C1 actually ranges from c8 to c15, one for each possible combiner stage :
+              // X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7
+              Inc(CurArg.Address, 8 + Cur.CombinerStageNr - 1);
+              ConstColor := pPSDef.PSConstant1[CurArg.Address - 8];
+            end
+            else
+              ConstColor := pPSDef.PSConstant1[1];
+          end;
         end;
 
         // If this is a new constant, output a 'def' opcode for it at the begin of the shader :
-        if not ConstUse[CurArg.Address] then
+        if not IsConstDeclared[CurArg.Address] then
         begin
-          ConstUse[CurArg.Address] := True;
+          IsConstDeclared[CurArg.Address] := True;
 
           NewIns.Output[0] := CurArg^;
           NewIns.Output[0].Mask := MASK_RGBA;
           _SetColor(NewIns, ConstColor);
           InsertIntermediate(@NewIns, 0);
+          // Note : We'll try to fixup constants above c7 later.
         end;
       end;
     end;
@@ -2543,10 +2572,10 @@ begin
   // - Move independent .a channel instructions upwards to enable channel-combining
   // - Mark .a instructions as 'Combined' if they follow an .rgb instruction
 
-  // TODO : Fixup C8..C15 constants - ps.1.3 goes only up to C7 (PS.3.0 has 224, but need complete Direct3D9 port)
-  // With a bit of luck, the C8..C15 constants are identical to one or more of C0..C7, in which case we could
+  // TODO : Fixup C8..C15 + FC0+FC1 constants - ps.1.3 goes only up to C7 (PS.3.0 has 224, but needs a complete Direct3D9 port)
+  // With a bit of luck, there are gaps in the constant-usage (which we could remove via a mapping table),
+  // or some of the additional constants could be identical to one of C0..C7, in which case we could
   // switch them over (hopeing that no SetPixelShaderConstant call updates these).
-
 
   if MoveRemovableParametersRight then
     Result := True;
@@ -4392,7 +4421,7 @@ begin
   Result := PSIntermediate.DisassembleIntermediate();
 {$IFDEF PS_REWRITE}
   New.Decode(pPSDef);
-  Result := New.ToString;
+//  Result := New.ToString;
 {$ENDIF}
 end;
 
