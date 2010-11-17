@@ -1143,7 +1143,7 @@ var
 begin
   if Type_ = PARAM_VALUE then
   begin
-    Result := Format('%.0f', [GetConstValue]);
+    Result := Format('%f', [GetConstValue]);
     if Pos(DecimalSeparator, Result) > 0 then
       Result := Result + 'f';
 
@@ -2784,6 +2784,16 @@ begin
     // Change it into a MOV (the 0 argument will be resolve in a recursive MOV fixup) :
     Cur.Opcode := PO_MOV;
     Cur.Parameters[0].SetConstValue(0.0);
+    Result := True;
+    Exit;
+  end;
+
+  // Is this a multiply-by-const 1 ?
+  if (Cur.Parameters[1].GetConstValue = 0.5) then
+  begin
+    // Change it into a simple MOV :
+    Cur.Opcode := PO_MOV;
+    Cur.Parameters[0].Modifiers := [ARGMOD_SCALE_D2]; // TODO : Scale incremental!
     Result := True;
     Exit;
   end;
