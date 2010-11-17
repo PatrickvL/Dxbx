@@ -2222,7 +2222,7 @@ begin
     Ins.Output[0].Mask := MASK_A;
     Ins.Parameters[0] := Cur.Parameters[6];
     InsertIntermediate(@Ins, InsertPos);
-    Inc(InsertPos);
+//    Inc(InsertPos);
   end;
 end;
 
@@ -2679,7 +2679,6 @@ var
   R0aDefaultInsertPos: int;
   i: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
-  CurArg: PPSH_IMD_ARGUMENT;
   NewIns: PSH_INTERMEDIATE_FORMAT;
 begin
   Result := False;
