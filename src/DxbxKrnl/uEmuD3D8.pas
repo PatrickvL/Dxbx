@@ -724,19 +724,21 @@ end;
 procedure AssureExtraXRGBSurface(const BackBufferSurface: IDirect3DSurface; const Caller: string);
 var
   SurfaceDesc: D3DSURFACE_DESC;
+  aResult: HRESULT;
 begin
   // Assure we have a reusable surface (in the correct format) which the back buffer can be converted into :
   if (ExtraXRGBSurface = nil) then
   begin
     BackBufferSurface.GetDesc({out}SurfaceDesc);
-    if FAILED(IDirect3DDevice_CreateImageSurface(
-      g_pD3DDevice,
-      SurfaceDesc.Width,
-      SurfaceDesc.Height,
-      D3DFMT_A8R8G8B8, // This format is supported by D3DXSaveSurfaceToFile (D3DFMT_X8R8G8B8 works too)
-      @ExtraXRGBSurface)) then
+    aResult := IDirect3DDevice_CreateImageSurface(
+                  g_pD3DDevice,
+                  SurfaceDesc.Width,
+                  SurfaceDesc.Height,
+                  D3DFMT_A8R8G8B8, // This format is supported by D3DXSaveSurfaceToFile (D3DFMT_X8R8G8B8 works too)
+                  @ExtraXRGBSurface);
+    if FAILED(aResult) then
     begin
-      DbgPrintf('EmuD3D8 : %s could not create a extra buffer!', [Caller]);
+      DbgPrintf('EmuD3D8 : %s could not create a extra buffer!' +#13#10+ D3DErrorString(aResult), [Caller]);
     end;
   end;
 end;
@@ -762,7 +764,7 @@ begin
   hRet := g_pD3DDevice.GetBackBuffer({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} BackBuffer, D3DBACKBUFFER_TYPE_MONO, @BackBufferSurface);
   if (FAILED(hRet)) then
   begin
-    DbgPrintf('EmuD3D8 : DxbxTakeScreenShot could not get back buffer!');
+    DbgPrintf('EmuD3D8 : DxbxTakeScreenShot could not get back buffer!' +#13#10+ D3DErrorString(hRet));
     Exit;
   end;
 
@@ -772,7 +774,7 @@ begin
   hRet := D3DXLoadSurfaceFromSurface(ExtraXRGBSurface, NULL, NULL, BackBufferSurface, NULL, NULL, D3DX_FILTER_LINEAR{D3DX_DEFAULT}, 0);
   if (FAILED(hRet)) then
   begin
-    DbgPrintf('EmuD3D8 : DxbxTakeScreenShot could not convert back buffer!');
+    DbgPrintf('EmuD3D8 : DxbxTakeScreenShot could not convert back buffer!' +#13#10+ D3DErrorString(hRet));
     Exit;
   end;
 
@@ -787,7 +789,7 @@ begin
   // Now save it to file (somehow, Direct3D8 doesn't export jpgs or pngs, so bitmap has to suffice for now) :
   hRet := D3DXSaveSurfaceToFileA(PAnsiChar(FileName), D3DXIFF_BMP, ExtraXRGBSurface, NULL, NULL);
   if (FAILED(hRet)) then
-    DbgPrintf('EmuD3D8 : DxbxTakeScreenShot could not write screen buffer!')
+    DbgPrintf('EmuD3D8 : DxbxTakeScreenShot could not write screen buffer!' +#13#10+ D3DErrorString(hRet))
   else
     DbgPrintf('EmuD3D8 : Screenshot written to %s', [FileName]);
 end;
@@ -1856,13 +1858,13 @@ begin
         begin
           // TODO -oDXBX: Use DXGetErrorDescription(g_EmuCDPD.hRet); (requires another DLL though)
           if (g_EmuCDPD.hRet = D3DERR_INVALIDCALL) then
-            DxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Invalid Call)')
+            DxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Invalid Call)' +#13#10+ D3DErrorString(g_EmuCDPD.hRet))
           else if (g_EmuCDPD.hRet = D3DERR_NOTAVAILABLE) then
-            DxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Not Available)')
+            DxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Not Available)' +#13#10+ D3DErrorString(g_EmuCDPD.hRet))
           else if (g_EmuCDPD.hRet = D3DERR_OUTOFVIDEOMEMORY) then
-            DxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Out of Video Memory)');
+            DxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Out of Video Memory)' +#13#10+ D3DErrorString(g_EmuCDPD.hRet));
 
-          DxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Unknown)');
+          DxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Unknown)' +#13#10+ D3DErrorString(g_EmuCDPD.hRet));
         end;
 
         // Update Xbox PresentationParameters :
@@ -1892,11 +1894,11 @@ begin
             hRet := DirectDrawCreateEx({lpGUID=}@g_ddguid, {out}IDirectDraw7(g_pDD7), {iid=}IID_IDirectDraw7, {pUnkOuter=}NULL);
 
           if (FAILED(hRet)) then
-            DxbxKrnlCleanup('Could not initialize DirectDraw7');
+            DxbxKrnlCleanup('Could not initialize DirectDraw7' +#13#10+ D3DErrorString(hRet));
 
           hRet := IDirectDraw7(g_pDD7).SetCooperativeLevel(0, DDSCL_NORMAL);
           if (FAILED(hRet)) then
-            DxbxKrnlCleanup('Could not set cooperative level');
+            DxbxKrnlCleanup('Could not set cooperative level' +#13#10+ D3DErrorString(hRet));
         end;
 
         // check for YUY2 overlay support
@@ -1952,7 +1954,7 @@ begin
           hRet := IDirectDraw7(g_pDD7).CreateSurface(ddsd2, @g_pDDSPrimary7, nil);
 
           if (FAILED(hRet)) then
-            DxbxKrnlCleanup('Could not create primary surface (0x%.08X)', [hRet]);
+            DxbxKrnlCleanup('Could not create primary surface (0x%.08X)' +#13#10+ D3DErrorString(hRet), [hRet]);
         end;
 
         // update render target cache
@@ -4457,7 +4459,7 @@ begin
       Result := g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}IDirect3DPixelShader9{$MESSAGE 'fixme'}{$ENDIF}(dwHandle));
 
     if (FAILED(Result)) then
-      EmuWarning('Could not set pixel shader!');
+      EmuWarning('Could not set pixel shader!' +#13#10+ D3DErrorString(Result));
     //*/
 
     g_bFakePixelShaderLoaded := TRUE;
@@ -4639,7 +4641,7 @@ begin
 
     if (FAILED(Result)) then
     begin
-      EmuWarning('CreateTexture Failed!');
+      EmuWarning('CreateTexture Failed!' +#13#10+ D3DErrorString(Result));
       ppTexture^.Data := $BEADBEAD;
     end
     else
@@ -4742,7 +4744,7 @@ begin
         PCFormat, D3DPOOL_MANAGED, @(ppVolumeTexture^.Emu.VolumeTexture));
 
     if (FAILED(hRet)) then
-      DxbxKrnlCleanup('CreateVolumeTexture Failed! (0x%.08X)', [hRet]);
+      DxbxKrnlCleanup('CreateVolumeTexture Failed! (0x%.08X)' +#13#10+ D3DErrorString(hRet), [hRet]);
 
     // Dxbx addition : Initialize Common field properly :
     ppVolumeTexture^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE or X_D3DCOMMON_D3DCREATED;
@@ -4804,7 +4806,7 @@ begin
   );
 
   if (FAILED(Result)) then
-    DxbxKrnlCleanup('CreateCubeTexture Failed!');
+    DxbxKrnlCleanup('CreateCubeTexture Failed!' +#13#10+ D3DErrorString(Result));
 
   // Dxbx addition : Initialize Common field properly :
   ppCubeTexture^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE or X_D3DCOMMON_D3DCREATED;
@@ -4852,7 +4854,7 @@ begin
       @(ppIndexBuffer^.Emu.IndexBuffer));
 
   if (FAILED(hRet)) then
-    DxbxKrnlCleanup('XTL_EmuD3DDevice_CreateIndexBuffer: IndexBuffer Create Failed!');
+    DxbxKrnlCleanup('XTL_EmuD3DDevice_CreateIndexBuffer: IndexBuffer Create Failed!' +#13#10+ D3DErrorString(hRet));
 
   // Dxbx addition : Initialize Common field properly :
   ppIndexBuffer^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_INDEXBUFFER or X_D3DCOMMON_D3DCREATED;
@@ -4860,7 +4862,7 @@ begin
   // update data ptr
   pData := NULL;
   if (FAILED(IDirect3DIndexBuffer(ppIndexBuffer^.Emu.IndexBuffer).Lock(0, Length, {out}TLockData(pData), 0))) then
-    DxbxKrnlCleanup('XTL_EmuD3DDevice_CreateIndexBuffer: IndexBuffer Lock Failed!');
+    DxbxKrnlCleanup('XTL_EmuD3DDevice_CreateIndexBuffer: IndexBuffer Lock Failed!' +#13#10+ D3DErrorString(hRet));
 
   ppIndexBuffer^.Data := DWORD(pData);
 
@@ -5088,7 +5090,7 @@ begin
 
   if FAILED(Result) then
   begin
-    EmuWarning('SetTextureFailed!\n');
+    EmuWarning('SetTextureFailed!' +#13#10+ D3DErrorString(Result));
   end;
 
   EmuSwapFS(fsXbox);
@@ -5906,7 +5908,7 @@ begin
           if IsRunning(TITLEID_CrazyTaxi) then
           begin
             // TODO -oCXBX: Hack for Crazy Taxi 3?
-            szString := SysUtils.Format('CreateVertexBuffer Failed!'#13#10'   VB Size = 0x%X', [dwSize]);
+            szString := SysUtils.Format('CreateVertexBuffer Failed!'#13#10'   VB Size = 0x%X' +#13#10+ D3DErrorString(hRet), [dwSize]);
 
             if ( dwSize <> 0 ) then
               DxbxKrnlCleanup( szString )
@@ -5927,7 +5929,7 @@ begin
         pData := nil;
         hRet := IDirect3DVertexBuffer(pVertexBuffer.Emu.VertexBuffer).Lock(0, 0, {out}TLockData(pData), 0);
         if FAILED(hRet) then
-          DxbxKrnlCleanup('EmuIDirect3DResource_Register: VertexBuffer Lock Failed!');
+          DxbxKrnlCleanup('EmuIDirect3DResource_Register: VertexBuffer Lock Failed!' +#13#10+ D3DErrorString(hRet));
 
         memcpy(pData, pBase, dwSize);
 
@@ -5974,13 +5976,13 @@ begin
             @(pIndexBuffer.Emu.IndexBuffer));
 
           if (FAILED(hRet)) then
-            DxbxKrnlCleanup('EmuIDirect3DResource_Register: IndexBuffer Create Failed!');
+            DxbxKrnlCleanup('EmuIDirect3DResource_Register: IndexBuffer Create Failed!' +#13#10+ D3DErrorString(hRet));
 
           // update data ptr
           pData := nil;
           hRet := IDirect3DIndexBuffer(pIndexBuffer.Emu.IndexBuffer).Lock(0, dwSize, {out}TLockData(pData), 0);
           if (FAILED(hRet)) then
-            DxbxKrnlCleanup('EmuIDirect3DResource_Register: IndexBuffer Lock Failed!');
+            DxbxKrnlCleanup('EmuIDirect3DResource_Register: IndexBuffer Lock Failed!' +#13#10 + D3DErrorString(hRet));
 
           memcpy({dest=}pData, {src=}pBase, dwSize);
 
@@ -6069,7 +6071,7 @@ begin
           );
 
           if (FAILED(hRet)) then
-            DxbxKrnlCleanup('EmuIDirect3DResource_Register: CreateImageSurface Failed!');
+            DxbxKrnlCleanup('EmuIDirect3DResource_Register: CreateImageSurface Failed!' +#13#10+ D3DErrorString(hRet));
 
           if MayLog(lfUnit or lfReturnValue) then
           begin
@@ -6108,7 +6110,7 @@ begin
               D3DPOOL_MANAGED, @(pPixelContainer.Emu.CubeTexture));
 
             if (FAILED(hRet)) then
-              DxbxKrnlCleanup('EmuIDirect3DResource_Register: CreateCubeTexture Failed!');
+              DxbxKrnlCleanup('EmuIDirect3DResource_Register: CreateCubeTexture Failed!' +#13#10+ D3DErrorString(hRet));
 
             if MayLog(lfUnit or lfReturnValue) then
               DbgPrintf('EmuIDirect3DResource_Register: Successfully Created CubeTexture : ' + ResourceToString(pPixelContainer));
@@ -6128,7 +6130,7 @@ begin
               );
 
             if (FAILED(hRet)) then
-              DxbxKrnlCleanup('EmuIDirect3DResource_Register: CreateTexture Failed!');
+              DxbxKrnlCleanup('EmuIDirect3DResource_Register: CreateTexture Failed!' +#13#10+ D3DErrorString(hRet));
 
             if MayLog(lfUnit or lfReturnValue) then
               DbgPrintf('EmuIDirect3DResource_Register: Successfully Created Texture : ' + ResourceToString(pPixelContainer));
@@ -6558,7 +6560,7 @@ begin
     hRet := IDirect3DTexture(pPixelContainer.Emu.Texture).GetLevelDesc(dwLevel, {out}SurfaceDesc);
     //hRet = IDirect3DSurface(pPixelContainer.Emu.Surface).GetDesc({out}SurfaceDesc);
     if FAILED(hRet) then
-      EmuWarning('IDirect3DTexture::GetSurfaceDesc failed!');
+      EmuWarning('IDirect3DTexture::GetSurfaceDesc failed!' +#13#10+ D3DErrorString(hRet));
 
     if MayLog(lfUnit) then
       DbgPrintf('Okay');
@@ -6710,7 +6712,7 @@ begin
       hRet := IDirect3DSurface(pPCSurface).LockRect({out}pLockedRect^, pRect, NewFlags);
 
       if (FAILED(hRet)) then
-        EmuWarning('LockRect Failed!');
+        EmuWarning('LockRect Failed!' +#13#10+ D3DErrorString(hRet));
     except
       EmuWarning('Invalid Surface!');
     end;
@@ -6738,7 +6740,7 @@ begin
   Result := IDirect3DBaseTexture(pThis.Emu.BaseTexture).GetLevelCount();
 
   if (FAILED(Result)) then
-    EmuWarning('GetLevelCount Failed!');
+    EmuWarning('GetLevelCount Failed!' +#13#10+ D3DErrorString(Result));
 
   EmuSwapFS(fsXbox);
 end;
@@ -6851,7 +6853,7 @@ begin
 
       hRet := IDirect3DTexture(pPCTexture).LockRect(Level, {out}pLockedRect^, pRect, NewFlags);
       if (FAILED(hRet)) then
-        EmuWarning('LockRect Failed!');
+        EmuWarning('LockRect Failed!' +#13#10+ D3DErrorString(hRet));
 
       // Dxbx addition : Initialize Common field properly :
       pThis.Common := pThis.Common or X_D3DCOMMON_ISLOCKED or $10; // Dxbx : Set a RefCount too (was in X_D3DCOMMON_ISLOCKED before!)
@@ -6911,7 +6913,7 @@ begin
 
     if (FAILED(hRet)) then
     begin
-      EmuWarning('GetSurfaceLevel Failed!');
+      EmuWarning('GetSurfaceLevel Failed!' +#13#10+ D3DErrorString(hRet));
     end
     else
     begin
@@ -6954,7 +6956,7 @@ begin
   Result := IDirect3DVolumeTexture(pThis.Emu.VolumeTexture).LockBox(Level, {out}pLockedVolume^, pBox, Flags);
 
   if (FAILED(Result)) then
-    EmuWarning('LockBox Failed!');
+    EmuWarning('LockBox Failed!' +#13#10+ D3DErrorString(Result));
 
   EmuSwapFS(fsXbox);
 end;
@@ -6988,7 +6990,7 @@ begin
   IDirect3DCubeTexture(pThis.Emu.CubeTexture).UnlockRect(FaceType, Level);
   Result := IDirect3DCubeTexture(pThis.Emu.CubeTexture).LockRect(FaceType, Level, {out}pLockedBox^, pRect, Flags);
   if (FAILED(Result)) then
-    EmuWarning('LockRect Failed!');
+    EmuWarning('LockRect Failed!' +#13#10+ D3DErrorString(Result));
 
   EmuSwapFS(fsXbox);
 end;
@@ -7083,7 +7085,7 @@ begin
 
   if (FAILED(Result)) then
   begin
-    EmuWarning('CreateVertexBuffer Failed!');
+    EmuWarning('CreateVertexBuffer Failed!' +#13#10+ D3DErrorString(Result));
     Dispose(pD3DVertexBuffer);
   end
   else
@@ -7180,12 +7182,12 @@ begin
         hRet := IDirectDraw7(g_pDD7).CreateSurface(ddsd2, @g_pDDSOverlay7, NULL);
 
         if (FAILED(hRet)) then
-          DxbxKrnlCleanup('EmuD3DDevice_EnableOverlay : Could not create overlay surface');
+          DxbxKrnlCleanup('EmuD3DDevice_EnableOverlay : Could not create overlay surface' +#13#10+ D3DErrorString(hRet));
 
         hRet := IDirectDraw7(g_pDD7).CreateClipper(0, {out}IDirectDrawClipper(g_pDDClipper7), NULL);
 
         if (FAILED(hRet)) then
-          DxbxKrnlCleanup('EmuD3DDevice_EnableOverlay : Could not create overlay clipper');
+          DxbxKrnlCleanup('EmuD3DDevice_EnableOverlay : Could not create overlay clipper' +#13#10+ D3DErrorString(hRet));
 
         {Dxbx unused hRet :=} IDirectDrawClipper(g_pDDClipper7).SetHWnd(0, g_hEmuWindow);
       end;
@@ -7263,7 +7265,6 @@ var
   R: Integer;
   G: Integer;
   B: Integer;
-
 begin
   EmuSwapFS(fsWindows);
 
@@ -7293,8 +7294,9 @@ begin
       ZeroMemory(@ddsd2, sizeof(ddsd2));
       ddsd2.dwSize := sizeof(ddsd2);
 
-      if (FAILED(IDirectDrawSurface7(g_pDDSOverlay7).Lock(NULL, {out}ddsd2, DDLOCK_SURFACEMEMORYPTR or DDLOCK_WAIT, 0))) then
-        EmuWarning('Unable to lock overlay surface!');
+      hRet := IDirectDrawSurface7(g_pDDSOverlay7).Lock(NULL, {out}ddsd2, DDLOCK_SURFACEMEMORYPTR or DDLOCK_WAIT, 0);
+      if FAILED(hRet) then
+        EmuWarning('Unable to lock overlay surface!' +#13#10+ D3DErrorString(hRet));
 
       // copy data
       begin
@@ -8522,7 +8524,7 @@ begin
         ]);*)
 
   if (FAILED(hRet)) then
-    EmuWarning('VertexBuffer Lock Failed!');
+    EmuWarning('VertexBuffer Lock Failed!' +#13#10+ D3DErrorString(hRet));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8553,7 +8555,7 @@ begin
   hRet := IDirect3DVertexBuffer(pPCVertexBuffer).Lock(0, 0, {out}TLockData(pVertexBuffer.Data), EmuXB2PC_D3DLock(Flags)); // Fixed flags check, Battlestar Galactica now displays graphics correctly
 
   if (FAILED(hRet)) then
-    EmuWarning('VertexBuffer Lock2 Failed!');
+    EmuWarning('VertexBuffer Lock2 Failed!' +#13#10+ D3DErrorString(hRet));
 
   if MayLog(lfUnit or lfReturnValue) then
   begin
@@ -8644,7 +8646,7 @@ begin
 
   Result := g_pD3DDevice.SetStreamSource(StreamNumber, IDirect3DVertexBuffer(pPCVertexBuffer), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0, {$ENDIF} Stride);
   if FAILED(RESULT) then
-    DxbxKrnlCleanup('SetStreamSource Failed!');
+    DxbxKrnlCleanup('SetStreamSource Failed!' +#13#10+ D3DErrorString(Result));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8897,7 +8899,7 @@ begin
     );
 
     if (FAILED(hRet)) then
-      DxbxKrnlCleanup('EmuD3DDevice_DrawIndexedVertices: IndexBuffer Create Failed!');
+      DxbxKrnlCleanup('EmuD3DDevice_DrawIndexedVertices: IndexBuffer Create Failed!' +#13#10+ D3DErrorString(hRet));
 
     // Dxbx addition : Initialize Common field properly :
     g_pIndexBuffer.Common := g_pIndexBuffer.Common or X_D3DCOMMON_TYPE_INDEXBUFFER;
@@ -8905,7 +8907,7 @@ begin
     pData := nil;
     hRet := IDirect3DIndexBuffer(g_pIndexBuffer.Emu.IndexBuffer).Lock(0, dwSize, {out}TLockData(pData), 0);
     if (FAILED(hRet)) then
-      DxbxKrnlCleanup('DrawIndexedVertices : IndexBuffer Lock Failed!');
+      DxbxKrnlCleanup('DrawIndexedVertices : IndexBuffer Lock Failed!' +#13#10+ D3DErrorString(hRet));
 
     memcpy(pData, Pvoid(g_pIndexBuffer.Data), dwSize);
 
@@ -8916,7 +8918,7 @@ begin
     hRet := g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(g_pIndexBuffer.Emu.IndexBuffer){$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, g_dwBaseVertexIndex{$ENDIF});
 
     if (FAILED(hRet)) then
-      DxbxKrnlCleanup('DrawIndexedVertices : SetIndices Failed!');
+      DxbxKrnlCleanup('DrawIndexedVertices : SetIndices Failed!' +#13#10+ D3DErrorString(hRet));
   end;
 
   XTL_EmuUpdateDeferredStates();
@@ -8978,8 +8980,9 @@ begin
     // TODO -oCXBX: caching (if it becomes noticably slow to recreate the buffer each time)
     if(not bActiveIB) then
     begin
-      if (FAILED(IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, VertexCount*SizeOf(Word), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pPCIndexBuffer))) then
-        DxbxKrnlCleanup('DrawIndexedVertices: IndexBuffer Create Failed!');
+      hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, VertexCount*SizeOf(Word), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pPCIndexBuffer);
+      if FAILED(hRet) then
+        DxbxKrnlCleanup('DrawIndexedVertices: IndexBuffer Create Failed!' +#13#10+ D3DErrorString(hRet));
 
       pbData := nil;
 
@@ -9921,7 +9924,7 @@ begin
   Result := IDirect3DTexture(pThis.Emu.Texture).GetLevelDesc(Level, {out}SurfaceDesc);
 
   if (FAILED(Result)) then
-    EmuWarning('EmuD3DTexture_GetLevelDesc Failed!')
+    EmuWarning('EmuD3DTexture_GetLevelDesc Failed!' +#13#10+ D3DErrorString(Result))
   else
   begin
     // rearrange into xbox format (remove D3DPOOL)
@@ -10312,7 +10315,7 @@ begin
 {$ENDIF}
 
   if (FAILED(Result)) then
-    EmuWarning('CreateStateBlock failed!');
+    EmuWarning('CreateStateBlock failed!' +#13#10+ D3DErrorString(Result));
 
   EmuSwapFS(fsXbox);
 end;
@@ -10363,7 +10366,7 @@ begin
   Result := g_pD3DDevice.DrawRectPatch(Handle, PSingle(pNumSegs), pRectPatchInfo);
 
   if (FAILED(Result)) then
-    EmuWarning('DrawRectPatch failed!');
+    EmuWarning('DrawRectPatch failed!' +#13#10+ D3DErrorString(Result));
 
   EmuSwapFS(fsXbox);
 end;
@@ -10398,12 +10401,12 @@ begin
     // Get current viewport
     hRet := g_pD3DDevice.GetViewport({out}Viewport);
     if (FAILED(hRet)) then
-      EmuWarning('Unable to get viewport!');
+      EmuWarning('Unable to get viewport!' +#13#10+ D3DErrorString(hRet));
 
     // Get current projection matrix
     hRet := g_pD3DDevice.GetTransform(D3DTS_PROJECTION, {out}mtxProjection);
     if (FAILED(hRet)) then
-      EmuWarning('Unable to get projection matrix!');
+      EmuWarning('Unable to get projection matrix!' +#13#10+ D3DErrorString(hRet));
 
     // Create the Viewport matrix manually
     // Direct3D8 doesn't give me everything I need in a viewport structure
@@ -10966,11 +10969,11 @@ begin
 
   Result := g_pD3DDevice.GetTransform(D3DTS_WORLD, {out}mtxWorld);
   if (FAILED(Result)) then
-    EmuWarning('Unable to get projection matrix!');
+    EmuWarning('Unable to get projection matrix!' +#13#10+ D3DErrorString(Result));
 
   Result := g_pD3DDevice.GetTransform(D3DTS_VIEW, {out}mtxView);
   if (FAILED(Result)) then
-    EmuWarning('Unable to get projection matrix!');
+    EmuWarning('Unable to get projection matrix!' +#13#10+ D3DErrorString(Result));
 
   // Clear the destination matrix
   ZeroMemory(@Out, sizeof(D3DMATRIX));
@@ -11056,7 +11059,7 @@ begin
   Result := IDirect3DCubeTexture(pThis.Emu.CubeTexture).GetLevelDesc(Level, {out}SurfaceDesc);
 
   if (FAILED(Result)) then
-    EmuWarning('EmuD3DCubeTexture_GetLevelDesc Failed!')
+    EmuWarning('EmuD3DCubeTexture_GetLevelDesc Failed!' +#13#10+ D3DErrorString(Result))
   else
   begin
     // rearrange into xbox format (remove D3DPOOL)
@@ -11119,7 +11122,7 @@ begin
   Result := IDirect3DVolumeTexture(pThis.Emu.VolumeTexture).GetLevelDesc(Level, {out}VolumeDesc);
 
   if (FAILED(Result)) then
-    EmuWarning('EmuD3DVolumeTexture_GetLevelDesc Failed!')
+    EmuWarning('EmuD3DVolumeTexture_GetLevelDesc Failed!' +#13#10+ D3DErrorString(Result))
   else
     // rearrange into xbox format (remove D3DPOOL)
     EmuPC2XB_D3DVOLUME_DESC(VolumeDesc, pDesc, 'D3DVolume_GetDesc');
@@ -11148,7 +11151,7 @@ begin
   Result := IDirect3DVolumeTexture(pThis.Emu.VolumeTexture).GetVolumeLevel(Level, PIDirect3DVolume(ppVolumeLevel));
 
   if (FAILED(Result)) then
-    EmuWarning('GetVolumeLevel2 Failed!');
+    EmuWarning('GetVolumeLevel2 Failed!' +#13#10+ D3DErrorString(Result));
 
   EmuSwapFS(fsXbox);
 end;
@@ -11242,7 +11245,7 @@ begin
   EmuVerifyResourceIsRegistered(pThis);
   Result := IDirect3DVolume(pThis.Emu.Volume).LockBox({out}pLockedVolume^, pBox, Flags);
   if (FAILED(Result)) then
-    EmuWarning('LockBox Failed!');
+    EmuWarning('LockBox Failed!' +#13#10+ D3DErrorString(Result));
 
   EmuSwapFS(fsXbox);
 end;
@@ -11319,7 +11322,7 @@ begin
   EmuVerifyResourceIsRegistered(pThis);
   Result := IDirect3DVolume(pThis.Emu.Surface).GetContainer({IID_}IDirect3DTexture, {var}Pointer(ppBaseTexture));
   if (FAILED(Result)) then
-    EmuWarning('GetVolumeLevel2 Failed!');
+    EmuWarning('GetVolumeLevel2 Failed!' +#13#10+ D3DErrorString(Result));
 
   EmuSwapFS(fsXbox);
 end;
