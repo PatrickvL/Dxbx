@@ -30,6 +30,7 @@ uses
   Windows,
   SysUtils, // Format
   // DirectX
+  Math,
 {$IFDEF DXBX_USE_D3D9}
   Direct3D9,
 {$ELSE}
@@ -446,7 +447,25 @@ type PSH_OPCODE =
     PO_COMMENT,
     PO_PS,
     PO_DEF,
+{$IFDEF DXBX_USE_D3D9}
+    PO_DCL,
+{$ENDIF}
     PO_TEX,
+    PO_TEXTCOORD,
+    PO_TEXKILL,
+    PO_TEXBEM,
+    PO_TEXBEMI,
+    PO_TEXBRDF,
+    PO_TEXM3X2TEX,
+    PO_TEXM3X2DEPTH, // Note : requires ps.1.3 and a preceding texm3x2pad
+    PO_TEXM3X3DIFF, // Note : Not supported by Direct3D8 ?
+    PO_TEXM3X3VSPEC,
+    PO_TEXM3X3TEX, // Note : Uses a cube texture
+    PO_TEXREG2AR,
+    PO_TEXREG2GB,
+    PO_TEXM3X2PAD,
+    PO_TEXM3X3PAD,
+    PO_TEXM3X3SPEC, // NOTE : NEEDS 3 ARGUMENTS!
     // Direct3D8 arithmetic instructions :
     PO_ADD,
     PO_CMP,
@@ -472,7 +491,25 @@ var PSH_OPCODE_DEFS: array [PSH_OPCODE] of record mn: string; _Out, _In: int; no
   ({PO_COMMENT}mn:';'; _Out:0; _In:0; note:''), //
   ({PO_PS}  mn:'ps';   _Out:0; _In:0; note:''), // Must occur once; Xbox needs an x prefix (xps), Native needs a 1.3 suffix (ps.1.3)
   ({PO_DEF} mn:'def';  _Out:1; _In:4; note:''), // Output must be a PARAM_C, arguments must be 4 floats [0.00f .. 1.00f]
-  ({PO_TEX} mn:'tex';  _Out:1; _In:0; note:''), // TODO : Add all other texture opcodes here (most also have 1 input)
+{$IFDEF DXBX_USE_D3D9}
+  ({PO_DCL} mn:'dcl';  _Out:1; _In:0; note:''),
+{$ENDIF}
+  ({PO_TEX} mn:'tex';  _Out:1; _In:0; note:''),
+  ({PO_TEXTCOORD} mn:'textcoord';  _Out:1; _In:0; note:''),
+  ({PO_TEXKILL} mn:'texkill';  _Out:1; _In:0; note:''),
+  ({PO_TEXBEM} mn:'texbem';  _Out:1; _In:1; note:''),
+  ({PO_TEXBEMI} mn:'texbemi';  _Out:1; _In:1; note:''),
+  ({PO_TEXBRDF} mn:'texbrdf';  _Out:1; _In:1; note:''), // Note : Not supported by Direct3D8 ?
+  ({PO_TEXM3X2TEX} mn:'texm3x2tex';  _Out:1; _In:1; note:''),
+  ({PO_TEXM3X2DEPTH} mn:'texm3x2depth';  _Out:1; _In:1; note:''), // Note : requires ps.1.3 and a preceding texm3x2pad
+  ({PO_TEXM3X3DIFF} mn:'texm3x3diff';  _Out:1; _In:1; note:''), // Note : Not supported by Direct3D8 ?
+  ({PO_TEXM3X3VSPEC} mn:'texm3x3vspec';  _Out:1; _In:1; note:''),
+  ({PO_TEXM3X3TEX} mn:'texm3x3tex';  _Out:1; _In:1; note:''), // Note : Uses a cube texture
+  ({PO_TEXREG2AR} mn:'texreg2ar';  _Out:1; _In:1; note:''),
+  ({PO_TEXREG2GB} mn:'texreg2gb';  _Out:1; _In:1; note:''),
+  ({PO_TEXM3X2PAD} mn:'texm3x2pad';  _Out:1; _In:1; note:''),
+  ({PO_TEXM3X3PAD} mn:'texm3x3pad';  _Out:1; _In:1; note:''),
+  ({PO_TEXM3X3SPEC} mn:'texm3x3spec';  _Out:1; _In:2; note:''),
   // Arithmetic opcodes :
   ({PO_ADD} mn:'add';  _Out:1; _In:2; note:'d0=s0+s1'),
   ({PO_CMP} mn:'cmp';  _Out:1; _In:3; note:'d0=(s0>=0?s1:s2)'),
@@ -608,6 +645,8 @@ type PSH_IMD_ARGUMENT = object
     Multiplier: Float;
     procedure SetConstValue(Value: Float);
     function GetConstValue: Float;
+    function IsRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
+    procedure SetRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD);
     function ToString: string;
     function Decode(const Value: DWORD; aMask: DWORD; ArgumentType: TArgumentType): Boolean;
     procedure Invert;
@@ -627,6 +666,7 @@ type PSH_INTERMEDIATE_FORMAT = record
     Parameters: array [0..7-1] of PSH_IMD_ARGUMENT; // 7 = xfc parameter count
     procedure Initialize(const aOpcode: PSH_OPCODE);
     function ToString: string;
+    function IsArithmetic: Boolean;
     function ReadsFromRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
     function WritesToRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
     procedure SwapParameter(const Index1, Index2: int);
@@ -643,6 +683,11 @@ type PSH_XBOX_SHADER = record
     IntermediateCount: int;
     Intermediate: array[0..X_PSH_COMBINECOUNT * 5] of PSH_INTERMEDIATE_FORMAT; // ...should be enough slots to hold all possible shaders
 
+    PSTextureModes: array[0..X_D3DTS_STAGECOUNT-1] of PS_TEXTUREMODES;
+    PSDotMapping: array[0..X_D3DTS_STAGECOUNT-1] of PS_DOTMAPPING;
+    PSCompareMode: array[0..X_D3DTS_STAGECOUNT-1] of DWORD;
+    PSInputTexture: array[0..X_D3DTS_STAGECOUNT-1] of int;
+
     FinalCombinerFlags: PS_FINALCOMBINERSETTING;
     CombinerCountFlags: DWORD; // For PS_COMBINERCOUNTFLAGS
     // Read from CombinerCountFlags :
@@ -656,8 +701,11 @@ type PSH_XBOX_SHADER = record
     procedure DeleteIntermediate(Index: int);
     procedure DeleteLastIntermediate;
     procedure Decode(pPSDef: PX_D3DPIXELSHADERDEF);
+    function DecodeTextureModes(pPSDef: PX_D3DPIXELSHADERDEF): Boolean;
     function MoveRemovableParametersRight: Boolean;
-    procedure ConvertXboxShaderToNative(pPSDef: PX_D3DPIXELSHADERDEF);
+    procedure ConvertXboxOpcodesToNative(pPSDef: PX_D3DPIXELSHADERDEF);
+    function ConvertConstantsToNative(pPSDef: PX_D3DPIXELSHADERDEF): Boolean;
+    function RemoveUselessWrites: Boolean;
     function ConvertXMMToNative_Except3RdOutput(i: int): Boolean;
     procedure ConvertXMMAToNative(i: int);
     procedure ConvertXMMCToNative(i: int);
@@ -668,6 +716,7 @@ type PSH_XBOX_SHADER = record
     function RemoveNops(): Boolean;
     function SimplifyMOV(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
     function SimplifyADD(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
+    function SimplifyMAD(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
     function SimplifySUB(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
     function SimplifyMUL(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
     function SimplifyLRP(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
@@ -1045,7 +1094,7 @@ begin
   if Type_ <> PARAM_VALUE then
   begin
     // Anything other than a const returns a value never checked for :
-    Result := 100000;
+    Result := Infinity;
     Exit;
   end;
 
@@ -1072,6 +1121,21 @@ begin
   // y =  x/2    -> 0..1 >    0..0.5
   if (Modifiers * [ARGMOD_SCALE_D2]) <> [] then Result := Result/2.0;
 end; // GetConstValue
+
+function PSH_IMD_ARGUMENT.IsRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
+begin
+  Result := (Type_ = aRegType)
+        and (Address = aAddress)
+        // Check the mask itself, but also 'mask-less' :
+        and (((Mask and aMask) = aMask) or (Mask = 0));
+end;
+
+procedure PSH_IMD_ARGUMENT.SetRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD);
+begin
+  Type_ := aRegType;
+  Address := aAddress;
+  Mask := aMask;
+end;
 
 function PSH_IMD_ARGUMENT.ToString: string;
 var
@@ -1116,7 +1180,7 @@ var
 begin
   Result := True;
   Address := 0;
-  Mask := aMask; // TODO : UNBELIEVABLE! If this line is enabled, Rayman crashes on it's 24th pixelshader!?!
+  Mask := aMask;
   Modifiers := [ARGMOD_IDENTITY];
   Multiplier := 1.0;
 
@@ -1238,10 +1302,7 @@ begin
   end;
 
   if ArgumentType = atOutput then
-  begin
-//    Mask := aMask;
     Exit;
-  end;
 
   if Type_ > PARAM_VALUE then
   begin
@@ -1360,24 +1421,22 @@ begin
     Result := Result + ' ; ' + PSH_OPCODE_DEFS[Opcode].note + ' ' + CommentString;
 end; // ToString
 
+function PSH_INTERMEDIATE_FORMAT.IsArithmetic: Boolean;
+begin
+  Result := (Opcode >= PO_ADD);
+end;
+
 function PSH_INTERMEDIATE_FORMAT.ReadsFromRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
 var
   i: int;
-  CurArg: PPSH_IMD_ARGUMENT;
 begin
   // Check all parameters :
   for i := 0 to PSH_OPCODE_DEFS[Opcode]._In - 1 do
   begin
     // Check if one of them reads from the given register :
-    CurArg := @(Parameters[i]);
-    if  (CurArg.Type_ = aRegType)
-    and (CurArg.Address = aAddress)
-    // Check the mask itself, but also 'mask-less' :
-    and (((CurArg.Mask and aMask) = aMask) or (CurArg.Mask = 0)) then
-    begin
-      Result := True;
+    Result := Parameters[i].IsRegister(aRegType, aAddress, aMask);
+    if Result then
       Exit;
-    end;
   end;
 
   Result := False;
@@ -1386,21 +1445,14 @@ end;
 function PSH_INTERMEDIATE_FORMAT.WritesToRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
 var
   i: int;
-  CurArg: PPSH_IMD_ARGUMENT;
 begin
   // Check the output :
   for i := 0 to PSH_OPCODE_DEFS[Opcode]._Out - 1 do
   begin
     // Check if one of them writes to the given register :
-    CurArg := @(Output[i]);
-    if  (CurArg.Type_ = aRegType)
-    and (CurArg.Address = aAddress)
-    // Check the mask itself, but also 'mask-less' :
-    and (((CurArg.Mask and aMask) = aMask) or (CurArg.Mask = 0)) then
-    begin
-      Result := True;
+    Result := Output[i].IsRegister(aRegType, aAddress, aMask);
+    if Result then
       Exit;
-    end;
   end;
 
   Result := False;
@@ -1586,11 +1638,6 @@ var
   i: int;
 begin
   Result := 'ps.1.3'#13#10;
-//
-Result := Result + 'tex t0'#13#10;
-Result := Result + 'tex t1'#13#10;
-Result := Result + 'tex t2'#13#10;
-//
   for i := 0 to IntermediateCount-1 do
     Result := Result + Intermediate[i].ToString + #13#10;
 end;
@@ -1654,22 +1701,21 @@ var
 begin
   ZeroMemory(@Self, SizeOf(Self));
 
-//  for i := 0 to X_D3DTS_STAGECOUNT-1 do
-//  begin
-//    PSTextureModes[i] := PS_TEXTUREMODES((pPSDef.PSTextureModes shr (i*5)) and $1F);
-//    PSCompareMode[i] := (pPSDef.PSCompareMode shr (i*4)) and $F;
-//  end;
-//
-//  PSDotMapping[0] := PS_DOTMAPPING(0);
-//  PSDotMapping[1] := PS_DOTMAPPING((pPSDef.PSDotMapping shr 0) and $7);
-//  PSDotMapping[2] := PS_DOTMAPPING((pPSDef.PSDotMapping shr 4) and $7);
-//  PSDotMapping[3] := PS_DOTMAPPING((pPSDef.PSDotMapping shr 8) and $7);
-//
-//  PSInputTexture[0] := -1; // Stage 0 has no predecessors
-//  PSInputTexture[1] := 0; // Stage 1 can only use stage 0
-//  PSInputTexture[2] := (pPSDef.PSInputTexture shr 16) and $1; // Stage 2 can use stage 0 or 1
-//  PSInputTexture[3] := (pPSDef.PSInputTexture shr 20) and $3; // Stage 3 can only use stage 0, 1 or 2
-//  TODO : Insert DisassembleTextureModes / DisassembleTextureMode
+  for i := 0 to X_D3DTS_STAGECOUNT-1 do
+  begin
+    PSTextureModes[i] := PS_TEXTUREMODES((pPSDef.PSTextureModes shr (i*5)) and $1F);
+    PSCompareMode[i] := (pPSDef.PSCompareMode shr (i*4)) and $F;
+  end;
+
+  PSDotMapping[0] := PS_DOTMAPPING(0);
+  PSDotMapping[1] := PS_DOTMAPPING((pPSDef.PSDotMapping shr 0) and $7);
+  PSDotMapping[2] := PS_DOTMAPPING((pPSDef.PSDotMapping shr 4) and $7);
+  PSDotMapping[3] := PS_DOTMAPPING((pPSDef.PSDotMapping shr 8) and $7);
+
+  PSInputTexture[0] := -1; // Stage 0 has no predecessors
+  PSInputTexture[1] := 0; // Stage 1 can only use stage 0
+  PSInputTexture[2] := (pPSDef.PSInputTexture shr 16) and $1; // Stage 2 can use stage 0 or 1
+  PSInputTexture[3] := (pPSDef.PSInputTexture shr 20) and $3; // Stage 3 can only use stage 0, 1 or 2
 
   NumberOfCombiners := (pPSDef.PSCombinerCount shr 0) and $F;
   CombinerCountFlags := (pPSDef.PSCombinerCount shr 8);
@@ -1719,12 +1765,24 @@ begin
   if RemoveNops() then
     Log('RemoveNops');
 
-  ConvertXboxShaderToNative(pPSDef);
-  Log('ConvertXboxShaderToNative');
+  if ConvertConstantsToNative(pPSDef) then
+    Log('ConvertXboxOpcodesToNative');
+
+  if RemoveUselessWrites then
+    Log('RemoveUselessWrites');
+
+  ConvertXboxOpcodesToNative(pPSDef);
+  Log('ConvertXboxOpcodesToNative');
+
+  if RemoveUselessWrites then // twice!
+    Log('RemoveUselessWrites');
 
   // Resolve all differences :
   if FixupPixelShader then
     Log('FixupPixelShader');
+
+  if DecodeTextureModes(pPSDef) then
+    Log('DecodeTextureModes');
 
   if FixInvalidSrcSwizzle then
     Log('FixInvalidSrcSwizzle');
@@ -1736,6 +1794,112 @@ begin
     Log('FixCoIssuedOpcodes');
 
   Log('End result');
+end;
+
+function PSH_XBOX_SHADER.DecodeTextureModes(pPSDef: PX_D3DPIXELSHADERDEF): Boolean;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+
+  function _NextIs2D(Stage: int): Boolean;
+  begin
+    if Stage < X_D3DTS_STAGECOUNT-1 then
+      Result := PSTextureModes[Stage + 1] = PS_TEXTUREMODES_DOT_ZW
+    else
+      Result := False;
+  end;
+
+var
+  InsertPos: int;
+  Ins: PSH_INTERMEDIATE_FORMAT;
+  Stage: int;
+begin
+  Result := False;
+
+  InsertPos := -1;
+  repeat
+    Inc(InsertPos);
+  until Intermediate[InsertPos].Opcode <> PO_DEF;
+
+{$IFDEF DXBX_USE_D3D9}
+  Ins.Initialize(PO_DCL);
+  for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
+  begin
+    if PSTextureModes[Stage] <> PS_TEXTUREMODES_NONE then
+    begin
+      Ins.Output[0].SetRegister(PARAM_T, Stage, 0);
+      InsertIntermediate(@Ins, InsertPos);
+      Inc(InsertPos);
+      Result := True;
+    end;
+  end;
+{$ENDIF}
+
+  Ins.Initialize(PO_TEX);
+  for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
+  begin
+    // TODO : Apply conversions when PS_GLOBALFLAGS_TEXMODE_ADJUST is set (but ... how to check the texture type? read D3DRS_PSTEXTUREMODES?)
+
+    // Convert the texture mode to a texture addressing instruction :
+    case PSTextureModes[Stage] of
+{$IFNDEF DXBX_USE_D3D9}
+      PS_TEXTUREMODES_PROJECT2D: Ins.Opcode := PO_TEX;
+      PS_TEXTUREMODES_PROJECT3D: Ins.Opcode := PO_TEX; // Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
+      PS_TEXTUREMODES_CUBEMAP: Ins.Opcode := PO_TEX; // Note : If we use 'texreg2rgb', that requires ps.1.2 (we're still using ps.1.1)
+{$ENDIF}
+      PS_TEXTUREMODES_PASSTHRU: Ins.Opcode := PO_TEXTCOORD;
+      PS_TEXTUREMODES_CLIPPLANE: Ins.Opcode := PO_TEXKILL;
+      PS_TEXTUREMODES_BUMPENVMAP: Ins.Opcode := PO_TEXBEM;
+      PS_TEXTUREMODES_BUMPENVMAP_LUM: Ins.Opcode := PO_TEXBEMI;
+//    PS_TEXTUREMODES_BRDF: Ins.Opcode := PO_TEXBRDF; // Note : Not supported by Direct3D8 ?
+      PS_TEXTUREMODES_DOT_ST: Ins.Opcode := PO_texm3x2tex;
+      PS_TEXTUREMODES_DOT_ZW: Ins.Opcode := PO_texm3x2depth; // Note : requires ps.1.3 and a preceding texm3x2pad
+//    PS_TEXTUREMODES_DOT_RFLCT_DIFF: Ins.Opcode := PO_texm3x3diff; // Note : Not supported by Direct3D8 ?
+      PS_TEXTUREMODES_DOT_RFLCT_SPEC: Ins.Opcode := PO_texm3x3vspec;
+      PS_TEXTUREMODES_DOT_STR_3D: Ins.Opcode := PO_texm3x3tex; // Note : Uses a 3d texture
+      PS_TEXTUREMODES_DOT_STR_CUBE: Ins.Opcode := PO_texm3x3tex; // Note : Uses a cube texture
+      PS_TEXTUREMODES_DPNDNT_AR: Ins.Opcode := PO_texreg2ar;
+      PS_TEXTUREMODES_DPNDNT_GB: Ins.Opcode := PO_texreg2gb;
+      PS_TEXTUREMODES_DOTPRODUCT:
+        if _NextIs2D(Stage) then
+          Ins.Opcode := PO_texm3x2pad
+        else
+          Ins.Opcode := PO_texm3x3pad;
+      PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST: Ins.Opcode := PO_texm3x3spec; // Note : Needs 3 arguments!
+    else
+      Continue;
+    end;
+
+    Ins.Output[0].SetRegister(PARAM_T, Stage, 0);
+
+    // For those texture modes that need it, add the source stage as argument :
+    if PSH_OPCODE_DEFS[Ins.Opcode]._In >= 1 then
+    begin
+      Ins.Parameters[0].SetRegister(PARAM_T, PSInputTexture[Stage], 0);
+
+      case PSDotMapping[Stage] of
+        PS_DOTMAPPING_MINUS1_TO_1_D3D:
+          Ins.Parameters[0].Modifiers := [ARGMOD_SCALE_BX2];
+      end;
+    end;
+
+    if PSH_OPCODE_DEFS[Ins.Opcode]._In >= 2 then
+    begin
+      // Add the third argument :
+      if PSTextureModes[Stage] in [
+        PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST] then
+      begin
+        Ins.Parameters[0].SetRegister(PARAM_C, 0, 0);
+        Ins.CommentString := 'Dxbx guess'; // TODO : Where do we get the 3rd argument to this?
+      end;
+    end;
+
+//    // Warn about unprocessed flag :
+//    if (dwPS_GLOBALFLAGS and Ord(PS_GLOBALFLAGS_TEXMODE_ADJUST)) > 0 then
+//      Ins.CommentString := Ins.CommentString + ' PS_GLOBALFLAGS_TEXMODE_ADJUST unhandled!';
+
+    InsertIntermediate(@Ins, InsertPos);
+    Inc(InsertPos);
+    Result := True;
+  end;
 end;
 
 function PSH_XBOX_SHADER.MoveRemovableParametersRight: Boolean;
@@ -1778,9 +1942,9 @@ begin
       end;
     end;
   end;
-end;
+end; // MoveRemovableParametersRight
 
-procedure PSH_XBOX_SHADER.ConvertXboxShaderToNative(pPSDef: PX_D3DPIXELSHADERDEF);
+function PSH_XBOX_SHADER.ConvertConstantsToNative(pPSDef: PX_D3DPIXELSHADERDEF): Boolean;
 
   function ByteToFloat(const aByte: Byte): Float;
   begin
@@ -1799,27 +1963,19 @@ procedure PSH_XBOX_SHADER.ConvertXboxShaderToNative(pPSDef: PX_D3DPIXELSHADERDEF
     NewIns.Parameters[3].SetConstValue({A}ByteToFloat((ConstColor shr 24) and $FF));
   end;
 
-const
-  MAX_ADDRESS = 8;
 var
   i, j: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
   NewIns: PSH_INTERMEDIATE_FORMAT;
   CurArg: PPSH_IMD_ARGUMENT;
   ConstColor: D3DCOLOR;
-  RegUsage: array [PSH_ARGUMENT_TYPE, 0..MAX_ADDRESS] of DWORD;
   IsConstDeclared: array [0..X_PSH_CONSTANT_FC1-1] of Boolean;
 begin
-  // Mark only R0 (and discard) as initially 'read', as these may not result in a removal :
-  ZeroMemory(@RegUsage, SizeOf(RegUsage));
-  RegUsage[PARAM_R, 0] := MASK_RGBA;
-  for i := 0 to MAX_ADDRESS do
-    RegUsage[PARAM_DISCARD, i] := MASK_RGBA;
+  Result := False;
 
   // Keep track of which constants are already 'DEF'ined :
   ZeroMemory(@IsConstDeclared, SizeOf(IsConstDeclared));
 
-  // Do a bottom-to-top pass, converting all xbox opcodes into a native set of opcodes :
   i := IntermediateCount;
   while i > 0 do
   begin
@@ -1834,17 +1990,6 @@ begin
     begin
       CurArg := @(Cur.Parameters[j]);
 
-      // Remove useless flag, to ease up later comparisions :
-      CurArg.Modifiers := CurArg.Modifiers - [ARGMOD_IDENTITY];
-
-      // Meanwhile, fix "Invalid src swizzle" :
-      if CurArg.Mask = MASK_RGB then
-        CurArg.Mask := MASK_RGBA;
-
-      // Keep track of all register reads, so that we can discard useless writes :
-      if CurArg.Address < MAX_ADDRESS then
-        RegUsage[CurArg.Type_, CurArg.Address] := RegUsage[CurArg.Type_, CurArg.Address] or CurArg.Mask;
-
       // Handle C0 and C1 (as we need to map these two to actual constants) :
       if CurArg.Type_ = PARAM_C then
       begin
@@ -1852,7 +1997,7 @@ begin
         begin
           if Cur.CombinerStageNr = XFC_COMBINERSTAGENR then
           begin
-            // TODO : Is the final combiner C0 als influenced by CombinerHasUniqueC0 ?
+            // TODO : Is the final combiner C0 also influenced by CombinerHasUniqueC0 ?
             CurArg.Address := X_PSH_CONSTANT_FC0;
             ConstColor := pPSDef.PSFinalCombinerConstant0;
           end
@@ -1874,7 +2019,7 @@ begin
 
           if Cur.CombinerStageNr = XFC_COMBINERSTAGENR then
           begin
-            // TODO : Is the final combiner C1 als influenced by CombinerHasUniqueC1 ?
+            // TODO : Is the final combiner C1 also influenced by CombinerHasUniqueC1 ?
             CurArg.Address := X_PSH_CONSTANT_FC1;
             ConstColor := pPSDef.PSFinalCombinerConstant1;
           end
@@ -1899,12 +2044,42 @@ begin
 
           NewIns.Output[0] := CurArg^;
           NewIns.Output[0].Mask := MASK_RGBA;
+          NewIns.Output[0].Modifiers := [];
           _SetColor(NewIns, ConstColor);
           InsertIntermediate(@NewIns, 0);
+          Result := True;
           // Note : We'll try to fixup constants above c7 later.
         end;
       end;
     end;
+  end;
+end; // ConvertConstantsToNative
+
+function PSH_XBOX_SHADER.RemoveUselessWrites: Boolean;
+const
+  MAX_ADDRESS = 8;
+var
+  i, j: int;
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+  CurArg: PPSH_IMD_ARGUMENT;
+  RegUsage: array [PSH_ARGUMENT_TYPE, 0..MAX_ADDRESS] of DWORD;
+begin
+  // TODO : In Polynomial Texture Maps, one extra opcode could be deleted (sub r1.rgb, v0,v0), why doesn't it?
+  Result := False;
+
+  // Mark only R0 (and discard) as initially 'read', as these may not result in a removal :
+  ZeroMemory(@RegUsage, SizeOf(RegUsage));
+  RegUsage[PARAM_R, 0] := MASK_RGBA;
+  for i := 0 to MAX_ADDRESS do
+    RegUsage[PARAM_DISCARD, i] := MASK_RGBA;
+
+  i := IntermediateCount;
+  while i > 0 do
+  begin
+    Dec(i);
+    Cur := @(Intermediate[i]);
+    if not Cur.IsArithmetic then
+      Continue;
 
     // Loop over the output arguments :
     for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._Out - 1 do
@@ -1923,6 +2098,34 @@ begin
       end;
     end;
 
+    // Loop over the input arguments :
+    for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 do
+    begin
+      CurArg := @(Cur.Parameters[j]);
+
+      // Remove useless flag, to ease up later comparisions :
+      CurArg.Modifiers := CurArg.Modifiers - [ARGMOD_IDENTITY];
+
+      // Keep track of all register reads, so that we can discard useless writes :
+      if CurArg.Address < MAX_ADDRESS then
+        RegUsage[CurArg.Type_, CurArg.Address] := RegUsage[CurArg.Type_, CurArg.Address] or CurArg.Mask;
+    end;
+  end;
+end; // RemoveUselessWrites
+
+procedure PSH_XBOX_SHADER.ConvertXboxOpcodesToNative(pPSDef: PX_D3DPIXELSHADERDEF);
+var
+  i: int;
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+  NewIns: PSH_INTERMEDIATE_FORMAT;
+begin
+  // Do a bottom-to-top pass, converting all xbox opcodes into a native set of opcodes :
+  i := IntermediateCount;
+  while i > 0 do
+  begin
+    Dec(i);
+    Cur := @(Intermediate[i]);
+
     // Convert all Xbox opcodes into native opcodes :
     NewIns.Initialize(PO_COMMENT);
     NewIns.CommentString := Cur.ToString;
@@ -1939,7 +2142,7 @@ begin
     if NewIns.CommentString <> '' then
       InsertIntermediate(@NewIns, i);
   end;
-end; // ConvertXboxShaderToNative
+end; // ConvertXboxOpcodesToNative
 
 function PSH_XBOX_SHADER.ConvertXMMToNative_Except3RdOutput(i: int): Boolean;
 var
@@ -2042,11 +2245,9 @@ begin
     Cur.Opcode := PO_CND;
     Cur.Modifier := INSMOD_NONE;
     // Begin the input of CND with the required r0.a parameter :
-    Cur.Parameters[0].Type_ := PARAM_R;
-    Cur.Parameters[0].Address := 0;
+    Cur.Parameters[0].SetRegister(PARAM_R, 0, MASK_A);
     Cur.Parameters[0].Modifiers := [ARGMOD_IDENTITY];
     Cur.Parameters[0].Multiplier := 1.0;
-    Cur.Parameters[0].Mask := MASK_A;
     // Follow that with the 2 selection registers :
     Cur.Parameters[1] := Cur.Output[0];
     Cur.Parameters[2] := Cur.Output[1];
@@ -2154,14 +2355,10 @@ begin
   begin
     // Add a new opcode that calculates r0*v1 :
     Ins.Initialize(PO_MUL);
-    Ins.Output[0].Type_ := PARAM_R;
-    Ins.Output[0].Address := FakeRegNr_Sum;
-    Ins.Output[0].Mask := MASK_RGBA;
+    Ins.Output[0].SetRegister(PARAM_R, FakeRegNr_Sum, MASK_RGBA);
 
-    Ins.Parameters[0].Type_ := PARAM_R;
-    Ins.Parameters[0].Address := 0;
-    Ins.Parameters[1].Type_ := PARAM_V;
-    Ins.Parameters[1].Address := 1;
+    Ins.Parameters[0].SetRegister(PARAM_R, 0, MASK_RGB);
+    Ins.Parameters[1].SetRegister(PARAM_V, 1, MASK_RGB);
 
     // Take the FinalCombinerFlags that influence this result into account :
     if ((FinalCombinerFlags and PS_FINALCOMBINERSETTING_COMPLEMENT_R0) > 0) then
@@ -2179,9 +2376,7 @@ begin
   begin
     // Add a new opcode that calculates E*F :
     Ins.Initialize(PO_MUL);
-    Ins.Output[0].Type_ := PARAM_R;
-    Ins.Output[0].Address := FakeRegNr_Prod;
-    Ins.Output[0].Mask := MASK_RGBA;
+    Ins.Output[0].SetRegister(PARAM_R, FakeRegNr_Prod, MASK_RGBA);
     Ins.Parameters[0] := Cur.Parameters[4]; // E
     Ins.Parameters[1] := Cur.Parameters[5]; // F
     InsertIntermediate(@Ins, InsertPos);
@@ -2193,9 +2388,12 @@ begin
 
   // Add a new opcode that calculates r0.rgb=s0*s1 + (1-s0)*s2 via a LRP :
   // Set the output to r0.rgb (as r0.a is determined via s6.a) :
-  Cur.Output[0].Type_ := PARAM_R;
-  Cur.Output[0].Address := 0;
-  Cur.Output[0].Mask := MASK_RGB;
+
+  // Watch out! If s3=r0.rgb, then the LRP cannot use r0, but must use r1 as temp!
+  if Cur.Parameters[3].IsRegister(PARAM_R, 0, 0) then
+    Cur.Output[0].SetRegister(PARAM_R, 1, MASK_RGB)
+  else
+    Cur.Output[0].SetRegister(PARAM_R, 0, MASK_RGB);
 
   Ins := Cur;
   Ins.Opcode := PO_LRP;
@@ -2217,9 +2415,7 @@ begin
   begin
     // Add a new opcode that moves s6 over to r0.a :
     Ins.Initialize(PO_MOV);
-    Ins.Output[0].Type_ := PARAM_R;
-    Ins.Output[0].Address := 0;
-    Ins.Output[0].Mask := MASK_A;
+    Ins.Output[0].SetRegister(PARAM_R, 0, MASK_A);
     Ins.Parameters[0] := Cur.Parameters[6];
     InsertIntermediate(@Ins, InsertPos);
 //    Inc(InsertPos);
@@ -2437,6 +2633,25 @@ begin
         end;
       end;
     end;
+
+    // Fix Dolphin :
+    //  mul r3, r0,t0 ; d0=s0*s1
+    //  mov r0.rgb, r3 ; d0=s0 final combiner - FOG not emulated, using 1.
+    if  (Cur.Output[0].Type_ = PARAM_R)
+    and (Cur.Output[0].Address >= PSH_XBOX_MAX_R_REGISTER_COUNT)
+    and (Intermediate[i+1].Parameters[0].Type_ = PARAM_R)
+    and (Intermediate[i+1].Parameters[0].Address >= PSH_XBOX_MAX_R_REGISTER_COUNT) then
+    begin
+      if  (Cur.Opcode = PO_MUL)
+      and (Intermediate[i+1].Opcode = PO_MOV) then
+      begin
+        Cur.Output[0] := Intermediate[i+1].Output[0];
+        DeleteIntermediate(i+1);
+        DbgPrintf('; Changed temporary MUL,MOV into a MUL');
+        Result := True;
+        Continue;
+      end;
+    end;
   end; // while
 end; // CombineInstructions
 
@@ -2509,6 +2724,42 @@ begin
   end;
 end;
 
+function PSH_XBOX_SHADER.SimplifyMAD(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
+begin
+  Result := False;
+
+  // Is this s0*0+s2 ?
+  if Cur.Parameters[1].GetConstValue = 0.0 then
+  begin
+    // Change it into s2 :
+    Cur.Opcode := PO_MOV;
+    Cur.Parameters[0] := Cur.Parameters[2];
+    Result := True;
+    Exit;
+  end;
+
+  // Is this s0*1+s2 ?
+  if Cur.Parameters[1].GetConstValue = 1.0 then
+  begin
+    // Change it into s0+s2 :
+    Cur.Opcode := PO_ADD;
+    Cur.Parameters[1] := Cur.Parameters[2];
+    Result := True;
+    Exit;
+  end;
+
+  // Is this s0*-1+s2 ?
+  if Cur.Parameters[1].GetConstValue = -1.0 then
+  begin
+    // Change it into s2-s0 :
+    Cur.Opcode := PO_SUB;
+    Cur.Parameters[1] := Cur.Parameters[0];
+    Cur.Parameters[0] := Cur.Parameters[2];
+    Result := True;
+    Exit;
+  end;
+end;
+
 function PSH_XBOX_SHADER.SimplifySUB(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
 begin
   Result := False;
@@ -2574,6 +2825,17 @@ begin
     Result := True;
     Exit;
   end;
+
+  // Is it d0=s0*s1+(1-s0)*1 ?
+  if (Cur.Parameters[2].GetConstValue = 1.0) then
+  begin
+    // Change it into a d0=s0*s1+(1-s0)
+    Cur.Opcode := PO_MAD;
+    Cur.Parameters[2] := Cur.Parameters[0];
+    Cur.Parameters[2].Invert;
+    Result := True;
+    Exit;
+  end;
 end; // SimplifyLRP
 
 function PSH_XBOX_SHADER.FixupPixelShader(): Boolean;
@@ -2587,15 +2849,8 @@ begin
   // TODO : Fixup the usage of non-existent register numbers (like FakeRegNr_Sum and FakeRegNr_Prod)
   // TODO : Fixup the usage of the unsupported INSMOD_BIAS and INSMOD_BX2 instruction modifiers
   // TODO : Use the INSMOD_SAT instruction modifier instead of the ARGMOD_SATURATE argument modifier
-  // TODO : Shift independent instructions up or down so the alpha write combiner can be used more often
   // TODO : Condense constants registers, to avoid the non-existant C8-C15 (requires a mapping in SetPixelShaderConstant too...)
-
-  // TODO : Conversion steps :
-  // - Convert numeric arguments (-2, -1, 0, 1, 2) into modifiers on the other argument
-  // - Merge idential .rgb .a instructions
-  // - Move independent .a channel instructions upwards to enable channel-combining
-  // - Mark .a instructions as 'Combined' if they follow an .rgb instruction
-
+  // TODO : Convert numeric arguments (-2, -1, 0, 1, 2) into modifiers on the other argument
   // TODO : Fixup C8..C15 + FC0+FC1 constants - ps.1.3 goes only up to C7 (PS.3.0 has 224, but needs a complete Direct3D9 port)
   // With a bit of luck, there are gaps in the constant-usage (which we could remove via a mapping table),
   // or some of the additional constants could be identical to one of C0..C7, in which case we could
@@ -2621,6 +2876,10 @@ begin
 
       PO_ADD:
         if SimplifyADD(Cur) then
+          Result := True;
+
+      PO_MAD:
+        if SimplifyMAD(Cur) then
           Result := True;
 
       PO_SUB:
@@ -2688,7 +2947,7 @@ begin
   for i := 0 to IntermediateCount - 1 do
   begin
     Cur := @(Intermediate[i]);
-    if Cur.Opcode = PO_DEF then
+    if not Cur.IsArithmetic then
       Continue;
 
     // Make sure if we insert at all, it'll be after the DEF's :
@@ -2711,9 +2970,7 @@ begin
   begin
     // Insert a new opcode : MOV r0.a, t0.a
     NewIns.Initialize(PO_MOV);
-    NewIns.Output[0].Type_ := PARAM_R;
-    NewIns.Output[0].Address := 0;
-    NewIns.Output[0].Mask := MASK_A;
+    NewIns.Output[0].SetRegister(PARAM_R, 0, MASK_A);
     NewIns.Parameters[0] := NewIns.Output[0];
     NewIns.Parameters[0].Type_ := PARAM_T;
     NewIns.CommentString := 'Inserted r0.a default';
@@ -2730,9 +2987,10 @@ var
 begin
   Result := False;
 
+  // TODO : Shift independent .a instructions up or down so the alpha write combiner can be used more often
+
   // Start with Alpha, so the first opcode doesn't become a write-combined opcode (which isn't possible) :
   PrevMask := MASK_A;
-  // TODO : We could try to bubble some opcodes up and/or down if possible, to combine better.
   for i := 0 to IntermediateCount - 1 do
   begin
     Cur := @(Intermediate[i]);
