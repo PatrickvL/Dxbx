@@ -564,6 +564,8 @@ type
 
   LPDIRECTSOUNDSTREAM = XTL_PIDirectSoundStream;
 
+  ErrorType = (etCleanup, etWarning);
+
 // Static Variable(s)
 var g_pDSound8: XTL_LPDIRECTSOUND8 = NULL;
 var g_pDSound8RefCount: int = 0;
@@ -581,6 +583,69 @@ begin
     Result := aTrue
   else
     Result := aFalse;
+end;
+
+function GetSoundError(aResult: HRESULT): String;
+begin
+  case aResult of
+    DSERR_ALLOCATED:
+        Result := 'were already being used by another caller';
+    DSERR_CONTROLUNAVAIL:
+        Result := 'The control (vol, pan, etc.) requested by the caller is not available';
+    DSERR_INVALIDPARAM:
+        Result := 'An invalid parameter was passed to the returning function';
+    DSERR_INVALIDCALL:
+        Result := 'This call is not valid for the current state of this object';
+    DSERR_GENERIC:
+        Result := 'An undetermined error occurred inside the DirectSound subsystem';
+    DSERR_PRIOLEVELNEEDED:
+        Result := 'The caller does not have the priority level required for the function to succeed';
+    DSERR_OUTOFMEMORY:
+        Result := 'Not enough free memory is available to complete the operation';
+    DSERR_BADFORMAT:
+        Result := 'The specified WAVE format is not supported';
+    DSERR_UNSUPPORTED:
+        Result := 'The function called is not supported at this time';
+    DSERR_NODRIVER:
+        Result := 'No sound driver is available for use';
+    DSERR_ALREADYINITIALIZED:
+        Result := 'This object is already initialized';
+    DSERR_NOAGGREGATION:
+        Result := 'This object does not support aggregation';
+    DSERR_BUFFERLOST:
+        Result := 'The buffer memory has been lost, and must be restored';
+    DSERR_OTHERAPPHASPRIO:
+        Result := 'Another app has a higher priority level, preventing this call from succeeding';
+    DSERR_UNINITIALIZED:
+        Result := 'This object has not been initialized';
+    DSERR_NOINTERFACE:
+        Result := 'The requested COM interface is not available';
+    DSERR_ACCESSDENIED:
+        Result := 'Access is denied';
+    DSERR_BUFFERTOOSMALL:
+        Result := 'Tried to create a DSBCAPS_CTRLFX buffer shorter than DSBSIZE_FX_MIN milliseconds';
+    DSERR_DS8_REQUIRED:
+        Result := 'Attempt to use DirectSound 8 functionality on an older DirectSound object';
+    DSERR_SENDLOOP:
+        Result := 'A circular loop of send effects was detected';
+    DSERR_BADSENDBUFFERGUID:
+        Result := 'The GUID specified in an audiopath file does not match a valid MIXIN buffer';
+    DSERR_OBJECTNOTFOUND:
+        Result := 'The object requested was not found (numerically equal to DMUS_E_NOT_FOUND)';
+    DSERR_FXUNAVAILABLE:
+      begin
+        Result := 'The effects requested could not be found on the system, or they were found' + #13#10 +
+        'but in the wrong order, or in the wrong hardware/software locations.';
+      end;
+  end;
+end;
+
+procedure ShowSoundError(aText: string; aResult: HRESULT; aErrorType: ErrorType);
+begin
+  case aErrorType of
+    etCleanup: DxbxKrnlCleanup(aText + #13#10 + GetsoundError(aResult));
+    etWarning: EmuWarning(aText + #13#10 + GetSoundError(aResult));
+  end;
 end;
 
 // periodically update sound buffers
@@ -699,7 +764,6 @@ begin
   if Assigned(pBuffer.EmuDirectSoundBuffer8) then // Dxbx addition : Allow resize from nil
   begin
     hRet := IDirectSoundBuffer(pBuffer.EmuDirectSoundBuffer8).GetCurrentPosition(@dwPlayCursor, @dwWriteCursor);
-
     if (FAILED(hRet)) then
       DxbxKrnlCleanup('Unable to retrieve current position for resize reallocation!');
 
@@ -720,7 +784,7 @@ begin
     hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(pBuffer.EmuBufferDesc^, PIDirectSoundBuffer(@(pBuffer.EmuDirectSoundBuffer8)), NULL);
 
     if (FAILED(hRet)) then
-      DxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed!');
+      ShowSoundError('IDirectSoundBuffer8 resize Failed!', hRet, etCleanup);
 
     IDirectSoundBuffer(pBuffer.EmuDirectSoundBuffer8).SetCurrentPosition(dwPlayCursor);
 
@@ -775,7 +839,7 @@ begin
     hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(pStream.EmuBufferDesc^, PIDirectSoundBuffer(@(pStream.EmuDirectSoundBuffer8)), NULL);
 
     if (FAILED(hRet)) then
-      DxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed!');
+      ShowSoundError('IDirectSoundBuffer8 resize Failed!', hRet, etCleanup);
 
     IDirectSoundBuffer(pStream.EmuDirectSoundBuffer8).SetCurrentPosition(dwPlayCursor);
 
@@ -811,13 +875,13 @@ begin
     end;
 
     // Create the DirectSound buffer before continuing...
-    Result := DirectSoundCreate8(NULL, PIDirectSound8(@g_pDSound8), NULL);
+    Result := DirectSoundCreate8(NULL, @g_pDSound8, NULL);
     if FAILED(Result) then
-      DxbxKrnlCleanup('DirectSoundCreate8 Failed!');
+      ShowSoundError('DirectSoundCreate8 Failed!', Result, etCleanup);
 
     Result := IDirectSound8(g_pDSound8).SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
     if FAILED(Result) then
-      DxbxKrnlCleanup('g_pDSound8->SetCooperativeLevel Failed!');
+      ShowSoundError('g_pDSound8->SetCooperativeLevel Failed!', Result, etCleanup);
 
     // clear sound buffer cache
     for v := 0 to SOUNDBUFFER_CACHE_SIZE-1 do
@@ -1175,7 +1239,7 @@ begin
 
   if (FAILED(hRet)) then
   begin
-    EmuWarning('CreateSoundBuffer Failed!');
+    ShowSoundError('CreateSoundBuffer Failed!', hRet, etWarning);
     ppBuffer^.EmuDirectSoundBuffer8 := NULL;
   end
   else
@@ -1188,6 +1252,7 @@ begin
          QueryInterface(IDirectSound3DListener, {out}IDirectSound3DListener(ppBuffer^.EmuListener))) then
     begin
       ppBuffer^.EmuListener := nil;
+      EmuWarning('QueryInterface Failed!');
   (* From http://www.ews64.com/mcdirectsound.html :
      If you want to add 3D sound there is more to do. First of all, you have to add
      the parameter DSBCAPS_CTRL3D to the flags of the primary buffer
@@ -1317,7 +1382,7 @@ begin
   hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(pDSBufferDesc^, PIDirectSoundBuffer(@(ppStream^.EmuDirectSoundBuffer8)), NULL);
 
   if (FAILED(hRet)) then
-    EmuWarning('CreateSoundBuffer Failed!');
+    ShowSoundError('CreateSoundBuffer Failed!', hRet, etWarning);
 
   // cache this sound stream
   begin
@@ -3332,7 +3397,7 @@ begin
   hRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).GetCurrentPosition(pdwPlayCursor, pdwWriteCursor);
 
   if (FAILED(hRet)) then
-    EmuWarning('GetCurrentPosition Failed!');
+    ShowSoundError('GetCurrentPosition Failed!', hRet, etWarning);
 
   if (pdwPlayCursor <> nil) and (pdwWriteCursor <> nil) then
   begin
@@ -3365,7 +3430,7 @@ begin
   hRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetCurrentPosition(dwPlayCursor);
 
   if (FAILED(hRet)) then
-    EmuWarning('SetCurrentPosition Failed!');
+    ShowSoundError('SetCurrentPosition Failed!', hRet, etWarning);
 
   EmuSwapFS(fsXbox);
 
