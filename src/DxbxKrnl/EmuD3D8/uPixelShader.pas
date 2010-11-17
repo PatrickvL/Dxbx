@@ -627,6 +627,8 @@ type PSH_INTERMEDIATE_FORMAT = record
     Parameters: array [0..7-1] of PSH_IMD_ARGUMENT; // 7 = xfc parameter count
     procedure Initialize(const aOpcode: PSH_OPCODE);
     function ToString: string;
+    function ReadsFromRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
+    function WritesToRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
     procedure SwapParameter(const Index1, Index2: int);
     procedure XSwapOutput();
     function MoveRemovableParametersRight(const Index1, Index2: int): Boolean;
@@ -639,7 +641,7 @@ type PSH_INTERMEDIATE_FORMAT = record
 
 type PSH_XBOX_SHADER = record
     IntermediateCount: int;
-    Intermediate: array[0..X_PSH_COMBINECOUNT * 3] of PSH_INTERMEDIATE_FORMAT; // ...should be enough slots to hold all possible shaders
+    Intermediate: array[0..X_PSH_COMBINECOUNT * 5] of PSH_INTERMEDIATE_FORMAT; // ...should be enough slots to hold all possible shaders
 
     FinalCombinerFlags: PS_FINALCOMBINERSETTING;
     CombinerCountFlags: DWORD; // For PS_COMBINERCOUNTFLAGS
@@ -1357,6 +1359,52 @@ begin
   or (PSH_OPCODE_DEFS[Opcode].note <> '') then
     Result := Result + ' ; ' + PSH_OPCODE_DEFS[Opcode].note + ' ' + CommentString;
 end; // ToString
+
+function PSH_INTERMEDIATE_FORMAT.ReadsFromRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
+var
+  i: int;
+  CurArg: PPSH_IMD_ARGUMENT;
+begin
+  // Check all parameters :
+  for i := 0 to PSH_OPCODE_DEFS[Opcode]._In - 1 do
+  begin
+    // Check if one of them reads from the given register :
+    CurArg := @(Parameters[i]);
+    if  (CurArg.Type_ = aRegType)
+    and (CurArg.Address = aAddress)
+    // Check the mask itself, but also 'mask-less' :
+    and (((CurArg.Mask and aMask) = aMask) or (CurArg.Mask = 0)) then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  Result := False;
+end;
+
+function PSH_INTERMEDIATE_FORMAT.WritesToRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
+var
+  i: int;
+  CurArg: PPSH_IMD_ARGUMENT;
+begin
+  // Check the output :
+  for i := 0 to PSH_OPCODE_DEFS[Opcode]._Out - 1 do
+  begin
+    // Check if one of them writes to the given register :
+    CurArg := @(Output[i]);
+    if  (CurArg.Type_ = aRegType)
+    and (CurArg.Address = aAddress)
+    // Check the mask itself, but also 'mask-less' :
+    and (((CurArg.Mask and aMask) = aMask) or (CurArg.Mask = 0)) then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  Result := False;
+end;
 
 procedure PSH_INTERMEDIATE_FORMAT.SwapParameter(const Index1, Index2: int);
 // Swaps two parameters.
@@ -2628,39 +2676,39 @@ end;
 
 function PSH_XBOX_SHADER.FixMissingR0a(): Boolean;
 var
-  NeedsR0aDefault: Boolean;
-  i, j: int;
+  R0aDefaultInsertPos: int;
+  i: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
   CurArg: PPSH_IMD_ARGUMENT;
   NewIns: PSH_INTERMEDIATE_FORMAT;
 begin
   Result := False;
+
   // Detect a read of r0.a without a write, as we need to insert a "MOV r0.a, t0.a" as default (like the xbox has) :
-  NeedsR0aDefault := True;
-  i := IntermediateCount;
-  while (i > 0) and NeedsR0aDefault do
+  R0aDefaultInsertPos := -1;
+  for i := 0 to IntermediateCount - 1 do
   begin
-    Dec(i);
     Cur := @(Intermediate[i]);
     if Cur.Opcode = PO_DEF then
-      Break;
+      Continue;
 
-    // Check if r0.a is written to by this opcode :
-    for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._Out - 1 do
+    // Make sure if we insert at all, it'll be after the DEF's :
+    if R0aDefaultInsertPos < 0 then
+      R0aDefaultInsertPos := i;
+
+    // First, check if r0.a is read by this opcode :
+    if Cur.ReadsFromRegister(PARAM_R, 0, MASK_A) then
     begin
-      CurArg := @(Cur.Output[j]);
-      if  (CurArg.Type_ = PARAM_R)
-      and (CurArg.Address = 0)
-      and ((CurArg.Mask and MASK_A) > 0) then
-      begin
-        // Then we don't have to insert a default :
-        NeedsR0aDefault := False;
-        Break;
-      end;
+      R0aDefaultInsertPos := i;
+      Break;
     end;
+
+    // If this opcode writes to r0.a, we're done :
+    if Cur.WritesToRegister(PARAM_R, 0, MASK_A) then
+      Exit;
   end;
 
-  if NeedsR0aDefault then
+  if R0aDefaultInsertPos >= 0 then
   begin
     // Insert a new opcode : MOV r0.a, t0.a
     NewIns.Initialize(PO_MOV);
@@ -2670,7 +2718,7 @@ begin
     NewIns.Parameters[0] := NewIns.Output[0];
     NewIns.Parameters[0].Type_ := PARAM_T;
     NewIns.CommentString := 'Inserted r0.a default';
-    InsertIntermediate(@NewIns, i);
+    InsertIntermediate(@NewIns, R0aDefaultInsertPos);
     Result := True;
   end;
 end; // FixMissingR0a
