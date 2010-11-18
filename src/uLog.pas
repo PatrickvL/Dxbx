@@ -1085,6 +1085,12 @@ end;
 
 initialization
 
+  // Because we bypass Delphi's BeginThread, the memory manager has no idea it has to run thread-safe,
+  // and thus skips all locking. When doing lots of allocations (like when our logging is turned on),
+  // this will cause memory corruption with access violations as a result.
+  // Simply setting IsMultiThread to True fixes all this!
+  IsMultiThread := True;
+
   InitializeCriticalSection({var}DxbxLogLock);
 
   SetSpecifiedLogFlags(@g_DefaultLogFlags_Enabled, @g_DefaultLogFlags_Disabled);
