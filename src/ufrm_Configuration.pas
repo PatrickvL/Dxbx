@@ -328,24 +328,14 @@ begin
 end;
 
 procedure TfmConfiguration.LoadControllerConfig;
-var
-  IniFile: TIniFile;
 begin
   OpenDialog1.Filter := 'Controller config (*.ccf)|*.ccf';
 
   if OpenDialog1.Execute then
   begin
-    IniFile := TIniFile.Create(OpenDialog1.FileName);
-    try
-
-      // TODO: write load controller config code  here
-
-    finally
-      FreeAndNil(IniFile);
-    end;
+    FXBController.LoadConfigFromIni(OpenDialog1.FileName);
     HasChanges := True;
   end;
-
 end;
 
 procedure TfmConfiguration.LoadLogConfig;
@@ -493,16 +483,7 @@ begin
   SaveDialog1.DefaultExt := '*.ccf';
 
   if SaveDialog1.Execute then
-  begin
-    IniFile := TIniFile.Create(SaveDialog1.FileName);
-    try
-
-      // TODO: write controller save here
-
-    finally
-      FreeAndNil(IniFile);
-    end;
-  end;
+    FXBController.SaveConfigToIni(SaveDialog1.FileName);
 end;
 
 procedure TfmConfiguration.SaveLogConfig;
