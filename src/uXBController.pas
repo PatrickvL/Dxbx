@@ -400,7 +400,8 @@ var
   IniFile: TIniFile;
   v: Integer;
   szValueName: AnsiString;
-//  dwSize: DWORD;
+  dwSize: DWORD;
+  HexStr: string;
 begin
   IniFile := TIniFile.Create(aFileName);
   try
@@ -416,19 +417,17 @@ begin
 
     // TODO: Save object config
 
-(*    for v := 0 to XBCTRL_OBJECT_COUNT-1 do
+     for v := 0 to XBCTRL_OBJECT_COUNT-1 do
     begin
-      szValueName := AnsiString(Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]));
-      dwSize := sizeof(XBCtrlObjectCfg);
-
-
+      szValueName := Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]);
       if (m_ObjectConfig[XBCtrlObject(v)].dwDevice <> -1) then
       begin
-        BinToHex(PBYTE(@m_ObjectConfig[XBCtrlObject(v)]), buf2, dwSize);
-        buf := BinToInt(buf2);
-        IniFile.WriteInteger('Controller', szValueName, Buf);
+        dwSize := sizeof(XBCtrlObjectCfg);
+        SetLength(HexStr, dwSize * 2);
+        BinToHex(Pointer(@m_ObjectConfig[XBCtrlObject(v)]), PChar(HexStr),dwSize);
+        IniFile.WriteString('Controller', szValueName, HexStr);
        end;
-    end;     *)
+    end;
   finally
     FreeAndNil(IniFile);
   end;
@@ -440,30 +439,37 @@ var
   v: Integer;
   szValueName: string;
   DeviceName: string;
+  dwSize: DWORD;
+  HexStr: string;
 begin
   Assert(FileExists(aFileName), Format ('File %s does not exists!', [aFileName]));
 
-  IniFile := TIniFile.Create(aFileName);
+IniFile := TIniFile.Create(aFileName);
   try
     // Todo: Load Device Names
 
     // Load Device Names
-(*    for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+    for v := 0 to XBCTRL_MAX_DEVICES - 1 do
     begin
       szValueName := Format('DeviceName 0x%.02X', [v]);
-      m_DeviceName[v] := AnsiString(IniFile.ReadString('Controller', szValueName, ''));
-    end;  *)
+      DeviceName := IniFile.ReadString('Controller', szValueName, '');
+      DeviceName := DeviceName + #0;
+      if DeviceName <> '' then
+        MemCpy(@(m_DeviceName[v][0]), PAnsiChar(DeviceName), Length(DeviceName)+1);
+    end;
 
     // Load Object Configuration
 
     // TODO: Load object config
 
-(*    for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+    for v := 0 to XBCTRL_MAX_DEVICES - 1 do
     begin
-      szValueName := AnsiString(Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]));
+      szValueName := Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]);
+      HexStr := IniFile.ReadString('Controller', szValueName, '');
       dwSize := sizeof(XBCtrlObjectCfg);
-
-    end; *)
+      if Length(HexStr) * 2 = dwSize then
+        HexToBin(PChar(HexStr), Pointer(@m_ObjectConfig[XBCtrlObject(v)]), Length(HexStr));
+    end;
 
 
   finally

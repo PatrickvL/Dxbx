@@ -476,8 +476,6 @@ begin
 end;
 
 procedure TfmConfiguration.SaveControllerConfig;
-var
-  IniFile: TIniFile;
 begin
   SaveDialog1.Filter := 'Controller config (*.ccf)|*.ccf';
   SaveDialog1.DefaultExt := '*.ccf';
