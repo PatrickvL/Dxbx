@@ -414,10 +414,7 @@ begin
     end;
 
     // Save Object Configuration
-
-    // TODO: Save object config
-
-     for v := 0 to XBCTRL_OBJECT_COUNT-1 do
+    for v := 0 to XBCTRL_OBJECT_COUNT-1 do
     begin
       szValueName := Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]);
       if (m_ObjectConfig[XBCtrlObject(v)].dwDevice <> -1) then
@@ -446,8 +443,6 @@ begin
 
 IniFile := TIniFile.Create(aFileName);
   try
-    // Todo: Load Device Names
-
     // Load Device Names
     for v := 0 to XBCTRL_MAX_DEVICES - 1 do
     begin
@@ -459,9 +454,6 @@ IniFile := TIniFile.Create(aFileName);
     end;
 
     // Load Object Configuration
-
-    // TODO: Load object config
-
     for v := 0 to XBCTRL_MAX_DEVICES - 1 do
     begin
       szValueName := Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]);
@@ -470,7 +462,6 @@ IniFile := TIniFile.Create(aFileName);
       if Length(HexStr) * 2 = dwSize then
         HexToBin(PChar(HexStr), Pointer(@m_ObjectConfig[XBCtrlObject(v)]), Length(HexStr));
     end;
-
 
   finally
     FreeAndNil(IniFile);

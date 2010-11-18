@@ -1585,7 +1585,7 @@ end;
 
 procedure Tfrm_Main.actFileDebugKernelExecute(Sender: TObject);
 begin
-  GetFolderDialog(Application.Handle, 'Select a folder', KernelDebugFilePath);
+  KernelDebugFilePath := BrowseDialog('Select a folder', BIF_RETURNONLYFSDIRS);
   if KernelDebugFilePath <> '' then
   begin
     KernelDebugMode := dmFile;
