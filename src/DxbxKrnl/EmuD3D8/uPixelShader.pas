@@ -562,6 +562,19 @@ const
   FakeRegNr_Xmm1 = 4;
   FakeRegNr_Xmm2 = 5;
 
+const
+  XFC_COMBINERSTAGENR = X_PSH_COMBINECOUNT; // Always call XFC 'stage 9', 1 after the 8th combiner
+
+  PSH_XBOX_MAX_C_REGISTER_COUNT = 16;
+  PSH_XBOX_MAX_R_REGISTER_COUNT = 2;
+  PSH_XBOX_MAX_T_REGISTER_COUNT = 4;
+  PSH_XBOX_MAX_V_REGISTER_COUNT = 2;
+
+  // Two extra constants are possible in the final combiner - give them fake numbers :
+  X_PSH_CONSTANT_FC0 = PSH_XBOX_MAX_C_REGISTER_COUNT + 1; // = 16
+  X_PSH_CONSTANT_FC1 = X_PSH_CONSTANT_FC0 + 1; // = 17
+  X_PSH_CONSTANT_MAX = X_PSH_CONSTANT_FC1 + 1; // = 18
+
 type PSH_INST_MODIFIER = (
   INSMOD_NONE,
   INSMOD_BIAS, // Xbox only : TODO : Fixup occurrances!
@@ -645,6 +658,7 @@ type PSH_IMD_ARGUMENT = object
     Multiplier: Float;
     procedure SetConstValue(Value: Float);
     function GetConstValue: Float;
+    function UsesRegister: Boolean;
     function IsRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
     procedure SetRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD);
     function ToString: string;
@@ -672,7 +686,7 @@ type PSH_INTERMEDIATE_FORMAT = record
     procedure SwapParameter(const Index1, Index2: int);
     procedure XSwapOutput();
     function MoveRemovableParametersRight(const Index1, Index2: int): Boolean;
-    function XMoveDiscardOutputsRight(): Boolean;
+    function XMoveNonRegisterOutputsRight(): Boolean;
     procedure XCopySecondOpcodeToFirst(const aOpcode: PSH_OPCODE);
     function Decode(CombinerStageNr, PSInputs, PSOutputs: DWORD; aMask: DWORD): Boolean;
     function DecodeFinalCombiner(aPSFinalCombinerInputsABCD, aPSFinalCombinerInputsEFG: DWORD): Boolean;
@@ -681,7 +695,8 @@ type PSH_INTERMEDIATE_FORMAT = record
 
 type PSH_XBOX_SHADER = record
     IntermediateCount: int;
-    Intermediate: array[0..X_PSH_COMBINECOUNT * 5] of PSH_INTERMEDIATE_FORMAT; // ...should be enough slots to hold all possible shaders
+    // Reserve enough slots for all shaders, so we need space for 18 constants, 4 texture addressing codes and 5 lines per opcode : :
+    Intermediate: array[0..(X_PSH_CONSTANT_MAX+X_D3DTS_STAGECOUNT+X_PSH_COMBINECOUNT * 5)] of PSH_INTERMEDIATE_FORMAT;
 
     PSTextureModes: array[0..X_D3DTS_STAGECOUNT-1] of PS_TEXTUREMODES;
     PSDotMapping: array[0..X_D3DTS_STAGECOUNT-1] of PS_DOTMAPPING;
@@ -1059,18 +1074,6 @@ const PS_GlobalFlagsStr: array [PS_GLOBALFLAGS] of P_char =
 {$IFDEF PS_REWRITE}
 
 const
-  XFC_COMBINERSTAGENR = X_PSH_COMBINECOUNT; // Always call XFC 'stage 9', 1 after
-
-  PSH_XBOX_MAX_C_REGISTER_COUNT = 16;
-  PSH_XBOX_MAX_R_REGISTER_COUNT = 2;
-  PSH_XBOX_MAX_T_REGISTER_COUNT = 4;
-  PSH_XBOX_MAX_V_REGISTER_COUNT = 2;
-
-  // Two extra constants are possible in the final combiner - give them fake numbers :
-  X_PSH_CONSTANT_FC0 = PSH_XBOX_MAX_C_REGISTER_COUNT + 1;
-  X_PSH_CONSTANT_FC1 = X_PSH_CONSTANT_FC0 + 1;
-
-const
   CONST_NEG_TWO = 4;
   CONST_NEG_ONE = -2;
   CONST_NEG_HALF = -1;
@@ -1093,7 +1096,7 @@ function PSH_IMD_ARGUMENT.GetConstValue: Float;
 begin
   if Type_ <> PARAM_VALUE then
   begin
-    // Anything other than a const returns a value never checked for :
+    // Anything other than a value-parameter returns a value never checked for :
     Result := Infinity;
     Exit;
   end;
@@ -1121,6 +1124,11 @@ begin
   // y =  x/2    -> 0..1 >    0..0.5
   if (Modifiers * [ARGMOD_SCALE_D2]) <> [] then Result := Result/2.0;
 end; // GetConstValue
+
+function PSH_IMD_ARGUMENT.UsesRegister: Boolean;
+begin
+  Result := (Type_ > PARAM_DISCARD);
+end;
 
 function PSH_IMD_ARGUMENT.IsRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
 begin
@@ -1155,7 +1163,7 @@ begin
   if Type_ >= PARAM_R then
     Result := Result + IntToStr(Address);
 
-  if Type_ > PARAM_DISCARD then
+  if UsesRegister then
   begin
     for Modifier := Low(PSH_ARG_MODIFIER) to High(PSH_ARG_MODIFIER) do
       if Modifier in Modifiers then
@@ -1301,55 +1309,55 @@ begin
     Result := False;
   end;
 
-  if ArgumentType = atOutput then
+  // We're done if this decoding is meant for output parameters,
+  // or when the input is a value-parameter (already read above) :
+  if (ArgumentType = atOutput)
+  or (Type_ = PARAM_VALUE) then
     Exit;
 
-  if Type_ > PARAM_VALUE then
-  begin
-    Channel := PS_CHANNEL(Value and Ord(PS_CHANNEL_ALPHA));
-    if Channel = PS_CHANNEL_ALPHA then
-      Mask := MASK_A
-    else // PS_CHANNEL_BLUE (only valid for Alpha step) :
-      // ARGMOD_BLUE_REPLICATE ?
-      if aMask = MASK_A then
-        Mask := MASK_B;
+  Channel := PS_CHANNEL(Value and Ord(PS_CHANNEL_ALPHA));
+  if Channel = PS_CHANNEL_ALPHA then
+    Mask := MASK_A
+  else // PS_CHANNEL_BLUE (only valid for Alpha step) :
+    // ARGMOD_BLUE_REPLICATE ?
+    if aMask = MASK_A then
+      Mask := MASK_B;
 
-    InputMapping := PS_INPUTMAPPING(Value and $e0);
+  InputMapping := PS_INPUTMAPPING(Value and $e0);
 
-  //    ARGMOD_BIAS,
-  //
-  //    ARGMOD_SCALE_X2, ARGMOD_SCALE_BX2, ARGMOD_SCALE_X4, ARGMOD_SCALE_D2,
-  //
-  //    ARGMOD_SATURATE,
-  //
-  //    ARGMOD_ALPHA_REPLICATE, ARGMOD_BLUE_REPLICATE];
+//    ARGMOD_BIAS,
+//
+//    ARGMOD_SCALE_X2, ARGMOD_SCALE_BX2, ARGMOD_SCALE_X4, ARGMOD_SCALE_D2,
+//
+//    ARGMOD_SATURATE,
+//
+//    ARGMOD_ALPHA_REPLICATE, ARGMOD_BLUE_REPLICATE];
 
-    case InputMapping of
-      PS_INPUTMAPPING_UNSIGNED_IDENTITY:
-        Modifiers := [ARGMOD_IDENTITY];
-      PS_INPUTMAPPING_UNSIGNED_INVERT:
-        Modifiers := [ARGMOD_INVERT];
-      PS_INPUTMAPPING_EXPAND_NORMAL:
-      begin
-        Modifiers := [ARGMOD_SCALE_BX2];
-        Multiplier := 2.0 * Multiplier;
-      end;
-      PS_INPUTMAPPING_EXPAND_NEGATE:
-      begin
-        Modifiers := [ARGMOD_NEGATE];
-        Multiplier := -Multiplier;
-      end;
-      PS_INPUTMAPPING_HALFBIAS_NORMAL:
-        Modifiers := [ARGMOD_BIAS];
-  //    PS_INPUTMAPPING_HALFBIAS_NEGATE:
-  //      Modifiers := [ARGMOD_IDENTITY]; ???
-      PS_INPUTMAPPING_SIGNED_IDENTITY:
-        Modifiers := [ARGMOD_IDENTITY];
-      PS_INPUTMAPPING_SIGNED_NEGATE:
-      begin
-        Modifiers := [ARGMOD_NEGATE];
-        Multiplier := -Multiplier;
-      end;
+  case InputMapping of
+    PS_INPUTMAPPING_UNSIGNED_IDENTITY:
+      Modifiers := [ARGMOD_IDENTITY];
+    PS_INPUTMAPPING_UNSIGNED_INVERT:
+      Modifiers := [ARGMOD_INVERT];
+    PS_INPUTMAPPING_EXPAND_NORMAL:
+    begin
+      Modifiers := [ARGMOD_SCALE_BX2];
+      Multiplier := 2.0 * Multiplier;
+    end;
+    PS_INPUTMAPPING_EXPAND_NEGATE:
+    begin
+      Modifiers := [ARGMOD_NEGATE];
+      Multiplier := -Multiplier;
+    end;
+    PS_INPUTMAPPING_HALFBIAS_NORMAL:
+      Modifiers := [ARGMOD_BIAS];
+//    PS_INPUTMAPPING_HALFBIAS_NEGATE:
+//      Modifiers := [ARGMOD_IDENTITY]; ???
+    PS_INPUTMAPPING_SIGNED_IDENTITY:
+      Modifiers := [ARGMOD_IDENTITY];
+    PS_INPUTMAPPING_SIGNED_NEGATE:
+    begin
+      Modifiers := [ARGMOD_NEGATE];
+      Multiplier := -Multiplier;
     end;
   end;
 end; // Decode
@@ -1488,22 +1496,22 @@ function PSH_INTERMEDIATE_FORMAT.MoveRemovableParametersRight(const Index1, Inde
 begin
   Result := False;
 
-  if  (Parameters[Index1].Type_ <= PARAM_DISCARD)
-  and (Parameters[Index2].Type_ > PARAM_DISCARD) then
+  if  (not Parameters[Index1].UsesRegister)
+  and (Parameters[Index2].UsesRegister) then
   begin
     SwapParameter(Index1, Index2);
     Result := True;
   end;
 end;
 
-function PSH_INTERMEDIATE_FORMAT.XMoveDiscardOutputsRight(): Boolean;
+function PSH_INTERMEDIATE_FORMAT.XMoveNonRegisterOutputsRight(): Boolean;
 // Swap discards and constants to the right position, to ease later conversions. Applies only to Xbox opcodes.
 begin
   Result := False;
 
   // First, check if the left output is discarded, while the second isn't :
-  if  (Output[0].Type_ <= PARAM_DISCARD)
-  and (Output[1].Type_ > PARAM_DISCARD) then
+  if  (not Output[0].UsesRegister)
+  and (Output[1].UsesRegister) then
   begin
     // Swap the outputs, so the discarded version is positioned rightmost :
     XSwapOutput();
@@ -1597,6 +1605,7 @@ begin
 
     if (CombinerOutputFlags and PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA) > 0 then // False=Alpha-to-Alpha, True=Blue-to-Alpha
     begin
+      // TODO : Rayman does this in some shaders, requires a fixup (as output.b is incorrect and not allowed)
       Output[0].Modifiers := Output[0].Modifiers + [ARGMOD_BLUE_REPLICATE];
       Output[0].Mask := MASK_B;
     end;
@@ -1765,9 +1774,6 @@ begin
   if RemoveNops() then
     Log('RemoveNops');
 
-  if ConvertConstantsToNative(pPSDef) then
-    Log('ConvertXboxOpcodesToNative');
-
   if RemoveUselessWrites then
     Log('RemoveUselessWrites');
 
@@ -1776,6 +1782,9 @@ begin
 
   if RemoveUselessWrites then // twice!
     Log('RemoveUselessWrites');
+
+  if ConvertConstantsToNative(pPSDef) then
+    Log('ConvertConstantsToNative');
 
   // Resolve all differences :
   if FixupPixelShader then
@@ -1926,7 +1935,7 @@ begin
       PO_XMMA,
       PO_XMMC,
       PO_XDD:
-        if Intermediate[i].XMoveDiscardOutputsRight() then
+        if Intermediate[i].XMoveNonRegisterOutputsRight() then
           Result := True;
 
       PO_XDM:
@@ -1969,12 +1978,39 @@ var
   NewIns: PSH_INTERMEDIATE_FORMAT;
   CurArg: PPSH_IMD_ARGUMENT;
   ConstColor: D3DCOLOR;
-  IsConstDeclared: array [0..X_PSH_CONSTANT_FC1-1] of Boolean;
+  ConstMapping: array [0..X_PSH_CONSTANT_MAX-1] of int;
+
+  // Try to fixup constants above c7 :
+  function _MapConstant(ConstNr: int): int;
+  begin
+    // 1-to-1 mapping for constants that can be supported native :
+    if (ConstNr < 8) and (ConstMapping[ConstNr] < 0) then
+    begin
+      Result := ConstNr;
+      Exit;
+    end;
+
+    // Assign non-supported constants top-to-bottom
+    Result := 7;
+    while Result > 0 do
+    begin
+      if ConstMapping[Result] < 0 then
+        Exit;
+
+      Dec(Result);
+    end;
+
+    // Unresolved - let it go unchanged...
+    if Result < 0 then
+      Result := ConstNr;
+  end;
+
 begin
   Result := False;
 
   // Keep track of which constants are already 'DEF'ined :
-  ZeroMemory(@IsConstDeclared, SizeOf(IsConstDeclared));
+  for i := 0 to High(ConstMapping) do
+    ConstMapping[i] := -1;
 
   i := IntermediateCount;
   while i > 0 do
@@ -2038,18 +2074,26 @@ begin
         end;
 
         // If this is a new constant, output a 'def' opcode for it at the begin of the shader :
-        if not IsConstDeclared[CurArg.Address] then
+        if ConstMapping[CurArg.Address] < 0 then
         begin
-          IsConstDeclared[CurArg.Address] := True;
-
+          // Determine and remember a new mapping :
+          ConstMapping[CurArg.Address] := _MapConstant(CurArg.Address);
+          // Apply that mapping :
+          CurArg.Address := ConstMapping[CurArg.Address];
+          // Output a new opcode to define this constant :
           NewIns.Output[0] := CurArg^;
           NewIns.Output[0].Mask := MASK_RGBA;
           NewIns.Output[0].Modifiers := [];
           _SetColor(NewIns, ConstColor);
           InsertIntermediate(@NewIns, 0);
           Result := True;
-          // Note : We'll try to fixup constants above c7 later.
-        end;
+          // Since we're in a for-loop, also step with current opcode after insert :
+          Inc(i);
+          Cur := @(Intermediate[i]);
+        end
+        else
+          // Just apply the previously determined mapping :
+          CurArg.Address := ConstMapping[CurArg.Address];
       end;
     end;
   end;
@@ -2102,6 +2146,9 @@ begin
     for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 do
     begin
       CurArg := @(Cur.Parameters[j]);
+      // Skip non-register parameters :
+      if not CurArg.UsesRegister then
+        Continue;
 
       // Remove useless flag, to ease up later comparisions :
       CurArg.Modifiers := CurArg.Modifiers - [ARGMOD_IDENTITY];
@@ -3031,7 +3078,7 @@ begin
   Result := Result + ' | ' + PS_CombineOutputStr[10 + ((dwFlags and Ord(PS_COMBINEROUTPUT_CD_DOT_PRODUCT)) shr 0)];
   Result := Result + ' | ' + PS_CombineOutputStr[12 + ((dwFlags and Ord(PS_COMBINEROUTPUT_AB_CD_MUX))      shr 2)];
 
-  if IsAlpha then
+  if not IsAlpha then
   begin
     if (dwFlags and Ord(PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA)) > 0 then
       Result := Result + ' | ' + PS_CombineOutputStr[6];
@@ -3892,8 +3939,11 @@ begin
   OutputSUM.OutputAB.DotProduct := (CombinerOutputFlags and PS_COMBINEROUTPUT_AB_DOT_PRODUCT) > 0; // False=Multiply, True=DotProduct
   OutputSUM.OutputCD.DotProduct := (CombinerOutputFlags and PS_COMBINEROUTPUT_CD_DOT_PRODUCT) > 0; // False=Multiply, True=DotProduct
 
-  OutputSUM.OutputAB.BlueToAlpha := (CombinerOutputFlags and PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA) > 0; // False=Alpha-to-Alpha, True=Blue-to-Alpha
-  OutputSUM.OutputCD.BlueToAlpha := (CombinerOutputFlags and PS_COMBINEROUTPUT_CD_BLUE_TO_ALPHA) > 0; // False=Alpha-to-Alpha, True=Blue-to-Alpha
+  if not IsAlpha then
+  begin
+    OutputSUM.OutputAB.BlueToAlpha := (CombinerOutputFlags and PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA) > 0; // False=Alpha-to-Alpha, True=Blue-to-Alpha
+    OutputSUM.OutputCD.BlueToAlpha := (CombinerOutputFlags and PS_COMBINEROUTPUT_CD_BLUE_TO_ALPHA) > 0; // False=Alpha-to-Alpha, True=Blue-to-Alpha
+  end;
 
   // Decode PSAlphaOutputs / PSRGBOutputs and PSAlphaInputs / PSRGBInputs :
   OutputSUM.OutputAB.Decode((PSOutputs shr 4) and $F, (PSInputs shr 16) and $FFFF, IsAlpha);
@@ -4819,7 +4869,7 @@ begin
   Result := PSIntermediate.DisassembleIntermediate();
 {$IFDEF PS_REWRITE}
   New.Decode(pPSDef);
-//  Result := New.ToString;
+  Result := New.ToString;
 {$ENDIF}
 end;
 
