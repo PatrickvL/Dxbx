@@ -1848,7 +1848,6 @@ end;
 procedure Tfrm_Main.ReopenXbe(Sender: TObject);
 var
   TempItem: TMenuItem;
-  XbeXml: string;
 begin
   TempItem := Sender as TMenuItem;
   if not TXbe.FileExists(TempItem.Hint) then

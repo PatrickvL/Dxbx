@@ -330,17 +330,6 @@ end;
 procedure TfmConfiguration.LoadControllerConfig;
 var
   IniFile: TIniFile;
-  lIndex: Integer;
-  LogStatus: TLogStatus;
-
-  dwType, dwSize: DWORD;
-  dwDisposition: DWORD;
-  hKey: Windows.HKEY;
-  v: int;
-  szValueName: AnsiString;
-    m_ObjectConfig: array [XBCtrlObject] of XBCtrlObjectCfg;
-
-  stream: TMemoryStream;
 begin
   OpenDialog1.Filter := 'Controller config (*.ccf)|*.ccf';
 
@@ -351,19 +340,6 @@ begin
 
       // TODO: write load controller config code  here
 
-(*      // Save Object Configuration
-      for v := 0 to XBCTRL_OBJECT_COUNT-1 do
-      begin
-
-        szValueName := AnsiString(Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]));
-
-        if (m_ObjectConfig[XBCtrlObject(v)].dwDevice <> -1) then
-        begin
-          m_ObjectConfig[XBCtrlObject(v)].dwDevice := IniFile.ReadInteger('Controller', 'dwDevice-' + szValueName, 0);
-          m_ObjectConfig[XBCtrlObject(v)].dwInfo := IniFile.ReadInteger('Controller', 'dwInfo-' + szValueName, 0);
-          m_ObjectConfig[XBCtrlObject(v)].dwFlags := IniFile.ReadInteger('Controller', 'dwFlags-' + szValueName, 0);
-        end;
-      end; *)
     finally
       FreeAndNil(IniFile);
     end;
@@ -398,8 +374,6 @@ end;
 procedure TfmConfiguration.LoadSoundConfig;
 var
   IniFile: TIniFile;
-  lIndex: Integer;
-  LogStatus: TLogStatus;
 begin
   OpenDialog1.Filter := 'Sound config (*.scf)|*.scf';
 
@@ -423,8 +397,6 @@ end;
 procedure TfmConfiguration.LoadVideoConfig;
 var
   IniFile: TIniFile;
-  lIndex: Integer;
-  LogStatus: TLogStatus;
 begin
   OpenDialog1.Filter := 'Video config (*.vcf)|*.vcf';
 
@@ -516,17 +488,6 @@ end;
 procedure TfmConfiguration.SaveControllerConfig;
 var
   IniFile: TIniFile;
-  lIndex: Integer;
-  LogStatus: TLogStatus;
-
-  dwType, dwSize: DWORD;
-  dwDisposition: DWORD;
-  hKey: Windows.HKEY;
-  v: int;
-  szValueName: AnsiString;
-    m_ObjectConfig: array [XBCtrlObject] of XBCtrlObjectCfg;
-
-  stream: TMemoryStream;
 begin
   SaveDialog1.Filter := 'Controller config (*.ccf)|*.ccf';
   SaveDialog1.DefaultExt := '*.ccf';
@@ -536,20 +497,8 @@ begin
     IniFile := TIniFile.Create(SaveDialog1.FileName);
     try
 
-      // TODO: write save controller config code  here
-      // Save Object Configuration
-(*      for v := 0 to XBCTRL_OBJECT_COUNT-1 do
-      begin
+      // TODO: write controller save here
 
-        szValueName := AnsiString(Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]));
-
-        if (m_ObjectConfig[XBCtrlObject(v)].dwDevice <> -1) then
-        begin
-          IniFile.WriteInteger('Controller', 'dwDevice-' + szValueName, m_ObjectConfig[XBCtrlObject(v)].dwDevice);
-          IniFile.WriteInteger('Controller', 'dwInfo-' + szValueName, m_ObjectConfig[XBCtrlObject(v)].dwInfo);
-          IniFile.WriteInteger('Controller', 'dwFlags-' + szValueName, m_ObjectConfig[XBCtrlObject(v)].dwflags);
-        end;
-      end;  *)
     finally
       FreeAndNil(IniFile);
     end;
@@ -585,8 +534,6 @@ end;
 procedure TfmConfiguration.SaveSoundConfig;
 var
   IniFile: TIniFile;
-  lIndex: Integer;
-  LogStatus: TLogStatus;
 begin
   SaveDialog1.Filter := 'Sound config (*.scf)|*.scf';
   SaveDialog1.DefaultExt := '*.scf';
@@ -606,8 +553,6 @@ end;
 procedure TfmConfiguration.SaveVideoConfig;
 var
   IniFile: TIniFile;
-  lIndex: Integer;
-  LogStatus: TLogStatus;
 begin
   SaveDialog1.Filter := 'Video config (*.vcf)|*.vcf';
   SaveDialog1.DefaultExt := '*.vcf';
