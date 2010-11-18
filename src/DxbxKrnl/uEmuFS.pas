@@ -19,6 +19,10 @@ unit uEmuFS;
 
 {$INCLUDE Dxbx.inc}
 
+{$DEFINE DXBX_EXTERNAL_FS} // Doesn't use PNT_TIB(GetFS()).ArbitraryUserPointer, costs 256 Kb extra
+
+{.$DEFINE DXBX_TWO_THREAD_FS} // Abuse a second thread to obtain a Xbox FS (this circumvents LDT!) DOESN'T WORK YET!
+
 interface
 
 uses
@@ -90,11 +94,29 @@ implementation
 
 const lfUnit = lfCxbx or lfThreading;
 
+{$IFDEF DXBX_EXTERNAL_FS}
+var
+  IsFSXbox: array [WORD] of Boolean;
+  FSXboxToWindows: array [WORD] of WORD;
+  FSWindowsToXbox: array [WORD] of WORD;
+
+procedure InitExternalFS;
+begin
+  ZeroMemory(@(IsFSXbox[0]), Sizeof(IsFSXbox));
+  ZeroMemory(@(FSXboxToWindows[0]), Sizeof(FSXboxToWindows));
+  ZeroMemory(@(FSWindowsToXbox[0]), Sizeof(FSWindowsToXbox));
+end;
+{$ENDIF}
+
 // is the current fs register the xbox emulation variety?
 function EmuIsXboxFS(): _bool;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
+{$IFDEF DXBX_EXTERNAL_FS}
+  Result := IsFSXbox[GetFS()];
+{$ELSE}
   Result := (GetTIBEntryWord(DxbxFS_IsXboxFS) <> 0);
+{$ENDIF}
 end;
 
 //
@@ -131,10 +153,20 @@ begin
   Exit;
 {$ENDIF}
 
+{$IFDEF DXBX_EXTERNAL_FS}
+  // Use the correct lookup table to switch the current FS to the other :
+  if EmuIsXboxFS then
+    // If the Current FS is for Xbox, map that to the Windows counterpart :
+    SetFS(FSXboxToWindows[GetFS()])
+  else
+    // But it could also be the other way around :
+    SetFS(FSWindowsToXbox[GetFS()]);
+{$ELSE}
   asm
     mov ax, fs:[DxbxFS_SwapFS]
     mov fs, ax
   end;
+{$ENDIF}
 
   // every "N" interceptions, perform various periodic services
   Inc(dwInterceptionCount);
@@ -202,7 +234,9 @@ begin
   Exit;
 {$ENDIF}
 
+{$IFNDEF DXBX_TWO_THREAD_FS}
   EmuInitLDT();
+{$ENDIF}
 end;
 
 function GetCurrentKPCR(): PKPCR; // inline;
@@ -210,6 +244,7 @@ begin
   Result := GetTIBEntry(FS_SelfPcr);
 end;
 
+{$IFNDEF DXBX_EXTERNAL_FS}
 type
   RDxbxTIBUserData = record
     Dxbx_SwapFS: Word;
@@ -222,6 +257,7 @@ function DxbxTIBUserData(const aTIB: PNT_TIB): PDxbxTIBUserData; inline;
 begin
   Result := PDxbxTIBUserData(@(aTIB.ArbitraryUserPointer));
 end;
+{$ENDIF}
 
 function DumpXboxFS(const aFS: PKPCR): string;
 begin
@@ -304,6 +340,37 @@ begin
     Result := Result + ' (Win32 FS)'#13#10 + DumpWin32FS(GetTIB());
 end;
 
+{$IFDEF DXBX_TWO_THREAD_FS}
+function EmuThreadHijack(Parameter: Puint16): Integer; stdcall;
+begin
+  // Make sure that this thread has a new TEB?  http://www.nynaeve.net/?p=186
+  TlsAlloc();
+  // Here the sole purpose of this thread : Send back it's FS to the caller :
+  Parameter^ := GetFS();
+  // We don't need this thread anymore, except it's FS existance; So sleep a year :
+  Sleep(1000*60*24*365);
+end;
+
+function HijackThreadFS(dwBaseAddr: uint32; dwLimit: uint32): uint16;
+var
+  dwThreadId: DWORD;
+begin
+  // Create a thread specifically meant to be hijacked :
+  dwThreadId := 0;
+  Result := 0;
+  CreateThread(nil, 100, @EmuThreadHijack, @Result, 0, {var}dwThreadId);
+
+  // Wait until the resulting FS is set :
+  while Result = 0 do
+    Sleep(1);
+
+  // TODO : THIS FAILSAFE GETS HIT - WHY?!?
+  if Result = GetFS() then
+    DbgPrintf('Hijack thread has the same FS as the caller!');
+end;
+{$ENDIF}
+
+
 // generate fs segment selector
 procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
@@ -385,15 +452,27 @@ begin
 
     NewPcr := DxbxMalloc(dwSize);
     memset(NewPcr, 0, dwSize);
+{$IFDEF DXBX_TWO_THREAD_FS}
+    NewFS := HijackThreadFS(uint32(NewPcr), uint32(UIntPtr(NewPcr) + dwSize));
+{$ELSE}
     NewFS := EmuAllocateLDT(uint32(NewPcr), uint32(UIntPtr(NewPcr) + dwSize));
+{$ENDIF}
   end;
 
+
+{$IFDEF DXBX_EXTERNAL_FS}
+  // Administrate the new FS register into the mapping tables :
+  IsFSXbox[NewFS] := True;
+  FSXboxToWindows[NewFS] := OrgFS;
+  FSWindowsToXbox[OrgFS] := NewFS;
+{$ELSE}
   // update "OrgFS" with NewFS and (bIsXboxFS = False)
   with DxbxTIBUserData(OrgNtTib)^ do
   begin
     Dxbx_SwapFS := NewFS;
     Dxbx_IsXboxFS := False;
   end;
+{$ENDIF}
 
   if MayLog(lfUnit or lfExtreme) then
     DbgPrintf('update "OrgFS" ($%.04x) with NewFS ($%.04x) and (bIsXboxFS = False) : '#13#10 + DumpCurrentFS(), [OrgFS, NewFS]);
@@ -428,12 +507,14 @@ begin
       PPvoid(pNewTLS)^ := pNewTLS;
   end;
 
+{$IFNDEF DXBX_EXTERNAL_FS}
   // update "NewFS" with OrgFS and (bIsXboxFS = True)
   with DxbxTIBUserData(@(NewPcr.NtTib))^ do
   begin
     Dxbx_SwapFS := OrgFS;
     Dxbx_IsXboxFS := True;
   end;
+{$ENDIF}
 
   // save "TLSPtr" inside NewFS.StackBase
   NewPcr.NtTib.StackBase := pNewTLS;
@@ -460,9 +541,20 @@ begin
   Exit;
 {$ENDIF}
 
+{$IFDEF DXBX_EXTERNAL_FS}
+  if EmuIsXboxFS then
+  begin
+    if FSXboxToWindows[GetFS()] = 0 then
+      Exit;
+  end
+  else
+    if FSWindowsToXbox[GetFS()] = 0 then
+      Exit;
+{$ELSE}
   wSwapFS := GetTIBEntryWord(DxbxFS_SwapFS);
   if wSwapFS = 0 then
     Exit;
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 
@@ -516,6 +608,10 @@ end;
 initialization
 
   AssertCorrectXboxStructDeclarations;
+
+{$IFDEF DXBX_EXTERNAL_FS}
+  InitExternalFS;
+{$ENDIF}
 
 {$IFDEF DXBX_EXTENSIVE_CALLSTACK_LOGGING}
   LastCallStackInfo[True] := JclCreateStackList(False, 0, nil, True);
