@@ -20,6 +20,7 @@ unit uEmu;
 {$INCLUDE Dxbx.inc}
 
 {.$define _DEBUG}
+{.$define GAME_HACKS_ENABLED}
 
 interface
 
@@ -239,6 +240,24 @@ begin
         end;
     end; // if E.ExceptionRecord.ExceptionCode = $C0000005 then
   end;
+
+  // Rayman Arena *NTSC*
+  if(e.ExceptionRecord.ExceptionCode = $C0000005) then
+  begin
+    if(e.ContextRecord.Eip = $18B40C) then
+    begin
+      // call dword ptr [ecx+4]
+      Inc(e.ContextRecord.Eip, 3);
+
+      DbgPrintf('Rayman Arena Hack 1 was applied!');
+
+      g_bEmuException := false;
+
+      Result := EXCEPTION_CONTINUE_EXECUTION;
+      Exit;
+    end;
+  end;
+
 {$ENDIF GAME_HACKS_ENABLED}
 
   // print debug information
