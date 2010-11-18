@@ -141,6 +141,29 @@ begin
 
   g_bEmuException := true;
 
+  // Dxbx addition : Generic WBINVD skip :
+  if E.ExceptionRecord.ExceptionCode = $C0000096 then
+  begin
+    // See if the instruction pointer is inside the Xbe region :
+    if  (E.ContextRecord.Eip >= XBE_IMAGE_BASE)
+    and (E.ContextRecord.Eip < XBE_IMAGE_BASE + (32*1024*1024))
+    // See if the instruction pointer is a WBINVD opcode :
+    and (PBytes(E.ContextRecord.Eip)[0] = $0F)
+    and (PBytes(E.ContextRecord.Eip)[1] = $0C) then
+    begin
+      // Skip it, and continue :
+      Inc(E.ContextRecord.Eip, 2);
+
+      DbgPrintf('EmuMain : Generic WBINVD skip applied!');
+
+      g_bEmuException := False;
+      EmuSwapFS(fsXbox);
+
+      Result := EXCEPTION_CONTINUE_EXECUTION;
+      Exit;
+    end;
+  end;
+
 {$IFDEF GAME_HACKS_ENABLED}
   // check for Halo hack
   begin

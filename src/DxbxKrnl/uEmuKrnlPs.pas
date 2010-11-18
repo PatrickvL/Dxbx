@@ -158,9 +158,6 @@ begin
   end;
 
 {$IFNDEF DISABLE_THREAD_EXCEPTION_HANDLING}
-  // Re-route unhandled exceptions to our emulation-execption handler :
-  OldExceptionFilter := SetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER(@EmuException));
-
   try
 {$ENDIF}
     SetEvent(Parameter.hStartedEvent);

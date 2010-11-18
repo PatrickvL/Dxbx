@@ -1223,6 +1223,9 @@ begin
   if (g_XBVideo.GetFullscreen()) then
     DxbxKrnl_hEmuParent := 0;
 
+  // Dxbx addition : Disable DivByZero exceptions :
+  Set8087CW(Get8087CW() or $0004);
+
   // cache XbeHeader and size of XbeHeader
   g_XbeHeader := XbeHeader;
   g_XbeHeaderSize := XbeHeaderSize;
@@ -1964,6 +1967,9 @@ begin
           g_dwVertexShaderUsage := D3DUSAGE_SOFTWAREPROCESSING;
         end;
 // [PatrickvL] Reviewed up to here
+        // Dxbx addition : Prevent Direct3D from changing the FPU Control word :
+        g_EmuCDPD.CreationParameters.BehaviorFlags := g_EmuCDPD.CreationParameters.BehaviorFlags or D3DCREATE_FPU_PRESERVE;
+
         // redirect to windows Direct3D
         g_EmuCDPD.hRet := g_pD3D.CreateDevice
         (

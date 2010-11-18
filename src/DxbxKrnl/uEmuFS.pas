@@ -21,7 +21,7 @@ unit uEmuFS;
 
 {$DEFINE DXBX_EXTERNAL_FS} // Doesn't use PNT_TIB(GetFS()).ArbitraryUserPointer, costs 256 Kb extra
 
-{.$DEFINE DXBX_TWO_THREAD_FS} // Abuse a second thread to obtain a Xbox FS (this circumvents LDT!) DOESN'T WORK YET!
+{.$DEFINE DXBX_TWO_THREAD_FS} // Abuse a second thread to obtain a Xbox FS (this circumvents LDT!) DOESN'T WORK!
 
 interface
 
@@ -364,7 +364,8 @@ begin
   while Result = 0 do
     Sleep(1);
 
-  // TODO : THIS FAILSAFE GETS HIT - WHY?!?
+  // This fails, because http://www.microsoft.com/msj/archive/s2ce.aspx says so :
+  // Under Windows NT, the FS register is always the same for each thread's TIB.
   if Result = GetFS() then
     DbgPrintf('Hijack thread has the same FS as the caller!');
 end;
