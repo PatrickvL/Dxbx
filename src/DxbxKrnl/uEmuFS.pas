@@ -19,9 +19,7 @@ unit uEmuFS;
 
 {$INCLUDE Dxbx.inc}
 
-{$DEFINE DXBX_EXTERNAL_FS} // Doesn't use PNT_TIB(GetFS()).ArbitraryUserPointer, costs 256 Kb extra
-
-{.$DEFINE DXBX_TWO_THREAD_FS} // Abuse a second thread to obtain a Xbox FS (this circumvents LDT!) DOESN'T WORK!
+{.$DEFINE DXBX_EXTERNAL_FS} // Doesn't use PNT_TIB(GetFS()).ArbitraryUserPointer, costs 256 Kb extra
 
 interface
 
@@ -234,9 +232,7 @@ begin
   Exit;
 {$ENDIF}
 
-{$IFNDEF DXBX_TWO_THREAD_FS}
   EmuInitLDT();
-{$ENDIF}
 end;
 
 function GetCurrentKPCR(): PKPCR; // inline;
@@ -340,38 +336,6 @@ begin
     Result := Result + ' (Win32 FS)'#13#10 + DumpWin32FS(GetTIB());
 end;
 
-{$IFDEF DXBX_TWO_THREAD_FS}
-function EmuThreadHijack(Parameter: Puint16): Integer; stdcall;
-begin
-  // Make sure that this thread has a new TEB?  http://www.nynaeve.net/?p=186
-  TlsAlloc();
-  // Here the sole purpose of this thread : Send back it's FS to the caller :
-  Parameter^ := GetFS();
-  // We don't need this thread anymore, except it's FS existance; So sleep a year :
-  Sleep(1000*60*24*365);
-end;
-
-function HijackThreadFS(dwBaseAddr: uint32; dwLimit: uint32): uint16;
-var
-  dwThreadId: DWORD;
-begin
-  // Create a thread specifically meant to be hijacked :
-  dwThreadId := 0;
-  Result := 0;
-  CreateThread(nil, 100, @EmuThreadHijack, @Result, 0, {var}dwThreadId);
-
-  // Wait until the resulting FS is set :
-  while Result = 0 do
-    Sleep(1);
-
-  // This fails, because http://www.microsoft.com/msj/archive/s2ce.aspx says so :
-  // Under Windows NT, the FS register is always the same for each thread's TIB.
-  if Result = GetFS() then
-    DbgPrintf('Hijack thread has the same FS as the caller!');
-end;
-{$ENDIF}
-
-
 // generate fs segment selector
 procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
@@ -453,11 +417,7 @@ begin
 
     NewPcr := DxbxMalloc(dwSize);
     memset(NewPcr, 0, dwSize);
-{$IFDEF DXBX_TWO_THREAD_FS}
-    NewFS := HijackThreadFS(uint32(NewPcr), uint32(UIntPtr(NewPcr) + dwSize));
-{$ELSE}
     NewFS := EmuAllocateLDT(uint32(NewPcr), uint32(UIntPtr(NewPcr) + dwSize));
-{$ENDIF}
   end;
 
 

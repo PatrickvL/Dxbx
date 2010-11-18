@@ -158,6 +158,11 @@ begin
   end;
 
 {$IFNDEF DISABLE_THREAD_EXCEPTION_HANDLING}
+  // Re-route unhandled exceptions to our emulation-exception handler :
+  OldExceptionFilter := SetUnhandledExceptionFilter(@EmuException);
+//  JITEnable := 2;        { 1 to call UnhandledExceptionFilter if the exception is not a Pascal exception.
+//                          >1 to call UnhandledExceptionFilter for all exceptions }
+
   try
 {$ENDIF}
     SetEvent(Parameter.hStartedEvent);
