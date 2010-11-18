@@ -136,27 +136,45 @@ var
   dwPtr: DWORD;
 //  Context: JwaWinNT.CONTEXT;
 {$ENDIF}
+//  From System.MapToRunError:
+const
+  STATUS_ACCESS_VIOLATION         = $C0000005;
+  STATUS_ARRAY_BOUNDS_EXCEEDED    = $C000008C;
+  STATUS_FLOAT_DENORMAL_OPERAND   = $C000008D;
+  STATUS_FLOAT_DIVIDE_BY_ZERO     = $C000008E;
+  STATUS_FLOAT_INEXACT_RESULT     = $C000008F;
+  STATUS_FLOAT_INVALID_OPERATION  = $C0000090;
+  STATUS_FLOAT_OVERFLOW           = $C0000091;
+  STATUS_FLOAT_STACK_CHECK        = $C0000092;
+  STATUS_FLOAT_UNDERFLOW          = $C0000093;
+  STATUS_INTEGER_DIVIDE_BY_ZERO   = $C0000094;
+  STATUS_INTEGER_OVERFLOW         = $C0000095;
+  STATUS_PRIVILEGED_INSTRUCTION   = $C0000096;
+  STATUS_STACK_OVERFLOW           = $C00000FD;
+  STATUS_CONTROL_C_EXIT           = $C000013A;
 begin
   EmuSwapFS(fsWindows);
 
   g_bEmuException := true;
 
+  DbgPrintf('EmuMain : EmuException() with code 0x%.08x triggered', [E.ExceptionRecord.ExceptionCode]);
+
   // Dxbx addition : Generic WBINVD skip :
-  if E.ExceptionRecord.ExceptionCode = $C0000096 then
+  if E.ExceptionRecord.ExceptionCode = STATUS_PRIVILEGED_INSTRUCTION then
   begin
     // See if the instruction pointer is inside the Xbe region :
     if  (E.ContextRecord.Eip >= XBE_IMAGE_BASE)
     and (E.ContextRecord.Eip < XBE_IMAGE_BASE + (32*1024*1024))
     // See if the instruction pointer is a WBINVD opcode :
     and (PBytes(E.ContextRecord.Eip)[0] = $0F)
-    and (PBytes(E.ContextRecord.Eip)[1] = $0C) then
+    and (PBytes(E.ContextRecord.Eip)[1] = $09) then
     begin
       // Skip it, and continue :
       Inc(E.ContextRecord.Eip, 2);
 
       DbgPrintf('EmuMain : Generic WBINVD skip applied!');
 
-      g_bEmuException := False;
+      g_bEmuException := false;
       EmuSwapFS(fsXbox);
 
       Result := EXCEPTION_CONTINUE_EXECUTION;

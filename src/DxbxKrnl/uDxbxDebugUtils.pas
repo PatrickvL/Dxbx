@@ -241,14 +241,6 @@ begin
 
   ErrorProc := OrigErrorHandler;
   try
-    // TODO : Delphi's ErrorProc cannot return, so where should we place this check for 'WINBVD' instead (so we can continue)?
-//    if  (PBytes(ErrorAddr)[0] = $0F)
-//    and (PBytes(ErrorAddr)[1] = $0C) then
-//    begin
-//      Inc(ErrorAddr, 2);
-//      Result := EXCEPTION_CONTINUE;
-//    end;
-
     try
       uLog.DbgPrintf('DxbxErrorHandler(%d,$%.8x) %s',
         [ErrorCode, ErrorAddr, JclLastExceptStackListToString]);

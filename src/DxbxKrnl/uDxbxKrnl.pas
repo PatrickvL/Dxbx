@@ -378,8 +378,8 @@ begin
 
   // Re-route unhandled exceptions to our emulation-exception handler :
   OldExceptionFilter := SetUnhandledExceptionFilter(TFNTopLevelExceptionFilter(@EmuException));
-  JITEnable := 2;        { 1 to call UnhandledExceptionFilter if the exception is not a Pascal exception.
-                          >1 to call UnhandledExceptionFilter for all exceptions }
+//  JITEnable := 2;        { 1 to call UnhandledExceptionFilter if the exception is not a Pascal exception.
+//                          >1 to call UnhandledExceptionFilter for all exceptions }
 
   // Xbe entry point
   try
