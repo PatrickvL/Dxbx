@@ -27,6 +27,7 @@ uses
     Windows
   , SysUtils
   , Classes
+  , IniFiles
   // Jedi Win32API
   , JwaWinType
   // DirectX
@@ -145,7 +146,11 @@ type XBController = object(Error)
     procedure DInputInit(ahwnd: HWND);
     procedure DInputCleanup();
     // Check if a device is currently in the configuration
-    function DeviceIsUsed(szDeviceName: P_char): _bool;
+    function DeviceIsUsed(szDeviceName: P_char): _bool; overload;
+    function DeviceIsUsed(aIndex: Integer): _bool; overload;
+
+    procedure SaveConfigToIni(aFileName: string);
+    procedure LoadConfigFromIni(aFileName: string);
   private
     // Object Mapping
     procedure Map(aobject: XBCtrlObject; szDeviceName: P_char; dwInfo: int; dwFlags: int);
@@ -389,6 +394,84 @@ begin
     RegCloseKey(hKey);
   end;
 end;
+
+procedure XBController.SaveConfigToIni(aFileName: string);
+var
+  IniFile: TIniFile;
+  v: Integer;
+  szValueName: AnsiString;
+//  dwSize: DWORD;
+begin
+  IniFile := TIniFile.Create(aFileName);
+  try
+    // Save Device Names
+    for v := 0 to XBCTRL_MAX_DEVICES-1 do
+    begin
+      szValueName := AnsiString(Format('DeviceName 0x%.02X', [v]));
+      if DeviceIsUsed(v) then
+        IniFile.WriteString('Controller', szValueName, m_DeviceName[v]);
+    end;
+
+    // Save Object Configuration
+
+    // TODO: Save object config
+
+(*    for v := 0 to XBCTRL_OBJECT_COUNT-1 do
+    begin
+      szValueName := AnsiString(Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]));
+      dwSize := sizeof(XBCtrlObjectCfg);
+
+
+      if (m_ObjectConfig[XBCtrlObject(v)].dwDevice <> -1) then
+      begin
+        BinToHex(PBYTE(@m_ObjectConfig[XBCtrlObject(v)]), buf2, dwSize);
+        buf := BinToInt(buf2);
+        IniFile.WriteInteger('Controller', szValueName, Buf);
+       end;
+    end;     *)
+  finally
+    FreeAndNil(IniFile);
+  end;
+end;
+
+procedure XBController.LoadConfigFromIni(aFileName: string);
+var
+  IniFile: TIniFile;
+  v: Integer;
+  szValueName: string;
+  DeviceName: string;
+begin
+  Assert(FileExists(aFileName), Format ('File %s does not exists!', [aFileName]));
+
+  IniFile := TIniFile.Create(aFileName);
+  try
+    // Todo: Load Device Names
+
+    // Load Device Names
+(*    for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+    begin
+      szValueName := Format('DeviceName 0x%.02X', [v]);
+      m_DeviceName[v] := AnsiString(IniFile.ReadString('Controller', szValueName, ''));
+    end;  *)
+
+    // Load Object Configuration
+
+    // TODO: Load object config
+
+(*    for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+    begin
+      szValueName := AnsiString(Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]));
+      dwSize := sizeof(XBCtrlObjectCfg);
+
+    end; *)
+
+
+  finally
+    FreeAndNil(IniFile);
+  end;
+end;
+
+
 
 procedure XBController.ConfigBegin(ahwnd: HWND; object_: XBCtrlObject);
 // Branch:shogun  Revision:161  Translator:Shadow_Tj  Done:100
@@ -1193,6 +1276,11 @@ begin
       end;
     end;
   end;
+end;
+
+function XBController.DeviceIsUsed(aIndex: Integer): _bool;
+begin
+  Result := m_DeviceName[aIndex][0] <> #0;
 end;
 
 procedure XBController.DInputCleanup;
