@@ -917,7 +917,6 @@ const X_D3DRESOURCE_DATA_FLAG_SURFACE = $00000001; // Backbuffer surface, etc
 const X_D3DRESOURCE_DATA_FLAG_YUVSURF = $00000002; // YUV memory surface
 const X_D3DRESOURCE_DATA_FLAG_D3DREND = $00000004; // D3D Render Target
 const X_D3DRESOURCE_DATA_FLAG_D3DSTEN = $00000008; // D3D Stencil Surface
-const X_D3DRESOURCE_DATA_FLAG_TEXCLON = $00000010; // HACK: Cloned resource
 
 function IsSpecialResource(x: DWORD): Boolean; // forward
 function IsResourcePixelContainer(const aResource: PX_D3DResource): Boolean;
