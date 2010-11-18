@@ -19,6 +19,8 @@ unit uDxbxDebugUtils;
 
 {$INCLUDE Dxbx.inc}
 
+{.$DEFINE DXBX_DEBUGMM}
+
 interface
 
 uses
