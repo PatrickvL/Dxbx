@@ -428,8 +428,6 @@ begin
 end;
 
 function OpenXbe(aFileName: string; var aXbe: TXbe{; var aExeFileName, aXbeFileName: string}): Boolean;
-var
-  isValid: boolean;
 begin
   Result := False;
   if Assigned(aXbe) or not (TXbe.FileExists(aFileName)) then
