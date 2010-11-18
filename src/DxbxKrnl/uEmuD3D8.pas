@@ -443,7 +443,10 @@ begin
 {$ELSE}
   Result := D3DXGetErrorString(hResult); // Source : http://www.gamedev.net/community/forums/topic.asp?topic_id=16157
 {$ENDIF}
-  // Was : D3DErrorString
+
+  // If this gives a too cryptic output, try the old method :
+  if (Length(Result) < 8) or (Result[1] = '?') then
+    Result := D3DErrorString(hResult);
 end;
 
 procedure DxbxResetGlobals;
@@ -644,12 +647,84 @@ begin
   end;
 end;
 
+function GetResourceType(pResource: PX_D3DResource): TD3DResourceType;
+var
+  Surface: IDirect3DSurface;
+  Volume: IDirect3DVolume8;
+begin
+  Result := TD3DResourceType(0);
+  if (pResource = nil) or (pResource.Emu.Resource = nil) then
+    Exit;
+
+  if IUnknown(pResource.Emu.Resource).QueryInterface(IDirect3DSurface, Surface) = 0 then
+  begin
+    Result := D3DRTYPE_SURFACE;
+    Surface := nil;
+  end
+  else
+  if IUnknown(pResource.Emu.Resource).QueryInterface(IDirect3DVolume8, Volume) = 0 then
+  begin
+    Result := D3DRTYPE_VOLUME;
+    Volume := nil;
+  end
+  else
+    Result := IDirect3DResource(pResource.Emu.Resource).GetType();
+end;
+
+function DxbxUpdateResourceFields(pResource: PX_D3DResource): Boolean;
+var
+  ResourceType: TD3DResourceType;
+  SurfDesc: D3DSURFACE_DESC;
+begin
+  Result := Assigned(pResource) and Assigned(pResource.Emu.Resource);
+  if not Result then
+    Exit;
+
+  if (pResource.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
+    Exit;
+
+  ResourceType := GetResourceType(pResource);
+  case ResourceType of
+    D3DRTYPE_SURFACE,
+    D3DRTYPE_VOLUME:
+    begin
+      if ResourceType = D3DRTYPE_SURFACE then
+        IDirect3DSurface(pResource.Emu.Surface).GetDesc(SurfDesc)
+      else
+        IDirect3DTexture(pResource.Emu.Texture).GetLevelDesc(0, SurfDesc);
+
+      PX_D3DPixelContainer(pResource).Format := EmuPC2XB_D3DFormat(SurfDesc.Format) shl X_D3DFORMAT_FORMAT_SHIFT;
+//      PX_D3DPixelContainer(pResource).Size := SurfDesc.;
+//      PX_D3DPixelContainer(pResource).Common := SurfDesc.;
+//      PX_D3DPixelContainer(pResource).Data := SurfDesc.;
+    end;
+
+    D3DRTYPE_TEXTURE:
+      ;
+
+    D3DRTYPE_VOLUMETEXTURE:
+      ;
+
+    D3DRTYPE_CUBETEXTURE:
+      ;
+
+    D3DRTYPE_VERTEXBUFFER:
+      ;
+
+    D3DRTYPE_INDEXBUFFER:
+      ;
+  end;
+end;
+
+
 // Generic unlocking of a D3DResource.
 //
 // Dxbx Note : As suggested by StrikerX3, we should call this for any resource
 // that's locked while it shouldn't be anymore; So call this before Lock() itself,
 // before SetTexture(), SetStreamSource(), SetIndices() and maybe other calls too.
 function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0; iFace: int = Ord(D3DCUBEMAP_FACE_POSITIVE_X) - 1): Boolean;
+var
+  ResourceType: TD3DResourceType;
 begin
   Result := Assigned(pResource) and Assigned(pResource.Emu.Resource);
   if not Result then
@@ -659,7 +734,8 @@ begin
   or (pResource.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then // Dxbx addition
     Exit;
 
-  case (IDirect3DResource(pResource.Emu.Resource).GetType()) of
+  ResourceType := GetResourceType(pResource);
+  case ResourceType of
     D3DRTYPE_SURFACE:
       repeat until IDirect3DSurface(pResource.Emu.Surface).UnlockRect() <= D3D_OK;
 
@@ -1238,7 +1314,7 @@ begin
     PresParam.BackBufferHeight := 480;
     PresParam.BackBufferFormat := X_D3DFMT_A8R8G8B8; //=6
     PresParam.BackBufferCount := 1;
-    PresParam.MultiSampleType := $0011; // X_D3DMULTISAMPLE_NONE
+    PresParam.MultiSampleType := X_D3DMULTISAMPLE_NONE; // =$0011;
     PresParam.SwapEffect := D3DSWAPEFFECT_DISCARD;
     PresParam.EnableAutoDepthStencil := BOOL_TRUE;
     PresParam.AutoDepthStencilFormat := X_D3DFMT_D24S8; //=$2A
@@ -2005,19 +2081,15 @@ begin
 
         // update render target cache
         Dispose({var}g_pCachedRenderTarget); // Dxbx addition : Prevent memory leaks
-
         New({var X_D3DSurface:}g_pCachedRenderTarget);
         ZeroMemory(g_pCachedRenderTarget, SizeOf(g_pCachedRenderTarget^));
-
         g_pCachedRenderTarget.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DREND;
         IDirect3DDevice_GetRenderTarget(g_pD3DDevice, @(g_pCachedRenderTarget.Emu.Surface));
 
         // update z-stencil surface cache
         Dispose({var}g_pCachedZStencilSurface); // Dxbx addition : Prevent memory leaks
-
         New({var}g_pCachedZStencilSurface);
         ZeroMemory(g_pCachedZStencilSurface, SizeOf(g_pCachedZStencilSurface^));
-
         g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
         if IDirect3DDevice_GetDepthStencilSurface(g_pD3DDevice, @(g_pCachedZStencilSurface.Emu.Surface)) = D3D_OK then
           // Dxbx addition : Test if a ZBuffer exists, to fix invalid arguments to XTL_EmuD3DDevice_Clear :
@@ -3568,14 +3640,17 @@ begin
       _(ppRenderTarget, 'ppRenderTarget').
     LogEnd();
 
-  pPCSurface := g_pCachedRenderTarget.Emu.Surface;
-
-  IDirect3DSurface(pPCSurface)._AddRef();
+  if Assigned(g_pCachedRenderTarget) then
+  begin
+    pPCSurface := g_pCachedRenderTarget.Emu.Surface;
+    if Assigned(pPCSurface) then
+      IDirect3DSurface(pPCSurface)._AddRef();
+  end;
 
   ppRenderTarget^ := g_pCachedRenderTarget;
 
   if MayLog(lfUnit or lfReturnValue) then
-    DbgPrintf('EmuD3D8 : RenderTarget : ', ResourceToString(ppRenderTarget^));
+    DbgPrintf('EmuD3D8 : RenderTarget : ' + ResourceToString(ppRenderTarget^));
 
   // TODO -oDXBX: Should we nil-out pSurface ?
 
@@ -3586,24 +3661,15 @@ end;
 
 function XTL_EmuD3DDevice_GetRenderTarget2(): PX_D3DSurface; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  pPCSurface: XTL_PIDirect3DSurface8;
 begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetRenderTarget2();');
-
-  Result := g_pCachedRenderTarget;
-
-  pPCSurface := Result.Emu.Surface;
-
-  IDirect3DSurface(pPCSurface)._AddRef();
-
-  if MayLog(lfUnit or lfReturnValue) then
-    DbgPrintf('EmuD3D8 : RenderTarget : ', ResourceToString(Result));
+    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetRenderTarget2(); >>');
 
   EmuSwapFS(fsXbox);
+
+  XTL_EmuD3DDevice_GetRenderTarget(@Result);
 end;
 
 function XTL_EmuD3DDevice_GetTextureStageState
@@ -3689,10 +3755,12 @@ begin
       _(ppZStencilSurface, 'ppZStencilSurface').
     LogEnd();
 
-  pPCSurface := g_pCachedZStencilSurface.Emu.Surface;
-
-  if (pPCSurface <> nil) then
-    IDirect3DSurface(pPCSurface)._AddRef();
+  if Assigned(g_pCachedZStencilSurface) then
+  begin
+    pPCSurface := g_pCachedZStencilSurface.Emu.Surface;
+    if (pPCSurface <> nil) then
+      IDirect3DSurface(pPCSurface)._AddRef();
+  end;
 
   ppZStencilSurface^ := g_pCachedZStencilSurface;
 
@@ -3706,25 +3774,15 @@ end;
 
 function XTL_EmuD3DDevice_GetDepthStencilSurface2(): PX_D3DSurface; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  pPCSurface: XTL_PIDirect3DSurface8;
 begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetDepthStencilSurface2();');
-
-  Result := g_pCachedZStencilSurface;
-
-  pPCSurface := Result.Emu.Surface;
-
-  if (pPCSurface <> nil) then
-    IDirect3DSurface(pPCSurface)._AddRef();
-
-  if MayLog(lfUnit or lfReturnValue) then
-    DbgPrintf('EmuD3D8 : DepthStencilSurface : ' + ResourceToString(Result));
+    DbgPrintf('EmuD3D8 : EmuD3DDevice_GetDepthStencilSurface2(); >>');
 
   EmuSwapFS(fsXbox);
+
+  XTL_EmuD3DDevice_GetDepthStencilSurface(@Result);
 end;
 
 (* TOO HIGH LEVEL : No patch needed, just reads g_OverscanColor@D3D@@3KA :
@@ -6922,6 +6980,7 @@ var
   hRet: HRESULT;
   pRefCount: PDWORD;
   pPCTexture: XTL_PIDirect3DTexture8;
+  pSurfaceLevel: PX_D3DSurface;
 begin
   EmuSwapFS(fsWindows);
 
@@ -6950,25 +7009,29 @@ begin
   begin
     pPCTexture := pThis.Emu.Texture;
 
-    New({var}ppSurfaceLevel^); // Cxbx : new X_D3DSurface();
-    ZeroMemory(ppSurfaceLevel^, SizeOf(ppSurfaceLevel^^));
+    New({var}pSurfaceLevel); // Cxbx : new X_D3DSurface();
+    ZeroMemory(pSurfaceLevel, SizeOf(pSurfaceLevel^));
     // TODO -oDxbx : When should this be freeed? Isn't this a memory leak otherwise?
 
-    ppSurfaceLevel^.Data := $B00BBABE;
-    hRet := IDirect3DTexture(pPCTexture).GetSurfaceLevel(Level, @(ppSurfaceLevel^.Emu.Surface));
+//    ppSurfaceLevel^.Data := $B00BBABE;
+    hRet := IDirect3DTexture(pPCTexture).GetSurfaceLevel(Level, @(pSurfaceLevel.Emu.Surface));
+    DxbxUpdateResourceFields(pSurfaceLevel);
 
     if (FAILED(hRet)) then
     begin
+      Dispose({var}pSurfaceLevel);
       EmuWarning('GetSurfaceLevel Failed!' +#13#10+ DxbxD3DErrorString(hRet));
     end
     else
     begin
       // Dxbx addition : Initialize Common field properly :
-      ppSurfaceLevel^.Common := ((IDirect3DSurface(ppSurfaceLevel^.Emu.Surface)._AddRef()-1) and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_SURFACE;
-      IDirect3DSurface(ppSurfaceLevel^.Emu.Surface)._Release();
+      pSurfaceLevel.Common := ((IDirect3DSurface(pSurfaceLevel.Emu.Surface)._AddRef()-1) and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_SURFACE;
+      IDirect3DSurface(pSurfaceLevel.Emu.Surface)._Release();
+
+      ppSurfaceLevel^ := pSurfaceLevel;
 
       if MayLog(lfUnit or lfReturnValue) then
-        DbgPrintf('EmuD3D8 : SurfaceLevel : ' + ResourceToString(ppSurfaceLevel^));
+        DbgPrintf('EmuD3D8 : SurfaceLevel : ' + ResourceToString(pSurfaceLevel));
     end;
   end;
 
@@ -9307,6 +9370,13 @@ begin
   g_pD3DDevice.SetDepthStencilSurface(IDirect3DSurface9(pPCNewZStencil));
 {$ELSE}
   Result := g_pD3DDevice.SetRenderTarget(IDirect3DSurface(pPCRenderTarget), IDirect3DSurface(pPCNewZStencil));
+  // This tries to fix VolumeFog on ATI :
+  if FAILED(Result) then
+  begin
+    // TODO : Maybe some info : http://forums.create.msdn.com/forums/t/2124.aspx
+    EmuWarning('SetRenderTarget Failed Trying ATI fix' +#13#10+ DxbxD3DErrorString(Result));
+    Result := g_pD3DDevice.SetRenderTarget(IDirect3DSurface(pPCRenderTarget), nil);
+  end;
 {$ENDIF}
 
   if FAILED(Result) then

@@ -48,6 +48,7 @@ uses
   uTypes,
   uLog,
   uXboxLibraryUtils,
+  uEmuFS,
   DxLibraryAPIScanning;
 
 function JclLastExceptStackListToString(OnlyCallerModule: Boolean = False): string;
@@ -166,13 +167,88 @@ end;
 
 {$ENDIF}
 
+{$IFDEF DXBX_DEBUGMM}
+function DxbxGetMem(Size: Integer): Pointer;
+begin
+  try
+    Result := SysGetMem(Size);
+  except
+    Result := SysGetMem(Size); // Breakpoint opportunity
+  end;
+end;
+
+function DxbxFreeMem(P: Pointer): Integer;
+begin
+  try
+    Result := SysFreeMem(P);
+  except
+    Result := SysFreeMem(P); // Breakpoint opportunity
+  end;
+end;
+
+function DxbxReallocMem(P: Pointer; Size: Integer): Pointer;
+begin
+  try
+    Result := SysReallocMem(P, Size);
+  except
+    Result := SysReallocMem(P, Size); // Breakpoint opportunity
+  end;
+end;
+
+function DxbxAllocMem(Size: Cardinal): Pointer;
+begin
+  try
+    Result := SysAllocMem(Size);
+  except
+    Result := SysAllocMem(Size); // Breakpoint opportunity
+  end;
+end;
+
+function DxbxRegisterExpectedMemoryLeak(P: Pointer): Boolean;
+begin
+  try
+    Result := SysRegisterExpectedMemoryLeak(P);
+  except
+    Result := SysRegisterExpectedMemoryLeak(P); // Breakpoint opportunity
+  end;
+end;
+
+function DxbxUnregisterExpectedMemoryLeak(P: Pointer): Boolean;
+begin
+  try
+    Result := SysUnregisterExpectedMemoryLeak(P);
+  except
+    Result := SysUnregisterExpectedMemoryLeak(P); // Breakpoint opportunity
+  end;
+end;
+
+var
+  DxbxMemoryManager: TMemoryManagerEx = (
+    GetMem: DxbxGetMem;
+    FreeMem: DxbxFreeMem;
+    ReallocMem: DxbxReallocMem;
+    AllocMem: DxbxAllocMem;
+    RegisterExpectedmemoryLeak: DxbxRegisterExpectedMemoryLeak;
+    UnregisterExpectedmemoryLeak: DxbxUnregisterExpectedMemoryLeak);
+{$ENDIF}
+
 var
   OrigErrorHandler: procedure(ErrorCode: Byte; ErrorAddr: Pointer);
 
 procedure DxbxErrorHandler(ErrorCode: Byte; ErrorAddr: Pointer);// export;
 begin
+  EmuSwapFS(fsWindows);
+
   ErrorProc := OrigErrorHandler;
   try
+    // TODO : Delphi's ErrorProc cannot return, so where should we place this check for 'WINBVD' instead (so we can continue)?
+//    if  (PBytes(ErrorAddr)[0] = $0F)
+//    and (PBytes(ErrorAddr)[1] = $0C) then
+//    begin
+//      Inc(ErrorAddr, 2);
+//      Result := EXCEPTION_CONTINUE;
+//    end;
+
     try
       uLog.DbgPrintf('DxbxErrorHandler(%d,$%.8x) %s',
         [ErrorCode, ErrorAddr, JclLastExceptStackListToString]);
@@ -193,6 +269,9 @@ initialization
 
   OrigErrorHandler := ErrorProc;
   ErrorProc := DxbxErrorHandler;
+{$IFDEF DXBX_DEBUGMM}
+  SetMemoryManager(DxbxMemoryManager);
+{$ENDIF}
 
 finalization
 
