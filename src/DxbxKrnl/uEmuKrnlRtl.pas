@@ -517,7 +517,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlAnsiStringToUnicodeString').
+    LogBegin('EmuKrnl : RtlAnsiStringToUnicodeString').
       _(Pointer(DestinationString), 'DestinationString').
       _(SourceString, 'SourceString').
       _(AllocateDestinationString, ' AllocateDestinationString').
@@ -536,7 +536,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlAppendStringToString').
+    LogBegin('EmuKrnl : RtlAppendStringToString').
       _(DestinationString, 'DestinationString').
       _(AppendThisString, 'AppendThisString').
     LogEnd();
@@ -554,7 +554,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlAppendUnicodeStringToString').
+    LogBegin('EmuKrnl : RtlAppendUnicodeStringToString').
       _(DestinationString, 'DestinationString').
       _(SourceString, 'SourceString').
     LogEnd();
@@ -572,7 +572,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlAppendUnicodeToString').
+    LogBegin('EmuKrnl : RtlAppendUnicodeToString').
       _(Destination, 'Destination').
       _(Source, 'Source').
     LogEnd();
@@ -612,7 +612,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlCaptureContext').
+    LogBegin('EmuKrnl : RtlCaptureContext').
       _(ContextRecord, 'ContextRecord').
     LogEnd();
 
@@ -631,7 +631,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlCaptureStackBackTrace').
+    LogBegin('EmuKrnl : RtlCaptureStackBackTrace').
       _(FramesToSkip, 'FramesToSkip').
       _(FramesToCapture, 'FramesToCapture').
       _(BackTrace, 'BackTrace').
@@ -652,7 +652,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlCharToInteger').
+    LogBegin('EmuKrnl : RtlCharToInteger').
       _(LPCSTR(Str), 'Str').
       _(Base, 'Base').
       _(Value, 'Value').
@@ -672,7 +672,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlCompareMemory').
+    LogBegin('EmuKrnl : RtlCompareMemory').
       _(Source1, 'Source1').
       _(Source2, 'Source2').
       _(Length, 'Length').
@@ -692,7 +692,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlCompareMemoryUlong').
+    LogBegin('EmuKrnl : RtlCompareMemoryUlong').
       _(Source, 'Source').
       _(Length, 'Length').
       _(Value, 'Value').
@@ -712,7 +712,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlCompareString').
+    LogBegin('EmuKrnl : RtlCompareString').
       _(String1, 'String1').
       _(String2, 'String2').
       _(CaseInsensitive, 'CaseInsensitive').
@@ -732,7 +732,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlCompareUnicodeString').
+    LogBegin('EmuKrnl : RtlCompareUnicodeString').
       _(String1, 'String1').
       _(String2, 'String2').
       _(CaseInsensitive, 'CaseInsensitive').
@@ -751,7 +751,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlCopyString').
+    LogBegin('EmuKrnl : RtlCopyString').
       _(Pointer(DestinationString), 'DestinationString').
       _(SourceString, 'SourceString').
     LogEnd();
@@ -769,7 +769,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlCopyUnicodeString').
+    LogBegin('EmuKrnl : RtlCopyUnicodeString').
       _(Pointer(DestinationString), 'DestinationString').
       _(SourceString, 'SourceString').
     LogEnd();
@@ -787,7 +787,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlCreateUnicodeString').
+    LogBegin('EmuKrnl : RtlCreateUnicodeString').
       _(Pointer(DestinationString), 'DestinationString').
       _(SourceString, 'SourceString').
     LogEnd();
@@ -804,7 +804,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlDowncaseUnicodeChar').
+    LogBegin('EmuKrnl : RtlDowncaseUnicodeChar').
       _(Source, 'Source').
     LogEnd();
 
@@ -822,7 +822,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlDowncaseUnicodeString').
+    LogBegin('EmuKrnl : RtlDowncaseUnicodeString').
       _(Pointer(DestinationString), 'DestinationString').
       _(SourceString, 'SourceString').
       _(AllocateDestinationString, 'AllocateDestinationString').
@@ -841,7 +841,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfDxbx or lfExtreme) then
-    LogBegin('RtlEnterCriticalSection').
+    LogBegin('EmuKrnl : RtlEnterCriticalSection').
       _(CriticalSection, 'CriticalSection').
     LogEnd();
 
@@ -869,7 +869,7 @@ procedure xboxkrnl_RtlEnterCriticalSectionAndRegion(
 begin
   EmuSwapFS(fsWindows);
   if MayLog(lfUnit or lfDxbx or lfExtreme) then
-    LogBegin('RtlEnterCriticalSectionAndRegion').
+    LogBegin('EmuKrnl : RtlEnterCriticalSectionAndRegion').
       _(CriticalSection, 'CriticalSection').
     LogEnd();
 
@@ -893,7 +893,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlEqualString').
+    LogBegin('EmuKrnl : RtlEqualString').
       _(String1, 'String1').
       _(String2, 'String2').
       _(CaseInsensitive, 'CaseInsensitive').
@@ -914,7 +914,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlEqualUnicodeString').
+    LogBegin('EmuKrnl : RtlEqualUnicodeString').
       _(String1, 'String1').
       _(String2, 'String2').
       _(CaseInsensitive, 'CaseInsensitive').
@@ -933,7 +933,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('RtlExtendedIntegerMultiply').
+    LogBegin('EmuKrnl : RtlExtendedIntegerMultiply').
       _(Multiplicand, 'Multiplicand').
       _(Multiplier, 'Multiplier').
     LogEnd();
