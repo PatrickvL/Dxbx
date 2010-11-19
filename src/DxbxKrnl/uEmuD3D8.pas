@@ -5439,14 +5439,17 @@ begin
   Result := DxbxSetVertexData(Register_, a, b, c, d);
 end;
 
+// Note : We pass all SetVertexData* calls through this method, while the Xbox implements
+// these by just pushing the supplied values into different pushbuffer commands without
+// any conversion. Since we have no pushbuffer, our SetVertexData* functions convert
+// their arguments into one common format : Float's.
+// TODO : Research & document a few samples, so that we can establish the needed conversions,
+// as our current SetVertexData* implementations contain just an educated guess.
 function DxbxSetVertexData(const Register_: X_D3DVSDE; const a, b, c, d: FLOAT): HRESULT;
 
   function _abcdAsD3DCOLOR: D3DCOLOR;
   begin
-    Result := (Trunc(a * 255.0) shl 16) // Red
-           or (Trunc(b * 255.0) shl  8) // Green
-           or (Trunc(c * 255.0){shl 0}) // Blue
-           or (Trunc(d * 255.0) shl 24);// Alpha
+    Result := D3DCOLOR_COLORVALUE({Red=}a, {Green=}b, {Blue=}c, {Alpha=}d);
   end;
 
   procedure _Error;
@@ -5626,7 +5629,7 @@ begin
 
   fA := a; fB := b; fC := c; fD := d;
 
-  if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
+//  if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
   begin
     fA := fA / High(a);
     fB := fB / High(b);
@@ -5684,7 +5687,7 @@ function XTL_EmuD3DDevice_SetVertexDataColor
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  fA, fB, fC, fD: FLOAT;
+  XColor: D3DCOLORVALUE;
 begin
   if MayLog(lfUnit or lfTrace) then
   begin
@@ -5696,21 +5699,12 @@ begin
     EmuSwapFS(fsXbox);
   end;
 
-  // Convert ARGB color into its 4 float components :
-  fA := Byte(Color shr 16); // Red
-  fB := Byte(Color shr  8); // Green
-  fC := Byte(Color{shr 0}); // Blue
-  fD := Byte(Color shr 24); // Alpha
+  // Convert the D3DColor into its 4 float components :
+  XColor := D3DXColorFromDWord(Color);
+  // TODO -oDxbx : What if register indicates something else than a X_D3DVSDE_DIFFUSE or X_D3DVSDE_SPECULAR color?
 
-  if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
-  begin
-    fA := fA / 255.0;
-    fB := fB / 255.0;
-    fC := fC / 255.0;
-    fD := fD / 255.0;
-  end;
-
-  Result := DxbxSetVertexData(Register_, fA, fB, fC, fD);
+  // Append these to the vertex buffer (g_IVBTable) :
+  Result := DxbxSetVertexData(Register_, XColor.r, XColor.g, XColor.b, XColor.a);
 end;
 
 function XTL_EmuD3DDevice_End(): HRESULT; stdcall;

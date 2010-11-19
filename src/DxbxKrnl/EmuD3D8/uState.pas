@@ -28,8 +28,10 @@ uses
   // DirectX
 {$IFDEF DXBX_USE_D3D9}
   Direct3D9,
+  D3DX9,
 {$ELSE}
   Direct3D8, // IDirect3DBaseTexture8
+  D3DX8,
 {$ENDIF}
   // Dxbx
   uTypes,
@@ -643,7 +645,7 @@ begin
 //  DxbxRenderStateXB2PCCallback[X_D3DRS_BACKEMISSIVEMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // Never used; Xbox ext.
   DxbxRenderStateXB2PCCallback[X_D3DRS_VERTEXBLEND] := @EmuXB2PC_D3DVERTEXBLENDFLAGS;
 //  DxbxRenderStateXB2PCCallback[X_D3DRS_SWAPFILTER] := @EmuXB2PC_D3DMULTISAMPLE_TYPE; // Never used; Xbox ext.
-  DxbxRenderStateXB2PCCallback[X_D3DRS_COLORWRITEENABLE] := @EmuXB2PC_D3DCOLORWRITEENABLE; // No conversion needed; Xbox = PC
+  DxbxRenderStateXB2PCCallback[X_D3DRS_COLORWRITEENABLE] := @EmuXB2PC_D3DCOLORWRITEENABLE;
   DxbxRenderStateXB2PCCallback[X_D3DRS_BLENDOP] := @EmuXB2PC_D3DBLENDOP;
 //  DxbxRenderStateXB2PCCallback[X_D3DRS_SWATHWIDTH] := @EmuXB2PC_D3DSWATH; // Never used; Xbox ext.
 //  DxbxRenderStateXB2PCCallback[X_D3DRS_SHADOWFUNC] := @EmuXB2PC_D3DCMPFUNC; // Never used; Xbox ext.
@@ -855,10 +857,7 @@ begin
   if (X_D3DRS_PSCONSTANT0_0 <= XboxRenderState) and (XboxRenderState <= X_D3DRS_PSCONSTANT1_7) then
   begin
     // Convert color DWORD to a D3DColor :
-    RenderStateValue.r := ((XboxValue shr 16) and $FF) / 255.0;
-    RenderStateValue.g := ((XboxValue shr  8) and $FF) / 255.0;
-    RenderStateValue.b := ((XboxValue shr  0) and $FF) / 255.0;
-    RenderStateValue.a := ((XboxValue shr 24) and $FF) / 255.0;
+    RenderStateValue := D3DXColorFromDWord(XboxValue);
 
     // Convert Xbox render state to Pixel shader constant number :
     PCValue := EmuXB2PC_PSConstant(XboxRenderState);
