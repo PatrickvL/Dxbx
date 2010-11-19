@@ -128,8 +128,8 @@ type VertexPatcher = object
     // Returns the number of streams of a patch
     function GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
     // Caches a patched stream
-    procedure CacheStream(pPatchDesc: PVertexPatchDesc;
-                          uiStream: UINT);
+(*    procedure CacheStream(pPatchDesc: PVertexPatchDesc;
+                          uiStream: UINT); *) // Not used
     // Frees a cached, patched stream
     procedure FreeCachedStream(pStream: Pvoid);
     // Tries to apply a previously patched stream from the cache
@@ -318,6 +318,8 @@ begin
   end;
 end;
 
+(* NOT USED
+
 procedure VertexPatcher.CacheStream(pPatchDesc: PVertexPatchDesc;
                                     uiStream: UINT);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -427,7 +429,7 @@ begin
   pCachedStream_.lLastUsed := clock();
   g_PatchedStreamsCache.insert(uiKey, pCachedStream_);
 end; // VertexPatcher.CacheStream
-
+*)
 
 procedure VertexPatcher.FreeCachedStream(pStream: Pvoid);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100

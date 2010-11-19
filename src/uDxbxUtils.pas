@@ -38,7 +38,7 @@ uses
 const // instead of using uEmuD3D8Types :
   X_D3DFMT_A8R8G8B8 = $06; // 6, Swizzled
 //  X_D3DFMT_X8R8G8B8 = $07; // 7, Swizzled
-//  X_D3DFMT_P8 = $0B; // 11, Swizzled, 8-bit Palletized
+  X_D3DFMT_P8 = $0B; // 11, Swizzled, 8-bit Palletized
   X_D3DFMT_DXT1 = $0C; // 12, Compressed, opaque/one-bit alpha
   X_D3DFMT_DXT2 = $0E;
   X_D3DFMT_DXT3 = $0E; // 14, Compressed, linear alpha
@@ -89,7 +89,8 @@ type
 
   TStreamHelper = class helper for TStream
   public
-    procedure WriteString(const aString: AnsiString);
+    procedure WriteString(const aString: AnsiString); overload;
+    procedure WriteString(const aString: string); overload;
   end;
 
   TCustomMemoryStreamHelper = class helper for TCustomMemoryStream
@@ -1147,6 +1148,12 @@ end;
 { TStreamHelper }
 
 procedure TStreamHelper.WriteString(const aString: AnsiString);
+begin
+  if Length(aString) > 0 then
+    Write(aString[1], Length(aString));
+end;
+
+procedure TStreamHelper.WriteString(const aString: string);
 begin
   if Length(aString) > 0 then
     Write(aString[1], Length(aString));

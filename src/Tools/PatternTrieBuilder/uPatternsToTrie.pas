@@ -730,7 +730,7 @@ begin // Save
         // Read the current string, and step over all functions that match that name (could be zero).
         // Do note, that both UniqueStrings and AllFunctions are sorted, allowing a stepping lookup :
         TmpString := UniqueStrings[i];
-        while (FunctionIndex < AllFunctions.Count)
+        while (DWord(FunctionIndex) < DWord(AllFunctions.Count))
           and (TmpString = AllFunctions[FunctionIndex]) do
             Inc(FunctionIndex);
 
