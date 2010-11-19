@@ -7955,12 +7955,6 @@ begin
       _(DWORD(Value), 'Value').
     LogEnd();
 
-  case g_iWireframe of
-    0: Value := Value;
-    1: Value := X_D3DFILL_WIREFRAME;
-  else Value := X_D3DFILL_POINT;
-  end;
-
   XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_FILLMODE, DWORD(Value));
 
   EmuSwapFS(fsXbox);
@@ -8724,6 +8718,7 @@ begin
   XTL_EmuUpdateDeferredStates();
 
 //  EmuUnswizzleActiveTexture(); // This messed up textures in PSTest2_4627, but not anymore since rev 1245
+//  XTL_EmuUpdateActiveTexture();
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
@@ -8788,6 +8783,7 @@ begin
   XTL_EmuUpdateDeferredStates();
 
 //  EmuUnswizzleActiveTexture(); // This messed up the letters in Chunktro, but not anymore since rev 1245
+//  XTL_EmuUpdateActiveTexture();
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
@@ -8906,6 +8902,7 @@ begin
 //    DxbxKrnlCleanup('DrawIndexedVertices : Unknown primitive type: 0x%.02X', [Ord(PrimitiveType)]);
 //  end;
 //  EmuUnswizzleActiveTexture(); // This messes up the PrimitiveType stackvalue (overwrite?!) in Cubemap sample
+//  XTL_EmuUpdateActiveTexture();
 // If EmuUnswizzleActiveTexture was called, the above test would fail :
 //  if(PrimitiveType < X_D3DPT_POINTLIST) or (PrimitiveType >= X_D3DPT_MAX) then
 //  begin
@@ -9049,6 +9046,7 @@ begin
   XTL_EmuUpdateDeferredStates();
 
 //  EmuUnswizzleActiveTexture(); // This messed up the loading screen background image in Rayman Arena, but not anymore since rev 1245
+//  XTL_EmuUpdateActiveTexture();
 
   if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
     EmuWarning('Unsupported PrimitiveType! (%d)', [Ord(PrimitiveType)]);
@@ -10347,6 +10345,8 @@ begin
       _(pNumSegs^, 'pNumSegs').
       _(pRectPatchInfo, 'pRectPatchInfo').
     LogEnd();
+
+//  XTL_EmuUpdateActiveTexture();
 
   Result := g_pD3DDevice.DrawRectPatch(Handle, PSingle(pNumSegs), pRectPatchInfo);
 
