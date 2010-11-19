@@ -814,6 +814,7 @@ end;
 function EmuXB2PC_PSConstant(Value: X_D3DRenderStateType): DWORD;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
+  // TODO : Once the pixel shader generates a mapping table, use that here!
   case Value of
     X_D3DRS_PSCONSTANT0_0: Result := 0;
     X_D3DRS_PSCONSTANT0_1: Result := 2;
@@ -832,6 +833,9 @@ begin
     X_D3DRS_PSCONSTANT1_5: Result := 11;
     X_D3DRS_PSCONSTANT1_6: Result := 13;
     X_D3DRS_PSCONSTANT1_7: Result := 15;
+
+    X_D3DRS_PSFINALCOMBINERCONSTANT0: Result := 16;
+    X_D3DRS_PSFINALCOMBINERCONSTANT1: Result := 17;
   else
     Result := 0;
     EmuWarning('Unsupported Value for EmuXB2PC_PSConstant: 0x%.08X', [Value]);
