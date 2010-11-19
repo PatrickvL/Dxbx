@@ -7703,10 +7703,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_TWOSIDEDLIGHTING]^ := Value;
-
-  EmuWarning('SetRenderState_TwoSidedLighting is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_TWOSIDEDLIGHTING, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7724,10 +7721,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_BACKFILLMODE]^ := Value;
-
-  EmuWarning('SetRenderState_BackFillMode is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_BACKFILLMODE, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7853,10 +7847,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_FRONTFACE]^ := Value;
-
-  EmuWarning('SetRenderState_FrontFace is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_FRONTFACE, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7874,10 +7865,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_LOGICOP]^ := Value;
-
-  EmuWarning('SetRenderState_LogicOp is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_LOGICOP, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7895,10 +7883,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_NORMALIZENORMALS]^ := Value;
-
-  g_pD3DDevice.SetRenderState(D3DRS_NORMALIZENORMALS, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_NORMALIZENORMALS, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7916,10 +7901,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_TEXTUREFACTOR]^ := Value;
-
-  g_pD3DDevice.SetRenderState(D3DRS_TEXTUREFACTOR, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_TEXTUREFACTOR, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7937,21 +7919,7 @@ begin
      _(Value, 'Value').
    LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_ZBIAS]^ := Value;
-
-{$IFDEF DXBX_USE_D3D9}
-  // TODO -oDxbx : We need to calculate the sloped scale depth bias, here's what I know :
-  // (see http://blog.csdn.net/qq283397319/archive/2009/02/14/3889014.aspx)
-  //   bias = (max * D3DRS_SLOPESCALEDEPTHBIAS) + D3DRS_DEPTHBIAS (which is Value here)
-  // > bias - Value = max * D3DRS_SLOPESCALEDEPTHBIAS
-  // > D3DRS_SLOPESCALEDEPTHBIAS = (bias - Value) / max
-  // TODO : So, what should we use as bias and max?
-  g_pD3DDevice.SetRenderState(D3DRS_SLOPESCALEDEPTHBIAS, F2DW(1.0)); // For now.
-  g_pD3DDevice.SetRenderState(D3DRS_DEPTHBIAS, Value);
-{$ELSE}
-  g_pD3DDevice.SetRenderState(D3DRS_ZBIAS, Value);
-{$ENDIF}
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_ZBIAS, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7969,16 +7937,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_EDGEANTIALIAS]^ := Value;
-
-{$IFDEF DXBX_USE_D3D9}
-  // TODO -oDxbx : What can we do to support this?
-{$ELSE}
-  g_pD3DDevice.SetRenderState(D3DRS_EDGEANTIALIAS, Value);
-{$ENDIF}
-
-  // TODO -oCXBX: Analyze performance and compatibility (undefined behavior on PC with triangles or points)
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_EDGEANTIALIAS, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7988,8 +7947,6 @@ procedure XTL_EmuD3DDevice_SetRenderState_FillMode
   Value: X_D3DFILLMODE
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  dwFillMode: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7998,19 +7955,13 @@ begin
       _(DWORD(Value), 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_FILLMODE]^ := DWORD(Value);
-
   case g_iWireframe of
-    0: dwFillMode := EmuXB2PC_D3DFILLMODE(Value);
-    1: dwFillMode := D3DFILL_WIREFRAME;
-  else dwFillMode := D3DFILL_POINT;
+    0: Value := Value;
+    1: Value := X_D3DFILL_WIREFRAME;
+  else Value := X_D3DFILL_POINT;
   end;
 
-  if MayLog(lfUnit or lfReturnValue) then
-    DbgPrintf('D3DRS_FILLMODE := 0x%.08X', [dwFillMode]); // Dxbx addition
-
-  g_pD3DDevice.SetRenderState(D3DRS_FILLMODE, dwFillMode);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_FILLMODE, DWORD(Value));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8028,10 +7979,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_FOGCOLOR]^ := Value;
-
-  g_pD3DDevice.SetRenderState(D3DRS_FOGCOLOR, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_FOGCOLOR, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8049,10 +7997,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_DXT1NOISEENABLE]^ := Value;
-
-  EmuWarning('SetRenderState_Dxt1NoiseEnable is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_DXT1NOISEENABLE, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8079,14 +8024,9 @@ begin
   if (int(XboxRenderState) = -1) then
     EmuWarning('SetRenderState_Simple({Method=}0x%.08X, {Value=}0x%.08X) - unsupported method!', [Method, Value])
   else
-  begin
-    // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-    XTL_EmuMappedD3DRenderState[XboxRenderState]^ := DWORD(Value);
-
     // Use a helper for the simple render states, as SetRenderStateNotInline
     // needs to be able to call it too :
     XTL_EmuD3DDevice_SetRenderState_Simple_Internal(XboxRenderState, {Xbox}Value);
-  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -8123,15 +8063,7 @@ begin
       _(Ord(Value), 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_VERTEXBLEND]^ := Value;
-
-  Value := EmuXB2PC_D3DVERTEXBLENDFLAGS(X_D3DVERTEXBLENDFLAGS(Value));
-
-  if MayLog(lfUnit or lfReturnValue) then
-    DbgPrintf('D3DRS_VERTEXBLEND := 0x%.08X', [Value]); // Dxbx addition
-
-  g_pD3DDevice.SetRenderState(D3DRS_VERTEXBLEND, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_VERTEXBLEND, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8149,11 +8081,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_PSTEXTUREMODES]^ := Value;
-
-  // TODO -oCXBX: do something..
-  EmuWarning('SetRenderState_PSTextureModes is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_PSTEXTUREMODES, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8163,8 +8091,6 @@ procedure XTL_EmuD3DDevice_SetRenderState_CullMode
   Value: X_D3DCULL
 ); stdcall;
 // Branch:shogun  Revision:162  Translator:Shadow_Tj  Done:100
-var
-  PCValue: D3DCULL;
 begin
   EmuSwapFS(fsWindows);
 
@@ -8173,16 +8099,7 @@ begin
       _(DWORD(Value), 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_CULLMODE]^ := DWORD(Value);
-
-  // convert from Xbox D3D to PC D3D enumeration
-  PCValue := EmuXB2PC_D3DCULL(Value);
-
-  if MayLog(lfUnit or lfReturnValue) then
-    DbgPrintf('D3DRS_CULLMODE := 0x%.08X', [PCValue]); // Dxbx addition
-
-  g_pD3DDevice.SetRenderState(D3DRS_CULLMODE, PCValue);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_CULLMODE, DWORD(Value));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8200,12 +8117,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_LINEWIDTH]^ := Value;
-
-  // TODO -oCXBX: Convert to PC format??
-//  g_pD3DDevice.SetRenderState(D3DRS_LINEPATTERN, Value);
-  EmuWarning('SetRenderState_LineWidth is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_LINEWIDTH, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8215,8 +8127,6 @@ procedure XTL_EmuD3DDevice_SetRenderState_StencilFail
   Value: DWORD
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  PCValue: D3DSTENCILOP;
 begin
   EmuSwapFS(fsWindows);
 
@@ -8225,16 +8135,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILFAIL]^ := Value;
-
-  // convert from Xbox D3D to PC D3D enumeration
-  PCValue := EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP(Value));
-
-  if MayLog(lfUnit or lfReturnValue) then
-    DbgPrintf('D3DRS_STENCILFAIL := 0x%.08X', [PCValue]); // Dxbx addition
-
-  g_pD3DDevice.SetRenderState(D3DRS_STENCILFAIL, PCValue);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_STENCILFAIL, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8252,10 +8153,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_OCCLUSIONCULLENABLE]^ := Value;
-
-  EmuWarning('SetRenderState_OcclusionCullEnable is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_OCCLUSIONCULLENABLE, DWORD(Value));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8273,10 +8171,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILCULLENABLE]^ := Value;
-
-  EmuWarning('SetRenderState_StencilCullEnable is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_STENCILCULLENABLE, DWORD(Value));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8294,10 +8189,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_ROPZCMPALWAYSREAD]^ := Value;
-
-  EmuWarning('SetRenderState_RopZCmpAlwaysRead is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_ROPZCMPALWAYSREAD, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8315,10 +8207,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_ROPZREAD]^ := Value;
-
-  EmuWarning('SetRenderState_RopZRead is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_ROPZREAD, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8336,10 +8225,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_DONOTCULLUNCOMPRESSED]^ := Value;
-
-  EmuWarning('SetRenderState_DoNotCullUncompressed is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_DONOTCULLUNCOMPRESSED, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8357,10 +8243,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_ZENABLE]^ := Value;
-
-  g_pD3DDevice.SetRenderState(D3DRS_ZENABLE, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_ZENABLE, DWORD(Value));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8378,10 +8261,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILENABLE]^ := Value;
-
-  g_pD3DDevice.SetRenderState(D3DRS_STENCILENABLE, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_STENCILENABLE, DWORD(Value));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8399,11 +8279,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEANTIALIAS]^ := Value;
-
-  // TODO -oDxbx: If Value is D3DMULTISAMPLE_TYPE, then we should convert it from Xbox to Native!
-  g_pD3DDevice.SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_MULTISAMPLEANTIALIAS, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8421,10 +8297,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEMASK]^ := Value;
-
-  g_pD3DDevice.SetRenderState(D3DRS_MULTISAMPLEMASK, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_MULTISAMPLEMASK, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8442,10 +8315,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEMODE]^ := Value;
-
-  EmuWarning('SetRenderState_MultiSampleMode is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_MULTISAMPLEMODE, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8463,10 +8333,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLERENDERTARGETMODE]^ := Value;
-
-  EmuWarning('SetRenderState_MultiSampleRenderTargetMode is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_MULTISAMPLERENDERTARGETMODE, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -10827,12 +10694,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-  XTL_EmuMappedD3DRenderState[X_D3DRS_SAMPLEALPHA]^ := Value;
-
-  // TODO -oCXBX: Implement?
-
-  EmuWarning('SetRenderState_SampleAlpha is not supported!');
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_SAMPLEALPHA, Value);
 
   EmuSwapFS(fsXbox);
 
@@ -11578,9 +11440,6 @@ begin
   Result := D3D_OK;
   if (XboxRenderState_VersionIndependent <= X_D3DRS_SIMPLE_LAST) then
   begin
-    // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
-    XTL_EmuMappedD3DRenderState[XboxRenderState_VersionIndependent]^ := DWORD(Value);
-
     // Pixel & Simple render states - Just pass them on to our helper :
     XTL_EmuD3DDevice_SetRenderState_Simple_Internal(XboxRenderState_VersionIndependent, Value);
     EmuSwapFS(fsXbox);

@@ -453,19 +453,21 @@ type PSH_OPCODE =
     PO_DCL,
 {$ENDIF}
     PO_TEX,
+    PO_TEXBEM,
+    PO_TEXBEML,
+    PO_TEXBRDF, // Xbox ext.
     PO_TEXTCOORD,
     PO_TEXKILL,
-    PO_TEXBEM,
-    PO_TEXBEMI,
-    PO_TEXBRDF,
+    PO_TEXDP3, // Note : ps.1.3 only
+    PO_TEXDP3TEX, // Note : ps.1.3 only
     PO_TEXM3X2TEX,
     PO_TEXM3X2DEPTH, // Note : requires ps.1.3 and a preceding texm3x2pad
-    PO_TEXM3X3DIFF, // Note : Not supported by Direct3D8 ?
+    PO_TEXM3X3DIFF, // Xbox ext.
     PO_TEXM3X3VSPEC,
     PO_TEXM3X3TEX, // Note : Uses a cube texture
     PO_TEXREG2AR,
     PO_TEXREG2GB,
-    PO_TEXM3X2PAD,
+    PO_TEXM3X2PAD, // Note : Must be combined with texm3x2tex or texm3x2depth
     PO_TEXM3X3PAD,
     PO_TEXM3X3SPEC, // NOTE : NEEDS 3 ARGUMENTS!
     // Direct3D8 arithmetic instructions :
@@ -497,11 +499,13 @@ var PSH_OPCODE_DEFS: array [PSH_OPCODE] of record mn: string; _Out, _In: int; no
   ({PO_DCL} mn:'dcl';  _Out:1; _In:0; note:''),
 {$ENDIF}
   ({PO_TEX} mn:'tex';  _Out:1; _In:0; note:''),
+  ({PO_TEXBEM} mn:'texbem';  _Out:1; _In:1; note:''),
+  ({PO_TEXBEML} mn:'texbeml';  _Out:1; _In:1; note:''),
+  ({PO_TEXBRDF} mn:'texbrdf';  _Out:1; _In:1; note:''), // Note : Not supported by Direct3D8 ?
   ({PO_TEXTCOORD} mn:'textcoord';  _Out:1; _In:0; note:''),
   ({PO_TEXKILL} mn:'texkill';  _Out:1; _In:0; note:''),
-  ({PO_TEXBEM} mn:'texbem';  _Out:1; _In:1; note:''),
-  ({PO_TEXBEMI} mn:'texbemi';  _Out:1; _In:1; note:''),
-  ({PO_TEXBRDF} mn:'texbrdf';  _Out:1; _In:1; note:''), // Note : Not supported by Direct3D8 ?
+  ({PO_TEXDP3} mn:'texdp3';  _Out:1; _In:1; note:''),
+  ({PO_TEXDP3TEX} mn:'texdp3tex';  _Out:1; _In:1; note:''),
   ({PO_TEXM3X2TEX} mn:'texm3x2tex';  _Out:1; _In:1; note:''),
   ({PO_TEXM3X2DEPTH} mn:'texm3x2depth';  _Out:1; _In:1; note:''), // Note : requires ps.1.3 and a preceding texm3x2pad
   ({PO_TEXM3X3DIFF} mn:'texm3x3diff';  _Out:1; _In:1; note:''), // Note : Not supported by Direct3D8 ?
@@ -1850,7 +1854,7 @@ function PSH_XBOX_SHADER.DecodeTextureModes(pPSDef: PX_D3DPIXELSHADERDEF): Boole
   function _NextIs2D(Stage: int): Boolean;
   begin
     if Stage < X_D3DTS_STAGECOUNT-1 then
-      Result := PSTextureModes[Stage + 1] = PS_TEXTUREMODES_DOT_ZW
+      Result := PSTextureModes[Stage + 1] in [PS_TEXTUREMODES_DOT_ST, PS_TEXTUREMODES_DOT_ZW]
     else
       Result := False;
   end;
@@ -1887,31 +1891,31 @@ begin
     // TODO : Apply conversions when PS_GLOBALFLAGS_TEXMODE_ADJUST is set (but ... how to check the texture type? read D3DRS_PSTEXTUREMODES?)
 
     // Convert the texture mode to a texture addressing instruction :
-    case PSTextureModes[Stage] of
+    case PSTextureModes[Stage] of // input = q,s,t,r (same layout as a,r,g,b, also known as w,x,y,z)
 {$IFNDEF DXBX_USE_D3D9}
-      PS_TEXTUREMODES_PROJECT2D: Ins.Opcode := PO_TEX;
-      PS_TEXTUREMODES_PROJECT3D: Ins.Opcode := PO_TEX; // Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
-      PS_TEXTUREMODES_CUBEMAP: Ins.Opcode := PO_TEX; // Note : If we use 'texreg2rgb', that requires ps.1.2 (we're still using ps.1.1)
+      PS_TEXTUREMODES_PROJECT2D: Ins.Opcode := PO_TEX; // argb = texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
+      PS_TEXTUREMODES_PROJECT3D: Ins.Opcode := PO_TEX; // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
+      PS_TEXTUREMODES_CUBEMAP: Ins.Opcode := PO_TEX; // argb = cubemap(r/q, s/q, t/q)
 {$ENDIF}
       PS_TEXTUREMODES_PASSTHRU: Ins.Opcode := PO_TEXTCOORD;
       PS_TEXTUREMODES_CLIPPLANE: Ins.Opcode := PO_TEXKILL;
       PS_TEXTUREMODES_BUMPENVMAP: Ins.Opcode := PO_TEXBEM;
-      PS_TEXTUREMODES_BUMPENVMAP_LUM: Ins.Opcode := PO_TEXBEMI;
+      PS_TEXTUREMODES_BUMPENVMAP_LUM: Ins.Opcode := PO_TEXBEML;
 //    PS_TEXTUREMODES_BRDF: Ins.Opcode := PO_TEXBRDF; // Note : Not supported by Direct3D8 ?
-      PS_TEXTUREMODES_DOT_ST: Ins.Opcode := PO_texm3x2tex;
-      PS_TEXTUREMODES_DOT_ZW: Ins.Opcode := PO_texm3x2depth; // Note : requires ps.1.3 and a preceding texm3x2pad
-//    PS_TEXTUREMODES_DOT_RFLCT_DIFF: Ins.Opcode := PO_texm3x3diff; // Note : Not supported by Direct3D8 ?
-      PS_TEXTUREMODES_DOT_RFLCT_SPEC: Ins.Opcode := PO_texm3x3vspec;
-      PS_TEXTUREMODES_DOT_STR_3D: Ins.Opcode := PO_texm3x3tex; // Note : Uses a 3d texture
-      PS_TEXTUREMODES_DOT_STR_CUBE: Ins.Opcode := PO_texm3x3tex; // Note : Uses a cube texture
-      PS_TEXTUREMODES_DPNDNT_AR: Ins.Opcode := PO_texreg2ar;
-      PS_TEXTUREMODES_DPNDNT_GB: Ins.Opcode := PO_texreg2gb;
+      PS_TEXTUREMODES_DOT_ST: Ins.Opcode := PO_TEXM3X2TEX;
+      PS_TEXTUREMODES_DOT_ZW: Ins.Opcode := PO_TEXM3X2DEPTH; // Note : requires ps.1.3 and a preceding texm3x2pad
+//    PS_TEXTUREMODES_DOT_RFLCT_DIFF: Ins.Opcode := PO_TEXM3X3DIFF; // Note : Not supported by Direct3D8 ?
+      PS_TEXTUREMODES_DOT_RFLCT_SPEC: Ins.Opcode := PO_TEXM3X3VSPEC;
+      PS_TEXTUREMODES_DOT_STR_3D: Ins.Opcode := PO_TEXM3X3TEX; // Note : Uses a 3d texture
+      PS_TEXTUREMODES_DOT_STR_CUBE: Ins.Opcode := PO_TEXM3X3TEX; // Note : Uses a cube texture
+      PS_TEXTUREMODES_DPNDNT_AR: Ins.Opcode := PO_TEXREG2AR;
+      PS_TEXTUREMODES_DPNDNT_GB: Ins.Opcode := PO_TEXREG2GB;
       PS_TEXTUREMODES_DOTPRODUCT:
         if _NextIs2D(Stage) then
-          Ins.Opcode := PO_texm3x2pad
+          Ins.Opcode := PO_TEXM3X2PAD
         else
-          Ins.Opcode := PO_texm3x3pad;
-      PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST: Ins.Opcode := PO_texm3x3spec; // Note : Needs 3 arguments!
+          Ins.Opcode := PO_TEXM3X3PAD;
+      PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST: Ins.Opcode := PO_TEXM3X3SPEC; // Note : Needs 3 arguments!
     else
       Continue;
     end;
@@ -1932,11 +1936,12 @@ begin
     if PSH_OPCODE_DEFS[Ins.Opcode]._In >= 2 then
     begin
       // Add the third argument :
-      if PSTextureModes[Stage] in [
-        PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST] then
-      begin
-        Ins.Parameters[0].SetRegister(PARAM_C, 0, 0);
-        Ins.CommentString := 'Dxbx guess'; // TODO : Where do we get the 3rd argument to this?
+      case PSTextureModes[Stage] of
+        PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST:
+        begin
+          Ins.Parameters[0].SetRegister(PARAM_C, 0, 0);
+          Ins.CommentString := 'Dxbx guess'; // TODO : Where do we get the 3rd argument to this?
+        end;
       end;
     end;
 

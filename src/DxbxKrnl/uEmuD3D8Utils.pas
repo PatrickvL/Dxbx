@@ -72,7 +72,7 @@ function IDirect3DDevice_CreateVolumeTexture(const aDirect3DDevice: IDirect3DDev
 function IDirect3DDevice_GetTextureStageState(const aDirect3DDevice: IDirect3DDevice;
   Sampler: DWORD; _Type: X_D3DTEXTURESTAGESTATETYPE; out Value: DWORD): HResult;
 function IDirect3DDevice_SetTextureStageState(const aDirect3DDevice: IDirect3DDevice;
-  Sampler: DWORD; _Type: X_D3DTEXTURESTAGESTATETYPE; Value: DWORD): HResult;
+  Sampler: DWORD; _Type: X_D3DTEXTURESTAGESTATETYPE; PCValue: DWORD): HResult;
 
 function EmuXB2PC_D3DTSS(Value: X_D3DTEXTURESTAGESTATETYPE): TD3DSamplerStateType;
 
@@ -237,7 +237,7 @@ begin
 end;
 
 function IDirect3DDevice_SetTextureStageState(const aDirect3DDevice: IDirect3DDevice;
-  Sampler: DWORD; _Type: X_D3DTEXTURESTAGESTATETYPE; Value: DWORD): HResult;
+  Sampler: DWORD; _Type: X_D3DTEXTURESTAGESTATETYPE; PCValue: DWORD): HResult;
 var
   PCState: TD3DSamplerStateType;
 begin
@@ -251,10 +251,10 @@ begin
 {$IFDEF DXBX_USE_D3D9}
   // For Direct3D9, everything below D3DSAMP_MAXANISOTROPY needs to call SetSamplerState :
   if _Type <= X_D3DTSS_MAXANISOTROPY then
-    Result := aDirect3DDevice.SetSamplerState(Sampler, PCState, Value)
+    Result := aDirect3DDevice.SetSamplerState(Sampler, PCState, PCValue)
   else
 {$ENDIF}
-    Result := aDirect3DDevice.SetTextureStageState(Sampler, TD3DTextureStageStateType(PCState), Value);
+    Result := aDirect3DDevice.SetTextureStageState(Sampler, TD3DTextureStageStateType(PCState), PCValue);
 end;
 
 // convert from xbox to pc texture stage state
