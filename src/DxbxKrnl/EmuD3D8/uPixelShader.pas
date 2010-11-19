@@ -2554,7 +2554,9 @@ function PSH_XBOX_SHADER.CombineInstructions(): Boolean;
     Result := False;
     ParamLeft := @Mul1.Parameters[Left];
     ParamRight := @Mul2.Parameters[Right];
-    if (ParamLeft.Type_ <> ParamRight.Type_) or (ParamLeft.Address <> ParamRight.Address) then
+    if (ParamLeft.Type_ <> ParamRight.Type_)
+    or (ParamLeft.Address <> ParamRight.Address)
+    or (ParamLeft.Mask <> ParamRight.Mask) then
       Exit;
 
     // Is the left argument inverted and the right not (or the other way around) ?
@@ -2714,6 +2716,22 @@ begin
           Result := True;
           Continue;
         end;
+(*
+        if  (Cur.Opcode = PO_MOV)
+        and (Intermediate[i+1].Opcode = Cur.Opcode) then
+        begin
+          // Remove the two MOV's and fold their arguments into a MUL :
+          Intermediate[i+2].Opcode := PO_MUL;
+          Intermediate[i+2].Parameters[0] := Cur.Parameters[0];
+          Intermediate[i+2].Parameters[1] := Intermediate[i+1].Parameters[0];
+          // TODO : Fix the modifiers too
+          DeleteIntermediate(i);
+          DeleteIntermediate(i);
+          DbgPrintf('; Changed temporary MOV,MOV,ADD into a MUL');
+          Result := True;
+          Continue;
+        end;
+*)
       end;
     end;
 
@@ -2758,6 +2776,7 @@ begin
     if CanSimplify then
     begin
       Cur.Opcode := PO_NOP; // This nop will be removed in a recursive fixup
+      DbgPrintf('; Changed MOV into a NOP');
       Result := True;
       Exit;
     end;
@@ -2773,6 +2792,7 @@ begin
     Cur.Parameters[0].Address := 0;
     Cur.Parameters[0].Modifiers := [];
     Cur.Parameters[1] := Cur.Parameters[0];
+    DbgPrintf('; Changed MOV 0 into a SUB v0,v0');
     Exit;
   end;
 
@@ -2790,6 +2810,8 @@ begin
 
     // Try to simulate all factors (-2.0, -1.0, -0.5, 0.5, 1.0 and 2.0) using an output modifier :
     Cur.ScaleOutput(Cur.Parameters[0].GetConstValue());
+
+    DbgPrintf('; Changed MOV {const} into a SUB_factor 1-v0,-v0');
     Exit;
   end;
 end;
@@ -2804,6 +2826,7 @@ begin
     // Change it into a MOV (the first argument is already in-place)
     Cur.Opcode := PO_MOV;
     Result := True;
+    DbgPrintf('; Changed ADD s0,0 into a MOV s0');
     Exit;
   end;
 end;
@@ -2819,6 +2842,7 @@ begin
     Cur.Opcode := PO_MOV;
     Cur.Parameters[0] := Cur.Parameters[2];
     Result := True;
+    DbgPrintf('; Changed MAD s0,0 into a MOV s0');
     Exit;
   end;
 
@@ -2829,6 +2853,7 @@ begin
     Cur.Opcode := PO_ADD;
     Cur.Parameters[1] := Cur.Parameters[2];
     Result := True;
+    DbgPrintf('; Changed MAD s0,1,s2 into a ADD s0,s2');
     Exit;
   end;
 
@@ -2840,6 +2865,7 @@ begin
     Cur.Parameters[1] := Cur.Parameters[0];
     Cur.Parameters[0] := Cur.Parameters[2];
     Result := True;
+    DbgPrintf('; Changed MAD s0,-1,s2 into a SUB s2,s0');
     Exit;
   end;
 end;
@@ -2854,6 +2880,7 @@ begin
     // Change it into a MOV (the first argument is already in-place)
     Cur.Opcode := PO_MOV;
     Result := True;
+    DbgPrintf('; Changed SUB x, 0 into a MOV x');
     Exit;
   end;
 end;
@@ -2869,6 +2896,7 @@ begin
     Cur.Opcode := PO_MOV;
     Cur.Parameters[0].SetConstValue(0.0);
     Result := True;
+    DbgPrintf('; Changed MUL s0,0 into a MOV 0');
     Exit;
   end;
 
@@ -2879,6 +2907,7 @@ begin
     Cur.Opcode := PO_MOV;
     Cur.ScaleOutput(Cur.Parameters[1].GetConstValue());
     Result := True;
+    DbgPrintf('; Changed MUL s0,{const} into a MOV_factor s0');
     Exit;
   end;
 end; // SimplifyMUL
@@ -2895,6 +2924,7 @@ begin
     // Change it into a MUL (calculating the left part : s0*s1 :
     Cur.Opcode := PO_MUL;
     Result := True;
+    DbgPrintf('; Changed LRP s0,s1,s2 (where (1-s0)*s2=0) into a MUL s0,s1');
     Exit;
   end;
 
@@ -2906,6 +2936,7 @@ begin
     Cur.Parameters[0].Invert;
     Cur.Parameters[1] := Cur.Parameters[2];
     Result := True;
+    DbgPrintf('; Changed LRP s0,s1,s2 (where s0*s1=0) into a MUL (1-s0),s2');
     Exit;
   end;
 
@@ -2917,6 +2948,7 @@ begin
     Cur.Parameters[2] := Cur.Parameters[0];
     Cur.Parameters[2].Invert;
     Result := True;
+    DbgPrintf('; Changed LRP s0,s1,1 into a MAD s0,s1,1-s0');
     Exit;
   end;
 end; // SimplifyLRP
