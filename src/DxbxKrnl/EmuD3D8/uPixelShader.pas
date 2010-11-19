@@ -683,6 +683,7 @@ type PSH_INTERMEDIATE_FORMAT = record
     procedure Initialize(const aOpcode: PSH_OPCODE);
     function ToString: string;
     function IsArithmetic: Boolean;
+    procedure ScaleOutput(aFactor: Float);
     function ReadsFromRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
     function WritesToRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
     procedure SwapParameter(const Index1, Index2: int);
@@ -1434,6 +1435,42 @@ end; // ToString
 function PSH_INTERMEDIATE_FORMAT.IsArithmetic: Boolean;
 begin
   Result := (Opcode >= PO_ADD);
+end;
+
+procedure PSH_INTERMEDIATE_FORMAT.ScaleOutput(aFactor: Float);
+begin
+  if aFactor = 1.0 then
+    Exit;
+
+  if aFactor = 0.5 then
+  begin
+    // Half the output modifier :
+    case Modifier of
+      INSMOD_X4:
+        Modifier := INSMOD_X2;
+      INSMOD_X2:
+        Modifier := INSMOD_NONE;
+      INSMOD_NONE:
+        Modifier := INSMOD_D2;
+    end;
+
+    Exit;
+  end;
+
+  if aFactor = 2.0 then
+  begin
+    // Double the output modifier :
+    case Modifier of
+      INSMOD_D2:
+        Modifier := INSMOD_NONE;
+      INSMOD_NONE:
+        Modifier := INSMOD_X2;
+      INSMOD_X2:
+        Modifier := INSMOD_X4;
+    end;
+
+    Exit;
+  end;
 end;
 
 function PSH_INTERMEDIATE_FORMAT.ReadsFromRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
@@ -2739,21 +2776,22 @@ begin
     Exit;
   end;
 
-  // Does this MOV put a 1 (one) in the output?
-  if Cur.Parameters[0].GetConstValue = 1.0 then
+  // Does this MOV put a constant in the output?
+  if Cur.Parameters[0].Type_ = PARAM_VALUE then
   begin
-    // TODO : Find a constant with the value 1, and use that if present.
-    // Fixup via "sub d0=1-v0,-v0" :
+    // TODO : If there's a constant equal to GetConstValue(), use that.
+    // Fixup via "sub d0=1-v0,-v0" (which produces a 1.0 value) :
     Cur.Opcode := PO_SUB;
     Cur.Parameters[0].Type_ := PARAM_V;
     Cur.Parameters[0].Address := 0;
     Cur.Parameters[0].Modifiers := [ARGMOD_INVERT];
     Cur.Parameters[1] := Cur.Parameters[0];
     Cur.Parameters[1].Modifiers := [ARGMOD_NEGATE];
+
+    // Try to simulate all factors (-2.0, -1.0, -0.5, 0.5, 1.0 and 2.0) using an output modifier :
+    Cur.ScaleOutput(Cur.Parameters[0].GetConstValue());
     Exit;
   end;
-
-  // TODO : Simulate other factors (like -2.0, -1.0, -0.5, 0.5 and 2.0)?
 end;
 
 function PSH_XBOX_SHADER.SimplifyADD(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
@@ -2834,26 +2872,15 @@ begin
     Exit;
   end;
 
-  // Is this a multiply-by-const 1 ?
-  if (Cur.Parameters[1].GetConstValue = 0.5) then
+  // Is this a multiply-by-const ?
+  if (Cur.Parameters[1].Type_ = PARAM_VALUE) then
   begin
-    // Change it into a simple MOV :
+    // Change it into a simple MOV and scale the output instead :
     Cur.Opcode := PO_MOV;
-    Cur.Parameters[0].Modifiers := [ARGMOD_SCALE_D2]; // TODO : Scale incremental!
+    Cur.ScaleOutput(Cur.Parameters[1].GetConstValue());
     Result := True;
     Exit;
   end;
-
-  // Is this a multiply-by-const 1 ?
-  if (Cur.Parameters[1].GetConstValue = 1.0) then
-  begin
-    // Change it into a simple MOV :
-    Cur.Opcode := PO_MOV;
-    Result := True;
-    Exit;
-  end;
-
-  // TODO : What about multiplications by other factors (like -2.0, -1.0, -0.5, 0.5 and 2.0)?
 end; // SimplifyMUL
 
 function PSH_XBOX_SHADER.SimplifyLRP(Cur: PPSH_INTERMEDIATE_FORMAT): Boolean;
