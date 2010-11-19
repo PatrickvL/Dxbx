@@ -8215,6 +8215,8 @@ procedure XTL_EmuD3DDevice_SetRenderState_StencilFail
   Value: DWORD
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  PCValue: D3DSTENCILOP;
 begin
   EmuSwapFS(fsWindows);
 
@@ -8226,7 +8228,13 @@ begin
   // Dxbx addition : Set this value into the RenderState structure too (so other code will read the new current value)
   XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILFAIL]^ := Value;
 
-  g_pD3DDevice.SetRenderState(D3DRS_STENCILFAIL, Value);
+  // convert from Xbox D3D to PC D3D enumeration
+  PCValue := EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP(Value));
+
+  if MayLog(lfUnit or lfReturnValue) then
+    DbgPrintf('D3DRS_STENCILFAIL := 0x%.08X', [PCValue]); // Dxbx addition
+
+  g_pD3DDevice.SetRenderState(D3DRS_STENCILFAIL, PCValue);
 
   EmuSwapFS(fsXbox);
 end;
