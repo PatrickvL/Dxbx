@@ -410,19 +410,19 @@ begin
     begin
       szValueName := AnsiString(Format('DeviceName 0x%.02X', [v]));
       if DeviceIsUsed(v) then
-        IniFile.WriteString('Controller', szValueName, m_DeviceName[v]);
+        IniFile.WriteString('Controller', string(szValueName), string(m_DeviceName[v]));
     end;
 
     // Save Object Configuration
     for v := 0 to XBCTRL_OBJECT_COUNT-1 do
     begin
-      szValueName := Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]);
+      szValueName := AnsiString(Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]));
       if (m_ObjectConfig[XBCtrlObject(v)].dwDevice <> -1) then
       begin
         dwSize := sizeof(XBCtrlObjectCfg);
         SetLength(HexStr, dwSize * 2);
         BinToHex(Pointer(@m_ObjectConfig[XBCtrlObject(v)]), PChar(HexStr),dwSize);
-        IniFile.WriteString('Controller', szValueName, HexStr);
+        IniFile.WriteString('Controller', string(szValueName), string(HexStr));
        end;
     end;
   finally
@@ -435,7 +435,7 @@ var
   IniFile: TIniFile;
   v: Integer;
   szValueName: string;
-  DeviceName: string;
+  DeviceName: AnsiString;
   dwSize: DWORD;
   HexStr: string;
 begin
@@ -447,7 +447,7 @@ IniFile := TIniFile.Create(aFileName);
     for v := 0 to XBCTRL_MAX_DEVICES - 1 do
     begin
       szValueName := Format('DeviceName 0x%.02X', [v]);
-      DeviceName := IniFile.ReadString('Controller', szValueName, '');
+      DeviceName := AnsiString(IniFile.ReadString('Controller', szValueName, ''));
       DeviceName := DeviceName + #0;
       if DeviceName <> '' then
         MemCpy(@(m_DeviceName[v][0]), PAnsiChar(DeviceName), Length(DeviceName)+1);
@@ -459,7 +459,7 @@ IniFile := TIniFile.Create(aFileName);
       szValueName := Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]);
       HexStr := IniFile.ReadString('Controller', szValueName, '');
       dwSize := sizeof(XBCtrlObjectCfg);
-      if Length(HexStr) * 2 = dwSize then
+      if DWord(Length(HexStr) * 2) = DWORD(dwSize) then
         HexToBin(PChar(HexStr), Pointer(@m_ObjectConfig[XBCtrlObject(v)]), Length(HexStr));
     end;
 
