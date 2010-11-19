@@ -234,9 +234,9 @@ begin
 
           memcpy({dest=}LockedRect.pBits, {src=}pTemp, dwPitch * dwHeight);
 
-          IDirect3DTexture(pPCTexture).UnlockRect(v); // Dxbx fix : Cxbx unlocks level 0 each time!
-
           DxbxFree(pTemp);
+
+          IDirect3DTexture(pPCTexture).UnlockRect(v); // Dxbx fix : Cxbx unlocks level 0 each time!
         end;
       end;
 
@@ -380,6 +380,8 @@ var
       begin
         if (IsValidCurrentShader()) then
         begin
+//          XTL_EmuUpdateActiveTexture();
+
           g_pD3DDevice.DrawIndexedPrimitive
           (
             PCPrimitiveType,
@@ -567,6 +569,7 @@ begin
 {$endif}
 
         EmuUnswizzleActiveTexture();
+//        XTL_EmuUpdateActiveTexture();
 
         // render vertices
         if (dwVertexShader <> DWord(-1)) then

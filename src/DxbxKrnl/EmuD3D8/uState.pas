@@ -53,7 +53,7 @@ procedure DxbxBuildRenderStateMappingTable(const aD3DRenderState: PDWORDs); {NOP
 procedure DxbxInitializeDefaultRenderStates(const aParameters: PX_D3DPRESENT_PARAMETERS); {NOPATCH}
 
 function DxbxVersionAdjust_D3DRS(const XboxRenderState_VersionDependent: X_D3DRENDERSTATETYPE): X_D3DRENDERSTATETYPE; {NOPATCH}
-function Dxbx_SetRenderState(const XboxRenderState: X_D3DRenderStateType; const XboxValue: DWORD): DWORD; {NOPATCH}
+function Dxbx_SetRenderState(const XboxRenderState: X_D3DRenderStateType; XboxValue: DWORD): DWORD; {NOPATCH}
 function DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE): HResult;
 
 function DxbxTextureStageStateIsXboxExtension(const Value: X_D3DTEXTURESTAGESTATETYPE): Boolean; {NOPATCH}
@@ -843,12 +843,12 @@ begin
   end;
 end;
 
-function Dxbx_SetRenderState(const XboxRenderState: X_D3DRenderStateType; const XboxValue: DWORD): DWORD; {NOPATCH}
+function Dxbx_SetRenderState(const XboxRenderState: X_D3DRenderStateType; XboxValue: DWORD): DWORD; {NOPATCH}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   RenderStateValue: TD3DColorValue;
   PCRenderState: D3DRenderStateType;
-  PCValue: DWORD;
+  Tmp: DWORD;
 begin
   Result := XboxValue;
 
@@ -865,17 +865,17 @@ begin
   (*if (X_D3DRS_PS_FIRST <= XboxRenderState) and (XboxRenderState <= X_D3DRS_PS_LAST) then
     ; // TODO -oDxbx : Dirty the current PixelShader, so we can support ModifyPixelShader *)
 
-  // Handle the pixel shader constants first :
   case XboxRenderState of
+    // Handle the pixel shader constants separately :
     X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT1_7,
     X_D3DRS_PSFINALCOMBINERCONSTANT0, X_D3DRS_PSFINALCOMBINERCONSTANT1:
     begin
       // Convert Xbox render state to Pixel shader constant number :
-      PCValue := EmuXB2PC_PSConstant(XboxRenderState);
+      Tmp := EmuXB2PC_PSConstant(XboxRenderState);
 
       // Safeguard against overflowing native pixel shader constant count :
-      if PCValue >= D3DDP_MAXTEXCOORD then // TODO : Use D3DDP_MAXCONST
-        // TODO : What do we return when the constant is not supported?
+      if Tmp >= D3DDP_MAXTEXCOORD then // TODO : Use D3DDP_MAXCONST
+        // TODO : What should we do when the constant is not supported?
         Exit;
 
       // Convert color DWORD to a D3DColor :
@@ -883,53 +883,78 @@ begin
 
       // Set the constant locally :
   {$IFDEF DXBX_USE_D3D9}
-      g_pD3DDevice.SetPixelShaderConstantF(PCValue, PSingle(@RenderStateValue), 1);
+      g_pD3DDevice.SetPixelShaderConstantF(Tmp, PSingle(@RenderStateValue), 1);
   {$ELSE}
-      g_pD3DDevice.SetPixelShaderConstant(PCValue, {untyped const}RenderStateValue, 1);
+      g_pD3DDevice.SetPixelShaderConstant(Tmp, {untyped const}RenderStateValue, 1);
   {$ENDIF}
+      Exit;
+    end;
+
+    X_D3DRS_DEFERRED_FIRST..X_D3DRS_DEFERRED_LAST:
+    begin
+      // Skip unspecified deferred render states :
+      if (XboxValue = X_D3DTSS_UNK) then
+        Exit;
+    end;
+
+(*
+    X_D3DRS_TEXTUREFACTOR:
+    begin
+      // TODO : If no pixel shader is set, initialize all 16 pixel shader constants
+      //        (X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT1_7) to this value too.
+    end;
+
+    X_D3DRS_CULLMODE:
+    begin
+      if XboxValue > DWORD(X_D3DCULL_NONE) then
+        ; // TODO : Update X_D3DRS_FRONTFACE too
+
+    end;
+*)
+    X_D3DRS_FILLMODE:
+    begin
+      // Configurable override on fillmode :
+      case g_iWireframe of
+        0: {Use fillmode specified by the XBE};
+        1: XboxValue := DWORD(X_D3DFILL_WIREFRAME);
+      else XboxValue := DWORD(X_D3DFILL_POINT);
+      end;
     end;
   end;
-
-  // Skip unspecified deferred render states :
-  if  (XboxValue = X_D3DTSS_UNK)
-  and (XboxRenderState in [X_D3DRS_DEFERRED_FIRST..X_D3DRS_DEFERRED_LAST]) then
-    Exit;
 
   // Map the Xbox state to a PC state, and check if it's supported :
   PCRenderState := EmuXB2PC_D3DRS(XboxRenderState); // TODO : Speed this up using a lookup table
-  if Ord(PCRenderState) <> Ord(D3DRS_UNSUPPORTED) then
-  begin
-    // Convert the value from Xbox format into PC format, and set it locally :
-    Result := DxbxRenderStateXB2PCCallback[XboxRenderState](XboxValue);
-
-{$IFDEF DXBX_USE_D3D9}
-    case XboxRenderState of
-      X_D3DRS_EDGEANTIALIAS:
-        ; // TODO -oDxbx : What can we do to support this?
-      X_D3DRS_ZBIAS:
-      begin
-        // TODO -oDxbx : We need to calculate the sloped scale depth bias, here's what I know :
-        // (see http://blog.csdn.net/qq283397319/archive/2009/02/14/3889014.aspx)
-        //   bias = (max * D3DRS_SLOPESCALEDEPTHBIAS) + D3DRS_DEPTHBIAS (which is Value here)
-        // > bias - Value = max * D3DRS_SLOPESCALEDEPTHBIAS
-        // > D3DRS_SLOPESCALEDEPTHBIAS = (bias - Value) / max
-        // TODO : So, what should we use as bias and max?
-        g_pD3DDevice.SetRenderState(D3DRS_SLOPESCALEDEPTHBIAS, F2DW(1.0)); // For now.
-        g_pD3DDevice.SetRenderState(D3DRS_DEPTHBIAS, Value);
-      end;
-    else
-{$ENDIF}
-      g_pD3DDevice.SetRenderState(PCRenderState, {PCValue=}Result);
-{$IFDEF DXBX_USE_D3D9}
-    end;
-{$ENDIF}
-  end
-  else
+  if Ord(PCRenderState) = Ord(D3DRS_UNSUPPORTED) then
   begin
     EmuWarning('%s is not supported!', [DxbxRenderStateXB2String[XboxRenderState]]);
-    // TODO : What do we return when the render state is not supported?
+    Exit;
   end;
-end;
+
+  // Convert the value from Xbox format into PC format, and set it locally :
+  {PCValue=}Result := DxbxRenderStateXB2PCCallback[XboxRenderState](XboxValue);
+
+{$IFDEF DXBX_USE_D3D9}
+  case XboxRenderState of
+    X_D3DRS_EDGEANTIALIAS:
+      ; // TODO -oDxbx : What can we do to support this?
+    X_D3DRS_ZBIAS:
+    begin
+      // TODO -oDxbx : We need to calculate the sloped scale depth bias, here's what I know :
+      // (see http://blog.csdn.net/qq283397319/archive/2009/02/14/3889014.aspx)
+      //   bias = (max * D3DRS_SLOPESCALEDEPTHBIAS) + D3DRS_DEPTHBIAS (which is Value here)
+      // > bias - Value = max * D3DRS_SLOPESCALEDEPTHBIAS
+      // > D3DRS_SLOPESCALEDEPTHBIAS = (bias - Value) / max
+      // TODO : So, what should we use as bias and max?
+      g_pD3DDevice.SetRenderState(D3DRS_SLOPESCALEDEPTHBIAS, F2DW(1.0)); // For now.
+      g_pD3DDevice.SetRenderState(D3DRS_DEPTHBIAS, Result);
+    end;
+  else
+{$ELSE}
+  begin
+{$ENDIF}
+    g_pD3DDevice.SetRenderState(PCRenderState, {PCValue=}Result);
+  end;
+end; // Dxbx_SetRenderState
 
 function DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE): HResult;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
