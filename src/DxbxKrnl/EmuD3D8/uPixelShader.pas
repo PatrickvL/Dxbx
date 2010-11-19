@@ -33,8 +33,10 @@ uses
   Math,
 {$IFDEF DXBX_USE_D3D9}
   Direct3D9,
+  D3DX9,
 {$ELSE}
   Direct3D8, // D3DCOLOR_ARGB
+  D3DX8,
 {$ENDIF}
   // Dxbx
   uConsts, // TITLEID_AZURIK
@@ -1955,21 +1957,18 @@ end; // MoveRemovableParametersRight
 
 function PSH_XBOX_SHADER.ConvertConstantsToNative(pPSDef: PX_D3DPIXELSHADERDEF): Boolean;
 
-  function ByteToFloat(const aByte: Byte): Float;
-  begin
-  //  Result := (aByte - 127.0) / 128.0
-    Result := aByte / 255.0
-  end;
-
   procedure _SetColor(var NewIns: PSH_INTERMEDIATE_FORMAT; ConstColor: D3DCOLOR);
+  var
+    XColor: D3DCOLORVALUE;
   begin
     // Colors are defined in RGBA format, and range 0.0 - 1.0 (negative values
     // can be obtained by supplying PS_INPUTMAPPING_SIGNED_NEGATE to the combiner
     // that reads from these constants).
-    NewIns.Parameters[0].SetConstValue({R}ByteToFloat((ConstColor shr 16) and $FF));
-    NewIns.Parameters[1].SetConstValue({G}ByteToFloat((ConstColor shr  8) and $FF));
-    NewIns.Parameters[2].SetConstValue({B}ByteToFloat((ConstColor shr  0) and $FF));
-    NewIns.Parameters[3].SetConstValue({A}ByteToFloat((ConstColor shr 24) and $FF));
+    XColor := D3DXColorFromDWord(ConstColor);
+    NewIns.Parameters[0].SetConstValue(XColor.r);
+    NewIns.Parameters[1].SetConstValue(XColor.g);
+    NewIns.Parameters[2].SetConstValue(XColor.b);
+    NewIns.Parameters[3].SetConstValue(XColor.a);
   end;
 
 var
@@ -4697,24 +4696,16 @@ begin
   end;
 end;
 
-function ByteToFloat(const aByte: Byte): Float;
-begin
-//  Result := (aByte - 127.0) / 128.0
-  Result := aByte / 255.0
-end;
-
 function _EmitConstDef(i: DWORD; Constant: D3DCOLOR): string;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  XColor: D3DCOLORVALUE;
 begin
   // Colors are defined in RGBA format, and range 0.0 - 1.0 (negative values
   // can be obtained by supplying PS_INPUTMAPPING_SIGNED_NEGATE to the combiner
   // that reads from these constants).
-  Result := Format('def c%d, %ff, %ff, %ff, %ff'#13#10, [i,
-    {R}ByteToFloat((Constant shr 16) and $FF),
-    {G}ByteToFloat((Constant shr  8) and $FF),
-    {B}ByteToFloat((Constant shr  0) and $FF),
-    {A}ByteToFloat((Constant shr 24) and $FF)
-    ]);
+  XColor := D3DXColorFromDWord(Constant);
+  Result := Format('def c%d, %ff, %ff, %ff, %ff'#13#10, [i, XColor.r, XColor.g, XColor.b, XColor.a]);
 end;
 
 function RPSIntermediate.DisassembleIntermediate(): string;
