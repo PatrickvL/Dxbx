@@ -99,7 +99,8 @@ uses
   uXDVDFS in '..\..\src\uXDVDFS.pas',
   uFileSystem in '..\..\src\uFileSystem.pas',
   uEmuXactEng in '..\..\src\DxbxKrnl\uEmuXactEng.pas',
-  uXbSound in '..\..\src\uXbSound.pas';
+  uXbSound in '..\..\src\uXbSound.pas',
+  DbgConsole in '..\..\src\DxbxKrnl\DbgConsole.pas';
 
 {$IMAGEBASE $10000000}
 
