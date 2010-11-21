@@ -183,6 +183,7 @@
 			<DCCReference Include="..\..\src\uFileSystem.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXactEng.pas"/>
 			<DCCReference Include="..\..\src\uXbSound.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\DbgConsole.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
