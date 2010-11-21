@@ -8729,45 +8729,54 @@ begin
       _(VertexCount, 'VertexCount').
     LogEnd();
 
-  XTL_EmuUpdateDeferredStates();
-
-//  EmuUnswizzleActiveTexture(); // This messed up textures in PSTest2_4627, but not anymore since rev 1245
-//  XTL_EmuUpdateActiveTexture();
-
-  VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
-
-  VPDesc.PrimitiveType := PrimitiveType;
-  VPDesc.dwVertexCount := VertexCount;
-  VPDesc.dwOffset := StartVertex;
-  VPDesc.pVertexStreamZeroData := nil;
-  VPDesc.uiVertexStreamZeroStride := 0;
-  VPDesc.hVertexShader := g_CurrentVertexShader;
-
-  VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
-
-  {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
-
-  if IsValidCurrentShader() then
+  // Dxbx speedup for Billboard sample - draw 1 quad as 2 triangles without any patching :
+  if (PrimitiveType = X_D3DPT_QUADLIST) and (VertexCount = 4) then
   begin
-    {$ifdef _DEBUG_TRACK_VB}
-    if (not g_bVBSkipStream) then
+    // TODO : We should do stream patching here
+    // TODO : We could render more quads with a fixed index list.
+    g_pD3DDevice.DrawPrimitive(D3DPT_TRIANGLEFAN, StartVertex, 2);
+  end
+  else
+  begin
+    XTL_EmuUpdateDeferredStates();
+
+  //  EmuUnswizzleActiveTexture(); // This messed up textures in PSTest2_4627, but not anymore since rev 1245
+  //  XTL_EmuUpdateActiveTexture();
+
+    VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
+
+    VPDesc.PrimitiveType := PrimitiveType;
+    VPDesc.dwVertexCount := VertexCount;
+    VPDesc.dwOffset := StartVertex;
+    VPDesc.pVertexStreamZeroData := nil;
+    VPDesc.uiVertexStreamZeroStride := 0;
+    VPDesc.hVertexShader := g_CurrentVertexShader;
+
+    VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
+
+    {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
+
+    if IsValidCurrentShader() then
     begin
-    {$endif}
+      {$ifdef _DEBUG_TRACK_VB}
+      if (not g_bVBSkipStream) then
+      begin
+      {$endif}
 
-      g_pD3DDevice.DrawPrimitive
-      (
-          EmuPrimitiveType(VPDesc.PrimitiveType),
-          VPDesc.dwOffset, // Dxbx note : Cxbx wrongly uses StartVertex here!
-          VPDesc.dwPrimitiveCount
-      );
+        g_pD3DDevice.DrawPrimitive
+        (
+            EmuPrimitiveType(VPDesc.PrimitiveType),
+            VPDesc.dwOffset, // Dxbx note : Cxbx wrongly uses StartVertex here!
+            VPDesc.dwPrimitiveCount
+        );
 
-    {$ifdef _DEBUG_TRACK_VB}
+      {$ifdef _DEBUG_TRACK_VB}
+      end;
+      {$endif}
     end;
-    {$endif}
+
+    VertPatch.Restore();
   end;
-
-  VertPatch.Restore();
-
   EmuSwapFS(fsXbox);
 end;
 
