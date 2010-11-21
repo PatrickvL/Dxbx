@@ -1888,6 +1888,9 @@ begin
             g_pD3D.GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), {out}D3DDisplayMode);
 
             g_EmuCDPD.NativePresentationParameters.BackBufferFormat := D3DDisplayMode.Format;
+              // TODO -oDxbx : Why does BenchMark crash with this?
+              //EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat);
+
             g_EmuCDPD.NativePresentationParameters.FullScreen_RefreshRateInHz := 0; // ??
           end
           else
@@ -2038,15 +2041,15 @@ begin
           lpCodes := DxbxMalloc(dwCodes*sizeof(DWORD));
           IDirectDraw7(g_pDD7).GetFourCCCodes({var}dwCodes, lpCodes);
 
+          DbgPrintf('Supported FourCC codes:');
           g_bYUY2OverlaysSupported := false;
           if dwCodes > 0 then // Dxbx addition, to prevent underflow
           for v := 0 to dwCodes - 1 do
           begin
-            if (PDWORDs(lpCodes)[v] = MAKEFOURCC('Y', 'U', 'Y', '2')) then
-            begin
+            DbgPrintf('%s%s%s%s', [PAnsiChar(lpCodes)[4*v+0], PAnsiChar(lpCodes)[4*v+1], PAnsiChar(lpCodes)[4*v+2], PAnsiChar(lpCodes)[4*v+3]]);
+
+            if (PDWORDs(lpCodes)[v] = DWORD(D3DFMT_YUY2){=MAKEFOURCC('Y', 'U', 'Y', '2')}) then
               g_bYUY2OverlaysSupported := true;
-              break;
-            end;
           end;
 
           DxbxFree(lpCodes);
@@ -2303,18 +2306,21 @@ procedure DumpPresentationParameters(pPresentationParameters: PX_D3DPRESENT_PARA
 begin
   // Print a few of the pPresentationParameters contents to the console
   if MayLog(lfUnit) then
-    DbgPrintf('BackBufferWidth:        = %d' +
-        #13#10'BackBufferHeight:       = %d' +
-        #13#10'BackBufferFormat:       = 0x%.08X' +
-        #13#10'BackBufferCount:        = 0x%.08X' +
-        #13#10'SwapEffect:             = 0x%.08X' +
-        #13#10'EnableAutoDepthStencil: = 0x%.08X' +
-        #13#10'AutoDepthStencilFormat: = 0x%.08X' +
-        #13#10'Flags:                  = 0x%.08X',
-        [ pPresentationParameters.BackBufferWidth, pPresentationParameters.BackBufferHeight,
-          pPresentationParameters.BackBufferFormat, pPresentationParameters.BackBufferCount,
-          Ord(pPresentationParameters.SwapEffect), pPresentationParameters.EnableAutoDepthStencil,
-          pPresentationParameters.AutoDepthStencilFormat, pPresentationParameters.Flags]);
+    LogBegin('PresentationParameters:').
+      _(pPresentationParameters.BackBufferWidth, 'BackBufferWidth').
+      _(pPresentationParameters.BackBufferHeight,'BackBufferHeight').
+      _(pPresentationParameters.BackBufferFormat, 'BackBufferFormat').
+      _(pPresentationParameters.BackBufferCount,'BackBufferCount').
+      _(pPresentationParameters.MultiSampleType, 'MultiSampleType').
+      _(Ord(pPresentationParameters.SwapEffect), 'SwapEffect').
+      _(pPresentationParameters.hDeviceWindow, 'hDeviceWindow').
+      _(pPresentationParameters.Windowed, 'Windowed').
+      _(pPresentationParameters.EnableAutoDepthStencil,'EnableAutoDepthStencil').
+      _(pPresentationParameters.AutoDepthStencilFormat, 'AutoDepthStencilFormat').
+      _(pPresentationParameters.Flags, 'Flags').
+      _(pPresentationParameters.FullScreen_RefreshRateInHz, 'FullScreen_RefreshRateInHz').
+      _(pPresentationParameters.FullScreen_PresentationInterval, 'FullScreen_PresentationInterval').
+    LogEnd();
 end;
 
 function LogBegin(const aSymbolName: string; const aCategory: string = ''): PLogStack;
@@ -3602,11 +3608,14 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
+  begin
     LogBegin('EmuD3DDevice_Reset').
       _(pPresentationParameters, 'pPresentationParameters').
     LogEnd();
 
-  DumpPresentationParameters(pPresentationParameters);
+    DumpPresentationParameters(pPresentationParameters);
+  end;
+
   EmuWarning('Device Reset is being utterly ignored');
 
   EmuSwapFS(fsXbox);
@@ -5449,7 +5458,12 @@ function DxbxSetVertexData(const Register_: X_D3DVSDE; const a, b, c, d: FLOAT):
 
   function _abcdAsD3DCOLOR: D3DCOLOR;
   begin
-    Result := D3DCOLOR_COLORVALUE({Red=}a, {Green=}b, {Blue=}c, {Alpha=}d);
+    // TODO -oDxbx : Is this the correct way to check if Alpha should be set to 1?
+    if not EmuXBFormatHasAlpha(g_EmuCDPD.pPresentationParameters.BackBufferFormat) then
+      // Tests with XSokoban show that this is needed in order to make the text non-transparent :
+      Result := D3DCOLOR_COLORVALUE({Red=}a, {Green=}b, {Blue=}c, {Alpha=}1.0)
+    else
+      Result := D3DCOLOR_COLORVALUE({Red=}a, {Green=}b, {Blue=}c, {Alpha=}d);
   end;
 
   procedure _Error;
@@ -5541,7 +5555,7 @@ begin
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX1) then
         begin
           // Dxbx fix : Use mask, else the format might get expanded incorrectly :
-          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX1;
+          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX0;
         end;
       end;
 
@@ -5553,7 +5567,7 @@ begin
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX2) then
         begin
           // Dxbx fix : Use mask, else the format might get expanded incorrectly :
-          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX2;
+          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX1;
         end;
       end;
 
@@ -5565,7 +5579,7 @@ begin
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX3) then
         begin
           // Dxbx fix : Use mask, else the format might get expanded incorrectly :
-          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX3;
+          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX2;
         end;
       end;
 
@@ -5577,7 +5591,7 @@ begin
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX4) then
         begin
           // Dxbx fix : Use mask, else the format might get expanded incorrectly :
-          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX4;
+          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX3;
         end;
       end;
 
@@ -10356,6 +10370,32 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+function XTL_EmuD3DDevice_DrawTriPatch
+(
+  Handle: UINT;
+  {CONST} pNumSegs: PFLOAT;
+  {CONST} pTriPatchInfo: PD3DTRIPATCH_INFO
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_DrawTriPatch').
+      _(Handle, 'Handle').
+      _(pNumSegs^, 'pNumSegs').
+      _(pTriPatchInfo, 'pTriPatchInfo').
+    LogEnd();
+
+//  XTL_EmuUpdateActiveTexture();
+
+  Result := g_pD3DDevice.DrawTriPatch(Handle, PSingle(pNumSegs), pTriPatchInfo);
+  if (FAILED(Result)) then
+    EmuWarning('DrawTriPatch failed!' +#13#10+ DxbxD3DErrorString(Result));
+
+  EmuSwapFS(fsXbox);
+end;
+
 //#pragma warning(disable:4244)
 function XTL_EmuD3DDevice_GetProjectionViewportMatrix
 (
@@ -11721,6 +11761,7 @@ exports
   XTL_EmuD3DDevice_DrawIndexedVertices,
   XTL_EmuD3DDevice_DrawIndexedVerticesUP,
   XTL_EmuD3DDevice_DrawRectPatch,
+  XTL_EmuD3DDevice_DrawTriPatch,
   XTL_EmuD3DDevice_DrawVertices,
   XTL_EmuD3DDevice_DrawVerticesUP,
   XTL_EmuD3DDevice_EnableOverlay,
