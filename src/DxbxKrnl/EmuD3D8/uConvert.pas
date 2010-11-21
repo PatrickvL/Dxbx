@@ -42,6 +42,7 @@ function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
 function EmuXBFormatIsYUV(Format: X_D3DFORMAT): BOOL_;
 function EmuXBFormatIsCompressed(Format: X_D3DFORMAT): BOOL_;
 function EmuXBFormatIsLinear(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
+function EmuXBFormatHasAlpha(Format: X_D3DFORMAT): BOOL_;
 
 function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT;
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
@@ -234,6 +235,32 @@ begin
   end;
 end;
 
+function EmuXBFormatHasAlpha(Format: X_D3DFORMAT): BOOL_;
+begin
+  Result := Format in [X_D3DFMT_AL8,
+  X_D3DFMT_A1R5G5B5, // $02;
+  X_D3DFMT_A4R4G4B4, // $04;
+  X_D3DFMT_A8R8G8B8, // $06;
+  X_D3DFMT_A8, // $19;
+  X_D3DFMT_A8L8, // $1A;
+  X_D3DFMT_R5G5B5A1, // $38;
+  X_D3DFMT_R4G4B4A4, // $39;
+  X_D3DFMT_A8B8G8R8, // $3A;
+  X_D3DFMT_B8G8R8A8, // $3B;
+  X_D3DFMT_R8G8B8A8, // $3C;
+  X_D3DFMT_LIN_A1R5G5B5, // $10;
+  X_D3DFMT_LIN_A8R8G8B8, // $12;
+  X_D3DFMT_LIN_AL8, // $1B;
+  X_D3DFMT_LIN_A4R4G4B4, // $1D;
+  X_D3DFMT_LIN_A8, // $1F;
+  X_D3DFMT_LIN_A8L8, // $20;
+  X_D3DFMT_LIN_R5G5B5A1, // $3D;
+  X_D3DFMT_LIN_R4G4B4A4, // $3E;
+  X_D3DFMT_LIN_A8B8G8R8, // $3F;
+  X_D3DFMT_LIN_B8G8R8A8, // $40;
+  X_D3DFMT_LIN_R8G8B8A8 // $41;
+  ];
+end;
 // convert from xbox to pc color formats
 function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
