@@ -962,7 +962,8 @@ var
   XboxValue: DWORD;
 begin
   // Check if this render state is supported (so we don't trigger a warning) :
-  if XTL_EmuMappedD3DRenderState[XboxRenderState] <> DummyRenderState then
+  if  (XTL_EmuMappedD3DRenderState[XboxRenderState] <> DummyRenderState)
+  and (Ord(EmuXB2PC_D3DRS(XboxRenderState)) <> Ord(D3DRS_UNSUPPORTED)) then
   begin
     // Read the current Xbox value, and set it locally :
     XboxValue := XTL_EmuMappedD3DRenderState[XboxRenderState]^;

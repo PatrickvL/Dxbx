@@ -279,10 +279,10 @@ VSH_SWIZZLE = _VSH_SWIZZLE;
 
 type _VSH_PARAMETER = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-    ParameterType: VSH_PARAMETER_TYPE;      // Parameter type, R, V or C
     Neg: boolean;                           // TRUE if negated, FALSE if not
-    Swizzle: array [0..4-1] of VSH_SWIZZLE; // The four swizzles
+    ParameterType: VSH_PARAMETER_TYPE;      // Parameter type, R, V or C
     Address: int16;                         // Register address
+    Swizzle: array [0..4-1] of VSH_SWIZZLE; // The four swizzles
   end; // size = 28 (as in Cxbx)
   VSH_PARAMETER = _VSH_PARAMETER;
   PVSH_PARAMETER = ^VSH_PARAMETER;
@@ -347,7 +347,7 @@ type _VSH_IMD_PARAMETER = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Active: boolean;
     Parameter: VSH_PARAMETER;
-    // There is only a single address register in Microsoft® DirectX® 8.0.
+    // There is only a single address register in MicrosoftÂ® DirectXÂ® 8.0.
     // The address register, designated as a0.x, may be used as signed
     // integer offset in relative addressing into the constant register file.
     //     c[a0.x + n]
@@ -374,7 +374,7 @@ type _VSH_INTERMEDIATE_FORMAT = record
 // Used for xvu spec definition
 type _VSH_FIELDMAPPING = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-    FieldName: VSH_FIELD_NAME;
+    // FieldName: VSH_FIELD_NAME;
     SubToken: uint08;
     StartBit: uint08;
     BitLength: uint08;
@@ -402,58 +402,58 @@ var
 {$ENDIF}
 
 // Local constants
-const g_FieldMapping: array [VSH_FIELD_NAME] of VSH_FIELDMAPPING = 
+const g_FieldMapping: array [VSH_FIELD_NAME] of VSH_FIELDMAPPING =
 (
-    //          Field Name            DWORD         BitPos           BitSize
-    ( FieldName:FLD_ILU;              SubToken:1;   StartBit:25;     BitLength:3 ), // VSH_ILU
-    ( FieldName:FLD_MAC;              SubToken:1;   StartBit:21;     BitLength:4 ), // VSH_MAC
-    ( FieldName:FLD_CONST;            SubToken:1;   StartBit:13;     BitLength:8 ),
-    ( FieldName:FLD_V;                SubToken:1;   StartBit: 9;     BitLength:4 ),
+    //           Field Name             DWORD         BitPos           BitSize
+    ( {FieldName:FLD_ILU;              }SubToken:1;   StartBit:25;     BitLength:3 ), // VSH_ILU
+    ( {FieldName:FLD_MAC;              }SubToken:1;   StartBit:21;     BitLength:4 ), // VSH_MAC
+    ( {FieldName:FLD_CONST;            }SubToken:1;   StartBit:13;     BitLength:8 ),
+    ( {FieldName:FLD_V;                }SubToken:1;   StartBit: 9;     BitLength:4 ),
     // INPUT A
-    ( FieldName:FLD_A_NEG;            SubToken:1;   StartBit: 8;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_A_SWZ_X;          SubToken:1;   StartBit: 6;     BitLength:2 ), // VSH_SWIZZLE
-    ( FieldName:FLD_A_SWZ_Y;          SubToken:1;   StartBit: 4;     BitLength:2 ), // VSH_SWIZZLE
-    ( FieldName:FLD_A_SWZ_Z;          SubToken:1;   StartBit: 2;     BitLength:2 ), // VSH_SWIZZLE
-    ( FieldName:FLD_A_SWZ_W;          SubToken:1;   StartBit: 0;     BitLength:2 ), // VSH_SWIZZLE
-    ( FieldName:FLD_A_R;              SubToken:2;   StartBit:28;     BitLength:4 ),
-    ( FieldName:FLD_A_MUX;            SubToken:2;   StartBit:26;     BitLength:2 ), // VSH_PARAMETER_TYPE
+    ( {FieldName:FLD_A_NEG;            }SubToken:1;   StartBit: 8;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_A_SWZ_X;          }SubToken:1;   StartBit: 6;     BitLength:2 ), // VSH_SWIZZLE
+    ( {FieldName:FLD_A_SWZ_Y;          }SubToken:1;   StartBit: 4;     BitLength:2 ), // VSH_SWIZZLE
+    ( {FieldName:FLD_A_SWZ_Z;          }SubToken:1;   StartBit: 2;     BitLength:2 ), // VSH_SWIZZLE
+    ( {FieldName:FLD_A_SWZ_W;          }SubToken:1;   StartBit: 0;     BitLength:2 ), // VSH_SWIZZLE
+    ( {FieldName:FLD_A_R;              }SubToken:2;   StartBit:28;     BitLength:4 ),
+    ( {FieldName:FLD_A_MUX;            }SubToken:2;   StartBit:26;     BitLength:2 ), // VSH_PARAMETER_TYPE
     // INPUT B
-    ( FieldName:FLD_B_NEG;            SubToken:2;   StartBit:25;     BitLength:1 ),
-    ( FieldName:FLD_B_SWZ_X;          SubToken:2;   StartBit:23;     BitLength:2 ), // VSH_SWIZZLE
-    ( FieldName:FLD_B_SWZ_Y;          SubToken:2;   StartBit:21;     BitLength:2 ), // VSH_SWIZZLE
-    ( FieldName:FLD_B_SWZ_Z;          SubToken:2;   StartBit:19;     BitLength:2 ), // VSH_SWIZZLE
-    ( FieldName:FLD_B_SWZ_W;          SubToken:2;   StartBit:17;     BitLength:2 ), // VSH_SWIZZLE
-    ( FieldName:FLD_B_R;              SubToken:2;   StartBit:13;     BitLength:4 ),
-    ( FieldName:FLD_B_MUX;            SubToken:2;   StartBit:11;     BitLength:2 ), // VSH_PARAMETER_TYPE
+    ( {FieldName:FLD_B_NEG;            }SubToken:2;   StartBit:25;     BitLength:1 ),
+    ( {FieldName:FLD_B_SWZ_X;          }SubToken:2;   StartBit:23;     BitLength:2 ), // VSH_SWIZZLE
+    ( {FieldName:FLD_B_SWZ_Y;          }SubToken:2;   StartBit:21;     BitLength:2 ), // VSH_SWIZZLE
+    ( {FieldName:FLD_B_SWZ_Z;          }SubToken:2;   StartBit:19;     BitLength:2 ), // VSH_SWIZZLE
+    ( {FieldName:FLD_B_SWZ_W;          }SubToken:2;   StartBit:17;     BitLength:2 ), // VSH_SWIZZLE
+    ( {FieldName:FLD_B_R;              }SubToken:2;   StartBit:13;     BitLength:4 ),
+    ( {FieldName:FLD_B_MUX;            }SubToken:2;   StartBit:11;     BitLength:2 ), // VSH_PARAMETER_TYPE
     // INPUT C
-    ( FieldName:FLD_C_NEG;            SubToken:2;   StartBit:10;     BitLength:1 ),
-    ( FieldName:FLD_C_SWZ_X;          SubToken:2;   StartBit: 8;     BitLength:2 ), // VSH_SWIZZLE
-    ( FieldName:FLD_C_SWZ_Y;          SubToken:2;   StartBit: 6;     BitLength:2 ), // VSH_SWIZZLE
-    ( FieldName:FLD_C_SWZ_Z;          SubToken:2;   StartBit: 4;     BitLength:2 ), // VSH_SWIZZLE
-    ( FieldName:FLD_C_SWZ_W;          SubToken:2;   StartBit: 2;     BitLength:2 ), // VSH_SWIZZLE
-    ( FieldName:FLD_C_R_HIGH;         SubToken:2;   StartBit: 0;     BitLength:2 ), // Forms FLD_C_R together with
-    ( FieldName:FLD_C_R_LOW;          SubToken:3;   StartBit:30;     BitLength:2 ), // this (to bridge a DWord). c0..c15
-    ( FieldName:FLD_C_MUX;            SubToken:3;   StartBit:28;     BitLength:2 ), // VSH_PARAMETER_TYPE
+    ( {FieldName:FLD_C_NEG;            }SubToken:2;   StartBit:10;     BitLength:1 ),
+    ( {FieldName:FLD_C_SWZ_X;          }SubToken:2;   StartBit: 8;     BitLength:2 ), // VSH_SWIZZLE
+    ( {FieldName:FLD_C_SWZ_Y;          }SubToken:2;   StartBit: 6;     BitLength:2 ), // VSH_SWIZZLE
+    ( {FieldName:FLD_C_SWZ_Z;          }SubToken:2;   StartBit: 4;     BitLength:2 ), // VSH_SWIZZLE
+    ( {FieldName:FLD_C_SWZ_W;          }SubToken:2;   StartBit: 2;     BitLength:2 ), // VSH_SWIZZLE
+    ( {FieldName:FLD_C_R_HIGH;         }SubToken:2;   StartBit: 0;     BitLength:2 ), // Forms FLD_C_R together with
+    ( {FieldName:FLD_C_R_LOW;          }SubToken:3;   StartBit:30;     BitLength:2 ), // this (to bridge a DWord). c0..c15
+    ( {FieldName:FLD_C_MUX;            }SubToken:3;   StartBit:28;     BitLength:2 ), // VSH_PARAMETER_TYPE
     // Output
-    ( FieldName:FLD_OUT_MAC_MASK_X;   SubToken:3;   StartBit:27;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_OUT_MAC_MASK_Y;   SubToken:3;   StartBit:26;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_OUT_MAC_MASK_Z;   SubToken:3;   StartBit:25;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_OUT_MAC_MASK_W;   SubToken:3;   StartBit:24;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_OUT_R;            SubToken:3;   StartBit:20;     BitLength:4 ), // Dxbx note : 4 bits to select r0..r15
-    ( FieldName:FLD_OUT_ILU_MASK_X;   SubToken:3;   StartBit:19;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_OUT_ILU_MASK_Y;   SubToken:3;   StartBit:18;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_OUT_ILU_MASK_Z;   SubToken:3;   StartBit:17;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_OUT_ILU_MASK_W;   SubToken:3;   StartBit:16;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_OUT_O_MASK_X;     SubToken:3;   StartBit:15;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_OUT_O_MASK_Y;     SubToken:3;   StartBit:14;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_OUT_O_MASK_Z;     SubToken:3;   StartBit:13;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_OUT_O_MASK_W;     SubToken:3;   StartBit:12;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_OUT_ORB;          SubToken:3;   StartBit:11;     BitLength:1 ), // VSH_OUTPUT_TYPE
-    ( FieldName:FLD_OUT_ADDRESS;      SubToken:3;   StartBit: 3;     BitLength:8 ),
-    ( FieldName:FLD_OUT_MUX;          SubToken:3;   StartBit: 2;     BitLength:1 ), // VSH_OUTPUT_MUX
+    ( {FieldName:FLD_OUT_MAC_MASK_X;   }SubToken:3;   StartBit:27;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_OUT_MAC_MASK_Y;   }SubToken:3;   StartBit:26;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_OUT_MAC_MASK_Z;   }SubToken:3;   StartBit:25;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_OUT_MAC_MASK_W;   }SubToken:3;   StartBit:24;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_OUT_R;            }SubToken:3;   StartBit:20;     BitLength:4 ), // Dxbx note : 4 bits to select r0..r15
+    ( {FieldName:FLD_OUT_ILU_MASK_X;   }SubToken:3;   StartBit:19;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_OUT_ILU_MASK_Y;   }SubToken:3;   StartBit:18;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_OUT_ILU_MASK_Z;   }SubToken:3;   StartBit:17;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_OUT_ILU_MASK_W;   }SubToken:3;   StartBit:16;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_OUT_O_MASK_X;     }SubToken:3;   StartBit:15;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_OUT_O_MASK_Y;     }SubToken:3;   StartBit:14;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_OUT_O_MASK_Z;     }SubToken:3;   StartBit:13;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_OUT_O_MASK_W;     }SubToken:3;   StartBit:12;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_OUT_ORB;          }SubToken:3;   StartBit:11;     BitLength:1 ), // VSH_OUTPUT_TYPE
+    ( {FieldName:FLD_OUT_ADDRESS;      }SubToken:3;   StartBit: 3;     BitLength:8 ),
+    ( {FieldName:FLD_OUT_MUX;          }SubToken:3;   StartBit: 2;     BitLength:1 ), // VSH_OUTPUT_MUX
     // Other
-    ( FieldName:FLD_A0X;              SubToken:3;   StartBit: 1;     BitLength:1 ), // Boolean
-    ( FieldName:FLD_FINAL;            SubToken:3;   StartBit: 0;     BitLength:1 )  // Boolean
+    ( {FieldName:FLD_A0X;              }SubToken:3;   StartBit: 1;     BitLength:1 ), // Boolean
+    ( {FieldName:FLD_FINAL;            }SubToken:3;   StartBit: 0;     BitLength:1 )  // Boolean
 );
 
 const g_OpCodeParams_ILU: array [VSH_ILU] of VSH_OPCODE_PARAMS =
@@ -734,8 +734,8 @@ begin
   pInstruction.MAC := VSH_MAC(VshGetField(pShaderToken, FLD_MAC));
 
   // Get parameter A
+  pInstruction.A.Neg := Boolean(VshGetField(pShaderToken, FLD_A_NEG) > 0);
   pInstruction.A.ParameterType := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_A_MUX));
-
   case pInstruction.A.ParameterType of
     PARAM_R:
       pInstruction.A.Address := VshGetField(pShaderToken, FLD_A_R);
@@ -751,15 +751,14 @@ begin
     Exit;
   end;
 
-  pInstruction.A.Neg := Boolean(VshGetField(pShaderToken, FLD_A_NEG) > 0);
   pInstruction.A.Swizzle[0] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_A_SWZ_X));
   pInstruction.A.Swizzle[1] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_A_SWZ_Y));
   pInstruction.A.Swizzle[2] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_A_SWZ_Z));
   pInstruction.A.Swizzle[3] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_A_SWZ_W));
 
   // Get parameter B
+  pInstruction.B.Neg := Boolean(VshGetField(pShaderToken, FLD_B_NEG) > 0);
   pInstruction.B.ParameterType := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_B_MUX));
-
   case pInstruction.B.ParameterType of
     PARAM_R:
       pInstruction.B.Address := VshGetField(pShaderToken, FLD_B_R);
@@ -775,15 +774,14 @@ begin
     Exit;
   end;
 
-  pInstruction.B.Neg := Boolean(VshGetField(pShaderToken, FLD_B_NEG) > 0);
   pInstruction.B.Swizzle[0] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_B_SWZ_X));
   pInstruction.B.Swizzle[1] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_B_SWZ_Y));
   pInstruction.B.Swizzle[2] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_B_SWZ_Z));
   pInstruction.B.Swizzle[3] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_B_SWZ_W));
 
   // Get parameter C
+  pInstruction.C.Neg := Boolean(VshGetField(pShaderToken, FLD_C_NEG) > 0);
   pInstruction.C.ParameterType := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_C_MUX));
-
   case pInstruction.C.ParameterType of
     PARAM_R:
       pInstruction.C.Address := (VshGetField(pShaderToken, FLD_C_R_HIGH) shl 2) or
@@ -799,7 +797,6 @@ begin
     Exit;
   end;
 
-  pInstruction.C.Neg := Boolean(VshGetField(pShaderToken, FLD_C_NEG) > 0);
   pInstruction.C.Swizzle[0] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_X));
   pInstruction.C.Swizzle[1] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_Y));
   pInstruction.C.Swizzle[2] := VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_Z));
@@ -809,7 +806,6 @@ begin
 
   // Output register
   pInstruction.Output.OutputType := VSH_OUTPUT_TYPE(VshGetField(pShaderToken, FLD_OUT_ORB));
-
   case pInstruction.Output.OutputType of
     OUTPUT_C:
      pInstruction.Output.OutputAddress := ConvertCRegister(VshGetField(pShaderToken, FLD_OUT_ADDRESS));
@@ -1086,7 +1082,7 @@ begin
       else
         Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s ', [MAC_OpCode[pIntermediate.MAC]]))
     end
-    else
+    else // IMD_ILU
     begin
       // Dxbx addition : Safeguard against incorrect ILU opcodes :
       if (Ord(pIntermediate.ILU) > Ord(HIGH(VSH_ILU))) then
@@ -1522,7 +1518,6 @@ begin
         if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_C) and
            (not pIntermediate.Parameters[k].IndexesWithA0_X) then
         begin
-          // TODO : Add correction?
           if (pIntermediate.Parameters[k].Parameter.Address = X_D3DSCM_RESERVED_CONSTANT2{=-37}) then
           begin
             // Found c-37, remove the instruction
@@ -1538,7 +1533,7 @@ begin
                 if (pIntermediate1W.InstructionType = IMD_ILU) and
                     (pIntermediate1W.ILU = ILU_RCC) and
                     (pIntermediate1W.Output.Type_ = IMD_OUTPUT_R) and
-                    (pIntermediate1W.Output.Address = 
+                    (pIntermediate1W.Output.Address =
                      Word(pIntermediate.Parameters[1].Parameter.Address)) then
                 begin
                   DbgVshPrintf('Deleted +rcc r1.x, r12.w'#13#10);
@@ -1703,6 +1698,7 @@ begin
     if (pIntermediate.InstructionType = IMD_ILU) and (pIntermediate.ILU = ILU_RCC) then
     begin
       // Convert rcc to rcp
+      DbgVshPrintf('Converted rcc to rcp'#13#10);
       pIntermediate.ILU := ILU_RCP;
     end;
 
@@ -1734,10 +1730,11 @@ begin
       if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_C) then
       begin
         // Dxbx fix : PARAM_C correction shouldn't depend on Active!
-        // Make constant registers range from 0 to 191 instead of -96 to 95
-        if not pIntermediate.Parameters[j].IndexesWithA0_X then // Test : don't correct c[a0.x] indexes?
-        if g_BuildVersion > 4361 then
-          Inc(pIntermediate.Parameters[j].Parameter.Address, X_D3DSCM_CORRECTION{=96});
+        // Dxbx : Don't correct c[a0.x] indexes; Seems to stabilize MatrixPaletteSkinning a bit (not fully) :
+        if not pIntermediate.Parameters[j].IndexesWithA0_X then
+          // Make constant registers range from 0 to 191 instead of -96 to 95 (when the XDK version requires it) :
+          if g_BuildVersion > 4361 then
+            Inc(pIntermediate.Parameters[j].Parameter.Address, X_D3DSCM_CORRECTION{=96});
       end else
       if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_V) then
       begin
@@ -1777,7 +1774,7 @@ begin
           end;
         end;
 
-       TmpIntermediate := pIntermediate^;
+        TmpIntermediate := pIntermediate^;
 
         // modify the instructions
         pIntermediate.MAC := MAC_DP3;
@@ -1807,7 +1804,10 @@ begin
         TmpIntermediate.Parameters[0].Parameter.Address := TmpIntermediate.Output.Address;
         TmpIntermediate.Parameters[0].Parameter.Neg := FALSE;
 
-        swizzle := Ord(TmpIntermediate.Output.Mask[0]) or (Ord(TmpIntermediate.Output.Mask[1]) shl 1) or (Ord(TmpIntermediate.Output.Mask[2]) shl 2) or (Ord(TmpIntermediate.Output.Mask[3]) shl 3);
+        swizzle := Ord(TmpIntermediate.Output.Mask[0])
+               or (Ord(TmpIntermediate.Output.Mask[1]) shl 1)
+               or (Ord(TmpIntermediate.Output.Mask[2]) shl 2)
+               or (Ord(TmpIntermediate.Output.Mask[3]) shl 3);
         case (swizzle) of
           1: begin
             VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
@@ -1890,6 +1890,7 @@ begin
 //          else if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_C) and
 //                  (pIntermediate.Parameters[k].Parameter.Address = ({58=}X_D3DSCM_RESERVED_CONSTANT1{=-38}+X_D3DSCM_CORRECTION{=96})) and
 //                  (not pIntermediate.Parameters[k].IndexesWithA0_X) then
+// if (not bNoReservedConstants) then
 //          begin
 //            // Found c-38, replace it with r12.w
 //            pIntermediate.Parameters[k].Parameter.ParameterType := PARAM_R;

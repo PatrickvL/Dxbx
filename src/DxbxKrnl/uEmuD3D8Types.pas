@@ -142,7 +142,6 @@ const
   D3DVSDT_NORMSHORT4  = D3DDECLTYPE_SHORT4N;    // 4D signed, normalized short expanded to (value, value, value, value)
   D3DVSDT_NONE        = D3DDECLTYPE_UNUSED;    // No stream data
 
-
 const
   // Dxbx note : Dirty little hack : Map the old D3DVSDE values to new D3DDECLUSAGE values,
   // to ease the implementation of Xb2PCRegisterType (which also determines an index for D3D9)
@@ -833,7 +832,7 @@ type _X_D3DPIXELSHADERDEF = record // <- blueshogun 10/1/07
 
 type _STREAM_DYNAMIC_PATCH_ = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-    NeedPatch: BOOL_;       // This is to know whether is data which must be patched
+    NeedPatch: BOOL_;       // This is to know whether it's data which must be patched
     ConvertedStride: DWORD;
     NbrTypes: DWORD;        // Number of the stream data types
     pTypes: PUINTs;         // The stream data types (xbox)
