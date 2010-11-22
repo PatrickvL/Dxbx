@@ -1194,6 +1194,13 @@ begin
 
   // Unsupported primitives that don't need deep patching.
   case(pPatchDesc.PrimitiveType) of
+    X_D3DPT_QUADLIST: begin
+      // Dxbx speedup for Billboard sample - draw 1 quad as 2 triangles :
+      if (pPatchDesc.dwVertexCount = 4) then
+        pPatchDesc.PrimitiveType := X_D3DPT_TRIANGLEFAN;
+        // TODO : We could render more quads with a fixed index list through DrawIndexedPrimitive()
+      end;
+
     // Quad strip is just like a triangle strip, but requires two
     // vertices per primitive.
     X_D3DPT_QUADSTRIP: begin
@@ -1441,11 +1448,11 @@ begin
   begin
     LocalPatched := false;
 
-    if (ApplyCachedStream(pPatchDesc, uiStream, pbFatalError)) then
-    begin
-      m_pStreams[uiStream].bUsedCached := true;
-      continue;
-    end;
+//    if (ApplyCachedStream(pPatchDesc, uiStream, pbFatalError)) then
+//    begin
+//      m_pStreams[uiStream].bUsedCached := true;
+//      continue;
+//    end;
 
     // Dxbx note : Cxbx does 'LocalPatched |= PatchPrimitive();' which is a arithmetic or operation.
     // In Delphi, booleans are lazy evaluated, which could mean missing the call completly. We fix that like this :
@@ -1952,6 +1959,8 @@ begin
 
       pSrc := PBYTE(pPixelContainer.Data);
       pDest := LockedRect.pBits;
+      if pSrc = pDest then
+        Continue;
 
       if (IsSpecialResource(pPixelContainer.Data) and ((pPixelContainer.Data and X_D3DRESOURCE_DATA_FLAG_SURFACE) > 0)) then
       begin
@@ -1985,7 +1994,7 @@ begin
               // the original P8 texture is also still available, in order to allow the Xbe
               // to still make changes!
 
-              dwDataSize := dwMipWidth * dwMipHeight;// * 4;
+              dwDataSize := dwMipWidth * dwMipHeight; // Number of P8 (byte sized) pixels
               dwPaletteSize := 256 * 4; // Cxbx Note: This is not allways true, it can be 256- 128- 64- or 32*4
 
               // First we need to unswizzle the texture data to a temporary buffer :
@@ -2000,19 +2009,22 @@ begin
               // and write the expanded color back to the texture :
               w := 0;
               c := 0;
-              if (dwDataSize div 4) > 0 then // Dxbx addition, to prevent underflow
-              for y := 0 to (dwDataSize div 4) - 1 do
+              if dwDataSize > 0 then // Dxbx addition, to prevent underflow
+              for y := 0 to dwDataSize - 1 do
               begin
                 if (c = dwMipWidth) then
                 begin
-                  w := w + dwMipWidth * 3;
+                  w := w + dwMipPitch - c;
                   c := 0;
                 end;
+                // Read P8 pixel :
                 p := Byte(pTextureCache[w]);
-                pDest[y * 4 + 0] := g_pCurrentPalette[p * 4 + 0];
-                pDest[y * 4 + 1] := g_pCurrentPalette[p * 4 + 1];
-                pDest[y * 4 + 2] := g_pCurrentPalette[p * 4 + 2];
-                pDest[y * 4 + 3] := g_pCurrentPalette[p * 4 + 3];
+                // Read the corresponding ARGB from the palette and store it in the new texture :
+                PDWORDs(pDest)[y] := PDWORDs(g_pCurrentPalette)[p];
+//                pDest[y * 4 + 0] := g_pCurrentPalette[p * 4 + 0];
+//                pDest[y * 4 + 1] := g_pCurrentPalette[p * 4 + 1];
+//                pDest[y * 4 + 2] := g_pCurrentPalette[p * 4 + 2];
+//                pDest[y * 4 + 3] := g_pCurrentPalette[p * 4 + 3];
                 w := w + 1;
                 c := c + 1;
               end;
@@ -2071,6 +2083,8 @@ begin
   end;
 end;
 
+//var g_EmuD3DConvertedTexture: array [0..X_D3DTS_STAGECOUNT-1] of PX_D3DBaseTexture; // = {0,0,0,0};
+
 procedure XTL_EmuUpdateActiveTexture(); {NOPATCH}
 // Branch:shogun  Revision:162  Translator:Shadow_Tj  Done:100
 var
@@ -2088,18 +2102,13 @@ var
   dwCompressedSize: DWORD;
   bCubeMap: BOOL_;
 begin
-  //
-  // DEBUGGING
-  //
   for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
   begin
-    pPixelContainer := PX_D3DPixelContainer(g_EmuD3DActiveTexture[Stage]);
+    pPixelContainer := g_EmuD3DActiveTexture[Stage];
     if (pPixelContainer = NULL) then
       Continue;
 
     X_Format := X_D3DFORMAT(((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT));
-
-    if (X_Format <> $CD) then // TODO -oDxbx: Why is X_Format checked against the invalid value $CD here?
     if (IDirect3DResource(pPixelContainer.Emu.Resource).GetType() = D3DRTYPE_TEXTURE) then
     begin
       DxbxGetFormatRelatedVariables(pPixelContainer, X_Format,
