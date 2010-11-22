@@ -98,7 +98,7 @@ const
 // conversion table for xbox->pc primitive types
 EmuPrimitiveTypeLookup: array [0..Ord(X_D3DPT_POLYGON)] of D3DPRIMITIVETYPE = (
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-    D3DPRIMITIVETYPE(0),   // NULL                 = 0
+    D3DPRIMITIVETYPE(0),   // NULL                   = 0
     D3DPT_POINTLIST,       // X_D3DPT_POINTLIST      = 1,
     D3DPT_LINELIST,        // X_D3DPT_LINELIST       = 2,
     D3DPT_LINESTRIP,       // X_D3DPT_LINELOOP       = 3,  Xbox
