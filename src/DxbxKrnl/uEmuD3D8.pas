@@ -650,7 +650,7 @@ end;
 function GetResourceType(pResource: PX_D3DResource): TD3DResourceType;
 var
   Surface: IDirect3DSurface;
-  Volume: IDirect3DVolume8;
+  Volume: IDirect3DVolume;
 begin
   Result := TD3DResourceType(0);
   if (pResource = nil) or (pResource.Emu.Resource = nil) then
@@ -662,7 +662,7 @@ begin
     Surface := nil;
   end
   else
-  if IUnknown(pResource.Emu.Resource).QueryInterface(IDirect3DVolume8, Volume) = 0 then
+  if IUnknown(pResource.Emu.Resource).QueryInterface(IDirect3DVolume, Volume) = 0 then
   begin
     Result := D3DRTYPE_VOLUME;
     Volume := nil;
