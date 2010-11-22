@@ -369,7 +369,7 @@ begin
   Dbgprintf('DxbxDbg> ');
 //  fflush(stdout);
 
-  m_szInput[0] = #0;
+  m_szInput[0] := #0;
 end;
 
 end.
