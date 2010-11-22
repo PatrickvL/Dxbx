@@ -128,14 +128,16 @@ type VertexPatcher = object
     // Returns the number of streams of a patch
     function GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
     // Caches a patched stream
-(*    procedure CacheStream(pPatchDesc: PVertexPatchDesc;
-                          uiStream: UINT); *) // Not used
+(* NOT USED
+   procedure CacheStream(pPatchDesc: PVertexPatchDesc;
+                          uiStream: UINT);
     // Frees a cached, patched stream
     procedure FreeCachedStream(pStream: Pvoid);
     // Tries to apply a previously patched stream from the cache
     function ApplyCachedStream(pPatchDesc: PVertexPatchDesc;
                                uiStream: UINT;
                                pbFatalError: P_bool): _bool;
+*)
     // Patches the types of the stream
     function PatchStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
     // Normalize texture coordinates in FVF stream if needed
@@ -429,7 +431,6 @@ begin
   pCachedStream_.lLastUsed := clock();
   g_PatchedStreamsCache.insert(uiKey, pCachedStream_);
 end; // VertexPatcher.CacheStream
-*)
 
 procedure VertexPatcher.FreeCachedStream(pStream: Pvoid);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -497,10 +498,10 @@ begin
 
     if (nil=pOrigVertexBuffer) then
     begin
-      (*if(nil=g_pVertexBuffer) or (nil=g_pVertexBuffer.Emu.VertexBuffer) then
+      {if(nil=g_pVertexBuffer) or (nil=g_pVertexBuffer.Emu.VertexBuffer) then
         DxbxKrnlCleanup('Unable to retrieve original buffer (Stream := %d)', [uiStream]);
       else
-        pOrigVertexBuffer := g_pVertexBuffer.Emu.VertexBuffer;*)
+        pOrigVertexBuffer := g_pVertexBuffer.Emu.VertexBuffer;}
 
       if Assigned(pbFatalError) then
         pbFatalError^ := true;
@@ -623,7 +624,7 @@ begin
 
   Result := bApplied;
 end; // VertexPatcher.ApplyCachedStream
-
+*)
 
 function VertexPatcher.GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -1336,17 +1337,21 @@ begin
    This mainly becomes a problem whenever dwOffset <> 0 though.
 *)
   // Copy the nonmodified data
-  if (pPatchDesc.dwOffset > 0) then
   begin
-    memcpy(pPatchedVertexData, pOrigVertexData, pPatchDesc.dwOffset * pStream.uiOrigStride);
-  end;
-  dwRemainingSize := dwOriginalSizeWR - (pPatchDesc.dwOffset * pStream.uiOrigStride) - dwOriginalSize;
-  if (dwRemainingSize > 0) then
-  begin
-    memcpy(
-      pPatchedVertexData + (pPatchDesc.dwOffset * pStream.uiOrigStride) + dwNewSize,
-      pOrigVertexData + (pPatchDesc.dwOffset * pStream.uiOrigStride) + dwOriginalSize,
-      dwRemainingSize);
+    if (pPatchDesc.dwOffset > 0) then
+    begin
+      // Copy the part _before_ the indicated offset (TODO : Why not convert the whole stream?)
+      memcpy(pPatchedVertexData, pOrigVertexData, pPatchDesc.dwOffset * pStream.uiOrigStride);
+    end;
+    dwRemainingSize := dwOriginalSizeWR - (pPatchDesc.dwOffset * pStream.uiOrigStride) - dwOriginalSize;
+    if (dwRemainingSize > 0) then
+    begin
+      // Copy the part _after_ the indicated stretch :
+      memcpy(
+        pPatchedVertexData + (pPatchDesc.dwOffset * pStream.uiOrigStride) + dwNewSize,
+        pOrigVertexData + (pPatchDesc.dwOffset * pStream.uiOrigStride) + dwOriginalSize,
+        dwRemainingSize);
+    end;
   end;
 
   // Quad list; Convert each quad to two triangles :
@@ -1361,8 +1366,7 @@ begin
     pOrig012 := @pOrigVertexData[ pPatchDesc.dwOffset      * pStream.uiOrigStride];
     pOrig23 :=  @pOrigVertexData[(pPatchDesc.dwOffset + 2) * pStream.uiOrigStride];
 
-    // Now that dwOffset isn't used anymore, make sure the index points to the vertex of the same 'virtual' primitive :
-    pPatchDesc.dwOffset := (pPatchDesc.dwOffset * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD) div VERTICES_PER_QUAD;
+    // Note : DO NOT change pPatchDesc.dwOffset as the new vertex buffer is filled at the same offset!
 
     // Dxbx note : Cxbx handles primitives, but it's cleaner to loop over vertices :
     // Loop over all quads :
@@ -1496,6 +1500,7 @@ begin
 
     if (m_pStreams[uiStream].pOriginalStream <> NULL) then
     begin
+      // Release the reference to original stream we got via GetStreamSource() :
       if IDirect3DVertexBuffer(m_pStreams[uiStream].pOriginalStream)._Release() = 0 then
         m_pStreams[uiStream].pOriginalStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
