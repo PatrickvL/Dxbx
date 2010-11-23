@@ -243,10 +243,20 @@ begin
     // Copy the complete XBEHeader over to the ImageBase :
     _ReadXbeBlock(
       {RawOffset=}0,
-      {RawSize=}XBE_HEADER_SIZE, // =$1000 TODO : Should we use it's own dwSizeofHeader instead?
+      {RawSize=}XBE_HEADER_SIZE, // =$1000
       {VirtualAddr=}XBE_IMAGE_BASE,
       {VirtualSize=}XBE_HEADER_SIZE,
       {NewProtect}PAGE_READWRITE);
+
+    // Some XBE's have a header bigger than $1000 (like 'BLiNX:the time sweeper'), read the real size :
+    XbeHeader := PXbeHeader(XBE_IMAGE_BASE);
+    if XbeHeader.dwSizeofHeaders > XBE_HEADER_SIZE then
+      _ReadXbeBlock(
+        {RawOffset=}0,
+        {RawSize=}XbeHeader.dwSizeofHeaders,
+        {VirtualAddr=}XBE_IMAGE_BASE,
+        {VirtualSize=}XbeHeader.dwSizeofHeaders,
+        {NewProtect}PAGE_READWRITE);
 
     // Remember the ExeDosHeader._lfanew value, as we're about to overwrite it :
     // (This field can be restored by calling ReinitXbeImageHeader)
@@ -256,7 +266,6 @@ begin
     ReinitExeImageHeader;
 
     // Load all sections to their requested Virtual Address :
-    XbeHeader := PXbeHeader(XBE_IMAGE_BASE);
     XbeSectionHeader := PXbeSectionHeader(XbeHeader.dwSectionHeadersAddr);
     for i := 0 to XbeHeader.dwSections - 1 do
     begin

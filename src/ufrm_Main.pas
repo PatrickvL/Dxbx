@@ -1480,6 +1480,7 @@ begin
 
   if sFolder <> '' then
   begin
+    Screen.Cursor := crHourGlass;
     XbeFiles := TStringList.Create;
     try
       FindFiles(XbeFiles, sFolder, '*.xbe');
@@ -1492,6 +1493,7 @@ begin
 
     finally
       FreeAndNil(XbeFiles);
+      Screen.Cursor := crDefault;
     end;
   end;
 end;

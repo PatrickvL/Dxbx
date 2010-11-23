@@ -910,7 +910,7 @@ begin
 //  or _Test($00030E80, '_D3DXVec3Normalize@8')
 
   // Smashing Drive
-//  or _Test($000A5620, '?Init@CDevice@D3D@@QAEJPAU_D3DPRESENT_PARAMETERS_@@@Z'); // "address range taken" ? Fixed.
+//  or _Test($000A5620, '?Init@CDevice@D3D@@QAEJPAU_D3DPRESENT_PARAMETERS_@@@Z') // "address range taken" ? Fixed.
 //  or _Test($000DA7ED, '@OHCD_fIsochCloseEndpoint@8') // 3911 has ref to @OHCD_ScheduleAddEndpointPeriodic@8 at +$21 (4631 refs @OHCD_fPauseEndpoint@8) Fixed.
 //  or _Test($000A0320, '_D3DDevice_BlockUntilIdle@0') // Address appeared 2 times (but overlap not allowed!) Fixed.
 //  or _Test($000A0320, '_D3DVolumeTexture_GetLevelDesc@12') // 2nd appearance
@@ -921,16 +921,20 @@ begin
 //  or _Test($000DA7ED, '@OHCD_fIsochCloseEndpoint@8') // Cause - 2 versions have different references
 
   // Daphne (linked to XDK 5558);
-//  or _Test($0009A690, '_Direct3D_CreateDevice@24');
-//  or _Test($000AAD81, '?AddRef@CDirectSound@DirectSound@@UAGKXZ');
-//  or _Test($000AAE63, '?Stop@CDirectSoundBuffer@DirectSound@@QAGJXZ');
-//  or _Test($000AAEB2, '?GetStatus@CDirectSoundBuffer@DirectSound@@QAGJPAK@Z');
-//  or _Test($000AAF03, '?GetCurrentPosition@CDirectSoundBuffer@DirectSound@@QAGJPAK0@Z');
-//  or _Test($000AAF58, '?Lock@CDirectSoundBuffer@DirectSound@@QAGJKKPAPAXPAK01K@Z');
-//  or _Test($000AB3C1, '_IDirectSoundBuffer_SetCurrentPosition@8');
-//  or _Test($000AB985, '?SetBufferData@CDirectSoundBuffer@DirectSound@@QAGJPAXK@Z');
-//  or _Test($000ABC73, '?SetFormat@CDirectSoundBuffer@DirectSound@@QAGJPBUtWAVEFORMATEX@@@Z');
-//  or _Test($000AC036, '?CreateSoundBuffer@CDirectSound@DirectSound@@QAGJPBU_DSBUFFERDESC@@PAPAUIDirectSoundBuffer@@PAUIUnknown@@@Z');
+//  or _Test($0009A690, '_Direct3D_CreateDevice@24')
+//  or _Test($000AAD81, '?AddRef@CDirectSound@DirectSound@@UAGKXZ')
+//  or _Test($000AAE63, '?Stop@CDirectSoundBuffer@DirectSound@@QAGJXZ')
+//  or _Test($000AAEB2, '?GetStatus@CDirectSoundBuffer@DirectSound@@QAGJPAK@Z')
+//  or _Test($000AAF03, '?GetCurrentPosition@CDirectSoundBuffer@DirectSound@@QAGJPAK0@Z')
+//  or _Test($000AAF58, '?Lock@CDirectSoundBuffer@DirectSound@@QAGJKKPAPAXPAK01K@Z')
+//  or _Test($000AB3C1, '_IDirectSoundBuffer_SetCurrentPosition@8')
+//  or _Test($000AB985, '?SetBufferData@CDirectSoundBuffer@DirectSound@@QAGJPAXK@Z')
+//  or _Test($000ABC73, '?SetFormat@CDirectSoundBuffer@DirectSound@@QAGJPBUtWAVEFORMATEX@@@Z')
+//  or _Test($000AC036, '?CreateSoundBuffer@CDirectSound@DirectSound@@QAGJPBU_DSBUFFERDESC@@PAPAUIDirectSoundBuffer@@PAUIUnknown@@@Z')
+
+  // Halo [NTSC]
+//  or _Test($00185670, '_D3DDevice_Present@16') // Fails - we miss 3925 patterns
+//  or _Test($00181030, '_D3DDevice_Release@0') // ?
 
 end; // _IsTestCase
 
