@@ -440,6 +440,7 @@ function DxbxD3DErrorString(hResult: HRESULT): string;
 begin
 {$IFDEF DXBX_USE_D3D9}
   Result := DXGetErrorString9(hResult); // Source : http://www.fairyengine.com/articles/dxmultiviews.htm
+  Result := Result + #13#10 + DXGetErrorDescription9(hResult); // Source : http://www.gamedev.net/community/forums/showfaq.asp?forum_id=10
 {$ELSE}
   Result := D3DXGetErrorString(hResult); // Source : http://www.gamedev.net/community/forums/topic.asp?topic_id=16157
 {$ENDIF}
