@@ -263,6 +263,10 @@ end;
 procedure ToggleLogging;
 begin
   LoggingEnabled := not LoggingEnabled;
+  if LoggingEnabled then
+    WriteLog('Resumed logging at ' + DateTimeToStr(Now))
+  else
+    WriteLog('Suspended logging at ' + DateTimeToStr(Now));
 
   UpdateLogFlags;
 end;

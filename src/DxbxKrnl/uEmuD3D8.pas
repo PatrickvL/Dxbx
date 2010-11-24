@@ -4964,9 +4964,9 @@ begin
     LogEnd();
 
   if Format <> X_D3DFMT_INDEX16 then
-    DxbxKrnlCleanup('XTL_EmuD3DDevice_CreateIndexBuffer: Unsupported index format!')
-  else
-    DbgPrintf('Number of indexes : %d', [Length div SizeOf(Word)]);
+    EmuWarning('XTL_EmuD3DDevice_CreateIndexBuffer: Weird index format - will be ignored anyway.');
+
+  DbgPrintf('Number of indexes : %d', [Length div SizeOf(Word)]);
 
   New({var PX_D3DIndexBuffer}ppIndexBuffer^);
   ZeroMemory(ppIndexBuffer^, SizeOf(ppIndexBuffer^^));
