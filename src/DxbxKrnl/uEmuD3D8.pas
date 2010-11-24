@@ -6801,22 +6801,9 @@ begin
   end
   else
   begin
-    // Dxbx note : Copied this over from EmuIDirect3DSurface_LockRect, seems the right thing to do
-    if (Flags and X_D3DLOCK_TILED) > 0 then
-      EmuWarning('D3DLOCK_TILED ignored!');
-
     pPCSurface := pThis.Emu.Surface;
 
-    NewFlags := 0;
-
-    if (Flags and X_D3DLOCK_NOOVERWRITE) > 0 then
-      NewFlags := NewFlags or D3DLOCK_NOOVERWRITE;
-
-    if (Flags and X_D3DLOCK_READONLY) > 0 then
-      NewFlags := NewFlags or D3DLOCK_READONLY;
-
-    if (Flags and (not X_D3DLOCK_ALL_SUPPORTED)) > 0 then
-      DxbxKrnlCleanup('EmuD3DTexture_LockRect: Unknown Flags! (0x%.08X)', [Flags and (not X_D3DLOCK_ALL_SUPPORTED)]);
+    NewFlags := EmuXB2PC_D3DLock(Flags);
 
     try
       // Remove old lock(s)
@@ -6938,19 +6925,9 @@ begin
   end
   else
   begin
-    // Dxbx note : Copied this over from EmuIDirect3DSurface_LockRect, seems the right thing to do
-    if (Flags and X_D3DLOCK_TILED) > 0 then
-      EmuWarning('D3DLOCK_TILED ignored!');
-
     pPCTexture := pThis.Emu.Texture;
 
-    NewFlags := 0;
-
-    if (Flags and X_D3DLOCK_READONLY) > 0 then
-      NewFlags := NewFlags or D3DLOCK_READONLY;
-
-    if (Flags and (not X_D3DLOCK_ALL_SUPPORTED)) > 0 then
-      DxbxKrnlCleanup('EmuD3DTexture_LockRect: Unknown Flags! (0x%.08X)', [Flags and (not X_D3DLOCK_ALL_SUPPORTED)]);
+    NewFlags := EmuXB2PC_D3DLock(Flags);
 
     if IsRunning(TITLEID_UnrealChampionship)
     and ((Level = 6) or (Level = 7) or (Level = 8) or (Level = 9)) then

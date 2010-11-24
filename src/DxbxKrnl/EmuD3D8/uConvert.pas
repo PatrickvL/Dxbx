@@ -477,13 +477,13 @@ begin
   //TODO -oCXBX: fix the xbox extensions
   // Dxbx note : Cxbx uses XOR here, that can't be right! We'll be using OR.
   if (Flags and X_D3DLOCK_NOFLUSH) > 0 then
-    NewFlags := NewFlags or 0;
+    EmuWarning('D3DLOCK_NOFLUSH ignored!');
 
   if (Flags and X_D3DLOCK_NOOVERWRITE) > 0 then
     NewFlags := NewFlags or D3DLOCK_NOOVERWRITE;
 
   if (Flags and X_D3DLOCK_TILED) > 0 then
-    NewFlags := NewFlags or 0;
+    EmuWarning('D3DLOCK_TILED ignored!');
 
   if (Flags and X_D3DLOCK_READONLY) > 0 then
     NewFlags := NewFlags or D3DLOCK_READONLY;
