@@ -122,7 +122,7 @@ begin
     ColWidths[0] := 80;
     ColWidths[1] := 120;
     ColWidths[2] := 200;
-    Options := [goRangeSelect, goColSizing, goRowSelect];
+    Options := [goRangeSelect, goColSizing, goRowSelect, goThumbTracking];
 //    Color := FixedColor;
 //    DrawingStyle := gdsClassic;
     ShowHint := True;
