@@ -2,8 +2,8 @@ program TranslationChecker;
 
 uses
   Forms,
-  uTranslationChecker in '..\..\src\Tools\TranslationChecker\uTranslationChecker.pas' {Form1},
-  uTypes in '..\..\src\uTypes.pas';
+  uTypes in '..\..\src\uTypes.pas',
+  uTranslationChecker in '..\..\src\Tools\TranslationChecker\uTranslationChecker.pas' {Form1};
 
 {$R *.res}
 
