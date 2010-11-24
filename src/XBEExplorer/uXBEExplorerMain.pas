@@ -24,7 +24,7 @@ interface
 uses
   // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Menus, ComCtrls, Grids, ExtCtrls,
+  Dialogs, Menus, ComCtrls, Grids, ExtCtrls, Clipbrd,
   StdActns, ActnList, XPStyleActnCtrls, ActnMan, ToolWin, ActnCtrls, ActnMenus,
   StdCtrls, // TMemo
   Math, // Min
@@ -66,6 +66,8 @@ type
     actSaveAs: TAction;
     Extra1: TMenuItem;
     ExploreFileSystem1: TMenuItem;
+    Edit1: TMenuItem;
+    Copy2: TMenuItem;
     procedure actOpenExecute(Sender: TObject);
     procedure actCloseExecute(Sender: TObject);
     procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
@@ -74,10 +76,15 @@ type
     procedure actCloseUpdate(Sender: TObject);
     procedure actSaveAsUpdate(Sender: TObject);
     procedure ExploreFileSystem1Click(Sender: TObject);
+    procedure Copy1Click(Sender: TObject);
+    procedure Copy2Click(Sender: TObject);
   protected
     MyXBE: TXbe;
     MyRanges: TMemo;
     FXBEFileName: string;
+
+    SelectedText: string;
+
     procedure CloseFile;
     procedure GridAddRow(const aStringGrid: TStringGrid; const aStrings: array of string);
     procedure HandleGridDrawCell(Sender: TObject; aCol, aRow: Integer; Rect: TRect; State: TGridDrawState);
@@ -86,6 +93,7 @@ type
     procedure SectionClick(Sender: TObject);
     procedure LibVersionClick(Sender: TObject);
     procedure OnDropFiles(var Msg: TMessage); message WM_DROPFILES;
+    procedure StringGridSelectCell(Sender: TObject; ACol, ARow: Integer;  var CanSelect: Boolean);
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
@@ -279,7 +287,15 @@ begin
 
     TSectionViewer(TStringGrid(Sender).Tag).SetRegion(RegionInfo);
   end;
-end; // SectionClick
+end;
+
+procedure TFormXBEExplorer.StringGridSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+  SelectedText := TStringGrid(Sender).Cells[ACol, ARow];
+end;
+
+// SectionClick
 
 procedure TFormXBEExplorer.LibVersionClick(Sender: TObject);
 var
@@ -325,6 +341,7 @@ var
 begin
   Result := TStringGrid.Create(Self);
   Result.OnDrawCell := HandleGridDrawCell;
+  Result.OnSelectCell := StringGridSelectCell;
   Result.RowCount := 2;
   Result.DefaultRowHeight := Canvas.TextHeight('Wg') + 5;
   Result.ColCount := Length(aTitles);
@@ -400,6 +417,16 @@ begin
   PageControl.Visible := False;
   while PageControl.PageCount > 0 do
     PageControl.Pages[0].Free;
+end;
+
+procedure TFormXBEExplorer.Copy1Click(Sender: TObject);
+begin
+  Showmessage(SelectedText);
+end;
+
+procedure TFormXBEExplorer.Copy2Click(Sender: TObject);
+begin
+  Clipboard.AsText := SelectedText;
 end;
 
 function TFormXBEExplorer.OpenFile(const aFilePath: string): Boolean;

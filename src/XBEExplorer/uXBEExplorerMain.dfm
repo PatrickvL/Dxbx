@@ -2,7 +2,7 @@ object FormXBEExplorer: TFormXBEExplorer
   Left = 0
   Top = 0
   Caption = 'XBE Explorer'
-  ClientHeight = 728
+  ClientHeight = 788
   ClientWidth = 836
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,7 +18,7 @@ object FormXBEExplorer: TFormXBEExplorer
     Left = 0
     Top = 23
     Width = 225
-    Height = 705
+    Height = 765
     Align = alLeft
     HideSelection = False
     Indent = 19
@@ -26,14 +26,16 @@ object FormXBEExplorer: TFormXBEExplorer
     RowSelect = True
     TabOrder = 0
     OnChange = TreeView1Change
+    ExplicitHeight = 705
   end
   object PageControl: TPageControl
     Left = 225
     Top = 23
     Width = 611
-    Height = 705
+    Height = 765
     Align = alClient
     TabOrder = 1
+    ExplicitHeight = 705
   end
   object ActionMainMenuBar: TActionMainMenuBar
     Left = 0
@@ -42,9 +44,9 @@ object FormXBEExplorer: TFormXBEExplorer
     Height = 23
     UseSystemFont = False
     ActionManager = ActionManager
-    ColorMap.HighlightColor = 14410210
+    ColorMap.HighlightColor = clWhite
     ColorMap.BtnSelectedColor = clBtnFace
-    ColorMap.UnusedColor = 14410210
+    ColorMap.UnusedColor = clWhite
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -69,6 +71,14 @@ object FormXBEExplorer: TFormXBEExplorer
       end
       object Exit1: TMenuItem
         Action = actExit
+      end
+    end
+    object Edit1: TMenuItem
+      Caption = '&Edit'
+      object Copy2: TMenuItem
+        Caption = '&Copy'
+        ShortCut = 16451
+        OnClick = Copy2Click
       end
     end
     object Extra1: TMenuItem
