@@ -82,6 +82,7 @@ type
     procedure GridAddRow(const aStringGrid: TStringGrid; const aStrings: array of string);
     procedure HandleGridDrawCell(Sender: TObject; aCol, aRow: Integer; Rect: TRect; State: TGridDrawState);
     function NewGrid(const aFixedCols: Integer; const aTitles: array of string): TStringGrid;
+    procedure ResizeGrid(const Grid: TStringGrid; const aHeightPercentage: Double);
     procedure SectionClick(Sender: TObject);
     procedure LibVersionClick(Sender: TObject);
     procedure OnDropFiles(var Msg: TMessage); message WM_DROPFILES;
@@ -328,10 +329,42 @@ begin
   Result.DefaultRowHeight := Canvas.TextHeight('Wg') + 5;
   Result.ColCount := Length(aTitles);
   Result.FixedCols := aFixedCols;
-  Result.Options := Result.Options + [goColSizing] - [goRowSizing, goRangeSelect];
+  Result.Options := Result.Options + [goColSizing, goColMoving, goThumbTracking] - [goRowSizing, goRangeSelect];
+  Result.ScrollBars := ssHorizontal;
   GridAddRow(Result, aTitles);
   for i := 0 to Length(aTitles) - 1 do
     Result.Cells[i, 0] := string(aTitles[i]);
+end;
+
+procedure TFormXBEExplorer.ResizeGrid(const Grid: TStringGrid; const aHeightPercentage: Double);
+var
+  i: Integer;
+  NewHeight: Integer;
+  MaxHeight: Integer;
+begin
+  // Calculate how heigh all rows together would be :
+  NewHeight := GetSystemMetrics(SM_CYHSCROLL);
+  for i := 0 to Grid.RowCount - 1 do
+    Inc(NewHeight, Grid.RowHeights[i] + 1);
+  NewHeight := 2 + NewHeight + 2;
+
+  // Determine how heigh the parent is :
+  MaxHeight := Grid.Parent.Height;
+  // It that's not enough for 4 rows, switch to using the form height :
+  if MaxHeight < 4*Grid.RowHeights[0] then
+    MaxHeight := Self.Height;
+
+  // See if the grid would exceed it's allotted height-percentage :
+  MaxHeight := Trunc(MaxHeight * aHeightPercentage);
+  if NewHeight > MaxHeight then
+  begin
+    // Reduce it's height and add the vertical scrollbar :
+    NewHeight := MaxHeight;
+    Grid.ScrollBars := ssBoth;
+  end;
+
+  // Set the newly determined height :
+  Grid.Height := NewHeight;
 end;
 
 procedure TFormXBEExplorer.GridAddRow(const aStringGrid: TStringGrid; const aStrings: array of string);
@@ -666,11 +699,8 @@ var
       Inc(o, SizeOf(TXbeSectionHeader));
     end;
 
-    // Resize grid to fit :
-    o := GetSystemMetrics(SM_CYHSCROLL);
-    for i := 0 to Grid.RowCount - 1 do
-      Inc(o, Grid.RowHeights[i] + 1);
-    Grid.Height := o + 4;
+    // Resize grid to fit into 40% of the height or less :
+    ResizeGrid(Grid, 0.4);
 
     Splitter := TSplitter.Create(Self);
     Splitter.Parent := Result;
