@@ -4254,7 +4254,7 @@ begin
   begin
     if MayLog(lfUnit) then
         DbgPrintf('SetVertexShaderConstant, c%d (c%d) = { %f, %f, %f, %f }',
-               [Register_ + X_D3DSCM_CORRECTION{=96} + i, Register_ + i, // Dxbx fix
+               [Register_ + X_D3DSCM_CORRECTION_VersionDependent + i, Register_ + i, // Dxbx fix
                Pfloats(pConstantData)[4 * i],
                Pfloats(pConstantData)[4 * i + 1],
                Pfloats(pConstantData)[4 * i + 2],
@@ -4268,8 +4268,7 @@ begin
   // Dxbx note : 4627 samples show that the Register value arriving in this function is already
   // incremented with 96 (even though the code for these samples supplies 0, maybe there's a
   // macro responsible for that?)
-  if g_BuildVersion <= 4361 then
-    Inc(Register_, X_D3DSCM_CORRECTION{=96});
+  Inc(Register_, X_D3DSCM_CORRECTION_VersionDependent);
 
 // TODO -oDxbx : This looks correct, but removes the mist from Turok menu's, so disable it for now :
 //  // Check we're not getting past the current upper bound :
@@ -4955,6 +4954,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
+  begin
     LogBegin('EmuD3DDevice_CreateIndexBuffer').
       _(Length, 'Length').
       _(Usage, 'Usage').
@@ -4963,10 +4963,11 @@ begin
       _(ppIndexBuffer, 'ppIndexBuffer').
     LogEnd();
 
-  if Format <> X_D3DFMT_INDEX16 then
-    EmuWarning('XTL_EmuD3DDevice_CreateIndexBuffer: Weird index format - will be ignored anyway.');
+    if Format <> X_D3DFMT_INDEX16 then
+      EmuWarning('XTL_EmuD3DDevice_CreateIndexBuffer: Weird index format - will be ignored anyway.');
 
-  DbgPrintf('Number of indexes : %d', [Length div SizeOf(Word)]);
+    DbgPrintf('Number of indexes : %d', [Length div SizeOf(Word)]);
+  end;
 
   New({var PX_D3DIndexBuffer}ppIndexBuffer^);
   ZeroMemory(ppIndexBuffer^, SizeOf(ppIndexBuffer^^));
@@ -9620,8 +9621,7 @@ begin
   // TODO -oDxbx: If we ever find a title that calls this, check if this correction
   // should indeed be done version-dependantly (like in SetVertexShaderConstant);
   // It seems logical that these two mirror eachother, but it could well be different:
-  if g_BuildVersion <= 4361 then
-    Inc(Register_, X_D3DSCM_CORRECTION{=96});
+  Inc(Register_, X_D3DSCM_CORRECTION_VersionDependent);
 
 {$IFDEF DXBX_USE_D3D9}
   Result := g_pD3DDevice.GetVertexShaderConstantF
