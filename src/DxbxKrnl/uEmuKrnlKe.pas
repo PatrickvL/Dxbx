@@ -329,6 +329,12 @@ begin
 //    Result := STATUS_SUCCESS;
   end;
 
+  // HACK : Since we have no APC implementation yet, we need to return the 'Alerted' state
+  // now and then to stop callers from hanging indefinitely on the alert :
+  if Alertable then
+    if Random(10) = 0 then
+      Result := STATUS_ALERTED;
+
   EmuSwapFS(fsXbox);
 end;
 
