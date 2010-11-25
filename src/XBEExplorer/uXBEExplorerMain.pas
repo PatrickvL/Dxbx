@@ -82,9 +82,6 @@ type
     MyXBE: TXbe;
     MyRanges: TMemo;
     FXBEFileName: string;
-
-    SelectedText: string;
-
     procedure CloseFile;
     procedure GridAddRow(const aStringGrid: TStringGrid; const aStrings: array of string);
     procedure HandleGridDrawCell(Sender: TObject; aCol, aRow: Integer; Rect: TRect; State: TGridDrawState);
@@ -95,6 +92,8 @@ type
     procedure OnDropFiles(var Msg: TMessage); message WM_DROPFILES;
     procedure StringGridSelectCell(Sender: TObject; ACol, ARow: Integer;  var CanSelect: Boolean);
   public
+    SelectedText: string;
+
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
 
