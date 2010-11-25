@@ -1724,7 +1724,7 @@ var
   function _RegisterIsWrittenBeforeRead(RangeStart, RangeEnd, RegisterAddress: int): boolean;
   var
     i: int;
-    WrittenMask: int;
+    WrittenMask: DxbxMask;
     pIntermediate: PVSH_INTERMEDIATE_FORMAT;
     j: int;
   begin
@@ -1761,7 +1761,6 @@ var
   function _DetermineRegisterUsageInRange(RangeStart, RangeEnd, RegisterAddress: int; out FirstWrite, LastRead: int): boolean;
   var
     i: int;
-    j: int;
     pIntermediate: PVSH_INTERMEDIATE_FORMAT;
   begin
     Result := False;
@@ -1795,11 +1794,9 @@ var
     i: int;
     LeastUsed: int;
     LeastUsed_FirstWrite, LeastUsed_LastRead: int;
-    Replacement_FirstWrite, Replacement_LastRead: int;
     pIntermediate: PVSH_INTERMEDIATE_FORMAT;
   begin
     // First, try to find an unused register (and determine which one was least used for the later fallback) :
-    Result := False;
     LeastUsed := 0;
     for i := VSH_NATIVE_MAX_R_REGISTER_COUNT-1 downto 0 do
     begin
