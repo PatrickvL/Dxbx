@@ -492,12 +492,17 @@ begin
 
     if Assigned(EmuNtSymbolicLinkObject) then
     begin
+      NativePath := EmuNtSymbolicLinkObject.NativePath;
+
       // If the remaining path starts with a '\', remove it (to prevent working in a native root) :
       if (Length(RelativePath) > 0) and (RelativePath[1] = '\') then
+      begin
         System.Delete(RelativePath, 1, 1);
+        // And add it to the Native path instead :
+        NativePath := NativePath + '\';
+      end;
 
       XboxFullPath := EmuNtSymbolicLinkObject.XboxFullPath;
-      NativePath := EmuNtSymbolicLinkObject.NativePath;
       ObjectAttributes.RootDirectory := EmuNtSymbolicLinkObject.RootDirectoryHandle;
     end
     else

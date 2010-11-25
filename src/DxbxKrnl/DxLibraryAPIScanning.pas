@@ -156,7 +156,7 @@ type
     UsingLibraryApproximations: Boolean;
     SectionInfo: array of record
       SectionHeader: PXBE_SECTIONHEADER;
-      SectionEndAddr: UIntPtr;
+      SectionEndAddr: Pointer;
       SectionName: string;
       LibraryNameIndex: TStringTableIndex;
       LibraryName: string;
@@ -502,6 +502,9 @@ var
   NewLength: Integer;
   Hit: PPatternHitResult;
 begin
+  Assert(UIntPtr(aAddress) > XBE_IMAGE_BASE);
+  Assert(UIntPtr(aAddress) <= ScanUpper);
+
   // Read the first function index, which is what we use as LeafID :
   LeafID := TLeafID(aFirstFunctionIndex^);
 
@@ -537,6 +540,7 @@ begin
     begin
       Assert(MyDetectedLeafs[LeafID].FirstFunctionIndex = aFirstFunctionIndex);
       Assert(MyDetectedLeafs[LeafID].NrChildren = NrChildren);
+
       Hit.NextHit := MyDetectedLeafs[LeafID].FirstHit;
     end;
 
@@ -661,7 +665,7 @@ begin
     ScanPtr := UIntPtr(Section.dwVirtualAddr);
     ScanEnd := ScanPtr + Section.dwSizeofRaw;
     SectionInfo[i].SectionHeader := Section;
-    SectionInfo[i].SectionEndAddr := ScanEnd;
+    SectionInfo[i].SectionEndAddr := Pointer(ScanEnd);
     SectionInfo[i].SectionName := string(PCharToString(PAnsiChar(Section.dwSectionNameAddr), XBE_SECTIONNAME_MAXLENGTH));
 
     // Mark only those sections that we know about :
@@ -1147,7 +1151,7 @@ function TSymbolManager.CheckFunctionAtAddressAndRegister(const CurrentSymbol: T
     for i := 0 to Length(SectionInfo) - 1 do
     begin
       if  (aAddress >= SectionInfo[i].SectionHeader.dwVirtualAddr)
-      and (aAddress < SectionInfo[i].SectionEndAddr)
+      and (aAddress < UIntPtr(SectionInfo[i].SectionEndAddr))
       and (SectionInfo[i].LibraryNameIndex > 0) then
       begin
         Result := (SectionInfo[i].LibraryNameIndex = aLibraryNameIndex);
@@ -1581,6 +1585,9 @@ procedure TSymbolManager.CleanupTemporaryScanningData;
   begin
     if Assigned(aHit) then
     begin
+      Assert(UIntPtr(aHit.Address) > XBE_IMAGE_BASE);
+      Assert(UIntPtr(aHit.Address) <= ScanUpper);
+
       _RecursiveDisposeHits(aHit.NextHit);
       Dispose(aHit);
     end;
@@ -1591,7 +1598,7 @@ var
 begin
   SetLength(MyIntermediateSymbolRegistrations, 0);
 
-  for i := 0 to FNrDetectedLeafs - 1 do
+  for i := 0 to Length(MyDetectedLeafs) - 1 do
     _RecursiveDisposeHits(MyDetectedLeafs[i].FirstHit);
 
   SetLength(MyDetectedLeafs, 0);
