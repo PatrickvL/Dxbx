@@ -38,6 +38,10 @@ type
     FRegionInfo: RRegionInfo;
     procedure DoDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
     procedure GotoOffsetExecute(Sender: TObject);
+
+    function GetTextByCell(ACol, ARow: Integer): string;
+    procedure StringGridSelectCell(Sender: TObject; ACol, ARow: Integer;  var CanSelect: Boolean);
+
   public
     property Offset: DWord read GetOffset write SetOffset;
     constructor Create(Owner: TComponent); override;
@@ -46,6 +50,9 @@ type
   end;
 
 implementation
+
+uses
+  uXBEExplorerMain;
 
 { THexViewer }
 
@@ -93,6 +100,7 @@ begin
     FixedRows := 1;
     Options := [goRangeSelect, goDrawFocusSelected, goThumbTracking];
     OnDrawCell := DoDrawCell;
+    OnSelectCell := StringGridSelectCell;
   end;
 
   PopupMenu := TPopupMenu.Create(Self);
@@ -144,6 +152,68 @@ begin
   Result := ((GridRect.Top - 1) * 16) + GridRect.Left - 1
 end;
 
+function THexViewer.GetTextByCell(ACol, ARow: Integer): string;
+
+  function _Ascii(Offset, Len: Integer): string;
+  var
+    i: Integer;
+  begin
+    if Len <= 0 then
+    begin
+      Result := '';
+      Exit;
+    end;
+
+    SetLength(Result, Len);
+    Dec(Offset);
+    for i := 1 to Len do
+    begin
+      if IsPrintableChar(PAnsiChar(FRegionInfo.Buffer)[Offset + i]) then
+        Result[i] := Char(PAnsiChar(FRegionInfo.Buffer)[Offset + i])
+      else
+        Result[i] := '.';
+    end;
+  end;
+
+var
+  Offset: DWord;
+  Len: Integer;
+begin
+  Result := '';
+  if aRow = 0 then
+  begin
+    case aCol of
+      0: Result := ' Offset';
+      1..16: Result := ' ' + HexNibble[aCol];
+      17: Result := '     Ascii';
+    end;
+  end
+  else
+  begin
+    case aCol of
+      0:
+        Result := Format('%.08x', [(aRow - 1) * 16]);
+      1..16:
+        begin
+          Offset := ((aRow - 1) * 16) + aCol - 1;
+          if Offset >= FRegionInfo.Size then
+            Result := ''
+          else
+            Result := PByteToHexString(@(PAnsiChar(FRegionInfo.Buffer)[Offset]), 1);
+        end;
+      17:
+        begin
+          Offset := ((aRow - 1) * 16);
+          Len := 16;
+          if Offset + DWord(Len) >= FRegionInfo.Size then
+            Len := FRegionInfo.Size - Offset;
+
+          Result := _Ascii(Offset, Len);
+        end;
+    end;
+  end;
+end;
+
 procedure THexViewer.SetRegion(const aRegionInfo: RRegionInfo);
 var
   NrRows: Integer;
@@ -166,68 +236,20 @@ begin
   MyDrawGrid.Repaint;
 end;
 
+procedure THexViewer.StringGridSelectCell(Sender: TObject; ACol, ARow: Integer;
+  var CanSelect: Boolean);
+begin
+  FormXBEExplorer.SelectedText := GetTextByCell(ACol, ARow);
+end;
+
 procedure THexViewer.DoDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
-
-  function _Ascii(Offset, Len: Integer): string;
-  var
-    i: Integer;
-  begin
-    if Len <= 0 then
-    begin
-      Result := '';
-      Exit;
-    end;       
-
-    SetLength(Result, Len);
-    Dec(Offset);
-    for i := 1 to Len do
-    begin
-      if IsPrintableChar(PAnsiChar(FRegionInfo.Buffer)[Offset + i]) then
-        Result[i] := Char(PAnsiChar(FRegionInfo.Buffer)[Offset + i])
-      else
-        Result[i] := '.';
-    end;
-  end;
-
 var
   aStr: string;
   Offset: DWord;
   Len: Integer;
 begin
-  if aRow = 0 then
-  begin
-    case aCol of
-      0: aStr := ' Offset';
-      1..16: aStr := ' ' + HexNibble[aCol];
-      17: aStr := '     Ascii';
-    end;
-  end
-  else
-  begin
-    case aCol of
-      0:
-        aStr := Format('%.08x', [(aRow - 1) * 16]);
-      1..16:
-        begin
-          Offset := ((aRow - 1) * 16) + aCol - 1;
-          if Offset >= FRegionInfo.Size then
-            aStr := ''
-          else
-            aStr := PByteToHexString(@(PAnsiChar(FRegionInfo.Buffer)[Offset]), 1);
-        end;
-      17:
-        begin
-          Offset := ((aRow - 1) * 16);
-          Len := 16;
-          if Offset + DWord(Len) >= FRegionInfo.Size then
-            Len := FRegionInfo.Size - Offset;
-
-          aStr := _Ascii(Offset, Len);
-        end;
-    end;
-  end;
-
+  aStr := GetTextByCell(ACol, ARow);
   MyDrawGrid.Canvas.FillRect(Rect);
   MyDrawGrid.Canvas.TextOut(Rect.Left, Rect.Top, aStr);
 end;
