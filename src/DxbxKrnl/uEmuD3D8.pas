@@ -2811,6 +2811,37 @@ begin
   Result := D3D_OK;
 end;
 
+{$J+}
+const
+  // TODO -oDxbx : Officially, we should have an array like this for each adapter :v
+  XboxResolutions: array [0..5] of record W, H, PCMode: LongWord; N: string; end = (
+    (W:640; H:480; PCMode:0; N:'NTSC'),
+    (W:640; H:576; PCMode:0; N:'PAL'),
+    (W:720; H:480; PCMode:0; N:'480p'),
+    (W:720; H:576; PCMode:0; N:'PAL2?'),
+    (W:1280; H:720; PCMode:0; N:'720p'),
+    (W:1920; H:1080; PCMode:0; N:'1080i')
+  );
+{$J-}
+
+function IsValidXboxDisplayMode(const PCDisplayMode: D3DDISPLAYMODE; const PCModeNr: int): boolean;
+var
+  i: int;
+begin
+  for i := Low(XboxResolutions) to High(XboxResolutions) do
+  begin
+    if  (XboxResolutions[i].W = PCDisplayMode.Width)
+    and (XboxResolutions[i].H = PCDisplayMode.Height) then
+    begin
+      XboxResolutions[i].PCMode := PCModeNr;
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  Result := False;
+end;
+
 function XTL_EmuDirect3D_GetAdapterModeCount
 (
   Adapter: UINT
@@ -2819,7 +2850,7 @@ function XTL_EmuDirect3D_GetAdapterModeCount
 var
   ret: UINT;
   v: UINT32;
-  Mode: D3DDISPLAYMODE;
+  PCDisplayMode: D3DDISPLAYMODE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2828,20 +2859,20 @@ begin
       _(Adapter, 'Adapter').
     LogEnd();
 
+  Result := 0;
   ret := g_pD3D.GetAdapterModeCount(g_XBVideo.GetDisplayAdapter(){$IFDEF DXBX_USE_D3D9}, D3DFMT_UNKNOWN{$ENDIF});
   if ret > 0 then // Dxbx addition, to prevent underflow
   for v := 0 to ret - 1 do
   begin
-    if (g_pD3D.EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), {$IFDEF DXBX_USE_D3D9}D3DFMT_UNKNOWN,{$ENDIF} v, {out}Mode) <> D3D_OK) then
+    if (g_pD3D.EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), {$IFDEF DXBX_USE_D3D9}D3DFMT_UNKNOWN,{$ENDIF} v, {out}PCDisplayMode) <> D3D_OK) then
       break;
 
-    if (Mode.Width <> 640) or (Mode.Height <> 480) then
-      Dec(ret);
+    // Dxbx addition : Only count valid Xbox resultions :
+    if IsValidXboxDisplayMode(PCDisplayMode, v) then
+      Inc(Result);
   end;
 
   EmuSwapFS(fsXbox);
-
-  Result := ret;
 end;
 
 function XTL_EmuDirect3D_GetAdapterDisplayMode
@@ -2851,7 +2882,7 @@ function XTL_EmuDirect3D_GetAdapterDisplayMode
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  pPCMode: PD3DDISPLAYMODE;
+  PCDisplayMode: D3DDISPLAYMODE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2866,28 +2897,24 @@ begin
   Result := g_pD3D.GetAdapterDisplayMode
   (
     g_XBVideo.GetDisplayAdapter(),
-    {out}PD3DDISPLAYMODE(pMode)^
+    {out}PCDisplayMode
   );
 
   // make adjustments to the parameters to make sense with windows direct3d
   begin
-    pPCMode := PD3DDISPLAYMODE(pMode);
-
-    // Convert Format (PC->Xbox)
-    pMode.Format := EmuPC2XB_D3DFormat(pPCMode.Format);
-
-    // TODO -oCXBX: Make this configurable in the future?
-    pMode.Flags := X_D3DPRESENTFLAG_FIELD or X_D3DPRESENTFLAG_INTERLACED or X_D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
-
     // TODO -oCXBX: Retrieve from current CreateDevice settings?
     pMode.Width := 640;
     pMode.Height := 480;
+    pMode.RefreshRate := PCDisplayMode.RefreshRate;
+    // Convert Format (PC->Xbox)
+    pMode.Format := EmuPC2XB_D3DFormat(PCDisplayMode.Format);
+    // TODO -oCXBX: Make this configurable in the future?
+    pMode.Flags := X_D3DPRESENTFLAG_FIELD or X_D3DPRESENTFLAG_INTERLACED or X_D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
   end;
 
   EmuSwapFS(fsXbox);
 end;
 
-{static}var ModeAdder: uint = 0; // Dxbx note : Changed Cxbx's int to uint to prevent warning
 function XTL_EmuDirect3D_EnumAdapterModes
 (
   Adapter: UINT;
@@ -2896,7 +2923,7 @@ function XTL_EmuDirect3D_EnumAdapterModes
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  PCMode: D3DDISPLAYMODE;
+  PCDisplayMode: D3DDISPLAYMODE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2907,35 +2934,23 @@ begin
       _(pMode, 'pMode').
     LogEnd();
 
-  Result := D3D_OK;
-
-  if (Mode = 0) then
-    ModeAdder := 0;
-
-  while true do
-  begin
-    Result := g_pD3D.EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), {$IFDEF DXBX_USE_D3D9}D3DFMT_UNKNOWN,{$ENDIF} Mode+ModeAdder, D3DDISPLAYMODE(PCMode));
-    if (Result <> D3D_OK) or (PCMode.Width = 640) and (PCMode.Height = 480) then
-      break;
-
-    Inc(ModeAdder);
-  end;
+  if Mode < High(XboxResolutions) then
+    Result := g_pD3D.EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), {$IFDEF DXBX_USE_D3D9}D3DFMT_UNKNOWN,{$ENDIF} XboxResolutions[Mode].PCMode, PCDisplayMode)
+  else
+    Result := D3DERR_INVALIDCALL;
 
   // make adjustments to parameters to make sense with windows direct3d
   if (Result = D3D_OK) then
   begin
-    //
     // NOTE: WARNING: PC D3DDISPLAYMODE is different than Xbox D3DDISPLAYMODE!
-    //
 
     // Convert Format (PC->Xbox)
-    pMode.Width := PCMode.Width;
-    pMode.Height := PCMode.Height;
-    pMode.RefreshRate := PCMode.RefreshRate;
-
+    pMode.Width := PCDisplayMode.Width;
+    pMode.Height := PCDisplayMode.Height;
+    pMode.RefreshRate := PCDisplayMode.RefreshRate;
     // TODO -oCXBX: Make this configurable in the future?
     pMode.Flags := X_D3DPRESENTFLAG_FIELD or X_D3DPRESENTFLAG_INTERLACED or X_D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
-    pMode.Format := EmuPC2XB_D3DFormat(PCMode.Format)
+    pMode.Format := EmuPC2XB_D3DFormat(PCDisplayMode.Format);
   end
   else
     Result := D3DERR_INVALIDCALL;
@@ -5300,7 +5315,7 @@ function XTL_EmuD3DDevice_GetDisplayMode
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  pPCMode: PD3DDISPLAYMODE;
+  PCDisplayMode: D3DDISPLAYMODE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -5311,18 +5326,16 @@ begin
 
   // make adjustments to parameters to make sense with windows d3d
   begin
-    pPCMode := PD3DDISPLAYMODE(pMode);
-    Result := g_pD3DDevice.GetDisplayMode({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} {out}pPCMode^);
-
-    // Convert Format (PC->Xbox)
-    pMode.Format := EmuPC2XB_D3DFormat(pPCMode.Format);
-
-    // TODO -oCXBX: Make this configurable in the future?
-    pMode.Flags := X_D3DPRESENTFLAG_FIELD or X_D3DPRESENTFLAG_INTERLACED or X_D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+    Result := g_pD3DDevice.GetDisplayMode({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} {out}PCDisplayMode);
 
     // TODO -oCXBX: Retrieve from current CreateDevice settings?
     pMode.Width := 640;
     pMode.Height := 480;
+    pMode.RefreshRate := PCDisplayMode.RefreshRate;
+    // Convert Format (PC->Xbox)
+    pMode.Format := EmuPC2XB_D3DFormat(PCDisplayMode.Format);
+    // TODO -oCXBX: Make this configurable in the future?
+    pMode.Flags := X_D3DPRESENTFLAG_FIELD or X_D3DPRESENTFLAG_INTERLACED or X_D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
   end;
 
   EmuSwapFS(fsXbox);
