@@ -1655,7 +1655,7 @@ begin
         MulIntermediate.Parameters[1].Parameter.ParameterType := PARAM_C;
         // Dxbx note : Cxbx calls ConvertCRegister(58) here, but doing a conversion seems incorrect.
         // That, and the constant address is also corrected afterwards, so use the original :
-        MulIntermediate.Parameters[1].Parameter.Address       := X_D3DSCM_RESERVED_CONSTANT1{=-38} + X_D3DSCM_CORRECTION;//_VersionDependent;
+        MulIntermediate.Parameters[1].Parameter.Address       := X_D3DSCM_RESERVED_CONSTANT1{=-38} + X_D3DSCM_CORRECTION_VersionDependent;
 
         MulIntermediate.Parameters[1].Parameter.Neg           := FALSE;
         VshSetSwizzle(@MulIntermediate.Parameters[1].Parameter, SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
@@ -1673,7 +1673,7 @@ begin
         AddIntermediate.Parameters[0].Parameter.Address       := 10;
         // Dxbx note : Cxbx calls ConvertCRegister(59) here, but doing a conversion seems incorrect.
         // That, and the constant address is also corrected afterwards, so use the original :
-        AddIntermediate.Parameters[1].Parameter.Address       := X_D3DSCM_RESERVED_CONSTANT2{=-37} + X_D3DSCM_CORRECTION;//_VersionDependent;
+        AddIntermediate.Parameters[1].Parameter.Address       := X_D3DSCM_RESERVED_CONSTANT2{=-37} + X_D3DSCM_CORRECTION_VersionDependent;
         // Insert this instruction :
         Inc(i); VshInsertIntermediate(pShader, @AddIntermediate, i);
       end;
