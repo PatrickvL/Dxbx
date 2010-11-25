@@ -528,22 +528,29 @@ begin
       _(MemoryStatistics, 'MemoryStatistics').
     LogEnd();
 
+  if Assigned(MemoryStatistics) and (MemoryStatistics.Length >= SizeOf(MM_STATISTICS)) then
+  begin
+    GlobalMemoryStatus({var}MemoryStatus);
 
-  GlobalMemoryStatus({var}MemoryStatus);
+    // Dxbx addition : Fill each field :
+    MemoryStatistics.TotalPhysicalPages := XBOX_MEMORY_SIZE div PAGE_SIZE; // 128 MB is enough for Debug Xbox and Chihiro
+    MemoryStatistics.AvailablePages := MemoryStatus.dwAvailVirtual div PAGE_SIZE;
+    MemoryStatistics.VirtualMemoryBytesReserved := MemoryStatus.dwTotalVirtual - MemoryStatus.dwAvailVirtual;
+    // Was : MemoryStatistics.VirtualMemoryBytesReserved := MemoryStatus.dwTotalPhys - MemoryStatus.dwAvailPhys; // HACK (does this matter?)
+    MemoryStatistics.CachePagesCommitted := 1;
+    MemoryStatistics.PoolPagesCommitted := 1;
+    MemoryStatistics.StackPagesCommitted := 1;
+    MemoryStatistics.ImagePagesCommitted := 1;
 
-  ZeroMemory(MemoryStatistics, sizeof(MM_STATISTICS));
+    MemoryStatistics.VirtualMemoryBytesCommitted := PAGE_SIZE *
+      (({NrAllocatedVirtualMemoryPages=}MemoryStatistics.VirtualMemoryBytesReserved div PAGE_SIZE) + MemoryStatistics.ImagePagesCommitted);
 
-  MemoryStatistics.Length := sizeof(MM_STATISTICS);
-  MemoryStatistics.TotalPhysicalPages := MemoryStatus.dwTotalVirtual div PAGE_SIZE;
-  MemoryStatistics.AvailablePages := MemoryStatus.dwAvailVirtual div PAGE_SIZE;
-
-  // HACK (does this matter?)
-  MemoryStatistics.VirtualMemoryBytesReserved := MemoryStatus.dwTotalPhys - MemoryStatus.dwAvailPhys;
-
-  // the rest arent really used from what i've seen
+    Result := STATUS_SUCCESS;
+  end
+  else
+    Result := STATUS_INVALID_PARAMETER;
 
   EmuSwapFS(fsXbox);
-  Result := STATUS_SUCCESS;
 end;
 
 procedure xboxkrnl_MmSetAddressProtect(
