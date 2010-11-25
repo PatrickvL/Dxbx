@@ -1769,6 +1769,11 @@ begin
     // For OpenSDK / SDLx linked XBEs, assume 4627 libs where used :
     g_BuildVersion := DEFAULT_XDK_VERSION; // TODO -oDxbx: Make this configurable!
 
+  if g_BuildVersion <= 4361 then
+    X_D3DSCM_CORRECTION_VersionDependent := X_D3DSCM_CORRECTION
+  else
+    X_D3DSCM_CORRECTION_VersionDependent := 0;
+
   if IsRunning(TITLEID_PetitCopter) then
   begin
     // TODO : Make this configurable ?

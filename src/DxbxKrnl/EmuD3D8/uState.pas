@@ -92,6 +92,8 @@ const DEFAULT_XDK_VERSION = 4627; // TODO -oDxbx : Make this configurable
 var g_BuildVersion: uint32 = DEFAULT_XDK_VERSION;
 // var g_OrigBuildVersion: uint32; // Dxbx note : Unused
 
+var X_D3DSCM_CORRECTION_VersionDependent: int = 0;
+
 type
   TXB2PCFunc = function(Value: DWORD): DWORD;
 
