@@ -52,6 +52,10 @@ type
     procedure CreatePatternExecute(Sender: TObject);
     procedure GotoAddressExecute(Sender: TObject);
     function GeneratePatternForAddress(const aAddress: UIntPtr): string;
+
+    function GetTextByCell(ACol, ARow: Integer; State: TGridDrawState): string;
+    procedure StringGridSelectCell(Sender: TObject; ACol, ARow: Integer;  var CanSelect: Boolean);
+
   public
     OnGetLabel: TGetLabelEvent;
 
@@ -68,6 +72,9 @@ type
   end;
 
 implementation
+
+uses
+  uXBEExplorerMain;
 
 var
   CYBorder: Integer;
@@ -129,6 +136,7 @@ begin
     DefaultDrawing := False;
 //    DoubleBuffered := True;
     OnDrawCell := GridDrawCellEvent;
+    OnSelectCell := StringGridSelectCell;
 
     Font.Name := 'Consolas';
     Parent := Self;
@@ -395,6 +403,115 @@ begin
     Result := DxbxUnmangleSymbolName(SymbolList[i]) + Result;
 end;
 
+function TDisassembleViewer.GetTextByCell(ACol, ARow: Integer;
+  State: TGridDrawState): string;
+var
+  Offset: Cardinal;
+  Address: UIntPtr;
+  LineHeight: Integer;
+  CommentStr: string;
+begin
+  // Handle fixed cells (meaning: header-row) :
+  Result := '';
+
+  // Update drawing colors, depending on state :
+  if gdSelected in State then
+  begin
+    MyDrawGrid.Canvas.Brush.Color := clHighlight;
+    MyDrawGrid.Canvas.Font.Color := clHighlightText;
+  end
+  else
+  begin
+    MyDrawGrid.Canvas.Brush.Color := MyDrawGrid.Color;
+    MyDrawGrid.Canvas.Font.Color := clWindowText;
+  end;
+
+  // Retrieve the offset and address of this line :
+  Offset := Cardinal(MyInstructionOffsets[aRow - 1]);
+  Address := UIntPtr(FRegionInfo.VirtualAddres) + Offset;
+
+  // Disassemble this (if not done already) :
+  if MyDisassemble.CurrentOffset <> Offset then
+  begin
+    MyDisassemble.Offset := Offset;
+    MyDisassemble.DoDisasm;
+
+    // Double the LineHeight, if there's a label :
+    if MyDisassemble.LabelStr <> '' then
+      LineHeight := 2 * MyDrawGrid.DefaultRowHeight
+    else
+      LineHeight := MyDrawGrid.DefaultRowHeight;
+
+    // Update this Row's height (only when needed) :
+    if MyDrawGrid.RowHeights[aRow] <> LineHeight then
+    begin
+      MyDrawGrid.RowHeights[aRow] := LineHeight;
+      MyDrawGrid.Invalidate;
+      Exit;
+    end;
+  end;
+
+  // Do we need to draw a label (we've already double the line-height for this) ?
+  if MyDisassemble.LabelStr <> '' then
+  begin
+  (*  // Append the label (only in the first column) :
+    if aCol = 0 then
+    begin
+      // Extend this cell to a whole line :
+      Inc(Rect.Right, ClientWidth);
+
+      // Clear contents :
+      MyDrawGrid.Canvas.FillRect(Rect);
+
+      // Draw the label in bold :
+      MyDrawGrid.Canvas.Font.Style := [fsBold];
+      MyDrawGrid.Canvas.TextOut(Rect.Left + CXBorder, Rect.Top + CYBorder, MyDisassemble.LabelStr);
+
+      // Deduce back to a single cell :
+      Dec(Rect.Right, ClientWidth);
+    end
+    else
+      ; // Don't clear the other columns (or the label would be gone)
+
+    // Move the drawing rectangle to the next line :
+    OffsetRect(Rect, 0, MyDrawGrid.DefaultRowHeight); *)
+  end;
+
+  // Determine cell text :
+  case aCol of
+    0: Result := Format('%.08x', [Address]);
+    1: Result := MyDisassemble.HexStr;
+    2: Result := MyDisassemble.OpcodeStr;
+    3:
+    begin
+      // Add interesting details, like referenced string contents, labels etc.
+
+      // Only problem is, the referenced addresses in code assume post-load layout,
+      // while we're working with a Raw Xbe - so we need to do a bit of addresss
+      // conversion wizardry to make this work :
+      CommentStr := '';
+      if MyDisassemble.GetReferencedMemoryAddress({var}Address) then
+      begin
+        CommentStr := MyDisassemble.GetLabelStr(Pointer(Address), {InLabelMode=}False);
+        if  (CommentStr = '')
+        // TODO : Check XBE Range better than this
+        // Also, add support for strings referenced in another section :
+        and (Address > UIntPtr(FRegionInfo.VirtualAddres))
+        and (Address < UIntPtr(FRegionInfo.VirtualAddres) + FRegionInfo.Size) then
+        begin
+          Address := UIntPtr(FRegionInfo.Buffer) + Address - UIntPtr(FRegionInfo.VirtualAddres);
+          CommentStr := TryReadLiteralString(PAnsiChar(Address));
+        end;
+      end;
+
+      if CommentStr <> '' then
+        CommentStr := '; ' + CommentStr;
+
+      Result := CommentStr;
+    end;
+  end; // case
+end;
+
 procedure TDisassembleViewer.SetRegion(const aRegionInfo: RRegionInfo);
 begin
   FRegionInfo := aRegionInfo;
@@ -418,6 +535,22 @@ begin
   MyDrawGrid.RowCount := 1 + MyInstructionOffsets.Count;
   MyDrawGrid.FixedRows := 1;
   MyDrawGrid.Invalidate;
+end;
+
+procedure TDisassembleViewer.StringGridSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+var
+  DisplayText: string;
+  i: integer;
+begin
+  DisplayText := '';
+  for i := 0 to MyDrawGrid.ColCount - 1 do
+    DisplayText := DisplayText + ' ' + GetTextByCell(i, ARow, [gdRowSelected]);
+
+  if MyDisassemble.LabelStr <> '' then
+    DisplayText := MyDisassemble.LabelStr + #13#10+ DisplayText;
+
+  FormXBEExplorer.SelectedText := DisplayText;
 end;
 
 procedure TDisassembleViewer.GridDrawCellEvent(Sender: TObject; ACol, ARow: Longint;
