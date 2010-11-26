@@ -85,17 +85,19 @@ object FormXBEExplorer: TFormXBEExplorer
       Align = alClient
       Columns = <
         item
-          Caption = 'Dissambled Functions'
-          Width = 150
+          Caption = 'Address'
+          Width = 63
         end
         item
           AutoSize = True
-          Caption = 'Address'
+          Caption = 'Dissambled Functions'
         end>
       ReadOnly = True
       RowSelect = True
+      SortType = stText
       TabOrder = 1
       ViewStyle = vsReport
+      OnColumnClick = lst_DissambledFunctionsColumnClick
       OnDblClick = lst_DissambledFunctionsDblClick
     end
   end

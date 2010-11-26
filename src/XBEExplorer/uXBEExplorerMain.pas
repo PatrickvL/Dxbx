@@ -82,10 +82,13 @@ type
     procedure ExploreFileSystem1Click(Sender: TObject);
     procedure Copy2Click(Sender: TObject);
     procedure lst_DissambledFunctionsDblClick(Sender: TObject);
+    procedure lst_DissambledFunctionsColumnClick(Sender: TObject;
+      Column: TListColumn);
   protected
     MyXBE: TXbe;
     MyRanges: TMemo;
     FXBEFileName: string;
+    LastSortedColumn: integer;
     procedure CloseFile;
     procedure GridAddRow(const aStringGrid: TStringGrid; const aStrings: array of string);
     procedure HandleGridDrawCell(Sender: TObject; aCol, aRow: Integer; Rect: TRect; State: TGridDrawState);
@@ -106,6 +109,7 @@ type
 
 var
   FormXBEExplorer: TFormXBEExplorer;
+  Ascending: boolean;
 
 implementation
 
@@ -165,6 +169,8 @@ begin
 
   // Start accepting WM_DROPFILES messages (see OnDropFiles) :
   DragAcceptFiles(Handle, True);
+  LastSortedColumn := -1;
+  Ascending := True;
 end;
 
 destructor TFormXBEExplorer.Destroy;
@@ -319,13 +325,34 @@ begin
   Grid.Cells[5, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).dwFlags));
 end;
 
+function SortByColumn(Item1, Item2: TListItem; Data: integer): integer; stdcall;
+begin
+  if Data = 0 then
+    Result := AnsiCompareText(Item1.Caption, Item2.Caption)
+  else
+    Result := AnsiCompareText(Item1.SubItems[Data-1], Item2.SubItems[Data-1]);
+
+  if not Ascending then Result := -Result;
+end;
+
+procedure TFormXBEExplorer.lst_DissambledFunctionsColumnClick(Sender: TObject;
+  Column: TListColumn);
+begin
+  if Column.Index = LastSortedColumn then
+    Ascending := not Ascending
+  else
+    LastSortedColumn := Column.Index;
+
+  TListView(Sender).CustomSort(@SortByColumn, Column.Index);
+end;
+
 procedure TFormXBEExplorer.lst_DissambledFunctionsDblClick(Sender: TObject);
 begin
   if Assigned(lst_DissambledFunctions.Selected) then
   begin
     if Assigned(TStringGrid(lst_DissambledFunctions.selected.Data)) then
     begin
-      TDisassembleViewer(lst_DissambledFunctions.selected.Data).GotoAddress(lst_DissambledFunctions.Selected.SubItems[0]);
+      TDisassembleViewer(lst_DissambledFunctions.selected.Data).GotoAddress(lst_DissambledFunctions.Selected.caption);
     end;
   end;
 end;
