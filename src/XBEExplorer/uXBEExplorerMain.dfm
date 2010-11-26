@@ -61,7 +61,7 @@ object FormXBEExplorer: TFormXBEExplorer
       Width = 217
       Height = 3
       Cursor = crVSplit
-      Align = alTop
+      Align = alBottom
       ExplicitWidth = 395
     end
     object TreeView1: TTreeView
@@ -69,7 +69,7 @@ object FormXBEExplorer: TFormXBEExplorer
       Top = 1
       Width = 217
       Height = 368
-      Align = alTop
+      Align = alClient
       HideSelection = False
       Indent = 19
       ReadOnly = True
@@ -82,7 +82,7 @@ object FormXBEExplorer: TFormXBEExplorer
       Top = 372
       Width = 217
       Height = 390
-      Align = alClient
+      Align = alBottom
       Columns = <
         item
           Caption = 'Address'
