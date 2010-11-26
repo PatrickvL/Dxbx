@@ -72,9 +72,6 @@ type
 
 implementation
 
-uses
-  uXBEExplorerMain;
-
 var
   CYBorder: Integer;
   CXBorder: Integer;
@@ -299,10 +296,12 @@ var
   NewAddress: Integer;
   AddressStr: string;
 begin
+  // See if we're already at this address :
   AddressStr := DWord2Str(Address);
   if GotoAddressStr = AddressStr then
     Exit;
 
+  // New address - scan input & set new location :
   if ScanHexDWord(PChar(GotoAddressStr), {var}NewAddress) then
     Address := NewAddress;
 end;
@@ -491,26 +490,13 @@ begin
     DWord(FRegionInfo.VirtualAddres) + FRegionInfo.Size,
     BytesToString(FRegionInfo.Size)]);
 
-  // Update dissambled function list
-  FormXBEExplorer.lst_DissambledFunctions.Clear;
-
   // Scan whole region for opcodes offsets :
   MyInstructionOffsets.Clear;
   MyDisassemble.Offset := 0;
-
-  FormXBEExplorer.lst_DissambledFunctions.Visible := True;
   while MyDisassemble.DoDisasm do
   begin
     MyInstructionOffsets.Add(Pointer(MyDisassemble.CurrentOffset));
     Address := UIntPtr(FRegionInfo.VirtualAddres) + MyDisassemble.CurrentOffset;
-
-    if MyDisassemble.LabelStr <> '' then
-      with FormXBEExplorer.lst_DissambledFunctions.Items.Add do
-      begin
-        Caption := Format('%.08x', [Address]);
-        SubItems.Add(MyDisassemble.LabelStr);
-        Data := Self;
-      end;
   end;
 
   // Update the view on this data :
@@ -547,7 +533,7 @@ begin
     DisplayText := MyDisassemble.LabelStr + ':'#13#10 + DisplayText;
 
   // Put that string into the global select string (so Ctrl+C can copy this text into the clipboard) :
-  FormXBEExplorer.SelectedText := DisplayText;
+  g_SelectedText := DisplayText;
 end;
 
 procedure TDisassembleViewer.GridDrawCellEvent(Sender: TObject; aCol, aRow: Longint;

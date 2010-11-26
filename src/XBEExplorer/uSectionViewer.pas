@@ -23,6 +23,7 @@ uses
   // Delphi
   Classes, Controls, ComCtrls,
   // Dxbx
+  uTypes,
   uViewerUtils,
   uHexViewer,
   uDisassembleViewer;
@@ -32,18 +33,15 @@ type
   protected
     FDisassembleViewer: TDisassembleViewer;
     FHexViewer: THexViewer;
-    procedure PageControlChange(Sender: TObject);
   public
     constructor Create(Owner: TComponent); override;
     procedure SetRegion(const aRegionInfo: RRegionInfo);
+    function GotoAddress(aAddress: UIntPtr): Boolean;
   end;
 
 implementation
 
 { TSectionViewer }
-
-uses
-  uXBEExplorerMain;
 
 constructor TSectionViewer.Create(Owner: TComponent);
 
@@ -69,20 +67,22 @@ begin
   FDisassembleViewer := TDisassembleViewer.Create(Self);
   FHexViewer := THexViewer.Create(Self);
 
-  OnChange := PageControlChange;
   _NewTab(FDisassembleViewer, 'Disassembly');
   _NewTab(FHexViewer, 'Hex view');
-end;
-
-procedure TSectionViewer.PageControlChange(Sender: TObject);
-begin
-  FormXBEExplorer.lst_DissambledFunctions.Visible := ActivePageIndex = 0;
 end;
 
 procedure TSectionViewer.SetRegion(const aRegionInfo: RRegionInfo);
 begin
   FHexViewer.SetRegion(aRegionInfo);
   FDisassembleViewer.SetRegion(aRegionInfo);
+end;
+
+function TSectionViewer.GotoAddress(aAddress: UIntPtr): Boolean;
+begin
+  // Try to switch the viewer over to this address :
+  FDisassembleViewer.Address := aAddress;
+  // Return if that succeeded :
+  Result := (FDisassembleViewer.Address = aAddress);
 end;
 
 end.

@@ -51,9 +51,6 @@ type
 
 implementation
 
-uses
-  uXBEExplorerMain;
-
 { THexViewer }
 
 constructor THexViewer.Create(Owner: TComponent);
@@ -238,7 +235,7 @@ end;
 procedure THexViewer.StringGridSelectCell(Sender: TObject; ACol, ARow: Integer;
   var CanSelect: Boolean);
 begin
-  FormXBEExplorer.SelectedText := GetTextByCell(ACol, ARow);
+  g_SelectedText := GetTextByCell(ACol, ARow);
 end;
 
 procedure THexViewer.DoDrawCell(Sender: TObject; ACol, ARow: Integer;
