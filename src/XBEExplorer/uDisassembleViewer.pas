@@ -453,7 +453,7 @@ begin
       // Add interesting details, like referenced string contents, labels etc.
 
       // Only problem is, the referenced addresses in code assume post-load layout,
-      // while we're working with a Raw Xbe - so we need to do a bit of addresss
+      // while we're working with a Raw Xbe - so we need to do a bit of address-
       // conversion wizardry to make this work :
       Result := '';
       if MyDisassemble.GetReferencedMemoryAddress({var}Address) then
@@ -521,16 +521,24 @@ procedure TDisassembleViewer.StringGridSelectCell(Sender: TObject; aCol,
   aRow: Integer; var CanSelect: Boolean);
 var
   DisplayText: string;
+  ColText: string;
   i: integer;
 begin
   // Create a space-separated string from all cells on this row :
   DisplayText := '';
   for i := 0 to MyDrawGrid.ColCount - 1 do
-    DisplayText := DisplayText + GetTextByCell(i, aRow) + ' ';
+  begin
+    ColText := GetTextByCell(i, aRow);
+    if ColText <> '' then
+      DisplayText := DisplayText + ColText + ' ';
+  end;
 
   // Remove last space and add a newline :
-  SetLength(DisplayText, Length(DisplayText)-1);
-  DisplayText := DisplayText + #13#10;
+  if DisplayText <> '' then
+  begin
+    SetLength(DisplayText, Length(DisplayText)-1);
+    DisplayText := DisplayText + #13#10;
+  end;
 
   // Prepend that string with a label line if present :
   if MyDisassemble.LabelStr <> '' then

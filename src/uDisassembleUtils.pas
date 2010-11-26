@@ -139,6 +139,9 @@ begin
     Result := StringReplace(Result, ', dword ptr ', ', ', [rfIgnoreCase, rfReplaceAll]);
     Result := StringReplace(Result, ' , ', ',', [rfIgnoreCase, rfReplaceAll]);
   end;
+
+  if LastChar(Result) = ' ' then
+    SetLength(Result, Length(Result)-1);
 end;
 
 function RDisassemble.HexStr: string;
@@ -156,9 +159,10 @@ begin
     else
       OpcodeLen := 1;
 
-  // Split HexStr in operand+space+arguments :
-  Result := PByteToHexString(@PBytes(FBuffer)[FCurrentOffset], OpcodeLen)
-    + ' ' + PByteToHexString(@PBytes(FBuffer)[FCurrentOffset + OpcodeLen], FLen - OpcodeLen);
+  // Split HexStr in operand(+space+arguments) :
+  Result := PByteToHexString(@PBytes(FBuffer)[FCurrentOffset], OpcodeLen);
+  if (FLen - OpcodeLen) > 0 then
+    Result := Result + ' ' + PByteToHexString(@PBytes(FBuffer)[FCurrentOffset + OpcodeLen], FLen - OpcodeLen);
 end;
 
 function RDisassemble.IsOpcode(const aOpcode: Integer): Boolean;
