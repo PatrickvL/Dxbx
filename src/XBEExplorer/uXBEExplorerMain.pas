@@ -81,6 +81,7 @@ type
     procedure actSaveAsUpdate(Sender: TObject);
     procedure ExploreFileSystem1Click(Sender: TObject);
     procedure Copy2Click(Sender: TObject);
+    procedure lst_DissambledFunctionsDblClick(Sender: TObject);
   protected
     MyXBE: TXbe;
     MyRanges: TMemo;
@@ -316,7 +317,20 @@ begin
   Grid.Cells[3, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).wMinorVersion));
   Grid.Cells[4, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).wBuildVersion));
   Grid.Cells[5, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).dwFlags));
-end; // LibVersionClick
+end;
+
+procedure TFormXBEExplorer.lst_DissambledFunctionsDblClick(Sender: TObject);
+begin
+  if Assigned(lst_DissambledFunctions.Selected) then
+  begin
+    if Assigned(TStringGrid(lst_DissambledFunctions.selected.Data)) then
+    begin
+      TDisassembleViewer(lst_DissambledFunctions.selected.Data).GotoAddress(lst_DissambledFunctions.Selected.SubItems[0]);
+    end;
+  end;
+end;
+
+// LibVersionClick
 
 
 procedure TFormXBEExplorer.HandleGridDrawCell(Sender: TObject; aCol, aRow: Integer;
