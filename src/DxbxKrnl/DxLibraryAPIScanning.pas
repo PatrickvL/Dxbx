@@ -1938,7 +1938,8 @@ begin
 
     CustomSort(@SortObjects);
 
-    with TIniFile.Create(aCacheFile) do
+   // Note : TIniFile.WriteString is very slow, so we use a TMemIniFile instead :
+    with TMemIniFile.Create(aCacheFile) do
     try
       // Remove the entire [Symbols] section :
       EraseSection('Symbols');
