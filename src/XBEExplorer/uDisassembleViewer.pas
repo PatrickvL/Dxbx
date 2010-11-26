@@ -524,16 +524,17 @@ var
   i: integer;
 begin
   // Create a space-separated string from all cells on this row :
-  DisplayText := ' ';
+  DisplayText := '';
   for i := 0 to MyDrawGrid.ColCount - 1 do
     DisplayText := DisplayText + GetTextByCell(i, aRow) + ' ';
+
+  // Remove last space and add a newline :
+  SetLength(DisplayText, Length(DisplayText)-1);
+  DisplayText := DisplayText + #13#10;
 
   // Prepend that string with a label line if present :
   if MyDisassemble.LabelStr <> '' then
     DisplayText := MyDisassemble.LabelStr + ':'#13#10 + DisplayText;
-
-  // Remove last space :
-  SetLength(DisplayText, Length(DisplayText)-1);
 
   // Put that string into the global select string (so Ctrl+C can copy this text into the clipboard) :
   FormXBEExplorer.SelectedText := DisplayText;
@@ -543,11 +544,12 @@ procedure TDisassembleViewer.GridDrawCellEvent(Sender: TObject; aCol, aRow: Long
   Rect: TRect; State: TGridDrawState);
 var
   LineStr: string;
-  Offset: Cardinal;
   LineHeight: Integer;
 begin
   // Determine cell text :
   LineStr := GetTextByCell(aCol, aRow);
+  // Note : GetTextByCell also populates the MyDisassemble record,
+  // so we can use it directly here below :
 
   // Handle fixed cells (meaning: header-row) :
   if gdFixed in State then
@@ -591,28 +593,19 @@ begin
     MyDrawGrid.Canvas.Font.Color := clWindowText;
   end;
 
-  // Retrieve the offset of this line :
-  Offset := Cardinal(MyInstructionOffsets[aRow - 1]);
+  // Double the LineHeight, if there's a label :
+  if MyDisassemble.LabelStr <> '' then
+    LineHeight := 2 * MyDrawGrid.DefaultRowHeight
+  else
+    LineHeight := MyDrawGrid.DefaultRowHeight;
 
-  // Disassemble this (if not done already) :
-  if MyDisassemble.CurrentOffset <> Offset then
+  // Update this Row's height (only when needed) :
+  if MyDrawGrid.RowHeights[aRow] <> LineHeight then
   begin
-    MyDisassemble.Offset := Offset;
-    MyDisassemble.DoDisasm;
-
-    // Double the LineHeight, if there's a label :
-    if MyDisassemble.LabelStr <> '' then
-      LineHeight := 2 * MyDrawGrid.DefaultRowHeight
-    else
-      LineHeight := MyDrawGrid.DefaultRowHeight;
-
-    // Update this Row's height (only when needed) :
-    if MyDrawGrid.RowHeights[aRow] <> LineHeight then
-    begin
-      MyDrawGrid.RowHeights[aRow] := LineHeight;
-      MyDrawGrid.Invalidate;
-      Exit;
-    end;
+    MyDrawGrid.RowHeights[aRow] := LineHeight;
+    // Apart from changing the line height, we'll also need to leave & redo the drawing :
+    MyDrawGrid.Invalidate;
+    Exit;
   end;
 
   // Do we need to draw a label (we've already double the line-height for this) ?
