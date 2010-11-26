@@ -1965,6 +1965,7 @@ begin
         WriteString('Symbols', Strings[i], TmpStr);
       end;
     finally
+      UpdateFile;
       Free;
     end;
   finally
