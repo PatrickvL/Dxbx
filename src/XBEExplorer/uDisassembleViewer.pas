@@ -50,8 +50,8 @@ type
     function GetLabelByVA(const aVirtualAddress: Pointer; const aInLabelMode: Boolean = True): string;
     procedure GridDrawCellEvent(Sender: TObject; ACol, ARow: Longint; Rect: TRect; State: TGridDrawState);
     procedure CreatePatternExecute(Sender: TObject);
-    procedure GotoAddressExecute(Sender: TObject);
     function GeneratePatternForAddress(const aAddress: UIntPtr): string;
+    procedure GotoAddressExecute(Sender: TObject);
 
     function GetDissamblyTextByRow(ARow: Integer): string;
     function GetTextByCell(ACol, ARow: Integer; State: TGridDrawState): string;
@@ -63,6 +63,7 @@ type
     property Address: UIntPtr read GetAddress write SetAddress;
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
+    procedure GotoAddress(GotoAddressStr: string);
 
     procedure SetRegion(const aRegionInfo: RRegionInfo);
   end;
@@ -296,6 +297,19 @@ begin
     [Address, m_szAsciiTitle, GeneratePatternForAddress(Address)]);
 end;
 
+procedure TDisassembleViewer.GotoAddress(GotoAddressStr: string);
+var
+  NewAddress: Integer;
+  AddressStr: string;
+begin
+  AddressStr := DWord2Str(Address);
+  if GotoAddressStr = AddressStr then
+    Exit;
+
+  if ScanHexDWord(PChar(GotoAddressStr), {var}NewAddress) then
+    Address := NewAddress;
+end;
+
 procedure TDisassembleViewer.GotoAddressExecute(Sender: TObject);
 var
   NewAddress: Integer;
@@ -525,6 +539,7 @@ begin
       begin
         Caption := MyDisassemble.LabelStr;
         SubItems.Add(Format('%.08x', [Address]));
+        Data := Self;
       end;
   end;
 

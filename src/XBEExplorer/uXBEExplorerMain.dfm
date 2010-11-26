@@ -29,28 +29,24 @@ object FormXBEExplorer: TFormXBEExplorer
     Height = 763
     Align = alClient
     TabOrder = 0
-    ExplicitLeft = 304
-    ExplicitTop = 23
-    ExplicitWidth = 532
-    ExplicitHeight = 765
   end
   object ActionMainMenuBar: TActionMainMenuBar
     Left = 0
     Top = 0
     Width = 836
     Height = 25
+    UseSystemFont = False
     ActionManager = ActionManager
     ColorMap.HighlightColor = clWhite
     ColorMap.BtnSelectedColor = clBtnFace
     ColorMap.UnusedColor = clWhite
     Font.Charset = DEFAULT_CHARSET
-    Font.Color = clMenuText
+    Font.Color = clWindowText
     Font.Height = -12
     Font.Name = 'Segoe UI'
     Font.Style = []
     PersistentHotKeys = True
     Spacing = 0
-    ExplicitHeight = 23
   end
   object Panel1: TPanel
     Left = 0
@@ -59,8 +55,6 @@ object FormXBEExplorer: TFormXBEExplorer
     Height = 763
     Align = alLeft
     TabOrder = 2
-    ExplicitTop = 23
-    ExplicitHeight = 765
     object Splitter2: TSplitter
       Left = 1
       Top = 369
@@ -102,7 +96,7 @@ object FormXBEExplorer: TFormXBEExplorer
       RowSelect = True
       TabOrder = 1
       ViewStyle = vsReport
-      ExplicitHeight = 392
+      OnDblClick = lst_DissambledFunctionsDblClick
     end
   end
   object MainMenu: TMainMenu
