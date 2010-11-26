@@ -476,8 +476,6 @@ begin
 end;
 
 procedure TDisassembleViewer.SetRegion(const aRegionInfo: RRegionInfo);
-var
-  Address: UIntPtr;
 begin
   FRegionInfo := aRegionInfo;
 
@@ -494,10 +492,7 @@ begin
   MyInstructionOffsets.Clear;
   MyDisassemble.Offset := 0;
   while MyDisassemble.DoDisasm do
-  begin
     MyInstructionOffsets.Add(Pointer(MyDisassemble.CurrentOffset));
-    Address := UIntPtr(FRegionInfo.VirtualAddres) + MyDisassemble.CurrentOffset;
-  end;
 
   // Update the view on this data :
   MyDrawGrid.RowCount := 1 + MyInstructionOffsets.Count;

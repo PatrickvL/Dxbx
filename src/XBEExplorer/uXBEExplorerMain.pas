@@ -549,8 +549,6 @@ var
     CacheFileName: string;
     SearchRec: TSearchRec;
   begin
-    Result := False;
-
     SymbolList.Clear;
     CacheFileName := SymbolCacheFolder
             // TitleID

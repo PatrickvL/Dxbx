@@ -872,7 +872,7 @@ procedure DxbxTakeScreenShot(hWnd: HWND);
 
   function _GetScreenshotFileName(): string;
   begin
-    Result := Format('Dxbx running %s (%0.3d).bmp', [g_Title, ScreenShotNr]);
+    Result := Format('Dxbx running %s (%0.3d).bmp', [TitleToNiceFilename(g_Title), ScreenShotNr]);
     Inc(ScreenShotNr);
   end;
 
@@ -2166,8 +2166,8 @@ begin
         // cleanup directdraw
         if (g_pDD7 <> nil) then
         begin
-          IDirectDraw7(g_pDD7)._Release();
-          g_pDD7 := nil;
+          if IDirectDraw7(g_pDD7)._Release() = 0 then
+            g_pDD7 := nil;
         end;
 
         // signal completion
@@ -7026,7 +7026,8 @@ begin
     begin
       // Dxbx addition : Initialize Common field properly :
       pSurfaceLevel.Common := ((IDirect3DSurface(pSurfaceLevel.Emu.Surface)._AddRef()-1) and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_SURFACE;
-      IDirect3DSurface(pSurfaceLevel.Emu.Surface)._Release();
+      if IDirect3DSurface(pSurfaceLevel.Emu.Surface)._Release() = 0 then
+        pSurfaceLevel.Emu.Surface := nil;
 
       ppSurfaceLevel^ := pSurfaceLevel;
 
@@ -7135,12 +7136,11 @@ begin
     Result := g_EmuCDPD.hRet;
   end
   else
-  begin
     Result := g_pD3DDevice._Release();
-    // Dxbx addition - TODO : is this better ?
-    if Result = 0 then
-      Pointer(g_pD3DDevice) := nil; // Cast to prevent automatic refcounting from clearing the object (we did that above)
-  end;
+
+  // Dxbx addition - TODO : is this better ?
+  if Result = 0 then
+    Pointer(g_pD3DDevice) := nil; // Cast to prevent automatic refcounting from clearing the object (we did that above)
 
   EmuSwapFS(fsXbox);
 end;
