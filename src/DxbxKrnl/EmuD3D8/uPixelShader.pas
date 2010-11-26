@@ -742,7 +742,8 @@ type PSH_IMD_ARGUMENT = object
     procedure SetConstValue(Value: Float);
     function GetConstValue: Float;
     function UsesRegister: Boolean;
-    function IsRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
+    function IsRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16): Boolean; overload;
+    function IsRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean; overload;
     procedure SetRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD);
     function ToString: string;
     function Decode(const Value: DWORD; aMask: DWORD; ArgumentType: TArgumentType): Boolean;
@@ -766,8 +767,10 @@ type PSH_INTERMEDIATE_FORMAT = record
     function ToString: string;
     function IsArithmetic: Boolean;
     procedure ScaleOutput(aFactor: Float);
-    function ReadsFromRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
-    function WritesToRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
+    function ReadsFromRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16): Boolean; overload;
+    function ReadsFromRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean; overload;
+    function WritesToRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16): Boolean; overload;
+    function WritesToRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean; overload;
     procedure SwapParameter(const Index1, Index2: int);
     procedure XSwapOutput();
     function MoveRemovableParametersRight(const Index1, Index2: int): Boolean;
@@ -812,6 +815,10 @@ type PSH_XBOX_SHADER = record
     procedure ConvertXboxOpcodesToNative(pPSDef: PX_D3DPIXELSHADERDEF);
     function ConvertConstantsToNative(pPSDef: PX_D3DPIXELSHADERDEF): Boolean;
     function RemoveUselessWrites: Boolean;
+    function IsRegisterFreeFromIndexOnwards(aIndex: int; aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16): Boolean;
+    procedure ReplaceRegisterFromIndexOnwards(aIndex: int;
+      aSrcRegType: PSH_ARGUMENT_TYPE; aSrcAddress: Int16;
+      aDstRegType: PSH_ARGUMENT_TYPE; aDstAddress: Int16);
     function ConvertXMMToNative_Except3RdOutput(i: int): Boolean;
     procedure ConvertXMMAToNative(i: int);
     procedure ConvertXMMCToNative(i: int);
@@ -1103,10 +1110,15 @@ begin
   Result := (Type_ > PARAM_DISCARD);
 end;
 
-function PSH_IMD_ARGUMENT.IsRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
+function PSH_IMD_ARGUMENT.IsRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16): Boolean;
 begin
   Result := (Type_ = aRegType)
-        and (Address = aAddress)
+        and (Address = aAddress);
+end;
+
+function PSH_IMD_ARGUMENT.IsRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
+begin
+  Result := IsRegister(aRegType, aAddress)
         // Check the mask itself, but also 'mask-less' :
         and (((Mask and aMask) = aMask) or (Mask = 0));
 end;
@@ -1460,6 +1472,22 @@ begin
   end;
 end;
 
+function PSH_INTERMEDIATE_FORMAT.ReadsFromRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16): Boolean;
+var
+  i: int;
+begin
+  // Check all parameters :
+  for i := 0 to PSH_OPCODE_DEFS[Opcode]._In - 1 do
+  begin
+    // Check if one of them reads from the given register :
+    Result := Parameters[i].IsRegister(aRegType, aAddress);
+    if Result then
+      Exit;
+  end;
+
+  Result := False;
+end;
+
 function PSH_INTERMEDIATE_FORMAT.ReadsFromRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16; aMask: DWORD): Boolean;
 var
   i: int;
@@ -1469,6 +1497,22 @@ begin
   begin
     // Check if one of them reads from the given register :
     Result := Parameters[i].IsRegister(aRegType, aAddress, aMask);
+    if Result then
+      Exit;
+  end;
+
+  Result := False;
+end;
+
+function PSH_INTERMEDIATE_FORMAT.WritesToRegister(aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16): Boolean;
+var
+  i: int;
+begin
+  // Check the output :
+  for i := 0 to PSH_OPCODE_DEFS[Opcode]._Out - 1 do
+  begin
+    // Check if one of them writes to the given register :
+    Result := Output[i].IsRegister(aRegType, aAddress);
     if Result then
       Exit;
   end;
@@ -2288,6 +2332,7 @@ begin
     ConstInUse[i] := False;
   end;
 
+  // Loop over all opcodes to update the constant-indexes (Xbox uses C0 and C1 in each combiner) :
   i := 0;
   while i < IntermediateCount do
   begin
@@ -2657,7 +2702,6 @@ begin
         CurArg.Type_ := PARAM_R;
         CurArg.Address := FakeRegNr_Sum;
         NeedsSum := True;
-        Cur.CommentString := 'final combiner - V1R0_sum register';
       end;
 
       PARAM_EF_PROD:
@@ -2666,7 +2710,6 @@ begin
         CurArg.Type_ := PARAM_R;
         CurArg.Address := FakeRegNr_Prod;
         NeedsProd := True;
-        Cur.CommentString := 'final combiner - EF_prod register';
       end;
 
       PARAM_FOG:
@@ -2697,6 +2740,7 @@ begin
 
     InsertIntermediate(@Ins, InsertPos);
     Inc(InsertPos);
+    DbgPrintf('; Inserted final combiner calculation of V1R0_sum register');
   end;
 
   if NeedsProd then
@@ -2708,6 +2752,7 @@ begin
     Ins.Parameters[1] := Cur.Parameters[5]; // F
     InsertIntermediate(@Ins, InsertPos);
     Inc(InsertPos);
+    DbgPrintf('; Inserted final combiner calculation of EF_prod register');
   end;
 
   // The final combiner calculates : r0.rgb=s0*s1 + (1-s0)*s2 + s3
@@ -2785,6 +2830,48 @@ begin
         Continue;
       end;
     end;
+  end;
+end;
+
+function PSH_XBOX_SHADER.IsRegisterFreeFromIndexOnwards(aIndex: int; aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16): Boolean;
+var
+  i: int;
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+begin
+  for i := aIndex to IntermediateCount - 1 do
+  begin
+    Cur := @(Intermediate[i]);
+    // Detect a write or read :
+    if Cur.WritesToRegister(aRegType, aAddress)
+    or Cur.ReadsFromRegister(aRegType, aAddress) then
+    begin
+      Result := False;
+      Exit;
+    end;
+  end;
+
+  Result := True;
+end;
+
+procedure PSH_XBOX_SHADER.ReplaceRegisterFromIndexOnwards(aIndex: int;
+  aSrcRegType: PSH_ARGUMENT_TYPE; aSrcAddress: Int16;
+  aDstRegType: PSH_ARGUMENT_TYPE; aDstAddress: Int16);
+var
+  i: int;
+  j: int;
+  Cur: PPSH_INTERMEDIATE_FORMAT;
+begin
+  for i := aIndex to IntermediateCount - 1 do
+  begin
+    Cur := @(Intermediate[i]);
+
+    for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._Out - 1 do
+      if Cur.Output[j].IsRegister(aSrcRegType, aSrcAddress) then
+        Cur.Output[j].SetRegister(aDstRegType, aDstAddress, Cur.Output[j].Mask);
+
+    for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 do
+      if Cur.Parameters[j].IsRegister(aSrcRegType, aSrcAddress) then
+        Cur.Parameters[j].SetRegister(aDstRegType, aDstAddress, Cur.Parameters[j].Mask);
   end;
 end;
 
@@ -2924,22 +3011,23 @@ begin
           Result := True;
           Continue;
         end;
-(*
-        if  (Op0.Opcode = PO_MOV)
-        and (Op1.Opcode = Op0.Opcode) then
+
+        // Was it a MUL,MUL,ADD?
+        if  (Op0.Opcode = PO_MUL)
+        and (Op1.Opcode = PO_MUL)
+        and (Op0.Parameters[1].GetConstValue = 1.0)
+        and (Op1.Parameters[1].GetConstValue = 1.0) then
         begin
           // Remove the two MOV's and fold their arguments into a MUL :
           Op2.Opcode := PO_MUL;
           Op2.Parameters[0] := Op0.Parameters[0];
           Op2.Parameters[1] := Op1.Parameters[0];
-          // TODO : Fix the modifiers too
           DeleteIntermediate(i);
           DeleteIntermediate(i);
-          DbgPrintf('; Changed temporary MOV,MOV,ADD into a MUL');
+          DbgPrintf('; Changed temporary MUL,MUL,ADD into a MUL');
           Result := True;
           Continue;
         end;
-*)
       end;
     end;
 
@@ -3020,6 +3108,7 @@ begin
       if  (Op0.Opcode = PO_MUL)
       and (Op1.Opcode = PO_MOV) then
       begin
+        // > mul r0.rgb, r0,t0
         Op0.Output[0] := Op1.Output[0];
         DeleteIntermediate(i+1);
         DbgPrintf('; Changed temporary MUL,MOV into a MUL');
@@ -3028,6 +3117,19 @@ begin
       end;
     end;
 
+    // Fix Crash bandicoot xfc leftover r3 :
+    if  (Op0.Output[0].Type_ = PARAM_R)
+    and (Op0.Output[0].Address = FakeRegNr_Prod) then
+    begin
+      // The final combiner uses r3, try to use r1 instead :
+      if IsRegisterFreeFromIndexOnwards(i, PARAM_R, 1) then
+      begin
+        ReplaceRegisterFromIndexOnwards(i, Op0.Output[0].Type_, Op0.Output[0].Address, PARAM_R, 1);
+        DbgPrintf('; Changed fake register by r1');
+        Result := True;
+        Continue;
+      end;
+    end;
   end; // while
 end; // CombineInstructions
 
