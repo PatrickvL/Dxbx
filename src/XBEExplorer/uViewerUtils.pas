@@ -28,6 +28,9 @@ type
     Name: string;
   end;
 
+var
+  g_SelectedText: string = '';
+
 implementation
 
 end.

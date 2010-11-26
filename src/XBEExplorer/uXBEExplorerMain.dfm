@@ -37,9 +37,9 @@ object FormXBEExplorer: TFormXBEExplorer
     Height = 25
     UseSystemFont = False
     ActionManager = ActionManager
-    ColorMap.HighlightColor = clWhite
+    ColorMap.HighlightColor = 14410210
     ColorMap.BtnSelectedColor = clBtnFace
-    ColorMap.UnusedColor = clWhite
+    ColorMap.UnusedColor = 14410210
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
@@ -55,21 +55,23 @@ object FormXBEExplorer: TFormXBEExplorer
     Height = 763
     Align = alLeft
     TabOrder = 2
+    ExplicitLeft = -3
+    ExplicitTop = 49
     object Splitter2: TSplitter
-      Left = 1
-      Top = 369
-      Width = 217
-      Height = 3
-      Cursor = crVSplit
-      Align = alBottom
-      ExplicitWidth = 395
-    end
-    object TreeView1: TTreeView
       Left = 1
       Top = 1
       Width = 217
-      Height = 368
-      Align = alClient
+      Height = 3
+      Cursor = crVSplit
+      Align = alTop
+      ExplicitTop = 166
+    end
+    object TreeView1: TTreeView
+      Left = 1
+      Top = 4
+      Width = 217
+      Height = 322
+      Align = alTop
       HideSelection = False
       Indent = 19
       ReadOnly = True
@@ -77,28 +79,52 @@ object FormXBEExplorer: TFormXBEExplorer
       TabOrder = 0
       OnChange = TreeView1Change
     end
-    object lst_DissambledFunctions: TListView
+    object Panel2: TPanel
       Left = 1
-      Top = 372
+      Top = 326
       Width = 217
-      Height = 390
-      Align = alBottom
-      Columns = <
-        item
-          Caption = 'Address'
-          Width = 63
-        end
-        item
-          AutoSize = True
-          Caption = 'Dissambled Functions'
-        end>
-      ReadOnly = True
-      RowSelect = True
-      SortType = stText
+      Height = 436
+      Align = alClient
+      Caption = 'Panel2'
       TabOrder = 1
-      ViewStyle = vsReport
-      OnColumnClick = lst_DissambledFunctionsColumnClick
-      OnDblClick = lst_DissambledFunctionsDblClick
+      ExplicitTop = 171
+      ExplicitHeight = 591
+      object edt_SymbolFilter: TEdit
+        Left = 1
+        Top = 1
+        Width = 215
+        Height = 21
+        Align = alTop
+        TabOrder = 0
+        OnChange = edt_SymbolFilterChange
+        ExplicitLeft = -3
+        ExplicitTop = 31
+      end
+      object lst_DissambledFunctions: TListView
+        Left = 1
+        Top = 22
+        Width = 215
+        Height = 413
+        Align = alClient
+        Columns = <
+          item
+            Caption = 'Address'
+            Width = 63
+          end
+          item
+            AutoSize = True
+            Caption = 'Symbol names'
+          end>
+        ReadOnly = True
+        RowSelect = True
+        SortType = stText
+        TabOrder = 1
+        ViewStyle = vsReport
+        OnColumnClick = lst_DissambledFunctionsColumnClick
+        OnDblClick = lst_DissambledFunctionsDblClick
+        ExplicitTop = 25
+        ExplicitHeight = 565
+      end
     end
   end
   object MainMenu: TMainMenu

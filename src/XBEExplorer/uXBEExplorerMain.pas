@@ -27,6 +27,7 @@ uses
   Dialogs, Menus, ComCtrls, Grids, ExtCtrls, Clipbrd,
   StdActns, ActnList, XPStyleActnCtrls, ActnMan, ToolWin, ActnCtrls, ActnMenus,
   StdCtrls, // TMemo
+  StrUtils, // ContainsText
   Math, // Min
   ShellAPI, // DragQueryFile
   ExtDlgs, // TSavePictureDialog
@@ -70,6 +71,8 @@ type
     Panel1: TPanel;
     TreeView1: TTreeView;
     Splitter1: TSplitter;
+    Panel2: TPanel;
+    edt_SymbolFilter: TEdit;
     lst_DissambledFunctions: TListView;
     Splitter2: TSplitter;
     procedure actOpenExecute(Sender: TObject);
@@ -84,11 +87,14 @@ type
     procedure lst_DissambledFunctionsDblClick(Sender: TObject);
     procedure lst_DissambledFunctionsColumnClick(Sender: TObject;
       Column: TListColumn);
+    procedure edt_SymbolFilterChange(Sender: TObject);
   protected
     MyXBE: TXbe;
     MyRanges: TMemo;
+    SectionsGrid: TStringGrid;
     FXBEFileName: string;
-    LastSortedColumn: integer;
+    LastSortedColumn: Integer;
+    Ascending: Boolean;
     procedure CloseFile;
     procedure GridAddRow(const aStringGrid: TStringGrid; const aStrings: array of string);
     procedure HandleGridDrawCell(Sender: TObject; aCol, aRow: Integer; Rect: TRect; State: TGridDrawState);
@@ -98,9 +104,9 @@ type
     procedure LibVersionClick(Sender: TObject);
     procedure OnDropFiles(var Msg: TMessage); message WM_DROPFILES;
     procedure StringGridSelectCell(Sender: TObject; ACol, ARow: Integer;  var CanSelect: Boolean);
+    procedure UpdateSymbolListView;
+    procedure GotoAddress(const aAddress: UIntPtr);
   public
-    SelectedText: string;
-
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
 
@@ -109,7 +115,6 @@ type
 
 var
   FormXBEExplorer: TFormXBEExplorer;
-  Ascending: boolean;
 
 implementation
 
@@ -169,9 +174,8 @@ begin
 
   // Start accepting WM_DROPFILES messages (see OnDropFiles) :
   DragAcceptFiles(Handle, True);
-  LastSortedColumn := -1;
-  Ascending := True;
-  lst_DissambledFunctions.Visible := False;
+
+  CloseFile;
 end;
 
 destructor TFormXBEExplorer.Destroy;
@@ -179,6 +183,11 @@ begin
   CloseFile;
 
   inherited Destroy;
+end;
+
+procedure TFormXBEExplorer.edt_SymbolFilterChange(Sender: TObject);
+begin
+  UpdateSymbolListView();
 end;
 
 procedure TFormXBEExplorer.ExploreFileSystem1Click(Sender: TObject);
@@ -259,13 +268,12 @@ end;
 procedure TFormXBEExplorer.TreeView1Change(Sender: TObject; Node: TTreeNode);
 begin
   PageControl.ActivePage := TTabSheet(Node.Data);
-  lst_DissambledFunctions.Visible := TreeView1.Selected.Text = 'Section Headers';
 end;
 
 procedure TFormXBEExplorer.SectionClick(Sender: TObject);
 var
   Grid: TStringGrid;
-  i: DWord;
+  i: DWORD;
   Hdr: PXbeSectionHeader;
   RegionInfo: RRegionInfo;
 begin
@@ -296,17 +304,15 @@ begin
     RegionInfo.VirtualAddres := Pointer(Hdr.dwVirtualAddr);
     RegionInfo.Name := 'section "' + Grid.Cells[0, Grid.Row] + '"';
 
-    TSectionViewer(TStringGrid(Sender).Tag).SetRegion(RegionInfo);
+    TSectionViewer(Grid.Tag).SetRegion(RegionInfo);
   end;
-end;
+end; // SectionClick
 
 procedure TFormXBEExplorer.StringGridSelectCell(Sender: TObject; ACol,
   ARow: Integer; var CanSelect: Boolean);
 begin
-  SelectedText := TStringGrid(Sender).Cells[ACol, ARow];
+  g_SelectedText := TStringGrid(Sender).Cells[ACol, ARow];
 end;
-
-// SectionClick
 
 procedure TFormXBEExplorer.LibVersionClick(Sender: TObject);
 var
@@ -327,14 +333,15 @@ begin
   Grid.Cells[5, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).dwFlags));
 end;
 
-function SortByColumn(Item1, Item2: TListItem; Data: integer): integer; stdcall;
+function SortByColumn(Item1, Item2: TListItem; Data: Integer): Integer; stdcall;
 begin
-  if Data = 0 then
+  if Abs(Data) = 1 then
     Result := AnsiCompareText(Item1.Caption, Item2.Caption)
   else
-    Result := AnsiCompareText(Item1.SubItems[Data-1], Item2.SubItems[Data-1]);
+    Result := AnsiCompareText(Item1.SubItems[0], Item2.SubItems[0]);
 
-  if not Ascending then Result := -Result;
+  if Data < 0 then
+    Result := -Result;
 end;
 
 procedure TFormXBEExplorer.lst_DissambledFunctionsColumnClick(Sender: TObject;
@@ -345,17 +352,75 @@ begin
   else
     LastSortedColumn := Column.Index;
 
-  TListView(Sender).CustomSort(@SortByColumn, Column.Index);
+  if Ascending then
+    // Sort 1 or 2 (for ascendig sort on column 0 or 1) :
+    TListView(Sender).CustomSort(@SortByColumn, Column.Index + 1)
+  else
+    // Sort -1 or -2 (for descendig sort on column 0 or 1) :
+    TListView(Sender).CustomSort(@SortByColumn, -(Column.Index + 1));
+end;
+
+procedure TFormXBEExplorer.GotoAddress(const aAddress: UIntPtr);
+var
+  i: Integer;
+  Hdr: PXbeSectionHeader;
+begin
+  // Loop over all sections in the Xbe :
+  for i := 0 to Length(MyXBE.m_SectionHeader) - 1 do
+  begin
+    // See if the given address falls inside this sections' range :
+    Hdr := @(MyXBE.m_SectionHeader[i]);
+    if (aAddress >= Hdr.dwVirtualAddr) and (aAddress < Hdr.dwVirtualAddr + Hdr.dwSizeofRaw) then
+    begin
+      // Switch the SectionGrid over to that section :
+      SectionsGrid.Row := SectionsGrid.FixedRows + i;
+      SectionClick(SectionsGrid);
+      // Select the addess :
+      if TSectionViewer(SectionsGrid.Tag).GotoAddress(aAddress) then
+        SectionsGrid.BringToFront;
+
+      Exit;
+    end;
+  end;
 end;
 
 procedure TFormXBEExplorer.lst_DissambledFunctionsDblClick(Sender: TObject);
 begin
   if Assigned(lst_DissambledFunctions.Selected) then
+    GotoAddress(UIntPtr(lst_DissambledFunctions.Selected.Data));
+end;
+
+procedure TFormXBEExplorer.UpdateSymbolListView;
+var
+  FilterText: string;
+  i: Integer;
+begin
+  // Check if the SymbolList is available and update the visibility of elements likewise :
+  Panel2.Visible := (SymbolList.Count > 0);
+  Splitter2.Visible := Panel2.Visible;
+  if not Panel2.Visible then
   begin
-    if Assigned(TStringGrid(lst_DissambledFunctions.selected.Data)) then
-    begin
-      TDisassembleViewer(lst_DissambledFunctions.selected.Data).GotoAddress(lst_DissambledFunctions.Selected.caption);
-    end;
+    TreeView1.Align := alClient;
+    Exit;
+  end;
+
+  // Make some space and put the (filter-matching) elements in the listview :
+  TreeView1.Align := alTop;
+  TreeView1.Height := 300;
+  FilterText := edt_SymbolFilter.Text;
+  lst_DissambledFunctions.Items.BeginUpdate;
+  try
+    lst_DissambledFunctions.Clear;
+    for i := 0 to SymbolList.Count - 1 do
+      if (FilterText = '') or ContainsText(SymbolList.Strings[i], FilterText) then
+        with lst_DissambledFunctions.Items.Add do
+        begin
+          Data := SymbolList.Objects[i]; // Address will be used in GOTO
+          Caption := Format('%.08x', [UIntPtr(Data)]);
+          SubItems.Add(SymbolList.Strings[i]);
+        end;
+  finally
+    lst_DissambledFunctions.Items.EndUpdate;
   end;
 end;
 
@@ -457,16 +522,21 @@ end;
 procedure TFormXBEExplorer.CloseFile;
 begin
   FreeAndNil(MyXBE);
+  SymbolList.Clear;
   TreeView1.Items.Clear;
   Caption := Application.Title;
   PageControl.Visible := False;
   while PageControl.PageCount > 0 do
     PageControl.Pages[0].Free;
+  LastSortedColumn := -1;
+  Ascending := True;
+  edt_SymbolFilter.Text := '';
+  UpdateSymbolListView();
 end;
 
 procedure TFormXBEExplorer.Copy2Click(Sender: TObject);
 begin
-  Clipboard.AsText := SelectedText;
+  Clipboard.AsText := g_SelectedText;
 end;
 
 function TFormXBEExplorer.OpenFile(const aFilePath: string): Boolean;
@@ -474,11 +544,13 @@ var
   NodeResources: TTreeNode;
   RegionInfo: RRegionInfo;
 
-  procedure _LoadSymbols;
+  function _LoadSymbols: Boolean;
   var
     CacheFileName: string;
     SearchRec: TSearchRec;
   begin
+    Result := False;
+
     SymbolList.Clear;
     CacheFileName := SymbolCacheFolder
             // TitleID
@@ -493,8 +565,9 @@ var
       LoadSymbolsFromCache(SymbolList, SymbolCacheFolder + SearchRec.Name);
       SysUtils.FindClose(SearchRec);
     end;
-  end;
 
+    Result := (SymbolList.Count > 0);
+  end;
 
   procedure _AddRange(Start, Size: Integer; Title: string);
   begin
@@ -695,7 +768,6 @@ var
 
   function _Initialize_SectionHeaders: TPanel;
   var
-    Grid: TStringGrid;
     i, o: Integer;
     Hdr: PXbeSectionHeader;
     ItemName: string;
@@ -710,16 +782,16 @@ var
 
     Result := TPanel.Create(Self);
 
-    Grid := NewGrid(2, [' ', 'Member:', 'Flags', 'Virtual Address', 'Virtual Size',
+    SectionsGrid := NewGrid(2, [' ', 'Member:', 'Flags', 'Virtual Address', 'Virtual Size',
       'Raw Address', 'Raw Size', 'SectionNamAddr', 'dwSectionRefCount',
       'dwHeadSharedRefCountAddr', 'dwTailSharedRefCountAddr', 'bzSectionDigest']);
-    Grid.Parent := Result;
-    Grid.Align := alTop;
-    Grid.RowCount := 4;
-    Grid.Options := Grid.Options + [goRowSelect];
-    Grid.FixedRows := 3;
-    GridAddRow(Grid, [' ', 'Type:', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Byte[20]']);
-    GridAddRow(Grid, ['Section', 'Offset', '-Click row-']); // This is the offset-row
+    SectionsGrid.Parent := Result;
+    SectionsGrid.Align := alTop;
+    SectionsGrid.RowCount := 4;
+    SectionsGrid.Options := SectionsGrid.Options + [goRowSelect];
+    SectionsGrid.FixedRows := 3;
+    GridAddRow(SectionsGrid, [' ', 'Type:', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Byte[20]']);
+    GridAddRow(SectionsGrid, ['Section', 'Offset', '-Click row-']); // This is the offset-row
 
     o := MyXBE.m_Header.dwSectionHeadersAddr - MyXBE.m_Header.dwBaseAddr;
     for i := 0 to Length(MyXBE.m_SectionHeader) - 1 do
@@ -728,7 +800,7 @@ var
       if Assigned(Hdr) then
       begin
         ItemName := GetSectionName(i);
-        GridAddRow(Grid, [
+        GridAddRow(SectionsGrid, [
           ItemName,
           DWord2Str(o),
           PByteToHexString(@Hdr.dwFlags[0], 4),
@@ -761,25 +833,25 @@ var
         _AddRange(Hdr.dwSectionNameAddr - MyXBE.m_Header.dwBaseAddr, Length(ItemName)+1, 'SectionName ' + ItemName);
       end
       else
-        GridAddRow(Grid, ['!NIL!']);
+        GridAddRow(SectionsGrid, ['!NIL!']);
 
       Inc(o, SizeOf(TXbeSectionHeader));
     end;
 
-    // Resize grid to fit into 40% of the height or less :
-    ResizeGrid(Grid, 0.4);
+    // Resize SectionsGrid to fit into 40% of the height or less :
+    ResizeGrid(SectionsGrid, 0.4);
 
     Splitter := TSplitter.Create(Self);
     Splitter.Parent := Result;
     Splitter.Align := alTop;
-    Splitter.Top := Grid.Height;
+    Splitter.Top := SectionsGrid.Height;
 
     SectionViewer := TSectionViewer.Create(Self);
     SectionViewer.Parent := Result;
     SectionViewer.Align := alClient;
 
-    Grid.Tag := Integer(SectionViewer);
-    Grid.OnClick := SectionClick;
+    SectionsGrid.Tag := Integer(SectionViewer);
+    SectionsGrid.OnClick := SectionClick;
   end; // _Initialize_SectionHeaders
 
   function _Initialize_LibraryVersions: TStringGrid;
@@ -885,7 +957,10 @@ begin // OpenFile
   MyXBE := TXbe.Create(aFilePath);
   FXBEFileName := ExtractFileName(aFilePath);
 
-  _LoadSymbols;
+  Panel2.Visible := _LoadSymbols;
+  Splitter2.Visible := Panel2.Visible;
+  if Panel2.Visible then
+    UpdateSymbolListView;
 
   Caption := Application.Title + ' - [' + FXBEFileName + ']';
   PageControl.Visible := True;
