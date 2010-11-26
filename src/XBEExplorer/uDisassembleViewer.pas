@@ -53,6 +53,7 @@ type
     procedure GotoAddressExecute(Sender: TObject);
     function GeneratePatternForAddress(const aAddress: UIntPtr): string;
 
+    function GetDissamblyTextByRow(ARow: Integer): string;
     function GetTextByCell(ACol, ARow: Integer; State: TGridDrawState): string;
     procedure StringGridSelectCell(Sender: TObject; ACol, ARow: Integer;  var CanSelect: Boolean);
 
@@ -130,11 +131,8 @@ begin
     ColWidths[1] := 120;
     ColWidths[2] := 200;
     Options := [goRangeSelect, goColSizing, goRowSelect, goThumbTracking];
-//    Color := FixedColor;
-//    DrawingStyle := gdsClassic;
     ShowHint := True;
     DefaultDrawing := False;
-//    DoubleBuffered := True;
     OnDrawCell := GridDrawCellEvent;
     OnSelectCell := StringGridSelectCell;
 
@@ -364,6 +362,28 @@ begin
   Result := UIntPtr(FRegionInfo.VirtualAddres) + Result;
 end;
 
+function TDisassembleViewer.GetDissamblyTextByRow(ARow: Integer): string;
+var
+  LineHeight: Integer;
+  Offset: Cardinal;
+begin
+  Result := '';
+  // Retrieve the offset and address of this line :
+  Offset := Cardinal(MyInstructionOffsets[aRow - 1]);
+  Address := UIntPtr(FRegionInfo.VirtualAddres) + Offset;
+
+  // Disassemble this (if not done already) :
+  if MyDisassemble.CurrentOffset <> Offset then
+  begin
+    MyDisassemble.Offset := Offset;
+    MyDisassemble.DoDisasm;
+
+    // Double the LineHeight, if there's a label :
+    if MyDisassemble.LabelStr <> '' then
+      Result := MyDisassemble.LabelStr;
+  end;
+end;
+
 const
   ShowMangledNames = True; // Change this into a setting
 
@@ -414,18 +434,6 @@ begin
   // Handle fixed cells (meaning: header-row) :
   Result := '';
 
-  // Update drawing colors, depending on state :
-  if gdSelected in State then
-  begin
-    MyDrawGrid.Canvas.Brush.Color := clHighlight;
-    MyDrawGrid.Canvas.Font.Color := clHighlightText;
-  end
-  else
-  begin
-    MyDrawGrid.Canvas.Brush.Color := MyDrawGrid.Color;
-    MyDrawGrid.Canvas.Font.Color := clWindowText;
-  end;
-
   // Retrieve the offset and address of this line :
   Offset := Cardinal(MyInstructionOffsets[aRow - 1]);
   Address := UIntPtr(FRegionInfo.VirtualAddres) + Offset;
@@ -449,32 +457,6 @@ begin
       MyDrawGrid.Invalidate;
       Exit;
     end;
-  end;
-
-  // Do we need to draw a label (we've already double the line-height for this) ?
-  if MyDisassemble.LabelStr <> '' then
-  begin
-  (*  // Append the label (only in the first column) :
-    if aCol = 0 then
-    begin
-      // Extend this cell to a whole line :
-      Inc(Rect.Right, ClientWidth);
-
-      // Clear contents :
-      MyDrawGrid.Canvas.FillRect(Rect);
-
-      // Draw the label in bold :
-      MyDrawGrid.Canvas.Font.Style := [fsBold];
-      MyDrawGrid.Canvas.TextOut(Rect.Left + CXBorder, Rect.Top + CYBorder, MyDisassemble.LabelStr);
-
-      // Deduce back to a single cell :
-      Dec(Rect.Right, ClientWidth);
-    end
-    else
-      ; // Don't clear the other columns (or the label would be gone)
-
-    // Move the drawing rectangle to the next line :
-    OffsetRect(Rect, 0, MyDrawGrid.DefaultRowHeight); *)
   end;
 
   // Determine cell text :
@@ -513,6 +495,8 @@ begin
 end;
 
 procedure TDisassembleViewer.SetRegion(const aRegionInfo: RRegionInfo);
+var
+  Address: UIntPtr;
 begin
   FRegionInfo := aRegionInfo;
 
@@ -525,11 +509,24 @@ begin
     DWord(FRegionInfo.VirtualAddres) + FRegionInfo.Size,
     BytesToString(FRegionInfo.Size)]);
 
+  // Update dissambled function list
+  FormXBEExplorer.lst_DissambledFunctions.Clear;
+
   // Scan whole region for opcodes offsets :
   MyInstructionOffsets.Clear;
   MyDisassemble.Offset := 0;
   while MyDisassemble.DoDisasm do
+  begin
     MyInstructionOffsets.Add(Pointer(MyDisassemble.CurrentOffset));
+    Address := UIntPtr(FRegionInfo.VirtualAddres) + MyDisassemble.CurrentOffset;
+
+    if MyDisassemble.LabelStr <> '' then
+      with FormXBEExplorer.lst_DissambledFunctions.Items.Add do
+      begin
+        Caption := MyDisassemble.LabelStr;
+        SubItems.Add(Format('%.08x', [Address]));
+      end;
+  end;
 
   // Update the view on this data :
   MyDrawGrid.RowCount := 1 + MyInstructionOffsets.Count;

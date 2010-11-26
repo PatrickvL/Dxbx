@@ -14,46 +14,96 @@ object FormXBEExplorer: TFormXBEExplorer
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
-  object TreeView1: TTreeView
-    Left = 0
-    Top = 23
-    Width = 225
-    Height = 765
-    Align = alLeft
-    HideSelection = False
-    Indent = 19
-    ReadOnly = True
-    RowSelect = True
-    TabOrder = 0
-    OnChange = TreeView1Change
-    ExplicitHeight = 705
+  object Splitter1: TSplitter
+    Left = 219
+    Top = 25
+    Height = 763
+    ExplicitLeft = 424
+    ExplicitTop = 376
+    ExplicitHeight = 100
   end
   object PageControl: TPageControl
-    Left = 225
-    Top = 23
-    Width = 611
-    Height = 765
+    Left = 222
+    Top = 25
+    Width = 614
+    Height = 763
     Align = alClient
-    TabOrder = 1
-    ExplicitHeight = 705
+    TabOrder = 0
+    ExplicitLeft = 304
+    ExplicitTop = 23
+    ExplicitWidth = 532
+    ExplicitHeight = 765
   end
   object ActionMainMenuBar: TActionMainMenuBar
     Left = 0
     Top = 0
     Width = 836
-    Height = 23
-    UseSystemFont = False
+    Height = 25
     ActionManager = ActionManager
     ColorMap.HighlightColor = clWhite
     ColorMap.BtnSelectedColor = clBtnFace
     ColorMap.UnusedColor = clWhite
     Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'Tahoma'
+    Font.Color = clMenuText
+    Font.Height = -12
+    Font.Name = 'Segoe UI'
     Font.Style = []
     PersistentHotKeys = True
     Spacing = 0
+    ExplicitHeight = 23
+  end
+  object Panel1: TPanel
+    Left = 0
+    Top = 25
+    Width = 219
+    Height = 763
+    Align = alLeft
+    TabOrder = 2
+    ExplicitTop = 23
+    ExplicitHeight = 765
+    object Splitter2: TSplitter
+      Left = 1
+      Top = 369
+      Width = 217
+      Height = 3
+      Cursor = crVSplit
+      Align = alTop
+      ExplicitWidth = 395
+    end
+    object TreeView1: TTreeView
+      Left = 1
+      Top = 1
+      Width = 217
+      Height = 368
+      Align = alTop
+      HideSelection = False
+      Indent = 19
+      ReadOnly = True
+      RowSelect = True
+      TabOrder = 0
+      OnChange = TreeView1Change
+    end
+    object lst_DissambledFunctions: TListView
+      Left = 1
+      Top = 372
+      Width = 217
+      Height = 390
+      Align = alClient
+      Columns = <
+        item
+          Caption = 'Dissambled Functions'
+          Width = 150
+        end
+        item
+          AutoSize = True
+          Caption = 'Address'
+        end>
+      ReadOnly = True
+      RowSelect = True
+      TabOrder = 1
+      ViewStyle = vsReport
+      ExplicitHeight = 392
+    end
   end
   object MainMenu: TMainMenu
     Left = 64

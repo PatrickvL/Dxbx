@@ -45,7 +45,6 @@ uses
 type
   TFormXBEExplorer = class(TForm)
     MainMenu: TMainMenu;
-    TreeView1: TTreeView;
     PageControl: TPageControl;
     File1: TMenuItem;
     Open1: TMenuItem;
@@ -68,6 +67,11 @@ type
     ExploreFileSystem1: TMenuItem;
     Edit1: TMenuItem;
     Copy2: TMenuItem;
+    Panel1: TPanel;
+    TreeView1: TTreeView;
+    Splitter1: TSplitter;
+    lst_DissambledFunctions: TListView;
+    Splitter2: TSplitter;
     procedure actOpenExecute(Sender: TObject);
     procedure actCloseExecute(Sender: TObject);
     procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
@@ -76,7 +80,6 @@ type
     procedure actCloseUpdate(Sender: TObject);
     procedure actSaveAsUpdate(Sender: TObject);
     procedure ExploreFileSystem1Click(Sender: TObject);
-    procedure Copy1Click(Sender: TObject);
     procedure Copy2Click(Sender: TObject);
   protected
     MyXBE: TXbe;
@@ -416,11 +419,6 @@ begin
   PageControl.Visible := False;
   while PageControl.PageCount > 0 do
     PageControl.Pages[0].Free;
-end;
-
-procedure TFormXBEExplorer.Copy1Click(Sender: TObject);
-begin
-  Showmessage(SelectedText);
 end;
 
 procedure TFormXBEExplorer.Copy2Click(Sender: TObject);
