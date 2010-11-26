@@ -67,7 +67,6 @@ constructor THexViewer.Create(Owner: TComponent);
 
 begin
   inherited Create(Owner);
-
   BevelOuter := bvNone;
 
   MyHeader := TPanel.Create(Self);

@@ -497,6 +497,8 @@ begin
   // Scan whole region for opcodes offsets :
   MyInstructionOffsets.Clear;
   MyDisassemble.Offset := 0;
+
+  FormXBEExplorer.lst_DissambledFunctions.Visible := True;
   while MyDisassemble.DoDisasm do
   begin
     MyInstructionOffsets.Add(Pointer(MyDisassemble.CurrentOffset));

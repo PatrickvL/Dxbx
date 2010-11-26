@@ -171,6 +171,7 @@ begin
   DragAcceptFiles(Handle, True);
   LastSortedColumn := -1;
   Ascending := True;
+  lst_DissambledFunctions.Visible := False;
 end;
 
 destructor TFormXBEExplorer.Destroy;
@@ -258,6 +259,7 @@ end;
 procedure TFormXBEExplorer.TreeView1Change(Sender: TObject; Node: TTreeNode);
 begin
   PageControl.ActivePage := TTabSheet(Node.Data);
+  lst_DissambledFunctions.Visible := TreeView1.Selected.Text = 'Section Headers';
 end;
 
 procedure TFormXBEExplorer.SectionClick(Sender: TObject);

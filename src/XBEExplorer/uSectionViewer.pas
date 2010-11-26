@@ -32,15 +32,18 @@ type
   protected
     FDisassembleViewer: TDisassembleViewer;
     FHexViewer: THexViewer;
+    procedure PageControlChange(Sender: TObject);
   public
     constructor Create(Owner: TComponent); override;
-
     procedure SetRegion(const aRegionInfo: RRegionInfo);
   end;
 
 implementation
 
 { TSectionViewer }
+
+uses
+  uXBEExplorerMain;
 
 constructor TSectionViewer.Create(Owner: TComponent);
 
@@ -66,8 +69,14 @@ begin
   FDisassembleViewer := TDisassembleViewer.Create(Self);
   FHexViewer := THexViewer.Create(Self);
 
+  OnChange := PageControlChange;
   _NewTab(FDisassembleViewer, 'Disassembly');
   _NewTab(FHexViewer, 'Hex view');
+end;
+
+procedure TSectionViewer.PageControlChange(Sender: TObject);
+begin
+  FormXBEExplorer.lst_DissambledFunctions.Visible := ActivePageIndex = 0;
 end;
 
 procedure TSectionViewer.SetRegion(const aRegionInfo: RRegionInfo);
