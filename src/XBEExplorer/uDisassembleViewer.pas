@@ -52,11 +52,8 @@ type
     procedure CreatePatternExecute(Sender: TObject);
     function GeneratePatternForAddress(const aAddress: UIntPtr): string;
     procedure GotoAddressExecute(Sender: TObject);
-
-    function GetDissamblyTextByRow(ARow: Integer): string;
     function GetTextByCell(ACol, ARow: Integer; State: TGridDrawState): string;
     procedure StringGridSelectCell(Sender: TObject; ACol, ARow: Integer;  var CanSelect: Boolean);
-
   public
     OnGetLabel: TGetLabelEvent;
 
@@ -312,17 +309,12 @@ end;
 
 procedure TDisassembleViewer.GotoAddressExecute(Sender: TObject);
 var
-  NewAddress: Integer;
   AddressStr: string;
   GotoAddressStr: string;
 begin
   AddressStr := DWord2Str(Address);
   GotoAddressStr := InputBox('Goto address', 'Enter hexadecimal address', AddressStr);
-  if GotoAddressStr = AddressStr then
-    Exit;
-
-  if ScanHexDWord(PChar(GotoAddressStr), {var}NewAddress) then
-    Address := NewAddress;
+  GotoAddress(GotoAddressStr);
 end;
 
 procedure TDisassembleViewer.SetAddress(Value: UIntPtr);
@@ -374,28 +366,6 @@ begin
     Result := Cardinal(MyInstructionOffsets[Result ]);
 
   Result := UIntPtr(FRegionInfo.VirtualAddres) + Result;
-end;
-
-function TDisassembleViewer.GetDissamblyTextByRow(ARow: Integer): string;
-var
-  LineHeight: Integer;
-  Offset: Cardinal;
-begin
-  Result := '';
-  // Retrieve the offset and address of this line :
-  Offset := Cardinal(MyInstructionOffsets[aRow - 1]);
-  Address := UIntPtr(FRegionInfo.VirtualAddres) + Offset;
-
-  // Disassemble this (if not done already) :
-  if MyDisassemble.CurrentOffset <> Offset then
-  begin
-    MyDisassemble.Offset := Offset;
-    MyDisassemble.DoDisasm;
-
-    // Double the LineHeight, if there's a label :
-    if MyDisassemble.LabelStr <> '' then
-      Result := MyDisassemble.LabelStr;
-  end;
 end;
 
 const

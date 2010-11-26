@@ -246,8 +246,6 @@ procedure THexViewer.DoDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 var
   aStr: string;
-  Offset: DWord;
-  Len: Integer;
 begin
   aStr := GetTextByCell(ACol, ARow);
   MyDrawGrid.Canvas.FillRect(Rect);
