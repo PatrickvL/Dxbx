@@ -505,8 +505,8 @@ begin
     if MyDisassemble.LabelStr <> '' then
       with FormXBEExplorer.lst_DissambledFunctions.Items.Add do
       begin
-        Caption := MyDisassemble.LabelStr;
-        SubItems.Add(Format('%.08x', [Address]));
+        Caption := Format('%.08x', [Address]);
+        SubItems.Add(MyDisassemble.LabelStr);
         Data := Self;
       end;
   end;
