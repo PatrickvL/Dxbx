@@ -48,12 +48,12 @@ type
     MyDisassemble: RDisassemble;
     MyInstructionOffsets: TList;
     function GetLabelByVA(const aVirtualAddress: Pointer; const aInLabelMode: Boolean = True): string;
-    procedure GridDrawCellEvent(Sender: TObject; ACol, ARow: Longint; Rect: TRect; State: TGridDrawState);
+    procedure GridDrawCellEvent(Sender: TObject; aCol, aRow: Longint; Rect: TRect; State: TGridDrawState);
     procedure CreatePatternExecute(Sender: TObject);
     function GeneratePatternForAddress(const aAddress: UIntPtr): string;
     procedure GotoAddressExecute(Sender: TObject);
-    function GetTextByCell(ACol, ARow: Integer; State: TGridDrawState): string;
-    procedure StringGridSelectCell(Sender: TObject; ACol, ARow: Integer;  var CanSelect: Boolean);
+    function GetTextByCell(aCol, aRow: Integer): string;
+    procedure StringGridSelectCell(Sender: TObject; aCol, aRow: Integer;  var CanSelect: Boolean);
   public
     OnGetLabel: TGetLabelEvent;
 
@@ -407,16 +407,30 @@ begin
     Result := DxbxUnmangleSymbolName(SymbolList[i]) + Result;
 end;
 
-function TDisassembleViewer.GetTextByCell(ACol, ARow: Integer;
-  State: TGridDrawState): string;
+function TDisassembleViewer.GetTextByCell(aCol, aRow: Integer): string;
 var
   Offset: Cardinal;
   Address: UIntPtr;
-  LineHeight: Integer;
-  CommentStr: string;
 begin
   // Handle fixed cells (meaning: header-row) :
   Result := '';
+
+  if (aRow = 0) then
+  begin
+    // Determine header text :
+    case aCol of
+      0: Result := 'Address';
+      1: Result := 'Hexdump';
+      2: Result := 'Disassembly';
+      3: Result := 'Comment';
+    end;
+
+    Exit;
+  end;
+
+  // Check end of data :
+  if aRow > MyInstructionOffsets.Count then
+    Exit;
 
   // Retrieve the offset and address of this line :
   Offset := Cardinal(MyInstructionOffsets[aRow - 1]);
@@ -427,20 +441,6 @@ begin
   begin
     MyDisassemble.Offset := Offset;
     MyDisassemble.DoDisasm;
-
-    // Double the LineHeight, if there's a label :
-    if MyDisassemble.LabelStr <> '' then
-      LineHeight := 2 * MyDrawGrid.DefaultRowHeight
-    else
-      LineHeight := MyDrawGrid.DefaultRowHeight;
-
-    // Update this Row's height (only when needed) :
-    if MyDrawGrid.RowHeights[aRow] <> LineHeight then
-    begin
-      MyDrawGrid.RowHeights[aRow] := LineHeight;
-      MyDrawGrid.Invalidate;
-      Exit;
-    end;
   end;
 
   // Determine cell text :
@@ -455,25 +455,23 @@ begin
       // Only problem is, the referenced addresses in code assume post-load layout,
       // while we're working with a Raw Xbe - so we need to do a bit of addresss
       // conversion wizardry to make this work :
-      CommentStr := '';
+      Result := '';
       if MyDisassemble.GetReferencedMemoryAddress({var}Address) then
       begin
-        CommentStr := MyDisassemble.GetLabelStr(Pointer(Address), {InLabelMode=}False);
-        if  (CommentStr = '')
+        Result := MyDisassemble.GetLabelStr(Pointer(Address), {InLabelMode=}False);
+        if  (Result = '')
         // TODO : Check XBE Range better than this
         // Also, add support for strings referenced in another section :
         and (Address > UIntPtr(FRegionInfo.VirtualAddres))
         and (Address < UIntPtr(FRegionInfo.VirtualAddres) + FRegionInfo.Size) then
         begin
           Address := UIntPtr(FRegionInfo.Buffer) + Address - UIntPtr(FRegionInfo.VirtualAddres);
-          CommentStr := TryReadLiteralString(PAnsiChar(Address));
+          Result := TryReadLiteralString(PAnsiChar(Address));
         end;
       end;
 
-      if CommentStr <> '' then
-        CommentStr := '; ' + CommentStr;
-
-      Result := CommentStr;
+      if Result <> '' then
+        Result := '; ' + Result;
     end;
   end; // case
 end;
@@ -519,43 +517,42 @@ begin
   MyDrawGrid.Invalidate;
 end;
 
-procedure TDisassembleViewer.StringGridSelectCell(Sender: TObject; ACol,
-  ARow: Integer; var CanSelect: Boolean);
+procedure TDisassembleViewer.StringGridSelectCell(Sender: TObject; aCol,
+  aRow: Integer; var CanSelect: Boolean);
 var
   DisplayText: string;
   i: integer;
 begin
-  DisplayText := '';
+  // Create a space-separated string from all cells on this row :
+  DisplayText := ' ';
   for i := 0 to MyDrawGrid.ColCount - 1 do
-    DisplayText := DisplayText + ' ' + GetTextByCell(i, ARow, [gdRowSelected]);
+    DisplayText := DisplayText + GetTextByCell(i, aRow) + ' ';
 
+  // Prepend that string with a label line if present :
   if MyDisassemble.LabelStr <> '' then
-    DisplayText := MyDisassemble.LabelStr + #13#10+ DisplayText;
+    DisplayText := MyDisassemble.LabelStr + ':'#13#10 + DisplayText;
 
+  // Remove last space :
+  SetLength(DisplayText, Length(DisplayText)-1);
+
+  // Put that string into the global select string (so Ctrl+C can copy this text into the clipboard) :
   FormXBEExplorer.SelectedText := DisplayText;
 end;
 
-procedure TDisassembleViewer.GridDrawCellEvent(Sender: TObject; ACol, ARow: Longint;
+procedure TDisassembleViewer.GridDrawCellEvent(Sender: TObject; aCol, aRow: Longint;
   Rect: TRect; State: TGridDrawState);
 var
-  Offset: Cardinal;
-  Address: UIntPtr;
-  LineHeight: Integer;
-  CommentStr: string;
   LineStr: string;
+  Offset: Cardinal;
+  LineHeight: Integer;
 begin
+  // Determine cell text :
+  LineStr := GetTextByCell(aCol, aRow);
+
   // Handle fixed cells (meaning: header-row) :
-  LineStr := '';
   if gdFixed in State then
   begin
     Assert(aRow = 0);
-    // Determine header text :
-    case aCol of
-      0: LineStr := 'Address';
-      1: LineStr := 'Hexdump';
-      2: LineStr := 'Disassembly';
-      3: LineStr := 'Comment';
-    end;
 
     // Clear background of header :
     MyDrawGrid.Canvas.Brush.Color := MyDrawGrid.FixedColor;
@@ -594,9 +591,8 @@ begin
     MyDrawGrid.Canvas.Font.Color := clWindowText;
   end;
 
-  // Retrieve the offset and address of this line :
+  // Retrieve the offset of this line :
   Offset := Cardinal(MyInstructionOffsets[aRow - 1]);
-  Address := UIntPtr(FRegionInfo.VirtualAddres) + Offset;
 
   // Disassemble this (if not done already) :
   if MyDisassemble.CurrentOffset <> Offset then
@@ -647,40 +643,6 @@ begin
   else
     // Single-line mode; Clear contents :
     MyDrawGrid.Canvas.FillRect(Rect);
-
-  // Determine cell text :
-  case aCol of
-    0: LineStr := Format('%.08x', [Address]);
-    1: LineStr := MyDisassemble.HexStr;
-    2: LineStr := MyDisassemble.OpcodeStr;
-    3:
-    begin
-      // Add interesting details, like referenced string contents, labels etc.
-
-      // Only problem is, the referenced addresses in code assume post-load layout,
-      // while we're working with a Raw Xbe - so we need to do a bit of addresss
-      // conversion wizardry to make this work :
-      CommentStr := '';
-      if MyDisassemble.GetReferencedMemoryAddress({var}Address) then
-      begin
-        CommentStr := MyDisassemble.GetLabelStr(Pointer(Address), {InLabelMode=}False);
-        if  (CommentStr = '')
-        // TODO : Check XBE Range better than this
-        // Also, add support for strings referenced in another section :
-        and (Address > UIntPtr(FRegionInfo.VirtualAddres))
-        and (Address < UIntPtr(FRegionInfo.VirtualAddres) + FRegionInfo.Size) then
-        begin
-          Address := UIntPtr(FRegionInfo.Buffer) + Address - UIntPtr(FRegionInfo.VirtualAddres);
-          CommentStr := TryReadLiteralString(PAnsiChar(Address));
-        end;
-      end;
-
-      if CommentStr <> '' then
-        CommentStr := '; ' + CommentStr;
-
-      LineStr := CommentStr;
-    end;
-  end; // case
 
   // Draw text (if there is any) :
   if LineStr <> '' then
@@ -735,18 +697,18 @@ var
       and (Row <= Rect.Bottom);
   end;
 
-  procedure DrawCells(ACol, ARow: Longint; StartX, StartY, StopX, StopY: Integer;
+  procedure DrawCells(aCol, aRow: Longint; StartX, StartY, StopX, StopY: Integer;
     IncludeDrawState: TGridDrawState);
   var
     CurCol, CurRow: Longint;
     AWhere, Where: TRect;
     DrawState: TGridDrawState;
   begin
-    CurRow := ARow;
+    CurRow := aRow;
     Where.Top := StartY;
     while (Where.Top < StopY) and (CurRow < RowCount) do
     begin
-      CurCol := ACol;
+      CurCol := aCol;
       Where.Left := StartX;
       Where.Bottom := Where.Top + RowHeights[CurRow];
       while (Where.Left < StopX) and (CurCol < ColCount) do
