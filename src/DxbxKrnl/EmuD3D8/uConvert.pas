@@ -36,6 +36,7 @@ uses
   , uTypes
   , uDxbxKrnlUtils
   , uEmuD3D8Types
+  , uEmuD3D8Utils
   , uEmu;
 
 function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
@@ -71,6 +72,8 @@ function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; Primitiv
 function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE;
 function EmuXB2PC_PSConstant(Value: X_D3DRenderStateType): DWORD;
 
+function DxbxEncodeDimensionsIntoSize(const Width, Height, Pitch: DWORD): DWORD;
+procedure DxbxDecodeSizeIntoDimensions(const Size: DWORD; out Width, Height, Pitch: DWORD);
 
 // simple render state encoding lookup table
 const X_D3DRSSE_UNK = $7fffffff;
@@ -117,282 +120,80 @@ implementation
 function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  Result := TRUE;
-  case Format of
+  if Format in [X_D3DFMT_L8..X_D3DFMT_INDEX16] then
+  begin
+    if Assigned(pBPP) then
+      pBPP^ := D3DFMT_INFO[Format].BPP;
 
-    X_D3DFMT_L8,       // 0x00
-    X_D3DFMT_AL8,      // 0x01
-    X_D3DFMT_P8,       // 0x0B
-    X_D3DFMT_A8:       // 0x19
-      if Assigned(pBPP) then
-        pBPP^ := 1;
-
-    X_D3DFMT_A1R5G5B5, // 0x02
-    X_D3DFMT_X1R5G5B5, // 0x03
-    X_D3DFMT_A4R4G4B4, // 0x04
-    X_D3DFMT_R5G6B5,   // 0x05
-    X_D3DFMT_A8L8,     // 0x1A
-    X_D3DFMT_R6G5B5,   // 0x27 Added by Dxbx
-    X_D3DFMT_G8B8,     // 0x28
-    X_D3DFMT_R8B8,     // 0x29 Added by Dxbx
-    X_D3DFMT_D16,      // 0x2C Added by Dxbx
-    X_D3DFMT_F16,      // 0x2D Added by Dxbx
-    X_D3DFMT_L16,      // 0x32 Added by Dxbx
-    X_D3DFMT_R5G5B5A1, // 0x38 Added by Dxbx
-    X_D3DFMT_R4G4B4A4: // 0x39 Added by Dxbx
-      if Assigned(pBPP) then
-        pBPP^ := 2;
-
-    X_D3DFMT_A8R8G8B8, // 0x06
-    X_D3DFMT_X8R8G8B8, // 0x07
-    X_D3DFMT_D24S8,    // 0x2A Added by Dxbx
-    X_D3DFMT_F24S8,    // 0x2B Added by Dxbx
-    X_D3DFMT_V16U16,   // 0x33 Added by Dxbx
-    X_D3DFMT_A8B8G8R8, // 0x3A Added by Dxbx
-    X_D3DFMT_B8G8R8A8, // 0x3B Added by Dxbx
-    X_D3DFMT_R8G8B8A8: // 0x3C Added by Dxbx
-      if Assigned(pBPP) then
-        pBPP^ := 4;
-
+    Result := (D3DFMT_INFO[Format].Flags and FMFL_SWIZZLED) > 0;
+  end
   else
-    Result := FALSE;
-  end;
+    Result := False;
 end;
 
 // is this format yuv?
 function EmuXBFormatIsYUV(Format: X_D3DFORMAT): BOOL_;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  case Format of
-    X_D3DFMT_YUY2,     // 0x24
-    X_D3DFMT_UYVY:     // 0x25
-      Result := TRUE;
+  if Format in [X_D3DFMT_L8..X_D3DFMT_INDEX16] then
+    Result := (D3DFMT_INFO[Format].Flags and FMFL_YUV) > 0
   else
-    Result := FALSE;
-  end;
+    Result := False;
 end;
 
 // is this format compressed?
 function EmuXBFormatIsCompressed(Format: X_D3DFORMAT): BOOL_;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  case Format of
-    X_D3DFMT_DXT1,     // 0x0C
-    X_D3DFMT_DXT3,     // 0x0E
-    X_D3DFMT_DXT5:     // 0x0F
-      Result := TRUE;
+  if Format in [X_D3DFMT_L8..X_D3DFMT_INDEX16] then
+    Result := (D3DFMT_INFO[Format].Flags and FMFL_COMPRESSED) > 0
   else
-    Result := FALSE;
-  end;
+    Result := False;
 end;
 
 // is this format linear?
 function EmuXBFormatIsLinear(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  Result := TRUE;
-  case (Format) of
-    X_D3DFMT_LIN_L8,       // 0x13 Added by Dxbx
-    X_D3DFMT_LIN_A8:       // 0x1F Added by Dxbx
-      if Assigned(pBPP) then
-        pBPP^ := 1;
+  if Format in [X_D3DFMT_L8..X_D3DFMT_INDEX16] then
+  begin
+    if Assigned(pBPP) then
+      pBPP^ := D3DFMT_INFO[Format].BPP;
 
-    X_D3DFMT_LIN_A1R5G5B5, // 0x10
-    X_D3DFMT_LIN_R5G6B5,   // 0x11
-    X_D3DFMT_LIN_R8B8,     // 0x16
-    X_D3DFMT_LIN_G8B8,     // 0x17
-    X_D3DFMT_LIN_AL8,      // 0x1B Added by Dxbx
-    X_D3DFMT_LIN_X1R5G5B5, // 0x1C Added by Dxbx
-    X_D3DFMT_LIN_A4R4G4B4, // 0x1D
-    X_D3DFMT_LIN_A8L8,     // 0x20 Added by Dxbx
-    X_D3DFMT_LIN_D16,      // 0x30
-    X_D3DFMT_LIN_F16,      // 0x31 Added by Dxbx
-    X_D3DFMT_LIN_L16,      // 0x35 Added by Dxbx
-    X_D3DFMT_LIN_R6G5B5,   // 0x37 Added by Dxbx
-    X_D3DFMT_LIN_R5G5B5A1, // 0x3D Added by Dxbx
-    X_D3DFMT_LIN_R4G4B4A4, // 0x3E Added by Dxbx
-    X_D3DFMT_INDEX16:      // 101 Added by Dxbx
-      if Assigned(pBPP) then
-        pBPP^ := 2;
-
-    X_D3DFMT_LIN_A8R8G8B8, // 0x12
-    X_D3DFMT_LIN_X8R8G8B8, // 0x1E
-    X_D3DFMT_LIN_D24S8,    // 0x2E
-    X_D3DFMT_YUY2,         // 0x24 Added by Dxbx (YUV Formats are also linear)
-    X_D3DFMT_UYVY,         // 0x25 Added by Dxbx (YUV Formats are also linear)
-    X_D3DFMT_LIN_F24S8,    // 0x2F Added by Dxbx
-    X_D3DFMT_LIN_V16U16,   // 0x36 Added by Dxbx
-    X_D3DFMT_LIN_A8B8G8R8, // 0x3F
-    X_D3DFMT_LIN_B8G8R8A8, // 0x40 Added by Dxbx
-    X_D3DFMT_LIN_R8G8B8A8: // 0x41 Added by Dxbx
-      if Assigned(pBPP) then
-        pBPP^ := 4;
-
-    X_D3DFMT_VERTEXDATA:   // 100 Added by Dxbx
-      ; // pBPP?
+    Result := (D3DFMT_INFO[Format].Flags and FMFL_LINEAR) > 0;
+  end
   else
-    Result := FALSE;
-  end;
+    Result := False;
 end;
 
 function EmuXBFormatHasAlpha(Format: X_D3DFORMAT): BOOL_;
 begin
-  Result := Format in [X_D3DFMT_AL8,
-  X_D3DFMT_A1R5G5B5, // $02;
-  X_D3DFMT_A4R4G4B4, // $04;
-  X_D3DFMT_A8R8G8B8, // $06;
-  X_D3DFMT_A8, // $19;
-  X_D3DFMT_A8L8, // $1A;
-  X_D3DFMT_R5G5B5A1, // $38;
-  X_D3DFMT_R4G4B4A4, // $39;
-  X_D3DFMT_A8B8G8R8, // $3A;
-  X_D3DFMT_B8G8R8A8, // $3B;
-  X_D3DFMT_R8G8B8A8, // $3C;
-  X_D3DFMT_LIN_A1R5G5B5, // $10;
-  X_D3DFMT_LIN_A8R8G8B8, // $12;
-  X_D3DFMT_LIN_AL8, // $1B;
-  X_D3DFMT_LIN_A4R4G4B4, // $1D;
-  X_D3DFMT_LIN_A8, // $1F;
-  X_D3DFMT_LIN_A8L8, // $20;
-  X_D3DFMT_LIN_R5G5B5A1, // $3D;
-  X_D3DFMT_LIN_R4G4B4A4, // $3E;
-  X_D3DFMT_LIN_A8B8G8R8, // $3F;
-  X_D3DFMT_LIN_B8G8R8A8, // $40;
-  X_D3DFMT_LIN_R8G8B8A8 // $41;
-  ];
+  if Format in [X_D3DFMT_L8..X_D3DFMT_INDEX16] then
+    Result := (D3DFMT_INFO[Format].Flags and FMFL_HASALPHA) > 0
+  else
+    Result := False;
 end;
+
 // convert from xbox to pc color formats
 function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  case aFormat of
-    X_D3DFMT_L8: // Swizzled
-      Result := D3DFMT_L8;
+  if aFormat in [X_D3DFMT_L8..X_D3DFMT_INDEX16] then
+  begin
+    Result := D3DFMT_INFO[aFormat].PC;
 
-    X_D3DFMT_AL8: // Swizzled    // Cxbx NOTE: Hack: Alpha ignored, basically
-    begin
-      EmuWarning('X_D3DFMT_AL8 -> D3DFMT_L8');
-      Result := D3DFMT_L8;
-    end;
-
-    X_D3DFMT_LIN_A1R5G5B5, // Linear
-    X_D3DFMT_A1R5G5B5: // Swizzled
-      Result := D3DFMT_A1R5G5B5;
-
-    X_D3DFMT_X1R5G5B5: // Swizzled
-      Result := D3DFMT_X1R5G5B5;
-
-    X_D3DFMT_A8L8: // Swizzled
-    begin
-      EmuWarning('X_D3DFMT_A8L8 -> D3DFMT_R5G6B5');
-      Result := D3DFMT_R5G6B5; // Cxbx NOTE: HACK: Totally and utterly wrong :)
-    end;
-
-    X_D3DFMT_A8: // Swizzled
-      Result := D3DFMT_A8;
-
-    X_D3DFMT_LIN_A4R4G4B4, // Linear
-    X_D3DFMT_A4R4G4B4: // Swizzled
-      Result := D3DFMT_A4R4G4B4;
-
-    X_D3DFMT_LIN_R5G6B5, // Linear
-    X_D3DFMT_R5G6B5: // Swizzled
-      Result := D3DFMT_R5G6B5;
-
-    X_D3DFMT_LIN_A8R8G8B8, // Linear
-    X_D3DFMT_A8R8G8B8: // Swizzled
-      Result := D3DFMT_A8R8G8B8;
-
-    X_D3DFMT_LIN_R8B8: // Linear
-    begin
-      EmuWarning('X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5');
-      Result := D3DFMT_R5G6B5; // Cxbx NOTE: HACK: Totally and utterly wrong :)
-    end;
-
-    X_D3DFMT_LIN_G8B8: // Linear
-    begin
-      EmuWarning('X_D3DFMT_LIN_G8B8 -> D3DFMT_R5G6B5');
-      Result := D3DFMT_R5G6B5; // Cxbx NOTE: HACK: Totally and utterly wrong :)
-    end;
-
-    X_D3DFMT_A8B8G8R8: // Swizzled
-    begin
-      EmuWarning('X_D3DFMT_A8B8G8R8 -> D3DFMT_A8R8G8B8');
-      Result := D3DFMT_A8R8G8B8; // Cxbx NOTE: HACK: R<->B Swapped!
-    end;
-
-    X_D3DFMT_LIN_A8B8G8R8: // Linear
-    begin
-      EmuWarning('X_D3DFMT_LIN_A8B8G8R8 -> D3DFMT_A8R8G8B8');
-      Result := D3DFMT_A8R8G8B8; // Cxbx NOTE: HACK: R<->B Swapped!
-    end;
-
-    X_D3DFMT_LIN_X8R8G8B8, // Linear
-    X_D3DFMT_X8R8G8B8: // Swizzled
-      Result := D3DFMT_X8R8G8B8;
-
-    X_D3DFMT_P8: // Swizzled
-      Result := D3DFMT_P8;
-
-    X_D3DFMT_DXT1: // Compressed
-      Result := D3DFMT_DXT1;
-
-    //X_D3DFMT_DXT2,
-    X_D3DFMT_DXT3: // Compressed
-      Result := D3DFMT_DXT3;
-
-    //X_D3DFMT_DXT4,
-    X_D3DFMT_DXT5: // Compressed
-      Result := D3DFMT_DXT5;
-
-    X_D3DFMT_YUY2: // Swizzled
-      Result := D3DFMT_YUY2;
-
-    X_D3DFMT_UYVY: // Swizzled
-      Result := D3DFMT_UYVY;
-
-    X_D3DFMT_LIN_D24S8, // Linear
-    X_D3DFMT_D24S8: // Swizzled
-      Result := D3DFMT_D24S8;
-
-    X_D3DFMT_LIN_F24S8, // Linear - Dxbx addition
-    X_D3DFMT_F24S8: // Swizzled
-    begin
-      EmuWarning('X_D3DFMT_F24S8 -> D3DFMT_D24S8');
-      Result := D3DFMT_D24S8; // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
-    end;
-
-    X_D3DFMT_LIN_F16, // Linear - Dxbx addition
-    X_D3DFMT_F16: // Swizzled - Dxbx addition
-    begin
-      EmuWarning('X_D3DFMT_F16 -> D3DFMT_D16');
-      Result := D3DFMT_D16; // NOTE: Hack!! PC does not have D3DFMT_F16 (Float vs Int)
-    end;
-
-    X_D3DFMT_LIN_D16, // Linear
-    X_D3DFMT_D16: // Swizzled
-      Result := D3DFMT_D16; // TODO -oCXBX: D3DFMT_D16 on Xbox is always lockable
-
-    X_D3DFMT_L6V5U5: // Swizzled
-      Result := D3DFMT_L6V5U5;
-
-    X_D3DFMT_V8U8: // Swizzled
-      Result := D3DFMT_V8U8;
-
-    X_D3DFMT_V16U16: // Swizzled
-      Result := D3DFMT_V16U16;
-
-    X_D3DFMT_VERTEXDATA:
-      Result := D3DFMT_VERTEXDATA;
-
-    X_D3DFMT_UNKNOWN:
-      Result := D3DFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
-
-    X_D3DFMT_INDEX16: // Dxbx addition : Pass-through internal format that shouldn't raise a warning :
-      Result := D3DFMT_INDEX16;
+    if (D3DFMT_INFO[aFormat].Flags and FMFL_APROX) > 0 then
+      EmuWarning(D3DFMT_INFO[aFormat].Name + ' -> ' + D3DFORMAT2String(Result));
+  end
   else
-    DxbxKrnlCleanup('EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)', [aFormat]);
-    Result := D3DFORMAT(aFormat);
+  begin
+    if aFormat = X_D3DFMT_UNKNOWN then
+      Result := D3DFMT_UNKNOWN // TODO -oCXBX: Not sure if this counts as swizzled or not...
+    else
+    begin
+      DxbxKrnlCleanup('EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)', [aFormat]);
+      Result := D3DFORMAT(aFormat);
+    end;
   end;
 end;
 
@@ -843,6 +644,25 @@ function EmuXB2PC_PSConstant(Value: X_D3DRenderStateType): DWORD;
 begin
   // TODO : Once the pixel shader generates a mapping table, use that here!
   case Value of
+(* TODO -o: Is this the real mapping, or do we need to do something else?
+    X_D3DRS_PSCONSTANT0_0: Result := 0;
+    X_D3DRS_PSCONSTANT0_1: Result := 1;
+    X_D3DRS_PSCONSTANT0_2: Result := 2;
+    X_D3DRS_PSCONSTANT0_3: Result := 3;
+    X_D3DRS_PSCONSTANT0_4: Result := 4;
+    X_D3DRS_PSCONSTANT0_5: Result := 5;
+    X_D3DRS_PSCONSTANT0_6: Result := 6;
+    X_D3DRS_PSCONSTANT0_7: Result := 7;
+
+    X_D3DRS_PSCONSTANT1_0: Result := 8;
+    X_D3DRS_PSCONSTANT1_1: Result := 9;
+    X_D3DRS_PSCONSTANT1_2: Result := 10;
+    X_D3DRS_PSCONSTANT1_3: Result := 11;
+    X_D3DRS_PSCONSTANT1_4: Result := 12;
+    X_D3DRS_PSCONSTANT1_5: Result := 13;
+    X_D3DRS_PSCONSTANT1_6: Result := 14;
+    X_D3DRS_PSCONSTANT1_7: Result := 15;
+*)
     X_D3DRS_PSCONSTANT0_0: Result := 0;
     X_D3DRS_PSCONSTANT0_1: Result := 2;
     X_D3DRS_PSCONSTANT0_2: Result := 4;
@@ -867,6 +687,20 @@ begin
     Result := 0;
     EmuWarning('Unsupported Value for EmuXB2PC_PSConstant: 0x%.08X', [Value]);
   end;
+end;
+
+function DxbxEncodeDimensionsIntoSize(const Width, Height, Pitch: DWORD): DWORD;
+begin
+  Result := ((( Width          - 1){shl X_D3DSIZE_WIDTH_SHIFT}) and X_D3DSIZE_WIDTH_MASK )
+         or ((( Height         - 1) shl X_D3DSIZE_HEIGHT_SHIFT) and X_D3DSIZE_HEIGHT_MASK)
+         or ((((Pitch  div 64) - 1) shl X_D3DSIZE_PITCH_SHIFT ) and X_D3DSIZE_PITCH_MASK );
+end;
+
+procedure DxbxDecodeSizeIntoDimensions(const Size: DWORD; out Width, Height, Pitch: DWORD);
+begin
+  {out}Width  := (((Size and X_D3DSIZE_WIDTH_MASK ){shr X_D3DSIZE_WIDTH_SHIFT}) + 1);
+  {out}Height := (((Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
+  {out}Pitch  := (((Size and X_D3DSIZE_PITCH_MASK ) shr X_D3DSIZE_PITCH_SHIFT ) + 1) * 64;
 end;
 
 end.

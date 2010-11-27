@@ -1034,6 +1034,7 @@ const X_D3DFORMAT_PSIZE_SHIFT         = 28;
 // greater than one or the pitch adjust will be nonzero because the minimum texture
 // pitch is 8 bytes.
 const X_D3DSIZE_WIDTH_MASK   = $00000FFF;   // Width of the texture - 1, in texels
+//const X_D3DSIZE_WIDTH_SHIFT = 0;
 const X_D3DSIZE_HEIGHT_MASK  = $00FFF000;   // Height of the texture - 1, in texels
 const X_D3DSIZE_HEIGHT_SHIFT = 12;
 const X_D3DSIZE_PITCH_MASK   = $FF000000;   // Pitch / 64 - 1
