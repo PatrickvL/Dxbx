@@ -1856,9 +1856,7 @@ begin
       if not EmuXBFormatIsLinear(X_Format, @dwBPP) then
         DxbxKrnlCleanup('0x%.08X is not a supported format!', [X_Format]);
 
-      dwWidth := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
-      dwHeight := ((pPixelContainer.Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
-      dwPitch := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
+      DxbxDecodeSizeIntoDimensions(pPixelContainer.Size, {out}dwWidth, {out}dwHeight, {out}dwPitch);
     end;
   end;
 

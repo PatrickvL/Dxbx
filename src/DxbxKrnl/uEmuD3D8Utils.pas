@@ -84,8 +84,126 @@ function GetSurfaceSize(const aSurface: PD3DSurfaceDesc): LongWord;
 function GetVolumeSize(const aVolume: PD3DVolumeDesc): LongWord;
 function X_D3DPRIMITIVETYPE2String(const aValue: X_D3DPRIMITIVETYPE): string;
 function X_D3DFORMAT2String(const aValue: X_D3DFORMAT): string;
+function D3DFORMAT2String(const aValue: D3DFORMAT): string;
 function CommonToStr(const Common: DWORD): string;
 function ResourceToString(const aValue: PX_D3DResource): string;
+
+const
+  // X_D3D_FORMAT flags :
+  FMFL_SWIZZLED   = $01;
+  FMFL_LINEAR     = $02;
+  FMFL_COMPRESSED = $04;
+  FMFL_YUV        = $08;
+  FMFL_PALETIZED  = $10;
+  FMFL_APROX      = $20;
+  FMFL_HASALPHA   = $40;
+
+  D3DFMT_INFO: array [X_D3DFMT_L8..X_D3DFMT_INDEX16] of record Name: string; PC: D3DFORMAT; BPP, Flags: DWORD; end = (
+    ({0x00}Name:'X_D3DFMT_L8';           PC:D3DFMT_L8;           BPP:1; Flags:FMFL_SWIZZLED),
+    ({0x01}Name:'X_D3DFMT_AL8';          PC:D3DFMT_L8;           BPP:1; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX), // Cxbx NOTE: Hack: Alpha ignored, basically
+    ({0x02}Name:'X_D3DFMT_A1R5G5B5';     PC:D3DFMT_A1R5G5B5;     BPP:2; Flags:FMFL_SWIZZLED+FMFL_HASALPHA),
+    ({0x03}Name:'X_D3DFMT_X1R5G5B5';     PC:D3DFMT_X1R5G5B5;     BPP:2; Flags:FMFL_SWIZZLED),
+    ({0x04}Name:'X_D3DFMT_A4R4G4B4';     PC:D3DFMT_A4R4G4B4;     BPP:2; Flags:FMFL_SWIZZLED+FMFL_HASALPHA),
+    ({0x05}Name:'X_D3DFMT_R5G6B5';       PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_SWIZZLED),
+    ({0x06}Name:'X_D3DFMT_A8R8G8B8';     PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_SWIZZLED+FMFL_HASALPHA),
+    ({0x07}Name:'X_D3DFMT_X8R8G8B8';     PC:D3DFMT_X8R8G8B8;     BPP:4; Flags:FMFL_SWIZZLED),
+    ({0x08}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x09}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x0A}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x0B}Name:'X_D3DFMT_P8';           PC:D3DFMT_P8;           BPP:1; Flags:FMFL_SWIZZLED+FMFL_PALETIZED),
+    ({0x0C}Name:'X_D3DFMT_DXT1';         PC:D3DFMT_DXT1;         BPP:0; Flags:FMFL_COMPRESSED),
+    ({0x0D}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x0F}Name:'X_D3DFMT_DXT2';         PC:D3DFMT_DXT3;         BPP:0; Flags:FMFL_COMPRESSED),
+    ({0x0E}Name:'X_D3DFMT_DXT4';         PC:D3DFMT_DXT5;         BPP:0; Flags:FMFL_COMPRESSED),
+    ({0x10}Name:'X_D3DFMT_LIN_A1R5G5B5'; PC:D3DFMT_A1R5G5B5;     BPP:2; Flags:FMFL_LINEAR+FMFL_HASALPHA),
+    ({0x11}Name:'X_D3DFMT_LIN_R5G6B5';   PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_LINEAR),
+    ({0x12}Name:'X_D3DFMT_LIN_A8R8G8B8'; PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_LINEAR+FMFL_HASALPHA),
+    ({0x13}Name:'X_D3DFMT_LIN_L8';       PC:D3DFMT_L8;           BPP:1; Flags:FMFL_LINEAR),
+    ({0x14}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x15}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x16}Name:'X_D3DFMT_LIN_R8B8';     PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_LINEAR+FMFL_APROX), // Cxbx NOTE: HACK: Totally and utterly wrong :)
+    ({0x17}Name:'X_D3DFMT_LIN_G8B8';     PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_LINEAR+FMFL_APROX), // Cxbx NOTE: HACK: Totally and utterly wrong :)
+    ({0x18}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x19}Name:'X_D3DFMT_A8';           PC:D3DFMT_A8;           BPP:1; Flags:FMFL_SWIZZLED+FMFL_HASALPHA),
+//    ({0x1A}Name:'X_D3DFMT_A8L8';         PC:D3DFMT_A8L8;         BPP:2; Flags:FMFL_SWIZZLED+FMFL_HASALPHA),
+    ({0x1A}Name:'X_D3DFMT_A8L8';         PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX), // Cxbx NOTE: Hack: Alpha ignored, basically
+    ({0x1B}Name:'X_D3DFMT_LIN_AL8';      PC:D3DFMT_A8;           BPP:1; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX), // Cxbx NOTE: Hack: Alpha ignored, basically
+    ({0x1C}Name:'X_D3DFMT_LIN_X1R5G5B5'; PC:D3DFMT_X1R5G5B5;     BPP:2; Flags:FMFL_LINEAR),
+    ({0x1D}Name:'X_D3DFMT_LIN_A4R4G4B4'; PC:D3DFMT_A4R4G4B4;     BPP:2; Flags:FMFL_LINEAR+FMFL_HASALPHA),
+    ({0x1E}Name:'X_D3DFMT_LIN_X8R8G8B8'; PC:D3DFMT_X8R8G8B8;     BPP:4; Flags:FMFL_LINEAR),
+    ({0x1F}Name:'X_D3DFMT_LIN_A8';       PC:D3DFMT_A8;           BPP:1; Flags:FMFL_LINEAR+FMFL_HASALPHA),
+    ({0x20}Name:'X_D3DFMT_LIN_A8L8';     PC:D3DFMT_A8L8;         BPP:2; Flags:FMFL_LINEAR+FMFL_HASALPHA),
+    ({0x21}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x22}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x23}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x24}Name:'X_D3DFMT_YUY2';         PC:D3DFMT_YUY2;         BPP:2; Flags:FMFL_LINEAR+FMFL_YUV),
+    ({0x25}Name:'X_D3DFMT_UYVY';         PC:D3DFMT_UYVY;         BPP:2; Flags:FMFL_LINEAR+FMFL_YUV),
+    ({0x26}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x27}Name:'X_D3DFMT_R6G5B5';       PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_SWIZZLED+FMFL_APROX), // Dxbx Note: R 1 bit less, G 1 bit more
+    ({0x28}Name:'X_D3DFMT_G8B8';         PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_SWIZZLED+FMFL_APROX), // Cxbx NOTE: HACK: Totally and utterly wrong :)
+    ({0x29}Name:'X_D3DFMT_R8B8';         PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_SWIZZLED+FMFL_APROX), // Cxbx NOTE: HACK: Totally and utterly wrong :)
+    ({0x2A}Name:'X_D3DFMT_D24S8';        PC:D3DFMT_D24S8;        BPP:4; Flags:FMFL_SWIZZLED),
+    ({0x2B}Name:'X_D3DFMT_F24S8';        PC:D3DFMT_D24S8;        BPP:4; Flags:FMFL_SWIZZLED+FMFL_APROX), // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
+    ({0x2C}Name:'X_D3DFMT_D16';          PC:D3DFMT_D16;          BPP:2; Flags:FMFL_SWIZZLED), // NOTE: D3DFMT_D16 on Xbox is always lockable
+    ({0x2D}Name:'X_D3DFMT_F16';          PC:D3DFMT_D16;          BPP:2; Flags:FMFL_SWIZZLED+FMFL_APROX), // NOTE: Hack!! PC does not have D3DFMT_F16 (Float vs Int)
+    ({0x2E}Name:'X_D3DFMT_LIN_D24S8';    PC:D3DFMT_D24S8;        BPP:4; Flags:FMFL_LINEAR),
+    ({0x2F}Name:'X_D3DFMT_LIN_F24S8';    PC:D3DFMT_D24S8;        BPP:4; Flags:FMFL_LINEAR+FMFL_APROX), // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
+    ({0x30}Name:'X_D3DFMT_LIN_D16';      PC:D3DFMT_D16;          BPP:2; Flags:FMFL_LINEAR), // NOTE: D3DFMT_D16 on Xbox is always lockable
+    ({0x31}Name:'X_D3DFMT_LIN_F16';      PC:D3DFMT_D16;          BPP:2; Flags:FMFL_LINEAR+FMFL_APROX), // NOTE: Hack!! PC does not have D3DFMT_F16 (Float vs Int)
+    ({0x32}Name:'X_D3DFMT_L16';          PC:D3DFMT_L6V5U5;       BPP:2; Flags:FMFL_SWIZZLED+FMFL_APROX),
+    ({0x33}Name:'X_D3DFMT_V16U16';       PC:D3DFMT_V16U16;       BPP:4; Flags:FMFL_SWIZZLED),
+    ({0x34}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x35}Name:'X_D3DFMT_LIN_L16';      PC:D3DFMT_L6V5U5;       BPP:2; Flags:FMFL_LINEAR+FMFL_APROX),
+    ({0x36}Name:'X_D3DFMT_LIN_V16U16';   PC:D3DFMT_V16U16;       BPP:4; Flags:FMFL_LINEAR),
+    ({0x37}Name:'X_D3DFMT_LIN_R6G5B5';   PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_LINEAR+FMFL_APROX),
+    ({0x38}Name:'X_D3DFMT_R5G5B5A1';     PC:D3DFMT_A1R5G5B5;     BPP:2; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX),
+    ({0x39}Name:'X_D3DFMT_R4G4B4A4';     PC:D3DFMT_A4R4G4B4;     BPP:2; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX),
+    ({0x3A}Name:'X_D3DFMT_A8B8G8R8';     PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX), // Cxbx NOTE: HACK: R<->B Swapped!
+    ({0x3B}Name:'X_D3DFMT_B8G8R8A8';     PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX),
+    ({0x3C}Name:'X_D3DFMT_R8G8B8A8';     PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX),
+    ({0x3D}Name:'X_D3DFMT_LIN_R5G5B5A1'; PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX),
+    ({0x3E}Name:'X_D3DFMT_LIN_R4G4B4A4'; PC:D3DFMT_A4R4G4B4;     BPP:2; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX),
+    ({0x3F}Name:'X_D3DFMT_LIN_A8B8G8R8'; PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX), // Cxbx NOTE: HACK: R<->B Swapped!
+    ({0x40}Name:'X_D3DFMT_LIN_B8G8R8A8'; PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX),
+    ({0x41}Name:'X_D3DFMT_LIN_R8G8B8A8'; PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX),
+    // Maybe cut off here and handle the last two separately?
+    ({0x42}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x43}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x44}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x45}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x46}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x47}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x48}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x49}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x4A}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x4B}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x4C}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x4D}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x4E}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x4F}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x50}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x51}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x52}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x53}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x54}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x55}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x56}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x57}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x58}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x59}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x5A}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x5B}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x5C}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x5D}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x5E}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x5F}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x60}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x61}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x62}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x63}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x64}Name:'X_D3DFMT_VERTEXDATA';   PC:D3DFMT_VERTEXDATA;   BPP:1; Flags:FMFL_LINEAR),
+    ({0x65}Name:'X_D3DFMT_INDEX16';      PC:D3DFMT_INDEX16;      BPP:2; Flags:FMFL_LINEAR) // Dxbx addition : Pass-through internal format that shouldn't raise a warning :
+  );
 
 implementation
 
@@ -370,79 +488,58 @@ end;
 
 function X_D3DFORMAT2String(const aValue: X_D3DFORMAT): string;
 begin
+  if aValue in [X_D3DFMT_L8..X_D3DFMT_INDEX16] then
+    Result := D3DFMT_INFO[aValue].Name
+  else
+    Result := '';
+end;
+
+function D3DFORMAT2String(const aValue: D3DFORMAT): string;
+begin
   case aValue of
-    // Swizzled Formats
-    X_D3DFMT_L8: Result := 'X_D3DFMT_L8';
-    X_D3DFMT_AL8: Result := 'X_D3DFMT_AL8';
-    X_D3DFMT_A1R5G5B5: Result := 'X_D3DFMT_A1R5G5B5';
-    X_D3DFMT_X1R5G5B5: Result := 'X_D3DFMT_X1R5G5B5';
-    X_D3DFMT_A4R4G4B4: Result := 'X_D3DFMT_A4R4G4B4';
-    X_D3DFMT_R5G6B5: Result := 'X_D3DFMT_R5G6B5';
-    X_D3DFMT_A8R8G8B8: Result := 'X_D3DFMT_A8R8G8B8';
-    X_D3DFMT_X8R8G8B8: Result := 'X_D3DFMT_X8R8G8B8';
-//    X_D3DFMT_X8L8V8U8 = $07; // Alias
-    X_D3DFMT_P8: Result := 'X_D3DFMT_P8';
-    X_D3DFMT_A8: Result := 'X_D3DFMT_A8';
-    X_D3DFMT_A8L8: Result := 'X_D3DFMT_A8L8';
-    X_D3DFMT_R6G5B5: Result := 'X_D3DFMT_R6G5B5';
-//    X_D3DFMT_L6V5U5 = $27; // Alias
-    X_D3DFMT_G8B8: Result := 'X_D3DFMT_G8B8';
-//    X_D3DFMT_V8U8 = $28; // Alias
-    X_D3DFMT_R8B8: Result := 'X_D3DFMT_R8B8';
-    X_D3DFMT_D24S8: Result := 'X_D3DFMT_D24S8';
-    X_D3DFMT_F24S8: Result := 'X_D3DFMT_F24S8';
-    X_D3DFMT_D16: Result := 'X_D3DFMT_D16';
-//    X_D3DFMT_D16_LOCKABLE = $2C; // Alias
-    X_D3DFMT_F16: Result := 'X_D3DFMT_F16';
-    X_D3DFMT_L16: Result := 'X_D3DFMT_L16';
-    X_D3DFMT_V16U16: Result := 'X_D3DFMT_V16U16';
-    X_D3DFMT_R5G5B5A1: Result := 'X_D3DFMT_R5G5B5A1';
-    X_D3DFMT_R4G4B4A4: Result := 'X_D3DFMT_R4G4B4A4';
-    X_D3DFMT_A8B8G8R8: Result := 'X_D3DFMT_A8B8G8R8';
-//    X_D3DFMT_Q8W8V8U8 = $3A; // Alias
-    X_D3DFMT_B8G8R8A8: Result := 'X_D3DFMT_B8G8R8A8';
-    X_D3DFMT_R8G8B8A8: Result := 'X_D3DFMT_R8G8B8A8';
-
-    // YUV Formats
-    X_D3DFMT_YUY2: Result := 'X_D3DFMT_YUY2';
-    X_D3DFMT_UYVY: Result := 'X_D3DFMT_UYVY';
-    // Compressed Formats
-    X_D3DFMT_DXT1: Result := 'X_D3DFMT_DXT1';
-    X_D3DFMT_DXT2: Result := 'X_D3DFMT_DXT2';
-//    X_D3DFMT_DXT3 = $0E; // linear alpha
-    X_D3DFMT_DXT4: Result := 'X_D3DFMT_DXT4';
-//    X_D3DFMT_DXT5 = $0F; // interpolated alpha
-
-    // Linear Formats
-    X_D3DFMT_LIN_A1R5G5B5: Result := 'X_D3DFMT_LIN_A1R5G5B5';
-    X_D3DFMT_LIN_R5G6B5: Result := 'X_D3DFMT_LIN_R5G6B5';
-    X_D3DFMT_LIN_A8R8G8B8: Result := 'X_D3DFMT_LIN_A8R8G8B8';
-    X_D3DFMT_LIN_L8: Result := 'X_D3DFMT_LIN_L8';
-    X_D3DFMT_LIN_R8B8: Result := 'X_D3DFMT_LIN_R8B8';
-    X_D3DFMT_LIN_G8B8: Result := 'X_D3DFMT_LIN_G8B8';
-//    X_D3DFMT_LIN_V8U8 = $17; // Alias
-    X_D3DFMT_LIN_AL8: Result := 'X_D3DFMT_LIN_AL8';
-    X_D3DFMT_LIN_X1R5G5B5: Result := 'X_D3DFMT_LIN_X1R5G5B5';
-    X_D3DFMT_LIN_A4R4G4B4: Result := 'X_D3DFMT_LIN_A4R4G4B4';
-    X_D3DFMT_LIN_X8R8G8B8: Result := 'X_D3DFMT_LIN_X8R8G8B8';
-//    X_D3DFMT_LIN_X8L8V8U8 = $1E; // Alias
-    X_D3DFMT_LIN_A8: Result := 'X_D3DFMT_LIN_A8';
-    X_D3DFMT_LIN_A8L8: Result := 'X_D3DFMT_LIN_A8L8';
-    X_D3DFMT_LIN_D24S8: Result := 'X_D3DFMT_LIN_D24S8';
-    X_D3DFMT_LIN_F24S8: Result := 'X_D3DFMT_LIN_F24S8';
-    X_D3DFMT_LIN_D16: Result := 'X_D3DFMT_LIN_D16';
-    X_D3DFMT_LIN_F16: Result := 'X_D3DFMT_LIN_F16';
-    X_D3DFMT_LIN_L16: Result := 'X_D3DFMT_LIN_L16';
-    X_D3DFMT_LIN_V16U16: Result := 'X_D3DFMT_LIN_V16U16';
-    X_D3DFMT_LIN_R6G5B5: Result := 'X_D3DFMT_LIN_R6G5B5';
-//    X_D3DFMT_LIN_L6V5U5 = $37; // Alias
-    X_D3DFMT_LIN_R5G5B5A1: Result := 'X_D3DFMT_LIN_R5G5B5A1';
-    X_D3DFMT_LIN_R4G4B4A4: Result := 'X_D3DFMT_LIN_R4G4B4A4';
-    X_D3DFMT_LIN_A8B8G8R8: Result := 'X_D3DFMT_LIN_A8B8G8R8';
-    X_D3DFMT_LIN_B8G8R8A8: Result := 'X_D3DFMT_LIN_B8G8R8A8';
-    X_D3DFMT_LIN_R8G8B8A8: Result := 'X_D3DFMT_LIN_R8G8B8A8';
-
-    X_D3DFMT_VERTEXDATA: Result := 'X_D3DFMT_VERTEXDATA';
+    D3DFMT_UNKNOWN     : Result := 'D3DFMT_UNKNOWN';
+    D3DFMT_R8G8B8      : Result := 'D3DFMT_R8G8B8';
+    D3DFMT_A8R8G8B8    : Result := 'D3DFMT_A8R8G8B8';
+    D3DFMT_X8R8G8B8    : Result := 'D3DFMT_X8R8G8B8';
+    D3DFMT_R5G6B5      : Result := 'D3DFMT_R5G6B5';
+    D3DFMT_X1R5G5B5    : Result := 'D3DFMT_X1R5G5B5';
+    D3DFMT_A1R5G5B5    : Result := 'D3DFMT_A1R5G5B5';
+    D3DFMT_A4R4G4B4    : Result := 'D3DFMT_A4R4G4B4';
+    D3DFMT_R3G3B2      : Result := 'D3DFMT_R3G3B2';
+    D3DFMT_A8          : Result := 'D3DFMT_A8 ';
+    D3DFMT_A8R3G3B2    : Result := 'D3DFMT_A8R3G3B2';
+    D3DFMT_X4R4G4B4    : Result := 'D3DFMT_X4R4G4B4';
+    D3DFMT_A2B10G10R10 : Result := 'D3DFMT_A2B10G10R10';
+    D3DFMT_G16R16      : Result := 'D3DFMT_G16R16';
+    D3DFMT_A8P8        : Result := 'D3DFMT_A8P8';
+    D3DFMT_P8          : Result := 'D3DFMT_P8 ';
+    D3DFMT_L8          : Result := 'D3DFMT_L8 ';
+    D3DFMT_A8L8        : Result := 'D3DFMT_A8L8';
+    D3DFMT_A4L4        : Result := 'D3DFMT_A4L4';
+    D3DFMT_V8U8        : Result := 'D3DFMT_V8U8';
+    D3DFMT_L6V5U5      : Result := 'D3DFMT_L6V5U5';
+    D3DFMT_X8L8V8U8    : Result := 'D3DFMT_X8L8V8U8';
+    D3DFMT_Q8W8V8U8    : Result := 'D3DFMT_Q8W8V8U8';
+    D3DFMT_V16U16      : Result := 'D3DFMT_V16U16';
+    D3DFMT_W11V11U10   : Result := 'D3DFMT_W11V11U10';
+    D3DFMT_A2W10V10U10 : Result := 'D3DFMT_A2W10V10U10';
+    D3DFMT_UYVY        : Result := 'D3DFMT_UYVY';
+    D3DFMT_YUY2        : Result := 'D3DFMT_YUY2';
+    D3DFMT_DXT1        : Result := 'D3DFMT_DXT1';
+    D3DFMT_DXT2        : Result := 'D3DFMT_DXT2';
+    D3DFMT_DXT3        : Result := 'D3DFMT_DXT3';
+    D3DFMT_DXT4        : Result := 'D3DFMT_DXT4';
+    D3DFMT_DXT5        : Result := 'D3DFMT_DXT5';
+    D3DFMT_D16_LOCKABLE: Result := 'D3DFMT_D16_LOCKABLE';
+    D3DFMT_D32         : Result := 'D3DFMT_D32';
+    D3DFMT_D15S1       : Result := 'D3DFMT_D15S1';
+    D3DFMT_D24S8       : Result := 'D3DFMT_D24S8';
+    D3DFMT_D16         : Result := 'D3DFMT_D16';
+    D3DFMT_D24X8       : Result := 'D3DFMT_D24X8';
+    D3DFMT_D24X4S4     : Result := 'D3DFMT_D24X4S4';
+    D3DFMT_VERTEXDATA  : Result := 'D3DFMT_VERTEXDATA';
+    D3DFMT_INDEX16     : Result := 'D3DFMT_INDEX16';
+    D3DFMT_INDEX32     : Result := 'D3DFMT_INDEX32';
   else Result := '';
   end;
 end;
