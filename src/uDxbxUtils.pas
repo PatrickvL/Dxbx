@@ -1416,6 +1416,10 @@ begin
     x := (k div 2) mod aOutput.Width;
     y := (k div 2) div aOutput.Width * 4;
 
+    // Forza Motorsport needs this safety measure, as it has aDataSize=147456, while we need 16384 bytes :
+    if y >= aOutput.Height then
+      Break;
+
     pixelmap := (aData[j + 4] shl 0)
               + (aData[j + 5] shl 8)
               + (aData[j + 6] shl 16)
