@@ -1655,7 +1655,7 @@ begin
         MulIntermediate.Parameters[1].Parameter.ParameterType := PARAM_C;
         // Dxbx note : Cxbx calls ConvertCRegister(58) here, but doing a conversion seems incorrect.
         // That, and the constant address is also corrected afterwards, so use the original :
-        MulIntermediate.Parameters[1].Parameter.Address       := X_D3DSCM_RESERVED_CONSTANT1{=-38} + X_D3DSCM_CORRECTION_VersionDependent;
+        MulIntermediate.Parameters[1].Parameter.Address       := X_D3DSCM_RESERVED_CONSTANT1{=-38};
 
         MulIntermediate.Parameters[1].Parameter.Neg           := FALSE;
         VshSetSwizzle(@MulIntermediate.Parameters[1].Parameter, SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
@@ -1673,7 +1673,7 @@ begin
         AddIntermediate.Parameters[0].Parameter.Address       := 10;
         // Dxbx note : Cxbx calls ConvertCRegister(59) here, but doing a conversion seems incorrect.
         // That, and the constant address is also corrected afterwards, so use the original :
-        AddIntermediate.Parameters[1].Parameter.Address       := X_D3DSCM_RESERVED_CONSTANT2{=-37} + X_D3DSCM_CORRECTION_VersionDependent;
+        AddIntermediate.Parameters[1].Parameter.Address       := X_D3DSCM_RESERVED_CONSTANT2{=-37};
         // Insert this instruction :
         Inc(i); VshInsertIntermediate(pShader, @AddIntermediate, i);
       end;
@@ -1919,9 +1919,8 @@ begin
     // Make constant registers range from 0 to 191 instead of -96 to 95
     if (pIntermediate.Output.Type_ = IMD_OUTPUT_C) then
     begin
-      if g_BuildVersion > 4361 then
-        Inc(pIntermediate.Output.Address, X_D3DSCM_CORRECTION{=96});
-//??      Inc(pIntermediate.Output.Address, X_D3DSCM_CORRECTION_VersionDependent);
+      // Dxbx note : This should NOT be done version-dependantly!
+      Inc(pIntermediate.Output.Address, X_D3DSCM_CORRECTION);
     end;
 
 {$IFDEF DXBX_USE_VS30}
@@ -1942,10 +1941,9 @@ begin
         // Dxbx fix : PARAM_C correction shouldn't depend on Active!
         // Dxbx : Don't correct c[a0.x] indexes; Seems to stabilize MatrixPaletteSkinning a bit (not fully) :
         if not pIntermediate.Parameters[j].IndexesWithA0_X then
-          // Make constant registers range from 0 to 191 instead of -96 to 95 (when the XDK version requires it) :
-          if g_BuildVersion > 4361 then
-            Inc(pIntermediate.Parameters[j].Parameter.Address, X_D3DSCM_CORRECTION{=96});
-//??          Inc(pIntermediate.Parameters[j].Parameter.Address, X_D3DSCM_CORRECTION_VersionDependent);
+          // Make constant registers range from 0 to 191 instead of -96 to 95 :
+          // Dxbx note : This should NOT be done version-dependantly!
+          Inc(pIntermediate.Parameters[j].Parameter.Address, X_D3DSCM_CORRECTION);
       end else
       if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_V) then
       begin

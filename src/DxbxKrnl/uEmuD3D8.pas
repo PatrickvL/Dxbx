@@ -4243,7 +4243,7 @@ end;
 
 function XTL_EmuD3DDevice_SetVertexShaderConstant
 (
-  Register_: X_D3DVSDE;
+  Register_: DWORD;
   {CONST} pConstantData: PVOID;
   ConstantCount: DWORD
 ): HRESULT; stdcall;
@@ -4263,19 +4263,6 @@ begin
       _(ConstantCount, 'ConstantCount').
     LogEnd();
 
-{$IFDEF _DEBUG_TRACK_VS_CONST}
-  if ConstantCount > 0 then // Dxbx addition, to prevent underflow
-  for i := 0 to ConstantCount - 1 do
-  begin
-    if MayLog(lfUnit) then
-        DbgPrintf('SetVertexShaderConstant, c%d (c%d) = { %f, %f, %f, %f }',
-               [Register_ + X_D3DSCM_CORRECTION_VersionDependent + i, Register_ + i, // Dxbx fix
-               Pfloats(pConstantData)[4 * i],
-               Pfloats(pConstantData)[4 * i + 1],
-               Pfloats(pConstantData)[4 * i + 2],
-               Pfloats(pConstantData)[4 * i + 3]]);
-  end;
-{$ENDIF}
 
   // TODO -oCXBX: HACK: Since Xbox vertex shader constants range from -96 to 95, during conversion
   // some shaders need to add 96 to use ranges 0 to 191.  This fixes 3911 - 4361 games and XDK
@@ -4284,6 +4271,21 @@ begin
   // incremented with 96 (even though the code for these samples supplies 0, maybe there's a
   // macro responsible for that?)
   Inc(Register_, X_D3DSCM_CORRECTION_VersionDependent);
+  DbgPrintf('Corrected constant register : 0x%.08x', [Register_]);
+
+{$IFDEF _DEBUG_TRACK_VS_CONST}
+  if ConstantCount > 0 then // Dxbx addition, to prevent underflow
+  for i := 0 to ConstantCount - 1 do
+  begin
+    if MayLog(lfUnit) then
+        DbgPrintf('SetVertexShaderConstant, c%d = { %f, %f, %f, %f }',
+               [Register_ + i,
+               Pfloats(pConstantData)[4 * i],
+               Pfloats(pConstantData)[4 * i + 1],
+               Pfloats(pConstantData)[4 * i + 2],
+               Pfloats(pConstantData)[4 * i + 3]]);
+  end;
+{$ENDIF}
 
 // TODO -oDxbx : This looks correct, but removes the mist from Turok menu's, so disable it for now :
 //  // Check we're not getting past the current upper bound :
@@ -4326,7 +4328,7 @@ end;
 procedure XTL_EmuD3DDevice_SetVertexShaderConstant1(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}const pConstantData: PVOID;
-  {1 ECX}Register_: X_D3DVSDE
+  {1 ECX}Register_: DWORD
   ); register; // VALIDATED fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -4349,7 +4351,7 @@ end;
 procedure XTL_EmuD3DDevice_SetVertexShaderConstant4(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}const pConstantData: PVOID;
-  {1 ECX}Register_: X_D3DVSDE//DWORD
+  {1 ECX}Register_: DWORD
   ); register; // VALIDATED fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -4372,7 +4374,7 @@ end;
 procedure XTL_EmuD3DDevice_SetVertexShaderConstantNotInline(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}const pConstantData: PVOID;
-  {1 ECX}Register_: X_D3DVSDE;
+  {1 ECX}Register_: DWORD;
   {3 stack}ConstantCount: DWORD
   ); register; // fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -9616,7 +9618,7 @@ end;
 
 function XTL_EmuD3DDevice_GetVertexShaderConstant
 (
-  Register_: X_D3DVSDE;
+  Register_: DWORD;
   pConstantData: Pvoid;
   ConstantCount: DWORD
 ): HRESULT; stdcall;
@@ -9635,6 +9637,7 @@ begin
   // should indeed be done version-dependantly (like in SetVertexShaderConstant);
   // It seems logical that these two mirror eachother, but it could well be different:
   Inc(Register_, X_D3DSCM_CORRECTION_VersionDependent);
+  DbgPrintf('Corrected constant register : 0x%.08x', [Register_]);
 
 {$IFDEF DXBX_USE_D3D9}
   Result := g_pD3DDevice.GetVertexShaderConstantF
