@@ -498,8 +498,9 @@ begin
       if (Length(RelativePath) > 0) and (RelativePath[1] = '\') then
       begin
         System.Delete(RelativePath, 1, 1);
-        // And add it to the Native path instead :
-        NativePath := NativePath + '\';
+        // And if needed, add it to the Native path instead :
+        if LastChar(NativePath) <> '\' then
+          NativePath := NativePath + '\';
       end;
 
       XboxFullPath := EmuNtSymbolicLinkObject.XboxFullPath;
