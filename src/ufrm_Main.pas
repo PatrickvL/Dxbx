@@ -1487,6 +1487,11 @@ begin
 
       for i := 0 to XbeFiles.Count -1 do
       begin
+        if (CompareStr(XbeFiles[i], 'dashupdate.xbe') = 0)
+        or (CompareStr(XbeFiles[i], 'downloader.xbe') = 0)
+        or (CompareStr(XbeFiles[i], 'update.xbe') = 0) then
+          continue;
+
         OpenXbeFile(XbeFiles[i]);
         Application.ProcessMessages;
       end;
