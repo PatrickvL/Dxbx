@@ -2102,8 +2102,11 @@ begin
         ZeroMemory(g_pCachedZStencilSurface, SizeOf(g_pCachedZStencilSurface^));
         g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
         if IDirect3DDevice_GetDepthStencilSurface(g_pD3DDevice, @(g_pCachedZStencilSurface.Emu.Surface)) = D3D_OK then
+        begin
           // Dxbx addition : Test if a ZBuffer exists, to fix invalid arguments to XTL_EmuD3DDevice_Clear :
-          DxbxFix_HasZBuffer := True
+          DxbxFix_HasZBuffer := True;
+          IDirect3DSurface(g_pCachedZStencilSurface.Emu.Surface)._Release;
+        end
         else
           DxbxFix_HasZBuffer := False;
 
@@ -4731,9 +4734,21 @@ begin
   end
   else // PCFormat <> D3DFMT_YUY2
   begin
-    // TODO -oDxbx: Turok crashes when D3DUSAGE_DEPTHSTENCIL is forwarded to PC, so disable that for now :
-    Usage := Usage and (D3DUSAGE_RENDERTARGET);
-    Pool := D3DPOOL_MANAGED; // ?
+    // Dxbx addition : Limit the usages we accept :
+    Usage := Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL);
+
+    // Dxbx addition : If this texture is going to be a depth stencil, use the correct format for that :
+    if (Usage and D3DUSAGE_DEPTHSTENCIL) > 0 then
+    begin
+      if PCFormat <> D3DFMT_D24S8 then
+      begin
+        // Note : XDL sample ZSprite fakes this anyhow by putting D3DFMT_LIN_D24S8 in the Resource.Format!
+        PCFormat := D3DFMT_D24S8;
+        EmuWarning('Overriding texture format into D3DFMT_D24S8 to support D3DUSAGE_DEPTHSTENCIL');
+      end;
+    end;
+
+    Pool := D3DPOOL_MANAGED;
 
     EmuAdjustTextureDimensions(D3DRTYPE_TEXTURE, @Width, @Height);
 
