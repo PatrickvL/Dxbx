@@ -1959,14 +1959,14 @@ begin
   if RemoveUselessWrites then
     Log('RemoveUselessWrites');
 
+  if ConvertConstantsToNative(pPSDef) then
+    Log('ConvertConstantsToNative');
+
   ConvertXboxOpcodesToNative(pPSDef);
   Log('ConvertXboxOpcodesToNative');
 
   if RemoveUselessWrites then // twice!
     Log('RemoveUselessWrites');
-
-  if ConvertConstantsToNative(pPSDef) then
-    Log('ConvertConstantsToNative');
 
   // Resolve all differences :
   if FixupPixelShader then
@@ -2291,11 +2291,11 @@ function PSH_XBOX_SHADER.ConvertConstantsToNative(pPSDef: PX_D3DPIXELSHADERDEF):
 var
   i, j: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
-  NewIns: PSH_INTERMEDIATE_FORMAT;
   CurArg: PPSH_IMD_ARGUMENT;
-  ConstColor: D3DCOLOR;
   ConstMapping: array [0..X_PSH_CONSTANT_MAX-1] of int;
+  ConstColors: array [0..X_PSH_CONSTANT_MAX-1] of D3DCOLOR;
   ConstInUse: array [0..X_PSH_CONSTANT_MAX-1] of boolean;
+  NewIns: PSH_INTERMEDIATE_FORMAT;
 
   // Try to fixup constants above c7 :
   function _MapConstant(ConstNr: int): int;
@@ -2307,7 +2307,7 @@ var
       Exit;
     end;
 
-    // Assign non-supported constants top-to-bottom
+    // Assign not-yet-defined constants top-to-bottom
     Result := 0;
     while Result < 8 do
     begin
@@ -2322,6 +2322,18 @@ var
       Result := ConstNr;
   end;
 
+  function _HandleConst(XboxConst: int; ConstColor: D3DCOLOR): int;
+  begin
+    if ConstMapping[XboxConst] < 0 then
+      // Determine and remember a new mapping :
+      ConstMapping[XboxConst] := _MapConstant(XboxConst);
+
+    ConstInUse[XboxConst] := True;
+    ConstColors[XboxConst] := ConstColor;
+    // Return the (previously) determined mapping :
+    Result := ConstMapping[XboxConst];
+  end;
+
 begin
   Result := False;
 
@@ -2332,93 +2344,131 @@ begin
     ConstInUse[i] := False;
   end;
 
-  // Loop over all opcodes to update the constant-indexes (Xbox uses C0 and C1 in each combiner) :
-  i := 0;
-  while i < IntermediateCount do
+  // For now, use the PSC0Mapping and PSC1Mapping as predefined mappings :
+  for i := 0 to 8 - 1 do
   begin
+    j := (pPSDef.PSC0Mapping shr (i * 4)) and $F;
+    ConstMapping[i] := j;
+
+    j := (pPSDef.PSC1Mapping shr (i * 4)) and $F;
+    ConstMapping[8+i] := j;
+  end;
+
+  // Do the same for the final combiner constants :
+  begin
+    j := (pPSDef.PSFinalCombinerConstants shr 0) and $F;
+    ConstMapping[X_PSH_CONSTANT_FC0] := j;
+
+    j := (pPSDef.PSFinalCombinerConstants shr 4) and $F;
+    ConstMapping[X_PSH_CONSTANT_FC1] := j;
+  end;
+
+{
+  Note : On the XBox, pPSDef.PSC0Mapping / PSC1Mapping are only used
+  to map indexes in SetPixelShaderConstant; The pixel shader itself just uses
+  c0..c7 (read from PSConstant0[]), c8-c15 (read from PSConstant1[]) and for
+  the final combiner it's c0 and c1 are read from PSFinalCombinerConstant0/1.
+
+  TODO : If we
+
+  // Example from TechCertGame :
+
+  // Declaration :
+  psd.PSC0Mapping = PS_CONSTANTMAPPING(15,15,15,15,15,15,0,2);  // = $20FFFFFF
+  psd.PSC1Mapping = PS_CONSTANTMAPPING(15,15,15,15,15,15,1,15); // = $F1FFFFFF
+
+  // Constant colors declared in shader :
+  psd.PSConstant0[1]=0xc0c0c0c0; // not mapped
+  psd.PSConstant0[6]=0xdfdfdfdf; // mapped to c0
+  psd.PSConstant1[6]=0xdfdfdfdf; // mapped to c1
+  psd.PSConstant0[7]=0x20202020; // mapped to c2
+
+  // Usage during rendering :
+  float fDiffuse[4] = ( 0.9f, 0.9f, 0.9f, 0.9f );
+  float fSpecular[4] = ( 0.0f, 0.0f, 0.0f, 0.0f );
+  float fAmbient[4] = ( 0.2f, 0.2f, 0.2f, 0.2f );
+  g_pd3dDevice->SetPixelShaderConstant( 0, fDiffuse, 1 );
+  g_pd3dDevice->SetPixelShaderConstant( 1, fSpecular, 1 );
+  g_pd3dDevice->SetPixelShaderConstant( 2, fAmbient, 1 );
+
+  // Decoding sample:
+  ConstMapping[0] :=  (pPSDef.PSC0Mapping shr  0) and $F);
+  ConstMapping[1] := ((pPSDef.PSC0Mapping shr  4) and $F);
+  ConstMapping[2] := ((pPSDef.PSC0Mapping shr  8) and $F);
+  ConstMapping[3] := ((pPSDef.PSC0Mapping shr 12) and $F); // ... etc
+
+  //function PS_CONSTANTMAPPING(s0,s1,s2,s3,s4,s5,s6,s7:): ,
+  //begin
+  //  Result := ((DWORD(s0) and $f) shl  0) or ((DWORD(s1) and $f) shl 4) or
+  //            ((DWORD(s2) and $f) shl  8) or ((DWORD(s3) and $f) shl 12) or
+  //            ((DWORD(s4) and $f) shl 16) or ((DWORD(s5) and $f) shl 20) or
+  //            ((DWORD(s6) and $f) shl 24) or ((DWORD(s7) and $f) shl 28),
+  //end,
+  // s0-s7 contain the offset of the D3D constant that corresponds to the
+  // c0 or c1 constant in stages 0 through 7.  These mappings are only used in
+  // SetPixelShaderConstant().
+}
+
+  // Loop over all opcodes to update the constant-indexes (Xbox uses C0 and C1 in each combiner) :
+  for i := 0 to IntermediateCount - 1 do
+  begin
+    // Loop over this opcodes' input arguments :
     Cur := @(Intermediate[i]);
-    Inc(i);
-
-    // Prepare constant DEFinitions :
-    NewIns.Initialize(PO_DEF);
-
-    // Loop over the input arguments :
     for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 do
     begin
       CurArg := @(Cur.Parameters[j]);
+      if CurArg.Type_ <> PARAM_C then
+        Continue;
 
-      // Handle C0 and C1 (as we need to map these two to actual constants) :
-      if CurArg.Type_ = PARAM_C then
-      begin
-        if (CurArg.Address = 0) then
+      // See if C0 and/or C1 are used :
+      case CurArg.Address of
+        0: // Handle C0 (if present) :
         begin
           if Cur.CombinerStageNr = XFC_COMBINERSTAGENR then
-          begin
-            // TODO : Is the final combiner C0 also influenced by CombinerHasUniqueC0 ?
-            CurArg.Address := X_PSH_CONSTANT_FC0;
-            ConstColor := pPSDef.PSFinalCombinerConstant0;
-          end
+            CurArg.Address := _HandleConst(X_PSH_CONSTANT_FC0, pPSDef.PSFinalCombinerConstant0)
           else
           begin
             // See if C0 has a unique index per combiner stage :
             if CombinerHasUniqueC0 then
-              // C0 actually ranges from c0 to c7, one for each possible combiner stage :
-              // X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7
-              Inc(CurArg.Address, Cur.CombinerStageNr);
-
-            ConstColor := pPSDef.PSConstant0[CurArg.Address];
-          end;
-        end
-        else
-        begin
-          // See if C1 has a unique index per combiner stage :
-          Assert(CurArg.Address = 1);
-
-          if Cur.CombinerStageNr = XFC_COMBINERSTAGENR then
-          begin
-            // TODO : Is the final combiner C1 also influenced by CombinerHasUniqueC1 ?
-            CurArg.Address := X_PSH_CONSTANT_FC1;
-            ConstColor := pPSDef.PSFinalCombinerConstant1;
-          end
-          else
-          begin
-            if CombinerHasUniqueC1 then
-            begin
-              // C1 actually ranges from c8 to c15, one for each possible combiner stage :
-              // X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7
-              Inc(CurArg.Address, 8 + Cur.CombinerStageNr - 1);
-              ConstColor := pPSDef.PSConstant1[CurArg.Address - 8];
-            end
+              // C0 actually ranges from c0 to c7, one for each possible combiner stage (X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7) :
+              CurArg.Address := _HandleConst(Cur.CombinerStageNr, pPSDef.PSConstant0[Cur.CombinerStageNr])
             else
-              ConstColor := pPSDef.PSConstant1[1];
+              CurArg.Address := _HandleConst(0, pPSDef.PSConstant0[0]);
           end;
         end;
 
-        // If this is a new constant, output a 'def' opcode for it at the begin of the shader :
-        if ConstMapping[CurArg.Address] < 0 then
+        1: // Handle C1 (if present) :
         begin
-          // Determine and remember a new mapping :
-          ConstMapping[CurArg.Address] := _MapConstant(CurArg.Address);
-          // Apply that mapping :
-          CurArg.Address := ConstMapping[CurArg.Address];
-          ConstInUse[CurArg.Address] := True;
-          // Output a new opcode to define this constant :
-          NewIns.Output[0] := CurArg^;
-          NewIns.Output[0].Mask := MASK_RGBA;
-          NewIns.Output[0].Modifiers := [];
-          _SetColor(NewIns, ConstColor);
-          InsertIntermediate(@NewIns, 0);
-          Result := True;
-          // Since we're in a for-loop, also step with current opcode after insert :
-          Inc(i);
-          Cur := @(Intermediate[i]);
-        end
-        else
-          // Just apply the previously determined mapping :
-          CurArg.Address := ConstMapping[CurArg.Address];
-      end;
+          if Cur.CombinerStageNr = XFC_COMBINERSTAGENR then
+            CurArg.Address := _HandleConst(X_PSH_CONSTANT_FC1, pPSDef.PSFinalCombinerConstant1)
+          else
+          begin
+            // See if C1 has a unique index per combiner stage :
+            if CombinerHasUniqueC1 then
+              // C1 actually ranges from c8 to c15, one for each possible combiner stage (X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7) :
+              CurArg.Address := _HandleConst(Cur.CombinerStageNr + 8, pPSDef.PSConstant1[Cur.CombinerStageNr])
+            else
+              CurArg.Address := _HandleConst(1, pPSDef.PSConstant1[0]);
+          end;
+        end;
+      end; // case
+    end; // for arguments
+  end; // for opcodes
+
+  // Now that we know all constants, insert the constant DEFinitions :
+  NewIns.Initialize(PO_DEF);
+  for i := High(ConstMapping) downto 0 do
+    // Only output constants in use and available in ps1.3 :
+    // TODO : Switch over to ps.2.0 or higher to more constants available (32 actually)
+    // (PS.2.0 requires Direct3D9 however, so that must come first...)
+    if ConstInUse[i] and (ConstMapping[i] < 8) then
+    begin
+      // Output a new opcode to define this constant :
+      NewIns.Output[0].SetRegister(PARAM_C, ConstMapping[i], MASK_RGBA);
+      _SetColor(NewIns, ConstColors[i]);
+      InsertIntermediate(@NewIns, 0);
+      Result := True;
     end;
-  end;
 end; // ConvertConstantsToNative
 
 function PSH_XBOX_SHADER.RemoveUselessWrites: Boolean;

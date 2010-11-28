@@ -1914,18 +1914,60 @@ var
   pSrc: PByte;
   pDest: PByte;
 
-  // Palette conversion variables (expanding D3DFMT_P8 to D3DFMT_A8R8G8B8) :
-  dwDataSize: DWORD;
-  dwPaletteSize: DWORD;
-  pTextureCache: PBytes;
-  w: uint32;
   v: uint32;
-  c: uint32;
+
+  // Palette conversion variables (expanding D3DFMT_P8 to D3DFMT_A8R8G8B8) :
+  ConvertP8ToARGB: Boolean;
+  NewTexture: XTL_PIDirect3DTexture8;
+  OldTexture: XTL_PIDirect3DTexture8;
+  dwDataSize: DWORD;
+  pTextureCache: PBytes;
+  src_yp: uint32;
+  dst_yp: uint32;
+  x: uint32;
   p: Byte;
-  y: DWORD;
 begin
   iRect := Classes.Rect(0, 0, 0, 0);
   iPoint := Classes.Point(0, 0);
+
+{$IFDEF DXBX_ENABLE_P8_CONVERSION}
+  ConvertP8ToARGB := (CacheFormat = X_D3DFMT_P8);
+{$ELSE}
+  ConvertP8ToARGB := False;
+{$ENDIF}
+  if ConvertP8ToARGB then
+  begin
+    if g_pCurrentPalette = nil then
+    begin
+      EmuWarning('Unsupported texture format D3DFMT_P8, no palette active to convert from!');
+      Exit;
+    end;
+
+    EmuWarning('Unsupported texture format D3DFMT_P8, expanding to D3DFMT_A8R8G8B8');
+
+    hRet := IDirect3DDevice_CreateTexture(g_pD3DDevice,
+      dwWidth, dwHeight, dwMipMapLevels,
+      {Usage=}0,//D3DUSAGE_RENDERTARGET,
+      D3DFMT_A8R8G8B8,
+      D3DPOOL_MANAGED, @NewTexture
+    );
+    if FAILED(hRet) then
+      DxbxKrnlCleanup('Couldn''t create P8 replacement texture!');
+
+    OldTexture := pPixelContainer.Emu.Texture;
+    pPixelContainer.Emu.Texture := NewTexture;
+
+    // Set new format in the resource header :
+    pPixelContainer.Format := (pPixelContainer.Format and not X_D3DFORMAT_FORMAT_MASK)
+                           or (X_D3DFMT_A8R8G8B8 shl X_D3DFORMAT_FORMAT_SHIFT);
+
+//    // Set new pitch in the resource header :
+//    pPixelContainer.Format := (pPixelContainer.Format and not X_D3DFORMAT_PSIZE_MASK)
+//                           or (??? shl X_D3DFORMAT_PSIZE_SHIFT);
+    dwDataSize := dwPitch * dwHeight; // Number of P8 (byte sized) pixels
+    pTextureCache := DxbxMalloc(dwDataSize);
+    dwPitch := dwPitch * 4; // 1 BPP > 4 BPP
+  end;
 
   nrfaces := ifThen(bCubemap, 6, 1);
   for face := 0 to nrfaces - 1 do
@@ -1958,7 +2000,7 @@ begin
 
       // Dxbx addition : Mirror the behaviour in EmuUnswizzleActiveTexture :
       if hRet <> S_OK then
-        continue;
+        Continue;
 
       pSrc := PBYTE(pPixelContainer.Data);
       pDest := LockedRect.pBits;
@@ -1989,51 +2031,38 @@ begin
           end
           else
           begin
-            if False{(CacheFormat = X_D3DFMT_P8)} then // Palette
+            if ConvertP8ToARGB then
             begin
-              EmuWarning('Unsupported texture format D3DFMT_P8, expanding to D3DFMT_A8R8G8B8');
-
-              // TODO -oDxbx : Create a new (larger) texture resource, but in such a way that
-              // the original P8 texture is also still available, in order to allow the Xbe
-              // to still make changes!
-
-              dwDataSize := dwMipWidth * dwMipHeight; // Number of P8 (byte sized) pixels
-              dwPaletteSize := 256 * 4; // Cxbx Note: This is not allways true, it can be 256- 128- 64- or 32*4
-
               // First we need to unswizzle the texture data to a temporary buffer :
-              pTextureCache := DxbxMalloc(dwDataSize);
               EmuXGUnswizzleRect
               (
                 pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, pTextureCache,
                 LockedRect.Pitch, iRect, iPoint, dwBPP
-              );
+                );
 
               // Lookup the colors of the paletted pixels in the current pallette
               // and write the expanded color back to the texture :
-              w := 0;
-              c := 0;
-              if dwDataSize > 0 then // Dxbx addition, to prevent underflow
-              for y := 0 to dwDataSize - 1 do
+              src_yp := 0;
+              dst_yp := 0;
+              x := 0;
+              dwDataSize := (dwMipWidth * dwMipHeight);
+              while dwDataSize > 0 do
               begin
-                if (c = dwMipWidth) then
-                begin
-                  w := w + dwMipPitch - c;
-                  c := 0;
-                end;
-                // Read P8 pixel :
-                p := Byte(pTextureCache[w]);
-                // Read the corresponding ARGB from the palette and store it in the new texture :
-                PDWORDs(pDest)[y] := PDWORDs(g_pCurrentPalette)[p];
-//                pDest[y * 4 + 0] := g_pCurrentPalette[p * 4 + 0];
-//                pDest[y * 4 + 1] := g_pCurrentPalette[p * 4 + 1];
-//                pDest[y * 4 + 2] := g_pCurrentPalette[p * 4 + 2];
-//                pDest[y * 4 + 3] := g_pCurrentPalette[p * 4 + 3];
-                w := w + 1;
-                c := c + 1;
-              end;
+                Dec(dwDataSize);
 
-              // Flush unused data buffers
-              DxbxFree(pTextureCache); // pTextureCache := nil;
+                // Read P8 pixel :
+                p := Byte(pTextureCache[src_yp + x]);
+                // Read the corresponding ARGB from the palette and store it in the new texture :
+                PDWORDs(pDest)[dst_yp + x] := PDWORDs(g_pCurrentPalette)[p];
+
+                Inc(x);
+                if (x = dwMipWidth) then
+                begin
+                  x := 0;
+                  Inc(src_yp, LockedRect.Pitch);
+                  Inc(dst_yp, dwMipPitch);
+                end;
+              end;
             end
             else
             begin
@@ -2083,6 +2112,16 @@ begin
       dwMipHeight := dwMipHeight div 2;
       dwMipPitch := dwMipPitch div 2;
     end;
+  end;
+
+  if ConvertP8ToARGB then
+  begin
+    // Flush unused data buffers
+    DxbxFree(pTextureCache); // pTextureCache := nil;
+    // Destroy old texture :
+    for level := 0 to dwMipMapLevels - 1 do
+      repeat until IDirect3DTexture(OldTexture).UnlockRect(level) <= D3D_OK;
+    while IDirect3DTexture(OldTexture)._Release > 0 do ;
   end;
 end;
 

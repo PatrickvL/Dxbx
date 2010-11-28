@@ -998,7 +998,7 @@ begin
   case Result of
     D3DFMT_P8:
     begin
-      EmuWarning('D3DFMT_P8 is an unsupported texture format!');
+      EmuWarning('D3DFMT_P8 is an unsupported texture format! Allocating D3DFMT_L8');
       Result := D3DFMT_L8;
     end;
     D3DFMT_D16:
@@ -1012,7 +1012,7 @@ begin
     end;
     D3DFMT_D24S8:
     begin
-      EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
+      EmuWarning('D3DFMT_D24S8 is an unsupported texture format! Allocating D3DFMT_X8R8G8B8');
       Result := D3DFMT_X8R8G8B8;
     end;
     D3DFMT_YUY2:
@@ -4797,7 +4797,7 @@ begin
       ppTexture^.Format := (Ord(Format) shl X_D3DFORMAT_FORMAT_SHIFT)
                         or (Log2(Width) shl X_D3DFORMAT_USIZE_SHIFT)
                         or (Log2(Height) shl X_D3DFORMAT_VSIZE_SHIFT)
-                        or (Log2(Height) shl X_D3DFORMAT_VSIZE_SHIFT)
+                        or ({Pitch=?}Log2(Width) shl X_D3DFORMAT_PSIZE_SHIFT)
                         or (Levels shl X_D3DFORMAT_MIPMAP_SHIFT);
 
       // Dxbx addition : Register all levels :
@@ -8726,7 +8726,9 @@ begin
   XTL_EmuUpdateDeferredStates();
 
 //  EmuUnswizzleActiveTexture(); // This messed up textures in PSTest2_4627, but not anymore since rev 1245
-//  XTL_EmuUpdateActiveTexture();
+{$IFDEF DXBX_ENABLE_P8_CONVERSION}
+  XTL_EmuUpdateActiveTexture();
+{$ENDIF}
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
@@ -8791,7 +8793,9 @@ begin
   XTL_EmuUpdateDeferredStates();
 
 //  EmuUnswizzleActiveTexture(); // This messed up the letters in Chunktro, but not anymore since rev 1245
-//  XTL_EmuUpdateActiveTexture();
+{$IFDEF DXBX_ENABLE_P8_CONVERSION}
+  XTL_EmuUpdateActiveTexture();
+{$ENDIF}
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
@@ -8910,7 +8914,9 @@ begin
 //    DxbxKrnlCleanup('DrawIndexedVertices : Unknown primitive type: 0x%.02X', [Ord(PrimitiveType)]);
 //  end;
 //  EmuUnswizzleActiveTexture(); // This messes up the PrimitiveType stackvalue (overwrite?!) in Cubemap sample
-//  XTL_EmuUpdateActiveTexture();
+{$IFDEF DXBX_ENABLE_P8_CONVERSION}
+  XTL_EmuUpdateActiveTexture();
+{$ENDIF}
 // If EmuUnswizzleActiveTexture was called, the above test would fail :
 //  if(PrimitiveType < X_D3DPT_POINTLIST) or (PrimitiveType >= X_D3DPT_MAX) then
 //  begin
@@ -9054,7 +9060,9 @@ begin
   XTL_EmuUpdateDeferredStates();
 
 //  EmuUnswizzleActiveTexture(); // This messed up the loading screen background image in Rayman Arena, but not anymore since rev 1245
-//  XTL_EmuUpdateActiveTexture();
+{$IFDEF DXBX_ENABLE_P8_CONVERSION}
+  XTL_EmuUpdateActiveTexture();
+{$ENDIF}
 
   if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
     EmuWarning('Unsupported PrimitiveType! (%d)', [Ord(PrimitiveType)]);
@@ -9313,6 +9321,8 @@ begin
   pPalette.Data := DWORD(XboxAlloc(lk[Size] * sizeof(uint08)));
   pPalette.Emu.Lock := RefCount; // emulated reference count for palettes
 
+  g_pCurrentPalette := PBytes(pPalette.Data);
+
   if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : CreatePalette2: Successfully Created Palette : ' + ResourceToString(pPalette));
 
@@ -9338,6 +9348,9 @@ begin
 
   // Marked out by Cxbx
 //  g_pD3DDevice.SetPaletteEntries(0, PPALETTEENTRY(@pPalette.Data));
+
+  g_pCurrentPalette := PBytes(pPalette.Data);
+
   EmuWarning('Not setting palette');
 
   EmuSwapFS(fsXbox);
@@ -9456,7 +9469,6 @@ begin
     LogEnd();
 
   Unimplemented('XTL_EmuD3DPalette_GetSize');
-
 
   //return D3DPalette_GetSize(pThis);
   Result := D3DPALETTE_32;
@@ -10354,7 +10366,11 @@ begin
       _(pRectPatchInfo, 'pRectPatchInfo').
     LogEnd();
 
-//  XTL_EmuUpdateActiveTexture();
+  XTL_EmuUpdateDeferredStates();
+
+{$IFDEF DXBX_ENABLE_P8_CONVERSION}
+  XTL_EmuUpdateActiveTexture();
+{$ENDIF}
 
   Result := g_pD3DDevice.DrawRectPatch(Handle, PSingle(pNumSegs), pRectPatchInfo);
 
@@ -10381,7 +10397,11 @@ begin
       _(pTriPatchInfo, 'pTriPatchInfo').
     LogEnd();
 
-//  XTL_EmuUpdateActiveTexture();
+  XTL_EmuUpdateDeferredStates();
+
+{$IFDEF DXBX_ENABLE_P8_CONVERSION}
+  XTL_EmuUpdateActiveTexture();
+{$ENDIF}
 
   Result := g_pD3DDevice.DrawTriPatch(Handle, PSingle(pNumSegs), pTriPatchInfo);
   if (FAILED(Result)) then
