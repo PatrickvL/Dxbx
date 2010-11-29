@@ -3178,6 +3178,58 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+function XTL_EmuD3DDevice_CreateDepthStencilSurface
+(
+  Width: UINT;
+  Height: UINT;
+  Format: X_D3DFORMAT;
+  MultiSample: X_D3DMULTISAMPLE_TYPE;
+  ppSurface: PPX_D3DSurface
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  PCFormat: D3DFORMAT;
+  PCMultiSample: D3DMULTISAMPLE_TYPE;
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_CreateDepthStencilSurface').
+      _(Width, 'Width').
+      _(Height, 'Height').
+      _(Format, 'Format').
+      _(MultiSample, 'MultiSample').
+      _(ppSurface, 'ppSurface').
+    LogEnd();
+
+  New({var PX_D3DSurface}ppSurface^);
+  ZeroMemory(ppSurface^, SizeOf(ppSurface^^));
+
+  PCFormat := EmuXB2PC_D3DFormat(Format);
+  PCMultiSample := EmuXB2PC_D3DMULTISAMPLE_TYPE(MultiSample);
+
+  EmuAdjustTextureDimensions(D3DRTYPE_SURFACE, @Width, @Height);
+
+  Result := IDirect3DDevice_CreateDepthStencilSurface(g_pD3DDevice,
+    Width,
+    Height,
+    PCFormat,
+    PCMultiSample,
+    PIDirect3DSurface(@(ppSurface^.Emu.Surface)));
+
+  if FAILED(Result) then
+    DxbxKrnlCleanup('CreateDepthStencilSurface failed! ' + #13#10 + 'Format = 0x%8.8X', [Format]);
+
+  // Dxbx addition : Initialize Common field properly :
+  ppSurface^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_SURFACE or X_D3DCOMMON_D3DCREATED;
+
+  if MayLog(lfUnit or lfReturnValue) then
+    DbgPrintf('EmuD3D8 : CreateDepthStencilSurface: Successfully Created Surface : ' + ResourceToString(ppSurface^));
+    // TODO : Also print Result, Width, Height, PCFormat
+
+  EmuSwapFS(fsXbox);
+end;
+
 function XTL_EmuD3DDevice_CreateImageSurface
 (
   Width: UINT;
@@ -3252,7 +3304,7 @@ begin
   ppBackBuffer^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_SURFACE or X_D3DCOMMON_D3DCREATED;
 
   if MayLog(lfUnit or lfReturnValue) then
-    DbgPrintf('EmuD3D8 : CreateImageSurface: Successfully Created BackBuffer : ' + ResourceToString(ppBackBuffer^));
+    DbgPrintf('EmuD3D8 : CreateImageSurface: Successfully Created Surface : ' + ResourceToString(ppBackBuffer^));
     // TODO : Also print Result, Width, Height, PCFormat
 
   EmuSwapFS(fsXbox);
@@ -4647,6 +4699,7 @@ begin
   hRes := D3D_OK-1; // TODO -oDxbx : What error code should we return?
   case D3DResource of
     X_D3DRTYPE_SURFACE: // 1
+      // XTL_EmuD3DDevice_CreateDepthStencilSurface ?
       hRes := XTL_EmuD3DDevice_CreateImageSurface(Width, Height, Format, @pTexture); // Dxbx addition
 
     X_D3DRTYPE_TEXTURE: // 3
@@ -11769,6 +11822,7 @@ exports
   XTL_EmuD3DDevice_Clear,
   XTL_EmuD3DDevice_CopyRects,
   XTL_EmuD3DDevice_CreateCubeTexture,
+  XTL_EmuD3DDevice_CreateDepthStencilSurface,
   XTL_EmuD3DDevice_CreateImageSurface,
   XTL_EmuD3DDevice_CreateIndexBuffer,
   XTL_EmuD3DDevice_CreateIndexBuffer2,

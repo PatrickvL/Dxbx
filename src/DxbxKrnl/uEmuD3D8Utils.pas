@@ -54,6 +54,9 @@ function IDirect3DDevice_GetRenderTarget(const aDirect3DDevice: IDirect3DDevice;
   ppRenderTarget: PIDirect3DSurface): HResult;
 function IDirect3DDevice_GetDepthStencilSurface(const aDirect3DDevice: IDirect3DDevice;
   ppZStencilSurface: PIDirect3DSurface): HResult;
+function IDirect3DDevice_CreateDepthStencilSurface(const aDirect3DDevice: IDirect3DDevice;
+  Width, Height: LongWord; Format: TD3DFormat; MultiSample: TD3DMultiSampleType;
+  ppSurface: PIDirect3DSurface): HResult;
 function IDirect3DDevice_CreateImageSurface(const aDirect3DDevice: IDirect3DDevice;
   Width, Height: LongWord; Format: TD3DFormat;
   ppSurface: PIDirect3DSurface): HResult;
@@ -249,6 +252,22 @@ function IDirect3DDevice_GetDepthStencilSurface(const aDirect3DDevice: IDirect3D
   ppZStencilSurface: PIDirect3DSurface): HResult;
 begin
   Result := aDirect3DDevice.GetDepthStencilSurface(ppZStencilSurface);
+end;
+
+function IDirect3DDevice_CreateDepthStencilSurface(const aDirect3DDevice: IDirect3DDevice;
+  Width, Height: LongWord; Format: TD3DFormat; MultiSample: TD3DMultiSampleType;
+  ppSurface: PIDirect3DSurface): HResult;
+begin
+{$IFDEF DXBX_USE_D3D9}
+CreateDepthStencilSurface ?
+  Result := aDirect3DDevice.CreateOffscreenPlainSurface(
+    Width, Height, Format, D3DPOOL_SCRATCH, // D3DPOOL_SYSTEMMEM ? See http://us.generation-nt.com/slowdowns-dx9-software-vertex-processing-help-24501522.html
+    ppSurface, {Handle=}NULL);
+{$ELSE}
+  Result := aDirect3DDevice.CreateDepthStencilSurface(
+    Width, Height, Format, MultiSample,
+    ppSurface);
+{$ENDIF}
 end;
 
 function IDirect3DDevice_CreateImageSurface(const aDirect3DDevice: IDirect3DDevice;
