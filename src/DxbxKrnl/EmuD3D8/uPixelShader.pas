@@ -45,6 +45,16 @@ uses
   uEmuD3D8Utils,
   uEmu;
 
+//{$IFDEF DXBX_USE_D3D9}
+//  {$IFDEF EXPIRIMENTAL}
+//    {$DEFINE DXBX_USE_PS_3_0}
+//  {$ELSE}
+//    {$DEFINE DXBX_USE_PS_2_0}
+//  {$ENDIF}
+//{$ELSE}
+  {$DEFINE DXBX_USE_PS_1_3}
+//{$ENDIF}
+
 // From PixelShader.h :
 
 (*---------------------------------------------------------------------------*)
@@ -468,7 +478,7 @@ type PSH_OPCODE =
     PO_COMMENT,
     PO_PS,
     PO_DEF,
-{$IFDEF DXBX_USE_D3D9}
+{$IFDEF DXBX_USE_PS_2_0}
     PO_DCL,
 {$ENDIF}
     PO_TEX,
@@ -514,7 +524,7 @@ var PSH_OPCODE_DEFS: array [PSH_OPCODE] of record mn: string; _Out, _In: int; no
   ({PO_COMMENT}mn:';'; _Out:0; _In:0; note:''), //
   ({PO_PS}  mn:'ps';   _Out:0; _In:0; note:''), // Must occur once; Xbox needs an x prefix (xps), Native needs a 1.3 suffix (ps.1.3)
   ({PO_DEF} mn:'def';  _Out:1; _In:4; note:''), // Output must be a PARAM_C, arguments must be 4 floats [0.00f .. 1.00f]
-{$IFDEF DXBX_USE_D3D9}
+{$IFDEF DXBX_USE_PS_2_0}
   ({PO_DCL} mn:'dcl';  _Out:1; _In:0; note:''),
 {$ENDIF}
   ({PO_TEX} mn:'tex';  _Out:1; _In:0; note:''),
@@ -594,11 +604,33 @@ const
   PSH_XBOX_MAX_R_REGISTER_COUNT = 2;
   PSH_XBOX_MAX_T_REGISTER_COUNT = 4;
   PSH_XBOX_MAX_V_REGISTER_COUNT = 2;
-
   // Two extra constants are possible in the final combiner - give them fake numbers :
-  X_PSH_CONSTANT_FC0 = PSH_XBOX_MAX_C_REGISTER_COUNT + 1; // = 16
-  X_PSH_CONSTANT_FC1 = X_PSH_CONSTANT_FC0 + 1; // = 17
-  X_PSH_CONSTANT_MAX = X_PSH_CONSTANT_FC1 + 1; // = 18
+  PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_MAX_C_REGISTER_COUNT + 1; // = 16
+  PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 17
+  PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FC1 + 1; // = 18
+
+{$IFDEF DXBX_USE_PS_3_0}
+  PSH_PC_MAX_C_REGISTER_COUNT = 224; // ps 3.0
+  PSH_PC_MAX_R_REGISTER_COUNT = 32; // ps 3.0
+  PSH_PC_MAX_S_REGISTER_COUNT = 16; // ps 3.0
+  PSH_PC_MAX_V_REGISTER_COUNT = 10; // ps 3.0
+  PSH_PC_MAX_REGISTER_COUNT = 224;
+{$ELSE}
+ {$IFDEF DXBX_USE_PS_2_0}
+  PSH_PC_MAX_C_REGISTER_COUNT = 32; // ps 2.0
+  PSH_PC_MAX_R_REGISTER_COUNT = 12; // ps 2.0
+  PSH_PC_MAX_S_REGISTER_COUNT = 16; // ps 2.0
+  PSH_PC_MAX_T_REGISTER_COUNT = 8; // ps 2.0
+  PSH_PC_MAX_V_REGISTER_COUNT = 2; // ps 2.0
+  PSH_PC_MAX_REGISTER_COUNT = 32;
+ {$ELSE} // DXBX_USE_PS_1_3
+  PSH_PC_MAX_C_REGISTER_COUNT = 8; // ps 1.3
+  PSH_PC_MAX_R_REGISTER_COUNT = 2; // ps 1.3
+  PSH_PC_MAX_T_REGISTER_COUNT = 4; // ps 1.3
+  PSH_PC_MAX_V_REGISTER_COUNT = 2; // ps 1.3
+  PSH_PC_MAX_REGISTER_COUNT = 8;
+ {$ENDIF}
+{$ENDIF}
 
 type PSH_INST_MODIFIER = (
   INSMOD_NONE, // y =  x
@@ -783,7 +815,7 @@ type PSH_INTERMEDIATE_FORMAT = record
 
 type PSH_XBOX_SHADER = record
     // Reserve enough slots for all shaders, so we need space for 18 constants, 4 texture addressing codes and 5 lines per opcode : :
-    Intermediate: array[0..(X_PSH_CONSTANT_MAX+X_D3DTS_STAGECOUNT+X_PSH_COMBINECOUNT * 5)] of PSH_INTERMEDIATE_FORMAT;
+    Intermediate: array[0..(PSH_XBOX_CONSTANT_MAX+X_D3DTS_STAGECOUNT+X_PSH_COMBINECOUNT * 5)] of PSH_INTERMEDIATE_FORMAT;
     IntermediateCount: int;
 
     PSTextureModes: array[0..X_D3DTS_STAGECOUNT-1] of PS_TEXTUREMODES;
@@ -1750,11 +1782,16 @@ begin
   // First things first, set the pixel shader version
   // 1.1 allows reading from 2 textures (which we use in 'cnd') and reading from the .b (blue) channel
   // 1.3 allows the use of texm3x2depth (which can occur sometimes)
-  // 2.0 allows up to r12, c32 and t8
-{$IFDEF DXBX_USE_D3D9}
-  Result := 'ps_2_0'#13#10;
+  // 2.0 allows up to r12, c32, t8 and s16 (requires Direct3D9)
+  // 3.0 allows up to r32, c224, v10 (instead of t via dcl), s16 and vFace (which can do two-sided lighting)
+{$IFDEF DXBX_USE_PS_3_0}
+  Result := 'ps_3_0'#13#10;
 {$ELSE}
+ {$IFDEF DXBX_USE_PS_2_0}
+  Result := 'ps_2_0'#13#10;
+ {$ELSE}
   Result := 'ps.1.3'#13#10;
+ {$ENDIF}
 {$ENDIF}
   for i := 0 to IntermediateCount-1 do
     Result := Result + Intermediate[i].ToString + #13#10;
@@ -2145,13 +2182,13 @@ begin
     Inc(InsertPos);
   until Intermediate[InsertPos].Opcode <> PO_DEF;
 
-{$IFDEF DXBX_USE_D3D9}
+{$IFDEF DXBX_USE_PS_2_0}
   Ins.Initialize(PO_DCL);
   for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
   begin
     if PSTextureModes[Stage] <> PS_TEXTUREMODES_NONE then
     begin
-      Ins.Output[0].SetRegister(PARAM_T, Stage, 0);
+      Ins.Output[0].SetRegister(PARAM_T, Stage, MASK_RGBA);
       InsertIntermediate(@Ins, InsertPos);
       Inc(InsertPos);
       Result := True;
@@ -2166,7 +2203,7 @@ begin
 
     // Convert the texture mode to a texture addressing instruction :
     case PSTextureModes[Stage] of // input = q,s,t,r (same layout as a,r,g,b, also known as w,x,y,z)
-{$IFNDEF DXBX_USE_D3D9}
+{$IFNDEF DXBX_USE_PS_2_0}
       PS_TEXTUREMODES_PROJECT2D: Ins.Opcode := PO_TEX; // argb = texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
       PS_TEXTUREMODES_PROJECT3D: Ins.Opcode := PO_TEX; // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
       PS_TEXTUREMODES_CUBEMAP: Ins.Opcode := PO_TEX; // argb = cubemap(r/q, s/q, t/q)
@@ -2292,16 +2329,16 @@ var
   i, j: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
   CurArg: PPSH_IMD_ARGUMENT;
-  ConstMapping: array [0..X_PSH_CONSTANT_MAX-1] of int;
-  ConstColors: array [0..X_PSH_CONSTANT_MAX-1] of D3DCOLOR;
-  ConstInUse: array [0..X_PSH_CONSTANT_MAX-1] of boolean;
+  ConstMapping: array [0..PSH_XBOX_CONSTANT_MAX-1] of int;
+  ConstColors: array [0..PSH_XBOX_CONSTANT_MAX-1] of D3DCOLOR;
+  ConstInUse: array [0..PSH_XBOX_CONSTANT_MAX-1] of boolean;
   NewIns: PSH_INTERMEDIATE_FORMAT;
 
-  // Try to fixup constants above c7 :
+  // Try to fixup constants above the limit (c7 for PS.1.3) :
   function _MapConstant(ConstNr: int): int;
   begin
     // 1-to-1 mapping for constants that can be supported native :
-    if (ConstNr < 8) and (not ConstInUse[ConstNr]) then
+    if (ConstNr < PSH_PC_MAX_C_REGISTER_COUNT) and (not ConstInUse[ConstNr]) then
     begin
       Result := ConstNr;
       Exit;
@@ -2309,7 +2346,7 @@ var
 
     // Assign not-yet-defined constants top-to-bottom
     Result := 0;
-    while Result < 8 do
+    while Result < PSH_PC_MAX_C_REGISTER_COUNT do
     begin
       if not ConstInUse[Result] then
         Exit;
@@ -2318,7 +2355,7 @@ var
     end;
 
     // Unresolved - let it go unchanged...
-    if Result >= 8 then
+    if Result >= PSH_PC_MAX_C_REGISTER_COUNT then
       Result := ConstNr;
   end;
 
@@ -2345,7 +2382,7 @@ begin
   end;
 
   // For now, use the PSC0Mapping and PSC1Mapping as predefined mappings :
-  for i := 0 to 8 - 1 do
+  for i := 0 to 8 - 1 do // XBOX has 2 * 8 constant registers (PSH_XBOX_MAX_C_REGISTER_COUNT)
   begin
     j := (pPSDef.PSC0Mapping shr (i * 4)) and $F;
     ConstMapping[i] := j;
@@ -2357,10 +2394,10 @@ begin
   // Do the same for the final combiner constants :
   begin
     j := (pPSDef.PSFinalCombinerConstants shr 0) and $F;
-    ConstMapping[X_PSH_CONSTANT_FC0] := j;
+    ConstMapping[PSH_XBOX_CONSTANT_FC0] := j;
 
     j := (pPSDef.PSFinalCombinerConstants shr 4) and $F;
-    ConstMapping[X_PSH_CONSTANT_FC1] := j;
+    ConstMapping[PSH_XBOX_CONSTANT_FC1] := j;
   end;
 
 {
@@ -2425,7 +2462,7 @@ begin
         0: // Handle C0 (if present) :
         begin
           if Cur.CombinerStageNr = XFC_COMBINERSTAGENR then
-            CurArg.Address := _HandleConst(X_PSH_CONSTANT_FC0, pPSDef.PSFinalCombinerConstant0)
+            CurArg.Address := _HandleConst(PSH_XBOX_CONSTANT_FC0, pPSDef.PSFinalCombinerConstant0)
           else
           begin
             // See if C0 has a unique index per combiner stage :
@@ -2440,7 +2477,7 @@ begin
         1: // Handle C1 (if present) :
         begin
           if Cur.CombinerStageNr = XFC_COMBINERSTAGENR then
-            CurArg.Address := _HandleConst(X_PSH_CONSTANT_FC1, pPSDef.PSFinalCombinerConstant1)
+            CurArg.Address := _HandleConst(PSH_XBOX_CONSTANT_FC1, pPSDef.PSFinalCombinerConstant1)
           else
           begin
             // See if C1 has a unique index per combiner stage :
@@ -2461,7 +2498,7 @@ begin
     // Only output constants in use and available in ps1.3 :
     // TODO : Switch over to ps.2.0 or higher to more constants available (32 actually)
     // (PS.2.0 requires Direct3D9 however, so that must come first...)
-    if ConstInUse[i] and (ConstMapping[i] < 8) then
+    if ConstInUse[i] and (ConstMapping[i] < PSH_PC_MAX_C_REGISTER_COUNT) then
     begin
       // Output a new opcode to define this constant :
       NewIns.Output[0].SetRegister(PARAM_C, ConstMapping[i], MASK_RGBA);
@@ -2474,13 +2511,11 @@ end; // ConvertConstantsToNative
 function PSH_XBOX_SHADER.RemoveUselessWrites: Boolean;
 // Note : Xbox allows writing to V0 (diffuse color) and V1 (specular color), but native ps.1.3 doesn't!
 // Some examples of this behaviour can be seen when running RayMan Arena.
-const
-  MAX_ADDRESS = 8;
 var
   i, j: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
   CurArg: PPSH_IMD_ARGUMENT;
-  RegUsage: array [PSH_ARGUMENT_TYPE, 0..MAX_ADDRESS] of DWORD;
+  RegUsage: array [PSH_ARGUMENT_TYPE, 0..PSH_PC_MAX_REGISTER_COUNT] of DWORD;
 begin
   // TODO : In Polynomial Texture Maps, one extra opcode could be deleted (sub r1.rgb, v0,v0), why doesn't it?
   Result := False;
@@ -2488,7 +2523,7 @@ begin
   // Mark only R0 (and discard) as initially 'read', as these may not result in a removal :
   ZeroMemory(@RegUsage, SizeOf(RegUsage));
   RegUsage[PARAM_R, 0] := MASK_RGBA;
-  for i := 0 to MAX_ADDRESS do
+  for i := 0 to High(RegUsage[PARAM_DISCARD]) do
     RegUsage[PARAM_DISCARD, i] := MASK_RGBA;
 
   i := IntermediateCount;
@@ -2508,7 +2543,7 @@ begin
       CurArg.Modifiers := CurArg.Modifiers - [ARGMOD_IDENTITY];
 
       // Discard useless writes :
-      if  (CurArg.Address < MAX_ADDRESS)
+      if  (CurArg.Address < PSH_PC_MAX_R_REGISTER_COUNT)
       and ((RegUsage[CurArg.Type_, CurArg.Address] and CurArg.Mask) = 0) then
       begin
         DbgPrintf('; Removed useless assignment to register ' + CurArg.ToString);
@@ -2528,7 +2563,7 @@ begin
       CurArg.Modifiers := CurArg.Modifiers - [ARGMOD_IDENTITY];
 
       // Keep track of all register reads, so that we can discard useless writes :
-      if CurArg.Address < MAX_ADDRESS then
+      if CurArg.Address < PSH_PC_MAX_R_REGISTER_COUNT then
         RegUsage[CurArg.Type_, CurArg.Address] := RegUsage[CurArg.Type_, CurArg.Address] or CurArg.Mask;
     end;
   end;
