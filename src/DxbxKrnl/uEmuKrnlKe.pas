@@ -71,9 +71,8 @@ function xboxkrnl_KeBugCheckEx(
   BugCheckParameter4: PVOID
   ): NTSTATUS; stdcall;
 function xboxkrnl_KeCancelTimer(
-  hTimerHandle: HANDLE;
-  pbPreviousState: PBOOLEAN
-  ): NTSTATUS; stdcall;
+  Timer: PKTIMER
+): _BOOLEAN; stdcall;
 function xboxkrnl_KeConnectInterrupt(
   Interrupt: PKINTERRUPT
 ): _BOOLEAN; stdcall;
@@ -109,7 +108,12 @@ function xboxkrnl_KeInsertDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInsertHeadQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInsertQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInsertQueueApc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeInsertQueueDpc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeInsertQueueDpc
+(
+  Dpc: PKDPC;
+  SystemArgument1: PVOID;
+  SystemArgument2: PVOID
+): _BOOLEAN; stdcall;
 function xboxkrnl_KeIsExecutingDpc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 procedure xboxkrnl_KeLeaveCriticalRegion(); stdcall;
 function xboxkrnl_KePulseEvent(
@@ -133,7 +137,10 @@ function xboxkrnl_KeRemoveByKeyDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGN
 function xboxkrnl_KeRemoveDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeRemoveEntryDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeRemoveQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeRemoveQueueDpc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeRemoveQueueDpc
+(
+  Dpc: PKDPC
+): _BOOLEAN; stdcall;
 function xboxkrnl_KeResetEvent(
   hEventHandle: HANDLE;
   pPreviousState: PULONG
@@ -176,21 +183,91 @@ function xboxkrnl_KeWaitForMultipleObjects(): NTSTATUS; stdcall; // UNKNOWN_SIGN
 function xboxkrnl_KeWaitForSingleObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 const
-  XBOX_PERFORMANCE_FREQUENCY = $337F98; // = 3.375000 Mhz;
+  XBOX_PERFORMANCE_FREQUENCY = 3375000; // = ACPI timer frequency (3.375000 Mhz)
 
 var
   NativePerformanceCounter: LARGE_INTEGER = (QuadPart:0);
   NativePerformanceFrequency: LARGE_INTEGER = (QuadPart:0);
   NativeToXbox_FactorForPerformanceFrequency: float;
 
-  NativeToXbox_TickCountMultiplier: DWORD;
-  NativeTickCountLowPtr: PDWORD;
-
 function DxbxXboxGetTickCount(): DWORD;
 
 implementation
 
 const lfUnit = lfCxbx or lfKernel;
+
+type DpcData = record
+  Lock: CRITICAL_SECTION;//RTL_CRITICAL_SECTION; // JwaNative.RtlInitializeCriticalSection(Lock);
+  DpcThread: THandle;
+  DpcEvent: THandle;
+  DpcQueue: LIST_ENTRY;
+  TimerQueue: LIST_ENTRY;
+end;
+
+var g_DpcData: DpcData;
+
+// http://www.koders.com/delphi/fid18D4CB8ADE82D407CF60EC8B45CB5A2AE79A10B9.aspx?s=thread
+procedure InitializeListHead(pListHead: PListEntry);
+begin
+  pListHead^.Flink := pListHead;
+  pListHead^.Blink := pListHead;
+end;
+
+procedure InsertHeadList(pListHead: PListEntry; pEntry: PListEntry);
+var
+  _EX_Flink: PListEntry;
+  _EX_ListHead: PListEntry;
+begin
+  _EX_ListHead := pListHead;
+  _EX_Flink := _EX_ListHead^.Flink;
+  pEntry^.Flink := _EX_Flink;
+  pEntry^.Blink := _EX_ListHead;
+  _EX_Flink^.Blink := pEntry;
+  _EX_ListHead^.Flink := pEntry;
+end;
+
+procedure RemoveEntryList(pEntry: PListEntry);
+var
+  _EX_Blink: PListEntry;
+  _EX_Flink: PListEntry;
+begin
+  _EX_Flink := pEntry^.Flink;
+  _EX_Blink := pEntry^.Blink;
+  _EX_Blink^.Flink := _EX_Flink;
+  _EX_Flink^.Blink := _EX_Blink;
+end;
+
+function IsListEmpty(pListHead: PListEntry): Boolean;
+begin
+  Result := (pListHead^.Flink = pListHead);
+end;
+
+function RemoveHeadList(pListHead: PListEntry): PListEntry;
+begin
+  Result := pListHead^.Flink;
+  RemoveEntryList(pListHead^.Flink);
+end;
+
+procedure InsertTailList(pListHead: PListEntry; pEntry: PListEntry);
+var
+  _EX_Blink: PListEntry;
+  _EX_ListHead: PListEntry;
+begin
+  _EX_ListHead := pListHead;
+  _EX_Blink := _EX_ListHead^.Blink;
+  pEntry^.Flink := _EX_ListHead;
+  pEntry^.Blink := _EX_Blink;
+  _EX_Blink^.Flink := pEntry;
+  _EX_ListHead^.Blink := pEntry;
+end;
+
+function RemoveTailList(pListHead: PListEntry): PListEntry;
+begin
+  Result := pListHead^.Blink;
+  RemoveEntryList(pListHead^.Blink);
+end;
+
+//
 
 function xboxkrnl_KeAlertResumeThread(
   ThreadHandle: HANDLE;
@@ -265,13 +342,34 @@ begin
 end;
 
 function xboxkrnl_KeCancelTimer(
-  hTimerHandle: HANDLE;
-  pbPreviousState: PBOOLEAN
-  ): NTSTATUS; stdcall;
+  Timer: PKTIMER
+): _BOOLEAN; stdcall;
 // Branch:dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := JwaNative.NtCancelTimer(hTimerHandle, pbPreviousState);
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : KeCancelTimer' +
+      #13#10'(' +
+      #13#10'   Timer                : 0x%.08X' +
+      #13#10');',
+      [Timer]);
+
+  if (Timer.TimerListEntry.Flink <> nil) then
+  begin
+    EnterCriticalSection({var}g_DpcData.Lock);
+
+    if (Timer.TimerListEntry.Flink <> nil) then
+    begin
+      RemoveEntryList(@Timer.TimerListEntry);
+      Timer.TimerListEntry.Flink := NULL;
+    end;
+
+    LeaveCriticalSection({var}g_DpcData.Lock);
+  end;
+
+  Result := TRUE;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -320,14 +418,14 @@ begin
   // same scale... TODO : Take that into account in our
   // timing thread!
 //  if Interval.QuadPart < 0 then
-  begin
+//  begin
     Result := NtDelayExecution(Alertable, Interval);
 //  end
 //  else
 //  begin
 //    // TODO -oDxbx : Fix this case
 //    Result := STATUS_SUCCESS;
-  end;
+//  end;
 
   // HACK : Since we have no APC implementation yet, we need to return the 'Alerted' state
   // now and then to stop callers from hanging indefinitely on the alert :
@@ -431,10 +529,9 @@ begin
   end;
 
   // inialize Dpc field values
-  Dpc.Number := 0;
   Dpc.DeferredRoutine := DeferredRoutine;
-  Dpc.Type_ := CSHORT(Ord({enum KOBJECTS.}DpcObject));
   Dpc.DeferredContext := DeferredContext;
+  Dpc.DpcListEntry.Flink := nil;
 end;
 
 function xboxkrnl_KeInitializeEvent(): NTSTATUS; stdcall;
@@ -500,12 +597,14 @@ begin
     EmuSwapFS(fsXbox);
   end;
 
-  Timer.Header.Type_ := UCHAR(Ord(Type_) + 8);
+  Timer.Header.Type_ := UCHAR(Ord(Type_) + 8); // 8 = TimerNotificationObject ?
   Timer.Header.Inserted := 0;
   Timer.Header.Size := sizeof(Timer^) div sizeof(ULONG);
   Timer.Header.SignalState := 0;
+
   Timer.TimerListEntry.Blink := NULL;
   Timer.TimerListEntry.Flink := NULL;
+
   Timer.Header.WaitListHead.Flink := @(Timer.Header.WaitListHead);
   Timer.Header.WaitListHead.Blink := @(Timer.Header.WaitListHead);
   Timer.DueTime.QuadPart := 0;
@@ -552,20 +651,54 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeInsertQueueDpc(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KeInsertQueueDpc
+(
+  Dpc: PKDPC;
+  SystemArgument1: PVOID;
+  SystemArgument2: PVOID
+): _BOOLEAN; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeInsertQueueDpc');
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : KeInsertQueueDpc' +
+      #13#10'(' +
+      #13#10'   Dpc                  : 0x%.08X' +
+      #13#10'   SystemArgument1      : 0x%.08X' +
+      #13#10'   SystemArgument2      : 0x%.08X' +
+      #13#10');',
+      [Dpc, SystemArgument1, SystemArgument2]);
+
+  if (Dpc.DpcListEntry.Flink = nil) then
+  begin
+    EnterCriticalSection({var}g_DpcData.Lock);
+
+    if (Dpc.DpcListEntry.Flink = nil) then
+    begin
+      Dpc.SystemArgument1 := SystemArgument1;
+      Dpc.SystemArgument2 := SystemArgument2;
+      InsertTailList(@g_DpcData.DpcQueue, @Dpc.DpcListEntry);
+    end;
+
+    LeaveCriticalSection({var}g_DpcData.Lock);
+
+    SetEvent(g_DpcData.DpcEvent);
+  end;
+
+  Result := TRUE;
+
   EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_KeIsExecutingDpc(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+// Branch:dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeIsExecutingDpc');
   EmuSwapFS(fsXbox);
+
+//??  Result := GetCurrentKPCR().PrcbData.DpcRoutineActive;
 end;
 
 procedure xboxkrnl_KeLeaveCriticalRegion(); stdcall;
@@ -629,12 +762,8 @@ begin
     DbgPrintf('EmuKrnl : KeQueryPerformanceCounter();');
 
   // Dxbx note : Xbox actually uses the RDTSC machine code instruction for this,
-  // and we could do that too, because we're bound to a single core anyway.
-  //
-  // TODO -oDxbx: Switch over do RDTSC, and factor in the difference between
-  // native and Xbox processor frequencies.
-
-
+  // and we we're bound to a single core, so we could do that too, but on Windows
+  // rdtsc is not a very stable counter, so instead, we'll use the native PeformanceCounter :
   JwaNative.NtQueryPerformanceCounter(@PerformanceCounter, PerformanceFrequency{=nil});
 
   // Re-base the performance counter to increase accuracy of the following conversion :
@@ -685,6 +814,7 @@ begin
   // which depends on xboxkrnl_KeSystemTimePtr set to the native
   // Windows SystemTimer (see ConnectWindowsTimersToThunkTable) :
   ReadSystemTimeIntoLargeInteger(xboxkrnl_KeSystemTimePtr, CurrentTime);
+//  GetSystemTimeAsFileTime ??
 
   EmuSwapFS(fsXbox);
 end;
@@ -821,11 +951,36 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeRemoveQueueDpc(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KeRemoveQueueDpc
+(
+  Dpc: PKDPC
+): _BOOLEAN; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeRemoveQueueDpc');
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : KeRemoveQueueDpc' +
+      #13#10'(' +
+      #13#10'   Dpc                  : 0x%.08X' +
+      #13#10');',
+      [Dpc]);
+
+  if (Dpc.DpcListEntry.Flink <> nil) then
+  begin
+    EnterCriticalSection({var}g_DpcData.Lock);
+
+    if (Dpc.DpcListEntry.Flink <> nil) then
+    begin
+      RemoveEntryList(@Dpc.DpcListEntry);
+      Dpc.DpcListEntry.Flink := NULL;
+    end;
+
+    LeaveCriticalSection({var}g_DpcData.Lock);
+  end;
+
+  Result := TRUE;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -943,7 +1098,7 @@ begin
       #13#10'   DueTime              : 0x%.16X' + // was %I64X
       #13#10'   Dpc                  : 0x%.08X' +
       #13#10');',
-      [Timer, QuadPart(@DueTime), Dpc]);
+      [Timer, DueTime.QuadPart, Dpc]);
     EmuSwapFS(fsXbox);
   end;
 
@@ -970,9 +1125,21 @@ begin
       #13#10'   Period               : 0x%.08X' +
       #13#10'   Dpc                  : 0x%.08X' +
       #13#10');',
-      [Timer, QuadPart(@DueTime), Period, Dpc]);
+      [Timer, DueTime.QuadPart, Period, Dpc]);
 
-  DxbxKrnlCleanup('KeSetTimerEx is not implemented');
+  EnterCriticalSection({var}g_DpcData.Lock);
+
+  if (Timer.TimerListEntry.Flink = nil) then
+  begin
+    Timer.DueTime.QuadPart := (DueTime.QuadPart div -10000) + DxbxXboxGetTickCount();
+    Timer.Period := Period;
+    Timer.Dpc := Dpc;
+    InsertTailList(@g_DpcData.TimerQueue, @Timer.TimerListEntry);
+  end;
+
+  LeaveCriticalSection({var}g_DpcData.Lock);
+
+  SetEvent(g_DpcData.DpcEvent);
 
   EmuSwapFS(fsXbox);
 
@@ -1040,49 +1207,117 @@ begin
   xLaunchDataPage.Header.dwFlags := 0;
 end;
 
+var
+  BootTickCount: DWORD;
+
 procedure PerformanceCounters_Init;
 begin
+  BootTickCount := GetTickCount();
+
   JwaNative.NtQueryPerformanceCounter(@NativePerformanceCounter, @NativePerformanceFrequency);
 
   NativeToXbox_FactorForPerformanceFrequency := XBOX_PERFORMANCE_FREQUENCY / NativePerformanceFrequency.QuadPart;
 end;
 
-procedure InitializeXboxTickCount();
-begin
-  if DxbxUserSharedData.NtMajorVersion < 6 then
-    // For WinXP, use the deprecated tick counter :
-    // See http://www.purebasic.fr/english/viewtopic.php?f=12&t=39017
-    NativeTickCountLowPtr := DxbxNtTickCountLowDeprecated
-  else
-    // On Vista and above, we use KUSER_SHARED_DATA TickCount.Low here, as suggested by
-    // http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Time/NtGetTickCount.html
-    NativeTickCountLowPtr := @(DxbxNtTickCount.LowPart);
-
-  // TODO -oDxbx: Use DxbxMinimumResolution, XBOX_PERFORMANCE_FREQUENCY, CLOCK_TIME_INCREMENT
-  // or any other magic to calculate the value for NativeToXbox_TickCountMultiplier so that
-  // DxbxXboxGetTickCount will match the Xbox frequency !!!
-  NativeToXbox_TickCountMultiplier := Trunc(DxbxUserSharedData.TickCountMultiplier * NativeToXbox_FactorForPerformanceFrequency); // ??
-end;
-
-//
-
-// This is a modified copy of GetTickCount, which reads the native TickCount(Low),
-// and corrects the result by a factor which takes care of the conversion from
-// native to Xbox frequency, resulting in behaviour approaching that of the original Xbox :
-{$IFDEF PURE_PASCAL}
+// The Xbox GetTickCount is measured in milliseconds, just like the native GetTickCount.
+// The only difference we'll take into account here, is that the Xbox will probably reboot
+// much more often than Windows, so we correct this with a 'BootTickCount' value :
 function DxbxXboxGetTickCount(): DWORD;
 begin
-  Result := DWORD((ULONGLONG(NativeTickCountLowPtr^) * NativeToXbox_TickCountMultiplier) shr $18);
+  Result := GetTickCount() - BootTickCount;
 end;
-{$ELSE}
-function DxbxXboxGetTickCount(): DWORD;
-asm
-  mov edx, [NativeTickCountLowPtr]
-  mov eax, [edx]
-  mul dword ptr [NativeToXbox_TickCountMultiplier] // fill EAX, EDX with multiplication
-  shrd eax,edx, $18 // Divide by (1 shl 24)
+
+function EmuThreadDpcHandler(lpVoid: LPVOID): DWORD; stdcall;
+var
+  pkdpc: XboxKrnl.PKDPC;
+  dwWait: DWord;
+  dwNow: DWord;
+  lWait: LONG;
+  pktimer: XboxKrnl.PKTIMER;
+begin
+  while True do
+  begin
+    EnterCriticalSection({var}g_DpcData.Lock);
+
+//    if (g_DpcData._fShutdown)
+//        break;
+
+//    Assert(g_DpcData._dwThreadId == GetCurrentThreadId());
+//    Assert(g_DpcData._dwDpcThreadId == 0);
+//    g_DpcData._dwDpcThreadId := g_DpcData._dwThreadId;
+//    Assert(g_DpcData._dwDpcThreadId != 0);
+
+    while (not IsListEmpty(@g_DpcData.DpcQueue)) do
+    begin
+      pkdpc := XboxKrnl.PKDPC(RemoveHeadList(@g_DpcData.DpcQueue));
+      pkdpc.DpcListEntry.Flink := NULL;
+      pkdpc.DeferredRoutine(pkdpc,
+                            pkdpc.DeferredContext,
+                            pkdpc.SystemArgument1,
+                            pkdpc.SystemArgument2);
+    end;
+
+    dwWait := INFINITE;
+
+    if (not IsListEmpty(@g_DpcData.TimerQueue)) then
+    begin
+      while True do
+      begin
+        dwNow   := DxbxXboxGetTickCount();
+        dwWait  := INFINITE;
+        pktimer := XboxKrnl.PKTIMER(g_DpcData.TimerQueue.Flink);
+        pkdpc   := NULL;
+
+        while (pktimer <> XboxKrnl.PKTIMER(@g_DpcData.TimerQueue)) do
+        begin
+          lWait := LONG(pktimer.DueTime.LowPart - dwNow);
+
+          if (lWait <= 0) then
+          begin
+            pktimer.DueTime.LowPart := pktimer.Period + dwNow;
+            pkdpc := pktimer.Dpc;
+            break;
+          end;
+
+          if (dwWait > DWORD(lWait)) then
+            dwWait := DWORD(lWait);
+
+          pktimer := XboxKrnl.PKTIMER(pktimer.TimerListEntry.Flink);
+        end;
+
+        if (pkdpc = NULL) then
+          break;
+
+        pkdpc.DeferredRoutine(pkdpc,
+                              pkdpc.DeferredContext,
+                              pkdpc.SystemArgument1,
+                              pkdpc.SystemArgument2);
+      end;
+    end;
+
+//    Assert(g_DpcData._dwThreadId = GetCurrentThreadId());
+//    Assert(g_DpcData._dwDpcThreadId = g_DpcData._dwThreadId);
+//    g_DpcData._dwDpcThreadId = 0;
+    LeaveCriticalSection({var}g_DpcData.Lock);
+
+    WaitForSingleObject(g_DpcData.DpcEvent, dwWait);
+  end;
+
+  Result := S_OK;
 end;
-{$ENDIF}
+
+procedure InitDpcAndTimerThread();
+var
+  dwThreadId: DWord;
+begin
+  InitializeCriticalSection({var}g_DpcData.Lock);
+  InitializeListHead(@g_DpcData.DpcQueue);
+  InitializeListHead(@g_DpcData.TimerQueue);
+  g_DpcData.DpcEvent := CreateEvent(NULL, FALSE, FALSE, NULL);
+
+  g_DpcData.DpcThread := CreateThread(nil, 0, @EmuThreadDpcHandler, nil, 0, @dwThreadId);
+  SetThreadPriority(g_DpcData.DpcThread, THREAD_PRIORITY_HIGHEST);
+end;
 
 initialization
 
@@ -1090,6 +1325,5 @@ initialization
 
   PerformanceCounters_Init;
 
-  InitializeXboxTickCount();
-
+  InitDpcAndTimerThread;
 end.
