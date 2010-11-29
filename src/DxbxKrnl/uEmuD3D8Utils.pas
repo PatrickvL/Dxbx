@@ -128,8 +128,11 @@ const
     ({0x17}Name:'X_D3DFMT_LIN_G8B8';     PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_LINEAR+FMFL_APROX), // Cxbx NOTE: HACK: Totally and utterly wrong :)
     ({0x18}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
     ({0x19}Name:'X_D3DFMT_A8';           PC:D3DFMT_A8;           BPP:1; Flags:FMFL_SWIZZLED+FMFL_HASALPHA),
-//    ({0x1A}Name:'X_D3DFMT_A8L8';         PC:D3DFMT_A8L8;         BPP:2; Flags:FMFL_SWIZZLED+FMFL_HASALPHA),
+{$IFDEF DXBX_USE_D3D9} // Note : Also available on Direct3D8, but only use it on 9, as that maps formats differently anyways :
+    ({0x1A}Name:'X_D3DFMT_A8L8';         PC:D3DFMT_A8L8;         BPP:2; Flags:FMFL_SWIZZLED+FMFL_HASALPHA),
+{$ELSE}
     ({0x1A}Name:'X_D3DFMT_A8L8';         PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX), // Cxbx NOTE: Hack: Alpha ignored, basically
+{$ENDIF}
     ({0x1B}Name:'X_D3DFMT_LIN_AL8';      PC:D3DFMT_A8;           BPP:1; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX), // Cxbx NOTE: Hack: Alpha ignored, basically
     ({0x1C}Name:'X_D3DFMT_LIN_X1R5G5B5'; PC:D3DFMT_X1R5G5B5;     BPP:2; Flags:FMFL_LINEAR),
     ({0x1D}Name:'X_D3DFMT_LIN_A4R4G4B4'; PC:D3DFMT_A4R4G4B4;     BPP:2; Flags:FMFL_LINEAR+FMFL_HASALPHA),
@@ -146,6 +149,29 @@ const
     ({0x28}Name:'X_D3DFMT_G8B8';         PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_SWIZZLED+FMFL_APROX), // Cxbx NOTE: HACK: Totally and utterly wrong :)
     ({0x29}Name:'X_D3DFMT_R8B8';         PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_SWIZZLED+FMFL_APROX), // Cxbx NOTE: HACK: Totally and utterly wrong :)
     ({0x2A}Name:'X_D3DFMT_D24S8';        PC:D3DFMT_D24S8;        BPP:4; Flags:FMFL_SWIZZLED),
+{$IFDEF DXBX_USE_D3D9}
+    ({0x2B}Name:'X_D3DFMT_F24S8';        PC:D3DFMT_D24FS8;       BPP:4; Flags:FMFL_SWIZZLED),
+    ({0x2C}Name:'X_D3DFMT_D16';          PC:D3DFMT_D16;          BPP:2; Flags:FMFL_SWIZZLED), // NOTE: D3DFMT_D16 on Xbox is always lockable
+    ({0x2D}Name:'X_D3DFMT_F16';          PC:D3DFMT_R16F;         BPP:2; Flags:FMFL_SWIZZLED+FMFL_APROX), // Dxbx : Better approximation than D16
+    ({0x2E}Name:'X_D3DFMT_LIN_D24S8';    PC:D3DFMT_D24S8;        BPP:4; Flags:FMFL_LINEAR),
+    ({0x2F}Name:'X_D3DFMT_LIN_F24S8';    PC:D3DFMT_D24FS8;       BPP:4; Flags:FMFL_LINEAR),
+    ({0x30}Name:'X_D3DFMT_LIN_D16';      PC:D3DFMT_D16;          BPP:2; Flags:FMFL_LINEAR), // NOTE: D3DFMT_D16 on Xbox is always lockable
+    ({0x31}Name:'X_D3DFMT_LIN_F16';      PC:D3DFMT_R16F;         BPP:2; Flags:FMFL_LINEAR+FMFL_APROX), // Dxbx : Better approximation than D16
+    ({0x32}Name:'X_D3DFMT_L16';          PC:D3DFMT_L16;          BPP:2; Flags:FMFL_SWIZZLED),
+    ({0x33}Name:'X_D3DFMT_V16U16';       PC:D3DFMT_V16U16;       BPP:4; Flags:FMFL_SWIZZLED),
+    ({0x34}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
+    ({0x35}Name:'X_D3DFMT_LIN_L16';      PC:D3DFMT_L16;          BPP:2; Flags:FMFL_LINEAR),
+    ({0x36}Name:'X_D3DFMT_LIN_V16U16';   PC:D3DFMT_V16U16;       BPP:4; Flags:FMFL_LINEAR),
+    ({0x37}Name:'X_D3DFMT_LIN_R6G5B5';   PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_LINEAR+FMFL_APROX), // Dxbx Note: R 1 bit less, G 1 bit more
+    ({0x38}Name:'X_D3DFMT_R5G5B5A1';     PC:D3DFMT_A1R5G5B5;     BPP:2; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX),
+    ({0x39}Name:'X_D3DFMT_R4G4B4A4';     PC:D3DFMT_A4R4G4B4;     BPP:2; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX),
+    ({0x3A}Name:'X_D3DFMT_A8B8G8R8';     PC:D3DFMT_A8B8G8R8;     BPP:4; Flags:FMFL_SWIZZLED+FMFL_HASALPHA),
+    ({0x3B}Name:'X_D3DFMT_B8G8R8A8';     PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX), // Cxbx NOTE: HACK: R<->B Swapped!
+    ({0x3C}Name:'X_D3DFMT_R8G8B8A8';     PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX),
+    ({0x3D}Name:'X_D3DFMT_LIN_R5G5B5A1'; PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX),
+    ({0x3E}Name:'X_D3DFMT_LIN_R4G4B4A4'; PC:D3DFMT_A4R4G4B4;     BPP:2; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX),
+    ({0x3F}Name:'X_D3DFMT_LIN_A8B8G8R8'; PC:D3DFMT_A8B8G8R8;     BPP:4; Flags:FMFL_LINEAR+FMFL_HASALPHA),
+{$ELSE} // Direct3D8 :
     ({0x2B}Name:'X_D3DFMT_F24S8';        PC:D3DFMT_D24S8;        BPP:4; Flags:FMFL_SWIZZLED+FMFL_APROX), // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
     ({0x2C}Name:'X_D3DFMT_D16';          PC:D3DFMT_D16;          BPP:2; Flags:FMFL_SWIZZLED), // NOTE: D3DFMT_D16 on Xbox is always lockable
     ({0x2D}Name:'X_D3DFMT_F16';          PC:D3DFMT_D16;          BPP:2; Flags:FMFL_SWIZZLED+FMFL_APROX), // NOTE: Hack!! PC does not have D3DFMT_F16 (Float vs Int)
@@ -158,15 +184,16 @@ const
     ({0x34}Name:'?';                     PC:D3DFMT_UNKNOWN;      BPP:0; Flags:0),
     ({0x35}Name:'X_D3DFMT_LIN_L16';      PC:D3DFMT_L6V5U5;       BPP:2; Flags:FMFL_LINEAR+FMFL_APROX),
     ({0x36}Name:'X_D3DFMT_LIN_V16U16';   PC:D3DFMT_V16U16;       BPP:4; Flags:FMFL_LINEAR),
-    ({0x37}Name:'X_D3DFMT_LIN_R6G5B5';   PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_LINEAR+FMFL_APROX),
+    ({0x37}Name:'X_D3DFMT_LIN_R6G5B5';   PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_LINEAR+FMFL_APROX), // Dxbx Note: R 1 bit less, G 1 bit more
     ({0x38}Name:'X_D3DFMT_R5G5B5A1';     PC:D3DFMT_A1R5G5B5;     BPP:2; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX),
     ({0x39}Name:'X_D3DFMT_R4G4B4A4';     PC:D3DFMT_A4R4G4B4;     BPP:2; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX),
     ({0x3A}Name:'X_D3DFMT_A8B8G8R8';     PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX), // Cxbx NOTE: HACK: R<->B Swapped!
-    ({0x3B}Name:'X_D3DFMT_B8G8R8A8';     PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX),
+    ({0x3B}Name:'X_D3DFMT_B8G8R8A8';     PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX), // Cxbx NOTE: HACK: R<->B Swapped!
     ({0x3C}Name:'X_D3DFMT_R8G8B8A8';     PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_SWIZZLED+FMFL_HASALPHA+FMFL_APROX),
     ({0x3D}Name:'X_D3DFMT_LIN_R5G5B5A1'; PC:D3DFMT_R5G6B5;       BPP:2; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX),
     ({0x3E}Name:'X_D3DFMT_LIN_R4G4B4A4'; PC:D3DFMT_A4R4G4B4;     BPP:2; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX),
     ({0x3F}Name:'X_D3DFMT_LIN_A8B8G8R8'; PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX), // Cxbx NOTE: HACK: R<->B Swapped!
+{$ENDIF}
     ({0x40}Name:'X_D3DFMT_LIN_B8G8R8A8'; PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX),
     ({0x41}Name:'X_D3DFMT_LIN_R8G8B8A8'; PC:D3DFMT_A8R8G8B8;     BPP:4; Flags:FMFL_LINEAR+FMFL_HASALPHA+FMFL_APROX),
     // Maybe cut off here and handle the last two separately?
@@ -259,9 +286,8 @@ function IDirect3DDevice_CreateDepthStencilSurface(const aDirect3DDevice: IDirec
   ppSurface: PIDirect3DSurface): HResult;
 begin
 {$IFDEF DXBX_USE_D3D9}
-CreateDepthStencilSurface ?
-  Result := aDirect3DDevice.CreateOffscreenPlainSurface(
-    Width, Height, Format, D3DPOOL_SCRATCH, // D3DPOOL_SYSTEMMEM ? See http://us.generation-nt.com/slowdowns-dx9-software-vertex-processing-help-24501522.html
+  Result := aDirect3DDevice.CreateDepthStencilSurface(
+    Width, Height, Format, MultiSample, {MultiSampleQuality=}0, {Discard=}False,
     ppSurface, {Handle=}NULL);
 {$ELSE}
   Result := aDirect3DDevice.CreateDepthStencilSurface(
@@ -516,49 +542,73 @@ end;
 function D3DFORMAT2String(const aValue: D3DFORMAT): string;
 begin
   case aValue of
-    D3DFMT_UNKNOWN     : Result := 'D3DFMT_UNKNOWN';
-    D3DFMT_R8G8B8      : Result := 'D3DFMT_R8G8B8';
-    D3DFMT_A8R8G8B8    : Result := 'D3DFMT_A8R8G8B8';
-    D3DFMT_X8R8G8B8    : Result := 'D3DFMT_X8R8G8B8';
-    D3DFMT_R5G6B5      : Result := 'D3DFMT_R5G6B5';
-    D3DFMT_X1R5G5B5    : Result := 'D3DFMT_X1R5G5B5';
-    D3DFMT_A1R5G5B5    : Result := 'D3DFMT_A1R5G5B5';
-    D3DFMT_A4R4G4B4    : Result := 'D3DFMT_A4R4G4B4';
-    D3DFMT_R3G3B2      : Result := 'D3DFMT_R3G3B2';
-    D3DFMT_A8          : Result := 'D3DFMT_A8 ';
-    D3DFMT_A8R3G3B2    : Result := 'D3DFMT_A8R3G3B2';
-    D3DFMT_X4R4G4B4    : Result := 'D3DFMT_X4R4G4B4';
-    D3DFMT_A2B10G10R10 : Result := 'D3DFMT_A2B10G10R10';
-    D3DFMT_G16R16      : Result := 'D3DFMT_G16R16';
-    D3DFMT_A8P8        : Result := 'D3DFMT_A8P8';
-    D3DFMT_P8          : Result := 'D3DFMT_P8 ';
-    D3DFMT_L8          : Result := 'D3DFMT_L8 ';
-    D3DFMT_A8L8        : Result := 'D3DFMT_A8L8';
-    D3DFMT_A4L4        : Result := 'D3DFMT_A4L4';
-    D3DFMT_V8U8        : Result := 'D3DFMT_V8U8';
-    D3DFMT_L6V5U5      : Result := 'D3DFMT_L6V5U5';
-    D3DFMT_X8L8V8U8    : Result := 'D3DFMT_X8L8V8U8';
-    D3DFMT_Q8W8V8U8    : Result := 'D3DFMT_Q8W8V8U8';
-    D3DFMT_V16U16      : Result := 'D3DFMT_V16U16';
-    D3DFMT_W11V11U10   : Result := 'D3DFMT_W11V11U10';
-    D3DFMT_A2W10V10U10 : Result := 'D3DFMT_A2W10V10U10';
-    D3DFMT_UYVY        : Result := 'D3DFMT_UYVY';
-    D3DFMT_YUY2        : Result := 'D3DFMT_YUY2';
-    D3DFMT_DXT1        : Result := 'D3DFMT_DXT1';
-    D3DFMT_DXT2        : Result := 'D3DFMT_DXT2';
-    D3DFMT_DXT3        : Result := 'D3DFMT_DXT3';
-    D3DFMT_DXT4        : Result := 'D3DFMT_DXT4';
-    D3DFMT_DXT5        : Result := 'D3DFMT_DXT5';
-    D3DFMT_D16_LOCKABLE: Result := 'D3DFMT_D16_LOCKABLE';
-    D3DFMT_D32         : Result := 'D3DFMT_D32';
-    D3DFMT_D15S1       : Result := 'D3DFMT_D15S1';
-    D3DFMT_D24S8       : Result := 'D3DFMT_D24S8';
-    D3DFMT_D16         : Result := 'D3DFMT_D16';
-    D3DFMT_D24X8       : Result := 'D3DFMT_D24X8';
-    D3DFMT_D24X4S4     : Result := 'D3DFMT_D24X4S4';
-    D3DFMT_VERTEXDATA  : Result := 'D3DFMT_VERTEXDATA';
-    D3DFMT_INDEX16     : Result := 'D3DFMT_INDEX16';
-    D3DFMT_INDEX32     : Result := 'D3DFMT_INDEX32';
+    D3DFMT_UNKNOWN      : Result := 'D3DFMT_UNKNOWN';
+    D3DFMT_R8G8B8       : Result := 'D3DFMT_R8G8B8';
+    D3DFMT_A8R8G8B8     : Result := 'D3DFMT_A8R8G8B8';
+    D3DFMT_X8R8G8B8     : Result := 'D3DFMT_X8R8G8B8';
+    D3DFMT_R5G6B5       : Result := 'D3DFMT_R5G6B5';
+    D3DFMT_X1R5G5B5     : Result := 'D3DFMT_X1R5G5B5';
+    D3DFMT_A1R5G5B5     : Result := 'D3DFMT_A1R5G5B5';
+    D3DFMT_A4R4G4B4     : Result := 'D3DFMT_A4R4G4B4';
+    D3DFMT_R3G3B2       : Result := 'D3DFMT_R3G3B2';
+    D3DFMT_A8           : Result := 'D3DFMT_A8 ';
+    D3DFMT_A8R3G3B2     : Result := 'D3DFMT_A8R3G3B2';
+    D3DFMT_X4R4G4B4     : Result := 'D3DFMT_X4R4G4B4';
+    D3DFMT_A2B10G10R10  : Result := 'D3DFMT_A2B10G10R10';
+    D3DFMT_G16R16       : Result := 'D3DFMT_G16R16';
+    D3DFMT_A8P8         : Result := 'D3DFMT_A8P8';
+    D3DFMT_P8           : Result := 'D3DFMT_P8 ';
+    D3DFMT_L8           : Result := 'D3DFMT_L8 ';
+    D3DFMT_A8L8         : Result := 'D3DFMT_A8L8';
+    D3DFMT_A4L4         : Result := 'D3DFMT_A4L4';
+    D3DFMT_V8U8         : Result := 'D3DFMT_V8U8';
+    D3DFMT_L6V5U5       : Result := 'D3DFMT_L6V5U5';
+    D3DFMT_X8L8V8U8     : Result := 'D3DFMT_X8L8V8U8';
+    D3DFMT_Q8W8V8U8     : Result := 'D3DFMT_Q8W8V8U8';
+    D3DFMT_V16U16       : Result := 'D3DFMT_V16U16';
+{$IFNDEF DXBX_USE_D3D9} // Direct3D8 only :
+    D3DFMT_W11V11U10    : Result := 'D3DFMT_W11V11U10';
+{$ENDIF}
+    D3DFMT_A2W10V10U10  : Result := 'D3DFMT_A2W10V10U10';
+    D3DFMT_UYVY         : Result := 'D3DFMT_UYVY';
+    D3DFMT_YUY2         : Result := 'D3DFMT_YUY2';
+    D3DFMT_DXT1         : Result := 'D3DFMT_DXT1';
+    D3DFMT_DXT2         : Result := 'D3DFMT_DXT2';
+    D3DFMT_DXT3         : Result := 'D3DFMT_DXT3';
+    D3DFMT_DXT4         : Result := 'D3DFMT_DXT4';
+    D3DFMT_DXT5         : Result := 'D3DFMT_DXT5';
+    D3DFMT_D16_LOCKABLE : Result := 'D3DFMT_D16_LOCKABLE';
+    D3DFMT_D32          : Result := 'D3DFMT_D32';
+    D3DFMT_D15S1        : Result := 'D3DFMT_D15S1';
+    D3DFMT_D24S8        : Result := 'D3DFMT_D24S8';
+    D3DFMT_D16          : Result := 'D3DFMT_D16';
+    D3DFMT_D24X8        : Result := 'D3DFMT_D24X8';
+    D3DFMT_D24X4S4      : Result := 'D3DFMT_D24X4S4';
+    D3DFMT_VERTEXDATA   : Result := 'D3DFMT_VERTEXDATA';
+    D3DFMT_INDEX16      : Result := 'D3DFMT_INDEX16';
+    D3DFMT_INDEX32      : Result := 'D3DFMT_INDEX32';
+{$IFDEF DXBX_USE_D3D9} // Direct3D9 only :
+    D3DFMT_A8B8G8R8     : Result := 'D3DFMT_A8B8G8R8';
+    D3DFMT_X8B8G8R8     : Result := 'D3DFMT_X8B8G8R8';
+    D3DFMT_A2R10G10B10  : Result := 'D3DFMT_A2R10G10B10';
+    D3DFMT_A16B16G16R16 : Result := 'D3DFMT_A16B16G16R16';
+    D3DFMT_A8X8V8U8     : Result := 'D3DFMT_A8X8V8U8';
+    D3DFMT_L8X8V8U8     : Result := 'D3DFMT_L8X8V8U8';
+    D3DFMT_RGBG         : Result := 'D3DFMT_RGBG';
+    D3DFMT_GRGB         : Result := 'D3DFMT_GRGB';
+    D3DFMT_D32F_LOCKABLE: Result := 'D3DFMT_D32F_LOCKABLE';
+    D3DFMT_D24FS8       : Result := 'D3DFMT_D24FS8';
+    D3DFMT_L16          : Result := 'D3DFMT_L16';
+    D3DFMT_Q16W16V16U16 : Result := 'D3DFMT_Q16W16V16U16';
+    D3DFMT_MULTI2_ARGB8 : Result := 'D3DFMT_MULTI2_ARGB8';
+    D3DFMT_R16F         : Result := 'D3DFMT_R16F';
+    D3DFMT_G16R16F      : Result := 'D3DFMT_G16R16F';
+    D3DFMT_A16B16G16R16F: Result := 'D3DFMT_A16B16G16R16F';
+    D3DFMT_R32F         : Result := 'D3DFMT_R32F';
+    D3DFMT_G32R32F      : Result := 'D3DFMT_G32R32F';
+    D3DFMT_A32B32G32R32F: Result := 'D3DFMT_A32B32G32R32F';
+    D3DFMT_CxV8U8       : Result := 'D3DFMT_CxV8U8';
+{$ENDIF}
   else Result := '';
   end;
 end;
