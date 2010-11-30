@@ -27,6 +27,7 @@ unit uEmuD3D8;
 {.$define _DEBUG_TRACE_VB}
 {.$define _DEBUG_TRACK_VS_CONST}
 
+{$DEFINE DXBX_PIXELSHADER_HOOKS} // Disable this to try dynamic pixel shader support
 
 interface
 
@@ -4451,6 +4452,7 @@ begin
   XTL_EmuD3DDevice_SetVertexShaderConstant(Register_, pConstantData, ConstantCount div 4);
 end;
 
+{$IFDEF DXBX_PIXELSHADER_HOOKS}
 procedure XTL_EmuD3DDevice_DeletePixelShader
 (
   Handle: DWORD
@@ -4672,6 +4674,7 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
+{$ENDIF DXBX_PIXELSHADER_HOOKS}
 
 function XTL_EmuD3DDevice_CreateTexture2
 (
@@ -10335,6 +10338,7 @@ begin
 end;
 
 
+{$IFDEF DXBX_PIXELSHADER_HOOKS}
 function XTL_EmuD3DDevice_SetPixelShaderProgram
 (
   {CONST} pPSDef: PX_D3DPIXELSHADERDEF
@@ -10360,6 +10364,7 @@ begin
 
   Result := XTL_EmuD3DDevice_SetPixelShader(dwHandle);
 end;
+{$ENDIF DXBX_PIXELSHADER_HOOKS}
 
 function XTL_EmuD3DDevice_CreateStateBlock
 (
@@ -11651,6 +11656,7 @@ begin
 end;
 
 
+{$IFDEF DXBX_PIXELSHADER_HOOKS}
 function XTL_EmuD3DDevice_GetPixelShader
 (
   Value: PDWORD
@@ -11676,6 +11682,7 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
+{$ENDIF DXBX_PIXELSHADER_HOOKS}
 
 function XTL_EmuD3DDevice_GetPixelShaderConstant
 (
@@ -11705,12 +11712,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+{$IFDEF DXBX_PIXELSHADER_HOOKS}
 function XTL_EmuD3DDevice_GetPixelShaderFunction
 (
   Handle: DWORD;
-  pData: PX_D3DPIXELSHADERDEF
+  pData: PX_D3DPIXELSHADERDEF;
+  pSizeOfData: PDWORD
 ): HRESULT; stdcall;
-// Branch:DXBX  Translator:Shadow_Tj  Done:50
+// Branch:Dxbx  Translator:PatrickvL  Done:75
 begin
   EmuSwapFS(fsWindows);
 
@@ -11718,13 +11727,36 @@ begin
     LogBegin('XTL_EmuD3DDevice_GetPixelShaderFunction').
       _(Handle, 'Handle').
       _(pData, 'pData').
+      _(pSizeOfData, 'pSizeOfData').
     LogEnd();
 
-//  g_pD3DDevice.GetPixelShaderFunction(Handle, pData, ???);
-  Result := D3D_OK;
+  Result := D3DERR_INVALIDCALL;
+  if pSizeOfData <> NULL then
+  begin
+    if pData = NULL then
+    begin
+      pSizeOfData^ := SizeOf(X_D3DPIXELSHADERDEF);
+      Result := D3D_OK;
+    end
+    else
+    begin
+      if pSizeOfData^ < SizeOf(X_D3DPIXELSHADERDEF) then
+      begin
+        pSizeOfData^ := SizeOf(X_D3DPIXELSHADERDEF);
+        Result := D3DERR_MOREDATA;
+      end
+      else
+      begin
+        // TODO -oDxbx : memcpy(pData, CurrentPixelShader, SizeOf(X_D3DPIXELSHADERDEF));
+        Unimplemented('GetPixelShaderFunction needs access to the Handle''s PixelShader!');
+        Result := D3D_OK;
+      end;
+    end;
+  end;
 
   EmuSwapFS(fsXbox);
 end;
+{$ENDIF DXBX_PIXELSHADER_HOOKS}
 
 exports
 
@@ -11828,7 +11860,9 @@ exports
   XTL_EmuD3DDevice_CreateIndexBuffer2,
   XTL_EmuD3DDevice_CreatePalette,
   XTL_EmuD3DDevice_CreatePalette2,
+{$IFDEF DXBX_PIXELSHADER_HOOKS}
   XTL_EmuD3DDevice_CreatePixelShader,
+{$ENDIF}
   XTL_EmuD3DDevice_CreateStateBlock,
   XTL_EmuD3DDevice_CreateSurface,
   XTL_EmuD3DDevice_CreateSurface2,
@@ -11838,7 +11872,9 @@ exports
   XTL_EmuD3DDevice_CreateVertexBuffer2,
   XTL_EmuD3DDevice_CreateVertexShader,
   XTL_EmuD3DDevice_CreateVolumeTexture,
+{$IFDEF DXBX_PIXELSHADER_HOOKS}
   XTL_EmuD3DDevice_DeletePixelShader,
+{$ENDIF}
   XTL_EmuD3DDevice_DeleteStateBlock,
   XTL_EmuD3DDevice_DeleteVertexShader,
   XTL_EmuD3DDevice_DrawIndexedVertices,
@@ -11873,9 +11909,13 @@ exports
   XTL_EmuD3DDevice_GetModelView, // ??
   XTL_EmuD3DDevice_GetOverlayUpdateStatus,
 //  XTL_EmuD3DDevice_GetOverscanColor, // Too high level
+{$IFDEF DXBX_PIXELSHADER_HOOKS}
   XTL_EmuD3DDevice_GetPixelShader,
+{$ENDIF}
   XTL_EmuD3DDevice_GetPixelShaderConstant,
+{$IFDEF DXBX_PIXELSHADER_HOOKS}
   XTL_EmuD3DDevice_GetPixelShaderFunction,
+{$ENDIF}
   XTL_EmuD3DDevice_GetProjectionViewportMatrix,
   XTL_EmuD3DDevice_GetPushBufferOffset,
   XTL_EmuD3DDevice_GetPushDistance,
@@ -11932,9 +11972,13 @@ exports
   XTL_EmuD3DDevice_SetModelView, // ??
 //  XTL_EmuD3DDevice_SetOverscanColor, // Too high level
   XTL_EmuD3DDevice_SetPalette,
+{$IFDEF DXBX_PIXELSHADER_HOOKS}
   XTL_EmuD3DDevice_SetPixelShader,
+{$ENDIF}
   XTL_EmuD3DDevice_SetPixelShaderConstant,
+{$IFDEF DXBX_PIXELSHADER_HOOKS}
   XTL_EmuD3DDevice_SetPixelShaderProgram,
+{$ENDIF}
   XTL_EmuD3DDevice_SetRenderState_BackFillMode,
   XTL_EmuD3DDevice_SetRenderState_CullMode,
   XTL_EmuD3DDevice_SetRenderState_DoNotCullUncompressed,
