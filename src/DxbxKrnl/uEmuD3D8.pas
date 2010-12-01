@@ -676,7 +676,37 @@ end;
 function DxbxUpdateResourceFields(pResource: PX_D3DResource): Boolean;
 var
   ResourceType: TD3DResourceType;
-  SurfDesc: D3DSURFACE_DESC;
+  CommonResourceType: DWORD;
+
+  SurfaceDesc: D3DSURFACE_DESC;
+  VolumeDesc: D3DVOLUME_DESC;
+  VertDesc: D3DVERTEXBUFFER_DESC;
+  IndexDesc: D3DINDEXBUFFER_DESC;
+
+  RefCount: int;
+  XFormat: X_D3DFORMAT;
+  Width, Height, Pitch, Levels, Dimensions: uint;
+
+  procedure _ReadSurfaceDesc();
+  begin
+    XFormat := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
+    Width := SurfaceDesc.Width;
+    Height := SurfaceDesc.Height;
+    Pitch := SurfaceDesc.Size div Height;
+    Levels := 1; // Surfaces have 1 mipmap level
+    Dimensions := 2;
+  end;
+
+  procedure _ReadVolumeDesc();
+  begin
+    XFormat := EmuPC2XB_D3DFormat(VolumeDesc.Format);
+    Width := VolumeDesc.Width;
+    Height := VolumeDesc.Height;
+    Pitch := VolumeDesc.Size div Height;
+    Levels := VolumeDesc.Depth; // ?
+    Dimensions := 3;
+  end;
+
 begin
   Result := Assigned(pResource) and Assigned(pResource.Emu.Resource);
   if not Result then
@@ -685,37 +715,104 @@ begin
   if (pResource.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
     Exit;
 
+  // Get the current reference count of this resource :
+  begin
+    RefCount := IUnknown(pResource.Emu.Resource)._AddRef() - 1;
+    IUnknown(pResource.Emu.Resource)._Release();
+  end;
+
   ResourceType := GetResourceType(pResource);
   case ResourceType of
-    D3DRTYPE_SURFACE,
+    D3DRTYPE_SURFACE                : CommonResourceType := X_D3DCOMMON_TYPE_SURFACE;
+    D3DRTYPE_VOLUME                 : CommonResourceType := X_D3DCOMMON_TYPE_SURFACE; // Also covers Volume resources;
+    D3DRTYPE_TEXTURE                : CommonResourceType := X_D3DCOMMON_TYPE_TEXTURE;
+    D3DRTYPE_VOLUMETEXTURE          : CommonResourceType := X_D3DCOMMON_TYPE_TEXTURE;
+    D3DRTYPE_CUBETEXTURE            : CommonResourceType := X_D3DCOMMON_TYPE_TEXTURE;
+    D3DRTYPE_VERTEXBUFFER           : CommonResourceType := X_D3DCOMMON_TYPE_VERTEXBUFFER;
+    D3DRTYPE_INDEXBUFFER            : CommonResourceType := X_D3DCOMMON_TYPE_INDEXBUFFER;
+  end;
+
+  case ResourceType of
+    D3DRTYPE_SURFACE:
+    begin
+      IDirect3DSurface(pResource.Emu.Surface).GetDesc(SurfaceDesc);
+      _ReadSurfaceDesc;
+    end;
+
     D3DRTYPE_VOLUME:
     begin
-      if ResourceType = D3DRTYPE_SURFACE then
-        IDirect3DSurface(pResource.Emu.Surface).GetDesc(SurfDesc)
-      else
-        IDirect3DTexture(pResource.Emu.Texture).GetLevelDesc(0, SurfDesc);
-
-      PX_D3DPixelContainer(pResource).Format := EmuPC2XB_D3DFormat(SurfDesc.Format) shl X_D3DFORMAT_FORMAT_SHIFT;
-//      PX_D3DPixelContainer(pResource).Size := SurfDesc.;
-//      PX_D3DPixelContainer(pResource).Common := SurfDesc.;
-//      PX_D3DPixelContainer(pResource).Data := SurfDesc.;
+      IDirect3DVolume(pResource.Emu.Volume).GetDesc(VolumeDesc);
+      _ReadVolumeDesc;
     end;
 
     D3DRTYPE_TEXTURE:
-      ;
+    begin
+      IDirect3DTexture(pResource.Emu.Texture).GetLevelDesc(0, SurfaceDesc);
+      _ReadSurfaceDesc;
+    end;
 
     D3DRTYPE_VOLUMETEXTURE:
-      ;
+    begin
+      IDirect3DVolumeTexture(pResource.Emu.VolumeTexture).GetLevelDesc(0, VolumeDesc);
+      _ReadVolumeDesc;
+    end;
 
     D3DRTYPE_CUBETEXTURE:
-      ;
+    begin
+      IDirect3DCubeTexture(pResource.Emu.CubeTexture).GetLevelDesc(0, SurfaceDesc);
+      _ReadSurfaceDesc;
+      // bCubeMap := (pPixelContainer.Format and X_D3DFORMAT_CUBEMAP) > 0;
+    end;
 
     D3DRTYPE_VERTEXBUFFER:
-      ;
+    begin
+      IDirect3DVertexBuffer(pResource.Emu.VertexBuffer).GetDesc(VertDesc);
+      XFormat := X_D3DFMT_VERTEXDATA; // ??
+      Width := 0;
+      Height := 0;
+      Pitch := 0;
+      Levels  := 0;
+      Dimensions := 0;
+    end;
 
     D3DRTYPE_INDEXBUFFER:
-      ;
+    begin
+      IDirect3DIndexBuffer(pResource.Emu.IndexBuffer).GetDesc(IndexDesc);
+      XFormat := X_D3DFMT_INDEX16;
+      Width := 0;
+      Height := 0;
+      Pitch := 0;
+      Levels  := 0;
+      Dimensions := 0;
+    end;
   end;
+
+  // Set all fields :
+  PX_D3DPixelContainer(pResource).Format := (XFormat shl X_D3DFORMAT_FORMAT_SHIFT)
+                                         or (Log2(Width) shl X_D3DFORMAT_USIZE_SHIFT)
+                                         or (Log2(Height) shl X_D3DFORMAT_VSIZE_SHIFT)
+                                         or (Log2(Pitch)  shl X_D3DFORMAT_PSIZE_SHIFT)
+                                         or (Levels shl X_D3DFORMAT_MIPMAP_SHIFT)
+                                         // or X_D3DFORMAT_CUBEMAP
+                                         // or X_D3DFORMAT_BORDERSOURCE_COLOR
+                                         or (Dimensions shl X_D3DFORMAT_DIMENSION_SHIFT)
+                                         ;
+
+  //  YUV formats have no USIZE, VSIZE and PSIZE in Format, but WIDTh, HEIGHT and PITCH in Size :
+  PX_D3DPixelContainer(pResource).Size := DxbxEncodeDimensionsIntoSize(Width, Height, Pitch);
+  // Initialize Common field properly :
+  PX_D3DPixelContainer(pResource).Common := (RefCount and X_D3DCOMMON_REFCOUNT_MASK)
+                                         or CommonResourceType
+                                         // or X_D3DCOMMON_VIDEOMEMORY
+                                         // or X_D3DCOMMON_D3DCREATED
+                                         // or X_D3DCOMMON_ISLOCKED
+                                         // or ((IntRefCount shl X_D3DCOMMON_INTREFCOUNT_SHIFT) and X_D3DCOMMON_INTREFCOUNT_MASK)
+                                         ;
+
+  // PX_D3DPixelContainer(pResource).Data := leave it (what about special resources - X_D3DRESOURCE_DATA_FLAG_SPECIAL)
+  // PX_D3DPixelContainer(pResource).Emu is already set.
+
+  // Note : ResourceToString() contains some code that converts the other way around
 end;
 
 
@@ -977,9 +1074,7 @@ begin
   pPixelContainer.Format := (X_D3DFMT_YUY2 shl X_D3DFORMAT_FORMAT_SHIFT)
                          or (1 shl X_D3DFORMAT_MIPMAP_SHIFT); // Surfaces have 1 mipmap level
   //  YUV formats have no USIZE, VSIZE and PSIZE in Format, but WIDTh, HEIGHT and PITCH in Size :
-  pPixelContainer.Size := ((( g_dwOverlayW         - 1){shl X_D3DSIZE_WIDTH_SHIFT}) and X_D3DSIZE_WIDTH_MASK )
-                       or ((( g_dwOverlayH         - 1) shl X_D3DSIZE_HEIGHT_SHIFT) and X_D3DSIZE_HEIGHT_MASK)
-                       or ((((g_dwOverlayP div 64) - 1) shl X_D3DSIZE_PITCH_SHIFT ) and X_D3DSIZE_PITCH_MASK );
+  pPixelContainer.Size := DxbxEncodeDimensionsIntoSize(g_dwOverlayW, g_dwOverlayH, g_dwOverlayP);
 end;
 
 type
@@ -3295,9 +3390,6 @@ begin
 
     PCFormat := D3DFMT_A8R8G8B8;
 
-    // Dxbx addition :
-    EmuAdjustTextureDimensions(D3DRTYPE_SURFACE, @Width, @Height);
-
     Result := IDirect3DDevice_CreateImageSurface(g_pD3DDevice,
       Width,
       Height,
@@ -3311,9 +3403,6 @@ begin
 
     PCFormat := D3DFMT_D16_LOCKABLE;
 
-    // Dxbx addition :
-    EmuAdjustTextureDimensions(D3DRTYPE_SURFACE, @Width, @Height);
-
     Result := IDirect3DDevice_CreateImageSurface(g_pD3DDevice,
        Width,
        Height,
@@ -3326,6 +3415,7 @@ begin
 
   // Dxbx addition : Initialize Common field properly :
   ppBackBuffer^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_SURFACE or X_D3DCOMMON_D3DCREATED;
+//    DxbxUpdateResourceFields(ppBackBuffer^);
 
   if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : CreateImageSurface: Successfully Created Surface : ' + ResourceToString(ppBackBuffer^));
@@ -4960,8 +5050,9 @@ begin
     // cache the overlay size
     g_dwOverlayW := Width;
     g_dwOverlayH := Height;
-    g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2;
+    g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2; // Pitch should be in 64 byte increments; 2 bytes per pixel
 
+    // create texture resource
     DxbxInitializePixelContainerYUY2(ppVolumeTexture^);
 
     hRet := D3D_OK;
@@ -5043,6 +5134,7 @@ begin
 
   // Dxbx addition : Initialize Common field properly :
   ppCubeTexture^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE or X_D3DCOMMON_D3DCREATED;
+//  DxbxUpdatePixelContainer(ppCubeTexture^, X_D3DCOMMON_TYPE_TEXTURE, {Width=}EdgeLength, {Height=}EdgeLength, BPP, 3, 0, Levels, IsSwizzled, IsCompressed, 0, IsCubeMap, CacheFormat);
 
   if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : CreateCubeTexture : Successfully Created Cube Texture : ' + ResourceToString(ppCubeTexture^));
@@ -6285,7 +6377,7 @@ begin
         // cache the overlay size
         g_dwOverlayW := dwWidth;
         g_dwOverlayH := dwHeight;
-        g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2;
+        g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2; // Pitch should be in 64 byte increments; 2 bytes per pixel
 
         // create texture resource
         DxbxInitializePixelContainerYUY2(pPixelContainer);
@@ -6311,7 +6403,7 @@ begin
             DbgPrintf('EmuIDirect3DResource_Register: Width:%d, Height:%d, Format:%d', [dwWidth, dwHeight, Ord(PCFormat)]);
           end;
         end
-        else
+        else // dwCommonType = X_D3DCOMMON_TYPE_TEXTURE
         begin
           // TODO -oCXBX: HACK: Figure out why this is necessary!
           // TODO -oCXBX: This is necessary for DXT1 textures at least (4x4 blocks minimum)
@@ -6340,6 +6432,8 @@ begin
             hRet := IDirect3DDevice_CreateCubeTexture(g_pD3DDevice,
               dwWidth, dwMipMapLevels, {Usage=}0, PCFormat,
               D3DPOOL_MANAGED, @(pPixelContainer.Emu.CubeTexture));
+            // dwHeight := dwWidth;
+            // dwBPP? dwDepth?? dwPitch?
 
             if (FAILED(hRet)) then
               DxbxKrnlCleanup('EmuIDirect3DResource_Register: CreateCubeTexture Failed!' +#13#10+ DxbxD3DErrorString(hRet));
@@ -7125,6 +7219,7 @@ begin
       pSurfaceLevel.Common := ((IDirect3DSurface(pSurfaceLevel.Emu.Surface)._AddRef()-1) and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_SURFACE;
       if IDirect3DSurface(pSurfaceLevel.Emu.Surface)._Release() = 0 then
         pSurfaceLevel.Emu.Surface := nil;
+//    DxbxUpdateResourceFields(pSurfaceLevel);
 
       ppSurfaceLevel^ := pSurfaceLevel;
 
@@ -9047,7 +9142,7 @@ begin
     // uiStartIndex := 0;
 
     // TODO -oCXBX: caching (if it becomes noticably slow to recreate the buffer each time)
-    if(not bActiveIB) then
+    if (not bActiveIB) then
     begin
       hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice, VertexCount*SizeOf(Word), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pPCIndexBuffer);
       if FAILED(hRet) then
@@ -9429,7 +9524,8 @@ begin
   // Marked out by Cxbx
 //  g_pD3DDevice.SetPaletteEntries(0, PPALETTEENTRY(@pPalette.Data));
 
-  g_pCurrentPalette := PBytes(pPalette.Data);
+  if Assigned(pPalette) then
+    g_pCurrentPalette := PBytes(pPalette.Data);
 
   EmuWarning('Not setting palette');
 

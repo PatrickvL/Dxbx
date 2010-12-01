@@ -998,7 +998,7 @@ var
   pLinearPixelContainer: array [0..4-1] of PX_D3DPixelContainer;
   i: uint08;
   pPixelContainer: PX_D3DPixelContainer;
-
+  X_Format: X_D3DFORMAT;
   pOrigVertexBuffer: XTL_PIDirect3DVertexBuffer8;
   pNewVertexBuffer: XTL_PIDirect3DVertexBuffer8;
   pStream: PPATCHEDSTREAM;
@@ -1026,14 +1026,15 @@ begin
   for i := 0 to 4-1 do
   begin
     pPixelContainer := PX_D3DPixelContainer(g_EmuD3DActiveTexture[i]);
-    if (Assigned(pPixelContainer) and EmuXBFormatIsLinear(X_D3DFORMAT((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT))) then
+    bTexIsLinear[i] := false;
+    if Assigned(pPixelContainer) then
     begin
-      bHasLinearTex := true; bTexIsLinear[i] := true;
-      pLinearPixelContainer[i] := pPixelContainer;
-    end
-    else
-    begin
-      bTexIsLinear[i] := false;
+      X_Format := X_D3DFORMAT((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
+      if EmuXBFormatIsLinear(X_Format) then
+      begin
+        bHasLinearTex := true; bTexIsLinear[i] := true;
+        pLinearPixelContainer[i] := pPixelContainer;
+      end;
     end
   end;
 
@@ -2150,7 +2151,7 @@ begin
     if (pPixelContainer = NULL) then
       Continue;
 
-    X_Format := X_D3DFORMAT(((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT));
+    X_Format := X_D3DFORMAT((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
     if (IDirect3DResource(pPixelContainer.Emu.Resource).GetType() = D3DRTYPE_TEXTURE) then
     begin
       DxbxGetFormatRelatedVariables(pPixelContainer, X_Format,
