@@ -26,6 +26,7 @@ unit uEmuD3D8;
 {.$define _DEBUG_TRACK_VS}
 {.$define _DEBUG_TRACE_VB}
 {.$define _DEBUG_TRACK_VS_CONST}
+{.$define _DEBUG_TUROK_CREATES} // Temporary, used to determine when exactly the failing Release is introduced.
 
 {$DEFINE DXBX_PIXELSHADER_HOOKS} // Disable this to try dynamic pixel shader support
 
@@ -1915,22 +1916,25 @@ begin
 //              g_EmuCDPD.NativePresentationParameters.BackBufferFormat := EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat);
           end;
 
-          g_EmuCDPD.NativePresentationParameters.BackBufferCount := g_EmuCDPD.pPresentationParameters.BackBufferCount;
-
-          // Cxbx HACK: Disable Tripple Buffering for now...
-          // TODO -oCXBX: Enumerate maximum BackBufferCount if possible.
-          if g_EmuCDPD.NativePresentationParameters.BackBufferCount > 1 then
-          begin
-            EmuWarning('Limiting BackBufferCount to 1...');
-            g_EmuCDPD.NativePresentationParameters.BackBufferCount := 1;
-          end;
-
-          g_EmuCDPD.NativePresentationParameters.MultiSampleType := D3DMULTISAMPLE_NONE;//EmuXB2PC_D3DMULTISAMPLE_TYPE(g_EmuCDPD.pPresentationParameters.MultiSampleType);
-
           if (g_XBVideo.GetVSync()) then
             g_EmuCDPD.NativePresentationParameters.SwapEffect := {$IFDEF DXBX_USE_D3D9}D3DSWAPEFFECT_COPY{$ELSE}D3DSWAPEFFECT_COPY_VSYNC{$ENDIF}
           else
-            g_EmuCDPD.NativePresentationParameters.SwapEffect := g_EmuCDPD.pPresentationParameters.SwapEffect; // D3DSWAPEFFECT_COPY; // D3DSWAPEFFECT_DISCARD ??
+            g_EmuCDPD.NativePresentationParameters.SwapEffect := g_EmuCDPD.pPresentationParameters.SwapEffect;
+
+          // MultiSampleType may only be set if SwapEffect = D3DSWAPEFFECT_DISCARD :
+          if g_EmuCDPD.NativePresentationParameters.SwapEffect = D3DSWAPEFFECT_DISCARD then
+            g_EmuCDPD.NativePresentationParameters.MultiSampleType := EmuXB2PC_D3DMULTISAMPLE_TYPE(g_EmuCDPD.pPresentationParameters.MultiSampleType)
+          else
+            g_EmuCDPD.NativePresentationParameters.MultiSampleType := D3DMULTISAMPLE_NONE;
+
+          // Set BackBufferCount (if this is too much, CreateDevice will change this into the allowed maximum,
+          // so a second call should succeed) :
+          g_EmuCDPD.NativePresentationParameters.BackBufferCount := g_EmuCDPD.pPresentationParameters.BackBufferCount;
+          if g_EmuCDPD.NativePresentationParameters.SwapEffect = D3DSWAPEFFECT_COPY then
+          begin
+            EmuWarning('Limiting BackBufferCount to 1 because of D3DSWAPEFFECT_COPY...');
+            g_EmuCDPD.NativePresentationParameters.BackBufferCount := 1;
+          end;
 
           g_EmuCDPD.NativePresentationParameters.hDeviceWindow := g_EmuCDPD.pPresentationParameters.hDeviceWindow;
           g_EmuCDPD.NativePresentationParameters.EnableAutoDepthStencil := g_EmuCDPD.pPresentationParameters.EnableAutoDepthStencil <> BOOL_FALSE;
@@ -1985,6 +1989,23 @@ begin
           @g_EmuCDPD.NativePresentationParameters,
           PIDirect3DDevice(g_EmuCDPD.ppReturnedDeviceInterface)
         );
+
+        // See if the BackBufferCount was too large - retry if it was updated :
+        if  (FAILED(g_EmuCDPD.hRet))
+        and (g_EmuCDPD.NativePresentationParameters.SwapEffect <> D3DSWAPEFFECT_COPY)
+        and (g_EmuCDPD.NativePresentationParameters.BackBufferCount <> g_EmuCDPD.pPresentationParameters.BackBufferCount) then
+        begin
+          EmuWarning('BackBufferCount too large! D3D changed it to %d, so retrying...', [g_EmuCDPD.NativePresentationParameters.BackBufferCount]);
+          g_EmuCDPD.hRet := g_pD3D.CreateDevice
+          (
+            g_EmuCDPD.CreationParameters.AdapterOrdinal,
+            g_EmuCDPD.CreationParameters.DeviceType,
+            g_EmuCDPD.CreationParameters.hFocusWindow,
+            g_EmuCDPD.CreationParameters.BehaviorFlags,
+            @g_EmuCDPD.NativePresentationParameters,
+            PIDirect3DDevice(g_EmuCDPD.ppReturnedDeviceInterface)
+          );
+        end;
 
         // report error
         if (FAILED(g_EmuCDPD.hRet)) then
@@ -2124,6 +2145,9 @@ begin
           {ppVertexBuffer=}@g_pDummyBuffer
           {$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF}
         );
+{$IFDEF _DEBUG_TUROK_CREATES}
+        DbgPrintf('CreateVertexBuffer: g_pDummyBuffer = 0x%0.8x', [g_pDummyBuffer]);
+{$ENDIF}
 
         for Streams := 0 to 8-1 do
         begin
@@ -2327,6 +2351,15 @@ begin
       _(pPresentationParameters.FullScreen_PresentationInterval, 'FullScreen_PresentationInterval').
     LogEnd();
 end;
+
+{$IFDEF _DEBUG_TUROK_CREATES}
+function MayLog(a:DWORD):Boolean;
+begin
+  Result := uLog.MayLog(a);
+  if (PX_D3DResource($08EC1D60).Common and $FFFFFFF0) >= $01000000 then
+    DbgPrintf('TRACE : ' + ResourceToString(PX_D3DResource($08EC1D60)));
+end;
+{$ENDIF}
 
 function LogBegin(const aSymbolName: string; const aCategory: string = ''): PLogStack;
 begin
@@ -7273,7 +7306,9 @@ begin
   else
   begin
     // Dxbx addition : Initialize Common field properly :
-    pD3DVertexBuffer.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_VERTEXBUFFER or X_D3DCOMMON_D3DCREATED;
+    pD3DVertexBuffer.Common := ((IDirect3DVertexBuffer(pD3DVertexBuffer.Emu.VertexBuffer)._AddRef()-1) and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_VERTEXBUFFER or X_D3DCOMMON_D3DCREATED;
+    if IDirect3DVertexBuffer(pD3DVertexBuffer.Emu.VertexBuffer)._Release() = 0 then
+      pD3DVertexBuffer.Emu.VertexBuffer := nil;
 
 {$ifdef _DEBUG_TRACK_VB}
     g_VBTrackTotal.insert(pD3DVertexBuffer.Emu.VertexBuffer);
@@ -8566,16 +8601,18 @@ begin
 
   pPCVertexBuffer := pVertexBuffer.Emu.VertexBuffer;
 
-  hRet := IDirect3DVertexBuffer(pPCVertexBuffer).Lock(OffsetToLock, SizeToLock, {out}TLockData(ppbData^), Flags);
-  (*DbgPrintf('VertexBuffer 0x%.08X was locked: 0x%x - 0x%x, hRet = 0x%.08x', [
-        pPCVertexBuffer,
-        OffsetToLock,
-        SizeToLock,
-        hRet
-        ]);*)
+  hRet := IDirect3DVertexBuffer(pPCVertexBuffer).Lock(OffsetToLock, SizeToLock, {out}TLockData(pVertexBuffer.Data), EmuXB2PC_D3DLock(Flags)); // Fixed flags check, Battlestar Galactica now displays graphics correctly
 
   if (FAILED(hRet)) then
-    EmuWarning('VertexBuffer Lock Failed!' +#13#10+ DxbxD3DErrorString(hRet));
+    EmuWarning('VertexBuffer Lock Failed!' +#13#10+ DxbxD3DErrorString(hRet))
+  else
+  begin
+    if Assigned(ppbData) then
+      ppbData^ := TLockData(pVertexBuffer.Data);
+
+    if MayLog(lfUnit or lfReturnValue) then
+      DbgPrintf('EmuD3D8 : VertexBuffer locked : ' + ResourceToString(pVertexBuffer));
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -8593,33 +8630,14 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuIDirect3DVertexBuffer_Lock2').
+    LogBegin('EmuIDirect3DVertexBuffer_Lock2 >> ').
       _(pVertexBuffer, 'pVertexBuffer').
       _(Flags, 'Flags').
     LogEnd();
 
-  // TODO -oDxbx : Should we call EmuVerifyResourceIsRegistered here?
-  EmuVerifyResourceIsRegistered(pVertexBuffer);
-
-  pPCVertexBuffer := pVertexBuffer.Emu.VertexBuffer;
-
-  hRet := IDirect3DVertexBuffer(pPCVertexBuffer).Lock(0, 0, {out}TLockData(pVertexBuffer.Data), EmuXB2PC_D3DLock(Flags)); // Fixed flags check, Battlestar Galactica now displays graphics correctly
-
-  if (FAILED(hRet)) then
-    EmuWarning('VertexBuffer Lock2 Failed!' +#13#10+ DxbxD3DErrorString(hRet));
-
-  if MayLog(lfUnit or lfReturnValue) then
-  begin
-    DbgPrintf('VertexBuffer 0x%.08X was locked (2): hRet=0x%.08x Data=0x%.08X', [
-          pPCVertexBuffer,
-          hRet,
-          pVertexBuffer.Data
-          ]);
-  end;
-
   EmuSwapFS(fsXbox);
 
-  Result := PByte(pVertexBuffer.Data);
+  XTL_EmuD3DVertexBuffer_Lock(pVertexBuffer, {OffsetToLock=}0, {SizeToLock=}0, @Result, Flags);
 end;
 
 function XTL_EmuD3DDevice_GetStreamSource2
