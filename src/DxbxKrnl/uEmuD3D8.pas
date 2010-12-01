@@ -26,7 +26,6 @@ unit uEmuD3D8;
 {.$define _DEBUG_TRACK_VS}
 {.$define _DEBUG_TRACE_VB}
 {.$define _DEBUG_TRACK_VS_CONST}
-{.$define _DEBUG_TUROK_CREATES} // Temporary, used to determine when exactly the failing Release is introduced.
 
 {$DEFINE DXBX_PIXELSHADER_HOOKS} // Disable this to try dynamic pixel shader support
 
@@ -2352,15 +2351,6 @@ begin
     LogEnd();
 end;
 
-{$IFDEF _DEBUG_TUROK_CREATES}
-function MayLog(a:DWORD):Boolean;
-begin
-  Result := uLog.MayLog(a);
-  if (PX_D3DResource($08EC1D60).Common and $FFFFFFF0) >= $01000000 then
-    DbgPrintf('TRACE : ' + ResourceToString(PX_D3DResource($08EC1D60)));
-end;
-{$ENDIF}
-
 function LogBegin(const aSymbolName: string; const aCategory: string = ''): PLogStack;
 begin
   Result := uLog.LogBegin(aSymbolName, {Category=}'EmuD3D8');
@@ -4360,7 +4350,8 @@ begin
   // incremented with 96 (even though the code for these samples supplies 0, maybe there's a
   // macro responsible for that?)
   Inc(Register_, X_D3DSCM_CORRECTION_VersionDependent);
-  DbgPrintf('Corrected constant register : 0x%.08x', [Register_]);
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('Corrected constant register : 0x%.08x', [Register_]);
 
 {$IFDEF _DEBUG_TRACK_VS_CONST}
   if ConstantCount > 0 then // Dxbx addition, to prevent underflow
@@ -9738,7 +9729,8 @@ begin
   // should indeed be done version-dependantly (like in SetVertexShaderConstant);
   // It seems logical that these two mirror eachother, but it could well be different:
   Inc(Register_, X_D3DSCM_CORRECTION_VersionDependent);
-  DbgPrintf('Corrected constant register : 0x%.08x', [Register_]);
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('Corrected constant register : 0x%.08x', [Register_]);
 
 {$IFDEF DXBX_USE_D3D9}
   Result := g_pD3DDevice.GetVertexShaderConstantF
