@@ -1026,6 +1026,11 @@ var
 
   NrOfPatternsFound: Integer;
 
+  procedure _WriteString(const aString: string);
+  begin
+    aDump.WriteString(AnsiString(aString));
+  end;
+
   procedure _FlushPattern;
   var
     i: Integer;
@@ -1067,19 +1072,19 @@ var
     end;
 
     // write a .pat file back to Input, so it can be scanned by ParseAndAppendPatternsToTrie :
-    aDump.WriteString(Copy(PatternString, 1, 64));
-    aDump.WriteString(Format(' %.2x %.4x ', [CRCLength, CRCValue]));
-    aDump.WriteString(SymbolSizeHexStr);
-    aDump.WriteString(' ');
-    aDump.WriteString(SymbolName);
+    _WriteString(Copy(PatternString, 1, 64));
+    _WriteString(Format(' %.2x %.4x ', [CRCLength, CRCValue]));
+    _WriteString(SymbolSizeHexStr);
+    _WriteString(' ');
+    _WriteString(SymbolName);
     if SymbolReferences <> '' then
-      aDump.WriteString(SymbolReferences);
+      _WriteString(SymbolReferences);
     if Length(PatternString) > 64 then
     begin
-      aDump.WriteString(' ');
-      aDump.WriteString(Copy(PatternString, 65 + (CRCLength * 2), MaxInt));
+      _WriteString(' ');
+      _WriteString(Copy(PatternString, 65 + (CRCLength * 2), MaxInt));
     end;
-    aDump.WriteString(#13#10);
+    _WriteString(#13#10);
 
     // Show some progress :
     SetLength(SymbolName, 78);
@@ -1254,7 +1259,7 @@ begin
     end; // for
 
     _FlushPattern;
-    aDump.WriteString('---'#13#10);
+    _WriteString('---'#13#10);
     aDump.Size := aDump.Position;
     WriteLn('Converted dump to ', NrOfPatternsFound, ' pattern format lines.                                  ');
 
