@@ -43,7 +43,7 @@ type
 
 type ResourceTracker = object(Mutex)
   public
-//    constructor ResourceTracker();// : m_head(0), m_tail(0) {};
+    constructor ResourceTracker();
     destructor _ResourceTracker();
 
     // clear the tracker
@@ -96,10 +96,15 @@ var g_PBTrackShowOnce: ResourceTracker;
 var g_PatchedStreamsCache: ResourceTracker;
 var g_DataToTexture: ResourceTracker;
 var g_AlignCache: ResourceTracker;
-  
+
 implementation
 
 { ResourceTracker }
+
+constructor ResourceTracker.ResourceTracker();
+begin
+  m_head := nil; m_tail := nil;
+end;
 
 destructor ResourceTracker._ResourceTracker();
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -142,26 +147,23 @@ procedure ResourceTracker.insert(uiKey: uint32; pResource: Pvoid);
 begin
   Self.Lock();
 
-  if (exists(uiKey)) then
+  if not (exists(uiKey)) then
   begin
-    Self.Unlock();
-    Exit;
-  end;
+    if (m_head = nil) then
+    begin
+      New(m_head);
+      m_tail := m_head;
+    end
+    else
+    begin
+      New(m_tail.pNext);
+      m_tail := m_tail.pNext;
+    end;
 
-  if (m_head = nil) then
-  begin
-    New(m_head);
-    m_tail := m_head;
-  end
-  else
-  begin
-    New(m_tail.pNext);
-    m_tail := m_tail.pNext;
+    m_tail.pResource := pResource;
+    m_tail.uiKey := uiKey;
+    m_tail.pNext := nil;
   end;
-
-  m_tail.pResource := pResource;
-  m_tail.uiKey := uiKey;
-  m_tail.pNext := nil;
 
   Self.Unlock();
 end;
@@ -301,6 +303,17 @@ function ResourceTracker.getHead: PRTNode;
 begin
   Result := m_head;
 end;
+
+initialization
+
+  g_VBTrackTotal.ResourceTracker();
+  g_VBTrackDisable.ResourceTracker();
+  g_PBTrackTotal.ResourceTracker();
+  g_PBTrackDisable.ResourceTracker();
+  g_PBTrackShowOnce.ResourceTracker();
+  g_PatchedStreamsCache.ResourceTracker();
+  g_DataToTexture.ResourceTracker();
+  g_AlignCache.ResourceTracker();
 
 end.
 

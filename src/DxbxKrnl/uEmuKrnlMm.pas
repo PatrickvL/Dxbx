@@ -19,6 +19,8 @@ unit uEmuKrnlMm;
 
 {$INCLUDE Dxbx.inc}
 
+{$DEFINE _MM_CONTIGUOUS_ALTERNATE}
+
 interface
 
 uses
@@ -155,7 +157,9 @@ begin
       _(NumberOfBytes, 'NumberOfBytes').
     LogEnd();
 
-
+{$IFDEF _MM_CONTIGUOUS_ALTERNATE}
+  pRet := VirtualAlloc(NULL, NumberOfBytes, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+{$ELSE}
   //
   // Cxbx NOTE: Kludgey (but necessary) solution:
   //
@@ -172,10 +176,10 @@ begin
     g_AlignCache.insert({uiKey=}dwRet, {pResource=}pRet);
     pRet := PVOID(dwRet);
   end;
+{$ENDIF}
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : MmAllocateContiguous returned 0x%.08X', [pRet]);
-
 
   EmuSwapFS(fsXbox);
   Result := pRet;
@@ -208,6 +212,9 @@ begin
       _(ProtectionType, 'ProtectionType').
     LogEnd();
 
+{$IFDEF _MM_CONTIGUOUS_ALTERNATE}
+  pRet := VirtualAlloc(NULL, NumberOfBytes, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+{$ELSE}
   //
   // NOTE: Kludgey (but necessary) solution:
   //
@@ -224,6 +231,7 @@ begin
     g_AlignCache.insert({uiKey=}dwRet, {pResource=}pRet);
     pRet := PVOID(dwRet);
   end;
+{$ENDIF}
 
   if IsRunning(TITLEID_Halo) then
   begin
@@ -339,6 +347,10 @@ begin
       _(BaseAddress, 'BaseAddress').
     LogEnd();
 
+{$IFDEF _MM_CONTIGUOUS_ALTERNATE}
+  if(BaseAddress <> @xLaunchDataPage) then
+    VirtualFree(BaseAddress, 0, MEM_RELEASE)
+{$ELSE}
   OrigBaseAddress := g_AlignCache.remove({uiKey=}uint32(BaseAddress));
   if OrigBaseAddress = nil then
     OrigBaseAddress := BaseAddress;
@@ -347,11 +359,11 @@ begin
   begin
     DxbxFree(OrigBaseAddress);
   end
+{$ENDIF}
   else
   begin
     if MayLog(lfUnit) then
       DbgPrintf('Ignored MmFreeContiguousMemory(&xLaunchDataPage)');
-
   end;
 
   // TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
@@ -511,6 +523,7 @@ begin
     LogEnd();
 
   Result := EmuCheckAllocationSize(BaseAddress, false);
+
   EmuSwapFS(fsXbox);
 end;
 

@@ -170,6 +170,10 @@ implementation
 {$IFDEF DXBX_DLL}
 uses
   DxLibraryAPIScanning,
+{$IFDEF _DEBUG_TUROK_CREATES}
+  uEmuD3D8Types,
+  uEmuD3D8Utils,
+{$ENDIF}
   uDxbxKrnlUtils;
 {$ENDIF}
 
@@ -686,7 +690,19 @@ procedure WriteLog(aText: string);
 var
   i: Integer;
   CurrentThreadIDInsert: PCurrentThreadIDInsert;
+{$IFDEF _DEBUG_TUROK_CREATES}
+  procedure _Check(CheckAddr: DWORD);
+  begin
+    if (PX_D3DResource(CheckAddr).Common and $FFFFFFF0) >= $01000000 then
+      if Assigned(PX_D3DResource(CheckAddr).Emu.Resource) then
+        aText := aText + #13#10'TRACE : ' + ResourceToString(PX_D3DResource(CheckAddr));
+  end;
 begin
+  _Check($08EC1D40);
+  _Check($08EC1D50);
+{$ELSE}
+begin
+{$ENDIF}
   EnterCriticalSection({var}DxbxLogLock);
   try
     try
