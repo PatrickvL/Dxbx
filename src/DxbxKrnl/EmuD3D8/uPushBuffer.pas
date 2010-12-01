@@ -141,7 +141,7 @@ procedure EmuUnswizzleActiveTexture(); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pPixelContainer: PX_D3DPixelContainer;
-  XBFormat: DWord;
+  X_Format: DWord;
   dwBPP: DWord;
   pPCTexture: XTL_PIDirect3DTexture8;
   dwLevelCount: DWord;
@@ -173,10 +173,10 @@ begin
 //    if IsSpecialResource(pPixelContainer.Data) then
 //      Continue;
 
-    XBFormat := (pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
+    X_Format := (pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
     dwBPP := 0;
 
-    if (not EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
+    if (not EmuXBFormatIsSwizzled(X_Format, @dwBPP)) then
       Continue;
 
     // TODO -oCXBX: potentially CRC to see if this surface was actually modified..

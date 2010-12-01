@@ -75,6 +75,16 @@ function EmuXB2PC_PSConstant(Value: X_D3DRenderStateType): DWORD;
 function DxbxEncodeDimensionsIntoSize(const Width, Height, Pitch: DWORD): DWORD;
 procedure DxbxDecodeSizeIntoDimensions(const Size: DWORD; out Width, Height, Pitch: DWORD);
 
+procedure DxbxDecodeResourceFormat(const ResourceFormat: DWORD;
+  const pCubeMap: PBoolean;
+  const pBorder: PBoolean;
+  const pDimens: PDWORD;
+  const pFormat: PDWORD;
+  const pMipMap: PDWORD;
+  const pUSize: PDWORD;
+  const pVSize: PDWORD;
+  const pPSize: PDWORD);
+
 // simple render state encoding lookup table
 const X_D3DRSSE_UNK = $7fffffff;
 
@@ -695,9 +705,9 @@ end;
 
 function DxbxEncodeDimensionsIntoSize(const Width, Height, Pitch: DWORD): DWORD;
 begin
-  Result := ((( Width          - 1){shl X_D3DSIZE_WIDTH_SHIFT}) and X_D3DSIZE_WIDTH_MASK )
-         or ((( Height         - 1) shl X_D3DSIZE_HEIGHT_SHIFT) and X_D3DSIZE_HEIGHT_MASK)
-         or ((((Pitch  div 64) - 1) shl X_D3DSIZE_PITCH_SHIFT ) and X_D3DSIZE_PITCH_MASK );
+  Result := ((( Width         - 1){shl X_D3DSIZE_WIDTH_SHIFT}) and X_D3DSIZE_WIDTH_MASK )
+         or ((( Height        - 1) shl X_D3DSIZE_HEIGHT_SHIFT) and X_D3DSIZE_HEIGHT_MASK)
+         or ((((Pitch div 64) - 1) shl X_D3DSIZE_PITCH_SHIFT ) and X_D3DSIZE_PITCH_MASK );
 end;
 
 procedure DxbxDecodeSizeIntoDimensions(const Size: DWORD; out Width, Height, Pitch: DWORD);
@@ -705,6 +715,26 @@ begin
   {out}Width  := (((Size and X_D3DSIZE_WIDTH_MASK ){shr X_D3DSIZE_WIDTH_SHIFT}) + 1);
   {out}Height := (((Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
   {out}Pitch  := (((Size and X_D3DSIZE_PITCH_MASK ) shr X_D3DSIZE_PITCH_SHIFT ) + 1) * 64;
+end;
+
+procedure DxbxDecodeResourceFormat(const ResourceFormat: DWORD;
+  const pCubeMap: PBoolean;
+  const pBorder: PBoolean;
+  const pDimens: PDWORD;
+  const pFormat: PDWORD;
+  const pMipMap: PDWORD;
+  const pUSize: PDWORD;
+  const pVSize: PDWORD;
+  const pPSize: PDWORD);
+begin
+  if Assigned(pCubeMap) then pCubeMap^ :=        (ResourceFormat and X_D3DFORMAT_CUBEMAP) > 0;
+  if Assigned(pBorder)  then pBorder^  :=        (ResourceFormat and X_D3DFORMAT_BORDERSOURCE_COLOR) > 0;
+  if Assigned(pDimens)  then pDimens^  :=        (ResourceFormat and X_D3DFORMAT_DIMENSION_MASK) shr X_D3DFORMAT_DIMENSION_SHIFT;
+  if Assigned(pFormat)  then pFormat^  :=        (ResourceFormat and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
+  if Assigned(pMipMap)  then pMipMap^  :=        (ResourceFormat and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
+  if Assigned(pUSize)   then pUSize^   := 1 shl ((ResourceFormat and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
+  if Assigned(pVSize)   then pVSize^   := 1 shl ((ResourceFormat and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
+  if Assigned(pPSize)   then pPSize^   := 1 shl ((ResourceFormat and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT);
 end;
 
 end.
