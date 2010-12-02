@@ -163,6 +163,12 @@ object frm_Main: Tfrm_Main
         object N6: TMenuItem
           Caption = '-'
         end
+        object Removenonexistinggamesfromlist1: TMenuItem
+          Action = actRemoveNonExistingGamesFromList
+        end
+        object N7: TMenuItem
+          Caption = '-'
+        end
         object Clear1: TMenuItem
           Action = actClearGameList
         end
@@ -389,6 +395,11 @@ object frm_Main: Tfrm_Main
       Category = 'File'
       Caption = 'Import Xbe`s from dir'
       OnExecute = actImportXbesExecute
+    end
+    object actRemoveNonExistingGamesFromList: TAction
+      Category = 'File'
+      Caption = 'Remove not existing games'
+      OnExecute = actRemoveNonExistingGamesFromListExecute
     end
   end
   object XbeOpenDialog: TOpenDialog

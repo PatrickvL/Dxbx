@@ -135,6 +135,9 @@ type
     mnu_DebugOutputKernelNone: TMenuItem;
     mnu_ImportXbes: TMenuItem;
     actImportXbes: TAction;
+    N7: TMenuItem;
+    actRemoveNonExistingGamesFromList: TAction;
+    Removenonexistinggamesfromlist1: TMenuItem;
     procedure actStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -174,6 +177,7 @@ type
     procedure actDebugKernelNoneExecute(Sender: TObject);
     procedure actDebugGuiNoneExecute(Sender: TObject);
     procedure actImportXbesExecute(Sender: TObject);
+    procedure actRemoveNonExistingGamesFromListExecute(Sender: TObject);
   protected
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
     procedure WndProc(var Message: TMessage); override;
@@ -1638,6 +1642,18 @@ procedure Tfrm_Main.actOpenXbeExecute(Sender: TObject);
 begin
   if XbeOpenDialog.Execute then
     OpenXbeFile(XbeOpenDialog.FileName);
+end;
+
+procedure Tfrm_Main.actRemoveNonExistingGamesFromListExecute(Sender: TObject);
+var
+  lIndex: Integer;
+begin
+  for lIndex :=  MyXBEList.Count -1 downto 0 do
+    if not FileExists(TXBEInfo(MyXBEList.Objects[lIndex]).FileName) then
+      MyXBEList.Delete(lIndex);
+
+  UpdateFilter;
+  SaveXBEList(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aPublishedBy=}'');
 end;
 
 procedure Tfrm_Main.actCloseXbeExecute(Sender: TObject);
