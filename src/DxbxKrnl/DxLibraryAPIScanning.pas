@@ -1830,7 +1830,15 @@ begin
 {$ENDIF}
 
   // Locate a few important D3D addresses :
-  XTL_D3D__pDevice := _Find('_D3D__pDevice');
+
+  if g_BuildVersion <= 4361 then // Is this the correct version?
+    XTL_D3D__Device := _Find('_D3D__g_Device') // for 3911 (+8 is called D3D__DirtyFlags in 4627)
+  else
+    XTL_D3D__Device := _Find('_D3D__pDevice'); // for 4726 and 5933
+  // Other names are : '_D3D__Device'
+
+  XTL_Direct3D_CreateDevice := _Find('_Direct3D_CreateDevice@24');
+
   XTL_D3D__RenderState := _Find('_D3D__RenderState');
   XTL_EmuD3DDeferredTextureState := _Find('_D3D__TextureState');
   XTL_D3D_InitializeD3dState := _Find('?InitializeD3dState@D3D@@YGXXZ'); // a function

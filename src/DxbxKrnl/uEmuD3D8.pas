@@ -28,6 +28,7 @@ unit uEmuD3D8;
 {.$define _DEBUG_TRACK_VS_CONST}
 
 {$DEFINE DXBX_PIXELSHADER_HOOKS} // Disable this to try dynamic pixel shader support
+{.$DEFINE DXBX_TRY_DEEPER_DEVICE_INIT} // Try to run more of the original initialization code
 
 interface
 
@@ -94,7 +95,7 @@ procedure XTL_EmuD3DInit(XbeHeader: PXBEIMAGE_HEADER; XbeHeaderSize: UInt32); {N
 function XTL_EmuDirect3D_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
   pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
-  ppReturnedDeviceInterface: XTL_PPIDirect3DDevice8): HRESULT; stdcall// forward
+  ppReturnedDeviceInterface: XTL_PPIDirect3DDevice8): HRESULT; stdcall; // forward
 
 function XTL_EmuD3DDevice_GetVertexShader({CONST} pHandle: PDWORD): HRESULT; stdcall; // forward
 
@@ -447,7 +448,7 @@ begin
 {$ENDIF}
 
   // If this gives a too cryptic output, try the old method :
-  if (Length(Result) < 8) or (Result[1] = '?') then
+  if (Length(Result) < 8) or (Result[1] < 'A') or (Result[1] > 'z') then
     Result := D3DErrorString(hResult);
 end;
 
@@ -1420,13 +1421,29 @@ begin
     PresParam.AutoDepthStencilFormat := X_D3DFMT_D24S8; //=$2A
 
     EmuSwapFS(fsXbox);
-    XTL_EmuDirect3D_CreateDevice(
-      0,
-      D3DDEVTYPE_HAL,
-      {ignored hFocusWindow=}0,
-      {ignored BehaviorFlags=}D3DCREATE_HARDWARE_VERTEXPROCESSING, // = $00000040
-      @PresParam,
-      @g_pD3DDevice);
+
+{$IFDEF DXBX_TRY_DEEPER_DEVICE_INIT}
+    // Initialize Xbox device :
+    if Assigned(Addr(XTL_Direct3D_CreateDevice)) then
+      // Call Xbox version (or our patch)
+      XTL_Direct3D_CreateDevice(
+        0,
+        D3DDEVTYPE_HAL,
+        {ignored hFocusWindow=}0,
+        {ignored BehaviorFlags=}D3DCREATE_HARDWARE_VERTEXPROCESSING, // = $00000040
+        @PresParam,
+        @g_pD3DDevice)
+    else
+{$ENDIF DXBX_TRY_DEEPER_DEVICE_INIT}
+      // Call our patched version
+      XTL_EmuDirect3D_CreateDevice(
+        0,
+        D3DDEVTYPE_HAL,
+        {ignored hFocusWindow=}0,
+        {ignored BehaviorFlags=}D3DCREATE_HARDWARE_VERTEXPROCESSING, // = $00000040
+        @PresParam,
+        @g_pD3DDevice);
+
     EmuSwapFS(fsWindows);
   end;
 end; // XTL_EmuD3DInit
@@ -2450,6 +2467,67 @@ function LogBegin(const aSymbolName: string; const aCategory: string = ''): PLog
 begin
   Result := uLog.LogBegin(aSymbolName, {Category=}'EmuD3D8');
 end;
+
+{$IFDEF DXBX_TRY_DEEPER_DEVICE_INIT}
+function XTL_EmuD3D__CDevice__Init
+(
+    pPresentationParameters: PX_D3DPRESENT_PARAMETERS
+//    This: Pointer // This must be hidden, otherwise the caller (XTL_Direct3D_CreateDevice) doesn't return correctly?!?
+): HRESULT; stdcall;
+var
+  v: DWORD;
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+  begin
+    LogBegin('XTL_EmuD3D__CDevice__Init').
+//      _(This, 'This').
+      _(pPresentationParameters, 'pPresentationParameters').
+    LogEnd();
+
+    DumpPresentationParameters(pPresentationParameters);
+  end;
+
+  // Cache parameters
+  g_EmuCDPD.CreationParameters.AdapterOrdinal := 0;
+  g_EmuCDPD.CreationParameters.DeviceType := D3DDEVTYPE_HAL;
+  g_EmuCDPD.CreationParameters.hFocusWindow := 0; // ignored
+  g_EmuCDPD.CreationParameters.BehaviorFlags := D3DCREATE_HARDWARE_VERTEXPROCESSING; // ignored
+  g_EmuCDPD.pPresentationParameters := pPresentationParameters;
+  g_EmuCDPD.ppReturnedDeviceInterface := @g_pD3DDevice;
+
+  // Wait until proxy is done with an existing call (i highly doubt this situation will come up)
+  while (g_EmuCDPD.bReady) do
+    Sleep(10); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
+
+  // Signal proxy thread, and wait for completion
+  g_EmuCDPD.bCreate := true; // Dxbx: bCreate should be set before bReady!
+  g_EmuCDPD.bReady := true;
+
+  // Wait until proxy is completed
+  while g_EmuCDPD.bReady do
+    Sleep(10); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
+
+  // Initialize the Xbox RenderState structure with default values :
+//  if Assigned(@XTL_D3D_InitializeD3dState) then
+//  begin
+//    EmuSwapFS(fsXbox);
+//    XTL_D3D_InitializeD3dState(); // This crashes on the access to D3D__pDevice+6688 (probably the ZStencilSurface resource pointer)
+//    EmuSwapFS(fsWindows);
+//  end
+//  else
+    DxbxInitializeDefaultRenderStates(g_EmuCDPD.pPresentationParameters);
+
+  // Transfer the default render states (set above) over to PC side :
+  for v := X_D3DRS_FIRST to X_D3DRS_LAST do
+    DxbxTransferRenderState(X_D3DRENDERSTATETYPE(v));
+
+  EmuSwapFS(fsXbox);
+
+  Result := g_EmuCDPD.hRet;
+end; // XTL_EmuD3D__CDevice__Init
+{$ENDIF DXBX_TRY_DEEPER_DEVICE_INIT}
 
 function XTL_EmuDirect3D_CreateDevice
 (
@@ -4910,11 +4988,22 @@ begin
     // Dxbx addition : If this texture is going to be a depth stencil, use the correct format for that :
     if (Usage and D3DUSAGE_DEPTHSTENCIL) > 0 then
     begin
-      if PCFormat <> D3DFMT_D24S8 then
+      if g_pD3D.CheckDeviceFormat(
+        g_EmuCDPD.CreationParameters.AdapterOrdinal,
+        g_EmuCDPD.CreationParameters.DeviceType,
+        g_EmuCDPD.NativePresentationParameters.BackBufferFormat,
+        D3DUSAGE_DEPTHSTENCIL,
+        D3DRTYPE_TEXTURE,
+        D3DFMT_D24S8) = D3D_OK then
       begin
-        // Note : XDL sample ZSprite fakes this anyhow by putting D3DFMT_LIN_D24S8 in the Resource.Format!
+        // Note : XDK sample ZSprite fakes this anyhow by putting D3DFMT_LIN_D24S8 in the Resource.Format!
         PCFormat := D3DFMT_D24S8;
         EmuWarning('Overriding texture format into D3DFMT_D24S8 to support D3DUSAGE_DEPTHSTENCIL');
+      end
+      else
+      begin
+        Usage := Usage and (not D3DUSAGE_DEPTHSTENCIL);
+        EmuWarning('Removing the D3DUSAGE_DEPTHSTENCIL flag, as you card doesn''t support this format!');
       end;
     end;
 
@@ -12209,7 +12298,11 @@ exports
 
   XTL_EmuDirect3D_CheckDeviceFormat,
   XTL_EmuDirect3D_CheckDeviceMultiSampleType,
+{$IFDEF DXBX_TRY_DEEPER_DEVICE_INIT}
+  XTL_EmuD3D__CDevice__Init name PatchPrefix + '?Init@CDevice@D3D@@QAEJPAU_D3DPRESENT_PARAMETERS_@@@Z',
+{$ELSE}
   XTL_EmuDirect3D_CreateDevice,
+{$ENDIF}
   XTL_EmuDirect3D_EnumAdapterModes,
   XTL_EmuDirect3D_GetAdapterDisplayMode,
   XTL_EmuDirect3D_GetAdapterModeCount,
