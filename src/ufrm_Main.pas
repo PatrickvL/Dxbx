@@ -226,7 +226,8 @@ type
     GUIHeadSepImg: TJPEGImage;
 
     function GetEmuWindowHandle(const aEmuDisplayMode: Integer = 1): THandle;
-    procedure LaunchXBE;
+    procedure LaunchXBE
+    (SymbolScanOnly: Boolean = False);
     procedure CloseXbe;
 
     procedure ReadSettingsIni;
@@ -520,7 +521,7 @@ procedure Tfrm_Main.FormCreate(Sender: TObject);
 var
   XBEFilePath: string;
   DummyStr: string;
-//  i: Integer;
+  SymbolScanOnly: Boolean;
 begin
   Application.OnMessage := AppMessage;
   ApplicationDir := ExtractFilePath(Application.ExeName);
@@ -529,9 +530,6 @@ begin
 
 
   // GUI stuff...
-
-
-
   BackgroundImage := TBitmap.Create;
 
   UpdateBackground;
@@ -558,24 +556,6 @@ begin
 
   PEmuShared(nil).Init;
 
-(*
-  // Calculated the exact X resolution :
-  i := GetSystemMetrics(SM_CXFIXEDFRAME);
-  i := i + 800 + i;
-  Constraints.MaxWidth := i; Constraints.MinWidth := i;
-  ClientWidth := i;
-
-  // Calculated the exact Y resolution :
-  i := GetSystemMetrics(SM_CYFIXEDFRAME);
-  i := i + GetSystemMetrics(SM_CYMENU) + 600 + StatusBar.Height + i;
-  Constraints.MaxHeight := i; Constraints.MinHeight := i;
-  ClientHeight := i;
-
-(*
-  // This proves the emulated screen is resized :
-  dgXbeInfos.Width := 320;
-  dgXbeInfos.Height := 200;
-*)
   Constraints.MinHeight := 480;
 
   // Dxbx Note : This prevents close-exceptions (we have with a "message WM_DROPFILES" procedure) :
@@ -590,13 +570,38 @@ begin
   CreateLogs(DebugMode, DebugFileName);
   //CreateLogs(KernelDebugMode, KernelDebugFileName);
 
-  XBEFilePath := ParamStr(1);
+  if SameText(ParamStr(1), '/load')
+  and SameText(ParamStr(2), '/SymbolScanOnly') then
+  begin
+    SymbolScanOnly := True;
+    XBEFilePath := ParamStr(2);
+  end
+  else
+  begin
+    if SameText(ParamStr(2), '/SymbolScanOnly') then
+    begin
+      SymbolScanOnly := True;
+      XBEFilePath := ParamStr(1);
+    end
+    else
+    begin
+      SymbolScanOnly := False;
+      XBEFilePath := ParamStr(1);
+    end;
+  end;
 
   if  (XBEFilePath <> '')
   and Drives.D.OpenImage(XBEFilePath, {out}DummyStr) then
   begin
     if OpenXbe(XBEFilePath, {var}m_Xbe) then
-      LaunchXBE;
+    begin
+      LaunchXBE(SymbolScanOnly);
+      if SymbolScanOnly then
+      begin
+        CloseXbe;
+        Close;
+      end;
+    end;
     // TODO : Error logging should go here
   end;
 end; // FormCreate
@@ -1816,12 +1821,17 @@ begin
   end;
 end;
 
-procedure Tfrm_Main.LaunchXBE;
+procedure Tfrm_Main.LaunchXBE(SymbolScanOnly: Boolean = False);
 var
   Parameters: string;
+  LaunchArguments: string;
 begin
+  LaunchArguments := '/load ';
+  if SymbolScanOnly then
+    LaunchArguments := LaunchArguments + '/SymbolScanOnly ';
+
   Parameters :=
-    {LaunchArgument=}'/load ' +
+    {LaunchArgument=}LaunchArguments +
     {XbePath=}AnsiQuotedStr(m_Xbe.XbePath, '"') + ' ' +
     {WindowHandle=}IntToStr(GetEmuWindowHandle) + ' ' +
     {DebugMode=}IntToStr(Ord(KernelDebugMode)) + ' ' +
