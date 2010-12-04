@@ -100,7 +100,8 @@ uses
   uFileSystem in '..\..\src\uFileSystem.pas',
   uEmuXactEng in '..\..\src\DxbxKrnl\uEmuXactEng.pas',
   uXbSound in '..\..\src\uXbSound.pas',
-  DbgConsole in '..\..\src\DxbxKrnl\DbgConsole.pas';
+  DbgConsole in '..\..\src\DxbxKrnl\DbgConsole.pas',
+  uMiniport in '..\..\src\DxbxKrnl\EmuD3D8\uMiniport.pas';
 
 {$IMAGEBASE $10000000}
 
