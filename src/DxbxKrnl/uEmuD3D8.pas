@@ -1425,6 +1425,9 @@ begin
 {$IFDEF DXBX_TRY_DEEPER_DEVICE_INIT}
     // Initialize Xbox device :
     if Assigned(Addr(XTL_Direct3D_CreateDevice)) then
+    begin
+      PPointer(XTL_D3D__Device)^ := AllocMem(9000); // Reserve enough memory for D3D_Device (TODO : How much exactly?)
+
       // Call Xbox version (or our patch)
       XTL_Direct3D_CreateDevice(
         0,
@@ -1432,7 +1435,8 @@ begin
         {ignored hFocusWindow=}0,
         {ignored BehaviorFlags=}D3DCREATE_HARDWARE_VERTEXPROCESSING, // = $00000040
         @PresParam,
-        @g_pD3DDevice)
+        @g_pD3DDevice);
+    end
     else
 {$ENDIF DXBX_TRY_DEEPER_DEVICE_INIT}
       // Call our patched version
@@ -2471,9 +2475,11 @@ end;
 {$IFDEF DXBX_TRY_DEEPER_DEVICE_INIT}
 function XTL_EmuD3D__CDevice__Init
 (
-    pPresentationParameters: PX_D3DPRESENT_PARAMETERS
-//    This: Pointer // This must be hidden, otherwise the caller (XTL_Direct3D_CreateDevice) doesn't return correctly?!?
-): HRESULT; stdcall;
+  {0 EAX}THISCALL_FIX_ARGUMENT_TAKING_EAX: DWORD; // Ignore this
+  {0 EDX}THISCALL_FIX_ARGUMENT_TAKING_EDX: DWORD; // Ignore this
+  {1 ECX}This: Pointer;
+  {2 stack}pPresentationParameters: PX_D3DPRESENT_PARAMETERS
+): HRESULT; register; // thiscall simulation - See Translation guide
 var
   v: DWORD;
 begin
@@ -2482,7 +2488,7 @@ begin
   if MayLog(lfUnit) then
   begin
     LogBegin('XTL_EmuD3D__CDevice__Init').
-//      _(This, 'This').
+      _(This, 'This').
       _(pPresentationParameters, 'pPresentationParameters').
     LogEnd();
 
@@ -12299,7 +12305,7 @@ exports
   XTL_EmuDirect3D_CheckDeviceFormat,
   XTL_EmuDirect3D_CheckDeviceMultiSampleType,
 {$IFDEF DXBX_TRY_DEEPER_DEVICE_INIT}
-  XTL_EmuD3D__CDevice__Init name PatchPrefix + '?Init@CDevice@D3D@@QAEJPAU_D3DPRESENT_PARAMETERS_@@@Z',
+//  XTL_EmuD3D__CDevice__Init name PatchPrefix + '?Init@CDevice@D3D@@QAEJPAU_D3DPRESENT_PARAMETERS_@@@Z',
 {$ELSE}
   XTL_EmuDirect3D_CreateDevice,
 {$ENDIF}

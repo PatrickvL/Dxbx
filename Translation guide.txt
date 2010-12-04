@@ -315,9 +315,30 @@ procedure FastCallPatch_4Arguments(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD; // Ignore this
   {2 EDX}Argument2: DWORD; // The 2nd argument here, forces it into EDX
   {1 ECX}Argument1: DWORD; // The 1st argument here, forces it into ECX
-  {3 stack}Argument4: DWORD  // The 3rd and following arguments must be put here
-  {4 stack}Argument3: DWORD; // in reverse order, to accord for the difference.
+  {4 stack}Argument4: DWORD; // The 3rd and following arguments must be put here
+  {3 stack}Argument3: DWORD // in reverse order, to accord for the difference.
   ); register; // fastcall simulation - See Translation guide
+begin
+  // Implement it.
+end;
+
+
+THISCALL / __thiscall :
+
+Just as the fastcall calling convention, Delphi doesn't support thiscall.
+Thiscall expects the first argument (called 'This') in the ECX register,
+the remaining arguments are pushed on stack right to left, callee cleans.
+
+So this can also be emulated with 'register', but we have to stub out
+the EDX and EAX registers and reverse the order of the other arguments.
+
+procedure ThisCallPatch_3Arguments(
+  {0 EAX}THISCALL_FIX_ARGUMENT_TAKING_EAX: DWORD; // Ignore this
+  {0 EDX}THISCALL_FIX_ARGUMENT_TAKING_EDX: DWORD; // Ignore this
+  {1 ECX}Argument1: DWORD; // The 1st argument here, forces it into ECX
+  {3 stack}Argument3: DWORD; // The 2nd and following arguments must be put here
+  {2 stack}Argument2: DWORD // in reverse order, to accord for the difference.
+  ); register; // thiscall simulation - See Translation guide
 begin
   // Implement it.
 end;
