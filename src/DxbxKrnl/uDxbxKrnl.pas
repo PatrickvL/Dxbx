@@ -33,6 +33,7 @@ uses
   FastMM4,
 {$ENDIF}
   // Jedi Win32API
+  JwaWinBase,
   JwaWinType,
   // Dxbx
   uConsts,
@@ -131,8 +132,7 @@ var
   pCertificate: PXBE_CERTIFICATE;
   TitleStr: AnsiString;
   hDupHandle: Handle;
-  OldExceptionFilter: TFNTopLevelExceptionFilter;
-
+  HandlerHandle: PVOID;
 begin
   DecimalSeparator := '.'; // Dxbx addition, to log floats with dots
 
@@ -374,6 +374,11 @@ begin
     end;
   end;
 
+  // Re-route unhandled exceptions to our emulation-exception handler :
+  HandlerHandle := AddVectoredExceptionHandler(
+    {FirstHandler=}High(Cardinal),
+    {VectoredHandler=}@EmuException);
+
     if MayLog(lfUnit) then
       DbgPrintf('EmuMain : Initializing Direct3D.');
 
@@ -382,11 +387,6 @@ begin
 
     if MayLog(lfUnit) then
       DbgPrintf('EmuMain : Initial thread starting.');
-
-    // Re-route unhandled exceptions to our emulation-exception handler :
-    OldExceptionFilter := SetUnhandledExceptionFilter(TFNTopLevelExceptionFilter(@EmuException));
-  //  JITEnable := 2;        { 1 to call UnhandledExceptionFilter if the exception is not a Pascal exception.
-  //                          >1 to call UnhandledExceptionFilter for all exceptions }
 
     // Xbe entry point
     try
@@ -437,7 +437,7 @@ begin
     end;
 
   // Restore original exception filter :
-  SetUnhandledExceptionFilter(OldExceptionFilter);
+  RemoveVectoredExceptionHandler(HandlerHandle);
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuMain : Initial thread ended.');
@@ -445,7 +445,7 @@ begin
 //  fflush(stdout);
   if not SymbolScanOnly then
     DxbxKrnlTerminateThread();
-end;
+end; // DxbxKrnlInit
 
 procedure _DxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const);
 begin

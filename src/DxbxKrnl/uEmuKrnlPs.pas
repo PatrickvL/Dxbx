@@ -157,14 +157,7 @@ begin
     end;
   end;
 
-{$IFNDEF DISABLE_THREAD_EXCEPTION_HANDLING}
-  // Re-route unhandled exceptions to our emulation-exception handler :
-  OldExceptionFilter := SetUnhandledExceptionFilter(@EmuException);
-//  JITEnable := 2;        { 1 to call UnhandledExceptionFilter if the exception is not a Pascal exception.
-//                          >1 to call UnhandledExceptionFilter for all exceptions }
-
-  try
-{$ENDIF}
+  begin
     SetEvent(Parameter.hStartedEvent);
 
     EmuSwapFS(fsXbox);
@@ -185,33 +178,11 @@ begin
       // Note : This jmp reads like this in Cxbx (which doesn't compile) :
       // jmp near esi
     end;
-*)
 callComplete:
+*)
 
-{$IFNDEF DISABLE_THREAD_EXCEPTION_HANDLING}
-  except
-    on E: Exception do
-    begin
-      EmuSwapFS(fsWindows);
-      // TODO -oDXBX: How do we intercept ntdll.ZwRaiseException here ?
-      //      EmuException(E);
-      if MayLog(lfUnit) then
-        DbgPrintf('EmuKrnl : PCSTProxy : Catched an exception : ' + E.Message);
-{$IFDEF DXBX_USE_JCLDEBUG}
-      DbgPrintf(JclLastExceptStackListToString(False));
-{$ENDIF}
-    (*__except(EmuException(GetExceptionInformation())); *)
-    //  EmuWarning('Problem with ExceptionFilter!');
-    end;
-  end; // try
-{$ENDIF}
-
-   EmuSwapFS(fsWindows);
-
-{$IFNDEF DISABLE_THREAD_EXCEPTION_HANDLING}
-  // Restore original exception filter :
-  SetUnhandledExceptionFilter(OldExceptionFilter);
-{$ENDIF}
+     EmuSwapFS(fsWindows);
+  end;
 
   // call thread notification routine(s)
   if (g_iThreadNotificationCount <> 0) then
