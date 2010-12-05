@@ -106,6 +106,7 @@ type
     procedure StringGridSelectCell(Sender: TObject; ACol, ARow: Integer;  var CanSelect: Boolean);
     procedure UpdateSymbolListView;
     procedure GotoAddress(const aAddress: UIntPtr);
+    function LoadSymbols: Boolean;
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
@@ -539,33 +540,38 @@ begin
   Clipboard.AsText := g_SelectedText;
 end;
 
+function TFormXBEExplorer.LoadSymbols: Boolean;
+var
+  CacheFileName: string;
+  SearchRec: TSearchRec;
+begin
+  SymbolList.Clear;
+  CacheFileName := SymbolCacheFolder
+          // TitleID
+          + IntToHex(MyXBE.m_Certificate.dwTitleId, 8)
+          // TODO : + CRC32 over XbeHeader :
+          + '_*'
+          // TitleName
+          + '_' + GetReadableTitle(@MyXBE.m_Certificate)
+          + SymbolCacheFileExt;
+  if SysUtils.FindFirst(CacheFileName, faAnyFile, SearchRec) = 0 then
+  begin
+    LoadSymbolsFromCache(SymbolList, SymbolCacheFolder + SearchRec.Name);
+    SysUtils.FindClose(SearchRec);
+  end;
+
+  Result := (SymbolList.Count > 0);
+
+  Panel2.Visible := Result;
+  Splitter2.Visible := Panel2.Visible;
+  if Panel2.Visible then
+    UpdateSymbolListView;
+end;
+
 function TFormXBEExplorer.OpenFile(const aFilePath: string): Boolean;
 var
   NodeResources: TTreeNode;
   RegionInfo: RRegionInfo;
-
-  function _LoadSymbols: Boolean;
-  var
-    CacheFileName: string;
-    SearchRec: TSearchRec;
-  begin
-    SymbolList.Clear;
-    CacheFileName := SymbolCacheFolder
-            // TitleID
-            + IntToHex(MyXBE.m_Certificate.dwTitleId, 8)
-            // TODO : + CRC32 over XbeHeader :
-            + '_*'
-            // TitleName
-            + '_' + GetReadableTitle(@MyXBE.m_Certificate)
-            + SymbolCacheFileExt;
-    if SysUtils.FindFirst(CacheFileName, faAnyFile, SearchRec) = 0 then
-    begin
-      LoadSymbolsFromCache(SymbolList, SymbolCacheFolder + SearchRec.Name);
-      SysUtils.FindClose(SearchRec);
-    end;
-
-    Result := (SymbolList.Count > 0);
-  end;
 
   procedure _AddRange(Start, Size: Integer; Title: string);
   begin
@@ -955,10 +961,13 @@ begin // OpenFile
   MyXBE := TXbe.Create(aFilePath);
   FXBEFileName := ExtractFileName(aFilePath);
 
-  Panel2.Visible := _LoadSymbols;
-  Splitter2.Visible := Panel2.Visible;
-  if Panel2.Visible then
-    UpdateSymbolListView;
+  if not LoadSymbols then
+    // if Ask scan then
+    begin
+      // Launch dxbx in scan-only mode :
+      {Result := }ShellExecute(0, 'open', PChar('Dxbx.exe'), PChar('/load /SymbolScanOnly "' + aFilePath + '"'), nil, SW_SHOWNORMAL);
+      LoadSymbols;
+    end;
 
   Caption := Application.Title + ' - [' + FXBEFileName + ']';
   PageControl.Visible := True;

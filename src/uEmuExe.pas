@@ -43,6 +43,7 @@ uses
   uKernelThunk,
   uEmuFile,
   uEmuKrnlXe, // xboxkrnl_XeImageFileName
+  uDxbxKrnlUtils,
   uDxbxKrnl;
 
 type _IMAGE_TLS_DIRECTORY = record
@@ -63,7 +64,7 @@ procedure ReinitExeImageHeader;
 procedure ReinitXbeImageHeader;
 
 function GetEntryPoint(const aXbeHeader: PXbeHeader): UIntPtr;
-function MapAndRunXBE(const aFilePath: string; const aHandle: THandle; SymbolScanOnly: Boolean): Boolean;
+function MapAndRunXBE(const aFilePath: string; const aHandle: THandle): Boolean;
 
 procedure DxbxMain(const aData: MathPtr; const aSize: DWord); stdcall;
 
@@ -179,7 +180,7 @@ begin
 end;
 
 // Load XBE sections in Virtual Memory, and call DxbxKrnlInit (TODO : from a new thread?)
-function MapAndRunXBE(const aFilePath: string; const aHandle: THandle; SymbolScanOnly: Boolean): Boolean;
+function MapAndRunXBE(const aFilePath: string; const aHandle: THandle): Boolean;
 var
   Drive: PLogicalVolume;
   XbeFilePath: string;
@@ -348,20 +349,18 @@ begin
       PAnsiChar(AnsiString(KernelDebugFileName)),
       XbeHeader,
       XbeHeader.dwSizeofHeaders,
-      TEntryProc(EntryPoint),
-      SymbolScanOnly);
+      TEntryProc(EntryPoint));
   end;
 end;
 
 var
   Params: PPWideChar;
   ParamCount: Integer;
-  
+
 procedure DxbxMain(const aData: MathPtr; const aSize: DWord); stdcall;
 var
   XBEPath: WideString;
   DCHandle: THandle;
-  SymbolScanOnly: Boolean;
 begin
   Assert(GetModuleHandle(nil) = XBE_IMAGE_BASE);
   Assert(aSize >= XBOX_MEMORY_SIZE);
@@ -377,10 +376,10 @@ begin
     Inc(Params);
     // Skip '/load' switch :
     Inc(Params);
-    // Skip '/load' switch :
+    // Remember & skip '/SymbolScanOnly' switch (if present) :
     SymbolScanOnly := SameText(WideString(Params^), '/SymbolScanOnly');
     if SymbolScanOnly then
-    Inc(Params);
+      Inc(Params);
     // Get XBE Name :
     XBEPath := WideString(Params^);
     Inc(Params);
@@ -401,7 +400,7 @@ begin
     // (which will launch the Xbe on itself), instead here.
 
     // Now we can load and run the XBE :
-    MapAndRunXBE(XbePath, DCHandle, SymbolScanOnly);
+    MapAndRunXBE(XbePath, DCHandle);
   end;
   
   // Prevent the process from returning to the overwritten EXE location

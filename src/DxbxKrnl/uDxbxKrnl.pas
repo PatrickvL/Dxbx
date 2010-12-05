@@ -77,8 +77,7 @@ procedure DxbxKrnlInit(
   szDebugFileName: P_char;
   pXbeHeader: PXBEIMAGE_HEADER;
   dwXbeHeaderSize: DWord;
-  Entry: TEntryProc;
-  SymbolScanOnly: Boolean); stdcall;
+  Entry: TEntryProc); stdcall;
 
 procedure _DxbxKrnlCleanup(const szErrorMessage: string); overload;
 procedure _DxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const); overload;
@@ -113,8 +112,7 @@ procedure DxbxKrnlInit(
   szDebugFileName: P_char;
   pXbeHeader: PXBEIMAGE_HEADER;
   dwXbeHeaderSize: DWord;
-  Entry: TEntryProc;
-  SymbolScanOnly: Boolean);
+  Entry: TEntryProc);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 {$IFDEF LOG_STRUCT_SIZES}
 var
@@ -253,12 +251,10 @@ begin
 
     if not DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
       DbgPrintf('EmuMain : Couldn''t duplicate handle!');
-    if not SymbolScanOnly then
       DxbxKrnlRegisterThread(hDupHandle); // Dxbx note : Is this correct? hDupHandle is a process, not a thread handle?
   end;
 
   // initialize FS segment selector
-  if not SymbolScanOnly then
   begin
     EmuInitFS();
 
@@ -367,11 +363,8 @@ begin
     DxbxCreateSymbolicLink(DriveY, DeviceHarddisk0Partition4); // Partition4 goes to Y:
 
     // Mount the Utility drive (Z:) conditionally :
-    if not SymbolScanOnly then
-    begin
-      if (DxbxKrnl_XbeHeader.dwInitFlags[0] and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
-        DxbxMountUtilityDrive({fFormatClean=}DxbxKrnl_XbeHeader.dwInitFlags[0] and XBE_INIT_FLAG_FormatUtilityDrive);
-    end;
+    if (DxbxKrnl_XbeHeader.dwInitFlags[0] and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
+      DxbxMountUtilityDrive({fFormatClean=}DxbxKrnl_XbeHeader.dwInitFlags[0] and XBE_INIT_FLAG_FormatUtilityDrive);
   end;
 
   // Re-route unhandled exceptions to our emulation-exception handler :
@@ -379,62 +372,61 @@ begin
     {FirstHandler=}High(Cardinal),
     {VectoredHandler=}@EmuException);
 
-    if MayLog(lfUnit) then
-      DbgPrintf('EmuMain : Initializing Direct3D.');
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuMain : Initializing Direct3D.');
 
-    if not SymbolScanOnly then
-      XTL_EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+  XTL_EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 
-    if MayLog(lfUnit) then
-      DbgPrintf('EmuMain : Initial thread starting.');
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuMain : Initial thread starting.');
 
-    // Xbe entry point
-    try
-      EmuSwapFS(fsXbox);
+  // Xbe entry point
+  try
+    EmuSwapFS(fsXbox);
 
-  {$IFDEF GAME_HACKS_ENABLED}
-      // _USE_XGMATH Disabled in mesh :[
-      // halo : dword_0_2E2D18
-      // halo : 1744F0 (bink)
-      // asm int 3 end;   // NO ASM IN 3  THIS CRASH
-  {$ENDIF}
+{$IFDEF GAME_HACKS_ENABLED}
+    // _USE_XGMATH Disabled in mesh :[
+    // halo : dword_0_2E2D18
+    // halo : 1744F0 (bink)
+    // asm int 3 end;   // NO ASM IN 3  THIS CRASH
+{$ENDIF}
 
-      (* Marked out by cxbx
-      for v := 0 to (SizeOf(FuncAddr / SizeOf(UInt32)) - 1 do
-      begin
-          _bool bExclude = False;
-          for r := 0 to (SizeOf(funcExclude / SizeOf(UInt32)) - 1 do
-          begin
-              if funcAddr[v] = funcExclude[r] then
-              begin
-                  bExclude := True;
-                  break;
-              end;
-          end;
-
-          if not bExclude then
-              *(uint08* )(funcAddr[v]) := 0xCC;
-      end
-      *)
-
-      Entry();
-
-      EmuSwapFS(fsWindows);
-    except
-      on E: Exception do
-      begin
-        EmuSwapFS(fsWindows);
-        if MayLog(lfUnit) then
+    (* Marked out by cxbx
+    for v := 0 to (SizeOf(FuncAddr / SizeOf(UInt32)) - 1 do
+    begin
+        _bool bExclude = False;
+        for r := 0 to (SizeOf(funcExclude / SizeOf(UInt32)) - 1 do
         begin
-          DbgPrintf('EmuMain : Catched an exception : ' + E.Message);
-    {$IFDEF DXBX_USE_JCLDEBUG}
-          DbgPrintf(JclLastExceptStackListToString);
-    {$ENDIF}
-    //    on(EmuException(GetExceptionInformation())) :
-    //      printf('Emu: WARNING!! Problem with ExceptionFilter');
+            if funcAddr[v] = funcExclude[r] then
+            begin
+                bExclude := True;
+                break;
+            end;
         end;
+
+        if not bExclude then
+            *(uint08* )(funcAddr[v]) := 0xCC;
+    end
+    *)
+
+    Entry();
+
+    EmuSwapFS(fsWindows);
+  except
+    on E: Exception do
+    begin
+      EmuSwapFS(fsWindows);
+      if MayLog(lfUnit) then
+      begin
+        DbgPrintf('EmuMain : Catched an exception : ' + E.Message);
+  {$IFDEF DXBX_USE_JCLDEBUG}
+        DbgPrintf(JclLastExceptStackListToString);
+  {$ENDIF}
+  //    on(EmuException(GetExceptionInformation())) :
+  //      printf('Emu: WARNING!! Problem with ExceptionFilter');
       end;
     end;
+  end;
 
   // Restore original exception filter :
   RemoveVectoredExceptionHandler(HandlerHandle);
@@ -443,8 +435,7 @@ begin
     DbgPrintf('EmuMain : Initial thread ended.');
 
 //  fflush(stdout);
-  if not SymbolScanOnly then
-    DxbxKrnlTerminateThread();
+  DxbxKrnlTerminateThread();
 end; // DxbxKrnlInit
 
 procedure _DxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const);
