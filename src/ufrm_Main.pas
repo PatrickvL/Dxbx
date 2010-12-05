@@ -226,8 +226,7 @@ type
     GUIHeadSepImg: TJPEGImage;
 
     function GetEmuWindowHandle(const aEmuDisplayMode: Integer = 1): THandle;
-    procedure LaunchXBE
-    (SymbolScanOnly: Boolean = False);
+    procedure LaunchXBE;
     procedure CloseXbe;
 
     procedure ReadSettingsIni;
@@ -521,7 +520,6 @@ procedure Tfrm_Main.FormCreate(Sender: TObject);
 var
   XBEFilePath: string;
   DummyStr: string;
-  SymbolScanOnly: Boolean;
 begin
   Application.OnMessage := AppMessage;
   ApplicationDir := ExtractFilePath(Application.ExeName);
@@ -570,38 +568,13 @@ begin
   CreateLogs(DebugMode, DebugFileName);
   //CreateLogs(KernelDebugMode, KernelDebugFileName);
 
-  if SameText(ParamStr(1), '/load')
-  and SameText(ParamStr(2), '/SymbolScanOnly') then
-  begin
-    SymbolScanOnly := True;
-    XBEFilePath := ParamStr(2);
-  end
-  else
-  begin
-    if SameText(ParamStr(2), '/SymbolScanOnly') then
-    begin
-      SymbolScanOnly := True;
-      XBEFilePath := ParamStr(1);
-    end
-    else
-    begin
-      SymbolScanOnly := False;
-      XBEFilePath := ParamStr(1);
-    end;
-  end;
+  XBEFilePath := ParamStr(1);
 
   if  (XBEFilePath <> '')
   and Drives.D.OpenImage(XBEFilePath, {out}DummyStr) then
   begin
     if OpenXbe(XBEFilePath, {var}m_Xbe) then
-    begin
-      LaunchXBE(SymbolScanOnly);
-      if SymbolScanOnly then
-      begin
-        CloseXbe;
-        Close;
-      end;
-    end;
+      LaunchXBE;
     // TODO : Error logging should go here
   end;
 end; // FormCreate
@@ -1821,17 +1794,12 @@ begin
   end;
 end;
 
-procedure Tfrm_Main.LaunchXBE(SymbolScanOnly: Boolean = False);
+procedure Tfrm_Main.LaunchXBE;
 var
   Parameters: string;
-  LaunchArguments: string;
 begin
-  LaunchArguments := '/load ';
-  if SymbolScanOnly then
-    LaunchArguments := LaunchArguments + '/SymbolScanOnly ';
-
   Parameters :=
-    {LaunchArgument=}LaunchArguments +
+    {LaunchArgument=}'/load ' +
     {XbePath=}AnsiQuotedStr(m_Xbe.XbePath, '"') + ' ' +
     {WindowHandle=}IntToStr(GetEmuWindowHandle) + ' ' +
     {DebugMode=}IntToStr(Ord(KernelDebugMode)) + ' ' +

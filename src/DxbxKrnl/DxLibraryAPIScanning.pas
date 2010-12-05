@@ -2064,12 +2064,15 @@ begin
       if MayLog(lfUnit) then
         DbgPrintf('DxbxHLE : Detected %d symbols, reachable from %d leaf hits.', [Count, NrLeafHits]);
 
-      // Now that the symbols are known, patch them up where needed :
-      EmuInstallWrappers(pXbeHeader);
-
       // After detection of all symbols, see if we need to save that to cache :
       if CacheFileNameStr <> '' then
         SaveSymbolsToCache(pXbeHeader, CacheFileNameStr);
+
+      if SymbolScanOnly then
+        Halt(0)
+      else
+        // Now that the symbols are known, patch them up where needed :
+        EmuInstallWrappers(pXbeHeader);
 
     finally
       FreeAndNil(PatternTrieReader);
