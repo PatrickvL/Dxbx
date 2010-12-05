@@ -136,8 +136,8 @@ type
     mnu_ImportXbes: TMenuItem;
     actImportXbes: TAction;
     N7: TMenuItem;
-    actRemoveNonExistingGamesFromList: TAction;
-    Removenonexistinggamesfromlist1: TMenuItem;
+    actRemoveInvalidFromList: TAction;
+    Removeinvalidfromlist: TMenuItem;
     procedure actStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -177,7 +177,7 @@ type
     procedure actDebugKernelNoneExecute(Sender: TObject);
     procedure actDebugGuiNoneExecute(Sender: TObject);
     procedure actImportXbesExecute(Sender: TObject);
-    procedure actRemoveNonExistingGamesFromListExecute(Sender: TObject);
+    procedure actRemoveInvalidFromListExecute(Sender: TObject);
   protected
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
     procedure WndProc(var Message: TMessage); override;
@@ -1622,17 +1622,29 @@ begin
     OpenXbeFile(XbeOpenDialog.FileName);
 end;
 
-procedure Tfrm_Main.actRemoveNonExistingGamesFromListExecute(Sender: TObject);
+procedure Tfrm_Main.actRemoveInvalidFromListExecute(Sender: TObject);
 var
   lIndex: Integer;
+  NoRunReason: string;
+  ThisXbe: TXbe;
 begin
   for lIndex :=  MyXBEList.Count -1 downto 0 do
+  begin
     if not FileExists(TXBEInfo(MyXBEList.Objects[lIndex]).FileName) then
-      MyXBEList.Delete(lIndex);
-
+      MyXBEList.Delete(lIndex)
+    else
+    begin
+      OpenXbe(TXBEInfo(MyXBEList.Objects[lIndex]).FileName, ThisXbe);
+      if not CanRunXbe(ThisXbe, {var}NoRunReason) then
+      begin
+        MyXBEList.Delete(lIndex);
+      end;
+      FreeAndNil(ThisXbe);
+    end;
+  end;
   UpdateFilter;
   SaveXBEList(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aPublishedBy=}'');
-end;
+end;//actRemoveInvalidFromListExecute
 
 procedure Tfrm_Main.actCloseXbeExecute(Sender: TObject);
 begin
@@ -1891,7 +1903,7 @@ begin
 
   mnu_RecentXbefiles.Insert(0, TempItem);
   mnu_RecentXbefiles.Enabled := True;
-end; // RecentXbeAdd
+end;// RecentXbeAdd
 
 procedure Tfrm_Main.UpdateTitleInformation;
 var

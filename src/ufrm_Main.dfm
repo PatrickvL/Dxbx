@@ -163,8 +163,9 @@ object frm_Main: Tfrm_Main
         object N6: TMenuItem
           Caption = '-'
         end
-        object Removenonexistinggamesfromlist1: TMenuItem
-          Action = actRemoveNonExistingGamesFromList
+        object Removeinvalidfromlist: TMenuItem
+          Caption = 'Remove Invalid XBE'#39's'
+          OnClick = actRemoveInvalidFromListExecute
         end
         object N7: TMenuItem
           Caption = '-'
@@ -396,10 +397,9 @@ object frm_Main: Tfrm_Main
       Caption = 'Import Xbe`s from dir'
       OnExecute = actImportXbesExecute
     end
-    object actRemoveNonExistingGamesFromList: TAction
+    object actRemoveInvalidFromList: TAction
       Category = 'File'
-      Caption = 'Remove not existing games'
-      OnExecute = actRemoveNonExistingGamesFromListExecute
+      Caption = 'Remove Invalid XBE'#39's'
     end
   end
   object XbeOpenDialog: TOpenDialog
