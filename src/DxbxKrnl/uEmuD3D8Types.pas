@@ -138,8 +138,8 @@ const
   D3DVSDT_SHORT4      = D3DDECLTYPE_SHORT4;    // 4D signed short
 
   // Xbox extensions that are unsupported in D3D8, but have a mapping to D3D9 (with vertex shaders >= 2.0) :
-  D3DVSDT_NORMSHORT2  = D3DDECLTYPE_SHORT2N;    // 2D signed, normalized short expanded to (value, value, 0., 1.)
-  D3DVSDT_NORMSHORT4  = D3DDECLTYPE_SHORT4N;    // 4D signed, normalized short expanded to (value, value, value, value)
+  D3DVSDT_NORMSHORT2  = D3DDECLTYPE_SHORT2N;   // 2D signed, normalized short expanded to (value, value, 0., 1.)
+  D3DVSDT_NORMSHORT4  = D3DDECLTYPE_SHORT4N;   // 4D signed, normalized short expanded to (value, value, value, value)
   D3DVSDT_NONE        = D3DDECLTYPE_UNUSED;    // No stream data
 
 const
@@ -836,6 +836,7 @@ type _STREAM_DYNAMIC_PATCH_ = record
     ConvertedStride: DWORD;
     NbrTypes: DWORD;        // Number of the stream data types
     pTypes: PUINTs;         // The stream data types (xbox)
+    pSizes: PUINTs;         // The stream data sizes (pc)
   end; // size = 16 (as in Cxbx)
   STREAM_DYNAMIC_PATCH = _STREAM_DYNAMIC_PATCH_;
   PSTREAM_DYNAMIC_PATCH = ^STREAM_DYNAMIC_PATCH;
@@ -1632,28 +1633,28 @@ type X_D3DVSDE = X_D3DVSDE_POSITION..High(DWORD)-2; // Unique declaration to mak
 
 const
   // bit declarations for _Type fields
-  X_D3DVSDT_FLOAT1      = $12;    // 1D float expanded to (value; 0.; 0.; 1.)
-  X_D3DVSDT_FLOAT2      = $22;    // 2D float expanded to (value; value; 0.; 1.)
-  X_D3DVSDT_FLOAT3      = $32;    // 3D float expanded to (value; value; value; 1.)
-  X_D3DVSDT_FLOAT4      = $42;    // 4D float
-  X_D3DVSDT_D3DCOLOR    = $40;    // 4D packed unsigned bytes mapped to 0. to 1. range
-//X_D3DVSDT_UBYTE4      = $05;    // 4D unsigned byte   Dxbx note : Not supported on Xbox ?
-  X_D3DVSDT_SHORT2      = $25;    // 2D signed short expanded to (value; value; 0.; 1.)
-  X_D3DVSDT_SHORT4      = $45;    // 4D signed short
+  X_D3DVSDT_FLOAT1      = $12; // 1D float expanded to (value, 0.0, 0.0, 1.0)
+  X_D3DVSDT_FLOAT2      = $22; // 2D float expanded to (value, value, 0.0, 1.0)
+  X_D3DVSDT_FLOAT3      = $32; // 3D float expanded to (value, value, value, 1.0) In double word format this is ARGB, or in byte ordering it would be B, G, R, A.
+  X_D3DVSDT_FLOAT4      = $42; // 4D float
+  X_D3DVSDT_D3DCOLOR    = $40; // 4D packed unsigned bytes mapped to 0.0 to 1.0 range
+//X_D3DVSDT_UBYTE4      = $05; // 4D unsigned byte   Dxbx note : Not supported on Xbox ?
+  X_D3DVSDT_SHORT2      = $25; // 2D signed short expanded to (value, value, 0.0, 1.0)
+  X_D3DVSDT_SHORT4      = $45; // 4D signed short
 
   //  Xbox only declarations :
-  X_D3DVSDT_NORMSHORT1  = $11; // xbox ext.
-  X_D3DVSDT_NORMSHORT2  = $21; // xbox ext.
-  X_D3DVSDT_NORMSHORT3  = $31; // xbox ext. nsp
-  X_D3DVSDT_NORMSHORT4  = $41; // xbox ext.
-  X_D3DVSDT_NORMPACKED3 = $16; // xbox ext. nsp
-  X_D3DVSDT_SHORT1      = $15; // xbox ext. nsp
-  X_D3DVSDT_SHORT3      = $35; // xbox ext. nsp
-  X_D3DVSDT_PBYTE1      = $14; // xbox ext. nsp
-  X_D3DVSDT_PBYTE2      = $24; // xbox ext. nsp
-  X_D3DVSDT_PBYTE3      = $34; // xbox ext. nsp
-  X_D3DVSDT_PBYTE4      = $44; // xbox ext.
-  X_D3DVSDT_FLOAT2H     = $72; // xbox ext.
+  X_D3DVSDT_NORMSHORT1  = $11; // xbox ext. 1D signed, normalized short expanded to (value, 0.0, 0.0, 1.0). Signed, normalized shorts map from -1.0 to 1.0.
+  X_D3DVSDT_NORMSHORT2  = $21; // xbox ext. 2D signed, normalized short expanded to (value, value, 0.0, 1.0). Signed, normalized shorts map from -1.0 to 1.0.
+  X_D3DVSDT_NORMSHORT3  = $31; // xbox ext. nsp 3D signed, normalized short expanded to (value, value, value, 1.0). Signed, normalized shorts map from -1.0 to 1.0.
+  X_D3DVSDT_NORMSHORT4  = $41; // xbox ext. 4D signed, normalized short expanded to (value, value, value, value). Signed, normalized shorts map from -1.0 to 1.0.
+  X_D3DVSDT_NORMPACKED3 = $16; // xbox ext. nsp Three signed, normalized components packed in 32-bits. (11,11,10). Each component ranges from -1.0 to 1.0. Expanded to (value, value, value, 1.0).
+  X_D3DVSDT_SHORT1      = $15; // xbox ext. nsp 1D signed short expanded to (value, 0., 0., 1). Signed shorts map to the range [-32768, 32767].
+  X_D3DVSDT_SHORT3      = $35; // xbox ext. nsp 3D signed short expanded to (value, value, value, 1). Signed shorts map to the range [-32768, 32767].
+  X_D3DVSDT_PBYTE1      = $14; // xbox ext. nsp 1D packed byte expanded to (value, 0., 0., 1). Packed bytes map to the range [0, 1].
+  X_D3DVSDT_PBYTE2      = $24; // xbox ext. nsp 2D packed byte expanded to (value, value, 0., 1). Packed bytes map to the range [0, 1].
+  X_D3DVSDT_PBYTE3      = $34; // xbox ext. nsp 3D packed byte expanded to (value, value, value, 1). Packed bytes map to the range [0, 1].
+  X_D3DVSDT_PBYTE4      = $44; // xbox ext. 4D packed byte expanded to (value, value, value, value). Packed bytes map to the range [0, 1].
+  X_D3DVSDT_FLOAT2H     = $72; // xbox ext. 3D float that expands to (value, value, 0.0, value). Useful for projective texture coordinates.
   X_D3DVSDT_NONE        = $02; // xbox ext. nsp
 
 const

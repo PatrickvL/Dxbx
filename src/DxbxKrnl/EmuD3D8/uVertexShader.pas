@@ -1939,11 +1939,12 @@ begin
       if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_C) then
       begin
         // Dxbx fix : PARAM_C correction shouldn't depend on Active!
-        // Dxbx : Don't correct c[a0.x] indexes; Seems to stabilize MatrixPaletteSkinning a bit (not fully) :
-        if not pIntermediate.Parameters[j].IndexesWithA0_X then
-          // Make constant registers range from 0 to 191 instead of -96 to 95 :
-          // Dxbx note : This should NOT be done version-dependantly!
-          Inc(pIntermediate.Parameters[j].Parameter.Address, X_D3DSCM_CORRECTION);
+
+        // Make constant registers range from 0 to 191 instead of -96 to 95 :
+        // Dxbx note : This should NOT be done version-dependantly!
+        // Dxbx note 2 : Turok shows c[a0.x] indexes must also be corrected
+        // TODO -oDxbx : Find out why MatrixPaletteSkinning is flickering so much
+        Inc(pIntermediate.Parameters[j].Parameter.Address, X_D3DSCM_CORRECTION);
       end else
       if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_V) then
       begin
@@ -2117,6 +2118,7 @@ type _VSH_TYPE_PATCH_DATA = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     NbrTypes: DWORD;
     Types: array [0..256-1] of UINT;
+    NewSizes: array [0..256-1] of UINT;
   end; // size = 1028 (as in Cxbx)
   VSH_TYPE_PATCH_DATA = _VSH_TYPE_PATCH_DATA;
 
@@ -2407,6 +2409,9 @@ begin
     // 2010/01/12 - revel8n - fixed allocated data size and type
     pStreamPatch.pTypes := PUINTs(DxbxMalloc(pPatchData.TypePatchData.NbrTypes * sizeof(UINT)));
     memcpy(pStreamPatch.pTypes, @(pPatchData.TypePatchData.Types[0]), pPatchData.TypePatchData.NbrTypes * sizeof(UINT));
+    // 2010/12/06 - PatrickvL - do the same for new sizes :
+    pStreamPatch.pSizes := PUINTs(DxbxMalloc(pPatchData.TypePatchData.NbrTypes * sizeof(UINT)));
+    memcpy(pStreamPatch.pSizes, @(pPatchData.TypePatchData.NewSizes[0]), pPatchData.TypePatchData.NbrTypes * sizeof(UINT));
 
     Result := TRUE;
     Exit;
@@ -2491,6 +2496,7 @@ var
   VertexRegister: DWORD;
   NewVertexRegister: DWORD;
   DataType: DWORD;
+  NewSize: DWORD;
 {$IFDEF DXBX_USE_D3D9}
   NewDataType: D3DDECLTYPE;
   PrevStream: Integer;
@@ -2518,124 +2524,124 @@ begin
   DataType := (pToken^ shr X_D3DVSD_DATATYPESHIFT) and $FF;
   PDWORD(@NewDataType)^ := 0;
 
-  // save patching information
-  pPatchData.TypePatchData.Types[pPatchData.TypePatchData.NbrTypes] := DataType;
-  Inc(pPatchData.TypePatchData.NbrTypes);
-
-  case(DataType) of
+  case (DataType) of
     { $12=}X_D3DVSDT_FLOAT1: begin
       DbgVshPrintf('D3DVSDT_FLOAT1');
       NewDataType := D3DVSDT_FLOAT1;
-      Inc(pPatchData.ConvertedStride, sizeof(FLOAT));
+      NewSize := 1*sizeof(FLOAT);
     end;
     { $22=}X_D3DVSDT_FLOAT2: begin
       DbgVshPrintf('D3DVSDT_FLOAT2');
       NewDataType := D3DVSDT_FLOAT2;
-      Inc(pPatchData.ConvertedStride, 2*sizeof(FLOAT));
+      NewSize := 2*sizeof(FLOAT);
     end;
     { $32=}X_D3DVSDT_FLOAT3: begin
       DbgVshPrintf('D3DVSDT_FLOAT3');
       NewDataType := D3DVSDT_FLOAT3;
-      Inc(pPatchData.ConvertedStride, 3*sizeof(FLOAT));
+      NewSize := 3*sizeof(FLOAT);
     end;
     { $42=}X_D3DVSDT_FLOAT4: begin
       DbgVshPrintf('D3DVSDT_FLOAT4');
       NewDataType := D3DVSDT_FLOAT4;
-      Inc(pPatchData.ConvertedStride, 4*sizeof(FLOAT));
+      NewSize := 4*sizeof(FLOAT);
     end;
     { $40=}X_D3DVSDT_D3DCOLOR: begin
       DbgVshPrintf('D3DVSDT_D3DCOLOR');
       NewDataType := D3DVSDT_D3DCOLOR;
-      Inc(pPatchData.ConvertedStride, sizeof(D3DCOLOR));
+      NewSize := sizeof(D3DCOLOR);
     end;
     { $25=}X_D3DVSDT_SHORT2: begin
       DbgVshPrintf('D3DVSDT_SHORT2');
       NewDataType := D3DVSDT_SHORT2;
-      Inc(pPatchData.ConvertedStride, 2*sizeof(SHORT));
+      NewSize := 2*sizeof(SHORT);
     end;
     { $45=}X_D3DVSDT_SHORT4: begin
       DbgVshPrintf('D3DVSDT_SHORT4');
       NewDataType := D3DVSDT_SHORT4;
-      Inc(pPatchData.ConvertedStride, 4*sizeof(SHORT));
+      NewSize := 4*sizeof(SHORT);
     end;
     { $11=}X_D3DVSDT_NORMSHORT1: begin
       DbgVshPrintf('D3DVSDT_NORMSHORT1 /* xbox ext. */');
-      NewDataType := D3DVSDT_SHORT2; // hmm, emulation?
-      Inc(pPatchData.ConvertedStride, 2*sizeof(SHORT));
+      NewDataType := D3DVSDT_FLOAT2;
       pPatchData.NeedPatching := TRUE;
+      NewSize := 2*sizeof(FLOAT);
     end;
     { $21=}X_D3DVSDT_NORMSHORT2: begin
-      DbgVshPrintf('D3DVSDT_NORMSHORT2 /* xbox ext. */');
 {$IFDEF DXBX_USE_D3D9}
+      DbgVshPrintf('D3DVSDT_NORMSHORT2');
       NewDataType := D3DVSDT_NORMSHORT2;
+      NewSize := 2*sizeof(SHORT);
 {$ELSE}
-      NewDataType := D3DVSDT_SHORT2;
+      DbgVshPrintf('D3DVSDT_NORMSHORT2 /* xbox ext. */');
+      NewDataType := D3DVSDT_FLOAT2;
       pPatchData.NeedPatching := TRUE;
+      NewSize := 2*sizeof(FLOAT);
 {$ENDIF}
-      Inc(pPatchData.ConvertedStride, 2*sizeof(SHORT));
     end;
     { $31=}X_D3DVSDT_NORMSHORT3: begin
       DbgVshPrintf('D3DVSDT_NORMSHORT3 /* xbox ext. nsp */');
-      NewDataType := D3DVSDT_SHORT4;
-      Inc(pPatchData.ConvertedStride, 4*sizeof(SHORT));
+      NewDataType := D3DVSDT_FLOAT4;
       pPatchData.NeedPatching := TRUE;
+      NewSize := 4*sizeof(FLOAT);
     end;
     { $41=}X_D3DVSDT_NORMSHORT4: begin
-      DbgVshPrintf('D3DVSDT_NORMSHORT4 /* xbox ext. */');
 {$IFDEF DXBX_USE_D3D9}
+      DbgVshPrintf('D3DVSDT_NORMSHORT4');
       NewDataType := D3DVSDT_NORMSHORT4;
+      NewSize := 4*sizeof(SHORT);
 {$ELSE}
-      NewDataType := D3DVSDT_SHORT4;
+      DbgVshPrintf('D3DVSDT_NORMSHORT4 /* xbox ext. */');
+      NewDataType := D3DVSDT_FLOAT4;
       pPatchData.NeedPatching := TRUE;
+      NewSize := 4*sizeof(FLOAT);
 {$ENDIF}
-      Inc(pPatchData.ConvertedStride, 4*sizeof(SHORT));
     end;
     { $16=}X_D3DVSDT_NORMPACKED3: begin
       DbgVshPrintf('D3DVSDT_NORMPACKED3 /* xbox ext. nsp */');
       NewDataType := D3DVSDT_FLOAT3;
-      Inc(pPatchData.ConvertedStride, 3*sizeof(FLOAT));
       pPatchData.NeedPatching := TRUE;
+      NewSize := 3*sizeof(FLOAT);
     end;
     { $15=}X_D3DVSDT_SHORT1: begin
-      DbgVshPrintf('D3DVSDT_SHORT1 /* xbox ext. nsp */');
+      DbgVshPrintf('D3DVSDT_SHORT1 /* xbox ext. */');
       NewDataType := D3DVSDT_SHORT2;
-      Inc(pPatchData.ConvertedStride, 2*sizeof(SHORT));
       pPatchData.NeedPatching := TRUE;
+      NewSize := 2*sizeof(SHORT);
     end;
     { $35=}X_D3DVSDT_SHORT3: begin
-      DbgVshPrintf('D3DVSDT_SHORT3 /* xbox ext. nsp */');
+      DbgVshPrintf('D3DVSDT_SHORT3 /* xbox ext. */');
       NewDataType := D3DVSDT_SHORT4;
-      Inc(pPatchData.ConvertedStride, 4*sizeof(SHORT));
       pPatchData.NeedPatching := TRUE;
+      NewSize := 4*sizeof(SHORT);
     end;
     { $14=}X_D3DVSDT_PBYTE1: begin
-      DbgVshPrintf('D3DVSDT_PBYTE1 /* xbox ext. nsp */');
+      DbgVshPrintf('D3DVSDT_PBYTE1 /* xbox ext. */');
       NewDataType := D3DVSDT_FLOAT1;
-      Inc(pPatchData.ConvertedStride, 1*sizeof(FLOAT));
       pPatchData.NeedPatching := TRUE;
+      NewSize := 1*sizeof(FLOAT);
     end;
     { $24=}X_D3DVSDT_PBYTE2: begin
-      DbgVshPrintf('D3DVSDT_PBYTE2 /* xbox ext. nsp */');
+      DbgVshPrintf('D3DVSDT_PBYTE2 /* xbox ext. */');
       NewDataType := D3DVSDT_FLOAT2;
-      Inc(pPatchData.ConvertedStride, 2*sizeof(FLOAT));
       pPatchData.NeedPatching := TRUE;
+      NewSize := 2*sizeof(FLOAT);
     end;
     { $34=}X_D3DVSDT_PBYTE3: begin
-      DbgVshPrintf('D3DVSDT_PBYTE3 /* xbox ext. nsp */');
+      DbgVshPrintf('D3DVSDT_PBYTE3 /* xbox ext. */');
       NewDataType := D3DVSDT_FLOAT3;
-      Inc(pPatchData.ConvertedStride, 3*sizeof(FLOAT));
       pPatchData.NeedPatching := TRUE;
+      NewSize := 3*sizeof(FLOAT);
     end;
     { $44=}X_D3DVSDT_PBYTE4: begin
       DbgVshPrintf('D3DVSDT_PBYTE4 /* xbox ext. */');
       NewDataType := D3DVSDT_FLOAT4;
-      Inc(pPatchData.ConvertedStride, 4*sizeof(FLOAT));
+      NewSize := 4*sizeof(FLOAT);
     end;
     { $72=}X_D3DVSDT_FLOAT2H: begin
       DbgVshPrintf('D3DVSDT_FLOAT2H /* xbox ext. */');
-      NewDataType := D3DVSDT_FLOAT3;
-      Inc(pPatchData.ConvertedStride, 3*sizeof(FLOAT));
+      NewDataType := D3DVSDT_FLOAT4;
       pPatchData.NeedPatching := TRUE;
+      NewSize := 4*sizeof(FLOAT);
     end;
     { $02=}X_D3DVSDT_NONE: begin
       DbgVshPrintf('D3DVSDT_NONE /* xbox ext. nsp */');
@@ -2648,6 +2654,14 @@ begin
   else // default:
     DbgVshPrintf('Unknown data type for D3DVSD_REG: 0x%02X'#13#10, [DataType]);
   end;
+
+  // save patching information
+  pPatchData.TypePatchData.Types[pPatchData.TypePatchData.NbrTypes] := DataType;
+  pPatchData.TypePatchData.NewSizes[pPatchData.TypePatchData.NbrTypes] := NewSize;
+  Inc(pPatchData.TypePatchData.NbrTypes);
+
+  Inc(pPatchData.ConvertedStride, NewSize);
+
 {$IFDEF DXBX_USE_D3D9}
   PrevStream := pRecompiled^.Stream;
   Inc(pRecompiled); // Step to next element
@@ -2926,6 +2940,9 @@ begin
   begin
     DxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches[i].pTypes);
     pVertexShader.VertexDynamicPatch.pStreamPatches[i].pTypes := nil;
+
+    DxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches[i].pSizes);
+    pVertexShader.VertexDynamicPatch.pStreamPatches[i].pSizes := nil;
   end;
   DxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches);
   pVertexShader.VertexDynamicPatch.pStreamPatches := NULL;

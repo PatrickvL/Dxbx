@@ -658,7 +658,7 @@ function EmuXB2PC_PSConstant(Value: X_D3DRenderStateType): DWORD;
 begin
   // TODO : Once the pixel shader generates a mapping table, use that here!
   case Value of
-(* TODO -o: Is this the real mapping, or do we need to do something else?
+// TODO -o: Is this the real mapping, or do we need to do something else?
     X_D3DRS_PSCONSTANT0_0: Result := 0;
     X_D3DRS_PSCONSTANT0_1: Result := 1;
     X_D3DRS_PSCONSTANT0_2: Result := 2;
@@ -676,7 +676,7 @@ begin
     X_D3DRS_PSCONSTANT1_5: Result := 13;
     X_D3DRS_PSCONSTANT1_6: Result := 14;
     X_D3DRS_PSCONSTANT1_7: Result := 15;
-*)
+(** )
     X_D3DRS_PSCONSTANT0_0: Result := 0;
     X_D3DRS_PSCONSTANT0_1: Result := 2;
     X_D3DRS_PSCONSTANT0_2: Result := 4;
@@ -694,7 +694,7 @@ begin
     X_D3DRS_PSCONSTANT1_5: Result := 11;
     X_D3DRS_PSCONSTANT1_6: Result := 13;
     X_D3DRS_PSCONSTANT1_7: Result := 15;
-
+*)
     X_D3DRS_PSFINALCOMBINERCONSTANT0: Result := 16;
     X_D3DRS_PSFINALCOMBINERCONSTANT1: Result := 17;
   else
