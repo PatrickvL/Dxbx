@@ -663,6 +663,8 @@ var
   pNewVertexBuffer: XTL_PIDirect3DVertexBuffer8;
   pOrigData: Puint08;
   pNewData: Puint08;
+  pOrigVertex: Puint08;
+  pNewDataPos: Puint08;
 {$IFDEF DXBX_USE_D3D9}
   uiOffsetInBytes: UINT;
 {$ENDIF}
@@ -673,7 +675,6 @@ var
 
   uiVertex: uint32;
   dwPosOrig: DWORD;
-  dwPosNew: DWORD;
   uiType: UINT;
   dwPacked: int; // needs to be signed
 begin
@@ -760,189 +761,113 @@ begin
   for uiVertex := 0 to pPatchDesc.dwVertexCount - 1 do
   begin
     dwPosOrig := 0;
-    dwPosNew := 0;
+    pOrigVertex := @pOrigData[uiVertex * uiStride];
+    pNewDataPos := @pNewData[uiVertex * pStreamPatch.ConvertedStride];
     for uiType := 0 to pStreamPatch.NbrTypes - 1 do
     begin
-      // TODO -oDxbx : Simplify the following, by copying all the no-conversion-needed cases
-      // with a single piece of code (we only need to determine the size for them).
-      // Also, the offset calculations done in every case could be done once before the case,
-      // just like we could also increment the dwPosOrig variable once after the case block.
-
-      case(pStreamPatch.pTypes[uiType]) of
-        X_D3DVSDT_FLOAT1: begin
-          memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                 @pOrigData[uiVertex * uiStride + dwPosOrig],
-                 sizeof(FLOAT));
-          Inc(dwPosOrig, sizeof(FLOAT));
-          Inc(dwPosNew, sizeof(FLOAT));
-        end;
-        X_D3DVSDT_FLOAT2: begin
-          memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                 @pOrigData[uiVertex * uiStride + dwPosOrig],
-                 2 * sizeof(FLOAT));
-          Inc(dwPosOrig, 2 * sizeof(FLOAT));
-          Inc(dwPosNew, 2 * sizeof(FLOAT));
-        end;
-        X_D3DVSDT_FLOAT3: begin
-          memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                 @pOrigData[uiVertex * uiStride + dwPosOrig],
-                 3 * sizeof(FLOAT));
-          Inc(dwPosOrig, 3 * sizeof(FLOAT));
-          Inc(dwPosNew, 3 * sizeof(FLOAT));
-        end;
-        X_D3DVSDT_FLOAT4: begin
-          memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                 @pOrigData[uiVertex * uiStride + dwPosOrig],
-                 4 * sizeof(FLOAT));
-          Inc(dwPosOrig, 4 * sizeof(FLOAT));
-          Inc(dwPosNew, 4 * sizeof(FLOAT));
-        end;
-        X_D3DVSDT_D3DCOLOR: begin
-          memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                 @pOrigData[uiVertex * uiStride + dwPosOrig],
-                 sizeof(D3DCOLOR));
-          Inc(dwPosOrig, sizeof(D3DCOLOR));
-          Inc(dwPosNew, sizeof(D3DCOLOR));
-        end;
-        X_D3DVSDT_NORMPACKED3: begin
-          // Make it a FLOAT3
-          dwPacked := int(PDWORDs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0]);
+      // Dxbx note : The following code handles only the D3DVSDT enums that need conversion;
+      // All other cases are catched by the memcpy in the else-block.
+      case (pStreamPatch.pTypes[uiType]) of
+        X_D3DVSDT_NORMPACKED3: begin // Make it FLOAT3
+          dwPacked := int(PDWORDs(@pOrigVertex[dwPosOrig])[0]);
 
           // Dxbx note : Be aware that shr doesn't do sign-extension in Delphi, so we need to div here to handle the sign correctly :
           // See http://galfar.vevb.net/wp/2009/11/shift-right-delphi-vs-c/
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := (ToFLOAT((dwPacked       ) div (1 shl 22))) / 511.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := (ToFLOAT((dwPacked shl 11) div (1 shl 22))) / 1023.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := (ToFLOAT((dwPacked shl 22) div (1 shl 22))) / 1023.0;
+          PFLOATs(pNewDataPos)[0] := (ToFLOAT((dwPacked shl 21) div (1 shl 21))) / 1023.0;
+          PFLOATs(pNewDataPos)[1] := (ToFLOAT((dwPacked shl 10) div (1 shl 21))) / 1023.0;
+          PFLOATs(pNewDataPos)[2] := (ToFLOAT((dwPacked       ) div (1 shl 22))) /  511.0;
 
           Inc(dwPosOrig, sizeof(DWORD));
-          Inc(dwPosNew, 3 * sizeof(FLOAT));
         end;
-        X_D3DVSDT_SHORT1: begin
-          // Make it a SHORT2 and set the second short to 0
-          PSHORTs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := PSHORT(@pOrigData[uiVertex * uiStride + dwPosOrig])^;
-          PSHORTs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := $00;
+
+        X_D3DVSDT_SHORT1: begin // Make it SHORT2 and set the second short to 0
+          PSHORTs(pNewDataPos)[0] := PSHORT(@pOrigVertex[dwPosOrig])^;
+          PSHORTs(pNewDataPos)[1] := $00;
 
           Inc(dwPosOrig, 1 * sizeof(SHORT));
-          Inc(dwPosNew, 2 * sizeof(SHORT));
         end;
-        X_D3DVSDT_SHORT2: begin
-          memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                 @pOrigData[uiVertex * uiStride+dwPosOrig],
-                 2 * sizeof(SHORT));
-          Inc(dwPosOrig, 2 * sizeof(SHORT));
-          Inc(dwPosNew, 2 * sizeof(SHORT));
-        end;
-        X_D3DVSDT_SHORT3: begin
-          memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                 @pOrigData[uiVertex * uiStride + dwPosOrig],
+
+        X_D3DVSDT_SHORT3: begin // Make it SHORT4 and set the last short to 1
+          memcpy(pNewDataPos,
+                 @pOrigVertex[dwPosOrig],
                  3 * sizeof(SHORT));
-          // Make it a SHORT4 and set the last short to 1
-          PSHORTs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[3] := $01;
+          PSHORTs(pNewDataPos)[3] := $01;
 
           Inc(dwPosOrig, 3 * sizeof(SHORT));
-          Inc(dwPosNew, 4 * sizeof(SHORT));
         end;
-        X_D3DVSDT_SHORT4: begin
-          memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                 @pOrigData[uiVertex * uiStride + dwPosOrig],
-                 4 * sizeof(SHORT));
-          Inc(dwPosOrig, 4 * sizeof(SHORT));
-          Inc(dwPosNew, 4 * sizeof(SHORT));
-        end;
-        X_D3DVSDT_PBYTE1: begin
-          // Make it FLOAT1
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ToFLOAT(PBYTEs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0;
+
+        X_D3DVSDT_PBYTE1: begin // Make it FLOAT1
+          PFLOATs(pNewDataPos)[0] := ToFLOAT(PBYTEs(@pOrigVertex[dwPosOrig])[0]) / 255.0;
 
           Inc(dwPosOrig, 1 * sizeof(BYTE));
-          Inc(dwPosNew, 1 * sizeof(FLOAT));
         end;
-        X_D3DVSDT_PBYTE2: begin
-          // Make it FLOAT2
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ToFLOAT(PBYTEs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ToFLOAT(PBYTEs(@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0;
+
+        X_D3DVSDT_PBYTE2: begin // Make it FLOAT2
+          PFLOATs(pNewDataPos)[0] := ToFLOAT(PBYTEs(@pOrigVertex[dwPosOrig])[0]) / 255.0;
+          PFLOATs(pNewDataPos)[1] := ToFLOAT(PBYTEs(@pOrigVertex[dwPosOrig])[1]) / 255.0;
 
           Inc(dwPosOrig, 2 * sizeof(BYTE));
-          Inc(dwPosNew, 2 * sizeof(FLOAT));
         end;
-        X_D3DVSDT_PBYTE3: begin
-          // Make it FLOAT3
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ToFLOAT(PBYTEs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ToFLOAT(PBYTEs(@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ToFLOAT(PBYTEs(@pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 255.0;
+
+        X_D3DVSDT_PBYTE3: begin // Make it FLOAT3
+          PFLOATs(pNewDataPos)[0] := ToFLOAT(PBYTEs(@pOrigVertex[dwPosOrig])[0]) / 255.0;
+          PFLOATs(pNewDataPos)[1] := ToFLOAT(PBYTEs(@pOrigVertex[dwPosOrig])[1]) / 255.0;
+          PFLOATs(pNewDataPos)[2] := ToFLOAT(PBYTEs(@pOrigVertex[dwPosOrig])[2]) / 255.0;
 
           Inc(dwPosOrig, 3 * sizeof(BYTE));
-          Inc(dwPosNew, 3 * sizeof(FLOAT));
         end;
-        X_D3DVSDT_PBYTE4: begin
-          // Make it FLOAT4
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ToFLOAT(PBYTEs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ToFLOAT(PBYTEs(@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ToFLOAT(PBYTEs(@pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 255.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[3] := ToFLOAT(PBYTEs(@pOrigData[uiVertex * uiStride + dwPosOrig])[3]) / 255.0;
+
+        X_D3DVSDT_PBYTE4: begin // Make it FLOAT4
+          PFLOATs(pNewDataPos)[0] := ToFLOAT(PBYTEs(@pOrigVertex[dwPosOrig])[0]) / 255.0;
+          PFLOATs(pNewDataPos)[1] := ToFLOAT(PBYTEs(@pOrigVertex[dwPosOrig])[1]) / 255.0;
+          PFLOATs(pNewDataPos)[2] := ToFLOAT(PBYTEs(@pOrigVertex[dwPosOrig])[2]) / 255.0;
+          PFLOATs(pNewDataPos)[3] := ToFLOAT(PBYTEs(@pOrigVertex[dwPosOrig])[3]) / 255.0;
 
           Inc(dwPosOrig, 4 * sizeof(BYTE));
-          Inc(dwPosNew, 4 * sizeof(FLOAT));
         end;
-        X_D3DVSDT_NORMSHORT1: begin
-          // Make it FLOAT1
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ToFLOAT(PSHORTs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0;
+
+        X_D3DVSDT_NORMSHORT1: begin // Make it FLOAT2 and set the second float to 0
+          PFLOATs(pNewDataPos)[0] := ToFLOAT(PSHORTs(@pOrigVertex[dwPosOrig])[0]) / 32767.0;
+          PFLOATs(pNewDataPos)[1] := 0.0;
 
           Inc(dwPosOrig, 1 * sizeof(SHORT));
-          Inc(dwPosNew, 1 * sizeof(FLOAT));
         end;
-        X_D3DVSDT_NORMSHORT2: begin
-{$IFDEF DXBX_USE_D3D9} // No need for patching in D3D9
-          memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                 @pOrigData[uiVertex * uiStride+dwPosOrig],
-                 2 * sizeof(SHORT));
-          Inc(dwPosOrig, 2 * sizeof(SHORT));
-          Inc(dwPosNew, 2 * sizeof(SHORT));
-{$ELSE}
-          // Make it FLOAT2
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ToFLOAT(PSHORTs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ToFLOAT(PSHORTs(@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0;
+
+{$IFNDEF DXBX_USE_D3D9} // No need for patching in D3D9
+        X_D3DVSDT_NORMSHORT2: begin // Make it FLOAT2
+          PFLOATs(pNewDataPos)[0] := ToFLOAT(PSHORTs(@pOrigVertex[dwPosOrig])[0]) / 32767.0;
+          PFLOATs(pNewDataPos)[1] := ToFLOAT(PSHORTs(@pOrigVertex[dwPosOrig])[1]) / 32767.0;
 
           Inc(dwPosOrig, 2 * sizeof(SHORT));
-          Inc(dwPosNew, 2 * sizeof(FLOAT));
-{$ENDIF}
         end;
-        X_D3DVSDT_NORMSHORT3: begin
-          // Make it FLOAT3
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ToFLOAT(PSHORTs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ToFLOAT(PSHORTs(@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ToFLOAT(PSHORTs(@pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 32767.0;
+{$ENDIF}
+
+        X_D3DVSDT_NORMSHORT3: begin // Make it FLOAT3
+          PFLOATs(pNewDataPos)[0] := ToFLOAT(PSHORTs(@pOrigVertex[dwPosOrig])[0]) / 32767.0;
+          PFLOATs(pNewDataPos)[1] := ToFLOAT(PSHORTs(@pOrigVertex[dwPosOrig])[1]) / 32767.0;
+          PFLOATs(pNewDataPos)[2] := ToFLOAT(PSHORTs(@pOrigVertex[dwPosOrig])[2]) / 32767.0;
 
           Inc(dwPosOrig, 3 * sizeof(SHORT));
-          Inc(dwPosNew, 3 * sizeof(FLOAT));
         end;
-        X_D3DVSDT_NORMSHORT4: begin
-{$IFDEF DXBX_USE_D3D9} // No need for patching in D3D9
-          memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                 @pOrigData[uiVertex * uiStride+dwPosOrig],
-                 4 * sizeof(SHORT));
+
+{$IFNDEF DXBX_USE_D3D9} // No need for patching in D3D9
+        X_D3DVSDT_NORMSHORT4: begin // Make it FLOAT4
+          PFLOATs(pNewDataPos)[0] := ToFLOAT(PSHORTs(@pOrigVertex[dwPosOrig])[0]) / 32767.0;
+          PFLOATs(pNewDataPos)[1] := ToFLOAT(PSHORTs(@pOrigVertex[dwPosOrig])[1]) / 32767.0;
+          PFLOATs(pNewDataPos)[2] := ToFLOAT(PSHORTs(@pOrigVertex[dwPosOrig])[2]) / 32767.0;
+          PFLOATs(pNewDataPos)[3] := ToFLOAT(PSHORTs(@pOrigVertex[dwPosOrig])[3]) / 32767.0;
 
           Inc(dwPosOrig, 4 * sizeof(SHORT));
-          Inc(dwPosNew, 4 * sizeof(SHORT));
-{$ELSE}
-          // Make it FLOAT4
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ToFLOAT(PSHORTs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ToFLOAT(PSHORTs(@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ToFLOAT(PSHORTs(@pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 32767.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[3] := ToFLOAT(PSHORTs(@pOrigData[uiVertex * uiStride + dwPosOrig])[3]) / 32767.0;
-
-          Inc(dwPosOrig, 4 * sizeof(SHORT));
-          Inc(dwPosNew, 4 * sizeof(FLOAT));
+        end;
 {$ENDIF}
-        end;
-        X_D3DVSDT_FLOAT2H: begin
-          // Make it FLOAT4 and set the third float to 0
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := PFLOATs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0];
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := PFLOATs(@pOrigData[uiVertex * uiStride + dwPosOrig])[1];
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := 0.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[3] := PFLOATs(@pOrigData[uiVertex * uiStride + dwPosOrig])[2];
+
+        X_D3DVSDT_FLOAT2H: begin // Make it FLOAT4 and set the third float to 0
+          PFLOATs(pNewDataPos)[0] := PFLOATs(@pOrigVertex[dwPosOrig])[0];
+          PFLOATs(pNewDataPos)[1] := PFLOATs(@pOrigVertex[dwPosOrig])[1];
+          PFLOATs(pNewDataPos)[2] := 0.0;
+          PFLOATs(pNewDataPos)[3] := PFLOATs(@pOrigVertex[dwPosOrig])[2];
 
           Inc(dwPosOrig, 3 * sizeof(FLOAT));
-          Inc(dwPosNew, 4 * sizeof(FLOAT));
         end;
       (*TODO -oCXBX:
         X_D3DVSDT_NONE: begin
@@ -950,8 +875,13 @@ begin
           dwNewDataType := $FF;
         end;*)
       else
-          DxbxKrnlCleanup('Unhandled stream type: 0x%.02X', [pStreamPatch.pTypes[uiType]]);
+        // Generic 'conversion' - just make a copy :
+        memcpy(pNewDataPos, @pOrigVertex[dwPosOrig], pStreamPatch.pSizes[uiType]);
+        Inc(dwPosOrig, pStreamPatch.pSizes[uiType]);
       end; // case
+
+      // Increment the new pointer :
+      Inc(UIntPtr(pNewDataPos), pStreamPatch.pSizes[uiType]);
     end;
   end;
 
