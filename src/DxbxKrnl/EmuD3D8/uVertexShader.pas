@@ -2291,12 +2291,14 @@ begin
 
   //pToken = D3DVSD_CONST(ConstantAddress, Count);
 
-  if Count > 0 then // Dxbx addition, to prevent underflow
-  for i := 0 to Count - 1 do
+  Result := Count * 4;
+  if Result > 0 then // Dxbx addition, to prevent underflow
+  for i := 0 to Result - 1 do
   begin
-    DbgVshPrintf(#9'0x%08X,'#13#10, [pToken]);
+    Inc(pToken);
+    DbgVshPrintf(#9'0x%.08X,'#13#10, [pToken^]);
   end;
-  Result := Count;
+  Inc(Result);
 end; // VshConvertToken_CONSTMEM
 
 procedure VshConverToken_TESSELATOR(pToken: PDWORD; pRecompiled: PTokenOutput;
