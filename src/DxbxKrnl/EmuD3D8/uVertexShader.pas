@@ -2523,7 +2523,7 @@ begin
 
   DataType := (pToken^ shr X_D3DVSD_DATATYPESHIFT) and $FF;
   PDWORD(@NewDataType)^ := 0;
-
+  NewSize := 0;
   case (DataType) of
     { $12=}X_D3DVSDT_FLOAT1: begin
       DbgVshPrintf('D3DVSDT_FLOAT1');

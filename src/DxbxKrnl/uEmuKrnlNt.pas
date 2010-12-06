@@ -1602,8 +1602,8 @@ begin
       memcpy(FileInformation, FileDirInfo, Length);
   end
   else
-    // if (Result <> STATUS_thats_okay) then
-    EmuWarning('NtQueryDirectoryFile failed! (%s)', [NTStatusToString(Result)]);
+    if (Result <> STATUS_NO_MORE_FILES) then
+      EmuWarning('NtQueryDirectoryFile failed! (%s)', [NTStatusToString(Result)]);
 
   // TODO -oCXBX: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
   DxbxFree(FileDirInfo);
@@ -2137,6 +2137,7 @@ begin
   if (Result = STATUS_SUCCESS) then
     // do nothing
   else
+    if (Result <> STATUS_PENDING) then
     if (Result <> STATUS_END_OF_FILE) then
       EmuWarning('NtReadFile failed! (%s)', [NTStatusToString(Result)]);
 

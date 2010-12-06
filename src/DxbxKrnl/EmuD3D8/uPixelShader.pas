@@ -3004,6 +3004,9 @@ var
   Op0: PPSH_INTERMEDIATE_FORMAT;
   Op1: PPSH_INTERMEDIATE_FORMAT;
   Op2: PPSH_INTERMEDIATE_FORMAT;
+  CanOptimize: boolean;
+  j: int;
+  k: int;
 begin
   Result := False;
 
@@ -3151,18 +3154,22 @@ begin
     MUL+MOV > MUL (if MUL.Output[0] was only read by MOV.Parameter[0])
     MUL+ADD > MAD (if MUL.Output[0] was only read by ADD.Parameter[0] or ADD.Parameter[1])
     MUL+SUB > MAD (if MUL.Output[0] was only read by SUB.Parameter[0] - Do invert MAD.Parameter[2])
+*)
 
-    // TODO : We can remove a MOV entirely if the input is not changed while
+    // We can remove a MOV entirely if the input is not changed while
     // the output is read, up until the output is re-written; We can change all
-    // these occurances into a read from the input of this MOV instead.
-    if  (Op0.Opcode = PO_MOV) then
+    // these occurances into a read from the input of this MOV instead :
+    // This fixes some shaders in Turok, that are reduced to 8 instead of 9 opcodes.
+    if  (Op0.Opcode = PO_MOV)
+    and (Op0.Modifier = INSMOD_NONE)
+    and (Op0.Output[0].Mask = MASK_RGBA) then
     begin
       CanOptimize := False;
       j := i + 1;
       while j < IntermediateCount do
       begin
         CanOptimize := True;
-        if Intermediate[j].OutputsTo(Op0.Output[0]) then
+        if Intermediate[j].WritesToRegister(Op0.Output[0].Type_, Op0.Output[0].Address, MASK_RGBA) then
           Break;
 
         CanOptimize := False;
@@ -3171,16 +3178,32 @@ begin
 
       if CanOptimize then
       begin
+        // Loop over all instructions in between, and try to replace reads :
+        CanOptimize := False;
         while j > i do
         begin
-          // TODO : For Intermediate[j].Parameters, change all occurrances of Op0.Parameters[0] into Op0.Output[0]
+          // For Intermediate[j].Parameters, change all occurrances of Op0.Output[0] into Op0.Parameters[0] :
+          for k := 0 to PSH_OPCODE_DEFS[Intermediate[j].Opcode]._In - 1 do
+            if  (Intermediate[j].Parameters[k].Type_ = Op0.Output[0].Type_)
+            and (Intermediate[j].Parameters[k].Address = Op0.Output[0].Address) then
+            begin
+              Intermediate[j].Parameters[k].Type_ := Op0.Parameters[0].Type_;
+              Intermediate[j].Parameters[k].Address := Op0.Parameters[0].Address;
+              // Signal that a replacement is actually done :
+              CanOptimize := True;
+            end;
+
           Dec(j);
         end;
 
-        DeleteIntermediate(i);
+        if CanOptimize then
+        begin
+          DeleteIntermediate(i);
+          DbgPrintf('; Moved MOV input into following instructions');
+          Result := True;
+        end;
       end;
     end;
-*)
 
     // Fix Dolphin :
     //  mul r3, r0,t0 ; d0=s0*s1
@@ -3581,16 +3604,51 @@ end; // FixMissingR0a
 function PSH_XBOX_SHADER.FixCoIssuedOpcodes(): Boolean;
 var
   PrevMask: DWORD;
+  PrevOpcode: PSH_OPCODE;
   i: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
+//  j: int;
+  NewIsCombined: boolean;
 begin
   Result := False;
 
-  // TODO : Shift independent .a instructions up or down so the alpha write combiner can be used more often
-  // TODO : Because "dp3" needs the color/vector pipeline, no color component outputing opcode can be co-issued with it.
+(*
+  // TODO : Shift independent .a instructions up or down so the alpha write combiner can be used more often :
+  for i := 0 to IntermediateCount - 1 do
+  begin
+    Cur := @(Intermediate[i]);
+    // Is this an arithmetic opcode?
+    if Cur.Opcode > PO_TEX then
+    begin
+      // Does this instruction write solely to Alpha?
+      if (Cur.Output[0].Mask = MASK_A) then
+      begin
+        // Look at prior instructions :
+        for j := i - 1 downto 0 do
+        begin
+          // Because "dp3" needs the color/vector pipeline, no color component outputing opcode can be co-issued with it :
+          if (Intermediate[j].Opcode = PO_DP3) then
+            Break;
 
+          // TODO : Test that none of the inputs of 'Cur' are written to (break otherwise)
+
+          // Does a prior instruction skip alpha?
+          if (Intermediate[j].Output[0].Mask and MASK_A) = 0 then
+          begin
+            // TODO : Move instruction up to right below j
+            // Result := True;
+            // Break;
+          end;
+        end;
+      end;
+    end;
+  end;
+*)
+
+  // Update IsCombined flags :
   // Start with Alpha, so the first opcode doesn't become a write-combined opcode (which isn't possible) :
   PrevMask := MASK_A;
+  PrevOpcode := PO_COMMENT;
   for i := 0 to IntermediateCount - 1 do
   begin
     Cur := @(Intermediate[i]);
@@ -3598,13 +3656,18 @@ begin
     if Cur.Opcode > PO_TEX then
     begin
       // Set IsCombined only when previous opcode doesn't write to Alpha, while this opcode writes only to Alpha :
-      if Cur.IsCombined <> ((PrevMask and MASK_A) = 0) and (Cur.Output[0].Mask = MASK_A) then
+      NewIsCombined := (PrevOpcode <> PO_DP3)
+                   and ((PrevMask and MASK_A) = 0)
+                   and (Cur.Output[0].Mask = MASK_A);
+
+      if Cur.IsCombined <> NewIsCombined then
       begin
-        Cur.IsCombined := not Cur.IsCombined;
+        Cur.IsCombined := NewIsCombined;
         Result := True;
       end;
 
       PrevMask := Cur.Output[0].Mask;
+      PrevOpcode := Cur.Opcode;
     end;
   end;
 end;

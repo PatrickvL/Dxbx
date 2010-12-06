@@ -791,7 +791,7 @@ begin
           memcpy(pNewDataPos,
                  @pOrigVertex[dwPosOrig],
                  3 * sizeof(SHORT));
-          PSHORTs(pNewDataPos)[3] := $01;
+          PSHORTs(pNewDataPos)[3] := 1; // Dxbx note : NOT 32767 !
 
           Inc(dwPosOrig, 3 * sizeof(SHORT));
         end;
