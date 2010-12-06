@@ -371,6 +371,10 @@ begin
   HandlerHandle := AddVectoredExceptionHandler(
     {FirstHandler=}High(Cardinal),
     {VectoredHandler=}@EmuException);
+// Use this to test :
+//  asm
+//    WBINVD
+//  end;
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuMain : Initializing Direct3D.');
@@ -428,8 +432,9 @@ begin
     end;
   end;
 
-  // Restore original exception filter :
-  RemoveVectoredExceptionHandler(HandlerHandle);
+  // Dxbx Note : DO NOT restore original exception filter,
+  // as other threads continue running past this point :
+  // RemoveVectoredExceptionHandler(HandlerHandle);
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuMain : Initial thread ended.');
