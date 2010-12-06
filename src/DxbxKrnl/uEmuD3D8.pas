@@ -693,7 +693,7 @@ var
     XFormat := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
     Width := SurfaceDesc.Width;
     Height := SurfaceDesc.Height;
-    Pitch := SurfaceDesc.Size div Height;
+    Pitch := GetSurfaceSize(@SurfaceDesc) div Height;
     Levels := 1; // Surfaces have 1 mipmap level
     Dimensions := 2;
   end;
@@ -703,7 +703,7 @@ var
     XFormat := EmuPC2XB_D3DFormat(VolumeDesc.Format);
     Width := VolumeDesc.Width;
     Height := VolumeDesc.Height;
-    Pitch := VolumeDesc.Size div Height;
+    Pitch := GetVolumeSize(@VolumeDesc) div Height;
     Levels := VolumeDesc.Depth; // ?
     Dimensions := 3;
   end;

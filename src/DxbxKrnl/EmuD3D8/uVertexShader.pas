@@ -2562,7 +2562,7 @@ begin
     end;
     { $11=}X_D3DVSDT_NORMSHORT1: begin
       DbgVshPrintf('D3DVSDT_NORMSHORT1 /* xbox ext. */');
-      NewDataType := D3DVSDT_FLOAT2;
+      NewDataType := D3DVSDT_FLOAT2; // TODO -oDxbx : Is it better to use D3DVSDT_NORMSHORT2 in Direct3D9 ?
       pPatchData.NeedPatching := TRUE;
       NewSize := 2*sizeof(FLOAT);
     end;
@@ -2580,7 +2580,7 @@ begin
     end;
     { $31=}X_D3DVSDT_NORMSHORT3: begin
       DbgVshPrintf('D3DVSDT_NORMSHORT3 /* xbox ext. nsp */');
-      NewDataType := D3DVSDT_FLOAT4;
+      NewDataType := D3DVSDT_FLOAT4; // TODO -oDxbx : Is it better to use D3DVSDT_NORMSHORT4 in Direct3D9 ?
       pPatchData.NeedPatching := TRUE;
       NewSize := 4*sizeof(FLOAT);
     end;
@@ -2597,7 +2597,7 @@ begin
 {$ENDIF}
     end;
     { $16=}X_D3DVSDT_NORMPACKED3: begin
-      DbgVshPrintf('D3DVSDT_NORMPACKED3 /* xbox ext. nsp */');
+      DbgVshPrintf('D3DVSDT_NORMPACKED3 /* xbox ext. */');
       NewDataType := D3DVSDT_FLOAT3;
       pPatchData.NeedPatching := TRUE;
       NewSize := 3*sizeof(FLOAT);
@@ -2616,25 +2616,25 @@ begin
     end;
     { $14=}X_D3DVSDT_PBYTE1: begin
       DbgVshPrintf('D3DVSDT_PBYTE1 /* xbox ext. */');
-      NewDataType := D3DVSDT_FLOAT1;
+      NewDataType := D3DVSDT_FLOAT1; // TODO -oDxbx : Is it better to use D3DVSDT_NORMSHORT2 in Direct3D9 ?
       pPatchData.NeedPatching := TRUE;
       NewSize := 1*sizeof(FLOAT);
     end;
     { $24=}X_D3DVSDT_PBYTE2: begin
       DbgVshPrintf('D3DVSDT_PBYTE2 /* xbox ext. */');
-      NewDataType := D3DVSDT_FLOAT2;
+      NewDataType := D3DVSDT_FLOAT2; // TODO -oDxbx : Is it better to use D3DVSDT_NORMSHORT2 in Direct3D9 ?
       pPatchData.NeedPatching := TRUE;
       NewSize := 2*sizeof(FLOAT);
     end;
     { $34=}X_D3DVSDT_PBYTE3: begin
       DbgVshPrintf('D3DVSDT_PBYTE3 /* xbox ext. */');
-      NewDataType := D3DVSDT_FLOAT3;
+      NewDataType := D3DVSDT_FLOAT3; // TODO -oDxbx : Is it better to use D3DVSDT_NORMSHORT4 in Direct3D9 ?
       pPatchData.NeedPatching := TRUE;
       NewSize := 3*sizeof(FLOAT);
     end;
     { $44=}X_D3DVSDT_PBYTE4: begin
       DbgVshPrintf('D3DVSDT_PBYTE4 /* xbox ext. */');
-      NewDataType := D3DVSDT_FLOAT4;
+      NewDataType := D3DVSDT_FLOAT4; // TODO -oDxbx : Is it better to use D3DVSDT_NORMSHORT4 or D3DDECLTYPE_UBYTE4N (if in caps) in Direct3D9 ?
       NewSize := 4*sizeof(FLOAT);
     end;
     { $72=}X_D3DVSDT_FLOAT2H: begin
