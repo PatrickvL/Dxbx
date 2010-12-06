@@ -464,6 +464,7 @@ function ByteLength(const aStr: WideString): Integer;
 
 function LastChar(const aStr: string): Char;
 
+function ToFLOAT(const aValue: int): FLOAT; overload;
 function ToFLOAT(const aValue: DWORD): FLOAT; overload;
 function ToFLOAT(const aValue: SHORT): FLOAT; overload;
 
@@ -849,6 +850,11 @@ begin
     Result := aStr[Length(aStr)]
   else
     Result := #0;
+end;
+
+function ToFLOAT(const aValue: int): FLOAT;
+begin
+  Result := 0.0 + aValue;
 end;
 
 function ToFLOAT(const aValue: DWORD): FLOAT;

@@ -97,7 +97,7 @@ const VSH_XBOX_MAX_INSTRUCTION_COUNT =  136;  // The maximum Xbox shader instruc
 const VSH_MAX_INTERMEDIATE_COUNT =      1024; // The maximum number of intermediate format slots
 
 // Local types
-type _VSH_FIELD_NAME = 
+type _VSH_FIELD_NAME =
 (
     FLD_ILU = 0,
     FLD_MAC,
@@ -152,7 +152,7 @@ type _VSH_FIELD_NAME =
 );
 VSH_FIELD_NAME = _VSH_FIELD_NAME;
 
-type _VSH_OREG_NAME = 
+type _VSH_OREG_NAME =
 (
     OREG_OPOS,    //  0
     OREG_UNUSED1, //  1
@@ -205,7 +205,7 @@ type _VSH_PARAMETER_TYPE =
 );
 VSH_PARAMETER_TYPE = _VSH_PARAMETER_TYPE;
 
-type _VSH_OUTPUT_TYPE = 
+type _VSH_OUTPUT_TYPE =
 (
     OUTPUT_C = 0,
     OUTPUT_O
@@ -1232,7 +1232,7 @@ begin
 end;
 
 procedure VshInsertIntermediate(pShader: PVSH_XBOX_SHADER;
-                                pIntermediate: PVSH_INTERMEDIATE_FORMAT; 
+                                pIntermediate: PVSH_INTERMEDIATE_FORMAT;
                                 Pos: uint16);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
@@ -1262,8 +1262,8 @@ begin
   Dec(pShader.IntermediateCount);
 end;
 
-function VshAddInstructionMAC_R(pInstruction: PVSH_SHADER_INSTRUCTION; 
-                                pShader: PVSH_XBOX_SHADER; 
+function VshAddInstructionMAC_R(pInstruction: PVSH_SHADER_INSTRUCTION;
+                                pShader: PVSH_XBOX_SHADER;
                                 IsCombined: boolean): boolean;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
@@ -1293,8 +1293,8 @@ begin
   Result := TRUE;
 end; // VshAddInstructionMAC_R
 
-function VshAddInstructionMAC_O(pInstruction: PVSH_SHADER_INSTRUCTION; 
-                                pShader: PVSH_XBOX_SHADER; 
+function VshAddInstructionMAC_O(pInstruction: PVSH_SHADER_INSTRUCTION;
+                                pShader: PVSH_XBOX_SHADER;
                                 IsCombined: boolean): boolean;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
@@ -1327,8 +1327,8 @@ begin
   Result := TRUE;
 end; // VshAddInstructionMAC_O
 
-function VshAddInstructionMAC_ARL(pInstruction: PVSH_SHADER_INSTRUCTION; 
-                                  pShader: PVSH_XBOX_SHADER; 
+function VshAddInstructionMAC_ARL(pInstruction: PVSH_SHADER_INSTRUCTION;
+                                  pShader: PVSH_XBOX_SHADER;
                                   IsCombined: boolean): boolean;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
@@ -1357,8 +1357,8 @@ begin
   Result := TRUE;
 end; // VshAddInstructionMAC_ARL
 
-function VshAddInstructionILU_R(pInstruction: PVSH_SHADER_INSTRUCTION; 
-                                pShader: PVSH_XBOX_SHADER; 
+function VshAddInstructionILU_R(pInstruction: PVSH_SHADER_INSTRUCTION;
+                                pShader: PVSH_XBOX_SHADER;
                                 IsCombined: boolean): boolean;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
@@ -1392,8 +1392,8 @@ begin
   Result := TRUE;
 end; // VshAddInstructionILU_R
 
-function VshAddInstructionILU_O(pInstruction: PVSH_SHADER_INSTRUCTION; 
-                                pShader: PVSH_XBOX_SHADER; 
+function VshAddInstructionILU_O(pInstruction: PVSH_SHADER_INSTRUCTION;
+                                pShader: PVSH_XBOX_SHADER;
                                 IsCombined: boolean): boolean;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
@@ -1426,7 +1426,7 @@ begin
   Result := TRUE;
 end; // VshAddInstructionILU_O
 
-procedure VshConvertToIntermediate(pInstruction: PVSH_SHADER_INSTRUCTION; 
+procedure VshConvertToIntermediate(pInstruction: PVSH_SHADER_INSTRUCTION;
                                    pShader: PVSH_XBOX_SHADER);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
@@ -1519,7 +1519,7 @@ begin
 end;
 
 procedure VshSetMask(pMask: PDxbxMask;
-                           MaskX: boolean; 
+                           MaskX: boolean;
                            MaskY: boolean;
                            MaskZ: boolean;
                            MaskW: boolean); inline;
@@ -2391,7 +2391,7 @@ function VshAddStreamPatch(pPatchData: PVSH_PATCH_DATA): boolean;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   CurrentStream: int;
-  pStreamPatch: STREAM_DYNAMIC_PATCH;
+  pStreamPatch: PSTREAM_DYNAMIC_PATCH;
 begin
   CurrentStream := int(pPatchData.StreamPatchData.NbrStreams) - 1;
 
@@ -2399,7 +2399,7 @@ begin
   begin
     DbgVshPrintf(#9'// NeedPatching: %s'#13#10, [iif(pPatchData.NeedPatching, 'YES', 'NO')]);
 
-    pStreamPatch := pPatchData.StreamPatchData.pStreamPatches[CurrentStream];
+    pStreamPatch := @(pPatchData.StreamPatchData.pStreamPatches[CurrentStream]);
 
     pStreamPatch.ConvertedStride := pPatchData.ConvertedStride;
     pStreamPatch.NbrTypes := pPatchData.TypePatchData.NbrTypes;
@@ -2692,7 +2692,7 @@ begin
 end; // VshConvertToken_STREAMDATA
 
 function VshRecompileToken(pToken: PDWORD; pRecompiled: PTokenOutput;
-                           IsFixedFunction: boolean; 
+                           IsFixedFunction: boolean;
                            pPatchData: PVSH_PATCH_DATA): DWORD;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
@@ -2826,7 +2826,7 @@ begin
   end;
   pShader.ShaderHeader := pShaderHeader^;
   case(pShaderHeader.Version) of
-    VERSION_XVS: 
+    VERSION_XVS:
       ;
     VERSION_XVSS:
       begin

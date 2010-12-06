@@ -675,7 +675,7 @@ var
   dwPosOrig: DWORD;
   dwPosNew: DWORD;
   uiType: UINT;
-  dwPacked: DWORD;
+  dwPacked: int; // needs to be signed
 begin
   // FVF buffers doesn't have Xbox extensions, but texture coordinates may
   // need normalization if used with linear textures.
@@ -806,11 +806,13 @@ begin
         end;
         X_D3DVSDT_NORMPACKED3: begin
           // Make it a FLOAT3
-          dwPacked := PDWORDs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0];
+          dwPacked := int(PDWORDs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0]);
 
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := (ToFLOAT((dwPacked shr  0) and $7ff)) / 1023.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := (ToFLOAT((dwPacked shr 11) and $7ff)) / 1023.0;
-          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := (ToFLOAT((dwPacked shr 22) and $3ff)) / 511.0;
+          // Dxbx note : Be aware that shr doesn't do sign-extension in Delphi, so we need to div here to handle the sign correctly :
+          // See http://galfar.vevb.net/wp/2009/11/shift-right-delphi-vs-c/
+          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := (ToFLOAT((dwPacked       ) div (1 shl 22))) / 511.0;
+          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := (ToFLOAT((dwPacked shl 11) div (1 shl 22))) / 1023.0;
+          PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := (ToFLOAT((dwPacked shl 22) div (1 shl 22))) / 1023.0;
 
           Inc(dwPosOrig, sizeof(DWORD));
           Inc(dwPosNew, 3 * sizeof(FLOAT));
