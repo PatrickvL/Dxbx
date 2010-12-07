@@ -2332,8 +2332,8 @@ const
 type
   PD3DAdapterIdentifier8 = ^TD3DAdapterIdentifier8;
   _D3DADAPTER_IDENTIFIER8 = packed record
-    Driver      : array [0..MAX_DEVICE_IDENTIFIER_STRING-1] of Char;
-    Description : array [0..MAX_DEVICE_IDENTIFIER_STRING-1] of Char;
+    Driver      : array [0..MAX_DEVICE_IDENTIFIER_STRING-1] of AnsiChar;
+    Description : array [0..MAX_DEVICE_IDENTIFIER_STRING-1] of AnsiChar;
 
     DriverVersionLowPart        : DWord;     { Defined for 16 bit driver components }
     DriverVersionHighPart       : DWord;

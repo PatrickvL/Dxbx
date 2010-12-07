@@ -281,34 +281,34 @@ type
 
 function RLogStackHelper._(const aValue: X_D3DPOOL; const aName: string = ''): PLogStack;
 begin
-  Result := SetName(aName, 'X_D3DPOOL');
+  Result := _New.SetName(aName, 'X_D3DPOOL');
   // D3DPoolToString :
   case aValue of
-    D3DPOOL_DEFAULT: SetValue(UIntPtr(aValue), 'D3DPOOL_DEFAULT');
-    D3DPOOL_MANAGED: SetValue(UIntPtr(aValue), 'D3DPOOL_MANAGED');
-    D3DPOOL_SYSTEMMEM: SetValue(UIntPtr(aValue), 'D3DPOOL_SYSTEMMEM');
-    D3DPOOL_SCRATCH: SetValue(UIntPtr(aValue), 'D3DPOOL_SCRATCH');
-  else SetValue(UIntPtr(aValue));
+    D3DPOOL_DEFAULT: Result.SetValue(UIntPtr(aValue), 'D3DPOOL_DEFAULT');
+    D3DPOOL_MANAGED: Result.SetValue(UIntPtr(aValue), 'D3DPOOL_MANAGED');
+    D3DPOOL_SYSTEMMEM: Result.SetValue(UIntPtr(aValue), 'D3DPOOL_SYSTEMMEM');
+    D3DPOOL_SCRATCH: Result.SetValue(UIntPtr(aValue), 'D3DPOOL_SCRATCH');
+  else Result.SetValue(UIntPtr(aValue));
   end;
 end;
 
 function RLogStackHelper._(const aValue: X_D3DTRANSFORMSTATETYPE; const aName: string = ''): PLogStack;
 begin
-  Result := SetName(aName, 'X_D3DTRANSFORMSTATETYPE');
+  Result := _New.SetName(aName, 'X_D3DTRANSFORMSTATETYPE');
   case aValue of
-    X_D3DTS_VIEW: SetValue(UIntPtr(aValue), 'X_D3DTS_VIEW');
-    X_D3DTS_PROJECTION: SetValue(UIntPtr(aValue), 'X_D3DTS_PROJECTION');
-    X_D3DTS_TEXTURE0: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE0');
-    X_D3DTS_TEXTURE1: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE1');
-    X_D3DTS_TEXTURE2: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE2');
-    X_D3DTS_TEXTURE3: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE3');
-    X_D3DTS_WORLD: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD');
-    X_D3DTS_WORLD1: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD1');
-    X_D3DTS_WORLD2: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD2');
-    X_D3DTS_WORLD3: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD3');
-    X_D3DTS_MAX: SetValue(UIntPtr(aValue), 'X_D3DTS_MAX');
-    X_D3DTS_FORCE_DWORD: SetValue(UIntPtr(aValue), 'X_D3DTS_FORCE_DWORD');
-  else SetValue(UIntPtr(aValue));
+    X_D3DTS_VIEW: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_VIEW');
+    X_D3DTS_PROJECTION: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_PROJECTION');
+    X_D3DTS_TEXTURE0: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE0');
+    X_D3DTS_TEXTURE1: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE1');
+    X_D3DTS_TEXTURE2: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE2');
+    X_D3DTS_TEXTURE3: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE3');
+    X_D3DTS_WORLD: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD');
+    X_D3DTS_WORLD1: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD1');
+    X_D3DTS_WORLD2: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD2');
+    X_D3DTS_WORLD3: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD3');
+    X_D3DTS_MAX: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_MAX');
+    X_D3DTS_FORCE_DWORD: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_FORCE_DWORD');
+  else Result.SetValue(UIntPtr(aValue));
   end;
 end;
 
@@ -316,34 +316,34 @@ function RLogStackHelper._(const aValue: X_D3DPRIMITIVETYPE; const aName: string
 var
   Str: string;
 begin
-  Result := SetName(aName, 'X_D3DPRIMITIVETYPE');
+  Result := _New.SetName(aName, 'X_D3DPRIMITIVETYPE');
   Str := X_D3DPRIMITIVETYPE2String(aValue);
   if Str <> '' then
-    SetValue(UIntPtr(aValue), Str)
+    Result.SetValue(UIntPtr(aValue), Str)
   else
-    SetValue(UIntPtr(aValue));
+    Result.SetValue(UIntPtr(aValue));
 end;
 
 function RLogStackHelper._(const aValue: X_D3DFORMAT; const aName: string = ''): PLogStack;
 var
   Str: string;
 begin
-  Result := SetName(aName, 'X_D3DFORMAT');
+  Result := _New.SetName(aName, 'X_D3DFORMAT');
   Str := X_D3DFORMAT2String(aValue);
   if Str <> '' then
-    SetValue(UIntPtr(aValue), Str)
+    Result.SetValue(UIntPtr(aValue), Str)
   else
-    SetValue(UIntPtr(aValue));
+    Result.SetValue(UIntPtr(aValue));
 end;
 
 function RLogStackHelper._(const aValue: D3DDEVTYPE; const aName: string = ''): PLogStack;
 begin
-  Result := SetName(aName, 'D3DDEVTYPE');
+  Result := _New.SetName(aName, 'D3DDEVTYPE');
   case aValue of
-    D3DDEVTYPE_HAL: SetValue(UIntPtr(aValue), 'D3DDEVTYPE_HAL');
-    D3DDEVTYPE_REF: SetValue(UIntPtr(aValue), 'D3DDEVTYPE_REF');
-    D3DDEVTYPE_SW: SetValue(UIntPtr(aValue), 'D3DDEVTYPE_SW');
-  else SetValue(UIntPtr(aValue));
+    D3DDEVTYPE_HAL: Result.SetValue(UIntPtr(aValue), 'D3DDEVTYPE_HAL');
+    D3DDEVTYPE_REF: Result.SetValue(UIntPtr(aValue), 'D3DDEVTYPE_REF');
+    D3DDEVTYPE_SW: Result.SetValue(UIntPtr(aValue), 'D3DDEVTYPE_SW');
+  else Result.SetValue(UIntPtr(aValue));
   end;
 end;
 
@@ -351,89 +351,89 @@ function RLogStackHelper._(const aValue: X_NV2AMETHOD; const aName: string = '')
 var
   rs: X_D3DRenderStateType;
 begin
-  Result := SetName(aName, 'X_NV2AMETHOD');
+  Result := _New.SetName(aName, 'X_NV2AMETHOD');
 
   rs := DxbxXboxMethodToRenderState(aValue);
   if rs in [X_D3DRS_FIRST..X_D3DRS_LAST] then
-    SetValue(UIntPtr(aValue), 'NV2A_' + DxbxRenderStateXB2String[rs])
+    Result.SetValue(UIntPtr(aValue), 'NV2A_' + DxbxRenderStateXB2String[rs])
   else
-    SetValue(UIntPtr(aValue));
+    Result.SetValue(UIntPtr(aValue));
 end;
 
 function RLogStackHelper._(const aValue: X_D3DTEXTURESTAGESTATETYPE; const aName: string = ''): PLogStack;
 begin
-  Result := SetName(aName, 'X_D3DTEXTURESTAGESTATETYPE');
+  Result := _New.SetName(aName, 'X_D3DTEXTURESTAGESTATETYPE');
   case aValue of
-    X_D3DTSS_ADDRESSU: SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSU');
-    X_D3DTSS_ADDRESSV: SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSV');
-    X_D3DTSS_ADDRESSW: SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSW');
-    X_D3DTSS_MAGFILTER: SetValue(UIntPtr(aValue), 'X_D3DTSS_MAGFILTER');
-    X_D3DTSS_MINFILTER: SetValue(UIntPtr(aValue), 'X_D3DTSS_MINFILTER');
-    X_D3DTSS_MIPFILTER: SetValue(UIntPtr(aValue), 'X_D3DTSS_MIPFILTER');
-    X_D3DTSS_MIPMAPLODBIAS: SetValue(UIntPtr(aValue), 'X_D3DTSS_MIPMAPLODBIAS');
-    X_D3DTSS_MAXMIPLEVEL: SetValue(UIntPtr(aValue), 'X_D3DTSS_MAXMIPLEVEL');
-    X_D3DTSS_MAXANISOTROPY: SetValue(UIntPtr(aValue), 'X_D3DTSS_MAXANISOTROPY');
-    X_D3DTSS_COLORKEYOP: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORKEYOP');
-    X_D3DTSS_COLORSIGN: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORSIGN');
-    X_D3DTSS_ALPHAKILL: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAKILL');
-    X_D3DTSS_COLOROP: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLOROP');
-    X_D3DTSS_COLORARG0: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG0');
-    X_D3DTSS_COLORARG1: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG1');
-    X_D3DTSS_COLORARG2: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG2');
-    X_D3DTSS_ALPHAOP: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAOP');
-    X_D3DTSS_ALPHAARG0: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG0');
-    X_D3DTSS_ALPHAARG1: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG1');
-    X_D3DTSS_ALPHAARG2: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG2');
-    X_D3DTSS_RESULTARG: SetValue(UIntPtr(aValue), 'X_D3DTSS_RESULTARG');
-    X_D3DTSS_TEXTURETRANSFORMFLAGS: SetValue(UIntPtr(aValue), 'X_D3DTSS_TEXTURETRANSFORMFLAGS');
-    X_D3DTSS_BUMPENVMAT00: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT00');
-    X_D3DTSS_BUMPENVMAT01: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT01');
-    X_D3DTSS_BUMPENVMAT11: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT11');
-    X_D3DTSS_BUMPENVMAT10: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT10');
-    X_D3DTSS_BUMPENVLSCALE: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVLSCALE');
-    X_D3DTSS_BUMPENVLOFFSET: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVLOFFSET');
-    X_D3DTSS_TEXCOORDINDEX: SetValue(UIntPtr(aValue), 'X_D3DTSS_TEXCOORDINDEX');
-    X_D3DTSS_BORDERCOLOR: SetValue(UIntPtr(aValue), 'X_D3DTSS_BORDERCOLOR');
-    X_D3DTSS_COLORKEYCOLOR: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORKEYCOLOR');
-  else SetValue(UIntPtr(aValue));
+    X_D3DTSS_ADDRESSU: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSU');
+    X_D3DTSS_ADDRESSV: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSV');
+    X_D3DTSS_ADDRESSW: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSW');
+    X_D3DTSS_MAGFILTER: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_MAGFILTER');
+    X_D3DTSS_MINFILTER: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_MINFILTER');
+    X_D3DTSS_MIPFILTER: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_MIPFILTER');
+    X_D3DTSS_MIPMAPLODBIAS: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_MIPMAPLODBIAS');
+    X_D3DTSS_MAXMIPLEVEL: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_MAXMIPLEVEL');
+    X_D3DTSS_MAXANISOTROPY: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_MAXANISOTROPY');
+    X_D3DTSS_COLORKEYOP: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORKEYOP');
+    X_D3DTSS_COLORSIGN: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORSIGN');
+    X_D3DTSS_ALPHAKILL: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAKILL');
+    X_D3DTSS_COLOROP: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLOROP');
+    X_D3DTSS_COLORARG0: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG0');
+    X_D3DTSS_COLORARG1: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG1');
+    X_D3DTSS_COLORARG2: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG2');
+    X_D3DTSS_ALPHAOP: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAOP');
+    X_D3DTSS_ALPHAARG0: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG0');
+    X_D3DTSS_ALPHAARG1: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG1');
+    X_D3DTSS_ALPHAARG2: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG2');
+    X_D3DTSS_RESULTARG: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_RESULTARG');
+    X_D3DTSS_TEXTURETRANSFORMFLAGS: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_TEXTURETRANSFORMFLAGS');
+    X_D3DTSS_BUMPENVMAT00: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT00');
+    X_D3DTSS_BUMPENVMAT01: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT01');
+    X_D3DTSS_BUMPENVMAT11: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT11');
+    X_D3DTSS_BUMPENVMAT10: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT10');
+    X_D3DTSS_BUMPENVLSCALE: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVLSCALE');
+    X_D3DTSS_BUMPENVLOFFSET: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVLOFFSET');
+    X_D3DTSS_TEXCOORDINDEX: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_TEXCOORDINDEX');
+    X_D3DTSS_BORDERCOLOR: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BORDERCOLOR');
+    X_D3DTSS_COLORKEYCOLOR: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORKEYCOLOR');
+  else Result.SetValue(UIntPtr(aValue));
   end;
 end;
 
 function RLogStackHelper._(const aValue: PD3DVIEWPORT; const aName: string = ''): PLogStack;
 begin
-  Result := SetName(aName, 'PD3DVIEWPORT');
-  SetValue(DWORD(aValue), Format('%d, %d, %d, %d, %f, %f',
+  Result := _New.SetName(aName, 'PD3DVIEWPORT');
+  Result.SetValue(DWORD(aValue), Format('%d, %d, %d, %d, %f, %f',
       [aValue.X, aValue.Y, aValue.Width, aValue.Height, aValue.MinZ, aValue.MaxZ]));
 end;
 
 function RLogStackHelper._(const aValue: X_D3DVSDE; const aName: string = ''): PLogStack;
 begin
-  Result := SetName(aName, 'X_D3DVSDE');
+  Result := _New.SetName(aName, 'X_D3DVSDE');
   case DWORD(aValue) of
-    X_D3DVSDE_POSITION     : SetValue(UIntPtr(aValue), 'X_D3DVSDE_POSITION');
-    X_D3DVSDE_BLENDWEIGHT  : SetValue(UIntPtr(aValue), 'X_D3DVSDE_BLENDWEIGHT');
-    X_D3DVSDE_NORMAL       : SetValue(UIntPtr(aValue), 'X_D3DVSDE_NORMAL');
-    X_D3DVSDE_DIFFUSE      : SetValue(UIntPtr(aValue), 'X_D3DVSDE_DIFFUSE');
-    X_D3DVSDE_SPECULAR     : SetValue(UIntPtr(aValue), 'X_D3DVSDE_SPECULAR');
-    X_D3DVSDE_FOG          : SetValue(UIntPtr(aValue), 'X_D3DVSDE_FOG');
-    X_D3DVSDE_BACKDIFFUSE  : SetValue(UIntPtr(aValue), 'X_D3DVSDE_BACKDIFFUSE');
-    X_D3DVSDE_BACKSPECULAR : SetValue(UIntPtr(aValue), 'X_D3DVSDE_BACKSPECULAR');
-    X_D3DVSDE_TEXCOORD0    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD0');
-    X_D3DVSDE_TEXCOORD1    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD1');
-    X_D3DVSDE_TEXCOORD2    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD2');
-    X_D3DVSDE_TEXCOORD3    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD3');
-    X_D3DVSDE_VERTEX       : SetValue(UIntPtr(aValue), 'X_D3DVSDE_VERTEX');
-  else SetValue(UIntPtr(aValue));
+    X_D3DVSDE_POSITION     : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_POSITION');
+    X_D3DVSDE_BLENDWEIGHT  : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_BLENDWEIGHT');
+    X_D3DVSDE_NORMAL       : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_NORMAL');
+    X_D3DVSDE_DIFFUSE      : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_DIFFUSE');
+    X_D3DVSDE_SPECULAR     : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_SPECULAR');
+    X_D3DVSDE_FOG          : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_FOG');
+    X_D3DVSDE_BACKDIFFUSE  : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_BACKDIFFUSE');
+    X_D3DVSDE_BACKSPECULAR : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_BACKSPECULAR');
+    X_D3DVSDE_TEXCOORD0    : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD0');
+    X_D3DVSDE_TEXCOORD1    : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD1');
+    X_D3DVSDE_TEXCOORD2    : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD2');
+    X_D3DVSDE_TEXCOORD3    : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD3');
+    X_D3DVSDE_VERTEX       : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_VERTEX');
+  else Result.SetValue(UIntPtr(aValue));
   end;
 end;
 
 function RLogStackHelper._(const aValue: PX_D3DResource; const aName: string = ''): PLogStack;
 begin
-  Result := SetName(aName, 'PX_D3DResource');
+  Result := _New.SetName(aName, 'PX_D3DResource');
   if Assigned(aValue) then
-    SetValue(ResourceToString(aValue))
+    Result.SetValue(ResourceToString(aValue))
   else
-    SetValue(UIntPtr(aValue), 'Resource');
+    Result.SetValue(UIntPtr(aValue), 'Resource');
 end;
 
 //
@@ -517,116 +517,143 @@ begin
   ZeroMemory(@g_EmuCDPD, SizeOf(g_EmuCDPD));
 end;
 
+function DxbTextureFilterCapsToString(const TextureFilterCaps: DWORD): string;
+begin
+  Result := '';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MINFPOINT) > 0 then Result := Result + 'D3DPTFILTERCAPS_MINFPOINT ';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MINFLINEAR) > 0 then Result := Result + 'D3DPTFILTERCAPS_MINFLINEAR ';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MINFANISOTROPIC) > 0 then Result := Result + 'D3DPTFILTERCAPS_MINFANISOTROPIC ';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MIPFPOINT) > 0 then Result := Result + 'D3DPTFILTERCAPS_MIPFPOINT ';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MIPFLINEAR) > 0 then Result := Result + 'D3DPTFILTERCAPS_MIPFLINEAR ';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MAGFPOINT) > 0 then Result := Result + 'D3DPTFILTERCAPS_MAGFPOINT ';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MAGFLINEAR) > 0 then Result := Result + 'D3DPTFILTERCAPS_MAGFLINEAR ';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MAGFANISOTROPIC) > 0 then Result := Result + 'D3DPTFILTERCAPS_MAGFANISOTROPIC ';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MAGFAFLATCUBIC) > 0 then Result := Result + 'D3DPTFILTERCAPS_MAGFAFLATCUBIC ';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MAGFGAUSSIANCUBIC) > 0 then Result := Result + 'D3DPTFILTERCAPS_MAGFGAUSSIANCUBIC ';
+end;
+
+function DxbTextureAddressCapsToString(const TextureAddressCaps: DWORD): string;
+begin
+  Result := '';
+  if (TextureAddressCaps and D3DPTADDRESSCAPS_WRAP) > 0 then Result := Result + 'D3DPTADDRESSCAPS_WRAP ';
+  if (TextureAddressCaps and D3DPTADDRESSCAPS_MIRROR) > 0 then Result := Result + 'D3DPTADDRESSCAPS_MIRROR ';
+  if (TextureAddressCaps and D3DPTADDRESSCAPS_CLAMP) > 0 then Result := Result + 'D3DPTADDRESSCAPS_CLAMP ';
+  if (TextureAddressCaps and D3DPTADDRESSCAPS_BORDER) > 0 then Result := Result + 'D3DPTADDRESSCAPS_BORDER ';
+  if (TextureAddressCaps and D3DPTADDRESSCAPS_INDEPENDENTUV) > 0 then Result := Result + 'D3DPTADDRESSCAPS_INDEPENDENTUV ';
+  if (TextureAddressCaps and D3DPTADDRESSCAPS_MIRRORONCE) > 0 then Result := Result + 'D3DPTADDRESSCAPS_MIRRORONCE ';
+end;
+
 procedure DxbxDumpD3DCaps(const aD3DCaps: D3DCAPS);
 begin
-  DbgPrintf('DxbxDumpD3DCaps');
-  (* Device Info *)
-  DbgPrintf('  %-28s = 0x%.08X', ['DeviceType', Ord(aD3DCaps.DeviceType)]);
-  DbgPrintf('  %-28s = 0x%.08X', ['AdapterOrdinal', aD3DCaps.AdapterOrdinal]);
+  LogBegin('DxbxDumpD3DCaps').
+    (* Device Info *)
+    _(aD3DCaps.DeviceType, 'DeviceType').
+    _(aD3DCaps.AdapterOrdinal, 'AdapterOrdinal').
 
-  (* Caps from DX7 Draw *)
-  DbgPrintf('  %-28s = 0x%.08X', ['Caps', aD3DCaps.Caps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['Caps2', aD3DCaps.Caps2]);
-  DbgPrintf('  %-28s = 0x%.08X', ['Caps3', aD3DCaps.Caps3]);
-  DbgPrintf('  %-28s = 0x%.08X', ['PresentationIntervals', aD3DCaps.PresentationIntervals]);
+    (* Caps from DX7 Draw *)
+    _(aD3DCaps.Caps, 'Caps').
+    _(aD3DCaps.Caps2, 'Caps2').
+    _(aD3DCaps.Caps3, 'Caps3').
+    _(aD3DCaps.PresentationIntervals, 'PresentationIntervals').
 
-  (* Cursor Caps *)
-  DbgPrintf('  %-28s = 0x%.08X', ['CursorCaps', aD3DCaps.CursorCaps]);
+    (* Cursor Caps *)
+    _(aD3DCaps.CursorCaps, 'CursorCaps').
 
-  (* 3D Device Caps *)
-  DbgPrintf('  %-28s = 0x%.08X', ['DevCaps', aD3DCaps.DevCaps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['PrimitiveMiscCaps', aD3DCaps.PrimitiveMiscCaps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['RasterCaps', aD3DCaps.RasterCaps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['ZCmpCaps', aD3DCaps.ZCmpCaps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['SrcBlendCaps', aD3DCaps.SrcBlendCaps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['DestBlendCaps', aD3DCaps.DestBlendCaps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['AlphaCmpCaps', aD3DCaps.AlphaCmpCaps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['ShadeCaps', aD3DCaps.ShadeCaps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['TextureCaps', aD3DCaps.TextureCaps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['TextureFilterCaps', aD3DCaps.TextureFilterCaps]);               // D3DPTFILTERCAPS for IDirect3DTexture8's
-  DbgPrintf('  %-28s = 0x%.08X', ['CubeTextureFilterCaps', aD3DCaps.CubeTextureFilterCaps]);       // D3DPTFILTERCAPS for IDirect3DCubeTexture8's
-  DbgPrintf('  %-28s = 0x%.08X', ['VolumeTextureFilterCaps', aD3DCaps.VolumeTextureFilterCaps]);   // D3DPTFILTERCAPS for IDirect3DVolumeTexture8's
-  DbgPrintf('  %-28s = 0x%.08X', ['TextureAddressCaps', aD3DCaps.TextureAddressCaps]);             // D3DPTFILTERCAPS for IDirect3DTexture8's
-  DbgPrintf('  %-28s = 0x%.08X', ['VolumeTextureAddressCaps', aD3DCaps.VolumeTextureAddressCaps]); // D3DPTFILTERCAPS for IDirect3DVolumeTexture8's
+    (* 3D Device Caps *)
+    _(aD3DCaps.DevCaps, 'DevCaps').
+    _(aD3DCaps.PrimitiveMiscCaps, 'PrimitiveMiscCaps').
+    _(aD3DCaps.RasterCaps, 'RasterCaps').
+    _(aD3DCaps.ZCmpCaps, 'ZCmpCaps').
+    _(aD3DCaps.SrcBlendCaps, 'SrcBlendCaps').
+    _(aD3DCaps.DestBlendCaps, 'DestBlendCaps').
+    _(aD3DCaps.AlphaCmpCaps, 'AlphaCmpCaps').
+    _(aD3DCaps.ShadeCaps, 'ShadeCaps').
+    _(aD3DCaps.TextureCaps, 'TextureCaps').
+    _('TextureFilterCaps').SetValue(aD3DCaps.TextureFilterCaps, DxbTextureFilterCapsToString(aD3DCaps.TextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DTexture8's
+    _('CubeTextureFilterCaps').SetValue(aD3DCaps.CubeTextureFilterCaps, DxbTextureFilterCapsToString(aD3DCaps.CubeTextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DCubeTexture8's
+    _('VolumeTextureFilterCaps').SetValue(aD3DCaps.VolumeTextureFilterCaps, DxbTextureFilterCapsToString(aD3DCaps.VolumeTextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DVolumeTexture8's
+    _('TextureAddressCaps').SetValue(aD3DCaps.TextureAddressCaps, DxbTextureAddressCapsToString(aD3DCaps.TextureAddressCaps)). // D3DPTADDRESSCAPS for IDirect3DTexture8's
+    _('VolumeTextureAddressCaps').SetValue(aD3DCaps.VolumeTextureAddressCaps, DxbTextureAddressCapsToString(aD3DCaps.VolumeTextureAddressCaps)). // D3DPTADDRESSCAPS for IDirect3DVolumeTexture8's
 
-  DbgPrintf('  %-28s = 0x%.08X', ['LineCaps', aD3DCaps.LineCaps]);                                 // D3DLINECAPS
+    _(aD3DCaps.LineCaps, 'LineCaps'). // D3DLINECAPS
 
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxTextureWidth', aD3DCaps.MaxTextureWidth]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxTextureHeight', aD3DCaps.MaxTextureHeight]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxVolumeExtent', aD3DCaps.MaxVolumeExtent]);
+    _(aD3DCaps.MaxTextureWidth, 'MaxTextureWidth').
+    _(aD3DCaps.MaxTextureHeight, 'MaxTextureHeight').
+    _(aD3DCaps.MaxVolumeExtent, 'MaxVolumeExtent').
 
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxTextureRepeat', aD3DCaps.MaxTextureRepeat]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxTextureAspectRatio', aD3DCaps.MaxTextureAspectRatio]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxAnisotropy', aD3DCaps.MaxAnisotropy]);
-  DbgPrintf('  %-28s = %f',      ['MaxVertexW', aD3DCaps.MaxVertexW]);
+    _(aD3DCaps.MaxTextureRepeat, 'MaxTextureRepeat').
+    _(aD3DCaps.MaxTextureAspectRatio, 'MaxTextureAspectRatio').
+    _(aD3DCaps.MaxAnisotropy, 'MaxAnisotropy').
+    _(aD3DCaps.MaxVertexW, 'MaxVertexW').
 
-  DbgPrintf('  %-28s = %f',      ['GuardBandLeft', aD3DCaps.GuardBandLeft]);
-  DbgPrintf('  %-28s = %f',      ['GuardBandTop', aD3DCaps.GuardBandTop]);
-  DbgPrintf('  %-28s = %f',      ['GuardBandRight', aD3DCaps.GuardBandRight]);
-  DbgPrintf('  %-28s = %f',      ['GuardBandBottom', aD3DCaps.GuardBandBottom]);
+    _(aD3DCaps.GuardBandLeft, 'GuardBandLeft').
+    _(aD3DCaps.GuardBandTop, 'GuardBandTop').
+    _(aD3DCaps.GuardBandRight, 'GuardBandRight').
+    _(aD3DCaps.GuardBandBottom, 'GuardBandBottom').
 
-  DbgPrintf('  %-28s = %f',      ['ExtentsAdjust', aD3DCaps.ExtentsAdjust]);
-  DbgPrintf('  %-28s = 0x%.08X', ['StencilCaps', aD3DCaps.StencilCaps]);
+    _(aD3DCaps.ExtentsAdjust, 'ExtentsAdjust').
+    _(aD3DCaps.StencilCaps, 'StencilCaps').
 
-  DbgPrintf('  %-28s = 0x%.08X', ['FVFCaps', aD3DCaps.FVFCaps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['TextureOpCaps', aD3DCaps.TextureOpCaps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxTextureBlendStages', aD3DCaps.MaxTextureBlendStages]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxSimultaneousTextures', aD3DCaps.MaxSimultaneousTextures]);
+    _(aD3DCaps.FVFCaps, 'FVFCaps').
+    _(aD3DCaps.TextureOpCaps, 'TextureOpCaps').
+    _(aD3DCaps.MaxTextureBlendStages, 'MaxTextureBlendStages').
+    _(aD3DCaps.MaxSimultaneousTextures, 'MaxSimultaneousTextures').
 
-  DbgPrintf('  %-28s = 0x%.08X', ['VertexProcessingCaps', aD3DCaps.VertexProcessingCaps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxActiveLights', aD3DCaps.MaxActiveLights]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxUserClipPlanes', aD3DCaps.MaxUserClipPlanes]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxVertexBlendMatrices', aD3DCaps.MaxVertexBlendMatrices]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxVertexBlendMatrixIndex', aD3DCaps.MaxVertexBlendMatrixIndex]);
+    _(aD3DCaps.VertexProcessingCaps, 'VertexProcessingCaps').
+    _(aD3DCaps.MaxActiveLights, 'MaxActiveLights').
+    _(aD3DCaps.MaxUserClipPlanes, 'MaxUserClipPlanes').
+    _(aD3DCaps.MaxVertexBlendMatrices, 'MaxVertexBlendMatrices').
+    _(aD3DCaps.MaxVertexBlendMatrixIndex, 'MaxVertexBlendMatrixIndex').
 
-  DbgPrintf('  %-28s = %f',      ['MaxPointSize', aD3DCaps.MaxPointSize]);
+    _(aD3DCaps.MaxPointSize, 'MaxPointSize').
 
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxPrimitiveCount', aD3DCaps.MaxPrimitiveCount]);         // max number of primitives per DrawPrimitive call
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxVertexIndex', aD3DCaps.MaxVertexIndex]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxStreams', aD3DCaps.MaxStreams]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxStreamStride', aD3DCaps.MaxStreamStride]);             // max stride for SetStreamSource
+    _(aD3DCaps.MaxPrimitiveCount, 'MaxPrimitiveCount').         // max number of primitives per DrawPrimitive call
+    _(aD3DCaps.MaxVertexIndex, 'MaxVertexIndex').
+    _(aD3DCaps.MaxStreams, 'MaxStreams').
+    _(aD3DCaps.MaxStreamStride, 'MaxStreamStride').             // max stride for SetStreamSource
 
-  DbgPrintf('  %-28s = 0x%.08X', ['VertexShaderVersion', aD3DCaps.VertexShaderVersion]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxVertexShaderConst', aD3DCaps.MaxVertexShaderConst]);   // number of vertex shader constant registers
+    _(aD3DCaps.VertexShaderVersion, 'VertexShaderVersion').
+    _(aD3DCaps.MaxVertexShaderConst, 'MaxVertexShaderConst').   // number of vertex shader constant registers
 
-  DbgPrintf('  %-28s = 0x%.08X', ['PixelShaderVersion', aD3DCaps.PixelShaderVersion]);
+    _(aD3DCaps.PixelShaderVersion, 'PixelShaderVersion').
 {$IFNDEF DXBX_USE_D3D9}
-  DbgPrintf('  %-28s = %f',      ['MaxPixelShaderValue', aD3DCaps.MaxPixelShaderValue]);     // max value of pixel shader arithmetic component
+    _(aD3DCaps.MaxPixelShaderValue, 'MaxPixelShaderValue').     // max value of pixel shader arithmetic component
 {$ELSE}
-  DbgPrintf('  %-28s = %f',      ['PixelShader1xMaxValue', aD3DCaps.PixelShader1xMaxValue]);      // max value storable in registers of ps.1.x shaders
+    _(aD3DCaps.PixelShader1xMaxValue, 'PixelShader1xMaxValue').      // max value storable in registers of ps.1.x shaders
 
-  // Here are the DX9 specific ones
-  DbgPrintf('  %-28s = 0x%.08X', ['DevCaps2', aD3DCaps.DevCaps2]);
+    // Here are the DX9 specific ones
+    _(aD3DCaps.DevCaps2, 'DevCaps2').
 
-  DbgPrintf('  %-28s = %f',      ['MaxNpatchTessellationLevel', aD3DCaps.MaxNpatchTessellationLevel]);
-  DbgPrintf('  %-28s = 0x%.08X', ['Reserved5', aD3DCaps.Reserved5]);
+    _(aD3DCaps.MaxNpatchTessellationLevel, 'MaxNpatchTessellationLevel').
+    _(aD3DCaps.Reserved5, 'Reserved5').
 
-  DbgPrintf('  %-28s = 0x%.08X', ['MasterAdapterOrdinal', aD3DCaps.MasterAdapterOrdinal]);     // ordinal of master adaptor for adapter group
-  DbgPrintf('  %-28s = 0x%.08X', ['AdapterOrdinalInGroup', aD3DCaps.AdapterOrdinalInGroup]);    // ordinal inside the adapter group
-  DbgPrintf('  %-28s = 0x%.08X', ['NumberOfAdaptersInGroup', aD3DCaps.NumberOfAdaptersInGroup]);  // number of adapters in this adapter group (only if master)
-  DbgPrintf('  %-28s = 0x%.08X', ['DeclTypes', aD3DCaps.DeclTypes]);                   // Data types, supported in vertex declarations
-  DbgPrintf('  %-28s = 0x%.08X', ['NumSimultaneousRTs', aD3DCaps.NumSimultaneousRTs]);          // Will be at least 1
-  DbgPrintf('  %-28s = 0x%.08X', ['StretchRectFilterCaps', aD3DCaps.StretchRectFilterCaps]);       // Filter caps supported by StretchRect
+    _(aD3DCaps.MasterAdapterOrdinal, 'MasterAdapterOrdinal').     // ordinal of master adaptor for adapter group
+    _(aD3DCaps.AdapterOrdinalInGroup, 'AdapterOrdinalInGroup').    // ordinal inside the adapter group
+    _(aD3DCaps.NumberOfAdaptersInGroup, 'NumberOfAdaptersInGroup').  // number of adapters in this adapter group (only if master)
+    _(aD3DCaps.DeclTypes, 'DeclTypes').                   // Data types, supported in vertex declarations
+    _(aD3DCaps.NumSimultaneousRTs, 'NumSimultaneousRTs').          // Will be at least 1
+    _(aD3DCaps.StretchRectFilterCaps, 'StretchRectFilterCaps').       // Filter caps supported by StretchRect
 
-  // VS20Caps: TD3DVShaderCaps2_0
-  DbgPrintf('  %-28s = 0x%.08X', ['VS20Caps.Caps', aD3DCaps.VS20Caps.Caps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['VS20Caps.DynamicFlowControlDepth', aD3DCaps.VS20Caps.DynamicFlowControlDepth]);
-  DbgPrintf('  %-28s = 0x%.08X', ['VS20Caps.NumTemps', aD3DCaps.VS20Caps.NumTemps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['VS20Caps.StaticFlowControlDepth', aD3DCaps.VS20Caps.StaticFlowControlDepth]);
+    // VS20Caps: TD3DVShaderCaps2_0
+    _(aD3DCaps.VS20Caps.Caps, 'VS20Caps.Caps').
+    _(aD3DCaps.VS20Caps.DynamicFlowControlDepth, 'VS20Caps.DynamicFlowControlDepth').
+    _(aD3DCaps.VS20Caps.NumTemps, 'VS20Caps.NumTemps').
+    _(aD3DCaps.VS20Caps.StaticFlowControlDepth, 'VS20Caps.StaticFlowControlDepth').
 
-  // PS20Caps: TD3DPShaderCaps2_0
-  DbgPrintf('  %-28s = 0x%.08X', ['PS20Caps.Caps', aD3DCaps.PS20Caps.Caps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['PS20Caps.DynamicFlowControlDepth', aD3DCaps.PS20Caps.DynamicFlowControlDepth]);
-  DbgPrintf('  %-28s = 0x%.08X', ['PS20Caps.NumTemps', aD3DCaps.PS20Caps.NumTemps]);
-  DbgPrintf('  %-28s = 0x%.08X', ['PS20Caps.StaticFlowControlDepth', aD3DCaps.PS20Caps.StaticFlowControlDepth]);
-  DbgPrintf('  %-28s = 0x%.08X', ['PS20Caps.NumInstructionSlots', aD3DCaps.PS20Caps.NumInstructionSlots]);
+    // PS20Caps: TD3DPShaderCaps2_0
+    _(aD3DCaps.PS20Caps.Caps, 'PS20Caps.Caps').
+    _(aD3DCaps.PS20Caps.DynamicFlowControlDepth, 'PS20Caps.DynamicFlowControlDepth').
+    _(aD3DCaps.PS20Caps.NumTemps, 'PS20Caps.NumTemps').
+    _(aD3DCaps.PS20Caps.StaticFlowControlDepth, 'PS20Caps.StaticFlowControlDepth').
+    _(aD3DCaps.PS20Caps.NumInstructionSlots, 'PS20Caps.NumInstructionSlots').
 
-  DbgPrintf('  %-28s = 0x%.08X', ['VertexTextureFilterCaps', aD3DCaps.VertexTextureFilterCaps]);     // D3DPTFILTERCAPS for IDirect3DTexture9's for texture, used in vertex shaders
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxVShaderInstructionsExecuted', aD3DCaps.MaxVShaderInstructionsExecuted]); // maximum number of vertex shader instructions that can be executed
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxPShaderInstructionsExecuted', aD3DCaps.MaxPShaderInstructionsExecuted]); // maximum number of pixel shader instructions that can be executed
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxVertexShader30InstructionSlots', aD3DCaps.MaxVertexShader30InstructionSlots]);
-  DbgPrintf('  %-28s = 0x%.08X', ['MaxPixelShader30InstructionSlots', aD3DCaps.MaxPixelShader30InstructionSlots]);
+    _('VertexTextureFilterCaps').SetValue(aD3DCaps.VertexTextureFilterCaps, DxbTextureFilterCapsToString(aD3DCaps.VertexTextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DTexture9's for texture, used in vertex shaders
+    _(aD3DCaps.MaxVShaderInstructionsExecuted, 'MaxVShaderInstructionsExecuted'). // maximum number of vertex shader instructions that can be executed
+    _(aD3DCaps.MaxPShaderInstructionsExecuted, 'MaxPShaderInstructionsExecuted'). // maximum number of pixel shader instructions that can be executed
+    _(aD3DCaps.MaxVertexShader30InstructionSlots, 'MaxVertexShader30InstructionSlots').
+    _(aD3DCaps.MaxPixelShader30InstructionSlots, 'MaxPixelShader30InstructionSlots').
 {$ENDIF}
+  LogEnd();
 end;
 
 procedure DxbxDumpNativeRenderStates();
@@ -1314,6 +1341,7 @@ var
   hThread: HANDLE;
   hDupHandle: HANDLE;
   DevType: D3DDEVTYPE;
+  Identifier: TD3DAdapterIdentifier8;
   PresParam: X_D3DPRESENT_PARAMETERS;
 begin
   g_EmuShared.GetXBVideo(@g_XBVideo);
@@ -1397,13 +1425,30 @@ begin
     g_pD3D := Direct3DCreate8(D3D_SDK_VERSION);
 {$ENDIF}
     if (g_pD3D = NULL) then
-      DxbxKrnlCleanup('Could not initialize Direct3D8!');
+      DxbxKrnlCleanup('Could not initialize Direct3D!');
 
+    // Show adapter identifier :
+    if FAILED(g_pD3D.GetAdapterIdentifier(g_XBVideo.GetDisplayAdapter(), {Flags=}0, {out}Identifier)) then
+      DbgPrintf('Could not get adapter information')
+    else
+      LogBegin('Adapter identifier').
+        _(AnsiString(Identifier.Driver), 'Driver').
+        _(AnsiString(Identifier.Description), 'Description').
+        _(Identifier.DriverVersionLowPart, 'DriverVersionLowPart').
+        _(Identifier.DriverVersionHighPart, 'DriverVersionHighPart').
+        _(Identifier.VendorId, 'VendorId').
+        _(Identifier.DeviceId, 'DeviceId').
+        _(Identifier.SubSysId, 'SubSysId').
+        _(Identifier.Revision, 'Revision').
+//      _(Identifier.DeviceIdentifier, 'DeviceIdentifier'). // TODO : Add GUID logging
+        _(Identifier.WHQLLevel, 'WHQLLevel').
+      LogEnd();
+
+    // Show device capabilities :
     DevType := iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF);
     g_pD3D.GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, {out}g_D3DCaps);
+    DxbxDumpD3DCaps(g_D3DCaps);
   end;
-
-  DxbxDumpD3DCaps(g_D3DCaps);
 
   SetFocus(g_hEmuWindow);
 
@@ -4328,6 +4373,7 @@ begin
     //* Fallback to dummy shader.
     if (FAILED(hRet)) then
     begin
+      EmuWarning('CreateVertexShader failed : ' + DxbxD3DErrorString(hRet));
       EmuWarning('Trying fallback:'#13#10'%s', [dummy]);
       hRet := D3DXAssembleShader(
         dummy,
