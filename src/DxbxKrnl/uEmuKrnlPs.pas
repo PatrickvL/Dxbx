@@ -376,7 +376,10 @@ begin
     iPCSTProxyParam.StartSuspended := CreateSuspended;
     iPCSTProxyParam.hStartedEvent := CreateEvent(NULL, FALSE, FALSE, NULL);
 
-    pThreadHandle^ := CreateThread(NULL, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}@dwThreadId);
+    // Dxbx addition : Petit Copter needs enough stackspace (it calls __chkstk($7e30) from _main,
+    // read http://support.microsoft.com/kb/100775 for more information about that function).
+    // We create Xbox threads with 1 MB of stackspace, which should suffice for almost anything :
+    pThreadHandle^ := CreateThread(NULL, $100000, @PCSTProxy, @iPCSTProxyParam, 0, {var}@dwThreadId);
 
     // Make sure Xbox1 code runs on one core :
     SetThreadAffinityMask(dwThreadId, g_CPUXbox);
