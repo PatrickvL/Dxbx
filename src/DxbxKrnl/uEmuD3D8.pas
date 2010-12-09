@@ -281,34 +281,34 @@ type
 
 function RLogStackHelper._(const aValue: X_D3DPOOL; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'X_D3DPOOL');
+  Result := SetName(aName, 'X_D3DPOOL');
   // D3DPoolToString :
   case aValue of
-    D3DPOOL_DEFAULT: Result.SetValue(UIntPtr(aValue), 'D3DPOOL_DEFAULT');
-    D3DPOOL_MANAGED: Result.SetValue(UIntPtr(aValue), 'D3DPOOL_MANAGED');
-    D3DPOOL_SYSTEMMEM: Result.SetValue(UIntPtr(aValue), 'D3DPOOL_SYSTEMMEM');
-    D3DPOOL_SCRATCH: Result.SetValue(UIntPtr(aValue), 'D3DPOOL_SCRATCH');
-  else Result.SetValue(UIntPtr(aValue));
+    D3DPOOL_DEFAULT: SetValue(UIntPtr(aValue), 'D3DPOOL_DEFAULT');
+    D3DPOOL_MANAGED: SetValue(UIntPtr(aValue), 'D3DPOOL_MANAGED');
+    D3DPOOL_SYSTEMMEM: SetValue(UIntPtr(aValue), 'D3DPOOL_SYSTEMMEM');
+    D3DPOOL_SCRATCH: SetValue(UIntPtr(aValue), 'D3DPOOL_SCRATCH');
+  else SetValue(UIntPtr(aValue));
   end;
 end;
 
 function RLogStackHelper._(const aValue: X_D3DTRANSFORMSTATETYPE; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'X_D3DTRANSFORMSTATETYPE');
+  Result := SetName(aName, 'X_D3DTRANSFORMSTATETYPE');
   case aValue of
-    X_D3DTS_VIEW: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_VIEW');
-    X_D3DTS_PROJECTION: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_PROJECTION');
-    X_D3DTS_TEXTURE0: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE0');
-    X_D3DTS_TEXTURE1: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE1');
-    X_D3DTS_TEXTURE2: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE2');
-    X_D3DTS_TEXTURE3: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE3');
-    X_D3DTS_WORLD: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD');
-    X_D3DTS_WORLD1: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD1');
-    X_D3DTS_WORLD2: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD2');
-    X_D3DTS_WORLD3: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD3');
-    X_D3DTS_MAX: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_MAX');
-    X_D3DTS_FORCE_DWORD: Result.SetValue(UIntPtr(aValue), 'X_D3DTS_FORCE_DWORD');
-  else Result.SetValue(UIntPtr(aValue));
+    X_D3DTS_VIEW: SetValue(UIntPtr(aValue), 'X_D3DTS_VIEW');
+    X_D3DTS_PROJECTION: SetValue(UIntPtr(aValue), 'X_D3DTS_PROJECTION');
+    X_D3DTS_TEXTURE0: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE0');
+    X_D3DTS_TEXTURE1: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE1');
+    X_D3DTS_TEXTURE2: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE2');
+    X_D3DTS_TEXTURE3: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE3');
+    X_D3DTS_WORLD: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD');
+    X_D3DTS_WORLD1: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD1');
+    X_D3DTS_WORLD2: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD2');
+    X_D3DTS_WORLD3: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD3');
+    X_D3DTS_MAX: SetValue(UIntPtr(aValue), 'X_D3DTS_MAX');
+    X_D3DTS_FORCE_DWORD: SetValue(UIntPtr(aValue), 'X_D3DTS_FORCE_DWORD');
+  else SetValue(UIntPtr(aValue));
   end;
 end;
 
@@ -316,34 +316,34 @@ function RLogStackHelper._(const aValue: X_D3DPRIMITIVETYPE; const aName: string
 var
   Str: string;
 begin
-  Result := _New.SetName(aName, 'X_D3DPRIMITIVETYPE');
+  Result := SetName(aName, 'X_D3DPRIMITIVETYPE');
   Str := X_D3DPRIMITIVETYPE2String(aValue);
   if Str <> '' then
-    Result.SetValue(UIntPtr(aValue), Str)
+    SetValue(UIntPtr(aValue), Str)
   else
-    Result.SetValue(UIntPtr(aValue));
+    SetValue(UIntPtr(aValue));
 end;
 
 function RLogStackHelper._(const aValue: X_D3DFORMAT; const aName: string = ''): PLogStack;
 var
   Str: string;
 begin
-  Result := _New.SetName(aName, 'X_D3DFORMAT');
+  Result := SetName(aName, 'X_D3DFORMAT');
   Str := X_D3DFORMAT2String(aValue);
   if Str <> '' then
-    Result.SetValue(UIntPtr(aValue), Str)
+    SetValue(UIntPtr(aValue), Str)
   else
-    Result.SetValue(UIntPtr(aValue));
+    SetValue(UIntPtr(aValue));
 end;
 
 function RLogStackHelper._(const aValue: D3DDEVTYPE; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'D3DDEVTYPE');
+  Result := SetName(aName, 'D3DDEVTYPE');
   case aValue of
-    D3DDEVTYPE_HAL: Result.SetValue(UIntPtr(aValue), 'D3DDEVTYPE_HAL');
-    D3DDEVTYPE_REF: Result.SetValue(UIntPtr(aValue), 'D3DDEVTYPE_REF');
-    D3DDEVTYPE_SW: Result.SetValue(UIntPtr(aValue), 'D3DDEVTYPE_SW');
-  else Result.SetValue(UIntPtr(aValue));
+    D3DDEVTYPE_HAL: SetValue(UIntPtr(aValue), 'D3DDEVTYPE_HAL');
+    D3DDEVTYPE_REF: SetValue(UIntPtr(aValue), 'D3DDEVTYPE_REF');
+    D3DDEVTYPE_SW: SetValue(UIntPtr(aValue), 'D3DDEVTYPE_SW');
+  else SetValue(UIntPtr(aValue));
   end;
 end;
 
@@ -351,89 +351,89 @@ function RLogStackHelper._(const aValue: X_NV2AMETHOD; const aName: string = '')
 var
   rs: X_D3DRenderStateType;
 begin
-  Result := _New.SetName(aName, 'X_NV2AMETHOD');
+  Result := SetName(aName, 'X_NV2AMETHOD');
 
   rs := DxbxXboxMethodToRenderState(aValue);
   if rs in [X_D3DRS_FIRST..X_D3DRS_LAST] then
-    Result.SetValue(UIntPtr(aValue), 'NV2A_' + DxbxRenderStateXB2String[rs])
+    SetValue(UIntPtr(aValue), 'NV2A_' + DxbxRenderStateXB2String[rs])
   else
-    Result.SetValue(UIntPtr(aValue));
+    SetValue(UIntPtr(aValue));
 end;
 
 function RLogStackHelper._(const aValue: X_D3DTEXTURESTAGESTATETYPE; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'X_D3DTEXTURESTAGESTATETYPE');
+  Result := SetName(aName, 'X_D3DTEXTURESTAGESTATETYPE');
   case aValue of
-    X_D3DTSS_ADDRESSU: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSU');
-    X_D3DTSS_ADDRESSV: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSV');
-    X_D3DTSS_ADDRESSW: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSW');
-    X_D3DTSS_MAGFILTER: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_MAGFILTER');
-    X_D3DTSS_MINFILTER: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_MINFILTER');
-    X_D3DTSS_MIPFILTER: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_MIPFILTER');
-    X_D3DTSS_MIPMAPLODBIAS: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_MIPMAPLODBIAS');
-    X_D3DTSS_MAXMIPLEVEL: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_MAXMIPLEVEL');
-    X_D3DTSS_MAXANISOTROPY: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_MAXANISOTROPY');
-    X_D3DTSS_COLORKEYOP: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORKEYOP');
-    X_D3DTSS_COLORSIGN: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORSIGN');
-    X_D3DTSS_ALPHAKILL: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAKILL');
-    X_D3DTSS_COLOROP: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLOROP');
-    X_D3DTSS_COLORARG0: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG0');
-    X_D3DTSS_COLORARG1: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG1');
-    X_D3DTSS_COLORARG2: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG2');
-    X_D3DTSS_ALPHAOP: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAOP');
-    X_D3DTSS_ALPHAARG0: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG0');
-    X_D3DTSS_ALPHAARG1: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG1');
-    X_D3DTSS_ALPHAARG2: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG2');
-    X_D3DTSS_RESULTARG: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_RESULTARG');
-    X_D3DTSS_TEXTURETRANSFORMFLAGS: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_TEXTURETRANSFORMFLAGS');
-    X_D3DTSS_BUMPENVMAT00: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT00');
-    X_D3DTSS_BUMPENVMAT01: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT01');
-    X_D3DTSS_BUMPENVMAT11: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT11');
-    X_D3DTSS_BUMPENVMAT10: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT10');
-    X_D3DTSS_BUMPENVLSCALE: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVLSCALE');
-    X_D3DTSS_BUMPENVLOFFSET: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVLOFFSET');
-    X_D3DTSS_TEXCOORDINDEX: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_TEXCOORDINDEX');
-    X_D3DTSS_BORDERCOLOR: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_BORDERCOLOR');
-    X_D3DTSS_COLORKEYCOLOR: Result.SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORKEYCOLOR');
-  else Result.SetValue(UIntPtr(aValue));
+    X_D3DTSS_ADDRESSU: SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSU');
+    X_D3DTSS_ADDRESSV: SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSV');
+    X_D3DTSS_ADDRESSW: SetValue(UIntPtr(aValue), 'X_D3DTSS_ADDRESSW');
+    X_D3DTSS_MAGFILTER: SetValue(UIntPtr(aValue), 'X_D3DTSS_MAGFILTER');
+    X_D3DTSS_MINFILTER: SetValue(UIntPtr(aValue), 'X_D3DTSS_MINFILTER');
+    X_D3DTSS_MIPFILTER: SetValue(UIntPtr(aValue), 'X_D3DTSS_MIPFILTER');
+    X_D3DTSS_MIPMAPLODBIAS: SetValue(UIntPtr(aValue), 'X_D3DTSS_MIPMAPLODBIAS');
+    X_D3DTSS_MAXMIPLEVEL: SetValue(UIntPtr(aValue), 'X_D3DTSS_MAXMIPLEVEL');
+    X_D3DTSS_MAXANISOTROPY: SetValue(UIntPtr(aValue), 'X_D3DTSS_MAXANISOTROPY');
+    X_D3DTSS_COLORKEYOP: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORKEYOP');
+    X_D3DTSS_COLORSIGN: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORSIGN');
+    X_D3DTSS_ALPHAKILL: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAKILL');
+    X_D3DTSS_COLOROP: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLOROP');
+    X_D3DTSS_COLORARG0: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG0');
+    X_D3DTSS_COLORARG1: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG1');
+    X_D3DTSS_COLORARG2: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORARG2');
+    X_D3DTSS_ALPHAOP: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAOP');
+    X_D3DTSS_ALPHAARG0: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG0');
+    X_D3DTSS_ALPHAARG1: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG1');
+    X_D3DTSS_ALPHAARG2: SetValue(UIntPtr(aValue), 'X_D3DTSS_ALPHAARG2');
+    X_D3DTSS_RESULTARG: SetValue(UIntPtr(aValue), 'X_D3DTSS_RESULTARG');
+    X_D3DTSS_TEXTURETRANSFORMFLAGS: SetValue(UIntPtr(aValue), 'X_D3DTSS_TEXTURETRANSFORMFLAGS');
+    X_D3DTSS_BUMPENVMAT00: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT00');
+    X_D3DTSS_BUMPENVMAT01: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT01');
+    X_D3DTSS_BUMPENVMAT11: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT11');
+    X_D3DTSS_BUMPENVMAT10: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVMAT10');
+    X_D3DTSS_BUMPENVLSCALE: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVLSCALE');
+    X_D3DTSS_BUMPENVLOFFSET: SetValue(UIntPtr(aValue), 'X_D3DTSS_BUMPENVLOFFSET');
+    X_D3DTSS_TEXCOORDINDEX: SetValue(UIntPtr(aValue), 'X_D3DTSS_TEXCOORDINDEX');
+    X_D3DTSS_BORDERCOLOR: SetValue(UIntPtr(aValue), 'X_D3DTSS_BORDERCOLOR');
+    X_D3DTSS_COLORKEYCOLOR: SetValue(UIntPtr(aValue), 'X_D3DTSS_COLORKEYCOLOR');
+  else SetValue(UIntPtr(aValue));
   end;
 end;
 
 function RLogStackHelper._(const aValue: PD3DVIEWPORT; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'PD3DVIEWPORT');
-  Result.SetValue(DWORD(aValue), Format('%d, %d, %d, %d, %f, %f',
+  Result := SetName(aName, 'PD3DVIEWPORT');
+  SetValue(DWORD(aValue), Format('%d, %d, %d, %d, %f, %f',
       [aValue.X, aValue.Y, aValue.Width, aValue.Height, aValue.MinZ, aValue.MaxZ]));
 end;
 
 function RLogStackHelper._(const aValue: X_D3DVSDE; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'X_D3DVSDE');
+  Result := SetName(aName, 'X_D3DVSDE');
   case DWORD(aValue) of
-    X_D3DVSDE_POSITION     : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_POSITION');
-    X_D3DVSDE_BLENDWEIGHT  : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_BLENDWEIGHT');
-    X_D3DVSDE_NORMAL       : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_NORMAL');
-    X_D3DVSDE_DIFFUSE      : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_DIFFUSE');
-    X_D3DVSDE_SPECULAR     : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_SPECULAR');
-    X_D3DVSDE_FOG          : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_FOG');
-    X_D3DVSDE_BACKDIFFUSE  : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_BACKDIFFUSE');
-    X_D3DVSDE_BACKSPECULAR : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_BACKSPECULAR');
-    X_D3DVSDE_TEXCOORD0    : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD0');
-    X_D3DVSDE_TEXCOORD1    : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD1');
-    X_D3DVSDE_TEXCOORD2    : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD2');
-    X_D3DVSDE_TEXCOORD3    : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD3');
-    X_D3DVSDE_VERTEX       : Result.SetValue(UIntPtr(aValue), 'X_D3DVSDE_VERTEX');
-  else Result.SetValue(UIntPtr(aValue));
+    X_D3DVSDE_POSITION     : SetValue(UIntPtr(aValue), 'X_D3DVSDE_POSITION');
+    X_D3DVSDE_BLENDWEIGHT  : SetValue(UIntPtr(aValue), 'X_D3DVSDE_BLENDWEIGHT');
+    X_D3DVSDE_NORMAL       : SetValue(UIntPtr(aValue), 'X_D3DVSDE_NORMAL');
+    X_D3DVSDE_DIFFUSE      : SetValue(UIntPtr(aValue), 'X_D3DVSDE_DIFFUSE');
+    X_D3DVSDE_SPECULAR     : SetValue(UIntPtr(aValue), 'X_D3DVSDE_SPECULAR');
+    X_D3DVSDE_FOG          : SetValue(UIntPtr(aValue), 'X_D3DVSDE_FOG');
+    X_D3DVSDE_BACKDIFFUSE  : SetValue(UIntPtr(aValue), 'X_D3DVSDE_BACKDIFFUSE');
+    X_D3DVSDE_BACKSPECULAR : SetValue(UIntPtr(aValue), 'X_D3DVSDE_BACKSPECULAR');
+    X_D3DVSDE_TEXCOORD0    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD0');
+    X_D3DVSDE_TEXCOORD1    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD1');
+    X_D3DVSDE_TEXCOORD2    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD2');
+    X_D3DVSDE_TEXCOORD3    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD3');
+    X_D3DVSDE_VERTEX       : SetValue(UIntPtr(aValue), 'X_D3DVSDE_VERTEX');
+  else SetValue(UIntPtr(aValue));
   end;
 end;
 
 function RLogStackHelper._(const aValue: PX_D3DResource; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'PX_D3DResource');
+  Result := SetName(aName, 'PX_D3DResource');
   if Assigned(aValue) then
-    Result.SetValue(ResourceToString(aValue))
+    SetValue(ResourceToString(aValue))
   else
-    Result.SetValue(UIntPtr(aValue), 'Resource');
+    SetValue(UIntPtr(aValue), 'Resource');
 end;
 
 //
@@ -569,11 +569,11 @@ begin
     _(aD3DCaps.AlphaCmpCaps, 'AlphaCmpCaps').
     _(aD3DCaps.ShadeCaps, 'ShadeCaps').
     _(aD3DCaps.TextureCaps, 'TextureCaps').
-    _('TextureFilterCaps').SetValue(aD3DCaps.TextureFilterCaps, DxbTextureFilterCapsToString(aD3DCaps.TextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DTexture8's
-    _('CubeTextureFilterCaps').SetValue(aD3DCaps.CubeTextureFilterCaps, DxbTextureFilterCapsToString(aD3DCaps.CubeTextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DCubeTexture8's
-    _('VolumeTextureFilterCaps').SetValue(aD3DCaps.VolumeTextureFilterCaps, DxbTextureFilterCapsToString(aD3DCaps.VolumeTextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DVolumeTexture8's
-    _('TextureAddressCaps').SetValue(aD3DCaps.TextureAddressCaps, DxbTextureAddressCapsToString(aD3DCaps.TextureAddressCaps)). // D3DPTADDRESSCAPS for IDirect3DTexture8's
-    _('VolumeTextureAddressCaps').SetValue(aD3DCaps.VolumeTextureAddressCaps, DxbTextureAddressCapsToString(aD3DCaps.VolumeTextureAddressCaps)). // D3DPTADDRESSCAPS for IDirect3DVolumeTexture8's
+    _(aD3DCaps.TextureFilterCaps, 'TextureFilterCaps', DxbTextureFilterCapsToString(aD3DCaps.TextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DTexture8's
+    _(aD3DCaps.CubeTextureFilterCaps, 'CubeTextureFilterCaps', DxbTextureFilterCapsToString(aD3DCaps.CubeTextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DCubeTexture8's
+    _(aD3DCaps.VolumeTextureFilterCaps, 'VolumeTextureFilterCaps', DxbTextureFilterCapsToString(aD3DCaps.VolumeTextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DVolumeTexture8's
+    _(aD3DCaps.TextureAddressCaps, 'TextureAddressCaps', DxbTextureAddressCapsToString(aD3DCaps.TextureAddressCaps)). // D3DPTADDRESSCAPS for IDirect3DTexture8's
+    _(aD3DCaps.VolumeTextureAddressCaps, 'VolumeTextureAddressCaps', DxbTextureAddressCapsToString(aD3DCaps.VolumeTextureAddressCaps)). // D3DPTADDRESSCAPS for IDirect3DVolumeTexture8's
 
     _(aD3DCaps.LineCaps, 'LineCaps'). // D3DLINECAPS
 
@@ -1341,7 +1341,7 @@ var
   hThread: HANDLE;
   hDupHandle: HANDLE;
   DevType: D3DDEVTYPE;
-  Identifier: TD3DAdapterIdentifier8;
+  Identifier: TD3DAdapterIdentifier8; // TODO : Compile to d3d9 too
   PresParam: X_D3DPRESENT_PARAMETERS;
 begin
   g_EmuShared.GetXBVideo(@g_XBVideo);
