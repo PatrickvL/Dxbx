@@ -15,7 +15,7 @@ type
   XBSound = object(Error)
   private
     m_bMute: BOOL;
-    m_dwSoundAdapter: DWORD;
+    m_dwSoundAdapter: TGUID;
   public
     procedure Initialize;
     procedure Finalize;
@@ -25,8 +25,8 @@ type
     procedure Save(const szRegistryKey: P_char);
 
     // property SoundAdapter
-    procedure SetSoundAdapter(Value: DWORD);
-    function GetSoundAdapter: DWORD;
+    procedure SetSoundAdapter(Value: TGUID);
+    function GetSoundAdapter: TGUID;
 
     // property Mute Toggling
     procedure SetMute(bMute: _BOOL);
@@ -50,7 +50,7 @@ begin
   Result := m_bMute <> BOOL_FALSE;
 end;
 
-function XBSound.GetSoundAdapter: DWORD;
+function XBSound.GetSoundAdapter: TGUID;
 // Branch:Dxbx  Revision:0.5  Translator:Shadow_tj  Done:100
 begin
   Result := m_dwSoundAdapter;
@@ -117,7 +117,7 @@ begin
     m_bMute := BOOL_FALSE;
 end;
 
-procedure XBSound.SetSoundAdapter(Value: DWORD);
+procedure XBSound.SetSoundAdapter(Value: TGUID);
 // Branch:Dxbx  Revision:0.5  Translator:Shadow_tj  Done:100
 begin
   m_dwSoundAdapter := Value;
