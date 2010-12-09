@@ -252,131 +252,159 @@ begin
   end;
 end;
 
+function AppendFlagStr(var Output: string; const Flags: ULONG; const Mask: ULONG; const Str: string): ULONG;
+begin
+  // Check for presence of all flag bits :
+  if (Flags and Mask) = Mask then
+  begin
+    // Add it's string to the output :
+    if Output <> '' then
+      Output := Output + '|';
+
+    Output := Output + Str;
+
+    Result := Mask;
+  end
+  else
+    Result := 0;
+end;
+
 function FileAttributesToString(FileAttributes: ULONG): string;
+const
+  FILE_ATTRIBUTE_OLD_DOS_VOLID = $00000008;
+var
+  HandledFlags: ULONG;
 begin
   Result := '';
 
   // Handle individual attributes :
-  if (FileAttributes and FILE_ATTRIBUTE_READONLY) > 0 then Result := Result + '|FILE_ATTRIBUTE_READONLY';
-  if (FileAttributes and FILE_ATTRIBUTE_HIDDEN) > 0 then Result := Result + '|FILE_ATTRIBUTE_HIDDEN';
-  if (FileAttributes and FILE_ATTRIBUTE_SYSTEM) > 0 then Result := Result + '|FILE_ATTRIBUTE_SYSTEM';
-  if (FileAttributes and FILE_ATTRIBUTE_DIRECTORY) > 0 then Result := Result + '|FILE_ATTRIBUTE_DIRECTORY';
-  if (FileAttributes and FILE_ATTRIBUTE_ARCHIVE) > 0 then Result := Result + '|FILE_ATTRIBUTE_ARCHIVE';
-  if (FileAttributes and FILE_ATTRIBUTE_DEVICE) > 0 then Result := Result + '|FILE_ATTRIBUTE_DEVICE';
-  if (FileAttributes and FILE_ATTRIBUTE_NORMAL) > 0 then Result := Result + '|FILE_ATTRIBUTE_NORMAL';
-  if (FileAttributes and FILE_ATTRIBUTE_TEMPORARY) > 0 then Result := Result + '|FILE_ATTRIBUTE_TEMPORARY';
-  if (FileAttributes and FILE_ATTRIBUTE_SPARSE_FILE) > 0 then Result := Result + '|FILE_ATTRIBUTE_SPARSE_FILE';
-  if (FileAttributes and FILE_ATTRIBUTE_REPARSE_POINT) > 0 then Result := Result + '|FILE_ATTRIBUTE_REPARSE_POINT';
-  if (FileAttributes and FILE_ATTRIBUTE_COMPRESSED) > 0 then Result := Result + '|FILE_ATTRIBUTE_COMPRESSED';
-  if (FileAttributes and FILE_ATTRIBUTE_OFFLINE) > 0 then Result := Result + '|FILE_ATTRIBUTE_OFFLINE';
-  if (FileAttributes and FILE_ATTRIBUTE_NOT_CONTENT_INDEXED) > 0 then Result := Result + '|FILE_ATTRIBUTE_NOT_CONTENT_INDEXED';
-  if (FileAttributes and FILE_ATTRIBUTE_ENCRYPTED) > 0 then Result := Result + '|FILE_ATTRIBUTE_ENCRYPTED';
+  HandledFlags := 0
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_READONLY, 'FILE_ATTRIBUTE_READONLY')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_HIDDEN, 'FILE_ATTRIBUTE_HIDDEN')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_SYSTEM, 'FILE_ATTRIBUTE_SYSTEM')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_DIRECTORY, 'FILE_ATTRIBUTE_DIRECTORY')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_ARCHIVE, 'FILE_ATTRIBUTE_ARCHIVE')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_DEVICE, 'FILE_ATTRIBUTE_DEVICE')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_NORMAL, 'FILE_ATTRIBUTE_NORMAL')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_TEMPORARY, 'FILE_ATTRIBUTE_TEMPORARY')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_SPARSE_FILE, 'FILE_ATTRIBUTE_SPARSE_FILE')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT, 'FILE_ATTRIBUTE_REPARSE_POINT')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_COMPRESSED, 'FILE_ATTRIBUTE_COMPRESSED')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_OFFLINE, 'FILE_ATTRIBUTE_OFFLINE')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_NOT_CONTENT_INDEXED, 'FILE_ATTRIBUTE_NOT_CONTENT_INDEXED')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_ENCRYPTED, 'FILE_ATTRIBUTE_ENCRYPTED')
 
-  // Handle individual flags :
-  if (FileAttributes and FILE_FLAG_WRITE_THROUGH) > 0 then Result := Result + '|FILE_FLAG_WRITE_THROUGH';
-  if (FileAttributes and FILE_FLAG_OVERLAPPED) > 0 then Result := Result + '|FILE_FLAG_OVERLAPPED';
-  if (FileAttributes and FILE_FLAG_NO_BUFFERING) > 0 then Result := Result + '|FILE_FLAG_NO_BUFFERING';
-  if (FileAttributes and FILE_FLAG_RANDOM_ACCESS) > 0 then Result := Result + '|FILE_FLAG_RANDOM_ACCESS';
-  if (FileAttributes and FILE_FLAG_SEQUENTIAL_SCAN) > 0 then Result := Result + '|FILE_FLAG_SEQUENTIAL_SCAN';
-  if (FileAttributes and FILE_FLAG_DELETE_ON_CLOSE) > 0 then Result := Result + '|FILE_FLAG_DELETE_ON_CLOSE';
-  if (FileAttributes and FILE_FLAG_BACKUP_SEMANTICS) > 0 then Result := Result + '|FILE_FLAG_BACKUP_SEMANTICS';
-  if (FileAttributes and FILE_FLAG_POSIX_SEMANTICS) > 0 then Result := Result + '|FILE_FLAG_POSIX_SEMANTICS';
-  if (FileAttributes and FILE_FLAG_FIRST_PIPE_INSTANCE) > 0 then Result := Result + '|FILE_FLAG_FIRST_PIPE_INSTANCE';
+    // Handle individual flags :
+    or AppendFlagStr({var}Result, FileAttributes, FILE_FLAG_WRITE_THROUGH, 'FILE_FLAG_WRITE_THROUGH')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_FLAG_OVERLAPPED, 'FILE_FLAG_OVERLAPPED')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_FLAG_NO_BUFFERING, 'FILE_FLAG_NO_BUFFERING')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_FLAG_RANDOM_ACCESS, 'FILE_FLAG_RANDOM_ACCESS')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_FLAG_SEQUENTIAL_SCAN, 'FILE_FLAG_SEQUENTIAL_SCAN')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_FLAG_DELETE_ON_CLOSE, 'FILE_FLAG_DELETE_ON_CLOSE')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_FLAG_BACKUP_SEMANTICS, 'FILE_FLAG_BACKUP_SEMANTICS')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_FLAG_POSIX_SEMANTICS, 'FILE_FLAG_POSIX_SEMANTICS')
+    or AppendFlagStr({var}Result, FileAttributes, FILE_FLAG_FIRST_PIPE_INSTANCE, 'FILE_FLAG_FIRST_PIPE_INSTANCE')
 
-  // TODO -oDxbx: Check if we ever encounter unhandled values, and what those might mean.
+    // Handle invalid, xbox only flags :
+    or AppendFlagStr({var}Result, FileAttributes, FILE_ATTRIBUTE_OLD_DOS_VOLID, 'FILE_ATTRIBUTE_OLD_DOS_VOLID');
 
-  if Result <> '' then System.Delete(Result, 1, 1);
+  // Add any unhandled flags as hexadecimal :
+  FileAttributes := FileAttributes and (not HandledFlags);
+  if FileAttributes > 0 then
+    Result := Result + '|0x' + IntToHex(FileAttributes, 8);
 end;
 
 function CreateOptionsToString(CreateOptions: ULONG): string;
+var
+  HandledFlags: ULONG;
 begin
   Result := '';
+  HandledFlags := 0;
 
-  // Handle combined flags (which must be removed once seen, hence the specific order) :
-  if (CreateOptions and FILE_STRUCTURED_STORAGE) = FILE_STRUCTURED_STORAGE then
-  begin
-    Result := Result + '|FILE_STRUCTURED_STORAGE';
-    CreateOptions := CreateOptions and (not FILE_STRUCTURED_STORAGE);
-  end;
+  // Handle combined flags (which must be handled before the individual flags, hence the specific order) :
+  if AppendFlagStr({var}Result, CreateOptions, FILE_STRUCTURED_STORAGE, 'FILE_STRUCTURED_STORAGE') > 0 then
+    HandledFlags := HandledFlags or FILE_STRUCTURED_STORAGE;
 
-  if (CreateOptions and FILE_COPY_STRUCTURED_STORAGE) = FILE_COPY_STRUCTURED_STORAGE then
-  begin
-    Result := Result + '|FILE_COPY_STRUCTURED_STORAGE';
-    CreateOptions := CreateOptions and (not FILE_COPY_STRUCTURED_STORAGE);
-  end;
+  if AppendFlagStr({var}Result, CreateOptions, FILE_COPY_STRUCTURED_STORAGE, 'FILE_COPY_STRUCTURED_STORAGE') > 0 then
+    HandledFlags := HandledFlags or FILE_COPY_STRUCTURED_STORAGE;
+
+  // Remove the combined flags that we handled thus far, so they don't show up individually :
+  CreateOptions := CreateOptions and (not HandledFlags);
 
   // Handle individual flags :
-  if (CreateOptions and FILE_DIRECTORY_FILE) > 0 then Result := Result + '|FILE_DIRECTORY_FILE';
-  if (CreateOptions and FILE_WRITE_THROUGH) > 0 then Result := Result + '|FILE_WRITE_THROUGH';
-  if (CreateOptions and FILE_SEQUENTIAL_ONLY) > 0 then Result := Result + '|FILE_SEQUENTIAL_ONLY';
-  if (CreateOptions and FILE_NO_INTERMEDIATE_BUFFERING) > 0 then Result := Result + '|FILE_NO_INTERMEDIATE_BUFFERING';
-  if (CreateOptions and FILE_SYNCHRONOUS_IO_ALERT) > 0 then Result := Result + '|FILE_SYNCHRONOUS_IO_ALERT';
-  if (CreateOptions and FILE_SYNCHRONOUS_IO_NONALERT) > 0 then Result := Result + '|FILE_SYNCHRONOUS_IO_NONALERT';
-  if (CreateOptions and FILE_NON_DIRECTORY_FILE) > 0 then Result := Result + '|FILE_NON_DIRECTORY_FILE';
-  if (CreateOptions and FILE_CREATE_TREE_CONNECTION) > 0 then Result := Result + '|FILE_CREATE_TREE_CONNECTION';
-  if (CreateOptions and FILE_COMPLETE_IF_OPLOCKED) > 0 then Result := Result + '|FILE_COMPLETE_IF_OPLOCKED';
-  if (CreateOptions and FILE_NO_EA_KNOWLEDGE) > 0 then Result := Result + '|FILE_NO_EA_KNOWLEDGE';
-  if (CreateOptions and FILE_OPEN_FOR_RECOVERY) > 0 then Result := Result + '|FILE_OPEN_FOR_RECOVERY';
-  if (CreateOptions and FILE_RANDOM_ACCESS) > 0 then Result := Result + '|FILE_RANDOM_ACCESS';
-  if (CreateOptions and FILE_DELETE_ON_CLOSE) > 0 then Result := Result + '|FILE_DELETE_ON_CLOSE';
-  if (CreateOptions and FILE_OPEN_BY_FILE_ID) > 0 then Result := Result + '|FILE_OPEN_BY_FILE_ID';
-  if (CreateOptions and FILE_OPEN_FOR_BACKUP_INTENT) > 0 then Result := Result + '|FILE_OPEN_FOR_BACKUP_INTENT';
-  if (CreateOptions and FILE_NO_COMPRESSION) > 0 then Result := Result + '|FILE_NO_COMPRESSION';
-  if (CreateOptions and FILE_RESERVE_OPFILTER) > 0 then Result := Result + '|FILE_RESERVE_OPFILTER';
-  if (CreateOptions and FILE_OPEN_REPARSE_POINT) > 0 then Result := Result + '|FILE_OPEN_REPARSE_POINT';
-  if (CreateOptions and FILE_OPEN_NO_RECALL) > 0 then Result := Result + '|FILE_OPEN_NO_RECALL';
-  if (CreateOptions and FILE_OPEN_FOR_FREE_SPACE_QUERY) > 0 then Result := Result + '|FILE_OPEN_FOR_FREE_SPACE_QUERY';
+  HandledFlags := HandledFlags
+    or AppendFlagStr({var}Result, CreateOptions, FILE_DIRECTORY_FILE, 'FILE_DIRECTORY_FILE')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_WRITE_THROUGH, 'FILE_WRITE_THROUGH')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_SEQUENTIAL_ONLY, 'FILE_SEQUENTIAL_ONLY')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_NO_INTERMEDIATE_BUFFERING, 'FILE_NO_INTERMEDIATE_BUFFERING')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_SYNCHRONOUS_IO_ALERT, 'FILE_SYNCHRONOUS_IO_ALERT')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_SYNCHRONOUS_IO_NONALERT, 'FILE_SYNCHRONOUS_IO_NONALERT')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_NON_DIRECTORY_FILE, 'FILE_NON_DIRECTORY_FILE')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_CREATE_TREE_CONNECTION, 'FILE_CREATE_TREE_CONNECTION')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_COMPLETE_IF_OPLOCKED, 'FILE_COMPLETE_IF_OPLOCKED')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_NO_EA_KNOWLEDGE, 'FILE_NO_EA_KNOWLEDGE')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_OPEN_FOR_RECOVERY, 'FILE_OPEN_FOR_RECOVERY')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_RANDOM_ACCESS, 'FILE_RANDOM_ACCESS')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_DELETE_ON_CLOSE, 'FILE_DELETE_ON_CLOSE')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_OPEN_BY_FILE_ID, 'FILE_OPEN_BY_FILE_ID')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_OPEN_FOR_BACKUP_INTENT, 'FILE_OPEN_FOR_BACKUP_INTENT')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_NO_COMPRESSION, 'FILE_NO_COMPRESSION')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_RESERVE_OPFILTER, 'FILE_RESERVE_OPFILTER')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_OPEN_REPARSE_POINT, 'FILE_OPEN_REPARSE_POINT')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_OPEN_NO_RECALL, 'FILE_OPEN_NO_RECALL')
+    or AppendFlagStr({var}Result, CreateOptions, FILE_OPEN_FOR_FREE_SPACE_QUERY, 'FILE_OPEN_FOR_FREE_SPACE_QUERY');
 
 //const FILE_VALID_OPTION_FLAGS =                 $00ffffff;
 //const FILE_VALID_PIPE_OPTION_FLAGS =            $00000032;
 //const FILE_VALID_MAILSLOT_OPTION_FLAGS =        $00000032;
 //const FILE_VALID_SET_FLAGS =                    $00000036;
 
-  // TODO -oDxbx: Check if we ever encounter unhandled values, and what those might mean.
-
-  if Result <> '' then System.Delete(Result, 1, 1);
+  // Add any unhandled flags as hexadecimal :
+  CreateOptions := CreateOptions and (not HandledFlags);
+  if CreateOptions > 0 then
+    Result := Result + '|0x' + IntToHex(CreateOptions, 8);
 end;
 
 function AccessMaskToString(AccessMask: ACCESS_MASK): string;
+var
+  HandledFlags: ACCESS_MASK;
 begin
   Result := '';
 
   // Handle generic flags :
-  if (AccessMask and GENERIC_READ) > 0 then Result := Result + '|GENERIC_READ';
-  if (AccessMask and GENERIC_WRITE) > 0 then Result := Result + '|GENERIC_WRITE';
-  if (AccessMask and GENERIC_EXECUTE) > 0 then Result := Result + '|GENERIC_EXECUTE';
-  if (AccessMask and GENERIC_ALL) > 0 then Result := Result + '|GENERIC_ALL';
+  HandledFlags := 0
+    or AppendFlagStr({var}Result, AccessMask, GENERIC_READ, 'GENERIC_READ')
+    or AppendFlagStr({var}Result, AccessMask, GENERIC_WRITE, 'GENERIC_WRITE')
+    or AppendFlagStr({var}Result, AccessMask, GENERIC_EXECUTE, 'GENERIC_EXECUTE')
+    or AppendFlagStr({var}Result, AccessMask, GENERIC_ALL, 'GENERIC_ALL');
 
-  // Handle combined flags (which must be removed once seen, hence the specific order) :
-  if (AccessMask and STANDARD_RIGHTS_ALL) = STANDARD_RIGHTS_ALL then
-  begin
-    Result := Result + '|STANDARD_RIGHTS_ALL';
-    AccessMask := AccessMask and (not STANDARD_RIGHTS_ALL);
-  end;
+  // Handle combined flags (which must be handled before the individual flags, hence the specific order) :
+  if AppendFlagStr({var}Result, AccessMask, STANDARD_RIGHTS_ALL, 'STANDARD_RIGHTS_ALL') > 0 then
+    HandledFlags := HandledFlags or STANDARD_RIGHTS_ALL;
 
-  if (AccessMask and STANDARD_RIGHTS_REQUIRED) = STANDARD_RIGHTS_REQUIRED then
-  begin
-    Result := Result + '|STANDARD_RIGHTS_REQUIRED';
-    AccessMask := AccessMask and (not STANDARD_RIGHTS_REQUIRED);
-  end;
+  if AppendFlagStr({var}Result, AccessMask, STANDARD_RIGHTS_REQUIRED, 'STANDARD_RIGHTS_REQUIRED') > 0 then
+    HandledFlags := HandledFlags or STANDARD_RIGHTS_REQUIRED;
+
+  // Remove the combined flags that we handled thus far, so they don't show up individually :
+  AccessMask := AccessMask and (not HandledFlags);
 
   // Handle individual flags :
-  if (AccessMask and DELETE) > 0 then Result := Result + '|DELETE';
-  if (AccessMask and READ_CONTROL) > 0 then Result := Result + '|READ_CONTROL';
-  if (AccessMask and WRITE_DAC) > 0 then Result := Result + '|WRITE_DAC';
-  if (AccessMask and WRITE_OWNER) > 0 then Result := Result + '|WRITE_OWNER';
-  if (AccessMask and SYNCHRONIZE) > 0 then Result := Result + '|SYNCHRONIZE';
+  HandledFlags := HandledFlags
+    or AppendFlagStr({var}Result, AccessMask, DELETE, 'DELETE')
+    or AppendFlagStr({var}Result, AccessMask, READ_CONTROL, 'READ_CONTROL')
+    or AppendFlagStr({var}Result, AccessMask, WRITE_DAC, 'WRITE_DAC')
+    or AppendFlagStr({var}Result, AccessMask, WRITE_OWNER, 'WRITE_OWNER')
+    or AppendFlagStr({var}Result, AccessMask, SYNCHRONIZE, 'SYNCHRONIZE')
 
-  if (AccessMask and ACCESS_SYSTEM_SECURITY) > 0 then Result := Result + '|ACCESS_SYSTEM_SECURITY';
-  if (AccessMask and MAXIMUM_ALLOWED) > 0 then Result := Result + '|MAXIMUM_ALLOWED';
+    or AppendFlagStr({var}Result, AccessMask, ACCESS_SYSTEM_SECURITY, 'ACCESS_SYSTEM_SECURITY')
+    or AppendFlagStr({var}Result, AccessMask, MAXIMUM_ALLOWED, 'MAXIMUM_ALLOWED');
 
-  // Handle the specific rights as hexadecimal string (since we can't guess their meaning here) :
-  // TODO -oDxbx: Maybe we should add a parameter to this function, to choose between various sets of meanings
-  if (AccessMask and SPECIFIC_RIGHTS_ALL) > 0 then Result := Result + Format('|0x%.4x', [AccessMask and SPECIFIC_RIGHTS_ALL]);
+  // TODO -oDxbx: Maybe we should add a parameter to this function, to choose between various sets of meanings for SPECIFIC_RIGHTS_ALL.
 
-  // TODO -oDxbx: Check if we ever encounter unhandled values, and what those might mean.
-
-  if Result <> '' then System.Delete(Result, 1, 1);
+  // Add any unhandled flags as hexadecimal :
+  AccessMask := AccessMask and (not HandledFlags);
+  if AccessMask > 0 then
+    Result := Result + '|0x' + IntToHex(AccessMask, 8);
 end;
 
 function NTStatusToString(aStatus: NTSTATUS): string;

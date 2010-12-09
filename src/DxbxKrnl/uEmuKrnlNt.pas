@@ -830,6 +830,45 @@ begin
 
   if (Result = STATUS_SUCCESS) then
   begin
+    // Dxbx addition : Fixup FileAttributes :
+    if FileAttributes and (not FILE_ATTRIBUTE_VALID_FLAGS) > 0 then
+    begin
+      // According to ReactOS, these are the reasons for STATUS_INVALID_PARAMETER (see http://www.alex-ionescu.com/?p=15) :
+//   if ((FileAttributes and (not FILE_ATTRIBUTE_VALID_FLAGS)) > 0)
+//   or ((ShareAccess and (not FILE_SHARE_VALID_FLAGS)) > 0)
+//   or (CreateDisposition > FILE_MAXIMUM_DISPOSITION)
+//   or ((CreateOptions and (not FILE_VALID_OPTION_FLAGS)) > 0)
+//   or ((CreateOptions and (FILE_SYNCHRONOUS_IO_ALERT or FILE_SYNCHRONOUS_IO_NONALERT) and (not (DesiredAccess and SYNCHRONIZE))) > 0)
+//   or ((CreateOptions and (FILE_SYNCHRONOUS_IO_NONALERT or FILE_SYNCHRONOUS_IO_ALERT)) = (FILE_SYNCHRONOUS_IO_NONALERT or FILE_SYNCHRONOUS_IO_ALERT))
+//   or (    ((CreateOptions and FILE_DIRECTORY_FILE) > 0)
+//       and ((CreateOptions and FILE_NON_DIRECTORY_FILE) = 0)
+//       and (   (CreateOptions and (not (FILE_DIRECTORY_FILE or
+//                              FILE_SYNCHRONOUS_IO_ALERT or
+//                              FILE_SYNCHRONOUS_IO_NONALERT or
+//                              FILE_WRITE_THROUGH or
+//                              FILE_COMPLETE_IF_OPLOCKED or
+//                              FILE_OPEN_FOR_BACKUP_INTENT or
+//                              FILE_DELETE_ON_CLOSE or
+//                              FILE_OPEN_FOR_FREE_SPACE_QUERY or
+//                              FILE_OPEN_BY_FILE_ID or
+//                              FILE_OPEN_REPARSE_POINT)) > 0)
+//             or (    (CreateDisposition <> FILE_CREATE)
+//                 and (CreateDisposition <> FILE_OPEN)
+//                 and (CreateDisposition <> FILE_OPEN_IF)
+//                )
+//           )
+//       )
+//    or (((CreateOptions and FILE_COMPLETE_IF_OPLOCKED) > 0) and ((CreateOptions and FILE_RESERVE_OPFILTER) > 0))
+//    or (((CreateOptions and FILE_NO_INTERMEDIATE_BUFFERING) > 0) and ((DesiredAccess and FILE_APPEND_DATA) > 0)) then
+//    begin
+//      STATUS_INVALID_PARAMETER
+//    end;
+      EmuWarning('NtCreateFile FileAttributes fixed (they would generate a STATUS_INVALID_PARAMETER if unpatched!) - removed 0x%0.8x', [FileAttributes and (not FILE_ATTRIBUTE_VALID_FLAGS)]);
+      // One possible attribute that could be present is : OLD DOS VOLID = $00000008;
+
+      FileAttributes := FileAttributes and FILE_ATTRIBUTE_VALID_FLAGS;
+    end;
+
     // redirect to Win2k/XP
     Result := JwaNative.NtCreateFile(
         FileHandle,
