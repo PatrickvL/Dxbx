@@ -128,20 +128,18 @@ type
     LogName: string; // LogType: string; ??
     LogValue: string;
   public
-    function _New: PLogStack;
     function SetName(const aName, aType: string): PLogStack; overload;
     function SetValue(const aValue: string; const aDetails: string = ''): PLogStack; overload;
     function SetValue(const aValue: UIntPtr; const aDetails: string = ''): PLogStack; overload;
-    function SetHexValue(const aValue: DWORD; const aNrNibbles: Integer): PLogStack; overload;
+    function SetHexValue(const aValue: DWORD; const aNrNibbles: Integer; const aDetails: string = ''): PLogStack; overload;
   public
-    function _(const aName: string): PLogStack; overload;
     function _(const aValue: AnsiString; const aName: string): PLogStack; overload;
     function _(const aValue: UnicodeString; const aName: string): PLogStack; overload;
     function _(const aValue: int; const aName: string = ''): PLogStack; overload;
     function _(const aValue: float; const aName: string = ''): PLogStack; overload;
     function _(const aValue: SHORT; const aName: string = ''): PLogStack; overload;
     function _(const aValue: WORD; const aName: string = ''): PlogStack; overload;
-    function _(const aValue: DWORD; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: DWORD; const aName: string = ''; const aDetails: string = ''): PLogStack; overload;
     function _(const aValue: BOOL; const aName: string = ''): PLogStack; overload;
     function _(const aValue: _BOOLEAN; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PVOID; const aName: string = ''): PLogStack; overload;
@@ -863,13 +861,6 @@ begin
   Result := Result.SetName(aSymbolName, '');
 end;
 
-function RLogStack._New: PLogStack;
-begin
-  // Retrieve the following entry and return that :
-  Next := GetLogEntry(LogRoot);
-  Result := Next;
-end;
-
 function RLogStack.SetName(const aName, aType: string): PLogStack;
 begin
   // Set the name (or type if no name was given) :
@@ -877,7 +868,9 @@ begin
     LogName := aName
   else
     LogName := aType;
-  Result := @Self;
+  // Retrieve the following entry and return that :
+  Next := GetLogEntry(LogRoot);
+  Result := Next;
 end;
 
 function RLogStack.SetValue(const aValue: string; const aDetails: string = ''): PLogStack;
@@ -886,172 +879,183 @@ begin
     LogValue := aValue + ' (' + aDetails + ')'
   else
     LogValue := aValue;
-
   Result := @Self;
 end;
 
 function RLogStack.SetValue(const aValue: UIntPtr; const aDetails: string = ''): PLogStack;
 begin
-  Result := SetValue('0x' + IntToHex(aValue, SizeOf(UIntPtr) * NIBBLES_PER_BYTE), aDetails);
+  SetValue('0x' + IntToHex(aValue, SizeOf(UIntPtr) * NIBBLES_PER_BYTE), aDetails);
+  Result := @Self;
 end;
 
-function RLogStack.SetHexValue(const aValue: DWORD; const aNrNibbles: Integer): PLogStack;
+function RLogStack.SetHexValue(const aValue: DWORD; const aNrNibbles: Integer; const aDetails: string = ''): PLogStack;
 begin
   // TODO : Handle signed/unsigned difference
-  if {(aValue < 0) or} (aValue > 9) then // Only add decimal representation when that's different from hexadecimal
-    Result := SetValue('0x' + IntToHex(aValue, aNrNibbles * NIBBLES_PER_BYTE), IntToStr(aValue))
+  if (aDetails = '') and ({(aValue < 0) or} (aValue > 9)) then // Only add decimal representation when that's different from hexadecimal
+    SetValue('0x' + IntToHex(aValue, aNrNibbles * NIBBLES_PER_BYTE), IntToStr(aValue))
   else
-    Result := SetValue('0x' + IntToHex(aValue, aNrNibbles * NIBBLES_PER_BYTE));
-end;
-
-function RLogStack._(const aName: string): PLogStack;
-begin
-  Result := _New.SetName(aName, 'string');
+    SetValue('0x' + IntToHex(aValue, aNrNibbles * NIBBLES_PER_BYTE), aDetails);
+  Result := @Self;
 end;
 
 function RLogStack._(const aValue: AnsiString; const aName: string): PLogStack;
 begin
-  Result := _New.SetName(aName, 'AnsiString').SetValue(string(aValue));
+  Result := SetName(aName, 'AnsiString');
+  SetValue(string(aValue));
 end;
 
 function RLogStack._(const aValue: UnicodeString; const aName: string): PLogStack;
 begin
-  Result := _New.SetName(aName, 'UnicodeString').SetValue(string(aValue));
+  Result := SetName(aName, 'UnicodeString');
+  SetValue(string(aValue));
 end;
 
 function RLogStack._(const aValue: int; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'int').SetValue(IntToStr(aValue));
+  Result := SetName(aName, 'int');
+  SetValue(IntToStr(aValue));
 end;
 
 function RLogStack._(const aValue: float; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'float').SetValue(FloatToString(aValue));
+  Result := SetName(aName, 'float');
+  SetValue(FloatToString(aValue));
 end;
 
 function RLogStack._(const aValue: SHORT; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'SHORT').SetHexValue(aValue, SizeOf(aValue));
+  Result := SetName(aName, 'SHORT');
+  SetHexValue(aValue, SizeOf(aValue));
 end;
 
 function RLogStack._(const aValue: WORD; const aName: string): PlogStack;
 begin
-  Result := _New.SetName(aName, 'WORD').SetHexValue(aValue, SizeOf(aValue));
+  Result := SetName(aName, 'WORD');
+  SetHexValue(aValue, SizeOf(aValue));
 end;
 
-function RLogStack._(const aValue: DWORD; const aName: string = ''): PLogStack;
+function RLogStack._(const aValue: DWORD; const aName, aDetails: string): PLogStack;
 begin
-  Result := _New.SetName(aName, 'DWORD').SetHexValue(aValue, SizeOf(aValue));
+  Result := SetName(aName, 'DWORD');
+  SetHexValue(aValue, SizeOf(aValue), aDetails);
 end;
 
 function RLogStack._(const aValue: BOOL; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'BOOL');
+  Result := SetName(aName, 'BOOL');
   if aValue = BOOL_FALSE then
-    Result.SetValue(UIntPtr(aValue), 'FALSE')
+    SetValue(UIntPtr(aValue), 'FALSE')
   else
-    Result.SetValue(UIntPtr(aValue), 'TRUE');
+    SetValue(UIntPtr(aValue), 'TRUE');
 end;
 
 function RLogStack._(const aValue: _BOOLEAN; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, '_BOOLEAN');
+  Result := SetName(aName, '_BOOLEAN');
   if aValue = False then
-    Result.SetValue(UIntPtr(aValue), 'False')
+    SetValue(UIntPtr(aValue), 'False')
   else
-    Result.SetValue(UIntPtr(aValue), 'True');
+    SetValue(UIntPtr(aValue), 'True');
 end;
 
 function RLogStack._(const aValue: LARGE_INTEGER; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'LARGE_INTEGER').SetValue(IntToStr(aValue.QuadPart));
+  Result := SetName(aName, 'LARGE_INTEGER');
+  SetValue(IntToStr(aValue.QuadPart));
 end;
 
 function RLogStack._(const aValue: PVOID; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'PVOID').SetValue(UIntPtr(aValue));
+  Result := SetName(aName, 'PVOID');
+  SetValue(UIntPtr(aValue));
 end;
 
 function RLogStack._(const aValue: LPCSTR; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'LPCSTR').SetValue(UIntPtr(aValue), '"' + string(PAnsiCharMaxLenToString(aValue, LOG_MAX_STRING_LENGTH)) + '"');
+  Result := SetName(aName, 'LPCSTR');
+  SetValue(UIntPtr(aValue), '"' + string(PAnsiCharMaxLenToString(aValue, LOG_MAX_STRING_LENGTH)) + '"');
 end;
 
 function RLogStack._(const aValue: LPCWSTR; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'LPCWSTR').SetValue(UIntPtr(aValue), '"' + string(PWideCharMaxLenToString(aValue, LOG_MAX_STRING_LENGTH)) + '"');
+  Result := SetName(aName, 'LPCWSTR');
+  SetValue(UIntPtr(aValue), '"' + string(PWideCharMaxLenToString(aValue, LOG_MAX_STRING_LENGTH)) + '"');
 end;
 
 function RLogStack._(const aValue: PPOINT; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'PPOINT');
+  Result := SetName(aName, 'PPOINT');
   if Assigned(aValue) then
-    Result.SetValue(UIntPtr(aValue), Format('%d,%d', [aValue.X, aValue.Y]))
+    SetValue(UIntPtr(aValue), Format('%d,%d', [aValue.X, aValue.Y]))
   else
-    Result.SetValue(UIntPtr(aValue));
+    SetValue(UIntPtr(aValue));
 end;
 
 function RLogStack._(const aValue: PRECT; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'PRECT');
+  Result := SetName(aName, 'PRECT');
   if Assigned(aValue) then
-    Result.SetValue(UIntPtr(aValue), Format('%d,%d %d,%d', [aValue.Left, aValue.Top, aValue.Right, aValue.Bottom]))
+    SetValue(UIntPtr(aValue), Format('%d,%d %d,%d', [aValue.Left, aValue.Top, aValue.Right, aValue.Bottom]))
   else
-    Result.SetValue(UIntPtr(aValue));
+    SetValue(UIntPtr(aValue));
 end;
 
 {$IFDEF DXBX_DLL}
 
 function RLogStack._(const aValue: PLARGE_INTEGER; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'PLARGE_INTEGER');
+  Result := SetName(aName, 'PLARGE_INTEGER');
   if Assigned(aValue) then
-    Result.SetValue(UIntPtr(aValue), IntToStr(aValue.QuadPart))
+    SetValue(UIntPtr(aValue), IntToStr(aValue.QuadPart))
   else
-    Result.SetValue(UIntPtr(aValue));
+    SetValue(UIntPtr(aValue));
 end;
 
 function RLogStack._(const aValue: PANSI_STRING; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'PANSI_STRING');
+  Result := SetName(aName, 'PANSI_STRING');
   if Assigned(aValue) then
-    Result.SetValue(UIntPtr(aValue), '"' + string(PSTRING_String(aValue)) + '"')
+    SetValue(UIntPtr(aValue), '"' + string(PSTRING_String(aValue)) + '"')
   else
-    Result.SetValue(UIntPtr(aValue));
+    SetValue(UIntPtr(aValue));
 end;
 
 function RLogStack._(const aValue: POBJECT_ATTRIBUTES; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'POBJECT_ATTRIBUTES');
+  Result := SetName(aName, 'POBJECT_ATTRIBUTES');
   if Assigned(aValue) then
-    Result.SetValue(UIntPtr(aValue), '"' + string(POBJECT_ATTRIBUTES_String(aValue)) + '"')
+    SetValue(UIntPtr(aValue), '"' + string(POBJECT_ATTRIBUTES_String(aValue)) + '"')
   else
-    Result.SetValue(UIntPtr(aValue));
+    SetValue(UIntPtr(aValue));
 end;
 
 function RLogStack._(const aValue: FILE_INFORMATION_CLASS; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'FILE_INFORMATION_CLASS').SetValue(UIntPtr(aValue), FileInformationClassToString(aValue));
+  Result := SetName(aName, 'FILE_INFORMATION_CLASS');  SetValue(UIntPtr(aValue), FileInformationClassToString(aValue));
 end;
 
 function RLogStack._ACCESS_MASK(const aValue: ACCESS_MASK; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'ACCESS_MASK').SetValue(UIntPtr(aValue), AccessMaskToString(aValue));
+  Result := SetName(aName, 'ACCESS_MASK');
+  SetValue(UIntPtr(aValue), AccessMaskToString(aValue));
 end;
 
 function RLogStack._FileAttributes(const aValue: ULONG; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'FileAttributes').SetValue(UIntPtr(aValue), FileAttributesToString(aValue));
+  Result := SetName(aName, 'FileAttributes');
+  SetValue(UIntPtr(aValue), FileAttributesToString(aValue));
 end;
 
 function RLogStack._CreateDisposition(const aValue: ULONG; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'CreateDisposition').SetValue(UIntPtr(aValue), CreateDispositionToString(aValue));
+  Result := SetName(aName, 'CreateDisposition');
+  SetValue(UIntPtr(aValue), CreateDispositionToString(aValue));
 end;
 
 function RLogStack._CreateOptions(const aValue: ULONG; const aName: string = ''): PLogStack;
 begin
-  Result := _New.SetName(aName, 'CreateOptions').SetValue(UIntPtr(aValue), CreateOptionsToString(aValue));
+  Result := SetName(aName, 'CreateOptions');
+  SetValue(UIntPtr(aValue), CreateOptionsToString(aValue));
 end;
 
 {$ENDIF DXBX_DLL}
