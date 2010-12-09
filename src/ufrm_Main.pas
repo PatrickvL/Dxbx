@@ -261,8 +261,8 @@ function BrowseDialogCallBack
   (Wnd: HWND; uMsg: UINT; lParam, lpData: LPARAM):
   integer stdcall;
 var
-  wa, rect : TRect;
-  dialogPT : TPoint;
+  wa, rect: TRect;
+  dialogPT: TPoint;
 begin
   //center in work area
   if uMsg = BFFM_INITIALIZED then
@@ -279,6 +279,7 @@ begin
                Rect.Right - Rect.Left,
                Rect.Bottom - Rect.Top,
                True);
+    SendMessage(wnd, BFFM_SETSELECTIONW, Longint(true), lpdata);
   end;
 
   Result := 0;
@@ -419,20 +420,24 @@ end;
 function Tfrm_Main.BrowseDialog(const Title: string;
   const Flag: integer): string;
 var
-  lpItemID : PItemIDList;
-  BrowseInfo : TBrowseInfo;
-  DisplayName : array[0..MAX_PATH] of char;
-  TempPath : array[0..MAX_PATH] of char;
+  lpItemID: PItemIDList;
+  BrowseInfo: TBrowseInfo;
+  DisplayName: array[0..MAX_PATH] of char;
+  TempPath: array[0..MAX_PATH] of char;
+  szDir: string;
 begin
   Result:='';
   FillChar(BrowseInfo, sizeof(TBrowseInfo), #0);
+  szDir := GetCurrentDir;
   with BrowseInfo do begin
     hwndOwner := Application.Handle;
     pszDisplayName := @DisplayName;
     lpszTitle := PChar(Title);
     ulFlags := Flag;
+    lParam := Longint(PChar(szDir));
     lpfn := BrowseDialogCallBack;
   end;
+
   lpItemID := SHBrowseForFolder(BrowseInfo);
   if lpItemId <> nil then begin
     SHGetPathFromIDList(lpItemID, TempPath);
