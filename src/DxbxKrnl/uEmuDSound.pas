@@ -860,6 +860,7 @@ function DxbxAssureDirectSoundCreate(const FromOriginalDSoundCreate: Boolean = F
 var
   v: int;
   AdapterGUID: TGUID;
+  pAdapterGUID: PGUID;
 begin
   Result := DS_OK;
 
@@ -877,7 +878,11 @@ begin
 
     // Create the DirectSound buffer before continuing...
     AdapterGUID := g_XBSound.GetSoundAdapterGUID;
-    Result := DirectSoundCreate8(@AdapterGUID, @g_pDSound8, NULL);
+    if (AdapterGUID.D1 = 0) then
+      pAdapterGUID := NULL
+    else
+      pAdapterGUID := @AdapterGUID;
+    Result := DirectSoundCreate8(pAdapterGUID, @g_pDSound8, NULL);
     if FAILED(Result) then
       ShowSoundError('DirectSoundCreate8 Failed!', Result, etCleanup);
 
