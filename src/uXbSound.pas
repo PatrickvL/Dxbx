@@ -15,7 +15,7 @@ type
   XBSound = object(Error)
   private
     m_bMute: BOOL;
-    m_dwSoundAdapter: TGUID;
+    m_SoundAdapterGUID: TGUID;
   public
     procedure Initialize;
     procedure Finalize;
@@ -24,9 +24,8 @@ type
     procedure Load(const szRegistryKey: P_char);
     procedure Save(const szRegistryKey: P_char);
 
-    // property SoundAdapter
-    procedure SetSoundAdapter(Value: TGUID);
-    function GetSoundAdapter: TGUID;
+    procedure SetSoundAdapterGUID(Value: TGUID);
+    function GetSoundAdapterGUID: TGUID;
 
     // property Mute Toggling
     procedure SetMute(bMute: _BOOL);
@@ -50,10 +49,10 @@ begin
   Result := m_bMute <> BOOL_FALSE;
 end;
 
-function XBSound.GetSoundAdapter: TGUID;
+function XBSound.GetSoundAdapterGUID: TGUID;
 // Branch:Dxbx  Revision:0.5  Translator:Shadow_tj  Done:100
 begin
-  Result := m_dwSoundAdapter;
+  Result := m_SoundAdapterGUID;
 end;
 
 procedure XBSound.Initialize;
@@ -72,8 +71,8 @@ begin
   try
     if RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
     try
-      dwType := REG_DWORD; dwSize := sizeof(DWORD);
-      RegQueryValueExA(hKey, 'SoundAdapter', NULL, @dwType, PBYTE(@m_dwSoundAdapter), @dwSize);
+      dwType := REG_BINARY; dwSize := sizeof(TGUID);
+      RegQueryValueExA(hKey, 'SoundAdapter', NULL, @dwType, PBYTE(@m_SoundAdapterGUID), @dwSize);
 
       dwType := REG_DWORD; dwSize := sizeof(DWORD);
       RegQueryValueExA(hKey, 'Mute', NULL, @dwType, PBYTE(@m_bMute), @dwSize);
@@ -95,8 +94,8 @@ begin
   try
     if RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
     try
-      dwType := REG_DWORD; dwSize := sizeof(DWORD);
-      RegSetValueExA(hKey, 'SoundAdapter', 0, dwType, PBYTE(@m_dwSoundAdapter), dwSize);
+      dwType := REG_BINARY; dwSize := sizeof(TGUID);
+      RegSetValueExA(hKey, 'SoundAdapter', 0, dwType, PBYTE(@m_SoundAdapterGUID), dwSize);
 
       dwType := REG_DWORD; dwSize := sizeof(DWORD);
       RegSetValueExA(hKey, 'Mute', 0, dwType, PBYTE(@m_bMute), dwSize);
@@ -117,10 +116,10 @@ begin
     m_bMute := BOOL_FALSE;
 end;
 
-procedure XBSound.SetSoundAdapter(Value: TGUID);
+procedure XBSound.SetSoundAdapterGUID(Value: TGUID);
 // Branch:Dxbx  Revision:0.5  Translator:Shadow_tj  Done:100
 begin
-  m_dwSoundAdapter := Value;
+  m_SoundAdapterGUID := Value;
 end;
 
 end.
