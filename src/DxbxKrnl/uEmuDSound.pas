@@ -876,7 +876,7 @@ begin
     end;
 
     // Create the DirectSound buffer before continuing...
-    AdapterGUID := g_XBSound.GetSoundAdapter;
+    AdapterGUID := g_XBSound.GetSoundAdapterGUID;
     Result := DirectSoundCreate8(@AdapterGUID, @g_pDSound8, NULL);
     if FAILED(Result) then
       ShowSoundError('DirectSoundCreate8 Failed!', Result, etCleanup);

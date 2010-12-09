@@ -190,8 +190,8 @@ implementation
 type
   RSoundDeviceInfo = record
     GUID: TGuid;
-    DriverDescription: string;
-    DriverName: string;
+    DriverDescription: AnsiString;
+    DriverName: AnsiString;
   end;
   PSoundDeviceInfo = ^RSoundDeviceInfo;
 
@@ -201,9 +201,13 @@ var
   SoundDeviceInfo: PSoundDeviceInfo;
 begin
   New({var}SoundDeviceInfo);
-  SoundDeviceInfo.GUID := lpGUID^;
-  SoundDeviceInfo.DriverDescription := string(AnsiString(lpDriverDescription));
-  SoundDeviceInfo.DriverName := string(AnsiString(lpDriverName));
+  ZeroMemory(SoundDeviceInfo, SizeOf(SoundDeviceInfo));
+  if Assigned(lpGUID) then
+    SoundDeviceInfo.GUID := lpGUID^;
+  if Assigned(lpDriverDescription) then
+    SetString(SoundDeviceInfo.DriverDescription, lpDriverDescription, StrLen(lpDriverDescription));
+  if Assigned(lpDriverName) then
+    SetString(SoundDeviceInfo.DriverName, lpDriverName, StrLen(lpDriverName));
 
   TStrings(lpContext).AddObject(SoundDeviceInfo.DriverDescription, TObject(SoundDeviceInfo));
   Result := True;
@@ -331,9 +335,11 @@ begin
   edt_DisplayAdapter.ItemIndex := FXBVideo.GetDisplayAdapter;
   edt_Direct3dDevice.ItemIndex := FXBVideo.GetDirect3DDevice;
   edt_VideoResolution.ItemIndex := VideoResolutionIndex;
+
+  edt_AudioAdapter.ItemIndex := 0;
   for i := 0 to edt_AudioAdapter.Items.Count - 1 do
   begin
-    if SameGUID(PSoundDeviceInfo(edt_AudioAdapter.Items.Objects[i]).GUID, FXBSound.GetSoundAdapter) then
+    if SameGUID(PSoundDeviceInfo(edt_AudioAdapter.Items.Objects[i]).GUID, FXBSound.GetSoundAdapterGUID) then
     begin
       edt_AudioAdapter.ItemIndex := i;
       Break;
@@ -764,7 +770,7 @@ begin
   g_EmuShared.SetXBVideo(@FXBVideo);
 
   // Publish the XBSound settings via shared memory :
-  FXBSound.SetSoundAdapter(PSoundDeviceInfo(edt_AudioAdapter.Items.Objects[edt_AudioAdapter.ItemIndex]).GUID);
+  FXBSound.SetSoundAdapterGUID(PSoundDeviceInfo(edt_AudioAdapter.Items.Objects[edt_AudioAdapter.ItemIndex]).GUID);
   FXBSound.SetMute(chkMute.Checked);
   g_EmuShared.SetXBSound(@FXBSound);
 
