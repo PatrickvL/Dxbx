@@ -1,4 +1,4 @@
-Dxbx FAQ - Last update : 2010-10-27 by PatrickvL
+Dxbx FAQ - Last update : 2010-11-09 by Wayo
 The latest version of this file can be found at http://dxbx.svn.sourceforge.net/viewvc/dxbx/DxbxFAQ.txt
 
 Q: What is Dxbx?
