@@ -5900,7 +5900,9 @@ begin
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX1) then
         begin
           // Dxbx fix : Use mask, else the format might get expanded incorrectly :
-          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX0;
+          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX1;
+          // Dxbx note : Correct usage of D3DFVF_TEX1 (and the other cases below)
+          // can be tested with "Daphne Xbox" (the Laserdisc Arcade Game Emulator).
         end;
       end;
 
@@ -5912,7 +5914,7 @@ begin
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX2) then
         begin
           // Dxbx fix : Use mask, else the format might get expanded incorrectly :
-          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX1;
+          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX2;
         end;
       end;
 
@@ -5924,7 +5926,7 @@ begin
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX3) then
         begin
           // Dxbx fix : Use mask, else the format might get expanded incorrectly :
-          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX2;
+          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX3;
         end;
       end;
 
@@ -5936,7 +5938,7 @@ begin
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX4) then
         begin
           // Dxbx fix : Use mask, else the format might get expanded incorrectly :
-          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX3;
+          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX4;
         end;
       end;
 
