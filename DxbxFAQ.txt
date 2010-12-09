@@ -105,9 +105,15 @@ A: Sadly, no. Some games are using link-time optimization, which means that the 
    This makes it very hard for us to pin-point them. Most likely Dxbx will fail placing most of the patches that should be in-place.
    The effect will be undeterminable, but most likely your game will crash.
    
-Q: How can I run games that use this problematic link-time optimization?
-A: We know of only one way around this : use a feature-complete LLE.
-   None exists yet, though, so you're out of luck. Might we suggest you use an actual Xbox1? ;-)
+Q: How can I run games that use this problematic link-time optimization (LTCG)?
+A: We know of only one way around this: use a feature-complete LLE. None exists yet, though, so you’re out of luck. Might we suggest you use an actual Xbox1? ;)
+   LTCG stands for "Link Time Code Generation" - a technique that optimized an executable during the linking phase. A nasty sideeffect (for us) is that the resulting  
+   executable doesn't contain the exact binary code, as was present in the original libraries.
+   This fact hinders our pattern scanning engine to such a degree, that we probably won't find enough symbols that should be patched in order to run the game.
+   Sure, you could reverse engineer each of those titles and manually add symbol locations (like _SF_ did in Xeon to run Halo), but chances are 
+   that even then our patches don't work anymore because of differences in argument-passing and whatnot.
+   So for now, we state officially that Dxbx won't support LTCG generated titles. This paints a clear picture to the general public and gives us 
+   more focus on other areas. I'm sure you'll understand this reasoning.
 
 Q: What about (homebrew) software using OpenXDK - can that be emulated too?
 A: Quite possibly, yes. But apart from a few patterns for OpenXDK, we've written not a single patch for it, because right now our main priority is emulating XDK linked software.
