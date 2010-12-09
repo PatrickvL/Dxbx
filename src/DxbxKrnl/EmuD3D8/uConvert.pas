@@ -384,7 +384,10 @@ begin
     X_D3DTS_WORLD3:
       Result := D3DTS_WORLD3;
   else
-    DxbxKrnlCleanup('Unknown Transform State Type (%d)', [Ord(State)]);
+    if State = X_D3DTS_MAX then
+      EmuWarning('Ignored D3DTS_MAX')
+    else
+      DxbxKrnlCleanup('Unknown Transform State Type (%d)', [Ord(State)]);
 
     Result := Low(Result); // Never reached
   end;
