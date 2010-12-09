@@ -187,12 +187,27 @@ const
 
 implementation
 
-function EnumDevices(lpGUID: PGUID; lpDriverDescription: PAnsiChar;
+type
+  RSoundDeviceInfo = record
+    GUID: TGuid;
+    DriverDescription: string;
+    DriverName: string;
+  end;
+  PSoundDeviceInfo = ^RSoundDeviceInfo;
+
+function EnumSoundDevices(lpGUID: PGUID; lpDriverDescription: PAnsiChar;
   lpDriverName: PAnsiChar; lpContext: Pointer): Windows.BOOL; stdcall;
+var
+  SoundDeviceInfo: PSoundDeviceInfo;
 begin
-  TStrings(lpContext).Add(string(AnsiString(lpDriverDescription)));
+  New({var}SoundDeviceInfo);
+  SoundDeviceInfo.GUID := lpGUID^;
+  SoundDeviceInfo.DriverDescription := string(AnsiString(lpDriverDescription));
+  SoundDeviceInfo.DriverName := string(AnsiString(lpDriverName));
+
+  TStrings(lpContext).AddObject(SoundDeviceInfo.DriverDescription, TObject(SoundDeviceInfo));
   Result := True;
-end; // EnumDevices
+end; // EnumSoundDevices
 
 function EnumDevicesEx(lpGUID: PGUID; lpDriverDescription: PAnsiChar;
   lpDriverName: PAnsiChar; lpContext: Pointer; Monitor: HMonitor): Windows.BOOL; stdcall;
@@ -226,6 +241,11 @@ end; // EnumDisplayModesCallBack
 
 {$R *.dfm}
 
+function SameGUID(const aGUID1, aGUID2: TGUID): Boolean;
+begin
+  Result := (memcmp(@aGUID1, @aGUID2, SizeOf(TGUID)) = 0);
+end;
+
 procedure TfmConfiguration.FormCreate(Sender: TObject);
 
   procedure _Register(const aPanel: TPanel; const aXBCtrlObject: XBCtrlObject);
@@ -240,6 +260,7 @@ var
   tempDirectDraw: IDirectDraw;
   VideoResolutionIndex: Integer;
 
+  i: Integer;
 begin
   // Read settings from shared memory :
   Assert(Assigned(g_EmuShared));
@@ -289,8 +310,8 @@ begin
   // Retrieve possible video modes :
   DirectDrawEnumerateExA(EnumDevicesEx, edt_DisplayAdapter.Items, 0);
 
-  // Retrieve possible
-  DirectSoundEnumerateA(EnumDevices, edt_AudioAdapter.Items);
+  // Retrieve possible sound devices :
+  DirectSoundEnumerateA(EnumSoundDevices, edt_AudioAdapter.Items);
 
   DirectDrawCreate(nil, {out}tempDirectDraw, MyDirectDraw);
   try
@@ -310,7 +331,14 @@ begin
   edt_DisplayAdapter.ItemIndex := FXBVideo.GetDisplayAdapter;
   edt_Direct3dDevice.ItemIndex := FXBVideo.GetDirect3DDevice;
   edt_VideoResolution.ItemIndex := VideoResolutionIndex;
-  edt_AudioAdapter.ItemIndex := FXBSound.GetSoundAdapter;
+  for i := 0 to edt_AudioAdapter.Items.Count - 1 do
+  begin
+    if SameGUID(PSoundDeviceInfo(edt_AudioAdapter.Items.Objects[i]).GUID, FXBSound.GetSoundAdapter) then
+    begin
+      edt_AudioAdapter.ItemIndex := i;
+      Break;
+    end;
+  end;
 
   chkMute.Checked := FXBSound.GetMute;
   chk_FullScreen.Checked :=  FXBVideo.GetFullscreen;
@@ -372,7 +400,7 @@ begin
     IniFile := TIniFile.Create(OpenDialog1.FileName);
     try
 
-      edt_AudioAdapter.ItemIndex := IniFile.ReadInteger('Sound', 'Adapter', 0);
+      edt_AudioAdapter.ItemIndex := edt_AudioAdapter.Items.IndexOf(IniFile.ReadString('Sound', 'Adapter', ''));
       chkMute.Checked := IniFile.ReadBool('Sound', 'Mute', False);
 
     finally
@@ -521,7 +549,7 @@ begin
   begin
     IniFile := TIniFile.Create(SaveDialog1.FileName);
     try
-      IniFile.WriteInteger('Sound', 'Adapter', edt_AudioAdapter.ItemIndex);
+      IniFile.WriteString('Sound', 'Adapter', edt_AudioAdapter.Items[edt_AudioAdapter.ItemIndex]);
       IniFile.WriteBool('Sound', 'Mute', chkMute.Checked);
     finally
       FreeAndNil(IniFile);
@@ -736,8 +764,8 @@ begin
   g_EmuShared.SetXBVideo(@FXBVideo);
 
   // Publish the XBSound settings via shared memory :
+  FXBSound.SetSoundAdapter(PSoundDeviceInfo(edt_AudioAdapter.Items.Objects[edt_AudioAdapter.ItemIndex]).GUID);
   FXBSound.SetMute(chkMute.Checked);
-  FXBSound.SetSoundAdapter(edt_AudioAdapter.ItemIndex);
   g_EmuShared.SetXBSound(@FXBSound);
 
   // Publish the Controller settings via shared memory :
