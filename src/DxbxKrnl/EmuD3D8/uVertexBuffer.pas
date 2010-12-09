@@ -1808,8 +1808,11 @@ begin
     end;
   end;
 
-  if (dwMipMapLevels > 6) then
-    dwMipMapLevels := 6;
+  if (dwMipMapLevels > 9) then
+  begin
+    EmuWarning('Limited MipMapLevels to 9 (instead of %d)', [dwMipMapLevels]);
+    dwMipMapLevels := 9;
+  end;
 end;
 
 // Dxbx Note: This code is taken from XTL_EmuIDirect3DResource_Register and occured
