@@ -213,63 +213,80 @@ function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
 begin
   // TODO -oDxbx: Complete this, and add a switch to prefer swizzled over linear formats (could be relevant)
   case aFormat of
-    D3DFMT_YUY2:
-      Result := X_D3DFMT_YUY2;
-    D3DFMT_UYVY:
-      Result := X_D3DFMT_UYVY;
-    D3DFMT_R5G6B5:
-      Result := X_D3DFMT_LIN_R5G6B5; // Linear
-//      Result := X_D3DFMT_R5G6B5; // Swizzled
-    D3DFMT_D24S8:
-      Result := X_D3DFMT_D24S8; // Swizzled
-    D3DFMT_DXT5:
-      Result := X_D3DFMT_DXT5; // Compressed
-    D3DFMT_DXT4:
-      Result := X_D3DFMT_DXT4;
-    D3DFMT_DXT3:
-      Result := X_D3DFMT_DXT3; // Compressed
-    D3DFMT_DXT2:
-      Result := X_D3DFMT_DXT2;
-    D3DFMT_DXT1:
-      Result := X_D3DFMT_DXT1; // Compressed
-    D3DFMT_A1R5G5B5:
-      Result := X_D3DFMT_LIN_A1R5G5B5; // Linear
+    // D3DFMT_R8G8B8               = 20,
+    D3DFMT_A8R8G8B8:
+      // Result := X_D3DFMT_LIN_A8R8G8B8; // Linear
+      Result := X_D3DFMT_A8R8G8B8;
     D3DFMT_X8R8G8B8:
       Result := X_D3DFMT_LIN_X8R8G8B8; // Linear
-//      Result := X_D3DFMT_X8R8G8B8; // Swizzled
-    D3DFMT_A8R8G8B8:
-//      Result := X_D3DFMT_LIN_A8R8G8B8; // Linear
-      Result := X_D3DFMT_A8R8G8B8;
-
+      // Result := X_D3DFMT_X8R8G8B8; // Swizzled
+    D3DFMT_R5G6B5:
+      Result := X_D3DFMT_LIN_R5G6B5; // Linear
+      // Result := X_D3DFMT_R5G6B5; // Swizzled
+    D3DFMT_X1R5G5B5:
+      Result := X_D3DFMT_X1R5G5B5; // Swizzled
+    D3DFMT_A1R5G5B5:
+      Result := X_D3DFMT_LIN_A1R5G5B5; // Linear
     D3DFMT_A4R4G4B4:
       Result := X_D3DFMT_LIN_A4R4G4B4; // Linear
-//      Result := X_D3DFMT_A4R4G4B4; // Swizzled
+      // Result := X_D3DFMT_A4R4G4B4; // Swizzled
+    // D3DFMT_R3G3B2               = 27,
+    D3DFMT_A8:
+      Result := X_D3DFMT_A8;
+    // D3DFMT_A8R3G3B2             = 29,
+    // D3DFMT_X4R4G4B4             = 30,
+    // D3DFMT_A2B10G10R10          = 31,
+    // D3DFMT_G16R16               = 34,
+    // D3DFMT_A8P8                 = 40,
+    D3DFMT_P8:
+      Result := X_D3DFMT_P8;
     D3DFMT_L8:
-        Result := X_D3DFMT_LIN_L8; // Linear
-//        Result := X_D3DFMT_L8; // Swizzled
-    D3DFMT_D16,
-    D3DFMT_D16_LOCKABLE:
-      Result := X_D3DFMT_D16_LOCKABLE; // Swizzled
-
-    D3DFMT_UNKNOWN:
-      Result := X_D3DFMT_UNKNOWN;
-
-// Dxbx additions :
-    D3DFMT_L6V5U5:
-      Result := X_D3DFMT_L6V5U5; // Swizzled
-
+      Result := X_D3DFMT_LIN_L8; // Linear
+      // Result := X_D3DFMT_L8; // Swizzled
+    D3DFMT_A8L8:
+      Result := X_D3DFMT_A8L8; // Swizzled
+    // D3DFMT_A4L4                 = 52,
     D3DFMT_V8U8:
       Result := X_D3DFMT_V8U8; // Swizzled
-
+    D3DFMT_L6V5U5:
+      Result := X_D3DFMT_L6V5U5; // Swizzled
+    // D3DFMT_X8L8V8U8             = 62,
+    // D3DFMT_Q8W8V8U8             = 63,
     D3DFMT_V16U16:
       Result := X_D3DFMT_V16U16; // Swizzled
-
+    // D3DFMT_W11V11U10            = 65,
+    // D3DFMT_A2W10V10U10          = 67,
+    D3DFMT_UYVY:
+      Result := X_D3DFMT_UYVY;
+    D3DFMT_YUY2:
+      Result := X_D3DFMT_YUY2;
+    D3DFMT_DXT1:
+      Result := X_D3DFMT_DXT1; // Compressed
+    D3DFMT_DXT2:
+      Result := X_D3DFMT_DXT2;
+    D3DFMT_DXT3:
+      Result := X_D3DFMT_DXT3; // Compressed
+    D3DFMT_DXT4:
+      Result := X_D3DFMT_DXT4;
+    D3DFMT_DXT5:
+      Result := X_D3DFMT_DXT5; // Compressed
+    D3DFMT_D16_LOCKABLE:
+      Result := X_D3DFMT_D16_LOCKABLE; // Swizzled
+    // D3DFMT_D32                  = 71,
+    // D3DFMT_D15S1                = 73,
+    D3DFMT_D24S8:
+      Result := X_D3DFMT_D24S8; // Swizzled
+    D3DFMT_D16:
+      Result := X_D3DFMT_D16_LOCKABLE; // Swizzled
+    // D3DFMT_D24X8                = 77,
+    // D3DFMT_D24X4S4              = 79,
     D3DFMT_VERTEXDATA:
       Result := X_D3DFMT_VERTEXDATA;
-
     D3DFMT_INDEX16:
       Result := X_D3DFMT_INDEX16;
-
+    // D3DFMT_INDEX32              =102,
+    D3DFMT_UNKNOWN:
+      Result := X_D3DFMT_UNKNOWN;
   else
     DxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (0x%.08X)', [Ord(aFormat)]);
     Result := X_D3DFORMAT(aFormat);
