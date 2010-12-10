@@ -190,6 +190,7 @@ implementation
 
 uses
   uHLEIntercept, // EmuInstallWrappers
+  uEmuD3D8, // XTL_Direct3D_GetDeviceCaps
   uVertexBuffer; // CRC32Init, Crc32
 
 const lfUnit = lfDxbx or lfSymbolScan;
@@ -1842,6 +1843,7 @@ begin
   XTL_D3D__RenderState := _Find('_D3D__RenderState');
   XTL_EmuD3DDeferredTextureState := _Find('_D3D__TextureState');
   XTL_D3D_InitializeD3dState := _Find('?InitializeD3dState@D3D@@YGXXZ'); // a function
+  XTL_Direct3D_GetDeviceCaps := _Find('_D3DDevice_GetDeviceCaps@4'); // a function
 
   // TODO : Most of the above are REQUIRED - so break out if not found!
 

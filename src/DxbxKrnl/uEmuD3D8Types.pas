@@ -26,10 +26,9 @@ uses
   // Delphi
   Windows,
   // DirectX
+  Direct3D8, // D3DADAPTER_IDENTIFIER8, D3DMULTISAMPLE_TYPE
 {$IFDEF DXBX_USE_D3D9}
   Direct3D9,
-{$ELSE}
-  Direct3D8, // D3DMULTISAMPLE_TYPE
 {$ENDIF}
   // Dxbx
   uTypes;
@@ -62,6 +61,7 @@ type
 
   PD3DMaterial = PD3DMaterial9;
 
+  D3DADAPTER_IDENTIFIER = D3DADAPTER_IDENTIFIER9;
   D3DCAPS = D3DCAPS9;
   D3DVIEWPORT = D3DVIEWPORT9;
 
@@ -191,6 +191,7 @@ type
 
   PD3DMaterial = PD3DMaterial8;
 
+  D3DADAPTER_IDENTIFIER = D3DADAPTER_IDENTIFIER8;
   D3DCAPS = D3DCAPS8;
   D3DVIEWPORT = D3DVIEWPORT8;
 
@@ -295,6 +296,14 @@ type
 
 type X_D3DMULTISAMPLE_TYPE = DWORD;
 type X_D3DSWAPEFFECT = D3DSWAPEFFECT; // Same as on Windows Direct3D
+
+
+// Dxbx note : Some Xbox types are identical to the Direct3D8 declarations, here these forwards :
+
+type X_D3DCAPS = D3DCAPS8;
+type X_PD3DCAPS = PD3DCAPS8;
+type X_D3DADAPTER_IDENTIFIER = D3DADAPTER_IDENTIFIER8;
+
 
 const
 (*
