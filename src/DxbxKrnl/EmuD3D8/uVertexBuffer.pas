@@ -1750,6 +1750,7 @@ procedure DxbxGetFormatRelatedVariables(
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   v: uint32;
+  MaxMipMapLevels: int;
 begin
   dwWidth := 1; dwHeight := 1; dwBPP := 1; dwDepth := 1; dwPitch := 0; dwMipMapLevels := 1;
   bSwizzled := FALSE; bCompressed := FALSE; dwCompressedSize := 0;
@@ -1808,10 +1809,17 @@ begin
     end;
   end;
 
-  if (dwMipMapLevels > 9) then
+  // Dxbx addition : Limit Turok to 6 MipMap levels - anything more leads to crashes... but WHY?!?
+  if IsRunning(TITLEID_TurokNTSC) then
+    MaxMipMapLevels := 6
+  else
+    // On the other hand, Battlestar Galactica crashes if we limit to 6 (9 does the trick). Here also : but WHY?!?
+    MaxMipMapLevels := 9;
+
+  if (dwMipMapLevels > MaxMipMapLevels) then
   begin
-    EmuWarning('Limited MipMapLevels to 9 (instead of %d)', [dwMipMapLevels]);
-    dwMipMapLevels := 9;
+    EmuWarning('Limited MipMapLevels to %d (instead of %d)', [MaxMipMapLevels, dwMipMapLevels]);
+    dwMipMapLevels := MaxMipMapLevels;
   end;
 end;
 
