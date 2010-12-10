@@ -181,6 +181,7 @@ var
   g_XbeHeader: PXBEIMAGE_HEADER = NULL;         // XbeHeader
   g_XbeHeaderSize: uint32 = 0;             // XbeHeaderSize
   g_D3DCaps: D3DCAPS;                     // Direct3D8 Caps
+  g_XboxCaps: X_D3DCAPS;
   g_hBgBrush: HBRUSH = 0;                  // Background Brush
   g_bRenderWindowActive: _bool = false;     // volatile?
   g_XBVideo: XBVideo;
@@ -248,6 +249,13 @@ type EmuD3D8CreateDeviceProxyData = packed record
   end; // packed size = 29
 
 var g_EmuCDPD: EmuD3D8CreateDeviceProxyData;
+
+var XTL_Direct3D_GetDeviceCaps: function
+(
+//  Adapter: UINT;
+//  DeviceType: D3DDEVTYPE;
+  pCaps: PD3DCAPS
+): HRESULT; stdcall;
 
 var
   DxbxFix_HasZBuffer: Boolean = False;
@@ -543,9 +551,13 @@ begin
   if (TextureAddressCaps and D3DPTADDRESSCAPS_MIRRORONCE) > 0 then Result := Result + 'D3DPTADDRESSCAPS_MIRRORONCE ';
 end;
 
-procedure DxbxDumpD3DCaps(const aD3DCaps: D3DCAPS);
+procedure DxbxDumpD3DCaps(const aD3DCaps: PD3DCAPS; const aFromXbox: Boolean);
+const
+  Source: array [Boolean] of string = ('Native', 'Xbox');
+var
+  LogStack: PLogStack;
 begin
-  LogBegin('DxbxDumpD3DCaps').
+  LogStack := LogBegin(Source[aFromXbox] + ' D3DCaps').
     (* Device Info *)
     _(aD3DCaps.DeviceType, 'DeviceType').
     _(aD3DCaps.AdapterOrdinal, 'AdapterOrdinal').
@@ -617,10 +629,13 @@ begin
 
     _(aD3DCaps.PixelShaderVersion, 'PixelShaderVersion').
 {$IFNDEF DXBX_USE_D3D9}
-    _(aD3DCaps.MaxPixelShaderValue, 'MaxPixelShaderValue').     // max value of pixel shader arithmetic component
+    _(aD3DCaps.MaxPixelShaderValue, 'MaxPixelShaderValue');     // max value of pixel shader arithmetic component
 {$ELSE}
-    _(aD3DCaps.PixelShader1xMaxValue, 'PixelShader1xMaxValue').      // max value storable in registers of ps.1.x shaders
+    _(aD3DCaps.PixelShader1xMaxValue, 'PixelShader1xMaxValue');      // max value storable in registers of ps.1.x shaders
 
+  if aFromXbox = False then
+  begin
+    LogStack.
     // Here are the DX9 specific ones
     _(aD3DCaps.DevCaps2, 'DevCaps2').
 
@@ -651,9 +666,11 @@ begin
     _(aD3DCaps.MaxVShaderInstructionsExecuted, 'MaxVShaderInstructionsExecuted'). // maximum number of vertex shader instructions that can be executed
     _(aD3DCaps.MaxPShaderInstructionsExecuted, 'MaxPShaderInstructionsExecuted'). // maximum number of pixel shader instructions that can be executed
     _(aD3DCaps.MaxVertexShader30InstructionSlots, 'MaxVertexShader30InstructionSlots').
-    _(aD3DCaps.MaxPixelShader30InstructionSlots, 'MaxPixelShader30InstructionSlots').
+    _(aD3DCaps.MaxPixelShader30InstructionSlots, 'MaxPixelShader30InstructionSlots');
+  end;
 {$ENDIF}
-  LogEnd();
+
+  LogStack.LogEnd();
 end;
 
 procedure DxbxDumpNativeRenderStates();
@@ -1341,7 +1358,7 @@ var
   hThread: HANDLE;
   hDupHandle: HANDLE;
   DevType: D3DDEVTYPE;
-  Identifier: TD3DAdapterIdentifier8; // TODO : Compile to d3d9 too
+  Identifier: D3DADAPTER_IDENTIFIER;
   PresParam: X_D3DPRESENT_PARAMETERS;
 begin
   g_EmuShared.GetXBVideo(@g_XBVideo);
@@ -1444,10 +1461,22 @@ begin
         _(Identifier.WHQLLevel, 'WHQLLevel').
       LogEnd();
 
-    // Show device capabilities :
-    DevType := iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF);
-    g_pD3D.GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, {out}g_D3DCaps);
-    DxbxDumpD3DCaps(g_D3DCaps);
+    // Show native device capabilities :
+    begin
+      DevType := iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF);
+      g_pD3D.GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, {out}g_D3DCaps);
+      DxbxDumpD3DCaps(@g_D3DCaps, {FromXbox=}False);
+    end;
+
+    // Show Xbox device capabilities :
+    if Addr(XTL_Direct3D_GetDeviceCaps) <> nil then
+    begin
+      XTL_Direct3D_GetDeviceCaps(@g_XboxCaps);
+      DxbxDumpD3DCaps(@g_XboxCaps, {FromXbox=}True);
+    end
+    else
+      DbgPrintf('Could not get Xbox device caps!');
+
   end;
 
   SetFocus(g_hEmuWindow);
@@ -2947,26 +2976,13 @@ begin
   Result := D3D_OK;
 end;
 
+(* Too high level : No patch needed, just copies g_DeviceCaps :
 procedure XTL_EmuD3DDevice_GetDeviceCaps
 (
     pCaps: PD3DCAPS
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_GetDeviceCaps').
-      _(pCaps, 'pCaps').
-    LogEnd();
-
-  g_pD3D.GetDeviceCaps(
-    g_XBVideo.GetDisplayAdapter(),
-    iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF),
-    {out}pCaps^);
-
-  EmuSwapFS(fsXbox);
-end;
+*)
 
 function XTL_EmuD3DDevice_LoadVertexShader
 (
@@ -4116,7 +4132,7 @@ begin
   XTL_EmuD3DDevice_GetDepthStencilSurface(@Result);
 end;
 
-(* TOO HIGH LEVEL : No patch needed, just reads g_OverscanColor@D3D@@3KA :
+(* Too high level : No patch needed, just reads g_OverscanColor@D3D@@3KA :
 function XTL_EmuD3DDevice_GetOverscanColor(): D3DCOLOR; stdcall;
 // Branch:Dxbx  Translator:Shadow_Tj  Done:0
 // Note : When we had this patch active, it removed all tree-leafs in Turok Start screen...
@@ -10315,6 +10331,7 @@ begin
   EmuSwapFS(fsXbox);
 end; // XTL_EmuDirect3D_CheckDeviceMultiSampleType
 
+(* Too high level : No patch needed, just copies g_DeviceCaps :
 function XTL_EmuDirect3D_GetDeviceCaps
 (
   Adapter: UINT;
@@ -10322,20 +10339,7 @@ function XTL_EmuDirect3D_GetDeviceCaps
   pCaps: PD3DCAPS
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit) then
-    LogBegin('EmuIDirect3D_GetDeviceCaps').
-      _(Adapter, 'Adapter').
-      _(DeviceType, 'DeviceType').
-      _(pCaps, 'pCaps').
-    LogEnd();
-
-  Result := g_pD3D.GetDeviceCaps(Adapter, DeviceType, {out}pCaps^);
-
-  EmuSwapFS(fsXbox);
-end;
+*)
 
 function XTL_EmuDirect3D_SetPushBufferSize
 (
@@ -11133,7 +11137,7 @@ begin
   Result := D3D_OK;
 end;
 
-(* Too High level
+(* Too high level : No patch needed, just sets g_OverscanColor@D3D@@3KA :
 procedure XTL_EmuD3DDevice_SetOverscanColor(
   Color: D3DCOLOR
 ); stdcall;
@@ -12147,7 +12151,7 @@ exports
   XTL_EmuD3DDevice_GetDepthClipPlanes,
   XTL_EmuD3DDevice_GetDepthStencilSurface,
   XTL_EmuD3DDevice_GetDepthStencilSurface2,
-  XTL_EmuD3DDevice_GetDeviceCaps,
+//  XTL_EmuD3DDevice_GetDeviceCaps, // Dxbx note : Disabled, too high level.
   XTL_EmuD3DDevice_GetDirect3D,
   XTL_EmuD3DDevice_GetDisplayFieldStatus,
   XTL_EmuD3DDevice_GetDisplayMode,
@@ -12157,7 +12161,7 @@ exports
   XTL_EmuD3DDevice_GetMaterial,
   XTL_EmuD3DDevice_GetModelView, // ??
   XTL_EmuD3DDevice_GetOverlayUpdateStatus,
-//  XTL_EmuD3DDevice_GetOverscanColor, // Too high level
+//  XTL_EmuD3DDevice_GetOverscanColor, // Dxbx note : Disabled, too high level.
 {$IFDEF DXBX_PIXELSHADER_HOOKS}
   XTL_EmuD3DDevice_GetPixelShader,
 {$ENDIF}
@@ -12219,7 +12223,7 @@ exports
   XTL_EmuD3DDevice_SetLight,
   XTL_EmuD3DDevice_SetMaterial,
   XTL_EmuD3DDevice_SetModelView, // ??
-//  XTL_EmuD3DDevice_SetOverscanColor, // Too high level
+//  XTL_EmuD3DDevice_SetOverscanColor, // Dxbx note : Disabled, too high level.
   XTL_EmuD3DDevice_SetPalette,
 {$IFDEF DXBX_PIXELSHADER_HOOKS}
   XTL_EmuD3DDevice_SetPixelShader,
@@ -12360,7 +12364,7 @@ exports
   XTL_EmuDirect3D_EnumAdapterModes,
   XTL_EmuDirect3D_GetAdapterDisplayMode,
   XTL_EmuDirect3D_GetAdapterModeCount,
-  XTL_EmuDirect3D_GetDeviceCaps,
+//  XTL_EmuDirect3D_GetDeviceCaps, // Dxbx note : Disabled, too high level.
   XTL_EmuDirect3D_SetPushBufferSize,
 
   XTL_EmuGet2DSurfaceDescD; // TODO -oDXBX: Fix wrong prefix!

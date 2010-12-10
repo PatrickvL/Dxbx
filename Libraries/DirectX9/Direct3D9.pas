@@ -2481,9 +2481,9 @@ const
 type
   PD3DAdapterIdentifier9 = ^TD3DAdapterIdentifier9;
   _D3DADAPTER_IDENTIFIER9 = packed record
-    Driver      : array [0..MAX_DEVICE_IDENTIFIER_STRING-1] of Char;
-    Description : array [0..MAX_DEVICE_IDENTIFIER_STRING-1] of Char;
-    DeviceName  : array [0..31] of Char;   { Device name for GDI (ex. \\.\DISPLAY1) }
+    Driver      : array [0..MAX_DEVICE_IDENTIFIER_STRING-1] of AnsiChar;
+    Description : array [0..MAX_DEVICE_IDENTIFIER_STRING-1] of AnsiChar;
+    DeviceName  : array [0..31] of AnsiChar;   { Device name for GDI (ex. \\.\DISPLAY1) }
 
     DriverVersionLowPart        : DWord;   { Defined for 16 bit driver components }
     DriverVersionHighPart       : DWord;
