@@ -44,6 +44,7 @@ uses
   , uConsts
   , uTypes // CLOCKS_PER_SEC, clock()
   , uLog
+  , uDxbxUtils // Log2:int
   , uDxbxKrnlUtils
   , uState
   , uResourceTracker
@@ -1874,11 +1875,7 @@ begin
   iRect := Classes.Rect(0, 0, 0, 0);
   iPoint := Classes.Point(0, 0);
 
-{$IFDEF DXBX_ENABLE_P8_CONVERSION}
   ConvertP8ToARGB := (CacheFormat = X_D3DFMT_P8);
-{$ELSE}
-  ConvertP8ToARGB := False;
-{$ENDIF}
   if ConvertP8ToARGB then
   begin
     if g_pCurrentPalette = nil then
@@ -1905,12 +1902,12 @@ begin
     pPixelContainer.Format := (pPixelContainer.Format and not X_D3DFORMAT_FORMAT_MASK)
                            or (X_D3DFMT_A8R8G8B8 shl X_D3DFORMAT_FORMAT_SHIFT);
 
-//    // Set new pitch in the resource header :
-//    pPixelContainer.Format := (pPixelContainer.Format and not X_D3DFORMAT_PSIZE_MASK)
-//                           or (??? shl X_D3DFORMAT_PSIZE_SHIFT);
+    // Set new pitch in the resource header :
+    pPixelContainer.Format := (pPixelContainer.Format and not X_D3DFORMAT_PSIZE_MASK)
+                           or (Log2(dwPitch * SizeOf(D3DCOLOR)) shl X_D3DFORMAT_PSIZE_SHIFT);
+
     dwDataSize := dwPitch * dwHeight; // Number of P8 (byte sized) pixels
     pTextureCache := DxbxMalloc(dwDataSize);
-    dwPitch := dwPitch * 4; // 1 BPP > 4 BPP
   end;
 
   nrfaces := ifThen(bCubemap, 6, 1);
@@ -1978,11 +1975,10 @@ begin
             if ConvertP8ToARGB then
             begin
               // First we need to unswizzle the texture data to a temporary buffer :
-              EmuXGUnswizzleRect
-              (
+              EmuXGUnswizzleRect(
                 pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, pTextureCache,
-                LockedRect.Pitch, iRect, iPoint, dwBPP
-                );
+                dwPitch, iRect, iPoint, dwBPP
+              );
 
               // Lookup the colors of the paletted pixels in the current pallette
               // and write the expanded color back to the texture :
@@ -1999,19 +1995,20 @@ begin
                 // Read the corresponding ARGB from the palette and store it in the new texture :
                 PDWORDs(pDest)[dst_yp + x] := PDWORDs(g_pCurrentPalette)[p];
 
+                // Step to the next pixel, check if we've done one scanline :
                 Inc(x);
                 if (x = dwMipWidth) then
                 begin
+                  // Step to the start of the next scanline :
                   x := 0;
-                  Inc(src_yp, LockedRect.Pitch);
-                  Inc(dst_yp, dwMipPitch);
+                  Inc(src_yp, dwMipPitch div SizeOf(Byte)); // src pitch is expressed in bytes
+                  Inc(dst_yp, LockedRect.Pitch div SizeOf(D3DCOLOR)); // dst pitch is expressed in D3DCOLOR's
                 end;
               end;
             end
             else
             begin
-              EmuXGUnswizzleRect
-              (
+              EmuXGUnswizzleRect(
                 pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, pDest,
                 LockedRect.Pitch, iRect, iPoint, dwBPP
               );
