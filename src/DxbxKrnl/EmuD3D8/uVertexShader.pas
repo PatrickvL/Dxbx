@@ -1683,12 +1683,13 @@ begin
   end;
 end; // VshRemoveScreenSpaceInstructions
 
-procedure VshRemoveBacksideInstructions(pShader: PVSH_XBOX_SHADER);
+function VshRemoveBacksideInstructions(pShader: PVSH_XBOX_SHADER): int;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   i: int;
   pIntermediate: PVSH_INTERMEDIATE_FORMAT;
 begin
+  Result := 0;
   // Dxbx note : Translated 'for' to 'while', because counter is incremented twice :
   i := 0; while i < pShader.IntermediateCount do
   begin
@@ -1697,10 +1698,16 @@ begin
     if  (pIntermediate.Output.Type_ = IMD_OUTPUT_O)
     and (   (pIntermediate.Output.Address = Ord(OREG_OB0))
          or (pIntermediate.Output.Address = Ord(OREG_OB1))) then
-      VshDeleteIntermediate(pShader, i)
+    begin
+      VshDeleteIntermediate(pShader, i);
+      Inc(Result);
+    end
     else
       Inc(i);
   end; // while
+
+  if Result > 0 then
+    EmuWarning('Removed %d backside lighting register assignments!', [Result]);
 end; // VshRemoveBacksideInstructions
 
 // Converts the intermediate format vertex shader to DirectX 8 format
@@ -1908,9 +1915,9 @@ begin
     VshRemoveScreenSpaceInstructions(pShader);
   end;
 
+  // Search & remove opcodes that write to the (unsupported) backside color registers (oB0 and oB1) :
   VshRemoveBacksideInstructions(pShader);
 
-  // TODO -oCXBX: Add routine for compacting r register usage so that at least one is freed (two if dph and r12)
   // Dxbx note : Translated 'for' to 'while', because counter is incremented twice :
   i := 0; while i < pShader.IntermediateCount do
   begin

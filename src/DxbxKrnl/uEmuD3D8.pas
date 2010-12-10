@@ -29,6 +29,7 @@ unit uEmuD3D8;
 
 {$DEFINE DXBX_PIXELSHADER_HOOKS} // Disable this to try dynamic pixel shader support
 {.$DEFINE DXBX_TRY_DEEPER_DEVICE_INIT} // Try to run more of the original initialization code
+{.$DEFINE DXBX_INDEXED_QUADLIST_TEST} // Render indexed QUADLIST as indexed TRIANGLFANS (XDK Ripple sample improves, although text&help disappears)
 
 interface
 
@@ -5387,7 +5388,7 @@ begin
 end;
 
 
-  function XTL_EmuD3DDevice_SetIndices
+function XTL_EmuD3DDevice_SetIndices
 (
   pIndexData: PX_D3DIndexBuffer;
   BaseVertexIndex: UINT
@@ -9203,6 +9204,7 @@ begin
       _(pIndexData, 'pIndexData').
     LogEnd();
 // Test only the smallest of 3 X_D3DPT_TRIANGLESTRIP calls done by MatrixPaletteSkinning :
+//if False then
 //if (PrimitiveType <> X_D3DPT_TRIANGLESTRIP) or (VertexCount < 300) then
 //if pIndexData <> nil then // This skips 1st subset of a mesh
 //if pIndexData = nil then // Draws only 1st subset of a mesh; Shows glitch in MatrixPaletteSkinning:F11 (wireframe),A (circeling snake)
@@ -9261,7 +9263,15 @@ begin
     EmuWarning('Unsupported PrimitiveType! (%d)', [DWORD(PrimitiveType)]);
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
-  VPDesc.PrimitiveType := PrimitiveType;
+
+{$IFDEF DXBX_INDEXED_QUADLIST_TEST}
+  if (PrimitiveType = X_D3DPT_QUADLIST) then
+    // Fake another primitive type, so the vertex patcher doesn't do it's quad-splitting trick :
+    VPDesc.PrimitiveType := X_D3DPT_TRIANGLEFAN
+  else
+{$ENDIF}
+    VPDesc.PrimitiveType := PrimitiveType;
+
   VPDesc.dwVertexCount := VertexCount;
   VPDesc.dwOffset := 0;
   VPDesc.pVertexStreamZeroData := nil;
@@ -9333,17 +9343,43 @@ begin
 
     if (IsValidCurrentShader()) and not FatalError then
     begin
-      g_pD3DDevice.DrawIndexedPrimitive
-      (
-        EmuPrimitiveType(VPDesc.PrimitiveType),
-{$IFDEF DXBX_USE_D3D9}
-        {BaseVertexIndex=}0,
+{$IFDEF DXBX_INDEXED_QUADLIST_TEST}
+      if (PrimitiveType = X_D3DPT_QUADLIST) then
+      begin
+        // Indexed quadlist can be drawn using unpatched indexes via multiple draws of 2 'strip' triangles :
+        // This is slower (because of the many calls) but doesn't require index buffer patching...
+        while uiNumVertices >= 4 do
+        begin
+          g_pD3DDevice.DrawIndexedPrimitive
+          (
+            D3DPT_TRIANGLEFAN,
+    {$IFDEF DXBX_USE_D3D9}
+            {BaseVertexIndex=}0,
+    {$ENDIF}
+            {MinVertexIndex=}0,
+            {NumVertices=}4,
+            uiStartIndex,
+            {primCount=}2
+          );
+          Inc(uiStartIndex, 4);
+          Dec(uiNumVertices, 4);
+        end;
+      end
+      else
 {$ENDIF}
-        {MinVertexIndex=}0,
-        uiNumVertices,
-        uiStartIndex,
-        VPDesc.dwPrimitiveCount
-      );
+      begin
+        g_pD3DDevice.DrawIndexedPrimitive
+        (
+          EmuPrimitiveType(VPDesc.PrimitiveType),
+  {$IFDEF DXBX_USE_D3D9}
+          {BaseVertexIndex=}0,
+  {$ENDIF}
+          {MinVertexIndex=}0,
+          uiNumVertices,
+          uiStartIndex,
+          VPDesc.dwPrimitiveCount
+        );
+      end;
     end;
 
     if(not bActiveIB) then
