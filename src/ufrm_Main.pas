@@ -1632,7 +1632,10 @@ var
   lIndex: Integer;
   NoRunReason: string;
   ThisXbe: TXbe;
+  CursorState: TCursor;
 begin
+  CursorState := Screen.Cursor;
+  Screen.Cursor := crHourGlass;
   for lIndex :=  MyXBEList.Count -1 downto 0 do
   begin
     if not FileExists(TXBEInfo(MyXBEList.Objects[lIndex]).FileName) then
@@ -1649,6 +1652,7 @@ begin
   end;
   UpdateFilter;
   SaveXBEList(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aPublishedBy=}'');
+  Screen.Cursor := CursorState;
 end;//actRemoveInvalidFromListExecute
 
 procedure Tfrm_Main.actCloseXbeExecute(Sender: TObject);
