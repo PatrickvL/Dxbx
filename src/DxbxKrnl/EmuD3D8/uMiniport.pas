@@ -247,7 +247,7 @@ end;
 //      D3DDevice_Clear(0, 0, 3, 0, 1065353216, 0);
 
 exports
-  XTL_EmuGlobalAlloc, // TODO : Move this to a better unit
+//  XTL_EmuGlobalAlloc, // TODO : Move this to a better unit. This patch crashes EviLoader!
 
   XTL_EmuD3D__CMiniport__BindToChannel name PatchPrefix + '?BindToChannel@CMiniport@D3D@@QAEHPAUOBJECTINFO@12@@Z',
   XTL_EmuD3D__CMiniport__CreateCtxDmaObject name PatchPrefix + '?CreateCtxDmaObject@CMiniport@D3D@@QAEHKKPAXKPAUOBJECTINFO@12@@Z',
