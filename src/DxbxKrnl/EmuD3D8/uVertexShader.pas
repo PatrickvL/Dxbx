@@ -1683,6 +1683,26 @@ begin
   end;
 end; // VshRemoveScreenSpaceInstructions
 
+procedure VshRemoveBacksideInstructions(pShader: PVSH_XBOX_SHADER);
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+var
+  i: int;
+  pIntermediate: PVSH_INTERMEDIATE_FORMAT;
+begin
+  // Dxbx note : Translated 'for' to 'while', because counter is incremented twice :
+  i := 0; while i < pShader.IntermediateCount do
+  begin
+    pIntermediate := @pShader.Intermediate[i];
+
+    if  (pIntermediate.Output.Type_ = IMD_OUTPUT_O)
+    and (   (pIntermediate.Output.Address = Ord(OREG_OB0))
+         or (pIntermediate.Output.Address = Ord(OREG_OB1))) then
+      VshDeleteIntermediate(pShader, i)
+    else
+      Inc(i);
+  end; // while
+end; // VshRemoveBacksideInstructions
+
 // Converts the intermediate format vertex shader to DirectX 8 format
 function VshConvertShader(pShader: PVSH_XBOX_SHADER;
                           bNoReservedConstants: boolean): boolean;
@@ -1887,6 +1907,8 @@ begin
   begin
     VshRemoveScreenSpaceInstructions(pShader);
   end;
+
+  VshRemoveBacksideInstructions(pShader);
 
   // TODO -oCXBX: Add routine for compacting r register usage so that at least one is freed (two if dph and r12)
   // Dxbx note : Translated 'for' to 'while', because counter is incremented twice :
