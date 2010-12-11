@@ -286,6 +286,7 @@ type
     function _(const aValue: PD3DVIEWPORT; const aName: string = ''): PLogStack; overload;
     function _(const aValue: X_D3DVSDE; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PX_D3DResource; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: X_D3DMULTISAMPLE_TYPE; const aName: string = ''): PLogStack; overload;
   end;
 
 function RLogStackHelper._(const aValue: X_D3DPOOL; const aName: string = ''): PLogStack;
@@ -443,6 +444,36 @@ begin
     SetValue(ResourceToString(aValue))
   else
     SetValue(UIntPtr(aValue), 'Resource');
+end;
+
+function RLogStackHelper._(const aValue: X_D3DMULTISAMPLE_TYPE; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'X_D3DMULTISAMPLE_TYPE');
+  case aValue of
+    X_D3DMULTISAMPLE_NONE:
+      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_NONE');
+    X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR:
+      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR');
+    X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX:
+      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX');
+    X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR:
+      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR');
+    X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR:
+      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR');
+    X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR:
+      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR');
+    X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN:
+      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN');
+    X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR:
+      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR');
+    X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN:
+      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN');
+    X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN:
+      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN');
+    X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN:
+      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN');
+  else SetValue(UIntPtr(aValue));
+  end;
 end;
 
 //
@@ -10330,7 +10361,7 @@ begin
       _(DeviceType, 'DeviceType').
       _(SurfaceFormat, 'SurfaceFormat').
       _(Windowed, 'Windowed').
-      _(Ord(MultiSampleType), 'MultiSampleType').
+      _(MultiSampleType, 'MultiSampleType').
     LogEnd();
 
   if (Adapter <> D3DADAPTER_DEFAULT) then
