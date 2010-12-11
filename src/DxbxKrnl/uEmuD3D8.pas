@@ -4381,7 +4381,9 @@ begin
 
   if (SUCCEEDED(hRet)) then
   begin
-    if pRecompiledFunction = NULL then
+    // Dxbx addition : Only fallback is a shader is given (NULL is valid input)!
+    // (Test this with the CompressedVertices and Patch XDK samples.)
+    if (pRecompiledFunction = NULL) and (pFunction <> NULL) then
     begin
       // Dxbx Note : As suggested by StrikerX3
       hRet := D3DERR_INVALIDCALL; // Use fallback if recompilation failed

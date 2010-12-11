@@ -396,7 +396,7 @@ function xboxkrnl_KeDelayExecutionThread
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfExtreme) then
     LogBegin('EmuKrnl : KeDelayExecutionThread').
       _(Ord(WaitMode), 'WaitMode').
       _(Alertable, 'Alertable').
