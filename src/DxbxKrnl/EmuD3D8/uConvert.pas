@@ -325,7 +325,7 @@ end;
 function EmuXB2PC_D3DMULTISAMPLE_TYPE(aType: X_D3DMULTISAMPLE_TYPE): D3DMULTISAMPLE_TYPE;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  case aType and $FFFF of
+  case aType {and $FFFF} of
     X_D3DMULTISAMPLE_NONE:
       Result := D3DMULTISAMPLE_NONE;
 
@@ -346,7 +346,7 @@ begin
       Result := D3DMULTISAMPLE_9_SAMPLES;
   else
     EmuWarning('Unknown Multisample Type (0x%X)!'#13#10 +
-               'If this value is greater than 0xFFFF contact blueshogun!', [aType] );
+               'If this value is greater than 0xFFFF contact blueshogun!', [Ord(aType)] );
 
     Result := D3DMULTISAMPLE_NONE;
   end;
@@ -371,7 +371,7 @@ begin
   else
     EmuWarning('Unknown Multisample Type (0x%X)!', [Ord(aType)] );
 
-    Result := $0011;
+    Result := X_D3DMULTISAMPLE_NONE;//=$0011;
   end;
 end;
 

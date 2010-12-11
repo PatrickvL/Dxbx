@@ -756,9 +756,9 @@ begin
     XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_C]^ := F2DW(0.0);
     XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEANTIALIAS]^ := BOOL_TRUE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEMASK]^ := $FFFFFFFF;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEMODE]^ := aParameters.MultiSampleType;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEMODE]^ := DWORD(aParameters.MultiSampleType);
     XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLERENDERTARGETMODE]^ := DWORD(X_D3DMULTISAMPLEMODE_1X);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_SWAPFILTER]^ := aParameters.MultiSampleType;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_SWAPFILTER]^ := DWORD(D3DTEXF_POINT);// Should be based on aParameters.MultiSampleType ?
     XTL_EmuMappedD3DRenderState[X_D3DRS_PRESENTATIONINTERVAL]^ := aParameters.FullScreen_PresentationInterval;
 //    XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHEDGESTYLE]^ := 0; // Unknown default
 //    XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHSEGMENTS]^ := 0; // Unknown default

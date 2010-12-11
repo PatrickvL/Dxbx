@@ -1044,6 +1044,12 @@ begin
   Dec(Result);
 end;
 
+function SignedShr(const aValue: int; const aShift: int): int; register; // UNTESTED!
+asm
+  mov cl, [aShift]
+  sar eax, cl
+end;
+
 function DebugModeToString(const aDebugMode: TDebugMode): string;
 begin
   case aDebugMode of
