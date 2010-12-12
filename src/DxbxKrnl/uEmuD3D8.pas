@@ -3698,7 +3698,9 @@ begin
 
   hRet := g_pD3DDevice.GetBackBuffer({$IFDEF DXBX_USE_D3D9}{iSwapChain=}0,{$ENDIF} BackBuffer, D3DBACKBUFFER_TYPE_MONO, @(pBackBuffer.Emu.Surface));
 
-  if (hRet <> D3D_OK) then
+  if (hRet = D3D_OK) then // not FAILED
+    //
+  else
     DxbxKrnlCleanup('Unable to retrieve back buffer');
 
   // update data pointer
@@ -8071,8 +8073,9 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  if (Value > $000A0000) then // Dxbx note : Cxbx uses 0x00030000, which is not enough for the Strip XDK sample!
-    DxbxKrnlCleanup('EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', [Value]);
+  // Native doesn't support D3DTSS_TCI_OBJECT, D3DTSS_TCI_SPHERE, D3DTSS_TCI_TEXGEN_MAX or higher:
+  if (Value and $FFFF0000) > D3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR then // Dxbx note : Cxbx uses 0x00030000, which is not enough for the Strip XDK sample!
+    EmuWarning('EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', [Value]);
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
   XTL_EmuD3DDeferredTextureState[Stage, Ord(DxbxFromNewVersion_D3DTSS(X_D3DTSS_TEXCOORDINDEX))] := Value;
