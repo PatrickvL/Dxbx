@@ -109,6 +109,29 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+function XTL_EmuD3D__CMiniport__DacProgramGammaRamp(
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}This: Pvoid;
+  {2 stack}a2: Pvoid
+  ): int; register; // thiscall simulation - See Translation guide
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+  begin
+    // result = D3D__CMiniport__DacProgramGammaRamp(D3D__g_pDevice + 8968, 768 * result + D3D__g_pDevice + 8968 + 532);
+    LogBegin('D3D__CMiniport__DacProgramGammaRamp').
+      _(This, 'This').
+      _(a2, 'a2').
+    LogEnd();
+  end;
+
+  Result := Unimplemented('D3D__CMiniport__DacProgramGammaRamp');
+
+  EmuSwapFS(fsXbox);
+end;
+
 function XTL_EmuD3D__CMiniport__InitDMAChannel(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
@@ -252,6 +275,7 @@ exports
   XTL_EmuD3D__CMiniport__BindToChannel name PatchPrefix + '?BindToChannel@CMiniport@D3D@@QAEHPAUOBJECTINFO@12@@Z',
   XTL_EmuD3D__CMiniport__CreateCtxDmaObject name PatchPrefix + '?CreateCtxDmaObject@CMiniport@D3D@@QAEHKKPAXKPAUOBJECTINFO@12@@Z',
   XTL_EmuD3D__CMiniport__CreateGrObject name PatchPrefix + '?CreateGrObject@CMiniport@D3D@@QAEHKKPAUOBJECTINFO@12@@Z',
+  XTL_EmuD3D__CMiniport__DacProgramGammaRamp name PatchPrefix + '?DacProgramGammaRamp@CMiniport@D3D@@QAEXPAU_D3DGAMMARAMP@@@Z',
   XTL_EmuD3D__CMiniport__InitDMAChannel name PatchPrefix + '?InitDMAChannel@CMiniport@D3D@@QAEHKPAUOBJECTINFO@12@0KPAPAX@Z',
   XTL_EmuD3D__CMiniport__InitHardware name PatchPrefix + '?InitHardware@CMiniport@D3D@@QAEHXZ',
   XTL_EmuD3D__CMiniport__SetVideoMode name PatchPrefix + '';

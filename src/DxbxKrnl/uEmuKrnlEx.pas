@@ -23,6 +23,7 @@ interface
 
 uses
   // Delphi
+  Windows, // VirtualQuery
   SysUtils,
   // Jedi Win32API
   JwaWinType,
@@ -170,17 +171,16 @@ function {014} xboxkrnl_ExAllocatePool
 var
   pRet: PVOID;
 begin
-  EmuSwapFS(fsWindows);
-
-  //  Result := xboxkrnl_ExAllocatePoolWithTag(NumberOfBytes, ULONG($656E6F4E)); // MakeFourCC('None');
   if MayLog(lfUnit) then
-    LogBegin('EmuKrnl : ExAllocatePool').
+  begin
+    EmuSwapFS(fsWindows);
+    LogBegin('EmuKrnl : ExAllocatePool >>').
       _(NumberOfBytes, 'NumberOfBytes').
     LogEnd();
+    EmuSwapFS(fsXbox);
+  end;
 
-  pRet := DxbxMalloc(NumberOfBytes);
-  EmuSwapFS(fsXbox);
-  Result := pRet;
+  Result := xboxkrnl_ExAllocatePoolWithTag(NumberOfBytes, ULONG($656E6F4E)); // MakeFourCC('None');
 end;
 
 // Differences from NT: There is no PoolType field, as the XBOX
@@ -191,22 +191,28 @@ function {015} xboxkrnl_ExAllocatePoolWithTag
   Tag: ULONG
 ): PVOID; stdcall;
 // Source:Cxbx  Branch:shogun  Revision:0.8.2-Pre2  Translator:PatrickvL  Done:100
-var
-  pRet: PVOID;
+
+  function _TagStr: AnsiString;
+  begin
+    SetString(Result, PAnsiChar(@Tag), 4);
+  end;
+
 begin
   EmuSwapFS(fsWindows);
-  
+
   if MayLog(lfUnit) then
     LogBegin('EmuKrnl : ExAllocatePoolWithTag').
       _(NumberOfBytes, 'NumberOfBytes').
-      _(Tag, 'Tag').
+      _(Tag, 'Tag', _TagStr).
     LogEnd();
 
   // TODO -oCXBX: Actually implement this
-  pRet := DxbxMalloc(NumberOfBytes);
+  Result := VirtualAlloc(NULL, NumberOfBytes, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
+  if MayLog(lfUnit or lfReturnValue) then
+    DbgPrintf('EmuKrnl : ExAllocatePoolWithTag returns 0x%.08X', [UIntPtr(Result)]);
 
   EmuSwapFS(fsXbox);
-  Result := pRet;
 end;
 
 procedure {017} xboxkrnl_ExFreePool(
@@ -217,9 +223,10 @@ begin
   EmuSwapFS(fsWindows);
   if MayLog(lfUnit) then
     LogBegin('EmuKrnl : ExFreePool').
+      _(Block, 'Block').
     LogEnd();
 
-  DxbxFree(Block); // ExFreeNonPagedPool
+  VirtualFree(Block, 0, MEM_RELEASE); //  DxbxFree(Block); // ExFreeNonPagedPool
 
   EmuSwapFS(fsXbox);
 end;
@@ -277,7 +284,9 @@ function {023} xboxkrnl_ExQueryPoolBlockSize(
   PoolBlock: PVOID;
   QuotaCharged: PBOOLEAN // OUT
   ): SIZE_T; stdcall;
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:Dxbx  Translator:PatrickvL  Done:100
+var
+  LMemInfo: Windows.TMemoryBasicInformation;
 begin
   EmuSwapFS(fsWindows);
 
@@ -287,7 +296,13 @@ begin
       _(QuotaCharged, 'QuotaCharged').
     LogEnd();
 
-  Result := Unimplemented('ExQueryPoolBlockSize');
+  // Get the VM status for the pointer
+  LMemInfo.RegionSize := 0;
+  Windows.VirtualQuery(PoolBlock, {var}LMemInfo, SizeOf(LMemInfo));
+  Result := LMemInfo.RegionSize;
+
+  if MayLog(lfUnit or lfReturnValue) then
+    DbgPrintf('EmuKrnl : ExQueryPoolBlockSize returns 0x%.08X', [Result]);
 
   EmuSwapFS(fsXbox);
 end;

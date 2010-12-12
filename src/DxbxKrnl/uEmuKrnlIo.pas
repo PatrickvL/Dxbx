@@ -417,7 +417,19 @@ function {065} xboxkrnl_IoCreateDevice(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+  LogBegin('EmuKrnl : IoCreateDevice').
+    _(DriverObject, 'DriverObject').
+    _(DeviceExtensionSize, 'DeviceExtensionSize').
+    _(DeviceName, 'DeviceName').
+    _(DeviceType, 'DeviceType').
+    _(DeviceCharacteristics, 'DeviceCharacteristics').
+    _(Exclusive, 'Exclusive').
+    _(DeviceObject, 'DeviceObject').
+  LogEnd();
+
   Result := Unimplemented('IoCreateDevice');
+
   EmuSwapFS(fsXbox);
 end;
 
