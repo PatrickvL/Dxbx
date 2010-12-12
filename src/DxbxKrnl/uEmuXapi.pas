@@ -594,10 +594,13 @@ begin
     Result := BOOL_FALSE;
 end;
 
+type
+  PXDEVICE_PREALLOC_TYPE = PVOID; // TODO : Declare fully
+
 procedure XTL_EmuXInitDevices
 (
-    Unknown1: DWORD;
-    Unknown2: PVOID
+    dwPreallocTypeCount: DWORD;
+    PreallocTypes: PXDEVICE_PREALLOC_TYPE
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
@@ -607,8 +610,8 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuXInitDevices').
-      _(Unknown1, 'Unknown1').
-      _(Unknown2, 'Unknown2').
+      _(dwPreallocTypeCount, 'dwPreallocTypeCount').
+      _(PreallocTypes, 'PreallocTypes').
     LogEnd();
 
   for v := 0 to XINPUT_SETSTATE_SLOTS-1 do

@@ -309,6 +309,11 @@ begin
 
   EmuHLEIntercept(pLibraryVersion, pXbeHeader);
 
+  begin
+    // Make sure that an unpatched XapiInitProcess doesn't call into the (probably also unpatched) XapiVerifyMediaInDrive :
+    pCertificate.dwAllowedMedia := pCertificate.dwAllowedMedia and (not XBEIMAGE_MEDIA_TYPE_DVD_X2);
+  end;
+
   if MayLog(lfUnit) then
     DbgPrintf('EmuMain : Initializing devices.');
 
