@@ -1342,7 +1342,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuKrnl : RtlNtStatusToDosError').
-      _(Status, 'Status').
+      _(Status, 'Status', NTStatusToString(Status)).
     LogEnd();
 
   Result := JwaNative.RtlNtStatusToDosError(Status);

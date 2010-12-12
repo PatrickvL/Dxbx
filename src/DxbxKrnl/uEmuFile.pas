@@ -682,7 +682,7 @@ begin
     if not Result then
       Exit;
 
-    // convert from PC to Xbox
+    // convert from Xbox to PC
     memcpy(NativeFileInformation, FileInformation, CopySize);
 
     // Double the amount of memory needed for the string :

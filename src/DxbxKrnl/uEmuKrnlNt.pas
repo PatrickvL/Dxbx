@@ -543,11 +543,11 @@ begin
 
       if StartsWithText(NativePath, DxbxBasePath) then
       begin
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfFile) then
           DbgPrintf('  New:"$DxbxPath\EmuDisk%s%s"', [Copy(NativePath, Length(DxbxBasePath), MaxInt), RelativePath])
       end
       else
-        if MayLog(lfUnit) then
+        if MayLog(lfUnit or lfFile) then
           DbgPrintf('  New:"$XbePath\%s"', [RelativePath]);
     end;
   end
@@ -667,7 +667,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfFile) then
     LogBegin('EmuKrnl : NtClose').
       _(Handle, 'Handle').
     LogEnd();
@@ -702,12 +702,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfDxbx or lfKernel or lfFile) then
-    DbgPrintf('EmuKrnl : NtCreateDirectoryObject' +
-        #13#10'(' +
-        #13#10'   DirectoryHandle     : 0x%.08X' +
-        #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
-        #13#10');',
-        [DirectoryHandle, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
+    LogBegin('EmuKrnl : NtCreateDirectoryObject').
+      _(DirectoryHandle, 'DirectoryHandle').
+      _(ObjectAttributes, 'ObjectAttributes').
+    LogEnd();
 
   // initialize object attributes
   Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtCreateDirectoryObject');
@@ -748,15 +746,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtCreateEvent' +
-      #13#10'(' +
-      #13#10'   EventHandle         : 0x%.08X' +
-      #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
-      #13#10'   EventType           : 0x%.08X' +
-      #13#10'   InitialState        : 0x%.08X' +
-      #13#10');',
-      [EventHandle, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
-       Ord(EventType), Ord(InitialState)]);
+    LogBegin('EmuKrnl : NtCreateEvent').
+      _(EventHandle, 'EventHandle').
+      _(ObjectAttributes, 'ObjectAttributes').
+      _(Ord(EventType), 'EventType'). // TODO : _ overload
+      _(InitialState, 'InitialState').
+    LogEnd();
 
   // initialize object attributes
   Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes);
@@ -890,7 +885,7 @@ begin
       DbgPrintf('EmuKrnl : NtCreateFile FileHandle^ = 0x%.08X', [FileHandle^]);
   end
   else
-    if (Result <> STATUS_OBJECT_NAME_COLLISION) then
+//    if (Result <> STATUS_OBJECT_NAME_COLLISION) then
       EmuWarning('NtCreateFile failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
@@ -1102,11 +1097,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfDxbx or lfKernel or lfFile) then
-   DbgPrintf('EmuKrnl : NtDeleteFile' +
-    #13#10'(' +
-    #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
-    #13#10');',
-    [ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
+    LogBegin('EmuKrnl : NtDeleteFile').
+      _(ObjectAttributes, 'ObjectAttributes').
+    LogEnd();
 
   // initialize object attributes
   Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtDeleteFile');
@@ -1152,17 +1145,18 @@ function xboxkrnl_NtDeviceIoControlFile(
 begin
   EmuSwapFS(fsWindows);
 
-  LogBegin('EmuKrnl : NtDeviceIoControlFile').
-    _(FileHandle, 'FileHandle').
-    _(Event, 'Event').
-    _(Addr(ApcRoutine), 'ApcRoutine').
-    _(ApcContext, 'ApcContext').
-    _(IoStatusBlock, 'IoStatusBlock').
-    _(IoControlCode, 'IoControlCode').
-    _(InputBuffer, 'InputBuffer').
-    _(InputBufferLength, 'InputBufferLength').
-    _(OutputBuffer, 'OutputBuffer').
-    _(OutputBufferLength, 'OutputBufferLength').
+  if MayLog(lfDxbx or lfKernel or lfFile) then
+    LogBegin('EmuKrnl : NtDeviceIoControlFile').
+      _(FileHandle, 'FileHandle').
+      _(Event, 'Event').
+      _(Addr(ApcRoutine), 'ApcRoutine').
+      _(ApcContext, 'ApcContext').
+      _(IoStatusBlock, 'IoStatusBlock').
+      _(IoControlCode, 'IoControlCode').
+      _(InputBuffer, 'InputBuffer').
+      _(InputBufferLength, 'InputBufferLength').
+      _(OutputBuffer, 'OutputBuffer').
+      _(OutputBufferLength, 'OutputBufferLength').
     LogEnd();
 
   Result := JwaNative.NtDeviceIoControlFile(
@@ -1247,7 +1241,7 @@ function xboxkrnl_NtFlushBuffersFile
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfFile) then
     LogBegin('EmuKrnl : NtFlushBuffersFile').
       _(FileHandle, 'FileHandle').
       _(IoStatusBlock, 'IoStatusBlock').
@@ -1401,7 +1395,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfFile) then
     LogBegin('EmuKrnl : NtOpenFile').
       _(FileHandle, 'FileHandle').
       _ACCESS_MASK(DesiredAccess, 'DesiredAccess').
@@ -1425,7 +1419,7 @@ begin
 
   if (Result = STATUS_SUCCESS) then
   begin
-    if MayLog(lfUnit or lfReturnValue) then
+    if MayLog(lfUnit or lfReturnValue or lfFile) then
       DbgPrintf('EmuKrnl : NtOpenFile FileHandle^ = 0x%.08X', [FileHandle^]);
   end
   else
@@ -1445,7 +1439,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfFile) then
     DbgPrintf('EmuKrnl : NtOpenSymbolicLinkObject' +
       #13#10'(' +
       #13#10'   LinkHandle          : 0x%.08X' +
@@ -1466,7 +1460,7 @@ begin
 
   if (Result = STATUS_SUCCESS) then
   begin
-    if MayLog(lfUnit or lfReturnValue) then
+    if MayLog(lfUnit or lfReturnValue or lfFile) then
       DbgPrintf('EmuKrnl : NtOpenSymbolicLinkObject LinkHandle^ = 0x%.08X', [LinkHandle^]);
   end
   else
@@ -1582,25 +1576,19 @@ begin
 
   szBuffer := PSTRING_String(FileMask);
 
-  if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
-        #13#10'(' +
-        #13#10'   FileHandle           : 0x%.08X' +
-        #13#10'   Event                : 0x%.08X' +
-        #13#10'   ApcRoutine           : 0x%.08X' +
-        #13#10'   ApcContext           : 0x%.08X' +
-        #13#10'   IoStatusBlock        : 0x%.08X' +
-        #13#10'   FileInformation      : 0x%.08X' +
-        #13#10'   Length               : 0x%.08X' +
-        #13#10'   FileInformationClass : 0x%.08X (%s)' +
-        #13#10'   FileMask             : 0x%.08X ("%s")' +
-        #13#10'   RestartScan          : 0x%.08X' +
-        #13#10');',
-        [FileHandle, Event, Addr(ApcRoutine), ApcContext, IoStatusBlock,
-         FileInformation, Length,
-         Ord(FileInformationClass), FileInformationClassToString(FileInformationClass),
-         FileMask, szBuffer,
-         RestartScan]);
+  if MayLog(lfUnit or lfFile) then
+    LogBegin('EmuKrnl : NtQueryDirectoryFile').
+      _(FileHandle, 'FileHandle').
+      _(Event, 'Event').
+      _(Addr(ApcRoutine), 'ApcRoutine').
+      _(ApcContext, 'ApcContext').
+      _(IoStatusBlock, 'IoStatusBlock').
+      _(FileInformation, 'FileInformation').
+      _(Length, 'Length').
+      _(FileInformationClass, 'FileInformationClass').
+      _(FileMask, 'FileMask').
+      _(RestartScan, 'RestartScan').
+    LogEnd();
 
   // initialize FileMask
   begin
@@ -1727,13 +1715,11 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtQueryFullAttributesFile' +
-       #13#10'(' +
-       #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
-       #13#10'   FileInformation     : 0x%.08X' +
-       #13#10');',
-       [ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes), FileInformation]);
+  if MayLog(lfUnit or lfFile) then
+    LogBegin('EmuKrnl : NtQueryFullAttributesFile').
+      _(ObjectAttributes, 'ObjectAttributes').
+      _(FileInformation, 'FileInformation').
+    LogEnd();
 
   // initialize object attributes
   Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtQueryFullAttributesFile');
@@ -1763,7 +1749,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit or lfTrace) then
+  if MayLog(lfUnit or lfFile or lfTrace) then
   begin
     LogBegin('EmuKrnl : NtQueryInformationFile').
       _(FileHandle, 'FileHandle').
@@ -1938,7 +1924,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfFile) then
     LogBegin('EmuKrnl : NtQuerySymbolicLinkObject').
       _(LinkHandle, 'LinkHandle').
       _(LinkTarget, 'LinkTarget').
@@ -2083,7 +2069,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfFile) then
     DbgPrintf('EmuKrnl : NtQueryVolumeInformationFile' +
       #13#10'(' +
       #13#10'   FileHandle          : 0x%.08X' +
@@ -2198,19 +2184,16 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfFile) then
-    DbgPrintf('EmuKrnl : NtReadFileScatter' +
-        #13#10'(' +
-        #13#10'   FileHandle          : 0x%.08X' +
-        #13#10'   Event               : 0x%.08X' +
-        #13#10'   ApcRoutine          : 0x%.08X' +
-        #13#10'   ApcContext          : 0x%.08X' +
-        #13#10'   IoStatusBlock       : 0x%.08X' +
-        #13#10'   SegmentArray        : 0x%.08X' +
-        #13#10'   Length              : 0x%.08X' +
-        #13#10'   ByteOffset          : 0x%.08X (%d)' +
-        #13#10');',
-        [FileHandle, Event, Addr(ApcRoutine),
-         ApcContext, IoStatusBlock, SegmentArray, Length, ByteOffset, QuadPart(ByteOffset)]);
+    LogBegin('EmuKrnl : NtReadFileScatter').
+      _(FileHandle, 'FileHandle').
+      _(Event, 'Event').
+      _(Addr(ApcRoutine), 'ApcRoutine').
+      _(ApcContext, 'ApcContext').
+      _(IoStatusBlock, 'IoStatusBlock').
+      _(SegmentArray, 'SegmentArray').
+      _(Length, 'Length').
+      _(ByteOffset, 'ByteOffset').
+    LogEnd();
 
   Result := JwaNative.NtReadFileScatter(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, SegmentArray, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
 
@@ -2386,17 +2369,14 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuKrnl : NtSetInformationFile' +
-         #13#10'(' +
-         #13#10'   FileHandle           : 0x%.08X' +
-         #13#10'   IoStatusBlock        : 0x%.08X' +
-         #13#10'   FileInformation      : 0x%.08X' +
-         #13#10'   Length               : 0x%.08X' +
-         #13#10'   FileInformationClass : 0x%.08X (%s)' +
-         #13#10');',
-         [FileHandle, IoStatusBlock, FileInformation,
-          Length, Ord(FileInformationClass), FileInformationClassToString(FileInformationClass)]);
+  if MayLog(lfUnit or lfFile or lfTrace) then
+    LogBegin('EmuKrnl : NtSetInformationFile').
+      _(FileHandle, 'FileHandle').
+      _(IoStatusBlock, 'IoStatusBlock').
+      _(FileInformation, 'FileInformation').
+      _(Length, 'Length').
+      _(FileInformationClass, 'FileInformationClass').
+    LogEnd();
 
   SetLength(NativeFileInformation, Length * 2);
 
@@ -2890,19 +2870,16 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfFile) then
-    DbgPrintf('EmuKrnl : NtWriteFileGather' +
-        #13#10'(' +
-        #13#10'   FileHandle          : 0x%.08X' +
-        #13#10'   Event               : 0x%.08X' +
-        #13#10'   ApcRoutine          : 0x%.08X' +
-        #13#10'   ApcContext          : 0x%.08X' +
-        #13#10'   IoStatusBlock       : 0x%.08X' +
-        #13#10'   SegmentArray        : 0x%.08X' +
-        #13#10'   Length              : 0x%.08X' +
-        #13#10'   ByteOffset          : 0x%.08X (%d)' +
-        #13#10');',
-        [FileHandle, Event, Addr(ApcRoutine),
-         ApcContext, IoStatusBlock, SegmentArray, Length, ByteOffset, QuadPart(ByteOffset)]);
+    LogBegin('EmuKrnl : NtWriteFileGather').
+      _(FileHandle, 'FileHandle').
+      _(Event, 'Event').
+      _(Addr(ApcRoutine), 'ApcRoutine').
+      _(ApcContext, 'ApcContext').
+      _(IoStatusBlock, 'IoStatusBlock').
+      _(SegmentArray, 'SegmentArray').
+      _(Length, 'Length').
+      _(ByteOffset, 'ByteOffset').
+    LogEnd();
 
   Result := JwaNative.NtWriteFileGather(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, SegmentArray, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
 
