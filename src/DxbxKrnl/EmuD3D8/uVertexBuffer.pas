@@ -1948,6 +1948,9 @@ begin
       if pSrc = pDest then
         Continue;
 
+      if (face = 0) and (level = 0) then
+        pPixelContainer.Data := UIntPtr(pDest);
+
       if (IsSpecialResource(pPixelContainer.Data) and ((pPixelContainer.Data and X_D3DRESOURCE_DATA_FLAG_SURFACE) > 0)) then
       begin
         EmuWarning('Attempt to registered to another resource''s data (eww!)');
@@ -1964,7 +1967,7 @@ begin
       end
       else
       begin
-        if (bSwizzled) then
+        if (bSwizzled) or ConvertP8ToARGB then // Dxbx hack : Even convert when already unswizzled!
         begin
           if (DWORD(pSrc) = $80000000) then
           begin
@@ -1975,10 +1978,13 @@ begin
             if ConvertP8ToARGB then
             begin
               // First we need to unswizzle the texture data to a temporary buffer :
-              EmuXGUnswizzleRect(
-                pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, pTextureCache,
-                dwPitch, iRect, iPoint, dwBPP
-              );
+              if bSwizzled then // Dxbx hack : Don't unswizzle twice!
+                EmuXGUnswizzleRect(
+                  pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, pTextureCache,
+                  dwPitch, iRect, iPoint, dwBPP
+                )
+              else
+                memcpy(pTextureCache, pSrc + dwMipOffs, dwMipWidth * dwMipHeight);
 
               // Lookup the colors of the paletted pixels in the current pallette
               // and write the expanded color back to the texture :
@@ -2043,6 +2049,8 @@ begin
             end;
           end;
         end;
+
+
       end;
 
       DxbxUnlockD3DResource(pPixelContainer, level, face);
@@ -2092,19 +2100,23 @@ begin
       Continue;
 
     X_Format := X_D3DFORMAT((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
+    if X_Format = X_D3DFMT_P8 then // Dxbx note : For now, do only P8 conversions (later on others can be handled too)
     if (IDirect3DResource(pPixelContainer.Emu.Resource).GetType() = D3DRTYPE_TEXTURE) then
     begin
       DxbxGetFormatRelatedVariables(pPixelContainer, X_Format,
         {var}dwWidth, {var}dwHeight, {var}dwBPP, {var}dwDepth, {var}dwPitch, {var}dwMipMapLevels,
         {var}bSwizzled, {var}bCompressed, {var}dwCompressedSize, {var}bCubeMap);
 
+      bSwizzled := False;
+
       DxbxUpdatePixelContainer(pPixelContainer, X_D3DCOMMON_TYPE_TEXTURE,
         dwWidth, dwHeight, dwBPP, dwDepth, dwPitch, dwMipMapLevels,
         bSwizzled, bCompressed, dwCompressedSize, bCubeMap, {CacheFormat=}X_Format);
+
+      DxbxUnlockD3DResource(pPixelContainer); // Dxbx addition
+      g_pD3DDevice.SetTexture(Stage, IDirect3DTexture(pPixelContainer.Emu.Texture));
     end;
 
-    DxbxUnlockD3DResource(pPixelContainer); // Dxbx addition
-    g_pD3DDevice.SetTexture(Stage, IDirect3DTexture(pPixelContainer.Emu.Texture));
   end;
 end; // XTL_EmuUpdateActiveTexture
 
