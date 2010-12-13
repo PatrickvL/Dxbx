@@ -2,6 +2,13 @@ DXBX Changelog, this changelog has been implemented from version 0.0.9
 So the changes from version 0.0.8 and below are not documented.
 
 version 0.5 Release:
+- XBEExplorer can use dxbx for generating Symbol cache if now symbol cache is not availible yet.
+- Fixed P8 conversion for non registered textures - ( Gauntlet )
+- Fixed P8 conversion for registered texture - ( Battlestar Gallactica )
+- Prevent Authentication check on Dvd drive
+- Lots of VertexShader and PixelShader patches and fixes
+- Turok menu now showing dino`s
+
 
 Version 0.4 Release:
 - Rewrite of pattern scanning and symbol detection
