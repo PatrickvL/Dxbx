@@ -30,6 +30,7 @@ unit uEmuD3D8;
 {$DEFINE DXBX_PIXELSHADER_HOOKS} // Disable this to try dynamic pixel shader support
 {.$DEFINE DXBX_TRY_DEEPER_DEVICE_INIT} // Try to run more of the original initialization code
 {.$DEFINE DXBX_INDEXED_QUADLIST_TEST} // Render indexed QUADLIST as indexed TRIANGLFANS (XDK Ripple sample improves, although text&help disappears)
+{$DEFINE DXBX_ENABLE_P8_CONVERSION}
 
 interface
 
@@ -5327,7 +5328,6 @@ begin
 
   // Dxbx addition : Initialize Common field properly :
   ppCubeTexture^.Common := ({RefCount=}1 and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_TEXTURE or X_D3DCOMMON_D3DCREATED;
-//  DxbxUpdatePixelContainer(ppCubeTexture^, X_D3DCOMMON_TYPE_TEXTURE, {Width=}EdgeLength, {Height=}EdgeLength, BPP, 3, 0, Levels, IsSwizzled, IsCompressed, 0, IsCubeMap, CacheFormat);
 
   if MayLog(lfUnit or lfReturnValue) then
     DbgPrintf('EmuD3D8 : CreateCubeTexture : Successfully Created Cube Texture : ' + ResourceToString(ppCubeTexture^));
@@ -6641,9 +6641,6 @@ begin
             if MayLog(lfUnit) then
               DbgPrintf('CreateTexture(%d,%d,%d, 0,%d, D3DPOOL_MANAGED, 0x%.08X)',
                 [dwWidth, dwHeight, dwMipMapLevels, Ord(PCFormat), @(pPixelContainer.Emu.Texture)]);
-
-//            if CacheFormat = X_D3DFMT_P8 then
-//              PCFormat := D3DFMT_A8R8G8B8;
 
             hRet := IDirect3DDevice_CreateTexture(g_pD3DDevice,
               dwWidth, dwHeight, dwMipMapLevels, {Usage=}0, PCFormat,
