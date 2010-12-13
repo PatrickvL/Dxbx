@@ -82,6 +82,9 @@ var
 begin
   XBEFilePath := ParamStr(2);
 
+  if (ParamStr(2) = '/SymbolScanOnly') and  (ParamStr(3) <> '') then
+    XBEFilePath := ParamStr(3);
+
   // Check if Dxbx is invoked with the intention to map&run a supplied image (if not, we'll show the GUI) :
   if  (XBEFilePath <> '')
   and SameText(ParamStr(1), '/load')

@@ -947,6 +947,7 @@ var
   Node0, Node1, NodeXBEHeader: TTreeNode;
   PreviousTreeNodeStr: string;
   i: Integer;
+  ExecuteStr: PChar;
 begin // OpenFile
   // Construct current tree path (excluding first node) :
   Node0 := TreeView1.Selected;
@@ -961,12 +962,14 @@ begin // OpenFile
   MyXBE := TXbe.Create(aFilePath);
   FXBEFileName := ExtractFileName(aFilePath);
 
-  if not LoadSymbols then
-    // if Ask scan then
+  if not LoadSymbols and FileExists('Dxbx.exe') then
+    if MessageDlg('Symbols not found, do you want Dxbx.exe to scan patterns ?', mtConfirmation, [mbYes, mbNo], 0 ) = mrYes then
     begin
       // Launch dxbx in scan-only mode :
-      {Result := }ShellExecute(0, 'open', PChar('Dxbx.exe'), PChar('/load /SymbolScanOnly "' + aFilePath + '"'), nil, SW_SHOWNORMAL);
-      LoadSymbols;
+      ExecuteStr := PChar('/load /SymbolScanOnly "' + aFilePath + '"');
+      {Result := }ShellExecute(0, 'open', PChar('Dxbx.exe'), ExecuteStr, nil, SW_SHOWNORMAL);
+      while not LoadSymbols do
+        Sleep(10);
     end;
 
   Caption := Application.Title + ' - [' + FXBEFileName + ']';
