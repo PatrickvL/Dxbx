@@ -1948,8 +1948,9 @@ begin
       if pSrc = pDest then
         Continue;
 
-      if (face = 0) and (level = 0) then
-        pPixelContainer.Data := UIntPtr(pDest);
+      if ConvertP8ToARGB then // Dxbx hack : Update Data member only when converting
+        if (face = 0) and (level = 0) then
+          pPixelContainer.Data := UIntPtr(pDest);
 
       if (IsSpecialResource(pPixelContainer.Data) and ((pPixelContainer.Data and X_D3DRESOURCE_DATA_FLAG_SURFACE) > 0)) then
       begin
