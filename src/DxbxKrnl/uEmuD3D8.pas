@@ -2846,15 +2846,18 @@ function XTL_EmuD3DDevice_GetDisplayFieldStatus(pFieldStatus: PX_D3DFIELD_STATUS
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfExtreme) then
     LogBegin('EmuD3DDevice_GetDisplayFieldStatus').
       _(pFieldStatus, 'pFieldStatus').
     LogEnd;
 
-//  pFieldStatus.Field := X_D3DFIELDTYPE(iif(g_VBData.VBlankCounter and 1 = 0, Ord(X_D3DFIELD_ODD), Ord(X_D3DFIELD_EVEN)));
-//  pFieldStatus.VBlankCount := g_VBData.VBlankCounter;
-  pFieldStatus.Field := X_D3DFIELD_PROGRESSIVE;
-  pFieldStatus.VBlankCount := 0;
+  // TODO -oDxbx: This flag is probably checked on the wrong struct (we need a global DisplayMode) :
+  if (PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).Flags and X_D3DPRESENTFLAG_INTERLACED) > 0 then
+    pFieldStatus.Field := X_D3DFIELDTYPE(iif(g_VBData.VBlankCounter and 1 = 0, Ord(X_D3DFIELD_ODD), Ord(X_D3DFIELD_EVEN)))
+  else
+    pFieldStatus.Field := X_D3DFIELD_PROGRESSIVE;
+
+  pFieldStatus.VBlankCount := g_VBData.VBlankCounter;
 
   Result := D3D_OK;
 
