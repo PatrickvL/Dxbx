@@ -529,6 +529,11 @@ begin
       FileRenameInformation, // = 10 FILE_RENAME_INFORMATION
       FileLinkInformation: // = 11 FILE_LINK_INFORMATION
       begin
+        // TODO : The Xbox FILE_RENAME_INFORMATION and FILE_LINK_INFORMATION structs differ from NT - Fix this!
+        // Xbox contains a member "OBJECT_STRING FileName;", NT has "FileNameLength: ULONG; FileName: array[0..0] of WCHAR;"
+        // OBJECT_STRING is an alias for STRING, which is a struct "USHORT Length,MaximumLength;PCHAR Buffer;",
+        // hence the Buffer is a pointer, while NT has this inline!
+
         CopySize := SizeOf(FILE_LINK_INFORMATION);
         StringLengthOffset := FIELD_OFFSET(PFILE_LINK_INFORMATION(nil).FileNameLength);
         wcstr := @(PFILE_LINK_INFORMATION(NativeFileInformation).FileName[0]);
@@ -546,7 +551,7 @@ begin
 
   //    FileDispositionInformation: ; // = 13 FILE_DISPOSITION_INFORMATION
   //    FilePositionInformation: ; // = 14 FILE_POSITION_INFORMATION
-  //    FileFullEaInformation: ; // = 15 ? / FILE_READ_EA
+  //    FileFullEaInformation: ; // = 15 ? / FILE_READ_EA (Note : FILE_FULL_EA_INFORMATION exists on NT, not on Xbox?)
   //    FileModeInformation: ; // = 16 FILE_MODE_INFORMATION
   //    FileAlignmentInformation: ; // = 17 FILE_ALIGNMENT_INFORMATION
       FileAllInformation: // = 18 FILE_ALL_INFORMATION / FILE_READ_ATTRIBUTES
@@ -712,6 +717,8 @@ var
   i: Integer;
   ExtraPath: AnsiString;
   DeviceIndex: Integer;
+  IsReadonlyDevice: Boolean;
+  ShareMode: DWORD;
 begin
   Result := STATUS_OBJECT_NAME_INVALID;
   DriveLetter := SymbolicLinkToDriveLetter(aSymbolicLinkName);
@@ -758,10 +765,23 @@ begin
         if ExtraPath <> '' then
           Self.NativePath := Self.NativePath + string(ExtraPath);
 
+        // Make sure the CdRom is opened without write or delete permission, to prevent writes to this readonly device!
+        IsReadonlyDevice := IsNativePath or StartsWithText(Self.XboxFullPath, DeviceCdrom0);
+        if IsReadonlyDevice then
+        begin
+          ShareMode := FILE_SHARE_READ
+          // TODO : Should we add FILE_FLAG_POSIX_SEMANTICS to the CdRom too?
+        end
+        else
+        begin
+          ShareMode := FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE;
+          // TODO : Should we add FILE_FLAG_DELETE_ON_CLOSE on temporary folders, to prevent flooding of our EmuDisk?
+        end;
+
         ForceDirectories(Self.NativePath);
         Self.RootDirectoryHandle := CreateFile(PChar(Self.NativePath),
           GENERIC_READ,
-          FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE,
+          ShareMode,
           NULL,
           OPEN_EXISTING,
           FILE_FLAG_BACKUP_SEMANTICS,
@@ -798,3 +818,4 @@ finalization
   CleanupSymbolicLinks;
 
 end.
+
