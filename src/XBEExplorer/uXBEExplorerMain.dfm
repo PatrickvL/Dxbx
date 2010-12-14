@@ -37,15 +37,14 @@ object FormXBEExplorer: TFormXBEExplorer
     Height = 25
     UseSystemFont = False
     ActionManager = ActionManager
-    ColorMap.HighlightColor = 14410210
+    ColorMap.HighlightColor = clWhite
     ColorMap.BtnSelectedColor = clBtnFace
-    ColorMap.UnusedColor = 14410210
+    ColorMap.UnusedColor = clWhite
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
     Font.Name = 'Segoe UI'
     Font.Style = []
-    PersistentHotKeys = True
     Spacing = 0
   end
   object Panel1: TPanel
@@ -55,8 +54,6 @@ object FormXBEExplorer: TFormXBEExplorer
     Height = 763
     Align = alLeft
     TabOrder = 2
-    ExplicitLeft = -3
-    ExplicitTop = 49
     object Splitter2: TSplitter
       Left = 1
       Top = 1
@@ -87,8 +84,6 @@ object FormXBEExplorer: TFormXBEExplorer
       Align = alClient
       Caption = 'Panel2'
       TabOrder = 1
-      ExplicitTop = 171
-      ExplicitHeight = 591
       object edt_SymbolFilter: TEdit
         Left = 1
         Top = 1
@@ -97,8 +92,6 @@ object FormXBEExplorer: TFormXBEExplorer
         Align = alTop
         TabOrder = 0
         OnChange = edt_SymbolFilterChange
-        ExplicitLeft = -3
-        ExplicitTop = 31
       end
       object lst_DissambledFunctions: TListView
         Left = 1
@@ -122,8 +115,6 @@ object FormXBEExplorer: TFormXBEExplorer
         ViewStyle = vsReport
         OnColumnClick = lst_DissambledFunctionsColumnClick
         OnDblClick = lst_DissambledFunctionsDblClick
-        ExplicitTop = 25
-        ExplicitHeight = 565
       end
     end
   end

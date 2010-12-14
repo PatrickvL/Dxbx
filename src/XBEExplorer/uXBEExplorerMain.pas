@@ -413,7 +413,9 @@ begin
   try
     lst_DissambledFunctions.Clear;
     for i := 0 to SymbolList.Count - 1 do
-      if (FilterText = '') or ContainsText(SymbolList.Strings[i], FilterText) then
+      if (FilterText = '')
+      or ContainsText(SymbolList.Strings[i], FilterText)
+      or ContainsText(format('%.08x', [UIntPtr(SymbolList.Objects[i])]), FilterText) then
         with lst_DissambledFunctions.Items.Add do
         begin
           Data := SymbolList.Objects[i]; // Address will be used in GOTO
@@ -968,8 +970,17 @@ begin // OpenFile
       // Launch dxbx in scan-only mode :
       ExecuteStr := PChar('/load /SymbolScanOnly "' + aFilePath + '"');
       {Result := }ShellExecute(0, 'open', PChar('Dxbx.exe'), ExecuteStr, nil, SW_SHOWNORMAL);
+      i := 0;
       while not LoadSymbols do
-        Sleep(10);
+      begin
+        Sleep(100);
+        if i = 5 then
+        begin
+          MessageDlg('Dxbx could not scan patterns in time', mtInformation, [mbOk], 0);
+          Break;
+        end;
+        Inc(i);
+      end;
     end;
 
   Caption := Application.Title + ' - [' + FXBEFileName + ']';
