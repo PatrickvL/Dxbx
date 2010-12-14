@@ -458,7 +458,7 @@ begin
     _(IoStatusBlock, 'IoStatusBlock').
     _(AllocationSize, 'AllocationSize').
     _FileAttributes(FileAttributes, 'FileAttributes').
-    _ACCESS_MASK(ShareAccess, 'ShareAccess').
+    _ShareAccess(ShareAccess, 'ShareAccess').
     _CreateDisposition(Disposition, 'Disposition').
     _CreateOptions(CreateOptions, 'CreateOptions').
     _(Options, 'Options').

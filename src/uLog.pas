@@ -155,6 +155,7 @@ type
     function _(const aValue: FILE_INFORMATION_CLASS; const aName: string = ''): PLogStack; overload;
 
     function _ACCESS_MASK(const aValue: ACCESS_MASK; const aName: string = ''): PLogStack;
+    function _ShareAccess(const aValue: ULONG; const aName: string = ''): PLogStack;
     function _FileAttributes(const aValue: ULONG; const aName: string = ''): PLogStack;
     function _CreateDisposition(const aValue: ULONG; const aName: string = ''): PLogStack;
     function _CreateOptions(const aValue: ULONG; const aName: string = ''): PLogStack;
@@ -1038,6 +1039,12 @@ function RLogStack._ACCESS_MASK(const aValue: ACCESS_MASK; const aName: string =
 begin
   Result := SetName(aName, 'ACCESS_MASK');
   SetValue(UIntPtr(aValue), AccessMaskToString(aValue));
+end;
+
+function RLogStack._ShareAccess(const aValue: ULONG; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'ShareAccess');
+  SetValue(UIntPtr(aValue), ShareAccessToString(aValue));
 end;
 
 function RLogStack._FileAttributes(const aValue: ULONG; const aName: string = ''): PLogStack;
