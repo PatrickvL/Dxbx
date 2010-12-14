@@ -506,7 +506,7 @@ begin
   end;
 
   actLoadConfig.Caption := format('Load %s config from file', [ConfigItem]);
-  actSaveConfig.Caption := format('Save %s config from file', [ConfigItem]);
+  actSaveConfig.Caption := format('Save %s config to file', [ConfigItem]);
 end;
 
 procedure TfmConfiguration.SaveControllerConfig;
