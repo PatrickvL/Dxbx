@@ -488,6 +488,7 @@ begin
       // Fixup RelativePath path here
       if Assigned(EmuNtSymbolicLinkObject) then
         System.Delete(RelativePath, 1, Length(EmuNtSymbolicLinkObject.XboxFullPath)); // Remove '\Device\Harddisk0\Partition2'
+      // else TODO : Turok requests 'gamedata.dat' without a preceding path, we probably need 'CurrentDir'-functionality
     end;
 
     if Assigned(EmuNtSymbolicLinkObject) then
@@ -569,7 +570,7 @@ begin
                                         ObjectAttributes.Attributes,
                                         ObjectAttributes.RootDirectory,
                                         NULL);
-end;
+end; // DxbxObjectAttributesToNT
 
 
 // NtAllocateVirtualMemory:
@@ -864,19 +865,36 @@ begin
       FileAttributes := FileAttributes and FILE_ATTRIBUTE_VALID_FLAGS;
     end;
 
-    // redirect to Win2k/XP
-    Result := JwaNative.NtCreateFile(
-        FileHandle,
-        DesiredAccess or GENERIC_READ, // Dxbx note : Add READ access, so NtQueryInformationFile doesn't fail
-        NativeObjectAttributes.NtObjAttrPtr,
-        JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
-        JwaWinType.PLARGE_INTEGER(AllocationSize),
-        FileAttributes,
-        ShareAccess,
-        CreateDisposition,
-        CreateOptions,
-        NULL, 0
-    );
+    // Another way to prevent write-access to CdRom0 device; Test with "TAZ: Wanted" (which tries
+    // to create a “_T_E_S_T.___” file), Zapper or “Burger King; Sneak King” :
+    if  (ObjectAttributes.RootDirectory = g_CdRomHandle) then
+    begin
+      // TODO -oDxbx : Test if the following checks are correct and complete :
+      if ((DesiredAccess and GENERIC_WRITE) > 0)
+      or ((FileAttributes and FILE_WRITE_ACCESS) > 0)
+      or ((ShareAccess and (FILE_SHARE_WRITE or FILE_SHARE_DELETE)) > 0)
+      or (CreateDisposition <> OPEN_EXISTING)
+      or ((CreateOptions and (FILE_WRITE_THROUGH or FILE_DELETE_ON_CLOSE)) > 0) then
+      begin
+        Result := STATUS_INVALID_PARAMETER;
+        EmuWarning('NtCreateFile tried to write on the CdRom0 device; Denied!');
+      end;
+    end;
+
+    if Result = STATUS_SUCCESS then
+      // redirect to Win2k/XP
+      Result := JwaNative.NtCreateFile(
+          FileHandle,
+          DesiredAccess or GENERIC_READ, // Dxbx note : Add READ access, so NtQueryInformationFile doesn't fail
+          NativeObjectAttributes.NtObjAttrPtr,
+          JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
+          JwaWinType.PLARGE_INTEGER(AllocationSize),
+          FileAttributes,
+          ShareAccess,
+          CreateDisposition,
+          CreateOptions,
+          NULL, 0
+      );
   end;
 
   if (Result = STATUS_SUCCESS) then

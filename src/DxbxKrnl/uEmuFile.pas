@@ -181,6 +181,8 @@ function DxbxXB2PC_FILE_INFORMATION(FileInformation, NativeFileInformation: PVOI
 
 procedure CleanupSymbolicLinks;
 
+var g_CdRomHandle: HANDLE = 0;
+
 implementation
 
 const
@@ -706,7 +708,12 @@ begin
     NtSymbolicLinkObjects[DriveLetter] := nil;
 
   if RootDirectoryHandle <> INVALID_HANDLE_VALUE then
+  begin
+    if g_CdRomHandle = RootDirectoryHandle then
+      g_CdRomHandle := 0; // Reset global handle if neccesary
+
     JwaNative.NtClose(RootDirectoryHandle);
+  end;
 
   inherited Destroy;
 end;
@@ -717,6 +724,7 @@ var
   i: Integer;
   ExtraPath: AnsiString;
   DeviceIndex: Integer;
+  IsCdRom: Boolean;
   IsReadonlyDevice: Boolean;
   ShareMode: DWORD;
 begin
@@ -766,7 +774,8 @@ begin
           Self.NativePath := Self.NativePath + string(ExtraPath);
 
         // Make sure the CdRom is opened without write or delete permission, to prevent writes to this readonly device!
-        IsReadonlyDevice := IsNativePath or StartsWithText(Self.XboxFullPath, DeviceCdrom0);
+        IsCdRom := StartsWithText(Self.XboxFullPath, DeviceCdrom0);
+        IsReadonlyDevice := IsNativePath or IsCdRom;
         if IsReadonlyDevice then
         begin
           ShareMode := FILE_SHARE_READ
@@ -794,6 +803,9 @@ begin
         end
         else
         begin
+          if IsCdRom then
+            g_CdRomHandle := Self.RootDirectoryHandle;
+
           NtSymbolicLinkObjects[DriveLetter] := Self;
           if MayLog(lfUnit) then
             DbgPrintf('EmuMain : Linked "%s" to "%s" (residing at "%s")', [aSymbolicLinkName, aFullPath, Self.NativePath]);
