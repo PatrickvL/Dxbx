@@ -873,7 +873,6 @@ begin
       if ((DesiredAccess and (DELETE or GENERIC_WRITE)) > 0)
       // TODO : What about DesiredAccess : FILE_WRITE_DATA or FILE_WRITE_ATTRIBUTES or FILE_WRITE_EA or FILE_APPEND_DATA or WRITE_DAC or WRITE_OWNER ?
       or ((FileAttributes and FILE_WRITE_ACCESS) > 0)
-      or ((ShareAccess and (FILE_SHARE_WRITE or FILE_SHARE_DELETE)) > 0)
       or (CreateDisposition <> FILE_OPEN)
       or ((CreateOptions and (FILE_WRITE_THROUGH or FILE_DELETE_ON_CLOSE)) > 0) then
       begin
