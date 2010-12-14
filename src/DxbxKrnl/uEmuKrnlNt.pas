@@ -80,7 +80,7 @@ function xboxkrnl_NtCreateFile(
   IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   AllocationSize: PLARGE_INTEGER; // OPTIONAL,
   FileAttributes: ULONG;
-  ShareAccess: ACCESS_MASK;
+  ShareAccess: ULONG;
   CreateDisposition: ULONG;
   CreateOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
@@ -157,7 +157,7 @@ function xboxkrnl_NtOpenFile(
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
   IoStatusBlock: PIO_STATUS_BLOCK; // OUT
-  ShareAccess: ACCESS_MASK;
+  ShareAccess: ULONG;
   OpenOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtOpenSymbolicLinkObject(
@@ -795,7 +795,7 @@ function xboxkrnl_NtCreateFile
   IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   AllocationSize: PLARGE_INTEGER; // OPTIONAL,
   FileAttributes: ULONG;
-  ShareAccess: ACCESS_MASK;
+  ShareAccess: ULONG;
   CreateDisposition: ULONG;
   CreateOptions: ULONG // dtCreateOptions
 ): NTSTATUS; stdcall;
@@ -813,7 +813,7 @@ begin
       _(IoStatusBlock, 'IoStatusBlock').
       _(AllocationSize, 'AllocationSize').
       _FileAttributes(FileAttributes).
-      _ACCESS_MASK(ShareAccess, 'ShareAccess').
+      _ShareAccess(ShareAccess, 'ShareAccess').
       _CreateDisposition(CreateDisposition).
       _CreateOptions(CreateOptions).
     LogEnd();
@@ -870,10 +870,11 @@ begin
     if  (ObjectAttributes.RootDirectory = g_CdRomHandle) then
     begin
       // TODO -oDxbx : Test if the following checks are correct and complete :
-      if ((DesiredAccess and GENERIC_WRITE) > 0)
+      if ((DesiredAccess and (DELETE or GENERIC_WRITE)) > 0)
+      // TODO : What about DesiredAccess : FILE_WRITE_DATA or FILE_WRITE_ATTRIBUTES or FILE_WRITE_EA or FILE_APPEND_DATA or WRITE_DAC or WRITE_OWNER ?
       or ((FileAttributes and FILE_WRITE_ACCESS) > 0)
       or ((ShareAccess and (FILE_SHARE_WRITE or FILE_SHARE_DELETE)) > 0)
-      or (CreateDisposition <> OPEN_EXISTING)
+      or (CreateDisposition <> FILE_OPEN)
       or ((CreateOptions and (FILE_WRITE_THROUGH or FILE_DELETE_ON_CLOSE)) > 0) then
       begin
         Result := STATUS_INVALID_PARAMETER;
@@ -1404,7 +1405,7 @@ function xboxkrnl_NtOpenFile(
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
   IoStatusBlock: PIO_STATUS_BLOCK; // OUT
-  ShareAccess: ACCESS_MASK;
+  ShareAccess: ULONG;
   OpenOptions: ULONG // dtCreateOptions
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
@@ -1419,7 +1420,7 @@ begin
       _ACCESS_MASK(DesiredAccess, 'DesiredAccess').
       _(ObjectAttributes, 'ObjectAttributes').
       _(IoStatusBlock, 'IoStatusBlock').
-      _ACCESS_MASK(ShareAccess, 'ShareAccess').
+      _ShareAccess(ShareAccess, 'ShareAccess').
       _CreateOptions(OpenOptions, 'OpenOptions').
     LogEnd();
 

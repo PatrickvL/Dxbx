@@ -61,6 +61,7 @@ function CreateDispositionToString(CreateDisposition: ULONG): string;
 function FileAttributesToString(FileAttributes: ULONG): string;
 function CreateOptionsToString(CreateOptions: ULONG): string;
 function AccessMaskToString(AccessMask: ACCESS_MASK): string;
+function ShareAccessToString(ShareAccess: ULONG): string;
 function NTStatusToString(aStatus: NTSTATUS): string;
 function FileInformationClassToString(FileInformationClass: FILE_INFORMATION_CLASS): string;
 function FsInformationClassToString(FsInformationClass: FS_INFORMATION_CLASS): string;
@@ -405,6 +406,26 @@ begin
   AccessMask := AccessMask and (not HandledFlags);
   if AccessMask > 0 then
     Result := Result + '|0x' + IntToHex(AccessMask, 8);
+end;
+
+function ShareAccessToString(ShareAccess: ULONG): string;
+var
+  HandledFlags: ACCESS_MASK;
+begin
+  Result := '';
+
+  // Handle individual flags :
+  HandledFlags := HandledFlags
+    or AppendFlagStr({var}Result, ShareAccess, FILE_SHARE_READ, 'FILE_SHARE_READ')
+    or AppendFlagStr({var}Result, ShareAccess, FILE_SHARE_WRITE, 'FILE_SHARE_WRITE')
+    or AppendFlagStr({var}Result, ShareAccess, FILE_SHARE_DELETE, 'FILE_SHARE_DELETE');
+
+  // TODO -oDxbx: Maybe we should add a parameter to this function, to choose between various sets of meanings for SPECIFIC_RIGHTS_ALL.
+
+  // Add any unhandled flags as hexadecimal :
+  ShareAccess := ShareAccess and (not HandledFlags);
+  if ShareAccess > 0 then
+    Result := Result + '|0x' + IntToHex(ShareAccess, 8);
 end;
 
 function NTStatusToString(aStatus: NTSTATUS): string;
