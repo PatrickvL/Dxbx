@@ -4387,7 +4387,7 @@ begin
 
   if (SUCCEEDED(hRet)) then
   begin
-    // Dxbx addition : Only fallback is a shader is given (NULL is valid input)!
+    // Dxbx addition : Only fallback if a shader is given (NULL is valid input)!
     // (Test this with the CompressedVertices and Patch XDK samples.)
     if (pRecompiledFunction = NULL) and (pFunction <> NULL) then
     begin
@@ -6195,6 +6195,19 @@ function XTL_EmuD3DDevice_Clear
     Stencil: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+
+  function _FlagsToStr: string;
+  begin
+    Result := '';
+    if (Flags and X_D3DCLEAR_ZBUFFER) > 0 then Result := Result + '|D3DCLEAR_ZBUFFER';
+    if (Flags and X_D3DCLEAR_STENCIL) > 0 then Result := Result + '|D3DCLEAR_STENCIL';
+    if (Flags and X_D3DCLEAR_TARGET_R) > 0 then Result := Result + '|D3DCLEAR_TARGET_R';
+    if (Flags and X_D3DCLEAR_TARGET_G) > 0 then Result := Result + '|D3DCLEAR_TARGET_G';
+    if (Flags and X_D3DCLEAR_TARGET_B) > 0 then Result := Result + '|D3DCLEAR_TARGET_B';
+    if (Flags and X_D3DCLEAR_TARGET_A) > 0 then Result := Result + '|D3DCLEAR_TARGET_A';
+    if Result <> '' then System.Delete(Result, 1, 1);
+  end;
+
 var
   PCFlags: DWORD;
 begin
@@ -6204,7 +6217,7 @@ begin
     LogBegin('EmuD3DDevice_Clear').
         _(Count, 'Count').
         _(pRects, 'pRects').
-        _(Flags, 'Flags').
+        _(Flags, 'Flags', _FlagsToStr).
         _(Color, 'Color').
         _(Z, 'Z').
         _(Stencil, 'Stencil').

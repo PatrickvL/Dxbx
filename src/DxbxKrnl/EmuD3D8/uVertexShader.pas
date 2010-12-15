@@ -1562,6 +1562,16 @@ begin
     begin
       if (pIntermediate.Parameters[k].Active) then
       begin
+{$IFDEF DXBX_REMOVE_V9_FOR_COMPRESSEDVERTICES}
+        if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_V) and
+           (pIntermediate.Parameters[k].Parameter.Address = 9) then
+        begin
+            VshDeleteIntermediate(pShader, i);
+            Inc(deleted);
+            Dec(i);
+            DbgVshPrintf('Removed v9 access'#13#10);
+        end else
+{$ENDIF}
         if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_C) and
            (not pIntermediate.Parameters[k].IndexesWithA0_X) then
         begin
