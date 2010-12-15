@@ -1616,6 +1616,10 @@ type _X_STREAMINPUT = record
 const
   X_D3DCLEAR_ZBUFFER = $00000001;
   X_D3DCLEAR_STENCIL = $00000002;
+  X_D3DCLEAR_TARGET_R = $00000010;  // Clear target surface R component
+  X_D3DCLEAR_TARGET_G = $00000020;  // Clear target surface G component
+  X_D3DCLEAR_TARGET_B = $00000040;  // Clear target surface B component
+  X_D3DCLEAR_TARGET_A = $00000080;  // Clear target surface A component
   X_D3DCLEAR_TARGET  = $000000f0;
 
   X_D3DCLEAR_ALL_SUPPORTED = X_D3DCLEAR_ZBUFFER or X_D3DCLEAR_STENCIL or X_D3DCLEAR_TARGET;
