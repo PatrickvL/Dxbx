@@ -666,6 +666,7 @@ var
   pNewData: Puint08;
   pOrigVertex: Puint08;
   pNewDataPos: Puint08;
+  uiVertexCount: uint;
 {$IFDEF DXBX_USE_D3D9}
   uiOffsetInBytes: UINT;
 {$ENDIF}
@@ -720,8 +721,11 @@ begin
       DxbxKrnlCleanup('Could not retrieve original buffer size');
     end;
     // Set a new (exact) vertex count
-    pPatchDesc.dwVertexCount := Desc.Size div uiStride;
-    dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
+    uiVertexCount := Desc.Size div uiStride;
+    // Dxbx addition : Don't update pPatchDesc.dwVertexCount because an indexed draw
+    // can (and will) use less vertices than the supplied nr of indexes. Thix fixes
+    // the missing parts in the CompressedVertices sample (in Vertex shader mode).
+    dwNewSize := uiVertexCount * pStreamPatch.ConvertedStride;
 
     if (FAILED(IDirect3DVertexBuffer(pOrigVertexBuffer).Lock(0, 0, {out}TLockData(pOrigData), 0))) then
     begin
@@ -748,7 +752,8 @@ begin
     uiStride  := pPatchDesc.uiVertexStreamZeroStride;
     pOrigData := Puint08(pPatchDesc.pVertexStreamZeroData);
     // TODO -oCXBX: This is sometimes the number of indices, which isn't too good
-    dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
+    uiVertexCount := pPatchDesc.dwVertexCount;
+    dwNewSize := uiVertexCount * pStreamPatch.ConvertedStride;
     pNewVertexBuffer := NULL;
     pNewData := XboxAlloc(dwNewSize);
     if (nil=pNewData) then
@@ -757,9 +762,9 @@ begin
     end;
   end;
 
-  if pPatchDesc.dwVertexCount > 0 then // Dxbx addition, to prevent underflow
+  if uiVertexCount > 0 then // Dxbx addition, to prevent underflow
   if pStreamPatch.NbrTypes > 0 then // Dxbx addition, to prevent underflow
-  for uiVertex := 0 to pPatchDesc.dwVertexCount - 1 do
+  for uiVertex := 0 to uiVertexCount - 1 do
   begin
     dwPosOrig := 0;
     pOrigVertex := @pOrigData[uiVertex * uiStride];
