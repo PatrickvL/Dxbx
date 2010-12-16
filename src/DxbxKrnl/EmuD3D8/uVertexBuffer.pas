@@ -1756,7 +1756,7 @@ procedure DxbxGetFormatRelatedVariables(
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   v: uint32;
-  MaxMipMapLevels: int;
+  MaxMipMapLevels: uint;
 begin
   dwWidth := 1; dwHeight := 1; dwBPP := 1; dwDepth := 1; dwPitch := 0; dwMipMapLevels := 1;
   bSwizzled := FALSE; bCompressed := FALSE; dwCompressedSize := 0;
@@ -1877,6 +1877,8 @@ var
   x: uint32;
   p: Byte;
 begin
+  pTextureCache := nil; // To prevent compiler warnings
+
   iRect := Classes.Rect(0, 0, 0, 0);
   iPoint := Classes.Point(0, 0);
 

@@ -112,7 +112,6 @@ var
   StartSuspended: BOOL_;
   i: int;
   pfnNotificationRoutine: XTHREAD_NOTIFY_PROC;
-  OldExceptionFilter: LPTOP_LEVEL_EXCEPTION_FILTER;
 begin
   StartAddress := Parameter.StartAddress;
   StartContext := Parameter.StartContext;

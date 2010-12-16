@@ -415,7 +415,7 @@ begin
   Result := '';
 
   // Handle individual flags :
-  HandledFlags := HandledFlags
+  HandledFlags := 0
     or AppendFlagStr({var}Result, ShareAccess, FILE_SHARE_READ, 'FILE_SHARE_READ')
     or AppendFlagStr({var}Result, ShareAccess, FILE_SHARE_WRITE, 'FILE_SHARE_WRITE')
     or AppendFlagStr({var}Result, ShareAccess, FILE_SHARE_DELETE, 'FILE_SHARE_DELETE');

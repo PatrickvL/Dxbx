@@ -168,8 +168,6 @@ function {014} xboxkrnl_ExAllocatePool
   NumberOfBytes: ULONG
 ): PVOID; stdcall;
 // Source:Cxbx  Branch:shogun  Revision:0.8.2-Pre2  Translator:PatrickvL  Done:100
-var
-  pRet: PVOID;
 begin
   if MayLog(lfUnit) then
   begin
@@ -203,7 +201,7 @@ begin
   if MayLog(lfUnit) then
     LogBegin('EmuKrnl : ExAllocatePoolWithTag').
       _(NumberOfBytes, 'NumberOfBytes').
-      _(Tag, 'Tag', _TagStr).
+      _(Tag, 'Tag', string(_TagStr)).
     LogEnd();
 
   // TODO -oCXBX: Actually implement this

@@ -148,7 +148,9 @@ function xboxkrnl_MmAllocateContiguousMemory(
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pRet: PVOID;
+{$IFNDEF _MM_CONTIGUOUS_ALTERNATE}
   dwRet: DWORD;
+{$ENDIF}
 begin
   EmuSwapFS(fsWindows);
 
@@ -199,7 +201,9 @@ const
 {$WRITEABLECONST OFF}
 var
   pRet: PVOID;
+{$IFNDEF _MM_CONTIGUOUS_ALTERNATE}
   dwRet: DWORD;
+{$ENDIF}
 begin
   EmuSwapFS(fsWindows);
 
@@ -337,8 +341,10 @@ procedure xboxkrnl_MmFreeContiguousMemory(
   BaseAddress: PVOID
   ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+{$IFNDEF _MM_CONTIGUOUS_ALTERNATE}
 var
   OrigBaseAddress: PVOID;
+{$ENDIF}
 begin
   EmuSwapFS(fsWindows);
 
