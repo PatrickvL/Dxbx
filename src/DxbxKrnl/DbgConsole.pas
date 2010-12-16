@@ -121,9 +121,9 @@ procedure TDbConsole.ParseCommand;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:80
 var
   szCmd : Array [0..32-1] of AnsiChar;
-  Full, v, n, m, c: Integer;
-  cur: PRTNode;
-  enabled: Boolean;
+//  Full, v, n, m, c: Integer;
+//  cur: PRTNode;
+//  enabled: Boolean;
 begin
   Dbgprintf('');
 
@@ -133,7 +133,7 @@ begin
 (*  sscanf(m_szInput, '%s', szCmd); *)
 
   // TODO: as command list grows, turn into static string/ptr lookup
-  if (CompareStr(szCmd, 'h') = 0) or (CompareStr(szCmd, 'help') = 0) then
+  if (CompareStr(String(szCmd), 'h') = 0) or (CompareStr(String(szCmd), 'help') = 0) then
   begin
     Dbgprintf('DxbxDbg: ');
     Dbgprintf('DxbxDbg: Cxbx Debug Command List:');
@@ -166,12 +166,12 @@ begin
     Dbgprintf('DxbxDbg: # denotes parameter of form [#] or [#-#]');
     Dbgprintf('DxbxDbg: ');
   end
-  else if (CompareStr(szCmd, 'q') = 0) or (CompareStr(szCmd, 'quit') = 0) or (CompareStr(szCmd, 'exit') = 0) then
+  else if (CompareStr(String(szCmd), 'q') = 0) or (CompareStr(String(szCmd), 'quit') = 0) or (CompareStr(String(szCmd), 'exit') = 0) then
   begin
     Dbgprintf('DxbxDbg: Goodbye...');
     DxbxKrnlCleanup('');
   end
-  else if (CompareStr(szCmd, 't') = 0) or (CompareStr(szCmd, 'trace') = 0) then
+  else if (CompareStr(String(szCmd), 't') = 0) or (CompareStr(String(szCmd), 'trace') = 0) then
   begin
 (*        g_bPrintfOn = not g_bPrintfOn;
       Dbgprintf('DxbxDbg: Trace is now %s', ifthen(g_bPrintfOn, 'ON', 'OFF')); *)
@@ -307,7 +307,7 @@ begin
     DxbxAllocDump(Full <> 0);
   end
   {$endif} // _DEBUG_ALLOC
-  else if(CompareStr(szCmd, 'cls') = 0) then
+  else if(CompareStr(String(szCmd), 'cls') = 0) then
   begin
       // clear screen using system call
 (*        system('cls'); *)
