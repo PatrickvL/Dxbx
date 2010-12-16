@@ -911,6 +911,7 @@ begin
     LogEnd();
 
   Unimplemented('XNetGetConnectStatus');
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -929,6 +930,7 @@ begin
     LogEnd();
 
   Unimplemented('EmuXNetGetDebugXnAddr');
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -947,6 +949,7 @@ begin
     LogEnd();
 
   Unimplemented('EmuXNetGetTitleXnAddr');
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -993,6 +996,7 @@ begin
     LogEnd();
 
   Unimplemented('EmuXNetInAddrToXnAddr');
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1019,6 +1023,7 @@ begin
     LogEnd();
 
   Unimplemented('EmuXNetQosListen');
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1057,6 +1062,7 @@ begin
     LogEnd();
 
   Unimplemented('EmuXNetQosRelease');
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1080,6 +1086,7 @@ begin
     LogEnd();
 
   Unimplemented('EmuXNetServerToInAddr');
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1290,6 +1297,7 @@ begin
     LogEnd();
 
   Unimplemented('EmuXOnlineArbitrationCreateRoundID');
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2668,6 +2676,7 @@ begin
     LogEnd();
 
   Unimplemented('EmuXOnlineGetLogonUsers');
+  Result := Nil;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2682,6 +2691,8 @@ begin
     LogEnd();
 
   Unimplemented('EmuXOnlineGetNatType');
+  // Todo: get real XONLINE_NAT_TYPE type.
+  Result := XONLINE_NAT_STRICT;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2703,6 +2714,7 @@ begin
     LogEnd();
 
   Unimplemented('EmuXOnlineGetNotification');
+  Result := BOOL_FALSE;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2725,6 +2737,7 @@ begin
     LogEnd();
 
   Unimplemented('EmuXOnlineGetNotificationEx');
+  Result := BOOL_FALSE;
 
   EmuSwapFS(fsXbox);
 end;
