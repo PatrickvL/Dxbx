@@ -585,6 +585,8 @@ function xboxkrnl_NtAllocateVirtualMemory
   AllocationType: DWORD;
   Protect: DWORD
 ): NTSTATUS; stdcall;
+const
+  MEM_NOZERO = $800000; // Note : This is an Xbox-only flag, that conflicts with Windows!
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -598,7 +600,15 @@ begin
       _(Protect, 'Protect').
     LogEnd();
 
-  Result := JwaNative.NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
+  // As suggested by Blueshogun, this fix denies any invalid flags, and removes
+  // the Xbox-only flag MEM_NOZERO; This will help in running Azurik better :
+  if (AllocationType and (not (MEM_COMMIT or MEM_RESERVE or MEM_TOP_DOWN or MEM_RESET or MEM_NOZERO))) > 0 then
+    Result := STATUS_INVALID_PARAMETER
+  else
+  begin
+    AllocationType := AllocationType and (not MEM_NOZERO);
+    Result := JwaNative.NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
+  end;
 
   EmuSwapFS(fsXbox);
 end;
