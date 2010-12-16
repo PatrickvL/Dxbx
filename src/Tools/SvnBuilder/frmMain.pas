@@ -2,6 +2,8 @@ unit frmMain;
 
 interface
 
+{$WARN UNIT_PLATFORM OFF} // Prevent warning on usage of FileCtrl
+
 uses
   // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
