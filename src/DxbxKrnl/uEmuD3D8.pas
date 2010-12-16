@@ -5860,11 +5860,12 @@ function DxbxSetVertexData(const Register_: X_D3DVSDE; const a, b, c, d: FLOAT):
 
   function _abcdAsD3DCOLOR: D3DCOLOR;
   begin
-    // TODO -oDxbx : Is this the correct way to check if Alpha should be set to 1?
-    if not EmuXBFormatHasAlpha(g_EmuCDPD.pPresentationParameters.BackBufferFormat) then
-      // Tests with XSokoban show that this is needed in order to make the text non-transparent :
-      Result := D3DCOLOR_COLORVALUE({Red=}a, {Green=}b, {Blue=}c, {Alpha=}1.0)
-    else
+//    // TODO -oDxbx : Is this the correct way to check if Alpha should be set to 1?
+//    if not EmuXBFormatHasAlpha(g_EmuCDPD.pPresentationParameters.BackBufferFormat) then
+//      // Tests with XSokoban show that this is needed in order to make the text non-transparent :
+//      Result := D3DCOLOR_COLORVALUE({Red=}a, {Green=}b, {Blue=}c, {Alpha=}1.0)
+//    else
+// TODO -oDxbx : Disabled the a=1 bit above, as the Begin XDK sample showed other colors in it's Begin()-mode
       Result := D3DCOLOR_COLORVALUE({Red=}a, {Green=}b, {Blue=}c, {Alpha=}d);
   end;
 
