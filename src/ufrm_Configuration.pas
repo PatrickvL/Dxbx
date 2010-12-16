@@ -209,7 +209,7 @@ begin
   if Assigned(lpDriverName) then
     SetString(SoundDeviceInfo.DriverName, lpDriverName, StrLen(lpDriverName));
 
-  TStrings(lpContext).AddObject(SoundDeviceInfo.DriverDescription, TObject(SoundDeviceInfo));
+  TStrings(lpContext).AddObject(string(SoundDeviceInfo.DriverDescription), TObject(SoundDeviceInfo));
   Result := True;
 end; // EnumSoundDevices
 
