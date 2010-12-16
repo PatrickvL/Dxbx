@@ -757,8 +757,11 @@ begin
   begin
     // Test if this parameter reads from W :
     if pParameter.Swizzle[3] = SWIZZLE_W then
+    begin
       // Change that into a read from just X :
       VshSetSwizzle(pParameter, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
+      DbgVshPrintf('Dxbx fixup on scalar instruction applied; Changed .W into .X read.'#13#10);
+    end;
   end;
 end;
 
@@ -794,8 +797,6 @@ begin
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_A_SWZ_Z)),
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_A_SWZ_W)));
 
-  DxbxFixupScalarParameter(pInstruction, @pInstruction.A);
-
   // Get parameter B
   pInstruction.B.Neg := Boolean(VshGetField(pShaderToken, FLD_B_NEG) > 0);
   pInstruction.B.ParameterType := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_B_MUX));
@@ -819,8 +820,6 @@ begin
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_B_SWZ_Y)),
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_B_SWZ_Z)),
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_B_SWZ_W)));
-
-  DxbxFixupScalarParameter(pInstruction, @pInstruction.B);
 
   // Get parameter C
   pInstruction.C.Neg := Boolean(VshGetField(pShaderToken, FLD_C_NEG) > 0);
@@ -846,6 +845,7 @@ begin
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_Z)),
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_W)));
 
+  // Dxbx note : Scalar instructions read from C, but use X instead of W, fix that :
   DxbxFixupScalarParameter(pInstruction, @pInstruction.C);
 
   // Get output
@@ -1725,8 +1725,8 @@ begin
     pIntermediate := @pShader.Intermediate[i];
 
     if  (pIntermediate.Output.Type_ = IMD_OUTPUT_O)
-    and (   (pIntermediate.Output.Address = Ord(OREG_OB0))
-         or (pIntermediate.Output.Address = Ord(OREG_OB1))) then
+    and (   (pIntermediate.Output.Address = UInt16(OREG_OB0))
+         or (pIntermediate.Output.Address = UInt16(OREG_OB1))) then
     begin
       VshDeleteIntermediate(pShader, i);
       Inc(Result);

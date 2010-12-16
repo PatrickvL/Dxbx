@@ -798,7 +798,7 @@ type
     {0x10}DueTime: ULARGE_INTEGER;
     {0x18}TimerListEntry: LIST_ENTRY;
     {0x20}Dpc: _PKDPC;
-    {0x24}Period: LongInt;
+    {0x24}Period: DWORD; // Dxbx note : Was LongInt (but gives compiler warnings)
   end; {=0x28}
   PKTIMER = ^KTIMER;
 

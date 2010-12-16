@@ -130,7 +130,7 @@ var
   pCertificate: PXBE_CERTIFICATE;
   TitleStr: AnsiString;
   hDupHandle: Handle;
-  HandlerHandle: PVOID;
+//  HandlerHandle: PVOID;
 begin
   DecimalSeparator := '.'; // Dxbx addition, to log floats with dots
 
@@ -373,7 +373,7 @@ begin
   end;
 
   // Re-route unhandled exceptions to our emulation-exception handler :
-  HandlerHandle := AddVectoredExceptionHandler(
+  {HandlerHandle :=} AddVectoredExceptionHandler(
     {FirstHandler=}High(Cardinal),
     {VectoredHandler=}@EmuException);
 // Use this to test :

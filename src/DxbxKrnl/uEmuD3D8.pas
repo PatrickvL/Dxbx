@@ -761,7 +761,7 @@ var
   VertDesc: D3DVERTEXBUFFER_DESC;
   IndexDesc: D3DINDEXBUFFER_DESC;
 
-  RefCount: int;
+  RefCount: uint;
   XFormat: X_D3DFORMAT;
   Width, Height, Pitch, Levels, Dimensions: uint;
 
@@ -808,6 +808,8 @@ begin
     D3DRTYPE_CUBETEXTURE            : CommonResourceType := X_D3DCOMMON_TYPE_TEXTURE;
     D3DRTYPE_VERTEXBUFFER           : CommonResourceType := X_D3DCOMMON_TYPE_VERTEXBUFFER;
     D3DRTYPE_INDEXBUFFER            : CommonResourceType := X_D3DCOMMON_TYPE_INDEXBUFFER;
+  else
+    CommonResourceType := 0; // To prevent compiler warnings
   end;
 
   case ResourceType of
@@ -8918,9 +8920,6 @@ function XTL_EmuD3DVertexBuffer_Lock2
   Flags: DWORD
 ): PByte; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  pPCVertexBuffer: XTL_PIDirect3DVertexBuffer8;
-  hRet: HRESULT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -9633,7 +9632,7 @@ begin
   if MayLog(lfUnit) then
   begin
     LogBegin('EmuD3DDevice_SetRenderTarget').
-       _(pRenderTarget, 'pRenderTarget').
+       _(pRenderTarget, 'pRenderTarget'). // If NULL, the existing color buffer is retained
        _(pNewZStencil, 'pNewZStencil').
     LogEnd();
   end;
@@ -9666,6 +9665,9 @@ begin
       pPCNewZStencil := g_pCachedZStencilSurface.Emu.Surface;
     end;
   end;
+
+  // TODO : Return D3DERR_INVALIDCALL if pPCRenderTarget or pPCNewZStencil are assigned but invalid,
+  // or if pPCNewZStencil is smaller than pPCRenderTarget.
 
 {$IFDEF DXBX_USE_D3D9}
   Result := g_pD3DDevice.SetRenderTarget({RenderTargetIndex=}0, IDirect3DSurface(pPCRenderTarget));
