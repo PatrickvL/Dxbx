@@ -749,22 +749,6 @@ begin
       Result := nil;
 end;
 
-// Dxbx addition : Scalar instructions reading from W should read from X instead
-procedure DxbxFixupScalarParameter(pInstruction: PVSH_SHADER_INSTRUCTION; pParameter: PVSH_PARAMETER);
-begin
-  // Test if this is a scalar instruction :
-  if pInstruction.ILU in [ILU_RCP, ILU_RCC, ILU_RSQ, ILU_EXP, ILU_LOG] then
-  begin
-    // Test if this parameter reads from W :
-    if pParameter.Swizzle[3] = SWIZZLE_W then
-    begin
-      // Change that into a read from just X :
-      VshSetSwizzle(pParameter, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
-      DbgVshPrintf('Dxbx fixup on scalar instruction applied; Changed .W into .X read.'#13#10);
-    end;
-  end;
-end;
-
 procedure VshParseInstruction(pShaderToken: Puint32;
                               pInstruction: PVSH_SHADER_INSTRUCTION);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -844,9 +828,6 @@ begin
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_Y)),
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_Z)),
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_W)));
-
-  // Dxbx note : Scalar instructions read from C, but use X instead of W, fix that :
-  DxbxFixupScalarParameter(pInstruction, @pInstruction.C);
 
   // Get output
 
@@ -1376,6 +1357,58 @@ begin
   Result := TRUE;
 end; // VshAddInstructionMAC_ARL
 
+// Dxbx addition : Scalar instructions reading from W should read from X instead
+function DxbxFixupScalarParameter(pInstruction: PVSH_SHADER_INSTRUCTION;
+                                  pShader: PVSH_XBOX_SHADER;
+                                  pParameter: PVSH_PARAMETER): Boolean;
+var
+  i: int;
+  WIsWritten: Boolean;
+begin
+  // The DirectX vertex shader language specifies that the exp, log, rcc, rcp, and rsq instructions
+  // all operate on the "w" component of the input. But the microcode versions of these instructions
+  // actually operate on the "x" component of the input.
+  Result := False;
+
+  // Test if this is a scalar instruction :
+  if pInstruction.ILU in [ILU_RCP, ILU_RCC, ILU_RSQ, ILU_EXP, ILU_LOG] then
+  begin
+    // Test if this parameter reads all components, including W (TODO : Or should we fixup any W reading swizzle?) :
+    if  (pParameter.Swizzle[0] = SWIZZLE_X)
+    and (pParameter.Swizzle[1] = SWIZZLE_Y)
+    and (pParameter.Swizzle[2] = SWIZZLE_Z)
+    and (pParameter.Swizzle[3] = SWIZZLE_W) then
+    begin
+      // Also test that the .W component is never written to before:
+      WIsWritten := False;
+      for i := 0 to pShader.IntermediateCount - 1 do
+      begin
+        // Stop when we reached this instruction :
+        if @(pShader.Intermediate[i]) = pInstruction then
+          Break;
+
+        // Check if this instruction writes to the .W component of the same input parameter :
+        if ((pShader.Intermediate[i].Output.Type_ = IMD_OUTPUT_C) and (pParameter.ParameterType = PARAM_C))
+        or ((pShader.Intermediate[i].Output.Type_ = IMD_OUTPUT_R) and (pParameter.ParameterType = PARAM_R)) then
+        begin
+          WIsWritten := (pShader.Intermediate[i].Output.Address = pParameter.Address)
+                    and ((pShader.Intermediate[i].Output.Mask and MASK_W) > 0);
+          if WIsWritten then
+            Break;
+        end;
+      end;
+
+      if not WIsWritten then
+      begin
+        // Change the read from W into a read from X (this fixes the XDK VolumeLight sample) :
+        VshSetSwizzle(pParameter, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
+        DbgVshPrintf('Dxbx fixup on scalar instruction applied; Changed read of uninitialized W into a read of X!'#13#10);
+        Result := True;
+      end;
+    end;
+  end;
+end;
+
 function VshAddInstructionILU_R(pInstruction: PVSH_SHADER_INSTRUCTION;
                                 pShader: PVSH_XBOX_SHADER;
                                 IsCombined: boolean): boolean;
@@ -1388,6 +1421,9 @@ begin
     Result := FALSE;
     Exit;
   end;
+
+  // Dxbx note : Scalar instructions read from C, but use X instead of W, fix that :
+  DxbxFixupScalarParameter(pInstruction, pShader, @pInstruction.C);
 
   pIntermediate := VshNewIntermediate(pShader);
   pIntermediate.IsCombined := IsCombined;
