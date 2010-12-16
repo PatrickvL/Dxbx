@@ -749,6 +749,19 @@ begin
       Result := nil;
 end;
 
+// Dxbx addition : Scalar instructions reading from W should read from X instead
+procedure DxbxFixupScalarParameter(pInstruction: PVSH_SHADER_INSTRUCTION; pParameter: PVSH_PARAMETER);
+begin
+  // Test if this is a scalar instruction :
+  if pInstruction.ILU in [ILU_RCP, ILU_RCC, ILU_RSQ, ILU_EXP, ILU_LOG] then
+  begin
+    // Test if this parameter reads from W :
+    if pParameter.Swizzle[3] = SWIZZLE_W then
+      // Change that into a read from just X :
+      VshSetSwizzle(pParameter, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
+  end;
+end;
+
 procedure VshParseInstruction(pShaderToken: Puint32;
                               pInstruction: PVSH_SHADER_INSTRUCTION);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -781,6 +794,8 @@ begin
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_A_SWZ_Z)),
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_A_SWZ_W)));
 
+  DxbxFixupScalarParameter(pInstruction, @pInstruction.A);
+
   // Get parameter B
   pInstruction.B.Neg := Boolean(VshGetField(pShaderToken, FLD_B_NEG) > 0);
   pInstruction.B.ParameterType := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_B_MUX));
@@ -805,6 +820,8 @@ begin
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_B_SWZ_Z)),
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_B_SWZ_W)));
 
+  DxbxFixupScalarParameter(pInstruction, @pInstruction.B);
+
   // Get parameter C
   pInstruction.C.Neg := Boolean(VshGetField(pShaderToken, FLD_C_NEG) > 0);
   pInstruction.C.ParameterType := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_C_MUX));
@@ -828,6 +845,8 @@ begin
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_Y)),
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_Z)),
     VSH_SWIZZLE(VshGetField(pShaderToken, FLD_C_SWZ_W)));
+
+  DxbxFixupScalarParameter(pInstruction, @pInstruction.C);
 
   // Get output
 
