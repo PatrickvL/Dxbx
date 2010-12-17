@@ -72,6 +72,19 @@ function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; Primitiv
 function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE;
 function EmuXB2PC_PSConstant(Value: X_D3DRenderStateType): DWORD;
 
+procedure EmuUnswizzleRect
+(
+    pSrcBuff: PVOID;
+    dwWidth: DWORD;
+    dwHeight: DWORD;
+    dwDepth: DWORD;
+    pDstBuff: PVOID;
+    dwPitch: DWORD;
+    rSrc: TRECT;
+    poDst: TPOINT;
+    dwBPP: DWORD
+); {NOPATCH}
+
 function DxbxEncodeDimensionsIntoSize(const Width, Height, Pitch: DWORD): DWORD;
 procedure DxbxDecodeSizeIntoDimensions(const Size: DWORD; out Width, Height, Pitch: DWORD);
 
@@ -723,6 +736,138 @@ begin
   end;
 end;
 
+procedure EmuUnswizzleRect
+(
+    pSrcBuff: PVOID;
+    dwWidth: DWORD;
+    dwHeight: DWORD;
+    dwDepth: DWORD;
+    pDstBuff: PVOID;
+    dwPitch: DWORD;
+    rSrc: TRECT;
+    poDst: TPOINT;
+    dwBPP: DWORD
+); {NOPATCH}
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  dwOffsetU: DWORD;
+  dwMaskU: DWORD;
+  dwOffsetV: DWORD;
+  dwMaskV: DWORD;
+  dwOffsetW: DWORD;
+  dwMaskW: DWORD;
+  i: DWORD;
+  j: DWORD;
+  dwSU: DWORD;
+  dwSV: DWORD;
+  dwSW: DWORD;
+  dwMaskMax: DWORD;
+  dwW: DWORD;
+  dwV: DWORD;
+  dwU: DWORD;
+  z: DWORD;
+  y: DWORD;
+  x: DWORD;
+begin
+  dwOffsetU := 0; dwMaskU := 0;
+  dwOffsetV := 0; dwMaskV := 0;
+  dwOffsetW := 0; dwMaskW := 0;
+
+  i := 1;
+  j := 1;
+
+//  MARKED OUT CXBX:
+// while ((i >= dwWidth) or (i >= dwHeight) or (i >= dwDepth)) do
+
+  while ((i <= dwWidth) or (i <= dwHeight) or (i <= dwDepth)) do
+  begin
+
+    if (i < dwWidth) then
+    begin
+      dwMaskU := dwMaskU or j;
+      j := j shl 1;
+    end;
+
+    if (i < dwHeight) then
+    begin
+      dwMaskV := dwMaskV or j;
+      j := j shl 1;
+    end;
+
+    if (i < dwDepth) then
+    begin
+      dwMaskW := dwMaskW or j;
+      j := j shl 1;
+    end;
+
+    i := i shl 1;
+  end;
+
+  dwSU := 0;
+  dwSV := 0;
+  dwSW := 0;
+  // dwMaskMax := 0;
+
+  // get the biggest mask
+  if (dwMaskU > dwMaskV) then
+    dwMaskMax := dwMaskU
+  else
+    dwMaskMax := dwMaskV;
+  if (dwMaskW > dwMaskMax) then
+    dwMaskMax := dwMaskW;
+
+  // Dxbx note : Translated 'for' to 'while', because counter is shifted instead of incremented :
+  i := 1; while i <= dwMaskMax do
+  begin
+    if (i <= dwMaskU) then
+    begin
+      if (dwMaskU and i) > 0 then dwSU := dwSU or (dwOffsetU and i)
+      else                       dwOffsetU := dwOffsetU shl 1;
+    end;
+
+    if (i <= dwMaskV) then
+    begin
+      if (dwMaskV and i) > 0 then dwSV := dwSV or (dwOffsetV and i)
+      else                        dwOffsetV := dwOffsetV shl 1;
+    end;
+
+    if (i <= dwMaskW) then
+    begin
+      if (dwMaskW and i) > 0 then dwSW := dwSW or (dwOffsetW and i)
+      else                        dwOffsetW := dwOffsetW shl 1;
+    end;
+    i := i shl 1;
+  end;
+
+  dwW := dwSW;
+  // dwV := dwSV;
+  // dwU := dwSU;
+
+  if dwDepth > 0 then // Dxbx addition, to prevent underflow
+  for z := 0 to dwDepth - 1 do
+  begin
+    dwV := dwSV;
+
+    if dwHeight > 0 then // Dxbx addition, to prevent underflow
+    for y := 0 to dwHeight - 1 do
+    begin
+      dwU := dwSU;
+
+      if dwWidth > 0 then // Dxbx addition, to prevent underflow
+      for x := 0 to dwWidth - 1 do
+      begin
+        memcpy(pDstBuff, @(PByte(pSrcBuff)[(dwU or dwV or dwW)*dwBPP]), dwBPP);
+        pDstBuff := PVOID(DWORD(pDstBuff)+dwBPP);
+
+        dwU := (dwU - dwMaskU) and dwMaskU;
+      end;
+      pDstBuff := PVOID(DWORD(pDstBuff)+(dwPitch-dwWidth*dwBPP));
+      dwV := (dwV - dwMaskV) and dwMaskV;
+    end;
+    dwW := (dwW - dwMaskW) and dwMaskW;
+  end;
+end; // EmuUnswizzleRect NOPATCH
+
 function DxbxEncodeDimensionsIntoSize(const Width, Height, Pitch: DWORD): DWORD;
 begin
   Result := ((( Width         - 1){shl X_D3DSIZE_WIDTH_SHIFT}) and X_D3DSIZE_WIDTH_MASK )
@@ -734,7 +879,7 @@ procedure DxbxDecodeSizeIntoDimensions(const Size: DWORD; out Width, Height, Pit
 begin
   {out}Width  := (((Size and X_D3DSIZE_WIDTH_MASK ){shr X_D3DSIZE_WIDTH_SHIFT}) + 1);
   {out}Height := (((Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
-  {out}Pitch  := (((Size and X_D3DSIZE_PITCH_MASK ) shr X_D3DSIZE_PITCH_SHIFT ) + 1) * 64;
+  {out}Pitch  := (((Size and X_D3DSIZE_PITCH_MASK ) shr X_D3DSIZE_PITCH_SHIFT ) + 1) * X_D3DTEXTURE_PITCH_ALIGNMENT;
 end;
 
 procedure DxbxDecodeResourceFormat(const ResourceFormat: DWORD;

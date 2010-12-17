@@ -351,7 +351,7 @@ type _VSH_IMD_OUTPUT = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Type_: VSH_IMD_OUTPUT_TYPE;
     Mask: DxbxMask;
-    Address: UInt16;
+    Address: int16;
   end; // size = 12 (as in Cxbx)
   VSH_IMD_OUTPUT = _VSH_IMD_OUTPUT;
   PVSH_IMD_OUTPUT = ^VSH_IMD_OUTPUT;
@@ -1645,8 +1645,7 @@ begin
                 if (pIntermediate1W.InstructionType = IMD_ILU) and
                     (pIntermediate1W.ILU = ILU_RCC) and
                     (pIntermediate1W.Output.Type_ = IMD_OUTPUT_R) and
-                    (pIntermediate1W.Output.Address =
-                     Word(pIntermediate.Parameters[1].Parameter.Address)) then
+                    (pIntermediate1W.Output.Address = pIntermediate.Parameters[1].Parameter.Address) then
                 begin
                   DbgVshPrintf('Deleted +rcc r1.x, r12.w'#13#10);
                   VshDeleteIntermediate(pShader, j);
@@ -1694,7 +1693,7 @@ begin
       // Find instructions outputting to oPos.
       // (?opcode? oPos.[mask], ...)
       if (pIntermediate.Output.Type_ = IMD_OUTPUT_O) and
-         (pIntermediate.Output.Address = Word(Ord(OREG_OPOS))) then
+         (pIntermediate.Output.Address = Ord(OREG_OPOS)) then
       begin
         // Redirect output to r11. (?opcode? r11.[mask], ...)
         pIntermediate.Output.Type_    := IMD_OUTPUT_R;
@@ -1761,8 +1760,8 @@ begin
     pIntermediate := @pShader.Intermediate[i];
 
     if  (pIntermediate.Output.Type_ = IMD_OUTPUT_O)
-    and (   (pIntermediate.Output.Address = UInt16(OREG_OB0))
-         or (pIntermediate.Output.Address = UInt16(OREG_OB1))) then
+    and (   (pIntermediate.Output.Address = Ord(OREG_OB0))
+         or (pIntermediate.Output.Address = Ord(OREG_OB1))) then
     begin
       VshDeleteIntermediate(pShader, i);
       Inc(Result);
@@ -2151,7 +2150,7 @@ begin
     begin
       pIntermediate := @pShader.Intermediate[j];
       if (pIntermediate.Output.Type_ = IMD_OUTPUT_O) and
-         (pIntermediate.Output.Address = Word(Ord(OREG_OPOS))) then
+         (pIntermediate.Output.Address = Ord(OREG_OPOS)) then
       begin
         // Found instruction writing to oPos
         pIntermediate.Output.Type_ := IMD_OUTPUT_R;

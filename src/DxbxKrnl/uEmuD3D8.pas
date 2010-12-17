@@ -30,7 +30,6 @@ unit uEmuD3D8;
 {$DEFINE DXBX_PIXELSHADER_HOOKS} // Disable this to try dynamic pixel shader support
 {.$DEFINE DXBX_TRY_DEEPER_DEVICE_INIT} // Try to run more of the original initialization code
 {.$DEFINE DXBX_INDEXED_QUADLIST_TEST} // Render indexed QUADLIST as indexed TRIANGLFANS (XDK Ripple sample improves, although text&help disappears)
-{$DEFINE DXBX_ENABLE_P8_CONVERSION}
 
 interface
 
@@ -9107,12 +9106,7 @@ begin
       _(VertexCount, 'VertexCount').
     LogEnd();
 
-  XTL_EmuUpdateDeferredStates();
-
-//  EmuUnswizzleActiveTexture(); // This messed up textures in PSTest2_4627, but not anymore since rev 1245
-{$IFDEF DXBX_ENABLE_P8_CONVERSION}
-  XTL_EmuUpdateActiveTexture();
-{$ENDIF}
+  DxbxUpdateNativeD3DResources();
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
@@ -9174,12 +9168,7 @@ begin
       _(VertexStreamZeroStride, 'VertexStreamZeroStride').
     LogEnd();
 
-  XTL_EmuUpdateDeferredStates();
-
-//  EmuUnswizzleActiveTexture(); // This messed up the letters in Chunktro, but not anymore since rev 1245
-{$IFDEF DXBX_ENABLE_P8_CONVERSION}
-  XTL_EmuUpdateActiveTexture();
-{$ENDIF}
+  DxbxUpdateNativeD3DResources();
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
@@ -9292,21 +9281,7 @@ begin
       DxbxKrnlCleanup('DrawIndexedVertices : SetIndices Failed!' +#13#10+ DxbxD3DErrorString(hRet));
   end;
 
-  XTL_EmuUpdateDeferredStates();
-
-//  if(PrimitiveType < X_D3DPT_POINTLIST) or (PrimitiveType >= X_D3DPT_MAX) then
-//  begin
-//    DxbxKrnlCleanup('DrawIndexedVertices : Unknown primitive type: 0x%.02X', [Ord(PrimitiveType)]);
-//  end;
-//  EmuUnswizzleActiveTexture(); // This messes up the PrimitiveType stackvalue (overwrite?!) in Cubemap sample
-{$IFDEF DXBX_ENABLE_P8_CONVERSION}
-  XTL_EmuUpdateActiveTexture();
-{$ENDIF}
-// If EmuUnswizzleActiveTexture was called, the above test would fail :
-//  if(PrimitiveType < X_D3DPT_POINTLIST) or (PrimitiveType >= X_D3DPT_MAX) then
-//  begin
-//    DxbxKrnlCleanup('DrawIndexedVertices : Unknown primitive type: 0x%.02X', [Ord(PrimitiveType)]);
-//  end;
+  DxbxUpdateNativeD3DResources();
 
   if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
     EmuWarning('Unsupported PrimitiveType! (%d)', [DWORD(PrimitiveType)]);
@@ -9476,12 +9451,7 @@ begin
   if (g_pIndexBuffer <> nil) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
     DxbxKrnlCleanup('DrawIndexedVerticesUP: g_pIndexBuffer != 0');
 
-  XTL_EmuUpdateDeferredStates();
-
-//  EmuUnswizzleActiveTexture(); // This messed up the loading screen background image in Rayman Arena, but not anymore since rev 1245
-{$IFDEF DXBX_ENABLE_P8_CONVERSION}
-  XTL_EmuUpdateActiveTexture();
-{$ENDIF}
+  DxbxUpdateNativeD3DResources();
 
   if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
     EmuWarning('Unsupported PrimitiveType! (%d)', [Ord(PrimitiveType)]);
@@ -10780,11 +10750,7 @@ begin
       _(pRectPatchInfo, 'pRectPatchInfo').
     LogEnd();
 
-  XTL_EmuUpdateDeferredStates();
-
-{$IFDEF DXBX_ENABLE_P8_CONVERSION}
-  XTL_EmuUpdateActiveTexture();
-{$ENDIF}
+  DxbxUpdateNativeD3DResources();
 
   Result := g_pD3DDevice.DrawRectPatch(Handle, PSingle(pNumSegs), pRectPatchInfo);
 
@@ -10811,11 +10777,7 @@ begin
       _(pTriPatchInfo, 'pTriPatchInfo').
     LogEnd();
 
-  XTL_EmuUpdateDeferredStates();
-
-{$IFDEF DXBX_ENABLE_P8_CONVERSION}
-  XTL_EmuUpdateActiveTexture();
-{$ENDIF}
+  DxbxUpdateNativeD3DResources();
 
   Result := g_pD3DDevice.DrawTriPatch(Handle, PSingle(pNumSegs), pTriPatchInfo);
   if (FAILED(Result)) then
