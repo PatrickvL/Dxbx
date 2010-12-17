@@ -1967,10 +1967,10 @@ begin
       begin
         Symbol := TSymbolInformation(Objects[i]);
         TmpStr := Format('$%.8x;%s', [UIntPtr(Symbol.Address), DxbxUnmangleSymbolName(Strings[i])]);
-        if Symbol.PatchedBy <> '' then
-          TmpStr := TmpStr + ' // PatchedBy:' + Symbol.PatchedBy
+        if Symbol.FailReason <> '' then
+          TmpStr := TmpStr + ' // -- Patched -- '
         else
-          TmpStr := TmpStr + ' // ## UNPATCHED ##';
+          TmpStr := TmpStr + ' // ## UNPATCHED ## - ' + Symbol.FailReason;
 
         WriteString('Symbols', Strings[i], TmpStr);
       end;
