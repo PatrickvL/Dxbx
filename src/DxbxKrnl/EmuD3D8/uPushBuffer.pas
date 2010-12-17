@@ -226,7 +226,7 @@ begin
 
           pTemp := DxbxMalloc(dwHeight * dwPitch);
 
-          EmuXGUnswizzleRect
+          EmuUnswizzleRect
           (
               LockedRect.pBits, dwWidth, dwHeight, dwDepth,
               pTemp, dwPitch, iRect, iPoint, dwBPP
@@ -380,8 +380,6 @@ var
       begin
         if (IsValidCurrentShader()) then
         begin
-//          XTL_EmuUpdateActiveTexture();
-
           g_pD3DDevice.DrawIndexedPrimitive
           (
             PCPrimitiveType,
@@ -423,8 +421,7 @@ begin
   PCPrimitiveType := D3DPRIMITIVETYPE(-1);
   XBPrimitiveType := X_D3DPT_INVALID;
 
-  // TODO -oCXBX: This technically should be enabled
-  XTL_EmuUpdateDeferredStates();
+  DxbxUpdateNativeD3DResources();
 
 {$ifdef _DEBUG_TRACK_PB}
   bShowPB := false;
@@ -567,9 +564,6 @@ begin
           DbgPrintf('  dwVertexShader : 0x%08X', [dwVertexShader]);
         end;
 {$endif}
-
-        EmuUnswizzleActiveTexture();
-//        XTL_EmuUpdateActiveTexture();
 
         // render vertices
         if (dwVertexShader <> DWord(-1)) then

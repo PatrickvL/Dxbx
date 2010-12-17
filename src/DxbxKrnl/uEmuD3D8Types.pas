@@ -1045,6 +1045,7 @@ const X_D3DSIZE_HEIGHT_MASK  = $00FFF000;   // Height of the texture - 1, in tex
 const X_D3DSIZE_HEIGHT_SHIFT = 12;
 const X_D3DSIZE_PITCH_MASK   = $FF000000;   // Pitch / 64 - 1
 const X_D3DSIZE_PITCH_SHIFT  = 24;
+const X_D3DTEXTURE_PITCH_ALIGNMENT = 64;
 
 type X_D3DBaseTexture = object(X_D3DPixelContainer)
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
