@@ -312,8 +312,6 @@ begin
   begin
     // Make sure that an unpatched XapiInitProcess doesn't call into the (perhaps also unpatched) XapiVerifyMediaInDrive :
     pCertificate.dwAllowedMedia := pCertificate.dwAllowedMedia and (not XBEIMAGE_MEDIA_TYPE_DVD_X2);
-    // Make sure that an unpatched XapiInitProcess doesn't call into the (perhaps also unpatched) XapiValidateDiskPartition :
-    DxbxKrnl_XbeHeader.dwInitFlags := DxbxKrnl_XbeHeader.dwInitFlags and (not XBE_INIT_FLAG_DontSetupHarddisk);
   end;
 
   if MayLog(lfUnit) then
@@ -359,6 +357,7 @@ begin
     g_hCurDir := FindNtSymbolicLinkObjectByVolumeLetter(DxbxDefaultXbeVolumeLetter).RootDirectoryHandle;
     // TODO -oDxbx: Make sure this path is set in g_EmuXbePath (xboxkrnl_XeImageFileName) too.
 
+    (* Too high level, as (the unpatched) XapiInitProcess does this for us :
     DxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
     DxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1); // Partition1 goes to E: (Data files, savegames, etc.)
     DxbxCreateSymbolicLink(DriveF, DeviceHarddisk0Partition2); // Partition2 goes to F: (Shell files, dashboard, etc.)
@@ -372,6 +371,7 @@ begin
     // Mount the Utility drive (Z:) conditionally :
     if (DxbxKrnl_XbeHeader.dwInitFlags and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
       DxbxMountUtilityDrive({fFormatClean=}DxbxKrnl_XbeHeader.dwInitFlags and XBE_INIT_FLAG_FormatUtilityDrive);
+    *)
   end;
 
   // Re-route unhandled exceptions to our emulation-exception handler :

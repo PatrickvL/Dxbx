@@ -384,8 +384,12 @@ begin
   // Check if this symbolic link already exists :
   EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByName(SymbolicLinkName);
   if Assigned(EmuNtSymbolicLinkObject) then
-    // In that case, close it :
-    EmuNtSymbolicLinkObject.NtClose;
+  begin
+    // To facilitate XapiInitProcess, we must return that we already have this volume assigned
+    // (which is actually true, as we still call DxbxCreateSymbolicLink ourselves for drive C) :
+    Result := STATUS_OBJECT_NAME_COLLISION;
+    Exit;
+  end;
 
   // Now (re)create a symbolic link object, and initialize it with the new definition :
   EmuNtSymbolicLinkObject := TEmuNtSymbolicLinkObject.Create;

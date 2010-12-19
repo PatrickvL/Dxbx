@@ -275,7 +275,7 @@ begin
   if MayLog(lfUnit) then
   begin
     EmuSwapFS(fsWindows);
-    DbgPrintf('EmuXapi : EmuXapiApplyKernelPatches(); // Perhaps XapiInitProcess isn''t found?');
+    DbgPrintf('EmuXapi : EmuXapiApplyKernelPatches();');
     EmuSwapFS(fsXbox);
   end;
 
@@ -319,6 +319,7 @@ begin
 end;
 
 
+(* Too high level
 function XTL_EmuRtlCreateHeap
 (
   Flags: ULONG;
@@ -329,31 +330,9 @@ function XTL_EmuRtlCreateHeap
   RtlHeapParams: PVOID // OPTIONAL
 ): PVOID; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  RtlHeapDefinition: RTL_HEAP_DEFINITION;
-begin
-  EmuSwapFS(fsWindows);
+*)
 
-  if MayLog(lfUnit or lfHeap) then
-    LogBegin('EmuRtlCreateHeap').
-      _(Flags, 'Flags').
-      _(Base, 'Base').
-      _(Reserve, 'Reserve').
-      _(Commit, 'Commit').
-      _(Lock, 'Lock').
-      _(RtlHeapParams, 'RtlHeapParams').
-    LogEnd();
-
-  ZeroMemory(@RtlHeapDefinition, sizeof(RtlHeapDefinition));
-
-  RtlHeapDefinition.Length := sizeof(RtlHeapDefinition);
-
-  Result := PVOID(JwaNative.RtlCreateHeap(
-    Flags, Base, Reserve, Commit, Lock, @RtlHeapDefinition));
-
-  EmuSwapFS(fsXbox);
-end;
-
+(* Too high level
 function XTL_EmuRtlAllocateHeap
 (
   hHeap: HANDLE;
@@ -361,36 +340,9 @@ function XTL_EmuRtlAllocateHeap
   dwBytes: SIZE_T
 ): PVOID; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
-var
-  AllocatedAddress: PVOID;
-begin
-  EmuSwapFS(fsWindows);
+*)
 
-  if MayLog(lfUnit or lfHeap) then
-    LogBegin('EmuRtlAllocateHeap').
-      _(hHeap, 'hHeap').
-      _(dwFlags, 'dwFlags').
-      _(dwBytes, 'dwBytes').
-    LogEnd();
-
-  if dwBytes > 0 then
-    Inc(dwBytes, HEAP_HEADERSIZE);
-
-  AllocatedAddress := DxbxRtlAlloc(hHeap, dwFlags, dwBytes);
-  if Assigned(AllocatedAddress) then
-  begin
-    Result := PVOID(RoundUp(uint32(AllocatedAddress) + 1, HEAP_HEADERSIZE));
-    (PPointer(Result)-1)^ := AllocatedAddress;
-  end
-  else
-    Result := nil;
-
-  if MayLog(lfUnit or lfHeap or lfTrace or lfExtreme) then
-    DbgPrintf('pRet : 0x%.08X', [Result]);
-
-  EmuSwapFS(fsXbox);
-end;
-
+(* Too high level
 function XTL_EmuRtlFreeHeap
 (
   hHeap: HANDLE;
@@ -398,24 +350,9 @@ function XTL_EmuRtlFreeHeap
   lpMem: PVOID
 ): BOOL; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
-begin
-  EmuSwapFS(fsWindows);
+*)
 
-  if MayLog(lfUnit or lfHeap) then
-    LogBegin('EmuRtlFreeHeap').
-      _(hHeap, 'hHeap').
-      _(dwFlags, 'dwFlags').
-      _(lpMem, 'lpMem').
-    LogEnd();
-
-  if Assigned(lpMem) then
-    lpMem := (PPointer(lpMem)-1)^;
-
-  Result := DxbxRtlFree(hHeap, dwFlags, lpMem);
-
-  EmuSwapFS(fsXbox);
-end;
-
+(* Too high level
 function XTL_EmuRtlReAllocateHeap
 (
   hHeap: HANDLE;
@@ -424,49 +361,9 @@ function XTL_EmuRtlReAllocateHeap
   dwBytes: SIZE_T
 ): PVOID; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
-var
-  AllocatedAddress: PVOID;
-begin
-  EmuSwapFS(fsWindows);
+*)
 
-  if MayLog(lfUnit or lfHeap) then
-    LogBegin('EmuRtlReAllocateHeap').
-      _(hHeap, 'hHeap').
-      _(dwFlags, 'dwFlags').
-      _(lpMem, 'lpMem').
-      _(dwBytes, 'dwBytes').
-    LogEnd();
-
-  // Dxbx note : Realloc cannot be implemented via DxbxRtlRealloc because of possible alignment-mismatches.
-  // We solve this by doing a new Alloc, copying over the original lpMem contents and freeing it :
-
-  if dwBytes > 0 then
-    Inc(dwBytes, HEAP_HEADERSIZE);
-
-  AllocatedAddress := DxbxRtlAlloc(hHeap, dwFlags, dwBytes);
-  if Assigned(AllocatedAddress) then
-  begin
-    Result := PVOID(RoundUp(uint32(AllocatedAddress) + 1, HEAP_HEADERSIZE));
-    (PPointer(Result)-1)^ := AllocatedAddress;
-  end
-  else
-    Result := nil;
-
-  if Assigned(lpMem) then
-  begin
-    AllocatedAddress := (PPointer(lpMem)-1)^;
-    if Assigned(Result) then
-      memcpy({destination=}Result, {source=}lpMem, {size=}DxbxRtlSizeHeap(hHeap, dwFlags, AllocatedAddress) - HEAP_HEADERSIZE);
-
-    DxbxRtlFree(hHeap, dwFlags, AllocatedAddress);
-  end;
-
-  if MayLog(lfUnit or lfHeap or lfTrace or lfExtreme) then
-    DbgPrintf('pRet : 0x%.08X', [Result]);
-
-  EmuSwapFS(fsXbox);
-end;
-
+(* Too high level
 function XTL_EmuRtlSizeHeap
 (
   hHeap: HANDLE;
@@ -474,23 +371,7 @@ function XTL_EmuRtlSizeHeap
   lpMem: PVOID
 ): SIZE_T; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit or lfHeap) then
-    LogBegin('EmuRtlSizeHeap').
-      _(hHeap, 'hHeap').
-      _(dwFlags, 'dwFlags').
-      _(lpMem, 'lpMem').
-    LogEnd();
-
-  if Assigned(lpMem) then
-    lpMem := (PPointer(lpMem)-1)^;
-
-  Result := DxbxRtlSizeHeap(hHeap, dwFlags, lpMem);
-
-  EmuSwapFS(fsXbox);
-end;
+*)
 
 // Dxbx note : Forwarded to xboxkrnl_KeQueryPerformanceCounter
 function XTL_EmuQueryPerformanceCounter
@@ -1190,11 +1071,12 @@ begin
   if MayLog(lfUnit) then
   begin
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuXapi : EmuXapiInitAutoPowerDown(); // Perhaps XapiInitProcess isn''t found?');
+  DbgPrintf('EmuXapi : EmuXapiInitAutoPowerDown();');
   EmuSwapFS(fsXbox);
   end;
 end;
 
+(*
 procedure XTL_EmuXapiInitProcess(); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 const
@@ -1203,25 +1085,7 @@ var
   HeapParameters: RTL_HEAP_PARAMETERS;
   dwPeHeapReserve: UInt32;
   dwPeHeapCommit: UInt32;
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit) then
-    DbgPrintf('EmuXapi : EmuXapiInitProcess();');
-
-  // call RtlCreateHeap
-  begin
-    ZeroMemory(@HeapParameters, sizeof(HeapParameters));
-    HeapParameters.Length := sizeof(HeapParameters);
-
-    EmuSwapFS(fsXbox);
-
-    dwPeHeapReserve := DxbxKrnl_XbeHeader.dwPeHeapReserve;
-    dwPeHeapCommit := DxbxKrnl_XbeHeader.dwPeHeapCommit;
-
-    XTL_EmuXapiProcessHeap^ := XTL_EmuRtlCreateHeap(HEAP_GROWABLE, nil, dwPeHeapReserve, dwPeHeapCommit, NULL, @HeapParameters);
-  end;
-end;
+*)
 
 procedure XTL_EmuXapiThreadStartup
 (
@@ -1246,26 +1110,13 @@ begin
 end;
 
 
-// TODO -oDxbx: Once our NtQueryVolumeInformationFile works on partitions, we can disable this patch
+(* Too high level
 function XTL_EmuXapiValidateDiskPartitionEx(
   PartitionName: PANSI_STRING;
   BytesPerCluster: DWORD
   ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit or lfDxbx) then
-    LogBegin('EmuXapiValidateDiskPartitionEx').
-      _(PartitionName, 'PartitionName').
-      _(BytesPerCluster, 'BytesPerCluster').
-    LogEnd();
-
-  EmuSwapFS(fsXbox);
-
-  Result := STATUS_SUCCESS;
-end;
-
+*)
 
 (* Cxbx : Too High Level! Dxbx note : This ultimately ends up in xboxkrnl_IoCreateSymbolicLink
 XTL.NTSTATUS CDECL XTL_XapiSetupPerTitleDriveLetters(DWord dwTitleId, PWideChar wszTitleName)
@@ -1578,25 +1429,13 @@ begin
 end;
 *)
 
-
+(* Too high level
 function XTL_EmuRtlDestroyHeap
 (
     HeapHandle: HANDLE
 ): PVOID; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit or lfHeap) then
-    LogBegin('EmuRtlDestroyHeap').
-      _(HeapHandle, 'HeapHandle').
-    LogEnd();
-
-  HANDLE(Result) := JwaNative.RtlDestroyHeap(HeapHandle);
-
-  EmuSwapFS(fsXbox);
-end;
-
+*)
 
 function XTL_EmuQueueUserAPC
 (
@@ -2157,13 +1996,13 @@ exports
   XTL_EmuQueueUserAPC,
   XTL_EmuRaiseException,
 //  XTL_EmuReleaseSemaphore, // Dxbx note : Disabled, too high level. See xboxkrnl_NtReleaseSemaphore
-  XTL_EmuRtlAllocateHeap,
-  XTL_EmuRtlCreateHeap,
-  XTL_EmuRtlDestroyHeap,
-  XTL_EmuRtlDestroyHeap,
-  XTL_EmuRtlFreeHeap,
-  XTL_EmuRtlReAllocateHeap,
-  XTL_EmuRtlSizeHeap,
+//  XTL_EmuRtlAllocateHeap, // Dxbx note : Disabled, too high level.
+//  XTL_EmuRtlCreateHeap, // Dxbx note : Disabled, too high level.
+//  XTL_EmuRtlDestroyHeap, // Dxbx note : Disabled, too high level.
+//  XTL_EmuRtlDestroyHeap, // Dxbx note : Disabled, too high level.
+//  XTL_EmuRtlFreeHeap, // Dxbx note : Disabled, too high level.
+//  XTL_EmuRtlReAllocateHeap, // Dxbx note : Disabled, too high level.
+//  XTL_EmuRtlSizeHeap, // Dxbx note : Disabled, too high level.
   XTL_EmuSetThreadPriority,
   XTL_EmuSetThreadPriorityBoost,
 //  XTL_EmuSignalObjectAndWait, // Dxbx note : Disabled, too high level. See xboxkrnl_NtSignalAndWaitForSingleObjectEx
@@ -2172,9 +2011,9 @@ exports
   XTL_EmuXapiApplyKernelPatches,
   XTL_EmuXapiBootToDash,
   XTL_EmuXapiInitAutoPowerDown,
-  XTL_EmuXapiInitProcess,
+//  XTL_EmuXapiInitProcess, // Dxbx note : Disabled, too high level.
   XTL_EmuXapiThreadStartup,
-  XTL_EmuXapiValidateDiskPartitionEx,
+//  XTL_EmuXapiValidateDiskPartitionEx, // Dxbx note : Disabled, too high level. See xboxkrnl_NtQueryVolumeInformationFile
   XTL_EmuXFormatUtilityDrive,
   XTL_EmuXFreeSectionA,
   XTL_EmuXFreeSectionByHandle,
