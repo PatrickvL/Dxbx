@@ -958,6 +958,7 @@ begin
           Swizzle := 'w';
       end;
       Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, '%s', [Swizzle]));
+      // TODO -oDxbx : Shouldn't we do this for i=0 only? :
       j := i;
       while j < 4 do
       begin
@@ -2201,7 +2202,7 @@ begin
   end;
 
   Result := TRUE;
-end;
+end; // VshConvertShader
 
 // ****************************************************************************
 // * Vertex shader declaration recompiler
