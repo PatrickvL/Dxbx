@@ -29,7 +29,7 @@ uses
   SysUtils,
   // Jedi Win32API
   JwaWinType,
-  JwaWinBase,
+  JwaWinBase, // LPOVERLAPPED
   JwaNative,
   JwaNTStatus,
   // OpenXDK
@@ -51,10 +51,8 @@ uses
   uXBController,
   uXboxLibraryUtils; // PatchPrefix
 
-var
-  XTL_EmuXapiProcessHeap: PPVOID;
-
 {$IFDEF DXBX_DISABLE_FS_FIXUP}
+var
   XTL_Emu_mainXapiStartup: PVOID;
 
   XTL_Org_XapiInitProcess: function (): int; stdcall;
@@ -317,7 +315,6 @@ begin
 
   EmuSwapFS(fsXBox);
 end;
-
 
 (* Too high level
 function XTL_EmuRtlCreateHeap
@@ -1076,15 +1073,11 @@ begin
   end;
 end;
 
-(*
+(* Too high level
 procedure XTL_EmuXapiInitProcess(); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 const
   HEAP_GROWABLE = $00000002;
-var
-  HeapParameters: RTL_HEAP_PARAMETERS;
-  dwPeHeapReserve: UInt32;
-  dwPeHeapCommit: UInt32;
 *)
 
 procedure XTL_EmuXapiThreadStartup

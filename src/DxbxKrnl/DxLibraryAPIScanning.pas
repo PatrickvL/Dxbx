@@ -44,7 +44,6 @@ uses
   uEmuShared,
   uState, // XTL_EmuD3DDeferredTextureState
   uEmu, // EmuWarning
-  uEmuXapi, // XTL_EmuXapiProcessHeap
   uEmuExe; // ReinitXbeImageHeader, ReinitExeImageHeader
 
 // Scanning steps:
@@ -190,6 +189,7 @@ implementation
 
 uses
   uHLEIntercept, // EmuInstallWrappers
+  uEmuAlloc, //   XTL_GlobalAlloc, XTL_GlobalFree
   uEmuD3D8, // XTL_Direct3D_GetDeviceCaps
   uVertexBuffer; // CRC32Init, Crc32
 
@@ -1820,7 +1820,7 @@ begin
     DbgPrintf('DxbxHLE : Determining special symbols');
 
   // Resolve the address of the _XapiProcessHeap symbol (at least referenced once, from XapiInitProcess) :
-  XTL_EmuXapiProcessHeap := _Find('_XapiProcessHeap');
+  XTL_XapiProcessHeap := _Find('_XapiProcessHeap');
 {$IFDEF DXBX_DISABLE_FS_FIXUP}
   XTL_Emu_mainXapiStartup := _Find('_mainXapiStartup@4');
 
@@ -1844,6 +1844,13 @@ begin
   XTL_EmuD3DDeferredTextureState := _Find('_D3D__TextureState');
   XTL_D3D_InitializeD3dState := _Find('?InitializeD3dState@D3D@@YGXXZ'); // a function
   XTL_Direct3D_GetDeviceCaps := _Find('_D3DDevice_GetDeviceCaps@4'); // a function
+  XTL_LocalAlloc := _Find('_LocalAlloc@8'); // a function
+  XTL_LocalFree := _Find('_LocalFree@4'); // a function
+  XTL_GlobalAlloc := _Find('_GlobalAlloc@8'); // a function
+  XTL_GlobalFree := _Find('_GlobalFree@4'); // a function
+  XTL_RtlAllocateHeap := _Find('_RtlAllocateHeap@12'); // a function
+  XTL_RtlFreeHeap := _Find('_RtlFreeHeap@12'); // a function
+
 
   // TODO : Most of the above are REQUIRED - so break out if not found!
 
