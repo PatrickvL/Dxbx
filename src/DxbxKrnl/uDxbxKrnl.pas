@@ -55,6 +55,7 @@ uses
   uEmuD3D8Types,
 {$ENDIF LOG_STRUCT_SIZES}
   uEmuShared,
+  uEmuAlloc,
   uEmuFS,
   uEmu,
   uEmuFile,
@@ -308,6 +309,8 @@ begin
     DbgPrintf('EmuMain : Intercepting functions.');
 
   EmuHLEIntercept(pLibraryVersion, pXbeHeader);
+
+  InitializeXboxAllocations;
 
   begin
     // Make sure that an unpatched XapiInitProcess doesn't call into the (perhaps also unpatched) XapiVerifyMediaInDrive :

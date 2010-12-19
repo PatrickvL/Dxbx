@@ -49,7 +49,24 @@ function DxbxRtlFree(Heap: Handle; Flags: DWORD; pMem: PVOID): BOOL;
 function DxbxRtlRealloc(Heap: HANDLE; Flags: ULONG; pMem: PVOID; Bytes: SIZE_T): PVOID;
 function DxbxRtlSizeHeap(Heap: HANDLE; Flags: ULONG; pMem: PVOID): SIZE_T;
 
+procedure InitializeXboxAllocations;
+
+var
+  XTL_XapiProcessHeap: PPointer;
+
+  XTL_LocalAlloc : function (uFlags: UINT; uBytes: UINT): HLOCAL; stdcall;
+  XTL_LocalFree : function (hMem: HLOCAL): HLOCAL; stdcall;
+
+  XTL_GlobalAlloc : function (uFlags: UINT; uBytes: UINT): HLOCAL; stdcall;
+  XTL_GlobalFree : function (hMem: HLOCAL): HLOCAL; stdcall;
+
+  XTL_RtlAllocateHeap : function (hHeap: HANDLE; dwFlags: DWORD; dwBytes: SIZE_T): PVOID; stdcall;
+  XTL_RtlFreeHeap : function(hHeap: HANDLE; dwFlags: DWORD; lpMem: PVOID): BOOL; stdcall;
+
 implementation
+
+uses
+  uEmuFS;
 
 const lfUnit = lfCxbx or lfKernel;
 
@@ -68,9 +85,73 @@ const DxbxRtlSizeHeap(Heap, Flags, pMem)       DxbxRtlSizeHeapDebug(Heap, Flags,
 
 {$ELSE !_DEBUG_ALLOC}
 
+var
+  _XboxAlloc : function (uFlags: UINT; uBytes: UINT): HLOCAL; stdcall;
+  _XboxFree : function (hMem: HLOCAL): HLOCAL; stdcall;
+
+function DxbxXboxAlloc_EmuHeap(uFlags: UINT; uBytes: UINT): HLOCAL; stdcall;
+begin
+  Result := HLOCAL(XTL_RtlAllocateHeap(HANDLE(XTL_XapiProcessHeap^), 0, uBytes));
+end;
+
+function DxbxXboxFree_EmuHeap(hMem: HLOCAL): HLOCAL; stdcall;
+begin
+  if XTL_RtlFreeHeap(HANDLE(XTL_XapiProcessHeap^), 0, Pointer(hMem)) <> 0 then
+    Result := 0
+  else
+    Result := hMem;
+end;
+
+function DxbxXboxAlloc_NoEmu(uFlags: UINT; uBytes: UINT): HLOCAL; stdcall;
+begin
+  EmuSwapFS(fsWindows);
+  Result := HLOCAL(DxbxMalloc(uBytes));
+  EmuSwapFS(fsXbox);
+end;
+
+function DxbxXboxFree_NoEmu(hMem: HLOCAL): HLOCAL; stdcall;
+begin
+  EmuSwapFS(fsWindows);
+  DxbxFree(Pointer(hMem));
+  Result := 0;
+  EmuSwapFS(fsXbox);
+end;
+
+procedure InitializeXboxAllocations;
+begin
+  if Assigned(Addr(XTL_LocalAlloc))
+  and Assigned(Addr(XTL_LocalFree)) then
+  begin
+    _XboxAlloc := XTL_LocalAlloc;
+    _XboxFree := XTL_LocalFree;
+  end
+  else
+  if Assigned(Addr(XTL_GlobalAlloc))
+  and Assigned(Addr(XTL_GlobalFree)) then
+  begin
+    _XboxAlloc := XTL_GlobalAlloc;
+    _XboxFree := XTL_GlobalFree;
+  end
+  else
+  if  Assigned(XTL_XapiProcessHeap)
+  and Assigned(XTL_RtlAllocateHeap)
+  and Assigned(XTL_RtlFreeHeap) then
+  begin
+    _XboxAlloc := @DxbxXboxAlloc_EmuHeap;
+    _XboxFree := @DxbxXboxFree_EmuHeap
+  end
+  else
+  begin
+    _XboxAlloc := @DxbxXboxAlloc_NoEmu;
+    _XboxFree := @DxbxXboxFree_NoEmu;
+  end;
+end;
+
 function XboxAlloc(x: Integer): Pointer;
 begin
-  Result := DxbxMalloc(x); // TODO : Change this to call DxbxRtlAlloc (but with which heap?)
+  EmuSwapFS(fsXbox);
+  Result := Pointer(_XboxAlloc(LMEM_FIXED, x));
+  EmuSwapFS(fsWindows);
 end;
 
 function XboxCalloc(x: Integer): Pointer;
@@ -81,7 +162,12 @@ end;
 
 procedure XboxFree(x: Pointer);
 begin
-  DxbxFree(x); // TODO : Change this to call DxbxRtlFree (but with which heap?)
+  if Assigned(x) then
+  begin
+    EmuSwapFS(fsXbox);
+    _XboxFree(HLOCAL(x));
+    EmuSwapFS(fsWindows);
+  end;
 end;
 
 function DxbxMalloc(x: Integer): Pointer;

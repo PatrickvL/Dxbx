@@ -27,7 +27,7 @@ uses
   SysUtils,
   // Jedi Win32API
   JwaWinType,
-  JwaWinBase,
+  JwaWinBase, // LPOVERLAPPED
   JwaWinNT,
   JwaNative,
   JwaNTStatus,
@@ -2604,10 +2604,10 @@ procedure xboxkrnl_NtUserIoApcDispatcher
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  dwEsi: uint32;
-  dwEax: uint32;
-  dwEcx: uint32;
   bWasXboxFS: Boolean; // Dxbx addition
+  pOverlapped: LPOVERLAPPED;
+  dwErrorCode: DWORD;
+  dwNumberOfBytesTransfered: DWORD;
 begin
   // Cxbx Note: This function is called within Win2k/XP context, so no EmuSwapFS here
 
@@ -2625,71 +2625,33 @@ begin
       LogEnd();
 
     DbgPrintf('IoStatusBlock->Pointer     : 0x%.08X' +
-      #13#10'IoStatusBlock->Information : 0x%.08X', [IoStatusBlock.Status, IoStatusBlock.Information]);
+        #13#10'IoStatusBlock->Information : 0x%.08X', [IoStatusBlock.Status, IoStatusBlock.Information]);
   end;
 
-  dwEsi := uint32(IoStatusBlock);
+  pOverlapped := LPOVERLAPPED(IoStatusBlock);
 
   if((IoStatusBlock.Status and $C0000000) = $C0000000) then
   begin
-    dwEcx := 0;
-    dwEax := JwaNative.RtlNtStatusToDosError(IoStatusBlock.Status);
+    dwNumberOfBytesTransfered := 0;
+    dwErrorCode := JwaNative.RtlNtStatusToDosError(IoStatusBlock.Status);
   end
   else
   begin
-    dwEcx := DWORD(IoStatusBlock.Information);
-    dwEax := 0;
+    dwNumberOfBytesTransfered := DWORD(IoStatusBlock.Information);
+    dwErrorCode := 0;
   end;
+
+  // Dxbx addition : Always swap back to Xbox FS before calling out :
+  EmuSwapFS(fsXbox);
+
+  LPOVERLAPPED_COMPLETION_ROUTINE(ApcContext)(dwErrorCode, dwNumberOfBytesTransfered, pOverlapped);
+
+  EmuSwapFS(fsWindows);
+  if MayLog(lfUnit or lfReturnValue) then
+    DbgPrintf('EmuKrnl : NtUserIoApcDispatcher Completed');
 
   if bWasXboxFS then // Dxbx addition : Swap back only here, if necessary
     EmuSwapFS(fsXbox);
-
-  (*
-  // ~XDK 3911??
-  if(true) then
-  begin
-    dwEsi := dw2;
-    dwEcx := dw1;
-    dwEax := dw3;
-
-  end
-  else
-  begin
-    dwEsi := dw1;
-    dwEcx := dw2;
-    dwEax := dw3;
-  end;*)
-
-  asm
-    pushad
-    (*
-    mov esi, IoStatusBlock
-    mov ecx, dwEcx
-    mov eax, dwEax
-    *)
-    // TODO -oCXBX: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
-    // Seems to be XDK/version dependand??
-    mov esi, dwEsi
-    mov ecx, dwEcx
-    mov eax, dwEax
-
-    push esi
-    push ecx
-    push eax
-
-    call ApcContext
-
-    popad
-  end;
-
-  if MayLog(lfUnit or lfTrace) then
-  begin
-    EmuSwapFS(fsWindows);
-    if MayLog(lfUnit) then
-      DbgPrintf('EmuKrnl : NtUserIoApcDispatcher Completed');
-    if bWasXboxFS then // Dxbx addition : Swap back only here, if necessary
-    EmuSwapFS(fsXbox);
-  end;
 end;
 
 function xboxkrnl_NtWaitForSingleObject(
