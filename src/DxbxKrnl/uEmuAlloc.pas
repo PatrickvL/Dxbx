@@ -37,6 +37,7 @@ uses
 
 
 function XboxAlloc(x: Integer): Pointer;
+function XboxCalloc(x: Integer): Pointer;
 procedure XboxFree(x: Pointer);
 
 function DxbxMalloc(x: Integer): Pointer;
@@ -70,6 +71,12 @@ const DxbxRtlSizeHeap(Heap, Flags, pMem)       DxbxRtlSizeHeapDebug(Heap, Flags,
 function XboxAlloc(x: Integer): Pointer;
 begin
   Result := DxbxMalloc(x); // TODO : Change this to call DxbxRtlAlloc (but with which heap?)
+end;
+
+function XboxCalloc(x: Integer): Pointer;
+begin
+  Result := XboxAlloc(x);
+  ZeroMemory(Result, x)
 end;
 
 procedure XboxFree(x: Pointer);

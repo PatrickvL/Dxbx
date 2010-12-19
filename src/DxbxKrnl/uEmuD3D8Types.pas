@@ -853,6 +853,14 @@ type _X_D3DPIXELSHADERDEF = record // <- blueshogun 10/1/07
   X_D3DPIXELSHADERDEF = _X_D3DPIXELSHADERDEF;
   PX_D3DPIXELSHADERDEF = ^X_D3DPIXELSHADERDEF;
 
+
+type X_D3DPixelShader = record
+    RefCount: DWORD;
+    Flags: DWORD;
+    PshDef: PX_D3DPIXELSHADERDEF;
+  end;
+  PX_D3DPixelShader = ^X_D3DPixelShader;
+
 type _STREAM_DYNAMIC_PATCH_ = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     NeedPatch: BOOL_;       // This is to know whether it's data which must be patched
@@ -1045,6 +1053,7 @@ const X_D3DSIZE_HEIGHT_MASK  = $00FFF000;   // Height of the texture - 1, in tex
 const X_D3DSIZE_HEIGHT_SHIFT = 12;
 const X_D3DSIZE_PITCH_MASK   = $FF000000;   // Pitch / 64 - 1
 const X_D3DSIZE_PITCH_SHIFT  = 24;
+
 const X_D3DTEXTURE_PITCH_ALIGNMENT = 64;
 
 type X_D3DBaseTexture = object(X_D3DPixelContainer)

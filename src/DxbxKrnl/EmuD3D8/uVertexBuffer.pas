@@ -723,7 +723,7 @@ begin
     uiVertexCount := pPatchDesc.dwVertexCount;
     dwNewSize := uiVertexCount * pStreamPatch.ConvertedStride;
     pNewVertexBuffer := NULL;
-    pNewData := XboxAlloc(dwNewSize);
+    pNewData := XboxCalloc(dwNewSize);
     if (nil=pNewData) then
     begin
       DxbxKrnlCleanup('Couldn''t allocate the new stream zero buffer');

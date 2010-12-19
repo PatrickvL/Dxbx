@@ -1139,8 +1139,7 @@ var
 begin
   // Dxbx addition : Ease the RefCount, by moving this to the start of the buffer :
   dwSize := sizeof(DWORD) + (g_dwOverlayP * g_dwOverlayH);
-  pRefCount := XboxAlloc(dwSize); // TODO : Honor D3DSURFACE_ALIGNMENT and the 'contiguous memory' requirement (use D3D_AllocContiguousMemory?)
-  ZeroMemory(pRefCount, dwSize);
+  pRefCount := XboxCalloc(dwSize); // TODO : Honor D3DSURFACE_ALIGNMENT and the 'contiguous memory' requirement (use D3D_AllocContiguousMemory?)
 
   // initialize ref count
   pRefCount^ := 1;
@@ -2335,16 +2334,14 @@ begin
         end;
 
         // update render target cache
-        Dispose({var}g_pCachedRenderTarget); // Dxbx addition : Prevent memory leaks
-        New({var X_D3DSurface:}g_pCachedRenderTarget);
-        ZeroMemory(g_pCachedRenderTarget, SizeOf(g_pCachedRenderTarget^));
+        DxbxFree(g_pCachedRenderTarget); // Dxbx addition : Prevent memory leaks
+        g_pCachedRenderTarget := DxbxMalloc(SizeOf(X_D3DSurface));
         g_pCachedRenderTarget.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DREND;
         IDirect3DDevice_GetRenderTarget(g_pD3DDevice, @(g_pCachedRenderTarget.Emu.Surface));
 
         // update z-stencil surface cache
-        Dispose({var}g_pCachedZStencilSurface); // Dxbx addition : Prevent memory leaks
-        New({var}g_pCachedZStencilSurface);
-        ZeroMemory(g_pCachedZStencilSurface, SizeOf(g_pCachedZStencilSurface^));
+        DxbxFree(g_pCachedZStencilSurface); // Dxbx addition : Prevent memory leaks
+        g_pCachedZStencilSurface := DxbxMalloc(SizeOf(X_D3DSurface));
         g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
         if IDirect3DDevice_GetDepthStencilSurface(g_pD3DDevice, @(g_pCachedZStencilSurface.Emu.Surface)) = D3D_OK then
         begin
@@ -2877,8 +2874,7 @@ begin
 
   // TODO -oDxbx : Speed this up by re-using a previously memory block
 
-  Result := XboxAlloc(Count * sizeof(DWORD)); // Cxbx: new DWORD[Count] Dxbx: Put this in an Xbox heap
-  ZeroMemory(Result, Count * sizeof(DWORD));
+  Result := XboxCalloc(Count * sizeof(DWORD)); // Cxbx: new DWORD[Count]
   g_dwPrimaryPBCount := Count;
   g_pPrimaryPB := Result;
 
@@ -3503,8 +3499,7 @@ begin
       _(ppSurface, 'ppSurface').
     LogEnd();
 
-  New({var PX_D3DSurface}ppSurface^);
-  ZeroMemory(ppSurface^, SizeOf(ppSurface^^));
+  ppSurface^ := XboxCalloc(SizeOf(X_D3DSurface));
 
   PCFormat := EmuXB2PC_D3DFormat(Format);
   PCMultiSample := EmuXB2PC_D3DMULTISAMPLE_TYPE(MultiSample);
@@ -3552,8 +3547,7 @@ begin
       _(ppBackBuffer, 'ppBackBuffer').
     LogEnd();
 
-  New({var PX_D3DSurface}ppBackBuffer^);
-  ZeroMemory(ppBackBuffer^, SizeOf(ppBackBuffer^^));
+  ppBackBuffer^ := XboxCalloc(SizeOf(X_D3DSurface));
 
   PCFormat := EmuXB2PC_D3DFormat(Format);
 
@@ -3657,8 +3651,7 @@ begin
 (* unsafe, somehow  -- MARKED OUT BY CXBX --
     HRESULT hRet := D3D_OK;
 
-    X_D3DSurface *pBackBuffer := new X_D3DSurface();
-    ZeroMemory(pBackBuffer, SizeOf(pBackBuffer^));
+    pBackBuffer := XboxCalloc(SizeOf(X_D3DSurface));
 
     if (BackBuffer = -1) then
     begin
@@ -3694,8 +3687,7 @@ begin
 
   if pBackBuffer = nil then // Dxbx addition, to initialize this 'static' var only once
   begin
-    New({var PX_D3DSurface}pBackBuffer);
-    ZeroMemory(pBackBuffer, SizeOf(pBackBuffer^));
+    pBackBuffer := XboxCalloc(SizeOf(X_D3DSurface));
   end;
 
   if (BackBuffer = -1) then
@@ -4338,11 +4330,9 @@ begin
     LogEnd();
 
   // create emulated shader struct
-  New(pD3DVertexShader);
-  ZeroMemory(pD3DVertexShader, sizeof(pD3DVertexShader^));
+  pD3DVertexShader := XboxCalloc(SizeOf(X_D3DVertexShader));
 
-  pVertexShader := PVERTEX_SHADER(XboxAlloc(sizeof(VERTEX_SHADER)));
-  ZeroMemory(pVertexShader, sizeof(VERTEX_SHADER));
+  pVertexShader := PVERTEX_SHADER(XboxCalloc(sizeof(VERTEX_SHADER)));
   // TODO -oCXBX: Intelligently fill out these fields as necessary
 
   // CXBX HACK:
@@ -5073,8 +5063,7 @@ begin
   // Convert Format (Xbox->PC)
   PCFormat := DxbxXB2PC_D3DFormat(Format, D3DRTYPE_TEXTURE);
 
-  New({var PX_D3DTexture}ppTexture^);
-  ZeroMemory(ppTexture^, SizeOf(ppTexture^^));
+  ppTexture^ := XboxCalloc(SizeOf(X_D3DTexture));
 
   if (PCFormat = D3DFMT_YUY2) then
   begin
@@ -5240,8 +5229,7 @@ begin
   // Convert Format (Xbox->PC)
   PCFormat := DxbxXB2PC_D3DFormat(Format, D3DRTYPE_VOLUMETEXTURE);
 
-  New({PX_D3DVolumeTexture}ppVolumeTexture^);
-  ZeroMemory(ppVolumeTexture^, SizeOf(ppVolumeTexture^^));
+  ppVolumeTexture^ := XboxCalloc(SizeOf(X_D3DVolumeTexture));
 
   if (PCFormat = D3DFMT_YUY2) then
   begin
@@ -5307,8 +5295,7 @@ begin
 
   PCFormat := DxbxXB2PC_D3DFormat(Format, D3DRTYPE_CUBETEXTURE);
 
-  New({var PX_D3DCubeTexture}ppCubeTexture^);
-  ZeroMemory(ppCubeTexture^, SizeOf(ppCubeTexture^^));
+  ppCubeTexture^ := XboxCalloc(SizeOf(X_D3DCubeTexture));
 
   if (Usage and D3DUSAGE_RENDERTARGET) > 0 then
     Pool := D3DPOOL_DEFAULT
@@ -5370,8 +5357,7 @@ begin
     DbgPrintf('Number of indexes : %d', [Length div SizeOf(Word)]);
   end;
 
-  New({var PX_D3DIndexBuffer}ppIndexBuffer^);
-  ZeroMemory(ppIndexBuffer^, SizeOf(ppIndexBuffer^^));
+  ppIndexBuffer^ := XboxCalloc(SizeOf(X_D3DIndexBuffer));
 
   hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice,
       Length, {Usage=}0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
@@ -7410,8 +7396,7 @@ begin
   begin
     pPCTexture := pThis.Emu.Texture;
 
-    New({var}pSurfaceLevel); // Cxbx : new X_D3DSurface();
-    ZeroMemory(pSurfaceLevel, SizeOf(pSurfaceLevel^));
+    pSurfaceLevel := XboxCalloc(SizeOf(X_D3DSurface));
     // TODO -oDxbx : When should this be freeed? Isn't this a memory leak otherwise?
 
 //    ppSurfaceLevel^.Data := $B00BBABE;
@@ -7420,7 +7405,7 @@ begin
 
     if (FAILED(hRet)) then
     begin
-      Dispose({var}pSurfaceLevel);
+      XboxFree(pSurfaceLevel);
       EmuWarning('GetSurfaceLevel Failed!' +#13#10+ DxbxD3DErrorString(hRet));
     end
     else
@@ -7582,8 +7567,7 @@ begin
     NewLength := $2000; // temporarily assign a small buffer, which will be increased later
   end;
 
-  New({PX_D3DVertexBuffer}pD3DVertexBuffer);
-  ZeroMemory(pD3DVertexBuffer, SizeOf(pD3DVertexBuffer^));
+  pD3DVertexBuffer := XboxCalloc(SizeOf(X_D3DVertexBuffer));
 
   Result := g_pD3DDevice.CreateVertexBuffer(
     NewLength,
@@ -7597,7 +7581,7 @@ begin
   if (FAILED(Result)) then
   begin
     EmuWarning('CreateVertexBuffer Failed!' +#13#10+ DxbxD3DErrorString(Result));
-    Dispose(pD3DVertexBuffer);
+    XboxFree(pD3DVertexBuffer);
   end
   else
   begin
@@ -9705,12 +9689,12 @@ begin
       _(Integer(Ord(Size)), 'Size').
     LogEnd();
 
-  New({var PX_D3DPalette}pPalette);
+  pPalette := XboxAlloc(SizeOf(X_D3DPalette));
   // ZeroMemory(pPalette,...) not nescessary, as we're filling each field already here :
 
   // Dxbx addition : Initialize Common field properly :
   pPalette.Common := (RefCount and X_D3DCOMMON_REFCOUNT_MASK) or X_D3DCOMMON_TYPE_PALETTE or X_D3DCOMMON_D3DCREATED;
-  pPalette.Data := DWORD(XboxAlloc(lk[Size] * sizeof(uint08)));
+  pPalette.Data := DWORD(XboxCalloc(lk[Size] * sizeof(uint08)));
   pPalette.Emu.Lock := RefCount; // emulated reference count for palettes
 
   g_pCurrentPalette := PBytes(pPalette.Data);
@@ -11469,8 +11453,7 @@ begin
       _(Level, 'Level').
     LogEnd();
 
-  New(Result); // TODO -oDxbx : When should this be freeed? Isn't this a memory leak otherwise?
-  ZeroMemory(Result, SizeOf(Result^));
+  Result := XboxCalloc(SizeOf(Result^)); // TODO -oDxbx : When should this be freeed? Isn't this a memory leak otherwise?
 
   IDirect3DCubeTexture(pThis.Emu.CubeTexture).GetCubeMapSurface(FaceType, Level, PIDirect3DSurface(@Result.Emu.Surface));
 
@@ -12429,3 +12412,4 @@ finalization
   ExtraXRGBSurface := nil;
 
 end.
+
