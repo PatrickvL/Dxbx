@@ -328,6 +328,8 @@ function xboxkrnl_IoMarkIrpMustComplete(): NTSTATUS; stdcall; // UNKNOWN_SIGNATU
 
 implementation
 
+const lfUnit = lfDxbx or lfKernel;
+
 function {059} xboxkrnl_IoAllocateIrp(
   StackSize: CCHAR
   ): PIRP; stdcall;
@@ -488,14 +490,16 @@ function xboxkrnl_IoCreateSymbolicLink
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuKrnl : IoCreateSymbolicLink').
-    _(SymbolicLinkName, 'SymbolicLinkName').
-    _(DeviceName, 'DeviceName').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : IoCreateSymbolicLink').
+      _(SymbolicLinkName, 'SymbolicLinkName').
+      _(DeviceName, 'DeviceName').
+    LogEnd();
 
   Result := DxbxCreateSymbolicLink(PSTRING_String(SymbolicLinkName), PSTRING_String(DeviceName));
+
+  if MayLog(lfUnit or lfReturnValue) then
+    DbgPrintf('IoCreateSymbolicLink returns 0x%.8x (%s)', [Result, NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
