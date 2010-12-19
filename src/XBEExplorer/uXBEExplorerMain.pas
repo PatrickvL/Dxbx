@@ -712,7 +712,7 @@ var
     GridAddRow(Result, ['dwCertificateAddr', 'Dword', _offset(PXbeHeader(nil).dwCertificateAddr), DWord2Str(Hdr.dwCertificateAddr)]);
     GridAddRow(Result, ['dwSections', 'Dword', _offset(PXbeHeader(nil).dwSections), DWord2Str(Hdr.dwSections)]);
     GridAddRow(Result, ['dwSectionHeadersAddr', 'Dword', _offset(PXbeHeader(nil).dwSectionHeadersAddr), DWord2Str(Hdr.dwSectionHeadersAddr)]);
-    GridAddRow(Result, ['dwInitFlags', 'Dword', _offset(PXbeHeader(nil).dwInitFlags), PByteToHexString(@Hdr.dwInitFlags[0], 4)]);
+    GridAddRow(Result, ['dwInitFlags', 'Dword', _offset(PXbeHeader(nil).dwInitFlags), DWord2Str(Hdr.dwInitFlags)]);
     GridAddRow(Result, ['dwEntryAddr', 'Dword', _offset(PXbeHeader(nil).dwEntryAddr), DWord2Str(Hdr.dwEntryAddr), Format('Retail: 0x%.8x, Debug: 0x%.8x', [Hdr.dwEntryAddr xor XOR_EP_Retail, Hdr.dwEntryAddr xor XOR_EP_DEBUG])]);
     GridAddRow(Result, ['dwTLSAddr', 'Dword', _offset(PXbeHeader(nil).dwTLSAddr), DWord2Str(Hdr.dwTLSAddr), GetSectionNameByVA(Hdr.dwTLSAddr)]);
     GridAddRow(Result, ['dwPeStackCommit', 'Dword', _offset(PXbeHeader(nil).dwPeStackCommit), DWord2Str(Hdr.dwPeStackCommit)]);
