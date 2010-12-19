@@ -1,8 +1,15 @@
 Dxbx compatibility
 ------------------
 
-Version 0.5
+Version 0.6
 
+Version 0.5
+Turok - Intro movie & start of main menu
+Rayman Arena - Intro & main menu
+Smashing Drive - Playable on Nvidia
+Gauntlet Dark Legacy - playable
+Petit Copter - playable
+Battlestar Callectica - playable
 
 Version 0.4
 
