@@ -56,9 +56,7 @@ type _XBEIMAGE_HEADER = packed record
     dwCertificateAddr: DWord; // 0x0118 - certificate address
     dwSections: DWord; // 0x011C - number of sections
     dwSectionHeadersAddr: DWord; // 0x0120 - section headers address
-
-    dwInitFlags: array [0..3] of Byte; // 0x0124 - initialization flags
-
+    dwInitFlags: DWord; // 0x0124 - initialization flags
     dwEntryAddr: DWord; // 0x0128 - entry point address
     dwTLSAddr: DWord; // 0x012C - thread local storage directory address
     dwPeStackCommit: DWord; // 0x0130 - size of stack commit
@@ -864,8 +862,8 @@ begin
   _LogEx(DxbxFormat('Section Headers Address          : 0x%.8x', [m_header.dwSectionHeadersAddr]));
 
   // Print init flags
-  TmpStr := DxbxFormat('Init Flags                       : 0x%.2x%.2x%.2x%.2x ', [m_Header.dwInitFlags[3], m_Header.dwInitFlags[2], m_Header.dwInitFlags[1], m_Header.dwInitFlags[0]]);
-  Flag := m_Header.dwInitFlags[0];
+  TmpStr := DxbxFormat('Init Flags                       : 0x%.8x ', [m_Header.dwInitFlags]);
+  Flag := m_Header.dwInitFlags;
 
   if (Flag and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
     TmpStr := TmpStr + '[Mount Utility Drive] ';

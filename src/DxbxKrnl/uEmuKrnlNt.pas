@@ -2138,6 +2138,7 @@ begin
       FileInformation.AvailableAllocationUnits.QuadPart := $2F125;
       FileInformation.SectorsPerAllocationUnit          := 32;
       FileInformation.BytesPerSector                    := XBOX_HD_SECTOR_SIZE;
+      // Dxbx note : XapiValidateDiskPartition requires that SectorsPerAllocationUnit * BytesPerSector = 16384
     end;
   end
   else

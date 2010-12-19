@@ -310,8 +310,10 @@ begin
   EmuHLEIntercept(pLibraryVersion, pXbeHeader);
 
   begin
-    // Make sure that an unpatched XapiInitProcess doesn't call into the (probably also unpatched) XapiVerifyMediaInDrive :
+    // Make sure that an unpatched XapiInitProcess doesn't call into the (perhaps also unpatched) XapiVerifyMediaInDrive :
     pCertificate.dwAllowedMedia := pCertificate.dwAllowedMedia and (not XBEIMAGE_MEDIA_TYPE_DVD_X2);
+    // Make sure that an unpatched XapiInitProcess doesn't call into the (perhaps also unpatched) XapiValidateDiskPartition :
+    DxbxKrnl_XbeHeader.dwInitFlags := DxbxKrnl_XbeHeader.dwInitFlags and (not XBE_INIT_FLAG_DontSetupHarddisk);
   end;
 
   if MayLog(lfUnit) then
@@ -368,8 +370,8 @@ begin
     DxbxCreateSymbolicLink(DriveY, DeviceHarddisk0Partition4); // Partition4 goes to Y:
 
     // Mount the Utility drive (Z:) conditionally :
-    if (DxbxKrnl_XbeHeader.dwInitFlags[0] and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
-      DxbxMountUtilityDrive({fFormatClean=}DxbxKrnl_XbeHeader.dwInitFlags[0] and XBE_INIT_FLAG_FormatUtilityDrive);
+    if (DxbxKrnl_XbeHeader.dwInitFlags and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
+      DxbxMountUtilityDrive({fFormatClean=}DxbxKrnl_XbeHeader.dwInitFlags and XBE_INIT_FLAG_FormatUtilityDrive);
   end;
 
   // Re-route unhandled exceptions to our emulation-exception handler :
