@@ -81,10 +81,13 @@ function {327} xboxkrnl_XeLoadSection(
   ): NTSTATUS; stdcall;
 // Source:XBMC  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  if XTL_EmuXLoadSectionByHandle(XTL_SECTIONHANDLE(Section)) <> NULL then
-    Result := STATUS_SUCCESS
-  else
-    Result := STATUS_IMAGE_NOT_AT_BASE; // TODO -oDxbx : Determine & set correct LastError code
+  // TODO : We should probably use a lock here, to make access to the SectionHeader thread-safe
+
+  if (Section.dwSectionRefCount = 0) then
+    ; // TODO : Load section
+
+  Inc(Section.dwSectionRefCount);
+  Result := STATUS_SUCCESS;
 end;
 
 // XeUnloadSection:
@@ -97,10 +100,17 @@ function {328} xboxkrnl_XeUnloadSection(
   ): NTSTATUS; stdcall;
 // Source:XBMC  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  if XTL_EmuXFreeSectionByHandle(XTL_SECTIONHANDLE(Section)) = BOOL_TRUE then
-    Result := STATUS_SUCCESS
+  // TODO : We should probably use a lock here, to make access to the SectionHeader thread-safe
+  if (Section.dwSectionRefCount = 0) then
+    Result := STATUS_INVALID_PARAMETER
   else
-    Result := STATUS_INVALID_PARAMETER;
+  begin
+    Dec(Section.dwSectionRefCount);
+    if (Section.dwSectionRefCount = 0) then
+      ; // TODO : Remove section
+
+    Result := STATUS_SUCCESS;
+  end;
 end;
 
 end.
