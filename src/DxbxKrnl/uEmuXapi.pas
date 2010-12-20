@@ -230,16 +230,6 @@ var g_bXInputOpenCalled: _bool = false;
 type
   XTL_SECTIONHANDLE = PXBE_SECTIONHEADER;
 
-function XTL_EmuXLoadSectionByHandle
-(
-    hSection: XTL_SECTIONHANDLE
-): LPVOID; stdcall; // published function, used for xboxkrnl_XeLoadSection
-
-function XTL_EmuXFreeSectionByHandle
-(
-    hSection: XTL_SECTIONHANDLE
-): BOOL; stdcall; // published function, used for xboxkrnl_XeUnloadSection
-
 function DxbxMountUtilityDrive(fFormatClean: BOOL): BOOL; // published function, used for DxbxKrnlInit
 
 implementation
@@ -1244,157 +1234,45 @@ begin
 end;
 
 
-// Dxbx note : This functinos doesn't need a patch (as Xbox returns SectionHeader as handle too),
-// but it's used by XTL_EmuXLoadSectionA and XTL_EmuXFreeSectionA (and these need patching).
+(* Disabled, too high level.
 function XTL_EmuXGetSectionHandleA
 (
     pSectionName: LPCSTR
 ): XTL_SECTIONHANDLE; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
-var
-  SectionHeader: PXBE_SECTIONHEADER;
-begin
-  EmuSwapFS(fsWindows);
+*)
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuXGetSectionHandleA').
-      _(pSectionName, 'pSectionName'). // TODO : Honour XBE_SECTIONNAME_MAXLENGTH
-    LogEnd();
-
-  SectionHeader := XBE_FindSectionHeaderByName(pSectionName);
-  if Assigned(SectionHeader) then
-    Result := XTL_SECTIONHANDLE(SectionHeader)
-  else
-    Result := XTL_SECTIONHANDLE(INVALID_HANDLE_VALUE);
-
-  EmuSwapFS(fsXbox);
-end;
-
-
-// Adds one to the reference count of the specified section and loads if the
-// count is now above zero.
+(*
 function XTL_EmuXLoadSectionByHandle
 (
     hSection: XTL_SECTIONHANDLE
 ): LPVOID; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
-var
-  SectionHeader: PXBE_SECTIONHEADER;
-begin
-  EmuSwapFS(fsWindows);
+*)
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuXLoadSectionByHandle').
-      _(hSection, 'hSection').
-    LogEnd();
-
-  // The handle should contain the address of this section by the hack
-  // used in EmuXGetSectionHandleA.
-
-  Result := NULL;
-
-  // TODO : We should probably use a lock here, to make access to the SectionHeader thread-safe
-
-  SectionHeader := PXBE_SECTIONHEADER(hSection);
-  if Assigned(SectionHeader) then // TODO -oDxbx : Check section handle more thoroughly than this
-  begin
-    Inc(SectionHeader.dwSectionRefCount);
-    if SectionHeader.dwSectionRefCount = 1 then
-    begin
-      // TODO : Actually load the section here, including the symbol-detection + patching!
-    end;
-
-    Result := LPVOID(SectionHeader.dwVirtualAddr);
-  end;
-
-  EmuSwapFS(fsXbox);
-end;
-
-
-// Subtracts one from the reference count of the specified section and unloads
-// if the count is now zero.
+(*
 function XTL_EmuXFreeSectionByHandle
 (
     hSection: XTL_SECTIONHANDLE
 ): BOOL; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
-var
-  SectionHeader: PXBE_SECTIONHEADER;
-begin
-  EmuSwapFS(fsWindows);
+*)
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuXFreeSectionByHandle').
-      _(hSection, 'hSection').
-    LogEnd();
-
-  // TODO : We should probably use a lock here, to make access to the SectionHeader thread-safe
-
-  SectionHeader := PXBE_SECTIONHEADER(hSection);
-  if Assigned(SectionHeader) and (SectionHeader.dwSectionRefCount > 0) then
-  begin
-    Dec(SectionHeader.dwSectionRefCount);
-    if SectionHeader.dwSectionRefCount = 0 then
-    begin
-      // TODO : Actually unload the section here
-    end;
-
-    Result := BOOL_TRUE;
-  end
-  else
-    Result := BOOL_FALSE;
-
-  EmuSwapFS(fsXbox);
-end;
-
-
+(*
 function XTL_EmuXLoadSectionA
 (
     pSectionName: LPCSTR
 ): LPVOID; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
-var
-  SectionHandle: XTL_SECTIONHANDLE;
-begin
-  if MayLog(lfUnit) then
-  begin
-    EmuSwapFS(fsWindows);
-    LogBegin('EmuXLoadSectionA').
-      _(pSectionName, 'pSectionName'). // TODO : Honour XBE_SECTIONNAME_MAXLENGTH
-    LogEnd();
-    EmuSwapFS(fsXbox);
-  end;
+*)
 
-  SectionHandle := XTL_EmuXGetSectionHandleA(pSectionName);
-  if SectionHandle = XTL_SECTIONHANDLE(INVALID_HANDLE_VALUE) then
-    Result := NULL
-  else
-    Result := XTL_EmuXLoadSectionByHandle(SectionHandle);
-end;
-
+(*
 function XTL_EmuXFreeSectionA
 (
     pSectionName: LPCSTR
 ): BOOL; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
-var
-  SectionHandle: XTL_SECTIONHANDLE;
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit) then
-    LogBegin('EmuXFreeSectionA').
-      _(pSectionName, 'pSectionName'). // TODO : Honour XBE_SECTIONNAME_MAXLENGTH
-    LogEnd();
-
-  SectionHandle := XTL_EmuXGetSectionHandleA(pSectionName);
-  if SectionHandle = XTL_SECTIONHANDLE(INVALID_HANDLE_VALUE) then
-    Result := BOOL_FALSE
-  else
-    Result := XTL_EmuXFreeSectionByHandle(SectionHandle);
-
-  EmuSwapFS(fsXbox);
-end;
+*)
 
 (* Dxbx note : This patch is not really needed, as the Xbox1 seems to use the SectionHeader address as a handle too.
 function XTL_EmuXGetSectionSize
@@ -1402,24 +1280,6 @@ function XTL_EmuXGetSectionSize
   hSection: XTL_SECTIONHANDLE
 ): DWORD; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
-var
-  SectionHeader: PXBE_SECTIONHEADER;
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit) then
-    LogBegin('EmuXGetSectionSize').
-      _(hSection, 'hSection').
-    LogEnd();
-
-  SectionHeader := PXBE_SECTIONHEADER(hSection);
-  if Assigned(SectionHeader) then // TODO -oDxbx : Check section handle more thoroughly than this
-    Result := SectionHeader.dwVirtualSize
-  else
-    Result := 0;
-
-  EmuSwapFS(fsXbox);
-end;
 *)
 
 (* Too high level
@@ -2008,15 +1868,15 @@ exports
   XTL_EmuXapiThreadStartup,
 //  XTL_EmuXapiValidateDiskPartitionEx, // Dxbx note : Disabled, too high level. See xboxkrnl_NtQueryVolumeInformationFile
   XTL_EmuXFormatUtilityDrive,
-  XTL_EmuXFreeSectionA,
-  XTL_EmuXFreeSectionByHandle,
+//  XTL_EmuXFreeSectionA, // Dxbx note : Disabled, too high level.
+//  XTL_EmuXFreeSectionByHandle, // Dxbx note : Disabled, too high level.
   XTL_EmuXGetDeviceChanges,
   XTL_EmuXGetDevices,
 //  XTL_EmuXGetFileCacheSize, // Dxbx note : Disabled, too high level. See xboxkrnl_FscGetCacheSize
 //  XTL_EmuXGetGameRegion, // Dxbx note : Disabled, too high level. See xboxkrnl_ExQueryNonVolatileSetting
   XTL_EmuXGetLaunchInfo,
 //  XTL_EmuXGetParentalControlSetting, // Dxbx note : Disabled, too high level. See xboxkrnl_ExQueryNonVolatileSetting
-  XTL_EmuXGetSectionHandleA,
+//  XTL_EmuXGetSectionHandleA, // Dxbx note : Disabled, too high level.
 //  XTL_EmuXGetSectionSize, // Dxbx note : This patch is not really needed, as the Xbox1 seems to use the SectionHeader address as a handle too.
   XTL_EmuXInitDevices name PatchPrefix + '_USBD_Init@8', // Cxbx incorrectly calls this XInitDevices
   XTL_EmuXInputClose,
@@ -2026,8 +1886,8 @@ exports
   XTL_EmuXInputPoll,
   XTL_EmuXInputSetState,
   XTL_EmuXLaunchNewImageA,
-  XTL_EmuXLoadSectionA,
-  XTL_EmuXLoadSectionByHandle,
+//  XTL_EmuXLoadSectionA, // Dxbx note : Disabled, too high level.
+//  XTL_EmuXLoadSectionByHandle, // Dxbx note : Disabled, too high level.
   XTL_EmuXMountUtilityDrive,
   XTL_EmuXRegisterThreadNotifyRoutine,
   XTL_EmuXSetProcessQuantumLength;
