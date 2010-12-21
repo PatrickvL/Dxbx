@@ -105,7 +105,7 @@ begin
     Hilo.Suspended := False;
   end
   else
-    if FormPadre = Form5 then
+    if FormPadre = frmCreateIso then
     begin
 
     end;

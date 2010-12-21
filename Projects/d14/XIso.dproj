@@ -112,7 +112,7 @@
 			</DCCReference>
 			<DCCReference Include="..\..\src\Tools\XIso\src\CreacionISO.pas"/>
 			<DCCReference Include="..\..\src\Tools\XIso\src\FormCreacionISO.pas">
-				<Form>Form5</Form>
+				<Form>frmCreateIso</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\src\Tools\XIso\src\ProgresoCreacionISO.pas"/>
 			<DCCReference Include="..\..\src\Tools\XIso\src\xisomakerv3.pas"/>

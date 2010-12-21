@@ -146,9 +146,9 @@ object frm_Main: Tfrm_Main
         Width = 622
       end>
     object ToolBar1: TToolBar
-      Left = 12
+      Left = 11
       Top = 0
-      Width = 608
+      Width = 613
       Height = 21
       AutoSize = True
       ButtonHeight = 21
@@ -159,9 +159,9 @@ object frm_Main: Tfrm_Main
       TabOrder = 0
     end
     object ToolBar2: TToolBar
-      Left = 12
+      Left = 11
       Top = 47
-      Width = 608
+      Width = 613
       Height = 22
       AutoSize = True
       Caption = 'ToolBar2'
@@ -195,6 +195,8 @@ object frm_Main: Tfrm_Main
         Hint = 'Extract All to XBOX'
         Caption = 'ToolButton14'
         ImageIndex = 10
+        ParentShowHint = False
+        ShowHint = True
         Visible = False
       end
       object ToolButton9: TToolButton
@@ -235,12 +237,14 @@ object frm_Main: Tfrm_Main
         ShowHint = True
         OnClick = GrabarISO1Click
       end
-      object ToolButton13: TToolButton
+      object btnXIsoStudio: TToolButton
         Left = 146
         Top = 0
         Hint = 'xISO Studio'
         ImageIndex = 5
-        OnClick = ToolButton13Click
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = btnXIsoStudioClick
       end
       object ToolButton12: TToolButton
         Left = 169
@@ -262,9 +266,9 @@ object frm_Main: Tfrm_Main
       end
     end
     object ToolBar3: TToolBar
-      Left = 12
+      Left = 11
       Top = 23
-      Width = 608
+      Width = 613
       Height = 22
       AutoSize = True
       Caption = 'ToolBar3'
@@ -317,7 +321,7 @@ object frm_Main: Tfrm_Main
     Left = 400
     Top = 160
     Bitmap = {
-      494C010107000900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010107000900080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -653,7 +657,7 @@ object frm_Main: Tfrm_Main
       object xISOStudio1: TMenuItem
         Caption = 'xISO Studio'
         ImageIndex = 5
-        OnClick = ToolButton13Click
+        OnClick = btnXIsoStudioClick
       end
       object AadirsoporteISO96601: TMenuItem
         Caption = 'Add ISO 9660 Support'
@@ -692,7 +696,7 @@ object frm_Main: Tfrm_Main
     Left = 400
     Top = 192
     Bitmap = {
-      494C010118001A00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010118001A00080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000007000000001002000000000000070
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1627,7 +1631,7 @@ object frm_Main: Tfrm_Main
     Left = 400
     Top = 224
     Bitmap = {
-      494C010118001A00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010118001A00080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000007000000001002000000000000070
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

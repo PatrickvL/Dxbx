@@ -95,7 +95,7 @@ type
     Extraercarpeta1: TMenuItem;
     Abrir1: TMenuItem;
     N2: TMenuItem;
-    ToolButton13: TToolButton;
+    btnXIsoStudio: TToolButton;
     ToolButton14: TToolButton;
     xISOStudio1: TMenuItem;
     procedure TreeView1Click(Sender: TObject);
@@ -126,7 +126,7 @@ type
     procedure TreeView1KeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormShow(Sender: TObject);
-    procedure ToolButton13Click(Sender: TObject);
+    procedure btnXIsoStudioClick(Sender: TObject);
   private
     procedure WMDROPFILES(var msg: TMessage); message WM_DROPFILES;
   public
@@ -1197,12 +1197,13 @@ begin
   end;
 end;
 
-procedure Tfrm_Main.ToolButton13Click(Sender: TObject);
+procedure Tfrm_Main.btnXIsoStudioClick(Sender: TObject);
 begin
-  if Form5 = nil then Form5 := TForm5.Create(Self);
-  Form5.ShowModal;
-  Form5.Free;
-  Form5 := nil;
+  if frmCreateIso = nil then
+    frmCreateIso := TfrmCreateIso.Create(Self);
+
+  frmCreateIso.ShowModal;
+  FreeAndNil(frmCreateIso);
 end;
 
 end.

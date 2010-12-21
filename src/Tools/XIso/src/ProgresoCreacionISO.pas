@@ -49,7 +49,7 @@ uses
 
 procedure AdvanceProgres(FileName: string);
 begin
-  Form5.ProgressBar1.StepIt;
+  frmCreateIso.ProgressBar1.StepIt;
 end;
 
 { ProgresoCreacionISO }
@@ -59,12 +59,12 @@ var
   ManagerXISO: TAdminXISO;
 begin
   Estado := False;
-  if not Form5.SaveDialog1.Execute then
+  if not frmCreateIso.SaveDialog1.Execute then
     Exit;
-    
-  ManagerXISO := TAdminXISO.Create(Form5.Manager);
+
+  ManagerXISO := TAdminXISO.Create(frmCreateIso.Manager);
   ManagerXISO.ProgresoxISO := AdvanceProgres;
-  ManagerXISO.CrearXISO(Form5.SaveDialog1.FileName);
+  ManagerXISO.CrearXISO(frmCreateIso.SaveDialog1.FileName);
   ManagerXISO.Free;
   Estado := True;
 end;
