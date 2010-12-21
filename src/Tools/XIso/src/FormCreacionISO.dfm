@@ -1,6 +1,7 @@
 object frmCreateIso: TfrmCreateIso
   Left = 182
   Top = 184
+  BorderIcons = [biSystemMenu, biMinimize, biMaximize, biHelp]
   Caption = 'xISO Studio'
   ClientHeight = 380
   ClientWidth = 584
@@ -35,22 +36,21 @@ object frmCreateIso: TfrmCreateIso
         Width = 50
       end>
     OnDrawPanel = StatusBar1DrawPanel
-    ExplicitTop = 341
   end
   object Panel1: TPanel
     Left = 0
-    Top = 25
+    Top = 46
     Width = 584
-    Height = 336
+    Height = 315
     Align = alClient
     TabOrder = 1
-    ExplicitTop = 51
-    ExplicitHeight = 290
+    ExplicitTop = 25
+    ExplicitHeight = 336
     object Splitter1: TSplitter
       Left = 186
       Top = 1
       Width = 2
-      Height = 334
+      Height = 313
       ResizeStyle = rsUpdate
       ExplicitHeight = 242
     end
@@ -58,7 +58,7 @@ object frmCreateIso: TfrmCreateIso
       Left = 1
       Top = 1
       Width = 185
-      Height = 334
+      Height = 313
       Align = alLeft
       DragMode = dmAutomatic
       Images = ImageList1
@@ -72,13 +72,13 @@ object frmCreateIso: TfrmCreateIso
       OnDragOver = TreeViewDirectoriosDragOver
       OnEdited = TreeViewDirectoriosEdited
       OnKeyPress = TreeViewDirectoriosKeyPress
-      ExplicitHeight = 288
+      ExplicitHeight = 334
     end
     object ListviewFicheros: TListView
       Left = 188
       Top = 1
       Width = 395
-      Height = 334
+      Height = 313
       Align = alClient
       Columns = <
         item
@@ -108,12 +108,12 @@ object frmCreateIso: TfrmCreateIso
       OnCustomDrawItem = ListviewFicherosCustomDrawItem
       OnCustomDrawSubItem = ListviewFicherosCustomDrawSubItem
       OnDblClick = ListviewFicherosDblClick
-      ExplicitHeight = 288
+      ExplicitHeight = 334
     end
   end
   object CoolBar1: TCoolBar
     Left = 0
-    Top = 0
+    Top = 21
     Width = 584
     Height = 25
     Bands = <
@@ -123,6 +123,7 @@ object frmCreateIso: TfrmCreateIso
         MinHeight = 22
         Width = 578
       end>
+    ExplicitTop = 0
     object ToolBar1: TToolBar
       Left = 11
       Top = 0
@@ -173,6 +174,20 @@ object frmCreateIso: TfrmCreateIso
       end
     end
   end
+  object ToolBar2: TToolBar
+    Left = 0
+    Top = 0
+    Width = 584
+    Height = 21
+    AutoSize = True
+    ButtonHeight = 21
+    ButtonWidth = 43
+    Caption = 'ToolBar1'
+    Menu = MainMenu1
+    ShowCaptions = True
+    TabOrder = 3
+    ExplicitLeft = 11
+  end
   object OpenDialog1: TOpenDialog
     Options = [ofAllowMultiSelect, ofEnableSizing]
     Left = 504
@@ -198,7 +213,7 @@ object frmCreateIso: TfrmCreateIso
     Left = 536
     Top = 192
     Bitmap = {
-      494C01010B000D000C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000D00100010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -618,7 +633,7 @@ object frmCreateIso: TfrmCreateIso
         Caption = '-'
       end
       object MenuItemExit: TMenuItem
-        Caption = 'Exit'
+        Action = actExit
       end
     end
     object Opciones1: TMenuItem
@@ -653,12 +668,14 @@ object frmCreateIso: TfrmCreateIso
       Caption = '&New'
       Hint = 'New'
       ImageIndex = 9
+      OnExecute = actNewIsoExecute
     end
     object actSaveXIso: TAction
       Category = 'File'
       Caption = '&Save'
       Hint = 'Save'
       ImageIndex = 10
+      OnExecute = actSaveXIsoExecute
     end
     object actExit: TAction
       Category = 'File'

@@ -79,6 +79,7 @@ type
     actAddFiles: TAction;
     actAddFolder: TAction;
     actDelete: TAction;
+    ToolBar2: TToolBar;
     procedure FormCreate(Sender: TObject);
     procedure ListviewFicherosDblClick(Sender: TObject);
     procedure ListviewFicherosCustomDrawItem(Sender: TCustomListView;
@@ -96,15 +97,15 @@ type
       Y: Integer; State: TDragState; var Accept: Boolean);
     procedure TreeViewDirectoriosEdited(Sender: TObject; Node: TTreeNode;
       var S: string);
-    procedure btnNewClick(Sender: TObject);
     procedure StatusBar1DrawPanel(StatusBar: TStatusBar;
       Panel: TStatusPanel; const Rect: TRect);
-    procedure MenuItemSaveClick(Sender: TObject);
     procedure actExitExecute(Sender: TObject);
     procedure actDeleteExecute(Sender: TObject);
     procedure actAddFilesExecute(Sender: TObject);
     procedure actAddFolderExecute(Sender: TObject);
     procedure actNewFolderExecute(Sender: TObject);
+    procedure actNewIsoExecute(Sender: TObject);
+    procedure actSaveXIsoExecute(Sender: TObject);
   private
     Etiqueta: string;
     procedure ActualizarDirectoriosRec(Parent: TTreeNode; List: TListContents);
@@ -376,6 +377,32 @@ begin
   UpdateFolders();
 end;
 
+procedure TfrmCreateIso.actNewIsoExecute(Sender: TObject);
+begin
+  Manager.Free;
+  Manager := TFileManager.Create;
+  Etiqueta := SEtiqueta;
+  UpdateList();
+  UpdateFolders();
+end;
+
+
+procedure TfrmCreateIso.actSaveXIsoExecute(Sender: TObject);
+var
+  Hilo: TProgresoCreacionISO;
+begin
+  if ProgressBar1 <> nil then
+  begin
+    ProgressBar1.Min := 0;
+    ProgressBar1.Max := Manager.Count;
+  end;
+  Hilo := TProgresoCreacionISO.Create(True);
+  Hilo.OnTerminate := FinCreacion;
+  Hilo.FreeOnTerminate := True;
+  Hilo.Suspended := False;
+  frmCreateIso.Enabled := False;
+end;
+
 procedure TfrmCreateIso.WMDROPFILES(var msg: TMessage);
 var
   dr: HDrop;
@@ -521,15 +548,6 @@ begin
   end;
 end;
 
-procedure TfrmCreateIso.btnNewClick(Sender: TObject);
-begin
-  Manager.Free;
-  Manager := TFileManager.Create;
-  Etiqueta := SEtiqueta;
-  UpdateList();
-  UpdateFolders();
-end;
-
 procedure TfrmCreateIso.FinCreacion(Sender: TObject);
 begin
   if Estado then
@@ -555,20 +573,5 @@ begin
   end;
 end;
 
-procedure TfrmCreateIso.MenuItemSaveClick(Sender: TObject);
-var
-  Hilo: TProgresoCreacionISO;
-begin
-  if ProgressBar1 <> nil then
-  begin
-    ProgressBar1.Min := 0;
-    ProgressBar1.Max := Manager.Count;
-  end;
-  Hilo := TProgresoCreacionISO.Create(True);
-  Hilo.OnTerminate := FinCreacion;
-  Hilo.FreeOnTerminate := True;
-  Hilo.Suspended := False;
-  frmCreateIso.Enabled := False;
-end;
 
 end.
