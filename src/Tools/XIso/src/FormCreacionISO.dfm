@@ -1,8 +1,8 @@
-object Form5: TForm5
+object frmCreateIso: TfrmCreateIso
   Left = 182
   Top = 184
   Caption = 'xISO Studio'
-  ClientHeight = 360
+  ClientHeight = 380
   ClientWidth = 584
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,7 +19,7 @@ object Form5: TForm5
   TextHeight = 13
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 341
+    Top = 361
     Width = 584
     Height = 19
     Panels = <
@@ -35,19 +35,22 @@ object Form5: TForm5
         Width = 50
       end>
     OnDrawPanel = StatusBar1DrawPanel
+    ExplicitTop = 341
   end
   object Panel1: TPanel
     Left = 0
-    Top = 51
+    Top = 25
     Width = 584
-    Height = 290
+    Height = 336
     Align = alClient
     TabOrder = 1
+    ExplicitTop = 51
+    ExplicitHeight = 290
     object Splitter1: TSplitter
       Left = 186
       Top = 1
       Width = 2
-      Height = 288
+      Height = 334
       ResizeStyle = rsUpdate
       ExplicitHeight = 242
     end
@@ -55,7 +58,7 @@ object Form5: TForm5
       Left = 1
       Top = 1
       Width = 185
-      Height = 288
+      Height = 334
       Align = alLeft
       DragMode = dmAutomatic
       Images = ImageList1
@@ -69,12 +72,13 @@ object Form5: TForm5
       OnDragOver = TreeViewDirectoriosDragOver
       OnEdited = TreeViewDirectoriosEdited
       OnKeyPress = TreeViewDirectoriosKeyPress
+      ExplicitHeight = 288
     end
     object ListviewFicheros: TListView
       Left = 188
       Top = 1
       Width = 395
-      Height = 288
+      Height = 334
       Align = alClient
       Columns = <
         item
@@ -104,48 +108,39 @@ object Form5: TForm5
       OnCustomDrawItem = ListviewFicherosCustomDrawItem
       OnCustomDrawSubItem = ListviewFicherosCustomDrawSubItem
       OnDblClick = ListviewFicherosDblClick
+      ExplicitHeight = 288
     end
   end
   object CoolBar1: TCoolBar
     Left = 0
     Top = 0
     Width = 584
-    Height = 51
+    Height = 25
     Bands = <
-      item
-        Control = ToolBar2
-        ImageIndex = -1
-        MinHeight = 21
-        Width = 580
-      end
       item
         Control = ToolBar1
         ImageIndex = -1
         MinHeight = 22
-        Width = 580
+        Width = 578
       end>
     object ToolBar1: TToolBar
-      Left = 9
-      Top = 23
-      Width = 567
+      Left = 11
+      Top = 0
+      Width = 569
       Height = 22
       AutoSize = True
       Caption = 'ToolBar1'
       Images = ImageList1
       TabOrder = 0
-      object ToolButton3: TToolButton
+      object btnNew: TToolButton
         Left = 0
         Top = 0
-        Caption = 'ToolButton3'
-        ImageIndex = 9
-        OnClick = ToolButton3Click
+        Action = actNewIso
       end
-      object ToolButton4: TToolButton
+      object btnSave: TToolButton
         Left = 23
         Top = 0
-        Caption = 'ToolButton4'
-        ImageIndex = 10
-        OnClick = MenuItemSaveClick
+        Action = actSaveXIso
       end
       object ToolButton5: TToolButton
         Left = 46
@@ -155,19 +150,17 @@ object Form5: TForm5
         ImageIndex = 9
         Style = tbsSeparator
       end
-      object ToolButton1: TToolButton
+      object btnDirUp: TToolButton
         Left = 54
         Top = 0
-        Caption = 'ToolButton1'
+        Caption = 'btnDirUp'
         ImageIndex = 7
-        OnClick = ToolButton1Click
+        OnClick = btnDirUpClick
       end
-      object ToolButton2: TToolButton
+      object btnCreateDir: TToolButton
         Left = 77
         Top = 0
-        Caption = 'ToolButton2'
-        ImageIndex = 8
-        OnClick = Nuevacarpeta1Click
+        Action = actNewFolder
       end
       object ToolButton7: TToolButton
         Left = 100
@@ -178,26 +171,6 @@ object Form5: TForm5
         Style = tbsSeparator
         Visible = False
       end
-      object ToolButton6: TToolButton
-        Left = 108
-        Top = 0
-        Caption = 'ToolButton6'
-        ImageIndex = 9
-        Visible = False
-      end
-    end
-    object ToolBar2: TToolBar
-      Left = 9
-      Top = 0
-      Width = 567
-      Height = 21
-      AutoSize = True
-      ButtonHeight = 21
-      ButtonWidth = 43
-      Caption = 'ToolBar2'
-      Menu = MainMenu1
-      ShowCaptions = True
-      TabOrder = 1
     end
   end
   object OpenDialog1: TOpenDialog
@@ -206,30 +179,26 @@ object Form5: TForm5
     Top = 192
   end
   object PopupMenu1: TPopupMenu
-    Left = 440
-    Top = 192
+    Left = 424
+    Top = 168
+    object Nuevacarpeta1: TMenuItem
+      Action = actNewFolder
+    end
     object Aadirficheros1: TMenuItem
-      Caption = 'Add files'
-      OnClick = Aadirficheros1Click
+      Action = actAddFiles
     end
     object Aadircarpeta1: TMenuItem
-      Caption = 'Add folder'
-      OnClick = Aadircarpeta1Click
+      Action = actAddFolder
     end
     object Eliminar1: TMenuItem
-      Caption = 'Delete'
-      OnClick = Eliminar1Click
-    end
-    object Nuevacarpeta1: TMenuItem
-      Caption = 'New Folder'
-      OnClick = Nuevacarpeta1Click
+      Action = actDelete
     end
   end
   object ImageList1: TImageList
     Left = 536
     Top = 192
     Bitmap = {
-      494C01010B000D00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000D000C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -635,26 +604,38 @@ object Form5: TForm5
   object MainMenu1: TMainMenu
     AutoMerge = True
     Images = ImageList1
-    Left = 408
-    Top = 192
+    Left = 352
+    Top = 168
     object N1: TMenuItem
       Caption = 'File'
+      object mnuNew: TMenuItem
+        Action = actNewIso
+      end
       object MenuItemSave: TMenuItem
-        Caption = 'Save'
-        ImageIndex = 10
-        OnClick = MenuItemSaveClick
+        Action = actSaveXIso
       end
       object N2: TMenuItem
         Caption = '-'
       end
       object MenuItemExit: TMenuItem
         Caption = 'Exit'
-        OnClick = MenuItemExitClick
       end
     end
     object Opciones1: TMenuItem
       Caption = 'Options'
       Visible = False
+      object mnuNewFolder: TMenuItem
+        Action = actNewFolder
+      end
+      object mnuAddFiles: TMenuItem
+        Action = actAddFiles
+      end
+      object mnuAddFolder: TMenuItem
+        Action = actAddFolder
+      end
+      object mnuDelete: TMenuItem
+        Action = actDelete
+      end
     end
   end
   object SaveDialog1: TSaveDialog
@@ -662,5 +643,52 @@ object Form5: TForm5
     Filter = 'XBOX ISO|*.xiso'
     Left = 504
     Top = 224
+  end
+  object ActionList1: TActionList
+    Images = ImageList1
+    Left = 368
+    Top = 232
+    object actNewIso: TAction
+      Category = 'File'
+      Caption = '&New'
+      Hint = 'New'
+      ImageIndex = 9
+    end
+    object actSaveXIso: TAction
+      Category = 'File'
+      Caption = '&Save'
+      Hint = 'Save'
+      ImageIndex = 10
+    end
+    object actExit: TAction
+      Category = 'File'
+      Caption = '&Exit'
+      OnExecute = actExitExecute
+    end
+    object actNewFolder: TAction
+      Category = 'Options'
+      Caption = 'New Folder'
+      Hint = 'New Folder'
+      ImageIndex = 8
+      OnExecute = actNewFolderExecute
+    end
+    object actAddFiles: TAction
+      Category = 'Options'
+      Caption = 'Add Files'
+      Hint = 'Add Files'
+      OnExecute = actAddFilesExecute
+    end
+    object actAddFolder: TAction
+      Category = 'Options'
+      Caption = 'Add Folders'
+      Hint = 'Add Folders'
+      OnExecute = actAddFolderExecute
+    end
+    object actDelete: TAction
+      Category = 'Options'
+      Caption = '&Delete'
+      Hint = 'Delete'
+      OnExecute = actDeleteExecute
+    end
   end
 end

@@ -39,7 +39,7 @@ uses
   GenerateXDFS in '..\..\src\Tools\XIso\src\GenerateXDFS.pas',
   Grabacion in '..\..\src\Tools\XIso\src\Grabacion.pas' {Form4},
   CreacionISO in '..\..\src\Tools\XIso\src\CreacionISO.pas',
-  FormCreacionISO in '..\..\src\Tools\XIso\src\FormCreacionISO.pas' {Form5},
+  FormCreacionISO in '..\..\src\Tools\XIso\src\FormCreacionISO.pas' {frmCreateIso},
   ProgresoCreacionISO in '..\..\src\Tools\XIso\src\ProgresoCreacionISO.pas',
   xisomakerv3 in '..\..\src\Tools\XIso\src\xisomakerv3.pas',
   xisomakerv2 in '..\..\src\Tools\XIso\src\xisomakerv2.pas',

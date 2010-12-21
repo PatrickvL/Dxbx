@@ -34,16 +34,15 @@ uses
   // Dxbx
   TextConsts,
   xisomakerv2,
-  ProgresoCreacionISO;
+  ProgresoCreacionISO, ActnList;
 
 
 type
-  TForm5 = class(TForm)
+  TfrmCreateIso = class(TForm)
     OpenDialog1: TOpenDialog;
     PopupMenu1: TPopupMenu;
     Eliminar1: TMenuItem;
     Nuevacarpeta1: TMenuItem;
-//    FolderBrowser1: TFolderBrowser;
     ImageList1: TImageList;
     Aadircarpeta1: TMenuItem;
     Aadirficheros1: TMenuItem;
@@ -60,28 +59,34 @@ type
     Splitter1: TSplitter;
     CoolBar1: TCoolBar;
     ToolBar1: TToolBar;
-    ToolButton1: TToolButton;
-    ToolBar2: TToolBar;
-    ToolButton2: TToolButton;
-    ToolButton3: TToolButton;
-    ToolButton4: TToolButton;
+    btnDirUp: TToolButton;
+    btnCreateDir: TToolButton;
+    btnNew: TToolButton;
+    btnSave: TToolButton;
     ToolButton5: TToolButton;
     SaveDialog1: TSaveDialog;
-    ToolButton6: TToolButton;
     ToolButton7: TToolButton;
+    mnuNew: TMenuItem;
+    mnuNewFolder: TMenuItem;
+    mnuAddFiles: TMenuItem;
+    mnuAddFolder: TMenuItem;
+    mnuDelete: TMenuItem;
+    ActionList1: TActionList;
+    actNewIso: TAction;
+    actSaveXIso: TAction;
+    actExit: TAction;
+    actNewFolder: TAction;
+    actAddFiles: TAction;
+    actAddFolder: TAction;
+    actDelete: TAction;
     procedure FormCreate(Sender: TObject);
-    procedure Eliminar1Click(Sender: TObject);
-    procedure Nuevacarpeta1Click(Sender: TObject);
     procedure ListviewFicherosDblClick(Sender: TObject);
     procedure ListviewFicherosCustomDrawItem(Sender: TCustomListView;
       Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
-    procedure Aadirficheros1Click(Sender: TObject);
-    procedure Aadircarpeta1Click(Sender: TObject);
-    procedure MenuItemExitClick(Sender: TObject);
     procedure TreeViewDirectoriosClick(Sender: TObject);
     procedure TreeViewDirectoriosKeyPress(Sender: TObject; var Key: Char);
     procedure FormShow(Sender: TObject);
-    procedure ToolButton1Click(Sender: TObject);
+    procedure btnDirUpClick(Sender: TObject);
     procedure ListviewFicherosCustomDrawSubItem(Sender: TCustomListView;
       Item: TListItem; SubItem: Integer; State: TCustomDrawState;
       var DefaultDraw: Boolean);
@@ -91,15 +96,20 @@ type
       Y: Integer; State: TDragState; var Accept: Boolean);
     procedure TreeViewDirectoriosEdited(Sender: TObject; Node: TTreeNode;
       var S: string);
-    procedure ToolButton3Click(Sender: TObject);
+    procedure btnNewClick(Sender: TObject);
     procedure StatusBar1DrawPanel(StatusBar: TStatusBar;
       Panel: TStatusPanel; const Rect: TRect);
     procedure MenuItemSaveClick(Sender: TObject);
+    procedure actExitExecute(Sender: TObject);
+    procedure actDeleteExecute(Sender: TObject);
+    procedure actAddFilesExecute(Sender: TObject);
+    procedure actAddFolderExecute(Sender: TObject);
+    procedure actNewFolderExecute(Sender: TObject);
   private
     Etiqueta: string;
     procedure ActualizarDirectoriosRec(Parent: TTreeNode; List: TListContents);
-    procedure FinCreacion(Sender: TObject);
     procedure WMDROPFILES(var msg: TMessage); message WM_DROPFILES;
+    procedure FinCreacion(Sender: TObject);
   public
     ProgressBar1: TProgressBar;
     Manager: TFileManager;
@@ -108,7 +118,7 @@ type
   end;
 
 var
-  Form5: TForm5;
+  frmCreateIso: TfrmCreateIso;
 
 implementation
 
@@ -128,7 +138,7 @@ begin
   Result := Info.hIcon;
 end;
 
-procedure TForm5.UpdateList;
+procedure TfrmCreateIso.UpdateList;
 var
   i: Integer;
   Fila: TListItem;
@@ -140,7 +150,7 @@ begin
 
   ListviewFicheros.Items.BeginUpdate;
   ListviewFicheros.Clear;
-  for i := 0 to Manager.CurrentList.Count - 1 do
+  for i := 1 to Manager.CurrentList.Count - 1 do
   begin
     attrs := '';
     Entry := Manager.CurrentList.Entry[i];
@@ -172,6 +182,8 @@ begin
           attrs := attrs + 'F';
           Fila.ImageIndex := 6;
         end;
+
+
     if Entry.Attributes and FILE_ATTRIBUTE_HIDDEN = FILE_ATTRIBUTE_HIDDEN then attrs := attrs + 'H';
     if Entry.Attributes and FILE_ATTRIBUTE_READONLY = FILE_ATTRIBUTE_READONLY then attrs := attrs + 'R';
     if Entry.Attributes and FILE_ATTRIBUTE_SYSTEM = FILE_ATTRIBUTE_SYSTEM then attrs := attrs + 'S';
@@ -179,11 +191,10 @@ begin
 
     Fila.SubItems.Add(attrs);
   end;
-
   ListviewFicheros.Items.EndUpdate;
 end;
 
-procedure TForm5.ActualizarDirectoriosRec(Parent: TTreeNode; List: TListContents);
+procedure TfrmCreateIso.ActualizarDirectoriosRec(Parent: TTreeNode; List: TListContents);
 var
   i: Integer;
   Entry: PEntry;
@@ -204,7 +215,7 @@ begin
   end;
 end;
 
-procedure TForm5.UpdateFolders;
+procedure TfrmCreateIso.UpdateFolders;
 var
   Root: TTreeNode;
   i: Integer;
@@ -244,48 +255,14 @@ begin
   TreeviewDirectorios.Items.EndUpdate;
 end;
 
-procedure TForm5.FormCreate(Sender: TObject);
+procedure TfrmCreateIso.FormCreate(Sender: TObject);
 begin
   Manager := TFileManager.Create;
   DragAcceptFiles(Self.Handle, True);
   Etiqueta := SEtiqueta;
 end;
 
-procedure TForm5.Eliminar1Click(Sender: TObject);
-var
-  i: Integer;
-begin
-  for i := ListviewFicheros.Items.Count - 1 downto 0 do
-  begin
-    if not ListviewFicheros.Items[i].Selected then
-      Continue;
-
-    Manager.DeleteFile(ListviewFicheros.Items[i].Caption);
-    ListviewFicheros.Items.Delete(i);
-  end;
-  
-  UpdateList();
-  UpdateFolders();
-end;
-
-procedure TForm5.Nuevacarpeta1Click(Sender: TObject);
-var
-  s: string;
-  i: Integer;
-begin
-  if not InputQuery(SNuevaCarpeta, SNombreCarpeta, s) then
-    Exit;
-    
-  for i := 1 to Length(s) do
-    if AnsiChar(s[i]) in ['\', '/', ':', '*', '?', '<', '>', '|'] then
-      Exit;
-
-  Manager.AddNewFolder(s);
-  UpdateList();
-  UpdateFolders();
-end;
-
-procedure TForm5.ListviewFicherosDblClick(Sender: TObject);
+procedure TfrmCreateIso.ListviewFicherosDblClick(Sender: TObject);
 var
   Entry, Entrada2: PEntry;
   i: Integer;
@@ -313,7 +290,7 @@ begin
   end
 end;
 
-procedure TForm5.ListviewFicherosCustomDrawItem(Sender: TCustomListView;
+procedure TfrmCreateIso.ListviewFicherosCustomDrawItem(Sender: TCustomListView;
   Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
 {var
    Icono: TIcon;
@@ -335,7 +312,7 @@ begin
   Sender.Canvas.Brush.Color := $F7F7F7;
 end;
 
-procedure TForm5.Aadirficheros1Click(Sender: TObject);
+procedure TfrmCreateIso.actAddFilesExecute(Sender: TObject);
 var
   i: Integer;
 begin
@@ -349,7 +326,7 @@ begin
   UpdateFolders();
 end;
 
-procedure TForm5.Aadircarpeta1Click(Sender: TObject);
+procedure TfrmCreateIso.actAddFolderExecute(Sender: TObject);
 begin
 {
   if not FolderBrowser1.Execute then
@@ -360,7 +337,46 @@ begin
   UpdateFolders();}
 end;
 
-procedure TForm5.WMDROPFILES(var msg: TMessage);
+procedure TfrmCreateIso.actDeleteExecute(Sender: TObject);
+var
+  i: Integer;
+begin
+  for i := ListviewFicheros.Items.Count - 1 downto 0 do
+  begin
+    if not ListviewFicheros.Items[i].Selected then
+      Continue;
+
+    Manager.DeleteFile(ListviewFicheros.Items[i].Caption);
+    ListviewFicheros.Items.Delete(i);
+  end;
+
+  UpdateList();
+  UpdateFolders();
+end;
+
+procedure TfrmCreateIso.actExitExecute(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure TfrmCreateIso.actNewFolderExecute(Sender: TObject);
+var
+  s: string;
+  i: Integer;
+begin
+  if not InputQuery(SNuevaCarpeta, SNombreCarpeta, s) then
+    Exit;
+
+  for i := 1 to Length(s) do
+    if AnsiChar(s[i]) in ['\', '/', ':', '*', '?', '<', '>', '|'] then
+      Exit;
+
+  Manager.AddNewFolder(s);
+  UpdateList();
+  UpdateFolders();
+end;
+
+procedure TfrmCreateIso.WMDROPFILES(var msg: TMessage);
 var
   dr: HDrop;
   nb, j: Integer;
@@ -378,12 +394,7 @@ begin
   UpdateList();
 end;
 
-procedure TForm5.MenuItemExitClick(Sender: TObject);
-begin
-  Close;
-end;
-
-procedure TForm5.TreeViewDirectoriosClick(Sender: TObject);
+procedure TfrmCreateIso.TreeViewDirectoriosClick(Sender: TObject);
 var
   Entry: PEntry;
 begin
@@ -401,13 +412,13 @@ begin
   UpdateList();
 end;
 
-procedure TForm5.TreeViewDirectoriosKeyPress(Sender: TObject;
+procedure TfrmCreateIso.TreeViewDirectoriosKeyPress(Sender: TObject;
   var Key: Char);
 begin
   TreeViewDirectoriosClick(Self);
 end;
 
-procedure TForm5.FormShow(Sender: TObject);
+procedure TfrmCreateIso.FormShow(Sender: TObject);
 begin
   if ProgressBar1 = nil then
   begin
@@ -420,7 +431,7 @@ begin
   UpdateFolders();
 end;
 
-procedure TForm5.ToolButton1Click(Sender: TObject);
+procedure TfrmCreateIso.btnDirUpClick(Sender: TObject);
 begin
   if Manager.Root = nil then
     Exit;
@@ -431,14 +442,14 @@ begin
     TreeviewDirectorios.Selected.Parent.Selected := True;
 end;
 
-procedure TForm5.ListviewFicherosCustomDrawSubItem(Sender: TCustomListView;
+procedure TfrmCreateIso.ListviewFicherosCustomDrawSubItem(Sender: TCustomListView;
   Item: TListItem; SubItem: Integer; State: TCustomDrawState;
   var DefaultDraw: Boolean);
 begin
   Sender.Canvas.Brush.Color := $FFFFFF;
 end;
 
-procedure TForm5.TreeViewDirectoriosDragDrop(Sender, Source: TObject; X,
+procedure TfrmCreateIso.TreeViewDirectoriosDragDrop(Sender, Source: TObject; X,
   Y: Integer);
 var
   Nodo: TTreeNode;
@@ -489,14 +500,14 @@ begin
   UpdateFolders();
 end;
 
-procedure TForm5.TreeViewDirectoriosDragOver(Sender, Source: TObject; X,
+procedure TfrmCreateIso.TreeViewDirectoriosDragOver(Sender, Source: TObject; X,
   Y: Integer; State: TDragState; var Accept: Boolean);
 begin
   if Source.ClassNameIs('TListView') or Source.ClassNameIs('TTreeview') then
     Accept := True;
 end;
 
-procedure TForm5.TreeViewDirectoriosEdited(Sender: TObject;
+procedure TfrmCreateIso.TreeViewDirectoriosEdited(Sender: TObject;
   Node: TTreeNode; var S: string);
 var
   Entry: PEntry;
@@ -510,7 +521,7 @@ begin
   end;
 end;
 
-procedure TForm5.ToolButton3Click(Sender: TObject);
+procedure TfrmCreateIso.btnNewClick(Sender: TObject);
 begin
   Manager.Free;
   Manager := TFileManager.Create;
@@ -519,17 +530,17 @@ begin
   UpdateFolders();
 end;
 
-procedure TForm5.FinCreacion(Sender: TObject);
+procedure TfrmCreateIso.FinCreacion(Sender: TObject);
 begin
   if Estado then
-    MessageBox(Form5.Handle, PChar(SFinCreacion), 'xISO', MB_OK or MB_ICONINFORMATION);
-    
-  Form5.Enabled := True;
+    MessageBox(frmCreateIso.Handle, PChar(SFinCreacion), 'xISO', MB_OK or MB_ICONINFORMATION);
+
+  frmCreateIso.Enabled := True;
   if ProgressBar1 <> nil then
     ProgressBar1.Position := 0;
 end;
 
-procedure TForm5.StatusBar1DrawPanel(StatusBar: TStatusBar;
+procedure TfrmCreateIso.StatusBar1DrawPanel(StatusBar: TStatusBar;
   Panel: TStatusPanel; const Rect: TRect);
 var
   R: TRect;
@@ -544,7 +555,7 @@ begin
   end;
 end;
 
-procedure TForm5.MenuItemSaveClick(Sender: TObject);
+procedure TfrmCreateIso.MenuItemSaveClick(Sender: TObject);
 var
   Hilo: TProgresoCreacionISO;
 begin
@@ -557,7 +568,7 @@ begin
   Hilo.OnTerminate := FinCreacion;
   Hilo.FreeOnTerminate := True;
   Hilo.Suspended := False;
-  Form5.Enabled := False;
+  frmCreateIso.Enabled := False;
 end;
 
 end.
