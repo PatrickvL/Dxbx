@@ -157,6 +157,7 @@ var
   g_bFakePixelShaderLoaded: BOOL_ = FALSE;
   g_bIsFauxFullscreen: BOOL_ = FALSE;
   g_bHackUpdateSoftwareOverlay: BOOL_ = FALSE;
+  g_OverlayHideDelay: int = 0; // The number of Present calls to wait before removing overlay
 
 function EmuThreadRenderWindow(lpVoid: LPVOID): DWORD; stdcall;
 function EmuThreadCreateDeviceProxy(lpVoid: LPVOID): DWORD; stdcall;
@@ -178,11 +179,13 @@ var
   g_dwOverlayW: DWORD = 640;     // Cached Overlay Width
   g_dwOverlayH: DWORD = 480;     // Cached Overlay Height
   g_dwOverlayP: DWORD = 640;     // Cached Overlay Pitch
+  g_OverlayRect: TRect;
 
   g_XbeHeader: PXBEIMAGE_HEADER = NULL;         // XbeHeader
   g_XbeHeaderSize: uint32 = 0;             // XbeHeaderSize
   g_D3DCaps: D3DCAPS;                     // Direct3D8 Caps
   g_XboxCaps: X_D3DCAPS;
+  g_MonitorInfo: MONITORINFO;
   g_hBgBrush: HBRUSH = 0;                  // Background Brush
   g_bRenderWindowActive: _bool = false;     // volatile?
   g_XBVideo: XBVideo;
@@ -492,6 +495,66 @@ begin
     Result := D3DErrorString(hResult);
 end;
 
+procedure DxbxCacheOverlaySize(Width, Height: uint);
+begin
+  g_dwOverlayW := Width;
+  g_dwOverlayH := Height;
+  g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2; // Pitch should be in 64 byte increments; 2 bytes per pixel (this is for YUY2)
+  // Calculate the overlay rectangle :
+  g_OverlayRect := Classes.Rect(0, 0, g_dwOverlayW, g_dwOverlayH);
+end;
+
+procedure DxbxUpdateOverlay(mode: uint);
+var
+  nTitleHeight: Integer;
+  nBorderWidth: Integer;
+  nBorderHeight: Integer;
+
+  DestRect: TRect;
+
+  ddofx: DDOVERLAYFX;
+begin
+  if (g_pDDClipper7 = nil) or (g_pDDSOverlay7 = nil) then
+    Exit;
+
+  // Calculate the destination rectangle :
+  GetWindowRect(g_hEmuWindow, {var}DestRect);
+  nTitleHeight  := 0;//GetSystemMetrics(SM_CYCAPTION);
+  nBorderWidth  := 0;//GetSystemMetrics(SM_CXSIZEFRAME);
+  nBorderHeight := 0;//GetSystemMetrics(SM_CYSIZEFRAME);
+  Inc(DestRect.left,   nBorderWidth);
+  Dec(DestRect.right,  nBorderWidth);
+  Inc(DestRect.top,    nTitleHeight + nBorderHeight);
+  Dec(DestRect.bottom, nBorderHeight);
+
+  // Correct rectangle for monitor :
+  Dec(DestRect.left,   g_MonitorInfo.rcMonitor.left);
+  Dec(DestRect.right,  g_MonitorInfo.rcMonitor.left);
+  Dec(DestRect.top,    g_MonitorInfo.rcMonitor.top);
+  Dec(DestRect.bottom, g_MonitorInfo.rcMonitor.top);
+
+  ZeroMemory(@ddofx, sizeof(ddofx));
+  ddofx.dwSize := sizeof(DDOVERLAYFX);
+  ddofx.dckDestColorkey.dwColorSpaceLowValue := 0;
+  ddofx.dckDestColorkey.dwColorSpaceHighValue := 0;
+
+  if mode = DDOVER_SHOW then
+    {Dxbx unused hRet :=} IDirectDrawClipper(g_pDDClipper7).SetHWnd(0, g_hEmuWindow);
+
+  {Dxbx unused hRet :=} IDirectDrawSurface7(g_pDDSOverlay7).UpdateOverlay(@g_OverlayRect, IDirectDrawSurface7(g_pDDSPrimary7), @DestRect, {DDOVER_KEYDESTOVERRIDE or} mode, @ddofx);
+end;
+
+procedure DxbxDelayedOverlayHide;
+begin
+  // Disable the overlay (with a delay of 1 swap/present) :
+  if g_OverlayHideDelay > 0 then
+  begin
+    Dec(g_OverlayHideDelay);
+    if g_OverlayHideDelay = 0 then
+      DxbxUpdateOverlay(DDOVER_HIDE);
+  end;
+end;
+
 procedure DxbxResetGlobals;
 begin
   g_pD3DDevice := NULL;
@@ -502,15 +565,14 @@ begin
   g_bFakePixelShaderLoaded := FALSE;
   g_bIsFauxFullscreen := FALSE;
   g_bHackUpdateSoftwareOverlay := FALSE;
+  g_OverlayHideDelay: int = 0;
 
   ZeroMemory(@g_ddguid, SizeOf(GUID));
   g_hMonitor := 0;
   g_pD3D := NULL;
   g_bYUY2OverlaysSupported := FALSE;
   g_pDD7 := NULL;
-  g_dwOverlayW := 640;
-  g_dwOverlayH := 480;
-  g_dwOverlayP := 640;
+  DxbxCacheOverlaySize(640, 480);
 
   g_XbeHeader := NULL;
   g_XbeHeaderSize := 0;
@@ -1509,7 +1571,6 @@ begin
     end
     else
       DbgPrintf('Could not get Xbox device caps!');
-
   end;
 
   SetFocus(g_hEmuWindow);
@@ -2316,6 +2377,11 @@ begin
                 DbgPrintf('EmuD3D8 : Hardware accelerated YUV surfaces Disabled...');
             end
           end;
+
+          // Retreive monitor info :
+          ZeroMemory(@g_MonitorInfo, sizeof(MONITORINFO));
+          g_MonitorInfo.cbSize := sizeof(MONITORINFO);
+          GetMonitorInfo(g_hMonitor, @g_MonitorInfo); // g_hMonitor is set by EmuEnumDisplayDevices
         end;
 
         // initialize primary surface
@@ -5068,9 +5134,7 @@ begin
   if (PCFormat = D3DFMT_YUY2) then
   begin
     // cache the overlay size
-    g_dwOverlayW := Width;
-    g_dwOverlayH := Height;
-    g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2;
+    DxbxCacheOverlaySize(Width, Height);
 
     DxbxInitializePixelContainerYUY2(ppTexture^);
 
@@ -5234,9 +5298,7 @@ begin
   if (PCFormat = D3DFMT_YUY2) then
   begin
     // cache the overlay size
-    g_dwOverlayW := Width;
-    g_dwOverlayH := Height;
-    g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2; // Pitch should be in 64 byte increments; 2 bytes per pixel
+    DxbxCacheOverlaySize(Width, Height);
 
     // create texture resource
     DxbxInitializePixelContainerYUY2(ppVolumeTexture^);
@@ -6300,6 +6362,8 @@ begin
 
   g_bHackUpdateSoftwareOverlay := FALSE;
 
+  DxbxDelayedOverlayHide;
+
   EmuSwapFS(fsXbox);
 
   Result := hRet;
@@ -6574,9 +6638,7 @@ begin
       if (X_Format = X_D3DFMT_YUY2) then
       begin
         // cache the overlay size
-        g_dwOverlayW := dwWidth;
-        g_dwOverlayH := dwHeight;
-        g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2; // Pitch should be in 64 byte increments; 2 bytes per pixel
+        DxbxCacheOverlaySize(dwWidth, dwHeight);
 
         // create texture resource
         DxbxInitializePixelContainerYUY2(pPixelContainer);
@@ -7638,11 +7700,38 @@ begin
       _(Enable, 'Enable').
     LogEnd();
 
-  if (Enable = BOOL_FALSE) and (g_pDDSOverlay7 <> NULL) then
+  // initialize overlay surface
+  if (g_bYUY2OverlaysSupported) then
   begin
-    if (g_bYUY2OverlaysSupported) then
-      IDirectDrawSurface7(g_pDDSOverlay7).UpdateOverlay(NULL, IDirectDrawSurface7(g_pDDSPrimary7), NULL, DDOVER_HIDE, nil);
+    if (g_pDDSOverlay7 = NULL) then
+    begin
+      ZeroMemory(@ddsd2, sizeof(ddsd2));
 
+      ddsd2.dwSize := sizeof(ddsd2);
+      ddsd2.dwFlags := DDSD_CAPS or DDSD_WIDTH or DDSD_HEIGHT or DDSD_PIXELFORMAT;
+      ddsd2.ddsCaps.dwCaps := DDSCAPS_OVERLAY;
+      ddsd2.dwWidth := g_dwOverlayW;
+      ddsd2.dwHeight := g_dwOverlayH;
+
+      ddsd2.ddpfPixelFormat.dwSize := sizeof(DDPIXELFORMAT);
+      ddsd2.ddpfPixelFormat.dwFlags := DDPF_FOURCC;
+      ddsd2.ddpfPixelFormat.dwFourCC := MAKEFOURCC('Y', 'U', 'Y', '2');
+
+      hRet := IDirectDraw7(g_pDD7).CreateSurface(ddsd2, @g_pDDSOverlay7, NULL);
+      if (FAILED(hRet)) then
+        DxbxKrnlCleanup('EmuD3DDevice_EnableOverlay : Could not create overlay surface'#13#10 + DxbxD3DErrorString(hRet));
+
+      hRet := IDirectDraw7(g_pDD7).CreateClipper(0, {out}IDirectDrawClipper(g_pDDClipper7), NULL);
+      if (FAILED(hRet)) then
+        DxbxKrnlCleanup('EmuD3DDevice_EnableOverlay : Could not create overlay clipper'#13#10 + DxbxD3DErrorString(hRet));
+    end;
+
+    if Enable = BOOL_FALSE then
+      // Don't set g_OverlayHideDelay := 1 or hardware overlay will flicker again! (test with Virtual Pool)
+    else
+      g_OverlayHideDelay := 2;
+
+(*
     // cleanup overlay clipper
     if (g_pDDClipper7 <> nil) then
     begin
@@ -7656,39 +7745,7 @@ begin
       if IDirectDrawSurface7(g_pDDSOverlay7)._Release() = 0 then
         g_pDDSOverlay7 := nil;
     end;
-  end
-  else
-  begin
-    if (Enable <> BOOL_FALSE) and (g_pDDSOverlay7 = nil) then
-    begin
-      // initialize overlay surface
-      if (g_bYUY2OverlaysSupported) then
-      begin
-        ZeroMemory(@ddsd2, sizeof(ddsd2));
-
-        ddsd2.dwSize := sizeof(ddsd2);
-        ddsd2.dwFlags := DDSD_CAPS or DDSD_WIDTH or DDSD_HEIGHT or DDSD_PIXELFORMAT;
-        ddsd2.ddsCaps.dwCaps := DDSCAPS_OVERLAY;
-        ddsd2.dwWidth := g_dwOverlayW;
-        ddsd2.dwHeight := g_dwOverlayH;
-
-        ddsd2.ddpfPixelFormat.dwSize := sizeof(DDPIXELFORMAT);
-        ddsd2.ddpfPixelFormat.dwFlags := DDPF_FOURCC;
-        ddsd2.ddpfPixelFormat.dwFourCC := MAKEFOURCC('Y', 'U', 'Y', '2');
-
-        hRet := IDirectDraw7(g_pDD7).CreateSurface(ddsd2, @g_pDDSOverlay7, NULL);
-
-        if (FAILED(hRet)) then
-          DxbxKrnlCleanup('EmuD3DDevice_EnableOverlay : Could not create overlay surface' +#13#10+ DxbxD3DErrorString(hRet));
-
-        hRet := IDirectDraw7(g_pDD7).CreateClipper(0, {out}IDirectDrawClipper(g_pDDClipper7), NULL);
-
-        if (FAILED(hRet)) then
-          DxbxKrnlCleanup('EmuD3DDevice_EnableOverlay : Could not create overlay clipper' +#13#10+ DxbxD3DErrorString(hRet));
-
-        {Dxbx unused hRet :=} IDirectDrawClipper(g_pDDClipper7).SetHWnd(0, g_hEmuWindow);
-      end;
-    end;
+*)
   end;
 
   Result := D3D_OK;
@@ -7725,7 +7782,6 @@ var
   w: DWORD;
   h: DWORD;
   v: UInt32;
-  SourRect: TRect;
   DestRect: TRect;
   hRet: HRESULT;
   y: Integer;
@@ -7739,19 +7795,7 @@ var
   pCurByte: Puint08;
   pDest2: Puint08;
   dx: uint32;
-  dy: uint32;
   dwImageSize: uint32;
-  stop: uint32;
-
-  aMonitorInfo: MONITORINFO;
-
-  nTitleHeight: Integer;
-  nBorderWidth: Integer;
-  nBorderHeight: Integer;
-  ddofx: DDOVERLAYFX;
-
-  x: Integer;
-  Y3: uint08;
 
   Y0U0Y1V0: DWORD;
   Y0: Integer;
@@ -7782,15 +7826,11 @@ begin
   end
   else
   begin
-    // Calculate the source rectangle :
-    SourRect := Classes.Rect(0, 0, g_dwOverlayW, g_dwOverlayH);
-
     // manually copy data over to overlay
     if (g_bYUY2OverlaysSupported) then
     begin
       ZeroMemory(@ddsd2, sizeof(ddsd2));
       ddsd2.dwSize := sizeof(ddsd2);
-
       hRet := IDirectDrawSurface7(g_pDDSOverlay7).Lock(NULL, {out}ddsd2, DDLOCK_SURFACEMEMORYPTR or DDLOCK_WAIT, 0);
       if FAILED(hRet) then
         EmuWarning('Unable to lock overlay surface!' +#13#10+ DxbxD3DErrorString(hRet));
@@ -7821,31 +7861,8 @@ begin
       IDirectDrawSurface7(g_pDDSOverlay7).Unlock(NULL);
 
       // update overlay!
-
-      // Calculate the destination rectangle :
-      GetWindowRect(g_hEmuWindow, {var}DestRect);
-      nTitleHeight  := 0;//GetSystemMetrics(SM_CYCAPTION);
-      nBorderWidth  := 0;//GetSystemMetrics(SM_CXSIZEFRAME);
-      nBorderHeight := 0;//GetSystemMetrics(SM_CYSIZEFRAME);
-      Inc(DestRect.left,   nBorderWidth);
-      Dec(DestRect.right,  nBorderWidth);
-      Inc(DestRect.top,    nTitleHeight + nBorderHeight);
-      Dec(DestRect.bottom, nBorderHeight);
-
-      ZeroMemory(@aMonitorInfo, sizeof(aMonitorInfo));
-      aMonitorInfo.cbSize := sizeof(MONITORINFO);
-      GetMonitorInfo(g_hMonitor, @aMonitorInfo);
-
-      Dec(DestRect.left,   aMonitorInfo.rcMonitor.left);
-      Dec(DestRect.right,  aMonitorInfo.rcMonitor.left);
-      Dec(DestRect.top,    aMonitorInfo.rcMonitor.top);
-      Dec(DestRect.bottom, aMonitorInfo.rcMonitor.top);
-
-      ZeroMemory(@ddofx, sizeof(ddofx));
-      ddofx.dwSize := sizeof(DDOVERLAYFX);
-      ddofx.dckDestColorkey.dwColorSpaceLowValue := 0;
-      ddofx.dckDestColorkey.dwColorSpaceHighValue := 0;
-      {Dxbx unused hRet :=} IDirectDrawSurface7(g_pDDSOverlay7).UpdateOverlay(@SourRect, IDirectDrawSurface7(g_pDDSPrimary7), @DestRect, {DDOVER_KEYDESTOVERRIDE or} DDOVER_SHOW, {&ddofx}nil);
+      g_OverlayHideDelay := 2;
+      DxbxUpdateOverlay(DDOVER_SHOW);
     end
     else // not g_bYUY2OverlaysSupported
     begin
@@ -7856,8 +7873,8 @@ begin
       begin
         // Determine if the overlay can be written directly to the backbuffer :
         BackBufferSurface.GetDesc({out}SurfaceDesc);
-        CanWriteToBackbuffer := ((DestRect.Top - SourRect.Top) < 10)
-                            and ((DestRect.Right - SourRect.Right) < 20)
+        CanWriteToBackbuffer := ((DestRect.Top - g_OverlayRect.Top) < 10)
+                            and ((DestRect.Right - g_OverlayRect.Right) < 20)
                             and (SurfaceDesc.Format in [D3DFMT_A8R8G8B8, D3DFMT_X8R8G8B8{, D3DFMT_R8G8B8?}]);
 
         // If we can write to the back buffer, work with that, else use the screenshotbuffer as temporary surface :
@@ -7954,7 +7971,7 @@ begin
           if not CanWriteToBackbuffer then
             // When the overlay could not directly be converted into the back buffer,
             // we now have to stretch-copy there (this also does a format-conversion, if needed) :
-            if D3DXLoadSurfaceFromSurface({DestSurface=}BackBufferSurface, NULL, {DestRect=}nil, {DestSurface=}OverlayBufferSurface, NULL, @SourRect, D3DX_FILTER_LINEAR{D3DX_DEFAULT}, 0) <> D3D_OK then
+            if D3DXLoadSurfaceFromSurface({DestSurface=}BackBufferSurface, NULL, {DestRect=}nil, {DestSurface=}OverlayBufferSurface, NULL, @g_OverlayRect, D3DX_FILTER_LINEAR{D3DX_DEFAULT}, 0) <> D3D_OK then
               DbgPrintf('EmuD3D8 : UpdateOverlay could not convert buffer!');
         end;
       end;
@@ -8089,7 +8106,7 @@ procedure XTL_EmuD3DDevice_SetRenderState_TwoSidedLighting
 (
   Value: DWORD
 ); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+  // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
