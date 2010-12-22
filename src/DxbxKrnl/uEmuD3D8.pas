@@ -565,7 +565,7 @@ begin
   g_bFakePixelShaderLoaded := FALSE;
   g_bIsFauxFullscreen := FALSE;
   g_bHackUpdateSoftwareOverlay := FALSE;
-  g_OverlayHideDelay: int = 0;
+  g_OverlayHideDelay := 0;
 
   ZeroMemory(@g_ddguid, SizeOf(GUID));
   g_hMonitor := 0;
