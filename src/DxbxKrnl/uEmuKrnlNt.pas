@@ -593,9 +593,9 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuKrnl : NtAllocateVirtualMemory').
-      _(BaseAddress, 'BaseAddress'). // Show BaseAddress^ ?
+      _(DWORD(BaseAddress), 'pBaseAddress', IntToHex(Integer(BaseAddress^), 8)).
       _(ZeroBits, 'ZeroBits').
-      _(AllocationSize, 'AllocationSize'). // Show AllocationSize^ ?
+      _(DWORD(AllocationSize), 'pAllocationSize', IntToHex(AllocationSize^, 8)).
       _(AllocationType, 'AllocationType').
       _(Protect, 'Protect').
     LogEnd();
