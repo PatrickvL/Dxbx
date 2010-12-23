@@ -484,8 +484,8 @@ end;
 function DxbxD3DErrorString(hResult: HRESULT): string;
 begin
 {$IFDEF DXBX_USE_D3D9}
-  Result := DXGetErrorString9(hResult); // Source : http://www.fairyengine.com/articles/dxmultiviews.htm
-  Result := Result + #13#10 + DXGetErrorDescription9(hResult); // Source : http://www.gamedev.net/community/forums/showfaq.asp?forum_id=10
+  Result := string(DXGetErrorString9(hResult)); // Source : http://www.fairyengine.com/articles/dxmultiviews.htm
+  Result := Result + #13#10 + string(DXGetErrorDescription9(hResult)); // Source : http://www.gamedev.net/community/forums/showfaq.asp?forum_id=10
 {$ELSE}
   Result := D3DXGetErrorString(hResult); // Source : http://www.gamedev.net/community/forums/topic.asp?topic_id=16157
 {$ENDIF}
@@ -779,7 +779,7 @@ begin
   begin
     // See if this renderstate is supported on Native D3D :
     PCState := EmuXB2PC_D3DRS(XState);
-    if Ord(PCState) = Ord(D3DRS_UNSUPPORTED) then // Ord for D3D9 compatibility
+    if DWORD(PCState) = Ord(D3DRS_UNSUPPORTED) then // Ord for D3D9 compatibility
       Continue;
 
     // Get the value and print it :
@@ -2431,9 +2431,7 @@ begin
           {ppVertexBuffer=}@g_pDummyBuffer
           {$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF}
         );
-{$IFDEF _DEBUG_TUROK_CREATES}
         DbgPrintf('CreateVertexBuffer: g_pDummyBuffer = 0x%0.8x', [g_pDummyBuffer]);
-{$ENDIF}
 
         for Streams := 0 to 8-1 do
         begin
@@ -9228,8 +9226,9 @@ var
   pbData: PBYTE;
   bActiveIB: _bool;
   pPCIndexBuffer: XTL_PIDirect3DIndexBuffer8;
+{$IFNDEF DXBX_USE_D3D9}
   BaseIndex: UINT;
-
+{$ENDIF}
   uiNumVertices: UINT;
   uiStartIndex: UINT;
   FatalError: _bool;
@@ -9320,10 +9319,12 @@ begin
 
     // check if there is an active index buffer
     begin
+{$IFDEF DXBX_USE_D3D9}
+      g_pD3DDevice.GetIndices(@pPCIndexBuffer);
+{$ELSE}
       BaseIndex := 0;
-
-      g_pD3DDevice.GetIndices(@pPCIndexBuffer{$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, {out}BaseIndex{$ENDIF});
-
+      g_pD3DDevice.GetIndices(@pPCIndexBuffer, {out}BaseIndex);
+{$ENDIF}
       if (pPCIndexBuffer <> nil) then
       begin
         bActiveIB := true;
@@ -9409,7 +9410,7 @@ begin
 
     if(not bActiveIB) then
     begin
-      g_pD3DDevice.SetIndices(nil{$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, 0{$ENDIF});
+      g_pD3DDevice.SetIndices(nil{$IFNDEF DXBX_USE_D3D9}, 0{$ENDIF});
       IDirect3DIndexBuffer(pPCIndexBuffer)._Release();
       pPCIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
     end;
