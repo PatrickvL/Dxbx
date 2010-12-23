@@ -1034,7 +1034,7 @@ begin
           0: DclStr := 'dcl_position';
 //          1: DclStr := 'dcl_blendweight';
 //          2: DclStr := 'dcl_normal';
-          else{3:} DclStr := 'dcl_color' + IntToStr(j); Inc(j); // This is Xbox 'Diffuse', is it correctly mapped?
+          else{3:} DclStr := 'dcl_color' + AnsiString(IntToStr(j)); Inc(j); // This is Xbox 'Diffuse', is it correctly mapped?
   //        Specular 4
 //          5: DclStr := 'dcl_fog';
   //      7: ; // Back Diffuse - Xbox ext.

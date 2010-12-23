@@ -45,7 +45,6 @@
 {$IFDEF DXBX_DLL}
   {$DEFINE DXBX_USE_JCLDEBUG}
   {.$DEFINE DXBX_USE_D3D9} // Enable this define to use DirectX 9
-  {.$DEFINE _DEBUG_TUROK_CREATES} // Temporary, used to determine when exactly the failing Release is introduced.
 {$ENDIF}
 
 {.$DEFINE DXBX_RECTYPE} // Include RecType info in PatternTrie

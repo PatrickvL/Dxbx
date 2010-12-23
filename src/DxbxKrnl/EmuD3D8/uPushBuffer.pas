@@ -370,7 +370,7 @@ var
 
     {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
-    g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer){$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, 0{$ENDIF});
+    g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pIndexBuffer){$IFNDEF DXBX_USE_D3D9}, 0{$ENDIF});
 
 {$ifdef _DEBUG_TRACK_PB}
     if (not g_PBTrackDisable.exists(pdwOrigPushData)) then
@@ -398,7 +398,7 @@ var
 
     VertPatch.Restore();
 
-    g_pD3DDevice.SetIndices(nil{$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, 0{$ENDIF});
+    g_pD3DDevice.SetIndices(nil{$IFNDEF DXBX_USE_D3D9}, 0{$ENDIF});
   end;
 
 begin

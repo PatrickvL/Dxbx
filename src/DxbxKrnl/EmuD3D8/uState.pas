@@ -976,7 +976,7 @@ begin
 
   // Map the Xbox state to a PC state, and check if it's supported :
   PCRenderState := EmuXB2PC_D3DRS(XboxRenderState); // TODO : Speed this up using a lookup table
-  if Ord(PCRenderState) = Ord(D3DRS_UNSUPPORTED) then
+  if DWORD(PCRenderState) = Ord(D3DRS_UNSUPPORTED) then
   begin
     EmuWarning('%s is not supported!', [DxbxRenderStateXB2String[XboxRenderState]]);
     Exit;
@@ -1015,7 +1015,7 @@ var
 begin
   // Check if this render state is supported (so we don't trigger a warning) :
   if  (XTL_EmuMappedD3DRenderState[XboxRenderState] <> DummyRenderState)
-  and (Ord(EmuXB2PC_D3DRS(XboxRenderState)) <> Ord(D3DRS_UNSUPPORTED)) then
+  and (DWORD(EmuXB2PC_D3DRS(XboxRenderState)) <> Ord(D3DRS_UNSUPPORTED)) then
   begin
     // Read the current Xbox value, and set it locally :
     XboxValue := XTL_EmuMappedD3DRenderState[XboxRenderState]^;
