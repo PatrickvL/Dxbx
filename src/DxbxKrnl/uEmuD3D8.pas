@@ -729,7 +729,7 @@ begin
 
   if aFromXbox = False then
   begin
-    LogStack.
+    LogStack := LogStack.
     // Here are the DX9 specific ones
     _(aD3DCaps.DevCaps2, 'DevCaps2').
 
