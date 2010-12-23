@@ -3168,6 +3168,16 @@ begin
       j := i + 1;
       while j < IntermediateCount do
       begin
+        // Don't optimize if the output is needed for CND or CMP (which must read from r0) :
+        // This fixes : "(Validation Error) First source for cnd instruction must be 'r0.a'" in Modify Pixel Shader XDK sample.
+        if  (Intermediate[j].Opcode in [PO_CND, PO_CMP])
+        and (Op0.Output[0].Type_ = PARAM_R)
+        and (Op0.Output[0].Address = 0) then
+          Break;
+
+        // TODO : Add other prevention rules here (like too many texture-reads, and other scases)
+
+        // We can optimize if the MOV-output is written to again before the end of the shader :
         CanOptimize := True;
         if Intermediate[j].WritesToRegister(Op0.Output[0].Type_, Op0.Output[0].Address, MASK_RGBA) then
           Break;
