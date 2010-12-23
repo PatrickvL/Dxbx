@@ -9380,7 +9380,7 @@ begin
           (
             D3DPT_TRIANGLEFAN,
     {$IFDEF DXBX_USE_D3D9}
-            {BaseVertexIndex=}0,
+            g_dwBaseVertexIndex, // TODO -oDxbx : Is this correct? And should we reset the used index?
     {$ENDIF}
             {MinVertexIndex=}0,
             {NumVertices=}4,
@@ -9398,7 +9398,7 @@ begin
         (
           EmuPrimitiveType(VPDesc.PrimitiveType),
   {$IFDEF DXBX_USE_D3D9}
-          {BaseVertexIndex=}0,
+          g_dwBaseVertexIndex, // TODO -oDxbx : Is this correct? And should we reset the used index?
   {$ENDIF}
           {MinVertexIndex=}0,
           uiNumVertices,
@@ -9480,8 +9480,14 @@ begin
     begin
       g_pD3DDevice.DrawIndexedPrimitiveUP
       (
-          EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwPrimitiveCount, pIndexData,
-          D3DFMT_INDEX16, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride
+          EmuPrimitiveType(VPDesc.PrimitiveType),
+          {MinVertexIndex=}0,
+          VPDesc.dwVertexCount,
+          VPDesc.dwPrimitiveCount,
+          pIndexData,
+          D3DFMT_INDEX16,
+          VPDesc.pVertexStreamZeroData,
+          VPDesc.uiVertexStreamZeroStride
       );
     end;
 

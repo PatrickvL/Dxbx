@@ -390,7 +390,7 @@ begin
   end;
 
 {$IFDEF DXBX_USE_D3D9}
-  // For Direct3D9, everything below X_D3DSAMP_MAXANISOTROPY needs to call SetSamplerState :
+  // For Direct3D9, everything below X_D3DSAMP_MAXANISOTROPY needs to call GetSamplerState :
   if (_Type <= X_D3DTSS_MAXANISOTROPY) then
     Result := aDirect3DDevice.GetSamplerState(Sampler, PCState, {out}Value)
   else
