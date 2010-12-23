@@ -2395,6 +2395,9 @@ begin
   Inc(Result);
 end; // VshConvertToken_CONSTMEM
 
+const
+  D3DVSD_TESSUV_MASK = $10000000;
+
 procedure VshConverToken_TESSELATOR(pToken: PDWORD; pRecompiled: PTokenOutput;
                                     IsFixedFunction: boolean);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -2410,8 +2413,7 @@ var
 {$ENDIF}
 begin
   // TODO -oCXBX: Investigate why Xb2PCRegisterType is only used for fixed function vertex shaders
-  // D3DVSD_TESSUV
-  if (pToken^ and $10000000) > 0 then
+  if (pToken^ and D3DVSD_TESSUV_MASK) > 0 then
   begin
     VertexRegister    := VshGetVertexRegister(pToken^);
     NewVertexRegister := VertexRegister;
@@ -2425,6 +2427,11 @@ begin
     else
     begin
       DbgVshPrintf('%d', [NewVertexRegister]);
+{$IFDEF DXBX_USE_D3D9}
+      Index := 0;
+      // TODO : The specular D3DDECLUSAGE_COLOR should use Index 1 (but how to detect?)
+      // TODO : The D3DDECLUSAGE_TEXCOORD should use Index 0..3 (but how to detect?)
+{$ENDIF}
     end;
 
     DbgVshPrintf('),'#13#10);
@@ -2455,7 +2462,13 @@ begin
     else
     begin
       DbgVshPrintf('%d', [NewVertexRegisterIn]);
+{$IFDEF DXBX_USE_D3D9}
+      Index := 0;
+      // TODO : The specular D3DDECLUSAGE_COLOR should use Index 1 (but how to detect?)
+      // TODO : The D3DDECLUSAGE_TEXCOORD should use Index 0..3 (but how to detect?)
+{$ENDIF}
     end;
+
 {$IFDEF DXBX_USE_D3D9}
     // TODO : Expand on the setting of this TESSNORMAL input register element :
     pRecompiled.Usage := D3DDECLUSAGE(NewVertexRegisterIn);
@@ -2471,6 +2484,11 @@ begin
     else
     begin
       DbgVshPrintf('%d', [NewVertexRegisterOut]);
+{$IFDEF DXBX_USE_D3D9}
+      Index := 0;
+      // TODO : The specular D3DDECLUSAGE_COLOR should use Index 1 (but how to detect?)
+      // TODO : The D3DDECLUSAGE_TEXCOORD should use Index 0..3 (but how to detect?)
+{$ENDIF}
     end;
 
     DbgVshPrintf('),'#13#10);
@@ -2539,13 +2557,15 @@ begin
       pPatchData.TypePatchData.NbrTypes := 0;
       pPatchData.NeedPatching := FALSE;
       pPatchData.StreamPatchData.NbrStreams := 0; // Dxbx addition
+{$IFDEF DXBX_USE_D3D9}
+      Inc(pRecompiled); // Step to next element
+{$ENDIF}
     end;
 
     StreamNumber := VshGetVertexStream(pToken^);
     DbgVshPrintf(#9'D3DVSD_STREAM(%d),'#13#10, [StreamNumber]);
 
 {$IFDEF DXBX_USE_D3D9}
-    Inc(pRecompiled); // Step to next element
     pRecompiled^.Stream := StreamNumber;
     pRecompiled^.Offset := 0;
     pRecompiled^._Type := D3DDECLTYPE_FLOAT3;
@@ -2613,12 +2633,21 @@ begin
   begin
     NewVertexRegister := VertexRegister;
     DbgVshPrintf('%d', [NewVertexRegister]);
+{$IFDEF DXBX_USE_D3D9}
+    Index := 0;
+    // TODO : The specular D3DDECLUSAGE_COLOR should use Index 1 (but how to detect?)
+    // TODO : The D3DDECLUSAGE_TEXCOORD should use Index 0..3 (but how to detect?)
+{$ENDIF}
   end;
 
   DbgVshPrintf(', ');
 
   DataType := (pToken^ shr X_D3DVSD_DATATYPESHIFT) and $FF;
-  PDWORD(@NewDataType)^ := 0;
+{$IFDEF DXBX_USE_D3D9}
+  NewDataType := D3DDECLTYPE(0);
+{$ELSE}
+  NewDataType := 0;
+{$ENDIF}
   NewSize := 0;
   case (DataType) of
     { $12=}X_D3DVSDT_FLOAT1: begin
@@ -2779,23 +2808,23 @@ begin
   end;
 end; // VshConvertToken_STREAMDATA_REG
 
+const
+  D3DVSD_SKIP = $10000000; // Skips (normally) dwords
+  D3DVSD_SKIPBYTES = $08000000; // Skips bytes (no, really?!)
+
 procedure VshConvertToken_STREAMDATA(pToken: PDWORD; pRecompiled: PTokenOutput;
                                      IsFixedFunction: boolean;
                                      pPatchData: PVSH_PATCH_DATA);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  // D3DVSD_SKIP
-  if (pToken^ and $10000000) > 0 then
+  if (pToken^ and D3DVSD_SKIP) > 0 then
   begin
-    VshConvertToken_STREAMDATA_SKIP(pToken, pRecompiled);
+    if (pToken^ and D3DVSD_SKIPBYTES) > 0 then
+      VshConvertToken_STREAMDATA_SKIPBYTES(pToken, pRecompiled)
+    else
+      VshConvertToken_STREAMDATA_SKIP(pToken, pRecompiled);
   end
-  // D3DVSD_SKIPBYTES
-  else if (pToken^ and $18000000) > 0 then
-  begin
-    VshConvertToken_STREAMDATA_SKIPBYTES(pToken, pRecompiled);
-  end
-  // D3DVSD_REG
-  else
+  else // D3DVSD_REG
   begin
     VshConvertToken_STREAMDATA_REG(pToken, pRecompiled, IsFixedFunction, pPatchData);
   end;
@@ -2865,7 +2894,11 @@ begin
   ppRecompiledDeclaration^ := PDWORD(DxbxMalloc(DeclarationSize));
 
   pRecompiled := PTokenOutput(ppRecompiledDeclaration^);
+{$IFDEF DXBX_USE_D3D9}
+  ZeroMemory(pRecompiled, DeclarationSize);
+{$ELSE}
   memcpy(pRecompiled, pDeclaration, DeclarationSize);
+{$ENDIF}
   pDeclarationSize^ := DeclarationSize;
 
   // TODO -oCXBX: Put these in one struct
