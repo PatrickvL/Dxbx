@@ -220,7 +220,8 @@ function {044} xboxkrnl_HalGetInterruptVector(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('HalGetInterruptVector');
+  Unimplemented('HalGetInterruptVector');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -271,7 +272,8 @@ function {047} xboxkrnl_HalRegisterShutdownNotification(
 // Source:APILogger - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('HalRegisterShutdownNotification');
+  Unimplemented('HalRegisterShutdownNotification');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -323,7 +325,8 @@ begin
       _(Value, 'Value').
     LogEnd();
       
-  Result := Unimplemented('HalWriteSMBusValue');
+  Unimplemented('HalWriteSMBusValue');
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -341,7 +344,8 @@ function {360} xboxkrnl_HalInitiateShutdown(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('HalInitiateShutdown');
+  Unimplemented('HalInitiateShutdown');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 

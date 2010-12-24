@@ -105,7 +105,8 @@ function {003} xboxkrnl_AvSetDisplayMode(
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('AvSetDisplayMode');
+  Unimplemented('AvSetDisplayMode');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 

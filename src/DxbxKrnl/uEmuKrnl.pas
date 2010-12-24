@@ -338,7 +338,8 @@ function {000} xboxkrnl_UnknownAPI000(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('UnknownAPI000');
+  Unimplemented('UnknownAPI000');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -560,7 +561,8 @@ function {163} xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KiUnlockDispatcherDatabase');
+  Unimplemented('KiUnlockDispatcherDatabase');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -568,7 +570,8 @@ function {252} xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('PhyGetLinkState');
+  Unimplemented('PhyGetLinkState');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -576,7 +579,8 @@ function {253} xboxkrnl_PhyInitialize(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('PhyInitialize');
+  Unimplemented('PhyInitialize');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -729,7 +733,8 @@ function {367} xboxkrnl_UnknownAPI367(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('UnknownAPI367');
+  Unimplemented('UnknownAPI367');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -737,7 +742,8 @@ function {368} xboxkrnl_UnknownAPI368(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('UnknownAPI368');
+  Unimplemented('UnknownAPI368');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -745,7 +751,8 @@ function {369} xboxkrnl_UnknownAPI369(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('UnknownAPI369');
+  Unimplemented('UnknownAPI369');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -753,7 +760,8 @@ function {370} xboxkrnl_UnknownAPI370(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('UnknownAPI370');
+  Unimplemented('UnknownAPI370');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -761,7 +769,8 @@ function {371} xboxkrnl_UnknownAPI371(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('UnknownAPI371');
+  Unimplemented('UnknownAPI371');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -769,7 +778,8 @@ function {372} xboxkrnl_UnknownAPI372(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('UnknownAPI372');
+  Unimplemented('UnknownAPI372');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -777,7 +787,8 @@ function {373} xboxkrnl_UnknownAPI373(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('UnknownAPI373');
+  Unimplemented('UnknownAPI373');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 

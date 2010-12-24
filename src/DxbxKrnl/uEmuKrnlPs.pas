@@ -416,7 +416,8 @@ function {256} xboxkrnl_PsQueryStatistics(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('PsQueryStatistics');
+  Unimplemented('PsQueryStatistics');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -426,7 +427,8 @@ function {257} xboxkrnl_PsSetCreateThreadNotifyRoutine(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('PsSetCreateThreadNotifyRoutine');
+  Unimplemented('PsSetCreateThreadNotifyRoutine');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 

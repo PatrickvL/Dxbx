@@ -279,7 +279,8 @@ function xboxkrnl_MmClaimGpuInstanceMemory(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := PVOID(Unimplemented('MmClaimGpuInstanceMemory'));
+  Unimplemented('MmClaimGpuInstanceMemory');
+  Result := PVOID(S_OK);
   EmuSwapFS(fsXbox);
 end;
 
@@ -421,7 +422,8 @@ function xboxkrnl_MmIsAddressValid(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := _BOOLEAN(Unimplemented('MmIsAddressValid'));
+  Unimplemented('MmIsAddressValid');
+  Result := _BOOLEAN(S_OK);
   // TODO -oDxbx : Could we use our IsValidAddress function for this perhaps?
   EmuSwapFS(fsXbox);
 end;
@@ -511,7 +513,8 @@ function xboxkrnl_MmQueryAddressProtect(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmQueryAddressProtect');
+  Unimplemented('MmQueryAddressProtect');
+  Result := S_OK;
   // TODO -oDxbx : Should we use VirtualQuery for implementing this, like in EmuCheckAllocationSize ?
   EmuSwapFS(fsXbox);
 end;
@@ -633,7 +636,8 @@ function xboxkrnl_MmDbgAllocateMemory(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmDbgAllocateMemory');
+  Unimplemented('MmDbgAllocateMemory');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -641,7 +645,8 @@ function xboxkrnl_MmDbgFreeMemory(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmDbgFreeMemory');
+  Unimplemented('MmDbgFreeMemory');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -649,7 +654,8 @@ function xboxkrnl_MmDbgQueryAvailablePages(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmDbgQueryAvailablePages');
+  Unimplemented('MmDbgQueryAvailablePages');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -657,7 +663,8 @@ function xboxkrnl_MmDbgReleaseAddress(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmDbgReleaseAddress');
+  Unimplemented('MmDbgReleaseAddress');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -665,7 +672,8 @@ function xboxkrnl_MmDbgWriteCheck(): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmDbgWriteCheck');
+  Unimplemented('MmDbgWriteCheck');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
