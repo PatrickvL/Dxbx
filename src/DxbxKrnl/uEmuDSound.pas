@@ -2188,6 +2188,13 @@ function XTL_EmuIDirectSound_QueryInterfaceC
 begin
   EmuSwapFS(fsWindows);
 
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirectSound_QueryInterfaceC').
+      _(pThis, 'pThis').
+      _(iid, 'iid').
+      _(ppvInterface, 'ppvInterface').
+    LogEnd();
+
   ppvInterface^ := pThis;
   TIDirectSound(pThis).AddRef;
 
@@ -2205,6 +2212,13 @@ function XTL_EmuIDirectSound_QueryInterface
 // Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirectSound_QueryInterface').
+      _(pThis, 'pThis').
+      _(iid, 'iid').
+      _(ppvInterface, 'ppvInterface').
+    LogEnd();
 
   ppvInterface^ := pThis;
   TIDirectSound(pThis).AddRef;
@@ -2389,6 +2403,13 @@ function XTL_EmuIDirectSoundBuffer_QueryInterfaceC
 begin
   EmuSwapFS(fsWindows);
 
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirectSoundBuffer_QueryInterfaceC').
+      _(pThis, 'pThis').
+      _(iid, 'iid').
+      _(ppvInterface, 'ppvInterface').
+    LogEnd();
+
   ppvInterface^ := pThis;
   TIDirectSoundBuffer(pThis).AddRef;
 
@@ -2406,6 +2427,13 @@ function XTL_EmuIDirectSoundBuffer_QueryInterface
 // Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirectSoundBuffer_QueryInterface').
+      _(pThis, 'pThis').
+      _(iid, 'iid').
+      _(ppvInterface, 'ppvInterface').
+    LogEnd();
 
   ppvInterface^ := pThis;
   TIDirectSoundBuffer(pThis).AddRef;
@@ -4682,6 +4710,13 @@ function XTL_EmuIDirectSoundStream_QueryInterfaceC
 begin
   EmuSwapFS(fsWindows);
 
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirectSoundStream_QueryInterfaceC').
+      _(pThis, 'pThis').
+      _(iid, 'iid').
+      _(ppvInterface, 'ppvInterface').
+    LogEnd();
+
   ppvInterface^ := pThis;
   TIDirectSoundStream(pThis).AddRef;
 
@@ -4699,6 +4734,13 @@ function XTL_EmuIDirectSoundStream_QueryInterface
 // Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuIDirectSoundStream_QueryInterface').
+      _(pThis, 'pThis').
+      _(iid, 'iid').
+      _(ppvInterface, 'ppvInterface').
+    LogEnd();
 
   ppvInterface^ := pThis;
   TIDirectSoundStream(pThis).AddRef;
