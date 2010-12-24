@@ -1728,7 +1728,8 @@ begin
     LogEnd();
 
   // TODO -oDxbx : Should we allow this call? And must we pass hWnd or g_hEmuWindow ?
-  Result := IDirectSound8(g_pDSound8).SetCooperativeLevel(hWnd, dwLevel);
+  //Result := IDirectSound8(g_pDSound8).SetCooperativeLevel(hWnd, dwLevel);
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1743,7 +1744,8 @@ begin
       _(Self, 'pDirectSound').
     LogEnd();
 
-  Result := IDirectSound8(g_pDSound8).Compact;
+  //Result := IDirectSound8(g_pDSound8).Compact;
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1786,7 +1788,8 @@ function TIDirectSound.GetEffectData
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSound.GetEffectData');
+  Unimplemented('TIDirectSound.GetEffectData');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1803,7 +1806,8 @@ function TIDirectSound.SetEffectData
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSound.SetEffectData');
+  Unimplemented('TIDirectSound.SetEffectData');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1813,7 +1817,8 @@ function TIDirectSound.CommitEffectData(): HRESULT; stdcall; // virtual;
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSound.CommitEffectData');
+  Unimplemented('TIDirectSound.CommitEffectData');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2667,7 +2672,8 @@ function TIDirectSoundBuffer.SetEG
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSoundBuffer.SetEG');
+  Unimplemented('TIDirectSoundBuffer.SetEG');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2724,7 +2730,8 @@ function TIDirectSoundBuffer.SetOutputBuffer
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('IDirectSoundBuffer_SetOutputBuffer');
+  Unimplemented('IDirectSoundBuffer_SetOutputBuffer');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2783,7 +2790,8 @@ function TIDirectSoundBuffer.SetAllParameters
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSoundBuffer.SetAllParameters');
+  Unimplemented('TIDirectSoundBuffer.SetAllParameters');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2954,11 +2962,9 @@ begin
 
   // Dxbx addition : Call upon the PrimaryBuffer (but do check for the existence of a Listener!) :
   if Assigned(Self.EmuListener) then
-    IDirectSound3DListener(Self.EmuListener).SetPosition(x, y, z, dwApply);
-
-// TODO -oDxbx : Find out if we can/need to use the Listener, or this attempt :
-//  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetPosition(x, y, z, dwApply);
-  Result := DS_OK;
+    Result := IDirectSound3DListener(Self.EmuListener).SetPosition(x, y, z, dwApply)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2986,11 +2992,9 @@ begin
   // Dxbx addition : Call upon the PrimaryBuffer (but do check for the existence of a Listener!) :
   if Assigned(Self.EmuListener) then
     // TODO -oDxbx: Test this!
-    IDirectSound3DListener(Self.EmuListener).SetVelocity(x, y, z, dwApply);
-
-// TODO -oDxbx : Find out if we can/need to use the Listener, or this attempt :
-//  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetVelocity(x, y, z, dwApply);
-  Result := DS_OK;
+    Result := IDirectSound3DListener(Self.EmuListener).SetVelocity(x, y, z, dwApply)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -3586,21 +3590,21 @@ function TIDirectSoundBuffer.Unlock
     pvLock2: LPVOID;
     dwLockSize2: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSound.Unlock');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
 function TIDirectSoundBuffer.Restore(): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSoundBuffer.Restore');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -3614,7 +3618,8 @@ function TIDirectSoundBuffer.SetNotificationPositions
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSoundBuffer.SetNotificationPositions');
+  Unimplemented('TIDirectSoundBuffer.SetNotificationPositions');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4281,6 +4286,7 @@ begin
   EmuSwapFS(fsWindows);
 
   Result := Unimplemented('TIDirectSoundStream.SetOutputBuffer');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4315,7 +4321,8 @@ function TIDirectSoundStream.SetMixBinVolumes
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSoundStream.SetMixBinVolumes');
+  Unimplemented('TIDirectSoundStream.SetMixBinVolumes');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4539,7 +4546,8 @@ function TIDirectSoundStream.SetDistanceFactor(flDistanceFactor: FLOAT; dwApply:
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSoundStream.SetDistanceFactor');
+  Unimplemented('TIDirectSoundStream.SetDistanceFactor');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4553,7 +4561,8 @@ function TIDirectSoundStream.SetDopplerFactor
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSoundStream.SetDopplerFactor');
+  Unimplemented('TIDirectSoundStream.SetDopplerFactor');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4589,7 +4598,8 @@ function TIDirectSoundStream.SetRolloffCurve
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSoundStream.SetRolloffCurve');
+  Unimplemented('TIDirectSoundStream.SetRolloffCurve');
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4643,7 +4653,9 @@ function TIDirectSoundStream.PauseEx
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSoundStream.PauseEx');
+  Unimplemented('TIDirectSoundStream.PauseEx');
+  Result := DS_OK;
+
 
   EmuSwapFS(fsXbox);
 end;
