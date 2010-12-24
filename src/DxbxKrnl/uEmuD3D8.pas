@@ -4363,7 +4363,7 @@ var
   pVertexShader: PVERTEX_SHADER;
 
   pRecompiledBuffer: XTL_LPD3DXBUFFER;
-  pRecompiledDeclaration: PDWORD;
+  pRecompiledDeclaration: PVertexShaderDeclaration;
   pRecompiledFunction: PDWORD;
   VertexShaderSize: DWORD;
   DeclarationSize: DWORD;
@@ -4452,13 +4452,12 @@ begin
     else
     begin
 {$IFDEF DXBX_USE_D3D9}
-// TODO -oDxbx : Enable this, once pRecompiledDeclaration is an array of D3DVertexElement9's!
-//      hRet := g_pD3DDevice.CreateVertexDeclaration
-//      (
-//        {pVertexElements=}PD3DVertexElement9(pRecompiledDeclaration),
-//        {ppDecl=}PIDirect3DVertexDeclaration9(@pDecl)
-//      );
-//      if SUCCEEDED(hRet) then
+      hRet := g_pD3DDevice.CreateVertexDeclaration
+      (
+        {pVertexElements=}PD3DVertexElement9(pRecompiledDeclaration),
+        {ppDecl=}PIDirect3DVertexDeclaration9(@pDecl)
+      );
+      if SUCCEEDED(hRet) then
         hRet := g_pD3DDevice.CreateVertexShader
         (
           pRecompiledFunction,

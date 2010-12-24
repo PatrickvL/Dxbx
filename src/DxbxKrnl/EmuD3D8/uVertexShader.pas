@@ -554,6 +554,13 @@ const OReg_Name: array [VSH_OREG_NAME] of P_char =
 
 // Dxbx forward declarations :
 
+{$IFDEF DXBX_USE_D3D9}
+type PVertexShaderDeclaration = PD3DVertexElement9;
+{$ELSE}
+type PVertexShaderDeclaration = PDWORD;
+{$ENDIF}
+type PPVertexShaderDeclaration = ^PVertexShaderDeclaration;
+
 function VshHandleIsFVF(aHandle: DWORD): boolean; // inline
 function VshHandleIsVertexShader(aHandle: DWORD): boolean; inline; // forward
 function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader; inline; // forward
@@ -571,7 +578,7 @@ procedure VshSetMask(pMASK: PDxbxMask;
 
 function XTL_EmuRecompileVshDeclaration(
   pDeclaration: PDWORD;
-  ppRecompiledDeclaration: PPDWORD;
+  ppRecompiledDeclaration: PPVertexShaderDeclaration;
   pDeclarationSize: PDWORD;
   IsFixedFunction: boolean;
   pVertexDynamicPatch: PVERTEX_DYNAMIC_PATCH
@@ -2226,6 +2233,7 @@ type _VSH_STREAM_PATCH_DATA = record
 type _VSH_PATCH_DATA = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     NeedPatching: boolean;
+    CurrentStreamNumber: WORD;
     ConvertedStride: DWORD;
     TypePatchData: VSH_TYPE_PATCH_DATA;
     StreamPatchData: VSH_STREAM_PATCH_DATA;
@@ -2292,7 +2300,7 @@ begin
     end;
   X_D3DVSDE_FOG: begin
       DbgVshPrintf('D3DVSDE_FOG /* xbox ext. */');
-      PCRegister := D3DVSDE_FOG; // Note : Doesn't exist in D3D8, but we define as D3DDECLUSAGE_FOG for D3D9 !
+      PCRegister := D3DVSDE_FOG; // Note : Doesn't exist in D3D8, but we define it as D3DDECLUSAGE_FOG for D3D9 !
     end;
   X_D3DVSDE_BACKDIFFUSE:
       DbgVshPrintf('D3DVSDE_BACKDIFFUSE /* xbox ext. */');
@@ -2346,19 +2354,13 @@ begin
   Result := (Token and D3DVSD_VERTEXREGINMASK) shr D3DVSD_VERTEXREGINSHIFT;
 end;
 
-function VshGetVertexStream(Token: DWORD): DWORD; inline;
+function VshGetVertexStream(Token: DWORD): WORD; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   Result := (Token and D3DVSD_STREAMNUMBERMASK) shr D3DVSD_STREAMNUMBERSHIFT;
 end;
 
-{$IFDEF DXBX_USE_D3D9}
-type PTokenOutput = PD3DVertexElement9;
-{$ELSE}
-type PTokenOutput = PDWORD;
-{$ENDIF}
-
-procedure VshConvertToken_NOP(pToken: PDWORD; pRecompiled: PTokenOutput);
+procedure VshConvertToken_NOP(pToken: PDWORD; var pRecompiled: PVertexShaderDeclaration);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   // D3DVSD_NOP
@@ -2369,7 +2371,7 @@ begin
   DbgVshPrintf(#9'D3DVSD_NOP(),'#13#10);
 end;
 
-function VshConvertToken_CONSTMEM(pToken: PDWORD; pRecompiled: PTokenOutput): DWORD;
+function VshConvertToken_CONSTMEM(pToken: PDWORD; var pRecompiled: PVertexShaderDeclaration): DWORD;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   ConstantAddress: DWORD;
@@ -2395,10 +2397,7 @@ begin
   Inc(Result);
 end; // VshConvertToken_CONSTMEM
 
-const
-  D3DVSD_TESSUV_MASK = $10000000;
-
-procedure VshConverToken_TESSELATOR(pToken: PDWORD; pRecompiled: PTokenOutput;
+procedure VshConvertToken_TESSELATOR(pToken: PDWORD; var pRecompiled: PVertexShaderDeclaration;
                                     IsFixedFunction: boolean);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
@@ -2413,7 +2412,7 @@ var
 {$ENDIF}
 begin
   // TODO -oCXBX: Investigate why Xb2PCRegisterType is only used for fixed function vertex shaders
-  if (pToken^ and D3DVSD_TESSUV_MASK) > 0 then
+  if (pToken^ and D3DVSD_MASK_TESSUV) > 0 then
   begin
     VertexRegister    := VshGetVertexRegister(pToken^);
     NewVertexRegister := VertexRegister;
@@ -2501,7 +2500,7 @@ begin
     pRecompiled^ := D3DVSD_TESSNORMAL(NewVertexRegisterIn, NewVertexRegisterOut);
 {$ENDIF}
   end;
-end; // VshConverToken_TESSELATOR
+end; // VshConvertToken_TESSELATOR
 
 function VshAddStreamPatch(pPatchData: PVSH_PATCH_DATA): boolean;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -2534,11 +2533,9 @@ begin
   Result := FALSE;
 end; // VshAddStreamPatch
 
-procedure VshConvertToken_STREAM(pToken: PDWORD; pRecompiled: PTokenOutput;
+procedure VshConvertToken_STREAM(pToken: PDWORD; var pRecompiled: PVertexShaderDeclaration;
                                  pPatchData: PVSH_PATCH_DATA);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-var
-  StreamNumber: DWORD;
 begin
   // D3DVSD_STREAM_TESS
   if (pToken^ and D3DVSD_STREAMTESSMASK) > 0 then
@@ -2562,49 +2559,46 @@ begin
 {$ENDIF}
     end;
 
-    StreamNumber := VshGetVertexStream(pToken^);
-    DbgVshPrintf(#9'D3DVSD_STREAM(%d),'#13#10, [StreamNumber]);
-
-{$IFDEF DXBX_USE_D3D9}
-    pRecompiled^.Stream := StreamNumber;
-    pRecompiled^.Offset := 0;
-    pRecompiled^._Type := D3DDECLTYPE_FLOAT3;
-    pRecompiled^.Method := D3DDECLMETHOD(0);// _DEFAULT;
-    pRecompiled^.Usage := D3DDECLUSAGE(0);
-    pRecompiled^.UsageIndex := 0;
-{$ENDIF}
+    pPatchData.CurrentStreamNumber := VshGetVertexStream(pToken^);
+    DbgVshPrintf(#9'D3DVSD_STREAM(%d),'#13#10, [pPatchData.CurrentStreamNumber]);
 
     Inc(pPatchData.StreamPatchData.NbrStreams);
   end;
 end; // VshConvertToken_STREAM
 
-procedure VshConvertToken_STREAMDATA_SKIP(pToken: PDWORD; pRecompiled: PTokenOutput);
+procedure VshConvertToken_STREAMDATA_SKIP(pToken: PDWORD; var pRecompiled: PVertexShaderDeclaration;
+  pPatchData: PVSH_PATCH_DATA);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   SkipCount: DWORD;
 begin
   SkipCount := (pToken^ and D3DVSD_SKIPCOUNTMASK) shr D3DVSD_SKIPCOUNTSHIFT;
   DbgVshPrintf(#9'D3DVSD_SKIP(%d),'#13#10, [SkipCount]);
+{$IFDEF DXBX_USE_D3D9}
+  Inc(pPatchData.ConvertedStride, SkipCount * SizeOf(DWORD));
+{$ENDIF}
 end;
 
-procedure VshConvertToken_STREAMDATA_SKIPBYTES(pToken: PDWORD; pRecompiled: PTokenOutput);
+procedure VshConvertToken_STREAMDATA_SKIPBYTES(pToken: PDWORD; var pRecompiled: PVertexShaderDeclaration;
+  pPatchData: PVSH_PATCH_DATA);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   SkipBytesCount: DWORD;
 begin
   SkipBytesCount := (pToken^ and D3DVSD_SKIPCOUNTMASK) shr D3DVSD_SKIPCOUNTSHIFT;
   DbgVshPrintf(#9'D3DVSD_SKIPBYTES(%d), /* xbox ext. */'#13#10, [SkipBytesCount]);
+{$IFDEF DXBX_USE_D3D9}
+  Inc(pPatchData.ConvertedStride, SkipBytesCount);
+{$ELSE}
   if (SkipBytesCount mod sizeof(DWORD)) > 0 then
   begin
     EmuWarning('D3DVSD_SKIPBYTES can''t be converted to D3DVSD_SKIP, not divisble by 4.');
   end;
-{$IFDEF DXBX_USE_D3D9}
-{$ELSE}
   pRecompiled^ := D3DVSD_SKIP(SkipBytesCount div sizeof(DWORD));
 {$ENDIF}
 end;
 
-procedure VshConvertToken_STREAMDATA_REG(pToken: PDWORD; pRecompiled: PTokenOutput;
+procedure VshConvertToken_STREAMDATA_REG(pToken: PDWORD; var pRecompiled: PVertexShaderDeclaration;
                                          IsFixedFunction: boolean;
                                          pPatchData: PVSH_PATCH_DATA);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -2615,7 +2609,6 @@ var
   NewSize: DWORD;
 {$IFDEF DXBX_USE_D3D9}
   NewDataType: D3DDECLTYPE;
-  PrevStream: Integer;
   Index: Integer;
 {$ELSE}
   NewDataType: DWORD;
@@ -2785,20 +2778,21 @@ begin
   pPatchData.TypePatchData.NewSizes[pPatchData.TypePatchData.NbrTypes] := NewSize;
   Inc(pPatchData.TypePatchData.NbrTypes);
 
-  Inc(pPatchData.ConvertedStride, NewSize);
-
 {$IFDEF DXBX_USE_D3D9}
-  PrevStream := pRecompiled^.Stream;
-  Inc(pRecompiled); // Step to next element
-  pRecompiled^.Stream := PrevStream;
-  pRecompiled^.Offset := 0;
-  pRecompiled^._Type := NewDataType;
-  pRecompiled^.Method := D3DDECLMETHOD(0);
-  pRecompiled^.Usage := D3DDECLUSAGE(NewVertexRegister);
-  pRecompiled^.UsageIndex := Index;
+  pRecompiled.Stream := pPatchData.CurrentStreamNumber;
+  pRecompiled.Offset := pPatchData.ConvertedStride;
+  pRecompiled._Type := NewDataType;
+  pRecompiled.Method := D3DDECLMETHOD_DEFAULT;
+  pRecompiled.Usage := D3DDECLUSAGE(NewVertexRegister);
+  pRecompiled.UsageIndex := Index;
+
+  // Step to next element
+  Inc({var}pRecompiled);
 {$ELSE}
   pRecompiled^ := D3DVSD_REG(NewVertexRegister, NewDataType);
 {$ENDIF}
+
+  Inc(pPatchData.ConvertedStride, NewSize);
 
   DbgVshPrintf('),'#13#10);
 
@@ -2808,21 +2802,18 @@ begin
   end;
 end; // VshConvertToken_STREAMDATA_REG
 
-const
-  D3DVSD_SKIP = $10000000; // Skips (normally) dwords
-  D3DVSD_SKIPBYTES = $08000000; // Skips bytes (no, really?!)
-
-procedure VshConvertToken_STREAMDATA(pToken: PDWORD; pRecompiled: PTokenOutput;
+procedure VshConvertToken_STREAMDATA(pToken: PDWORD; var pRecompiled: PVertexShaderDeclaration;
                                      IsFixedFunction: boolean;
                                      pPatchData: PVSH_PATCH_DATA);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  if (pToken^ and D3DVSD_SKIP) > 0 then
+  if (pToken^ and D3DVSD_MASK_SKIP) > 0 then
   begin
-    if (pToken^ and D3DVSD_SKIPBYTES) > 0 then
-      VshConvertToken_STREAMDATA_SKIPBYTES(pToken, pRecompiled)
+    // For D3D9, use D3DDECLTYPE_UNUSED ?
+    if (pToken^ and D3DVSD_MASK_SKIPBYTES) > 0 then
+      VshConvertToken_STREAMDATA_SKIPBYTES(pToken, pRecompiled, pPatchData)
     else
-      VshConvertToken_STREAMDATA_SKIP(pToken, pRecompiled);
+      VshConvertToken_STREAMDATA_SKIP(pToken, pRecompiled, pPatchData);
   end
   else // D3DVSD_REG
   begin
@@ -2830,7 +2821,7 @@ begin
   end;
 end; // VshConvertToken_STREAMDATA
 
-function VshRecompileToken(pToken: PDWORD; pRecompiled: PTokenOutput;
+function VshRecompileToken(pToken: PDWORD; var pRecompiled: PVertexShaderDeclaration;
                            IsFixedFunction: boolean;
                            pPatchData: PVSH_PATCH_DATA): DWORD;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -2847,7 +2838,7 @@ begin
     D3DVSD_TOKEN_STREAMDATA:
       VshConvertToken_STREAMDATA(pToken, pRecompiled, IsFixedFunction, pPatchData);
     D3DVSD_TOKEN_TESSELLATOR:
-      VshConverToken_TESSELATOR(pToken, pRecompiled, IsFixedFunction);
+      VshConvertToken_TESSELATOR(pToken, pRecompiled, IsFixedFunction);
     D3DVSD_TOKEN_CONSTMEM:
       Step := VshConvertToken_CONSTMEM(pToken, pRecompiled);
   else
@@ -2861,7 +2852,7 @@ end; // VshRecompileToken
 function XTL_EmuRecompileVshDeclaration
 (
   pDeclaration: PDWORD;
-  ppRecompiledDeclaration: PPDWORD;
+  ppRecompiledDeclaration: PPVertexShaderDeclaration;
   pDeclarationSize: PDWORD;
   IsFixedFunction: boolean;
   pVertexDynamicPatch: PVERTEX_DYNAMIC_PATCH
@@ -2869,7 +2860,7 @@ function XTL_EmuRecompileVshDeclaration
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   DeclarationSize: DWORD;
-  pRecompiled: PTokenOutput;
+  pRecompiled: PVertexShaderDeclaration;
   PatchData: VSH_PATCH_DATA;
   Step: DWORD;
   StreamsSize: DWORD;
@@ -2891,9 +2882,9 @@ begin
   // For Direct3D8, tokens are the same size as on Xbox (DWORD) and are translated in-place :
   DeclarationSize := DeclarationSize * SizeOf(DWORD);
 {$ENDIF}
-  ppRecompiledDeclaration^ := PDWORD(DxbxMalloc(DeclarationSize));
+  ppRecompiledDeclaration^ := PVertexShaderDeclaration(DxbxMalloc(DeclarationSize));
 
-  pRecompiled := PTokenOutput(ppRecompiledDeclaration^);
+  pRecompiled := PVertexShaderDeclaration(ppRecompiledDeclaration^);
 {$IFDEF DXBX_USE_D3D9}
   ZeroMemory(pRecompiled, DeclarationSize);
 {$ELSE}
@@ -2910,8 +2901,15 @@ begin
   begin
     Step := VshRecompileToken(pDeclaration, pRecompiled, IsFixedFunction, @PatchData);
     Inc(pDeclaration, Step);
+{$IFNDEF DXBX_USE_D3D9}
     Inc(pRecompiled, Step);
+{$ENDIF}
   end;
+
+{$IFDEF DXBX_USE_D3D9}
+  pRecompiled^ := D3DDECL_END;
+{$ENDIF}
+  // copy last current data to structure
   VshAddStreamPatch(@PatchData);
   DbgVshPrintf(#9'D3DVSD_END()'#13#10'};'#13#10);
 

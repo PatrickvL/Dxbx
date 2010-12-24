@@ -145,12 +145,15 @@ const
 const
   // Dxbx note : Dirty little hack : Map the old D3DVSDE values to new D3DDECLUSAGE values,
   // to ease the implementation of Xb2PCRegisterType (which also determines an index for D3D9)
+  // Unless otherwise indicated, these are mapped to index 0 in D3D9
   D3DVSDE_POSITION = D3DDECLUSAGE_POSITION;
+  D3DVSDE_POSITION2 = D3DDECLUSAGE_POSITION; // Mapped to index 1 in D3D9, but unused on Xbox.
   D3DVSDE_BLENDWEIGHT = D3DDECLUSAGE_BLENDWEIGHT;
   D3DVSDE_NORMAL = D3DDECLUSAGE_NORMAL;
-  D3DVSDE_DIFFUSE = D3DDECLUSAGE_COLOR; // Mapped to index 0 in D3D9
+  D3DVSDE_NORMAL2 = D3DDECLUSAGE_NORMAL; // Mapped to index 1 in D3D9, but unused on Xbox.
+  D3DVSDE_DIFFUSE = D3DDECLUSAGE_COLOR;
   D3DVSDE_SPECULAR = D3DDECLUSAGE_COLOR; // Mapped to index 1 in D3D9
-  D3DVSDE_FOG = D3DDECLUSAGE_FOG; // Doesn't exist in D3D8
+  D3DVSDE_FOG = D3DDECLUSAGE_FOG; // Doesn't exist in D3D8!
   D3DVSDE_TEXCOORD0 = D3DDECLUSAGE_TEXCOORD; // Mapped to index 0 in D3D9
   D3DVSDE_TEXCOORD1 = D3DDECLUSAGE_TEXCOORD; // Mapped to index 1 in D3D9
   D3DVSDE_TEXCOORD2 = D3DDECLUSAGE_TEXCOORD; // Mapped to index 2 in D3D9
@@ -217,6 +220,11 @@ const
   D3DSAMP_MAXANISOTROPY = D3DTSS_MAXANISOTROPY;
 
 {$ENDIF}
+
+const
+  D3DVSD_MASK_TESSUV = $10000000;
+  D3DVSD_MASK_SKIP = $10000000; // Skips (normally) dwords
+  D3DVSD_MASK_SKIPBYTES = $08000000; // Skips bytes (no, really?!)
 
 type
   // C++ nearly always works with pointer-to-interface, while Delphi's interfaces are already reference-types.
@@ -1647,7 +1655,7 @@ const // vertex input registers for fixed function vertex shader
   X_D3DVSDE_TEXCOORD1    = 10;
   X_D3DVSDE_TEXCOORD2    = 11;
   X_D3DVSDE_TEXCOORD3    = 12;
-  X_D3DVSDE_VERTEX       = $FFFFFFFF; // Xbox extension for Begin/End drawing
+  X_D3DVSDE_VERTEX       = $FFFFFFFF; // Xbox extension for Begin/End drawing (data is a D3DVSDT_FLOAT4)
 
 type X_D3DVSDE = X_D3DVSDE_POSITION..High(DWORD)-2; // Unique declaration to make overloads possible;
 
