@@ -3594,7 +3594,7 @@ function TIDirectSoundBuffer.Unlock
 begin
   EmuSwapFS(fsWindows);
 
-  Result := DS_OK;
+  Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).Unlock(pvLock1, dwLockSize1, pvLock2, dwLockSize2);
 
   EmuSwapFS(fsXbox);
 end;
@@ -3604,7 +3604,7 @@ function TIDirectSoundBuffer.Restore(): HRESULT; stdcall; // virtual;
 begin
   EmuSwapFS(fsWindows);
 
-  Result := DS_OK;
+  Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).Restore;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4630,6 +4630,8 @@ function TIDirectSoundStream.Pause
   dwPause: DWORD
 ): HRESULT; stdcall; // virtual;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  v: int;
 begin
   EmuSwapFS(fsWindows);
 
