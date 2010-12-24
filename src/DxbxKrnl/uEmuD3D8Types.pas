@@ -221,6 +221,13 @@ const
 
 {$ENDIF}
 
+{$IFDEF DXBX_USE_D3D9}
+type PVertexShaderDeclaration = PD3DVertexElement9;
+{$ELSE}
+type PVertexShaderDeclaration = PDWORD;
+{$ENDIF}
+type PPVertexShaderDeclaration = ^PVertexShaderDeclaration;
+
 const
   D3DVSD_MASK_TESSUV = $10000000;
   D3DVSD_MASK_SKIP = $10000000; // Skips (normally) dwords
@@ -898,6 +905,9 @@ type _VERTEX_SHADER = record
     // we save them to be able to return them when necessary.
     Size: UINT;
     pDeclaration: PDWORD;
+{$IFDEF DXBX_USE_D3D9}
+    hRecompiledDeclaration: DWORD;
+{$ENDIF}
     DeclarationSize: DWORD;
     pFunction: PDWORD;
     FunctionSize: DWORD;

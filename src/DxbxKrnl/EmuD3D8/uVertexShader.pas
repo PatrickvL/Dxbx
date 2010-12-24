@@ -554,13 +554,6 @@ const OReg_Name: array [VSH_OREG_NAME] of P_char =
 
 // Dxbx forward declarations :
 
-{$IFDEF DXBX_USE_D3D9}
-type PVertexShaderDeclaration = PD3DVertexElement9;
-{$ELSE}
-type PVertexShaderDeclaration = PDWORD;
-{$ENDIF}
-type PPVertexShaderDeclaration = ^PVertexShaderDeclaration;
-
 function VshHandleIsFVF(aHandle: DWORD): boolean; // inline
 function VshHandleIsVertexShader(aHandle: DWORD): boolean; inline; // forward
 function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader; inline; // forward
@@ -2245,7 +2238,7 @@ type _VSH_PATCH_DATA = record
 const DEF_VSH_END = $FFFFFFFF;
 const DEF_VSH_NOP = $00000000;
 
-function VshGetDeclarationSize(pDeclaration: PDWORD): DWORD;
+function VshGetXboxDeclarationSize(pDeclaration: PDWORD): DWORD;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   Result := 0;
@@ -2554,9 +2547,6 @@ begin
       pPatchData.TypePatchData.NbrTypes := 0;
       pPatchData.NeedPatching := FALSE;
       pPatchData.StreamPatchData.NbrStreams := 0; // Dxbx addition
-{$IFDEF DXBX_USE_D3D9}
-      Inc(pRecompiled); // Step to next element
-{$ENDIF}
     end;
 
     pPatchData.CurrentStreamNumber := VshGetVertexStream(pToken^);
@@ -2787,7 +2777,7 @@ begin
   pRecompiled.UsageIndex := Index;
 
   // Step to next element
-  Inc({var}pRecompiled);
+  Inc(pRecompiled);
 {$ELSE}
   pRecompiled^ := D3DVSD_REG(NewVertexRegister, NewDataType);
 {$ENDIF}
@@ -2874,7 +2864,7 @@ begin
   // 0x00000000 - nop (means that this value is ignored)
 
   // Calculate size of declaration
-  DeclarationSize := VshGetDeclarationSize(pDeclaration);
+  DeclarationSize := VshGetXboxDeclarationSize(pDeclaration);
 {$IFDEF DXBX_USE_D3D9}
   // For Direct3D9, we need to reserve at least twice the number of elements, as one token can generate two registers (in and out) :
   DeclarationSize := DeclarationSize * SizeOf(TD3DVertexElement9) * 2;
