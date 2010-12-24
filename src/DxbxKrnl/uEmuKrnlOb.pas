@@ -108,7 +108,8 @@ function xboxkrnl_ObCreateObject(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ObCreateObject');
+  Unimplemented('ObCreateObject');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -121,7 +122,8 @@ function xboxkrnl_ObInsertObject(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ObInsertObject');
+  Unimplemented('ObInsertObject');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -131,7 +133,8 @@ function xboxkrnl_ObMakeTemporaryObject(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ObMakeTemporaryObject');
+  Unimplemented('ObMakeTemporaryObject');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -144,7 +147,8 @@ function xboxkrnl_ObOpenObjectByName(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ObOpenObjectByName');
+  Unimplemented('ObOpenObjectByName');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -156,7 +160,8 @@ function xboxkrnl_ObOpenObjectByPointer(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ObOpenObjectByPointer');
+  Unimplemented('ObOpenObjectByPointer');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -175,7 +180,8 @@ function xboxkrnl_ObReferenceObjectByHandle(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ObReferenceObjectByHandle');
+  Unimplemented('ObReferenceObjectByHandle');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -189,7 +195,8 @@ function xboxkrnl_ObReferenceObjectByName(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ObReferenceObjectByName');
+  Unimplemented('ObReferenceObjectByName');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -201,7 +208,8 @@ function xboxkrnl_ObReferenceObjectByPointer(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ObReferenceObjectByPointer');
+  Unimplemented('ObReferenceObjectByPointer');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 

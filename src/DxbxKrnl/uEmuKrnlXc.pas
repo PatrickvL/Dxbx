@@ -256,7 +256,8 @@ function xboxkrnl_XcPKEncPublic(
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('XcPKEncPublic');
+  Unimplemented('XcPKEncPublic');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -268,7 +269,8 @@ function xboxkrnl_XcPKDecPrivate(
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('XcPKDecPrivate');
+  Unimplemented('XcPKDecPrivate');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -278,7 +280,8 @@ function xboxkrnl_XcPKGetKeyLen(
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('XcPKGetKeyLen');
+  Unimplemented('XcPKGetKeyLen');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -292,7 +295,7 @@ begin
   EmuSwapFS(fsWindows);
 
   Unimplemented('XcVerifyPKCS1Signature');
-  Result := BOOL_FALSE;
+  Result := BOOL(S_OK);
 
   EmuSwapFS(fsXbox);
 end;
@@ -308,7 +311,8 @@ function xboxkrnl_XcModExp(
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('XcModExp');
+  Unimplemented('XcModExp');
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -381,9 +385,8 @@ function xboxkrnl_XcCryptService(
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-
-  Result := Unimplemented('XcCryptService');
-
+  Unimplemented('XcCryptService');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 

@@ -4295,7 +4295,8 @@ begin
     LogEnd();
 
 //  return D3DDevice_GetTileCompressionTags(ZStartTag, ZEndTag);
-  Result := Unimplemented('XTL_EmuD3DDevice_GetTileCompressionTags');
+  Unimplemented('XTL_EmuD3DDevice_GetTileCompressionTags');
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -11662,7 +11663,8 @@ begin
 //
 //  Result := IDirectDraw7(g_pDD7).CreateSurface(SurfaceDesc, lplpDDSurface, pUnkOuter);
 
- Result := Unimplemented('XTL_EmuD3DDevice_CreateSurface');
+  Unimplemented('XTL_EmuD3DDevice_CreateSurface');
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -11774,7 +11776,8 @@ function XTL_EmuD3DPushBuffer_SetVertexShaderInputDirect
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('XTL_EmuD3DPushBuffer_SetVertexShaderInputDirect');
+  Unimplemented('XTL_EmuD3DPushBuffer_SetVertexShaderInputDirect');
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -11833,7 +11836,8 @@ function XTL_EmuD3DPushBuffer_SetRenderState
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('XTL_EmuD3DPushBuffer_SetRenderState');
+  Unimplemented('XTL_EmuD3DPushBuffer_SetRenderState');
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -11849,7 +11853,8 @@ function XTL_EmuD3DPushBuffer_CopyRects
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('XTL_EmuD3DPushBuffer_CopyRects');
+  Unimplemented('XTL_EmuD3DPushBuffer_CopyRects');
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;

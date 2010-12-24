@@ -1507,7 +1507,8 @@ function xboxkrnl_NtProtectVirtualMemory(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtProtectVirtualMemory');
+  Unimplemented('NtProtectVirtualMemory');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -2482,7 +2483,8 @@ function xboxkrnl_NtSetSystemTime(
 begin
   EmuSwapFS(fsWindows);
   // TODO -oDxbx: Surely, we won't set the system time here, but we CAN remember a delta (and apply that in KeQuerySystemTime)
-  Result := Unimplemented('NtSetSystemTime');
+  Unimplemented('NtSetSystemTime');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 

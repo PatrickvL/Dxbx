@@ -147,7 +147,8 @@ function {012} xboxkrnl_ExAcquireReadWriteLockExclusive(
 // Source:APILogger - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ExAcquireReadWriteLockExclusive');
+  Unimplemented('ExAcquireReadWriteLockExclusive');
+  Result := S_OK;
   // KeWaitForSingleObject
   EmuSwapFS(fsXbox);
 end;
@@ -158,7 +159,8 @@ function {013} xboxkrnl_ExAcquireReadWriteLockShared(
 // Source:APILogger - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ExAcquireReadWriteLockShared');
+  Unimplemented('ExAcquireReadWriteLockShared');
+  Result := S_OK;
   // KeWaitForSingleObject
   EmuSwapFS(fsXbox);
 end;
@@ -235,7 +237,8 @@ function {018} xboxkrnl_ExInitializeReadWriteLock(
 // Source:APILogger - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ExInitializeReadWriteLock');
+  Unimplemented('ExInitializeReadWriteLock');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -248,6 +251,7 @@ function {019} xboxkrnl_ExInterlockedAddLargeInteger(
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExInterlockedAddLargeInteger');
+  Result := S_OK;
   LARGE_INTEGER(Result).QuadPart := 0;
   EmuSwapFS(fsXbox);
 end;
@@ -274,7 +278,8 @@ function {021} xboxkrnl_ExInterlockedCompareExchange64(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ExInterlockedCompareExchange64');
+  Unimplemented('ExInterlockedCompareExchange64');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -537,7 +542,8 @@ function {028} xboxkrnl_ExReleaseReadWriteLock(
 // Source:APILogger - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ExReleaseReadWriteLock');
+  Unimplemented('ExReleaseReadWriteLock');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -550,7 +556,8 @@ function {029} xboxkrnl_ExSaveNonVolatileSetting(
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ExSaveNonVolatileSetting');
+  Unimplemented('ExSaveNonVolatileSetting');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 

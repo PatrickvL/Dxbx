@@ -638,7 +638,8 @@ begin
       _(BackTraceHash, 'BackTraceHash').
     LogEnd();
 
-  Result := Unimplemented('RtlCaptureStackBackTrace');
+  Unimplemented('RtlCaptureStackBackTrace');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -1709,7 +1710,8 @@ function xboxkrnl_RtlWalkFrameChain(
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlWalkFrameChain');
+  Unimplemented('RtlWalkFrameChain');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -1757,7 +1759,8 @@ function xboxkrnl_RtlSnprintf(
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlSnprintf');
+  Unimplemented('RtlSnprintf');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -1769,7 +1772,8 @@ function xboxkrnl_RtlSprintf(
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlSprintf');
+  Unimplemented('RtlSprintf');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -1782,7 +1786,8 @@ function xboxkrnl_RtlVsnprintf(
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlVsnprintf');
+  Unimplemented('RtlVsnprintf');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -1794,7 +1799,8 @@ function xboxkrnl_RtlVsprintf(
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlVsprintf');
+  Unimplemented('RtlVsprintf');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 

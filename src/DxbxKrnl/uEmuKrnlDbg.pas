@@ -92,7 +92,8 @@ function {007} xboxkrnl_DbgLoadImageSymbols(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('DbgLoadImageSymbols');
+  Unimplemented('DbgLoadImageSymbols');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -269,7 +270,8 @@ function {010} xboxkrnl_DbgPrompt(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('DbgPrompt');
+  Unimplemented('DbgPrompt');
+  Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
 

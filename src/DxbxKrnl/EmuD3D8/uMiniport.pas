@@ -104,7 +104,7 @@ begin
   end;
 
   Unimplemented('D3D__CMiniport__CreateCtxDmaObject');
-  Result := 0;
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -127,7 +127,8 @@ begin
     LogEnd();
   end;
 
-  Result := Unimplemented('D3D__CMiniport__DacProgramGammaRamp');
+  Unimplemented('D3D__CMiniport__DacProgramGammaRamp');
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -161,7 +162,7 @@ begin
   PDWORD(a6)^ := 0;
 
   Unimplemented('D3D__CMiniport__InitDMAChannel');
-  Result := 0;
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -185,7 +186,7 @@ begin
   end;
 
   Unimplemented('D3D__CMiniport__BindToChannel');
-  Result := 0;
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -213,8 +214,7 @@ begin
   end;
 
   Unimplemented('D3D__CMiniport__CreateGrObject');
-
-  Result := 0;
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -251,7 +251,7 @@ begin
   end;
 
   Unimplemented('D3D__CMiniport__SetVideoMode');
-  Result := 0;
+  Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
