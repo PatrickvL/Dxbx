@@ -434,8 +434,6 @@ type
   TIDirectSoundBuffer = class(TObject)
   // Branch:Dxbx  Translator:PatrickvL  Done:100
   public
-//    {0x}function QueryInterfaceC(const PIID iid; PLPVOID ppvInterface): HRESULT; stdcall; virtual;
-//    {0x}function QueryInterface IDirectSoundBuffer_QueryInterfaceC(): HRESULT; stdcall; virtual;
     // IUnknown interface :
     {VMT 0x00}function AddRef(): ULONG; virtual; stdcall;
     {VMT 0x04}function Release(): ULONG; virtual; stdcall;
@@ -2182,28 +2180,36 @@ end;
 
 function XTL_EmuIDirectSound_QueryInterfaceC
 (
-    pThis: XTL_LPDIRECTSOUND8
-    // MISSING_ARGUMENTS!
+    pThis: XTL_LPDIRECTSOUND8;
+    iid: PIID;
+    ppvInterface: PLPVOID
 ): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSound.QueryInterfaceC');
+  ppvInterface^ := pThis;
+  TIDirectSound(pThis).AddRef;
+
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuIDirectSound_QueryInterface
 (
-    pThis: XTL_LPDIRECTSOUND8
-    // MISSING_ARGUMENTS!
+    pThis: XTL_LPDIRECTSOUND8;
+    iid: REFIID;
+    ppvInterface: PLPVOID
 ): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSound.QueryInterface');
+  ppvInterface^ := pThis;
+  TIDirectSound(pThis).AddRef;
+
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2375,29 +2381,36 @@ asm jmp TIDirectSound.SynchPlayback; end;
 
 function XTL_EmuIDirectSoundBuffer_QueryInterfaceC
 (
-    pThis: XTL_LPDIRECTSOUND8
-    // MISSING_ARGUMENTS!
+    pThis: XTL_LPDIRECTSOUND8;
+    iid: PIID;
+    ppvInterface: PLPVOID
 ): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSoundBuffer.QueryInterfaceC');
+  ppvInterface^ := pThis;
+  TIDirectSoundBuffer(pThis).AddRef;
+
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuIDirectSoundBuffer_QueryInterface
 (
-    pThis: XTL_LPDIRECTSOUND8
-    // MISSING_ARGUMENTS!
+    pThis: XTL_LPDIRECTSOUND8;
+    iid: REFIID;
+    ppvInterface: PLPVOID
 ): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSoundBuffer.QueryInterface');
+  ppvInterface^ := pThis;
+  TIDirectSoundBuffer(pThis).AddRef;
 
+  Result := DS_OK;
   EmuSwapFS(fsXbox);
 end;
 
@@ -4665,11 +4678,14 @@ function XTL_EmuIDirectSoundStream_QueryInterfaceC
     iid: PIID;
     ppvInterface: PLPVOID
 ): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('XTL_EmuIDirectSoundStream_QueryInterfaceC');
+  ppvInterface^ := pThis;
+  TIDirectSoundStream(pThis).AddRef;
+
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4680,11 +4696,14 @@ function XTL_EmuIDirectSoundStream_QueryInterface
     iid: REFIID;
     ppvInterface: PLPVOID
 ): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('XTL_EmuIDirectSoundStream_QueryInterface');
+  ppvInterface^ := pThis;
+  TIDirectSoundStream(pThis).AddRef;
+
+  Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4966,8 +4985,6 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuDirectSound_CDirectSound_GetOutputLevels,
   XTL_EmuDirectSound_CDirectSound_GetSpeakerConfig,
   XTL_EmuDirectSound_CDirectSound_GetTime,
-//  XTL_EmuDirectSound_CDirectSound_QueryInterface,
-//  XTL_EmuDirectSound_CDirectSound_QueryInterfaceC,
   XTL_EmuDirectSound_CDirectSound_Release,
   XTL_EmuDirectSound_CDirectSound_SetAllParameters,
   XTL_EmuDirectSound_CDirectSound_SetCooperativeLevel,
