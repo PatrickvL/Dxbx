@@ -147,10 +147,10 @@ const
   // to ease the implementation of Xb2PCRegisterType (which also determines an index for D3D9)
   // Unless otherwise indicated, these are mapped to index 0 in D3D9
   D3DVSDE_POSITION = D3DDECLUSAGE_POSITION;
-  D3DVSDE_POSITION2 = D3DDECLUSAGE_POSITION; // Mapped to index 1 in D3D9, but unused on Xbox.
+  // D3DVSDE_POSITION2 = D3DDECLUSAGE_POSITION; // Mapped to index 1 in D3D9, but unused on Xbox.
   D3DVSDE_BLENDWEIGHT = D3DDECLUSAGE_BLENDWEIGHT;
   D3DVSDE_NORMAL = D3DDECLUSAGE_NORMAL;
-  D3DVSDE_NORMAL2 = D3DDECLUSAGE_NORMAL; // Mapped to index 1 in D3D9, but unused on Xbox.
+  // D3DVSDE_NORMAL2 = D3DDECLUSAGE_NORMAL; // Mapped to index 1 in D3D9, but unused on Xbox.
   D3DVSDE_DIFFUSE = D3DDECLUSAGE_COLOR;
   D3DVSDE_SPECULAR = D3DDECLUSAGE_COLOR; // Mapped to index 1 in D3D9
   D3DVSDE_FOG = D3DDECLUSAGE_FOG; // Doesn't exist in D3D8!
@@ -158,15 +158,16 @@ const
   D3DVSDE_TEXCOORD1 = D3DDECLUSAGE_TEXCOORD; // Mapped to index 1 in D3D9
   D3DVSDE_TEXCOORD2 = D3DDECLUSAGE_TEXCOORD; // Mapped to index 2 in D3D9
   D3DVSDE_TEXCOORD3 = D3DDECLUSAGE_TEXCOORD; // Mapped to index 3 in D3D9
+  // D3DVSDE_TEXCOORD4 = ?; // unused on Xbox.
+  // D3DVSDE_TEXCOORD5 = ?; // unused on Xbox.
+  // D3DVSDE_TEXCOORD6 = ?; // unused on Xbox.
+  // D3DVSDE_TEXCOORD7 = ?; // unused on Xbox.
+  // D3DVSDE_BLENDINDICES = ?; // unused on Xbox.
+  // D3DVSDE_PSIZE = ?; // unused on Xbox.
 
   D3DRS_FORCE_DWORD               = $7fffffff;
 
 {$ELSE !DXBX_USE_D3D9}
-const
-  UNSUPPORTED = DWORD(-1); // Doesn't exist in D3D8
-
-  D3DVSDE_FOG = UNSUPPORTED;
-
 type
   D3DDECLUSAGE = DWORD;
 
@@ -219,6 +220,14 @@ const
   D3DSAMP_MAXMIPLEVEL = D3DTSS_MAXMIPLEVEL;
   D3DSAMP_MAXANISOTROPY = D3DTSS_MAXANISOTROPY;
 
+{$ENDIF}
+
+const
+  D3DDECLUSAGE_UNSUPPORTED = D3DDECLUSAGE(-1);
+
+{$IFNDEF DXBX_USE_D3D9}
+const
+  D3DVSDE_FOG = D3DDECLUSAGE_UNSUPPORTED; // Doesn't exist in D3D8
 {$ENDIF}
 
 {$IFDEF DXBX_USE_D3D9}
@@ -1652,19 +1661,20 @@ const
 
   X_D3DCLEAR_ALL_SUPPORTED = X_D3DCLEAR_ZBUFFER or X_D3DCLEAR_STENCIL or X_D3DCLEAR_TARGET;
 
-const // vertex input registers for fixed function vertex shader
-  X_D3DVSDE_POSITION     = 0;
-  X_D3DVSDE_BLENDWEIGHT  = 1;
-  X_D3DVSDE_NORMAL       = 2;
-  X_D3DVSDE_DIFFUSE      = 3;
-  X_D3DVSDE_SPECULAR     = 4;
+const // vertex shader input registers for fixed function vertex shader
+  // Name                  Register number      D3DFVF
+  X_D3DVSDE_POSITION     = 0; // Corresponds to D3DFVF_XYZ
+  X_D3DVSDE_BLENDWEIGHT  = 1; // Corresponds to D3DFVF_XYZRHW
+  X_D3DVSDE_NORMAL       = 2; // Corresponds to D3DFVF_NORMAL
+  X_D3DVSDE_DIFFUSE      = 3; // Corresponds to D3DFVF_DIFFUSE
+  X_D3DVSDE_SPECULAR     = 4; // Corresponds to D3DFVF_SPECULAR
   X_D3DVSDE_FOG          = 5; // Xbox extension
   X_D3DVSDE_BACKDIFFUSE  = 7; // Xbox extension
   X_D3DVSDE_BACKSPECULAR = 8; // Xbox extension
-  X_D3DVSDE_TEXCOORD0    = 9;
-  X_D3DVSDE_TEXCOORD1    = 10;
-  X_D3DVSDE_TEXCOORD2    = 11;
-  X_D3DVSDE_TEXCOORD3    = 12;
+  X_D3DVSDE_TEXCOORD0    = 9; // "Corresponds to D3DFVF_TEX0" says the docs, but 0 means no textures, so probably D3DFVF_TEX1!
+  X_D3DVSDE_TEXCOORD1    = 10; // Corresponds to D3DFVF_TEX{above}+1
+  X_D3DVSDE_TEXCOORD2    = 11; // Corresponds to D3DFVF_TEX{above}+2
+  X_D3DVSDE_TEXCOORD3    = 12; // Corresponds to D3DFVF_TEX{above}+3
   X_D3DVSDE_VERTEX       = $FFFFFFFF; // Xbox extension for Begin/End drawing (data is a D3DVSDT_FLOAT4)
 
 type X_D3DVSDE = X_D3DVSDE_POSITION..High(DWORD)-2; // Unique declaration to make overloads possible;

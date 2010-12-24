@@ -2248,52 +2248,48 @@ begin
 end;
 
 {$IFDEF DXBX_USE_D3D9}
-function Xb2PCRegisterType(VertexRegister: DWORD; var D3D9Index: Integer): DWORD;
+function Xb2PCRegisterType(VertexRegister: DWORD; var D3D9Index: Integer): D3DDECLUSAGE;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 {$ELSE}
-function Xb2PCRegisterType(VertexRegister: DWORD): DWORD;
+function Xb2PCRegisterType(VertexRegister: DWORD): D3DDECLUSAGE;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   D3D9Index: Integer; // ignored
 {$HINTS OFF} // Prevent the compiler complaining about "value assigned to 'D3D9Index' never used"
 {$ENDIF}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
-
-var
-  PCRegister: {$IFDEF DXBX_USE_D3D9}D3DDECLUSAGE{$ELSE}DWORD{$ENDIF};
 begin
   D3D9Index := 0; // Default, each register maps to index 0
 
-  PInteger(@PCRegister)^ := -1;
-
+  Result := D3DDECLUSAGE_UNSUPPORTED;
   case VertexRegister of
   X_D3DVSDE_VERTEX:
       DbgVshPrintf('D3DVSDE_VERTEX /* xbox ext. */');
 
   X_D3DVSDE_POSITION: begin
       DbgVshPrintf('D3DVSDE_POSITION');
-      PCRegister := D3DVSDE_POSITION;
+      Result := D3DVSDE_POSITION;
     end;
   X_D3DVSDE_BLENDWEIGHT: begin
       DbgVshPrintf('D3DVSDE_BLENDWEIGHT');
-      PCRegister := D3DVSDE_BLENDWEIGHT;
+      Result := D3DVSDE_BLENDWEIGHT;
     end;
   X_D3DVSDE_NORMAL: begin
       DbgVshPrintf('D3DVSDE_NORMAL');
-      PCRegister := D3DVSDE_NORMAL;
+      Result := D3DVSDE_NORMAL;
     end;
   X_D3DVSDE_DIFFUSE: begin
       DbgVshPrintf('D3DVSDE_DIFFUSE');
-      PCRegister := D3DVSDE_DIFFUSE;
+      Result := D3DVSDE_DIFFUSE;
     end;
   X_D3DVSDE_SPECULAR: begin
       DbgVshPrintf('D3DVSDE_SPECULAR');
-      PCRegister := D3DVSDE_SPECULAR;
+      Result := D3DVSDE_SPECULAR;
       D3D9Index := 1;
     end;
   X_D3DVSDE_FOG: begin
       DbgVshPrintf('D3DVSDE_FOG /* xbox ext. */');
-      PCRegister := D3DVSDE_FOG; // Note : Doesn't exist in D3D8, but we define it as D3DDECLUSAGE_FOG for D3D9 !
+      Result := D3DVSDE_FOG; // Note : Doesn't exist in D3D8, but we define it as D3DDECLUSAGE_FOG for D3D9 !
     end;
   X_D3DVSDE_BACKDIFFUSE:
       DbgVshPrintf('D3DVSDE_BACKDIFFUSE /* xbox ext. */');
@@ -2302,31 +2298,30 @@ begin
 
   X_D3DVSDE_TEXCOORD0: begin
       DbgVshPrintf('D3DVSDE_TEXCOORD0');
-      PCRegister := D3DVSDE_TEXCOORD0;
+      Result := D3DVSDE_TEXCOORD0;
     end;
   X_D3DVSDE_TEXCOORD1: begin
       DbgVshPrintf('D3DVSDE_TEXCOORD1');
-      PCRegister := D3DVSDE_TEXCOORD1;
+      Result := D3DVSDE_TEXCOORD1;
       D3D9Index := 1;
     end;
   X_D3DVSDE_TEXCOORD2: begin
       DbgVshPrintf('D3DVSDE_TEXCOORD2');
-      PCRegister := D3DVSDE_TEXCOORD2;
+      Result := D3DVSDE_TEXCOORD2;
       D3D9Index := 2;
     end;
   X_D3DVSDE_TEXCOORD3: begin
       DbgVshPrintf('D3DVSDE_TEXCOORD3');
-      PCRegister := D3DVSDE_TEXCOORD3;
+      Result := D3DVSDE_TEXCOORD3;
       D3D9Index := 3;
     end;
   else
     DbgVshPrintf('%d /* unknown register */', [VertexRegister]);
   end;
 
-  Result := DWORD(PCRegister);
-  if Integer(Result) = -1 then
+  if Result = D3DDECLUSAGE_UNSUPPORTED then
     D3D9Index := -1;
-end;
+end; // Xb2PCRegisterType
 {$HINTS ON}
 
 function VshGetTokenType(Token: DWORD): DWORD; inline;
@@ -2395,11 +2390,11 @@ procedure VshConvertToken_TESSELATOR(pToken: PDWORD; var pRecompiled: PVertexSha
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   VertexRegister: DWORD;
-  NewVertexRegister: DWORD;
+  NewVertexRegister: D3DDECLUSAGE;
   VertexRegisterIn: DWORD;
   VertexRegisterOut: DWORD;
-  NewVertexRegisterIn: DWORD;
-  NewVertexRegisterOut: DWORD;
+  NewVertexRegisterIn: D3DDECLUSAGE;
+  NewVertexRegisterOut: D3DDECLUSAGE;
 {$IFDEF DXBX_USE_D3D9}
   Index: Integer;
 {$ENDIF}
@@ -2408,7 +2403,7 @@ begin
   if (pToken^ and D3DVSD_MASK_TESSUV) > 0 then
   begin
     VertexRegister    := VshGetVertexRegister(pToken^);
-    NewVertexRegister := VertexRegister;
+    NewVertexRegister := D3DDECLUSAGE(VertexRegister);
 
     DbgVshPrintf(#9'D3DVSD_TESSUV(');
 
@@ -2418,7 +2413,7 @@ begin
     end
     else
     begin
-      DbgVshPrintf('%d', [NewVertexRegister]);
+      DbgVshPrintf('%d', [Ord(NewVertexRegister)]);
 {$IFDEF DXBX_USE_D3D9}
       Index := 0;
       // TODO : The specular D3DDECLUSAGE_COLOR should use Index 1 (but how to detect?)
@@ -2442,8 +2437,8 @@ begin
     VertexRegisterIn  := VshGetVertexRegisterIn(pToken^);
     VertexRegisterOut := VshGetVertexRegister(pToken^);
 
-    NewVertexRegisterIn  := VertexRegisterIn;
-    NewVertexRegisterOut := VertexRegisterOut;
+    NewVertexRegisterIn  := D3DDECLUSAGE(VertexRegisterIn);
+    NewVertexRegisterOut := D3DDECLUSAGE(VertexRegisterOut);
 
     DbgVshPrintf(#9'D3DVSD_TESSNORMAL(');
 
@@ -2453,7 +2448,7 @@ begin
     end
     else
     begin
-      DbgVshPrintf('%d', [NewVertexRegisterIn]);
+      DbgVshPrintf('%d', [Ord(NewVertexRegisterIn)]);
 {$IFDEF DXBX_USE_D3D9}
       Index := 0;
       // TODO : The specular D3DDECLUSAGE_COLOR should use Index 1 (but how to detect?)
@@ -2475,7 +2470,7 @@ begin
     end
     else
     begin
-      DbgVshPrintf('%d', [NewVertexRegisterOut]);
+      DbgVshPrintf('%d', [Ord(NewVertexRegisterOut)]);
 {$IFDEF DXBX_USE_D3D9}
       Index := 0;
       // TODO : The specular D3DDECLUSAGE_COLOR should use Index 1 (but how to detect?)
@@ -2594,7 +2589,7 @@ procedure VshConvertToken_STREAMDATA_REG(pToken: PDWORD; var pRecompiled: PVerte
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   VertexRegister: DWORD;
-  NewVertexRegister: DWORD;
+  NewVertexRegister: D3DDECLUSAGE;
   DataType: DWORD;
   NewSize: DWORD;
 {$IFDEF DXBX_USE_D3D9}
@@ -2614,8 +2609,8 @@ begin
   end
   else
   begin
-    NewVertexRegister := VertexRegister;
-    DbgVshPrintf('%d', [NewVertexRegister]);
+    NewVertexRegister := D3DDECLUSAGE(VertexRegister);
+    DbgVshPrintf('%d', [Ord(NewVertexRegister)]);
 {$IFDEF DXBX_USE_D3D9}
     Index := 0;
     // TODO : The specular D3DDECLUSAGE_COLOR should use Index 1 (but how to detect?)
@@ -2773,7 +2768,7 @@ begin
   pRecompiled.Offset := pPatchData.ConvertedStride;
   pRecompiled._Type := NewDataType;
   pRecompiled.Method := D3DDECLMETHOD_DEFAULT;
-  pRecompiled.Usage := D3DDECLUSAGE(NewVertexRegister);
+  pRecompiled.Usage := NewVertexRegister;
   pRecompiled.UsageIndex := Index;
 
   // Step to next element

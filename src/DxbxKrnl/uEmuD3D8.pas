@@ -4707,9 +4707,9 @@ begin
 {$IFDEF DXBX_USE_D3D9}
     hRet := g_pD3DDevice.SetVertexShaderConstantF
     (
-      Register_,
-      PSingle(pConstantData),
-      ConstantCount
+      {StartRegister=}Register_,
+      {pConstantData=}PSingle(pConstantData),
+      {Vector4fCount=}ConstantCount
     );
 {$ELSE}
     hRet := g_pD3DDevice.SetVertexShaderConstant
