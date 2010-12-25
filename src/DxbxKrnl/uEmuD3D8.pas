@@ -368,7 +368,7 @@ begin
 
   rs := DxbxXboxMethodToRenderState(aValue);
   if rs in [X_D3DRS_FIRST..X_D3DRS_LAST] then
-    SetValue(UIntPtr(aValue), 'NV2A_' + DxbxRenderStateXB2String[rs])
+    SetValue(UIntPtr(aValue), 'NV2A_' + DxbxRenderStateInfo[rs].S)
   else
     SetValue(UIntPtr(aValue));
 end;
@@ -778,13 +778,13 @@ begin
   for XState := X_D3DRS_FIRST to X_D3DRS_LAST do
   begin
     // See if this renderstate is supported on Native D3D :
-    PCState := EmuXB2PC_D3DRS(XState);
+    PCState := DxbxRenderStateInfo[XState].PC;
     if DWORD(PCState) = Ord(D3DRS_UNSUPPORTED) then // Ord for D3D9 compatibility
       Continue;
 
     // Get the value and print it :
     g_pD3DDevice.GetRenderState(PCState, {out}Value);
-    DbgPrintf('  %-28s = 0x%.08X;', [DxbxRenderStateXB2String[XState], Value]);
+    DbgPrintf('  %-28s = 0x%.08X;', [DxbxRenderStateInfo[XState].S, Value]);
   end;
 end;
 
@@ -4171,10 +4171,10 @@ begin
     State_VersionIndependent := DxbxVersionAdjust_D3DRS(State);
 
     // Check if this is an Xbox extension  :
-    if DxbxRenderStateIsXboxExtension(State_VersionIndependent) then
+    if DxbxRenderStateInfo[State_VersionIndependent].X then
       PValue^ := XTL_EmuMappedD3DRenderState[State_VersionIndependent]^
     else
-      g_pD3DDevice.GetRenderState(EmuXB2PC_D3DRS(State_VersionIndependent), {out}PValue^);
+      g_pD3DDevice.GetRenderState(DxbxRenderStateInfo[State_VersionIndependent].PC, {out}PValue^);
   end;
 
   Result := S_OK;
@@ -8446,9 +8446,9 @@ begin
   if MayLog(lfUnit or lfReturnValue) then
   begin
     if PCValue <> XboxValue then
-      DbgPrintf('%s := 0x%.08X (converted from Xbox value 0x%.08X)', [DxbxRenderStateXB2String[XboxRenderState], PCValue, XboxValue])
+      DbgPrintf('%s := 0x%.08X (converted from Xbox value 0x%.08X)', [DxbxRenderStateInfo[XboxRenderState].S, PCValue, XboxValue])
     else
-      DbgPrintf('%s := 0x%.08X', [DxbxRenderStateXB2String[XboxRenderState], PCValue]);
+      DbgPrintf('%s := 0x%.08X', [DxbxRenderStateInfo[XboxRenderState].S, PCValue]);
   end;
 end;
 
