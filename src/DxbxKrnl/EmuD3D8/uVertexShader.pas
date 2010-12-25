@@ -578,6 +578,7 @@ function XTL_EmuRecompileVshDeclaration(
 ): DWORD; // forward
 function XTL_EmuRecompileVshFunction(
     pFunction: PDWORD;
+    pRecompiledDeclaration: PVertexShaderDeclaration;
     ppRecompiled: XTL_PLPD3DXBUFFER;
     pOriginalSize: PDWORD;
     bNoReservedConstants: boolean
@@ -977,6 +978,7 @@ begin
 end; // VshWriteParameter
 
 procedure VshWriteShader(pShader: PVSH_XBOX_SHADER;
+                         pRecompiledDeclaration: PVertexShaderDeclaration;
                          pDisassembly: P_char;
                          IsConverted: boolean);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -1017,46 +1019,26 @@ begin
     // input is probably a color register too then). Another method to determine
     // the type of input register usage, is to look at the D3DVSD_REG / D3DVSDT_*
     // registration. (How to get that here?)
-    j := 0;
-    for i := 0 to VSH_XBOX_MAX_V_REGISTER_COUNT - 1 do
+    i := 0;
+    while pRecompiledDeclaration.Stream < $FF do
     begin
-      // Test if this v-register is actually used :
-      if RegVUsage[i] then
-      begin
-        // TODO -oDxbx : We have a bit of a problem here, as there's no reliable way
-        // to determine what usage the input vertex registers have exactly (some cases
-        // might be logical, like a single use to fill a color output register, the
-        // input is probably a color register too then). Another method to determine
-        // the type of input register usage, is to look at the D3DVSD_REG / D3DVSDT_*
-        // registration. (How to get that here?)
-
-        case i of
-          0: DclStr := 'dcl_position';
-//          1: DclStr := 'dcl_blendweight';
-//          2: DclStr := 'dcl_normal';
-          else{3:} DclStr := 'dcl_color' + AnsiString(IntToStr(j)); Inc(j); // This is Xbox 'Diffuse', is it correctly mapped?
-  //        Specular 4
-//          5: DclStr := 'dcl_fog';
-  //      7: ; // Back Diffuse - Xbox ext.
-  //      8: ; // Back Specular - Xbox ext.
-//          9: DclStr := 'dcl_texcoord0';
-//          10: DclStr := 'dcl_texcoord1';
-//          11: DclStr := 'dcl_texcoord2';
-//          12: DclStr := 'dcl_texcoord3';
-
-  // Available in Direct3D9, but unmapped to Xbox :
-  //       0: DclStr := 'dcl_blendindices';
-  //       0: DclStr := 'dcl_psize';
-  //       0: DclStr := 'dcl_tangent';
-  //       0: DclStr := 'dcl_binormal';
-  //       0: DclStr := 'dcl_tessfactor';
-  //       0: DclStr := 'dcl_depth';
-  //       0: DclStr := 'dcl_sample';
-//        else
-//          DclStr := '; dcl_unknown';
-        end;
-        Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s v%d'#13#10, [DclStr, i]));
+      case pRecompiledDeclaration.Usage of
+        D3DDECLUSAGE_POSITION: DclStr := 'dcl_position';
+        D3DDECLUSAGE_BLENDWEIGHT: DclStr := 'dcl_blendweight';
+        D3DDECLUSAGE_NORMAL: DclStr := 'dcl_normal';
+        D3DDECLUSAGE_COLOR: DclStr := 'dcl_color' + AnsiString(IntToStr(pRecompiledDeclaration.UsageIndex));
+        D3DDECLUSAGE_FOG: DclStr := 'dcl_fog';
+        D3DDECLUSAGE_TEXCOORD: DclStr := 'dcl_texcoord' + AnsiString(IntToStr(pRecompiledDeclaration.UsageIndex));
+      else
+        DclStr := '; dcl_unknown';
       end;
+
+      while not RegVUsage[i] do
+        Inc(i);
+
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s v%d'#13#10, [DclStr, i]));
+      Inc(i);
+      Inc(pRecompiledDeclaration);
     end;
 
 {$IFDEF DXBX_USE_VS30}
@@ -2247,80 +2229,96 @@ begin
   Inc(Result); // Dxbx note : Multiply-by-size is done by the (only) caller
 end;
 
+function Xb2PCRegisterType(
+  VertexRegister: DWORD;
+  IsFixedFunction: boolean
 {$IFDEF DXBX_USE_D3D9}
-function Xb2PCRegisterType(VertexRegister: DWORD; var D3D9Index: Integer): D3DDECLUSAGE;
-// Branch:Dxbx  Translator:PatrickvL  Done:100
-{$ELSE}
-function Xb2PCRegisterType(VertexRegister: DWORD): D3DDECLUSAGE;
+  ; var D3D9Index: Integer
+{$ENDIF}
+  ): D3DDECLUSAGE;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+{$IFNDEF DXBX_USE_D3D9}
 var
   D3D9Index: Integer; // ignored
 {$HINTS OFF} // Prevent the compiler complaining about "value assigned to 'D3D9Index' never used"
 {$ENDIF}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
+  // For fixed function vertex shaders, print D3DVSDE_*, for custom shaders print numbered registers.
   D3D9Index := 0; // Default, each register maps to index 0
 
-  Result := D3DDECLUSAGE_UNSUPPORTED;
-  case VertexRegister of
-  X_D3DVSDE_VERTEX:
-      DbgVshPrintf('D3DVSDE_VERTEX /* xbox ext. */');
+  if (IsFixedFunction) then
+  begin
+    Result := D3DDECLUSAGE_UNSUPPORTED;
+    case VertexRegister of
+    X_D3DVSDE_VERTEX:
+        DbgVshPrintf('D3DVSDE_VERTEX /* xbox ext. */');
 
-  X_D3DVSDE_POSITION: begin
-      DbgVshPrintf('D3DVSDE_POSITION');
-      Result := D3DVSDE_POSITION;
-    end;
-  X_D3DVSDE_BLENDWEIGHT: begin
-      DbgVshPrintf('D3DVSDE_BLENDWEIGHT');
-      Result := D3DVSDE_BLENDWEIGHT;
-    end;
-  X_D3DVSDE_NORMAL: begin
-      DbgVshPrintf('D3DVSDE_NORMAL');
-      Result := D3DVSDE_NORMAL;
-    end;
-  X_D3DVSDE_DIFFUSE: begin
-      DbgVshPrintf('D3DVSDE_DIFFUSE');
-      Result := D3DVSDE_DIFFUSE;
-    end;
-  X_D3DVSDE_SPECULAR: begin
-      DbgVshPrintf('D3DVSDE_SPECULAR');
-      Result := D3DVSDE_SPECULAR;
-      D3D9Index := 1;
-    end;
-  X_D3DVSDE_FOG: begin
-      DbgVshPrintf('D3DVSDE_FOG /* xbox ext. */');
-      Result := D3DVSDE_FOG; // Note : Doesn't exist in D3D8, but we define it as D3DDECLUSAGE_FOG for D3D9 !
-    end;
-  X_D3DVSDE_BACKDIFFUSE:
-      DbgVshPrintf('D3DVSDE_BACKDIFFUSE /* xbox ext. */');
-  X_D3DVSDE_BACKSPECULAR:
-      DbgVshPrintf('D3DVSDE_BACKSPECULAR /* xbox ext. */');
+    X_D3DVSDE_POSITION: begin
+        DbgVshPrintf('D3DVSDE_POSITION');
+        Result := D3DVSDE_POSITION;
+      end;
+    X_D3DVSDE_BLENDWEIGHT: begin
+        DbgVshPrintf('D3DVSDE_BLENDWEIGHT');
+        Result := D3DVSDE_BLENDWEIGHT;
+      end;
+    X_D3DVSDE_NORMAL: begin
+        DbgVshPrintf('D3DVSDE_NORMAL');
+        Result := D3DVSDE_NORMAL;
+      end;
+    X_D3DVSDE_DIFFUSE: begin
+        DbgVshPrintf('D3DVSDE_DIFFUSE');
+        Result := D3DVSDE_DIFFUSE;
+      end;
+    X_D3DVSDE_SPECULAR: begin
+        DbgVshPrintf('D3DVSDE_SPECULAR');
+        Result := D3DVSDE_SPECULAR;
+        D3D9Index := 1;
+      end;
+    X_D3DVSDE_FOG: begin
+        DbgVshPrintf('D3DVSDE_FOG /* xbox ext. */');
+        Result := D3DVSDE_FOG; // Note : Doesn't exist in D3D8, but we define it as D3DDECLUSAGE_FOG for D3D9 !
+      end;
+    X_D3DVSDE_BACKDIFFUSE:
+        DbgVshPrintf('D3DVSDE_BACKDIFFUSE /* xbox ext. */');
+    X_D3DVSDE_BACKSPECULAR:
+        DbgVshPrintf('D3DVSDE_BACKSPECULAR /* xbox ext. */');
 
-  X_D3DVSDE_TEXCOORD0: begin
-      DbgVshPrintf('D3DVSDE_TEXCOORD0');
-      Result := D3DVSDE_TEXCOORD0;
+    X_D3DVSDE_TEXCOORD0: begin
+        DbgVshPrintf('D3DVSDE_TEXCOORD0');
+        Result := D3DVSDE_TEXCOORD0;
+      end;
+    X_D3DVSDE_TEXCOORD1: begin
+        DbgVshPrintf('D3DVSDE_TEXCOORD1');
+        Result := D3DVSDE_TEXCOORD1;
+        D3D9Index := 1;
+      end;
+    X_D3DVSDE_TEXCOORD2: begin
+        DbgVshPrintf('D3DVSDE_TEXCOORD2');
+        Result := D3DVSDE_TEXCOORD2;
+        D3D9Index := 2;
+      end;
+    X_D3DVSDE_TEXCOORD3: begin
+        DbgVshPrintf('D3DVSDE_TEXCOORD3');
+        Result := D3DVSDE_TEXCOORD3;
+        D3D9Index := 3;
+      end;
+    else
+      DbgVshPrintf('%d /* unknown register */', [VertexRegister]);
     end;
-  X_D3DVSDE_TEXCOORD1: begin
-      DbgVshPrintf('D3DVSDE_TEXCOORD1');
-      Result := D3DVSDE_TEXCOORD1;
-      D3D9Index := 1;
-    end;
-  X_D3DVSDE_TEXCOORD2: begin
-      DbgVshPrintf('D3DVSDE_TEXCOORD2');
-      Result := D3DVSDE_TEXCOORD2;
-      D3D9Index := 2;
-    end;
-  X_D3DVSDE_TEXCOORD3: begin
-      DbgVshPrintf('D3DVSDE_TEXCOORD3');
-      Result := D3DVSDE_TEXCOORD3;
-      D3D9Index := 3;
-    end;
+
+    if Result = D3DDECLUSAGE_UNSUPPORTED then
+      D3D9Index := -1;
+  end
   else
-    DbgVshPrintf('%d /* unknown register */', [VertexRegister]);
+  begin
+    Result := D3DDECLUSAGE(VertexRegister);
+    DbgVshPrintf('%d', [Ord(Result)]);
+{$IFDEF DXBX_USE_D3D9}
+    // TODO : The specular D3DDECLUSAGE_COLOR should use Index 1 (but how to detect?)
+    // TODO : The D3DDECLUSAGE_TEXCOORD should use Index 0..3 (but how to detect?)
+{$ENDIF}
   end;
-
-  if Result = D3DDECLUSAGE_UNSUPPORTED then
-    D3D9Index := -1;
 end; // Xb2PCRegisterType
 {$HINTS ON}
 
@@ -2367,6 +2365,7 @@ var
   i: int;
 begin
   // D3DVSD_CONST
+  // Dxbx note : Untested in XDK samples - TODO : Find a testcase for this!
   DbgVshPrintf(#9'D3DVSD_CONST(');
   ConstantAddress := ((pToken^ shr D3DVSD_CONSTADDRESSSHIFT) and $FF);
   Count           := (pToken^ and D3DVSD_CONSTCOUNTMASK) shr D3DVSD_CONSTCOUNTSHIFT;
@@ -2399,28 +2398,13 @@ var
   Index: Integer;
 {$ENDIF}
 begin
-  // TODO -oCXBX: Investigate why Xb2PCRegisterType is only used for fixed function vertex shaders
+  // Dxbx note : Use XDK Patch sample as testcase
   if (pToken^ and D3DVSD_MASK_TESSUV) > 0 then
   begin
-    VertexRegister    := VshGetVertexRegister(pToken^);
-    NewVertexRegister := D3DDECLUSAGE(VertexRegister);
+    VertexRegister := VshGetVertexRegister(pToken^);
 
     DbgVshPrintf(#9'D3DVSD_TESSUV(');
-
-    if (IsFixedFunction) then
-    begin
-      NewVertexRegister := Xb2PCRegisterType(VertexRegister{$IFDEF DXBX_USE_D3D9}, {var}Index{$ENDIF});
-    end
-    else
-    begin
-      DbgVshPrintf('%d', [Ord(NewVertexRegister)]);
-{$IFDEF DXBX_USE_D3D9}
-      Index := 0;
-      // TODO : The specular D3DDECLUSAGE_COLOR should use Index 1 (but how to detect?)
-      // TODO : The D3DDECLUSAGE_TEXCOORD should use Index 0..3 (but how to detect?)
-{$ENDIF}
-    end;
-
+    NewVertexRegister := Xb2PCRegisterType(VertexRegister, IsFixedFunction{$IFDEF DXBX_USE_D3D9}, {var}Index{$ENDIF});
     DbgVshPrintf('),'#13#10);
 
 {$IFDEF DXBX_USE_D3D9}
@@ -2434,27 +2418,12 @@ begin
   // D3DVSD_TESSNORMAL
   else
   begin
-    VertexRegisterIn  := VshGetVertexRegisterIn(pToken^);
+    VertexRegisterIn := VshGetVertexRegisterIn(pToken^);
     VertexRegisterOut := VshGetVertexRegister(pToken^);
 
-    NewVertexRegisterIn  := D3DDECLUSAGE(VertexRegisterIn);
-    NewVertexRegisterOut := D3DDECLUSAGE(VertexRegisterOut);
-
     DbgVshPrintf(#9'D3DVSD_TESSNORMAL(');
-
-    if (IsFixedFunction) then
-    begin
-      NewVertexRegisterIn := Xb2PCRegisterType(VertexRegisterIn{$IFDEF DXBX_USE_D3D9}, {var}Index{$ENDIF});
-    end
-    else
-    begin
-      DbgVshPrintf('%d', [Ord(NewVertexRegisterIn)]);
-{$IFDEF DXBX_USE_D3D9}
-      Index := 0;
-      // TODO : The specular D3DDECLUSAGE_COLOR should use Index 1 (but how to detect?)
-      // TODO : The D3DDECLUSAGE_TEXCOORD should use Index 0..3 (but how to detect?)
-{$ENDIF}
-    end;
+    NewVertexRegisterIn := Xb2PCRegisterType(VertexRegisterIn, IsFixedFunction{$IFDEF DXBX_USE_D3D9}, {var}Index{$ENDIF});
+    DbgVshPrintf(', ');
 
 {$IFDEF DXBX_USE_D3D9}
     // TODO : Expand on the setting of this TESSNORMAL input register element :
@@ -2462,23 +2431,9 @@ begin
     pRecompiled.UsageIndex := Index;
 {$ENDIF}
 
-    DbgVshPrintf(', ');
-
-    if (IsFixedFunction) then
-    begin
-      NewVertexRegisterOut := Xb2PCRegisterType(VertexRegisterOut{$IFDEF DXBX_USE_D3D9}, {var}Index{$ENDIF});
-    end
-    else
-    begin
-      DbgVshPrintf('%d', [Ord(NewVertexRegisterOut)]);
-{$IFDEF DXBX_USE_D3D9}
-      Index := 0;
-      // TODO : The specular D3DDECLUSAGE_COLOR should use Index 1 (but how to detect?)
-      // TODO : The D3DDECLUSAGE_TEXCOORD should use Index 0..3 (but how to detect?)
-{$ENDIF}
-    end;
-
+    NewVertexRegisterOut := Xb2PCRegisterType(VertexRegisterOut, IsFixedFunction{$IFDEF DXBX_USE_D3D9}, {var}Index{$ENDIF});
     DbgVshPrintf('),'#13#10);
+
 {$IFDEF DXBX_USE_D3D9}
     // TODO : Expand on the setting of this TESSNORMAL output register element :
     Inc(pRecompiled);
@@ -2535,6 +2490,7 @@ begin
   begin
     // new stream
     // copy current data to structure
+    // Dxbx note : Use Dophin(s), FieldRender, MatrixPaletteSkinning and PersistDisplay as a testcase
     if (VshAddStreamPatch(pPatchData)) then
     begin
       // Reset fields for next patch :
@@ -2599,25 +2555,10 @@ var
   NewDataType: DWORD;
 {$ENDIF}
 begin
-  DbgVshPrintf(#9'D3DVSD_REG(');
-
   VertexRegister := VshGetVertexRegister(pToken^);
 
-  if (IsFixedFunction) then
-  begin
-    NewVertexRegister := Xb2PCRegisterType(VertexRegister{$IFDEF DXBX_USE_D3D9}, {var}Index{$ENDIF});
-  end
-  else
-  begin
-    NewVertexRegister := D3DDECLUSAGE(VertexRegister);
-    DbgVshPrintf('%d', [Ord(NewVertexRegister)]);
-{$IFDEF DXBX_USE_D3D9}
-    Index := 0;
-    // TODO : The specular D3DDECLUSAGE_COLOR should use Index 1 (but how to detect?)
-    // TODO : The D3DDECLUSAGE_TEXCOORD should use Index 0..3 (but how to detect?)
-{$ENDIF}
-  end;
-
+  DbgVshPrintf(#9'D3DVSD_REG(');
+  NewVertexRegister := Xb2PCRegisterType(VertexRegister, IsFixedFunction{$IFDEF DXBX_USE_D3D9}, {var}Index{$ENDIF});
   DbgVshPrintf(', ');
 
   DataType := (pToken^ shr X_D3DVSD_DATATYPESHIFT) and $FF;
@@ -2768,7 +2709,7 @@ begin
   pRecompiled.Offset := pPatchData.ConvertedStride;
   pRecompiled._Type := NewDataType;
   pRecompiled.Method := D3DDECLMETHOD_DEFAULT;
-  pRecompiled.Usage := NewVertexRegister;
+  pRecompiled.Usage := NewVertexRegister; // Ex. D3DDECLUSAGE_COLOR etc
   pRecompiled.UsageIndex := Index;
 
   // Step to next element
@@ -2915,6 +2856,7 @@ end; // XTL_EmuRecompileVshDeclaration
 function XTL_EmuRecompileVshFunction
 (
     pFunction: PDWORD;
+    pRecompiledDeclaration: PVertexShaderDeclaration;
     ppRecompiled: XTL_PLPD3DXBUFFER;
     pOriginalSize: PDWORD;
     bNoReservedConstants: boolean
@@ -2987,12 +2929,12 @@ begin
 
     pShaderDisassembly := P_char(DxbxMalloc(pShader.IntermediateCount * 50)); // Should be plenty
     DbgVshPrintf('-- Before conversion --'#13#10);
-    VshWriteShader(pShader, pShaderDisassembly, FALSE);
+    VshWriteShader(pShader, pRecompiledDeclaration, pShaderDisassembly, FALSE);
     DbgVshPrintf('%s', [pShaderDisassembly]);
     DbgVshPrintf('-----------------------'#13#10);
 
     VshConvertShader(pShader, bNoReservedConstants);
-    VshWriteShader(pShader, pShaderDisassembly, TRUE);
+    VshWriteShader(pShader, pRecompiledDeclaration, pShaderDisassembly, TRUE);
 
     DbgVshPrintf('-- After conversion ---'#13#10);
     DbgVshPrintf('%s', [pShaderDisassembly]);

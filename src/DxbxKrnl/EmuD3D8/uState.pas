@@ -705,7 +705,14 @@ end;
 var
   DummyRenderStateValue: X_D3DRENDERSTATETYPE;
 
+const
+  fZero: Float = 0.0;
+  fOne: Float = 1.0;
+
+
 procedure DxbxInitializeDefaultRenderStates(const aParameters: PX_D3DPRESENT_PARAMETERS); {NOPATCH}
+var
+  f2dwOne: DWORD absolute fOne; // = $3F800000 = F2DW(1.0)
 var
   i: Integer;
 begin
@@ -759,8 +766,8 @@ begin
     XTL_EmuMappedD3DRenderState[X_D3DRS_FOGENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_FOGTABLEMODE]^ := DWORD(X_D3DFOG_NONE);
     XTL_EmuMappedD3DRenderState[X_D3DRS_FOGSTART]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGEND]^ := $3F800000; // = F2DW(1.0) ?
-    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGDENSITY]^ := $3F800000; // = F2DW(1.0) ?
+    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGEND]^ := f2dwOne;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGDENSITY]^ := f2dwOne;
     XTL_EmuMappedD3DRenderState[X_D3DRS_RANGEFOGENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP0]^ := 0;
     XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP1]^ := 0;
@@ -780,19 +787,22 @@ begin
     XTL_EmuMappedD3DRenderState[X_D3DRS_EMISSIVEMATERIALSOURCE]^ := DWORD(X_D3DMCS_MATERIAL);
     XTL_EmuMappedD3DRenderState[X_D3DRS_BACKAMBIENT]^ := 0;
     XTL_EmuMappedD3DRenderState[X_D3DRS_AMBIENT]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE]^ := $3F800000; // = F2DW(1.0) ?
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE]^ := f2dwOne;
     XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MIN]^ := 0;
     XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSPRITEENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALEENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_A]^ := $3F800000; // = F2DW(1.0) ?
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_A]^ := f2dwOne;
     XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_B]^ := 0;
     XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_C]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MAX]^ := $42800000; // between D3DCAPS8.MaxPointSize and D3DRS_POINTSIZE_MIN (including)
-    XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHEDGESTYLE]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHSEGMENTS]^ := $3F800000; // = F2DW(1.0) ?
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MAX]^ := $42800000; // = F2DW(64.0) between D3DCAPS8.MaxPointSize and D3DRS_POINTSIZE_MIN (including)
+    XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHEDGESTYLE]^ := 0; // = D3DPATCHEDGE_DISCRETE
+    XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHSEGMENTS]^ := f2dwOne;
 //    XTL_EmuMappedD3DRenderState[X_D3DRS_SWAPFILTER]^ := aParameters.MultiSampleType; // DEADBEEF
 //    XTL_EmuMappedD3DRenderState[X_D3DRS_PRESENTATIONINTERVAL]^ := aParameters.FullScreen_PresentationInterval; // DEADBEEF
-    // X_D3DRS_DEFERRED_UNUSED8 .. X_D3DRS_DEFERRED_UNUSED1 and X_D3DRS_PSTEXTUREMODES?
+
+    // X_D3DRS_DEFERRED_UNUSED8 .. X_D3DRS_DEFERRED_UNUSED1 ?
+    XTL_EmuMappedD3DRenderState[X_D3DRS_PSTEXTUREMODES]^ := 0;
+
     XTL_EmuMappedD3DRenderState[X_D3DRS_VERTEXBLEND]^ := DWORD(X_D3DVBF_DISABLE);
     XTL_EmuMappedD3DRenderState[X_D3DRS_FOGCOLOR]^ := 0;
 
@@ -814,7 +824,7 @@ begin
 //    XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEMODE]^ := aParameters.MultiSampleType; // DEADBEEF
     XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLERENDERTARGETMODE]^ := DWORD(X_D3DMULTISAMPLEMODE_1X);
     XTL_EmuMappedD3DRenderState[X_D3DRS_SHADOWFUNC]^ := DWORD(X_D3DCMP_NEVER);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_LINEWIDTH]^ := $3F800000; // = F2DW(1.0) ?
+    XTL_EmuMappedD3DRenderState[X_D3DRS_LINEWIDTH]^ := f2dwOne;
     XTL_EmuMappedD3DRenderState[X_D3DRS_SAMPLEALPHA]^ := 0; // Unknown default
     XTL_EmuMappedD3DRenderState[X_D3DRS_DXT1NOISEENABLE]^ := BOOL_TRUE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_YUVENABLE]^ := BOOL_FALSE;
