@@ -87,8 +87,8 @@ uses
   uEmuXG;
 
 function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0; iFace: int = Ord(D3DCUBEMAP_FACE_POSITIVE_X) - 1): Boolean;
-function DxbxFVF_GetTextureSize(const dwVertexShader: DWORD; const aTextureIndex: Integer): Integer;
-function DxbxFVFToVertexSizeInBytes(const dwVertexShader: DWORD; bIncludeTextures: Boolean = True): uint;
+function DxbxFVF_GetTextureSize(const dwFVF: DWORD; const aTextureIndex: Integer): Integer;
+function DxbxFVFToVertexSizeInBytes(const dwFVF: DWORD; bIncludeTextures: Boolean = True): uint;
 function DxbxPresent(pSourceRect: PRECT; pDestRect: PRECT; pDummy1: HWND; pDummy2: PVOID): UINT;
 function DxbxSetVertexData(const Register_: X_D3DVSDE; const a, b, c, d: FLOAT): HRESULT;
 
@@ -1019,11 +1019,11 @@ begin
   end;
 end;
 
-function DxbxFVF_GetTextureSize(const dwVertexShader: DWORD; const aTextureIndex: Integer): Integer;
+function DxbxFVF_GetTextureSize(const dwFVF: DWORD; const aTextureIndex: Integer): Integer;
 // Determine the size (in bytes) of the texture format (indexed 0 .. 3).
 // This is the reverse of the D3DFVF_TEXCOORDSIZE[0..3] macros.
 begin
-  case (dwVertexShader shr ((aTextureIndex * 2) + 16)) and 3 of
+  case (dwFVF shr ((aTextureIndex * 2) + 16)) and 3 of
     D3DFVF_TEXTUREFORMAT1: Result := 1 * SizeOf(FLOAT);
     D3DFVF_TEXTUREFORMAT2: Result := 2 * SizeOf(FLOAT);
     D3DFVF_TEXTUREFORMAT3: Result := 3 * SizeOf(FLOAT);
@@ -1036,7 +1036,7 @@ end;
 
 // Dxbx Note: This code is taken from EmuExecutePushBufferRaw and occured
 // in EmuFlushIVB too, so it's generalize in this single implementation.
-function DxbxFVFToVertexSizeInBytes(const dwVertexShader: DWORD; bIncludeTextures: Boolean = True): uint;
+function DxbxFVFToVertexSizeInBytes(const dwFVF: DWORD; bIncludeTextures: Boolean = True): uint;
 var
   NrTextures: Integer;
 begin
@@ -1051,7 +1051,7 @@ begin
   X_D3DFVF_XYZB4            = $00c; // 12 > 6 > 7
 *)
   // Divide the D3DFVF by two, this gives almost the number of floats needed for the format :
-  Result := (dwVertexShader and D3DFVF_POSITION_MASK) shr 1;
+  Result := (dwFVF and D3DFVF_POSITION_MASK) shr 1;
   if Result >= (D3DFVF_XYZB1 shr 1) then
     // Any format from D3DFVF_XYZB1 and above need 1 extra float :
     Inc(Result, 1)
@@ -1063,19 +1063,19 @@ begin
   Result := Result * sizeof(FLOAT);
 
   // D3DFVF_NORMAL cannot be combined with D3DFVF_XYZRHW :
-  if (dwVertexShader and D3DFVF_POSITION_MASK) <> D3DFVF_XYZRHW then
-    if (dwVertexShader and D3DFVF_NORMAL) > 0 then begin Inc(Result, sizeof(FLOAT)*3); end;
+  if (dwFVF and D3DFVF_POSITION_MASK) <> D3DFVF_XYZRHW then
+    if (dwFVF and D3DFVF_NORMAL) > 0 then begin Inc(Result, sizeof(FLOAT)*3); end;
 
-  if (dwVertexShader and D3DFVF_DIFFUSE) > 0 then begin Inc(Result, sizeof(D3DCOLOR)); end;
-  if (dwVertexShader and D3DFVF_SPECULAR) > 0 then begin Inc(Result, sizeof(D3DCOLOR)); end;
+  if (dwFVF and D3DFVF_DIFFUSE) > 0 then begin Inc(Result, sizeof(D3DCOLOR)); end;
+  if (dwFVF and D3DFVF_SPECULAR) > 0 then begin Inc(Result, sizeof(D3DCOLOR)); end;
 
   if bIncludeTextures then
   begin
-    NrTextures := ((dwVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT);
+    NrTextures := ((dwFVF and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT);
     while NrTextures > 0 do
     begin
       Dec(NrTextures);
-      Inc(Result, DxbxFVF_GetTextureSize(dwVertexShader, NrTextures));
+      Inc(Result, DxbxFVF_GetTextureSize(dwFVF, NrTextures));
     end;
   end;
 end;
@@ -4420,6 +4420,7 @@ begin
   if (SUCCEEDED(hRet) and Assigned(pFunction)) then
   begin
     hRet := XTL_EmuRecompileVshFunction(PDWORD(pFunction),
+                                        pRecompiledDeclaration,
                                         @pRecompiledBuffer,
                                         @VertexShaderSize,
                                         (g_VertexShaderConstantMode and X_D3DSCM_NORESERVEDCONSTANTS) > 0); // Dxbx fix

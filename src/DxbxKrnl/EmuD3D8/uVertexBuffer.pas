@@ -1604,6 +1604,7 @@ begin
         DbgPrintf('IVB Specular := 0x%.08X', [g_IVBTable_v.dwSpecular]);
     end;
 
+    // TODO -oDxbx : Handle other sizes than D3DFVF_TEXCOORDSIZE2 too!
     if(dwTexN >= 1) then
     begin
       PFLOATs(pdwVB)[0] := g_IVBTable_v.TexCoord1.x;

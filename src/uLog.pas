@@ -956,15 +956,25 @@ begin
 end;
 
 function RLogStack._(const aValue: LPCSTR; const aName: string = ''): PLogStack;
+var
+  s: string;
 begin
   Result := SetName(aName, 'LPCSTR');
-  SetValue(UIntPtr(aValue), '"' + string(PAnsiCharMaxLenToString(aValue, LOG_MAX_STRING_LENGTH)) + '"');
+  s := '"' + string(PAnsiCharMaxLenToString(aValue, LOG_MAX_STRING_LENGTH)) + '"';
+  if Length(s) >= LOG_MAX_STRING_LENGTH + 2 then
+    s := s + '...';
+  SetValue(UIntPtr(aValue), s);
 end;
 
 function RLogStack._(const aValue: LPCWSTR; const aName: string = ''): PLogStack;
+var
+  s: string;
 begin
   Result := SetName(aName, 'LPCWSTR');
-  SetValue(UIntPtr(aValue), '"' + string(PWideCharMaxLenToString(aValue, LOG_MAX_STRING_LENGTH)) + '"');
+  s := '"' + string(PWideCharMaxLenToString(aValue, LOG_MAX_STRING_LENGTH)) + '"';
+  if Length(s) >= LOG_MAX_STRING_LENGTH + 2 then
+    s := s + '...';
+  SetValue(UIntPtr(aValue), s);
 end;
 
 function RLogStack._(const aValue: PPOINT; const aName: string = ''): PLogStack;
