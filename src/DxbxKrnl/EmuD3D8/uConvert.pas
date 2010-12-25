@@ -440,23 +440,22 @@ begin
       Result := D3DBLENDOP_MAX;
     X_D3DBLENDOP_ADDSIGNED:
     begin
-      DxbxKrnlCleanup('D3DBLENDOP_ADDSIGNED is not supported!');
+      EmuWarning('Unsupported Xbox D3DBLENDOP : D3DBLENDOP_ADDSIGNED. Used approximation.');
       Result := D3DBLENDOP_ADD;
     end;
     X_D3DBLENDOP_REVSUBTRACTSIGNED:
     begin
-      DxbxKrnlCleanup('D3DBLENDOP_REVSUBTRACTSIGNED is not supported!');
+      EmuWarning('Unsupported Xbox D3DBLENDOP : D3DBLENDOP_REVSUBTRACTSIGNED. Used approximation.');
       Result := D3DBLENDOP_REVSUBTRACT;
     end;
   else
-
-    DxbxKrnlCleanup('Unknown D3DBLENDOP (0x%.08X)', [Ord(Value)]);
+    DxbxKrnlCleanup('Unknown Xbox D3DBLENDOP (0x%.08X)', [Ord(Value)]);
 
     Result := D3DBLENDOP(Value);
   end;
 end;
 
-// convert from xbox to pc blend types
+// Convert from xbox to pc blend types
 function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
@@ -472,19 +471,28 @@ begin
     X_D3DBLEND_DESTCOLOR          : Result := D3DBLEND_DESTCOLOR;
     X_D3DBLEND_INVDESTCOLOR       : Result := D3DBLEND_INVDESTCOLOR;
     X_D3DBLEND_SRCALPHASAT        : Result := D3DBLEND_SRCALPHASAT;
-(* Xbox only :
-    X_D3DBLEND_CONSTANTCOLOR      : Result := ; // $8001,
-    X_D3DBLEND_INVCONSTANTCOLOR   : Result := ; // $8002,
-    X_D3DBLEND_CONSTANTALPHA      : Result := ; // $8003,
-    X_D3DBLEND_INVCONSTANTALPHA   : Result := ; // $8004,
-   Xbox doesn't support :
-    // D3DBLEND_BOTHSRCALPHA       = 12,
-    // D3DBLEND_BOTHINVSRCALPHA    = 13,
-*)
+{$IFDEF DXBX_USE_D3D9}
+    // Xbox extensions not supported by D3D8, but available in D3D9 :
+    X_D3DBLEND_CONSTANTCOLOR      : Result := D3DBLEND_BLENDFACTOR;
+    X_D3DBLEND_INVCONSTANTCOLOR   : Result := D3DBLEND_INVBLENDFACTOR;
+{$ENDIF}
   else
-    DxbxKrnlCleanup('Unknown Xbox D3DBLEND Extension (0x%.08X)', [Ord(Value)]);
+    // Xbox extensions that have to be approximated :
+    case Value of
+{$IFNDEF DXBX_USE_D3D9}
+      // Not supported by D3D8 :
+      X_D3DBLEND_CONSTANTCOLOR    : Result := D3DBLEND_SRCCOLOR;
+      X_D3DBLEND_INVCONSTANTCOLOR : Result := D3DBLEND_INVSRCCOLOR;
+{$ENDIF}
+      X_D3DBLEND_CONSTANTALPHA    : Result := D3DBLEND_SRCALPHA;
+      X_D3DBLEND_INVCONSTANTALPHA : Result := D3DBLEND_INVSRCALPHA;
+      // Note : Xbox doesn't support D3DBLEND_BOTHSRCALPHA and D3DBLEND_BOTHINVSRCALPHA
+    else
+      DxbxKrnlCleanup('Unknown Xbox D3DBLEND Extension (0x%.08X)', [Ord(Value)]);
+      Result := D3DBLEND_SRCCOLOR;
+    end;
 
-    Result := D3DBLEND(Value);
+    EmuWarning('Unsupported Xbox D3DBLEND Extension (0x%.08X). Used approximation.', [Ord(Value)]);
   end;
 end;
 
@@ -627,7 +635,7 @@ begin
 
   // TODO -oCXBX: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
   if (Value and (not X_D3DCLEAR_ALL_SUPPORTED)) > 0 then
-    EmuWarning('Unsupported Flag(s) for IDirect3DDevice_Clear: 0x%.08X', [Value and (not X_D3DCLEAR_ALL_SUPPORTED)]);
+    EmuWarning('Unsupported D3DCLEAR flags : 0x%.08X', [Value and (not X_D3DCLEAR_ALL_SUPPORTED)]);
 
   if (Value and X_D3DCLEAR_TARGET) > 0 then
     Result := Result or D3DCLEAR_TARGET;
