@@ -143,6 +143,197 @@ var X_D3DSCM_CORRECTION_VersionDependent: int = 0;
 type
   TXB2PCFunc = function(Value: DWORD): DWORD;
 
+  TXBType = (
+    xtD3DBLEND,
+    xtD3DBLENDOP,
+    xtD3DCMPFUNC,
+    xtD3DCOLOR,
+    xtD3DCOLORWRITEENABLE,
+    xtD3DCULL,
+    xtD3DFILLMODE,
+    xtD3DFOGMODE,
+    xtD3DMCS,
+    xtD3DMULTISAMPLE_TYPE,
+    xtD3DSHADEMODE,
+    xtD3DSTENCILOP,
+    xtD3DSWATHWIDTH,
+    xtD3DVERTEXBLENDFLAGS,
+    xtD3DWRAP,
+    xtDWORD);
+
+const
+  DxbxRenderStateXBType: array [X_D3DRS_FIRST..X_D3DRS_LAST] of TXBType = (
+    {X_D3DRS_PSALPHAINPUTS0              =   0}xtDWORD,
+    {X_D3DRS_PSALPHAINPUTS1              =   1}xtDWORD,
+    {X_D3DRS_PSALPHAINPUTS2              =   2}xtDWORD,
+    {X_D3DRS_PSALPHAINPUTS3              =   3}xtDWORD,
+    {X_D3DRS_PSALPHAINPUTS4              =   4}xtDWORD,
+    {X_D3DRS_PSALPHAINPUTS5              =   5}xtDWORD,
+    {X_D3DRS_PSALPHAINPUTS6              =   6}xtDWORD,
+    {X_D3DRS_PSALPHAINPUTS7              =   7}xtDWORD,
+    {X_D3DRS_PSFINALCOMBINERINPUTSABCD   =   8}xtDWORD,
+    {X_D3DRS_PSFINALCOMBINERINPUTSEFG    =   9}xtDWORD,
+    {X_D3DRS_PSCONSTANT0_0               =  10}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT0_1               =  11}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT0_2               =  12}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT0_3               =  13}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT0_4               =  14}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT0_5               =  15}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT0_6               =  16}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT0_7               =  17}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT1_0               =  18}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT1_1               =  19}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT1_2               =  20}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT1_3               =  21}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT1_4               =  22}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT1_5               =  23}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT1_6               =  24}xtD3DCOLOR,
+    {X_D3DRS_PSCONSTANT1_7               =  25}xtD3DCOLOR,
+    {X_D3DRS_PSALPHAOUTPUTS0             =  26}xtDWORD,
+    {X_D3DRS_PSALPHAOUTPUTS1             =  27}xtDWORD,
+    {X_D3DRS_PSALPHAOUTPUTS2             =  28}xtDWORD,
+    {X_D3DRS_PSALPHAOUTPUTS3             =  29}xtDWORD,
+    {X_D3DRS_PSALPHAOUTPUTS4             =  30}xtDWORD,
+    {X_D3DRS_PSALPHAOUTPUTS5             =  31}xtDWORD,
+    {X_D3DRS_PSALPHAOUTPUTS6             =  32}xtDWORD,
+    {X_D3DRS_PSALPHAOUTPUTS7             =  33}xtDWORD,
+    {X_D3DRS_PSRGBINPUTS0                =  34}xtDWORD,
+    {X_D3DRS_PSRGBINPUTS1                =  35}xtDWORD,
+    {X_D3DRS_PSRGBINPUTS2                =  36}xtDWORD,
+    {X_D3DRS_PSRGBINPUTS3                =  37}xtDWORD,
+    {X_D3DRS_PSRGBINPUTS4                =  38}xtDWORD,
+    {X_D3DRS_PSRGBINPUTS5                =  39}xtDWORD,
+    {X_D3DRS_PSRGBINPUTS6                =  40}xtDWORD,
+    {X_D3DRS_PSRGBINPUTS7                =  41}xtDWORD,
+    {X_D3DRS_PSCOMPAREMODE               =  42}xtDWORD,
+    {X_D3DRS_PSFINALCOMBINERCONSTANT0    =  43}xtDWORD,
+    {X_D3DRS_PSFINALCOMBINERCONSTANT1    =  44}xtDWORD,
+    {X_D3DRS_PSRGBOUTPUTS0               =  45}xtDWORD,
+    {X_D3DRS_PSRGBOUTPUTS1               =  46}xtDWORD,
+    {X_D3DRS_PSRGBOUTPUTS2               =  47}xtDWORD,
+    {X_D3DRS_PSRGBOUTPUTS3               =  48}xtDWORD,
+    {X_D3DRS_PSRGBOUTPUTS4               =  49}xtDWORD,
+    {X_D3DRS_PSRGBOUTPUTS5               =  50}xtDWORD,
+    {X_D3DRS_PSRGBOUTPUTS6               =  51}xtDWORD,
+    {X_D3DRS_PSRGBOUTPUTS7               =  52}xtDWORD,
+    {X_D3DRS_PSCOMBINERCOUNT             =  53}xtDWORD,
+    {X_D3DRS_PS_RESERVED                 =  54}xtDWORD, // Dxbx note : This takes the slot of X_D3DPIXELSHADERDEF.PSTextureModes, set by D3DDevice_SetRenderState_LogicOp?
+    {X_D3DRS_PSDOTMAPPING                =  55}xtDWORD,
+    {X_D3DRS_PSINPUTTEXTURE              =  56}xtDWORD,
+    // End of "pixel-shader" render states, continuing with "simple" render states :
+    {X_D3DRS_ZFUNC                       =  57}xtD3DCMPFUNC,
+    {X_D3DRS_ALPHAFUNC                   =  58}xtD3DCMPFUNC,
+    {X_D3DRS_ALPHABLENDENABLE            =  59}xtDWORD, // TRUE to enable alpha blending
+    {X_D3DRS_ALPHATESTENABLE             =  60}xtDWORD, // TRUE to enable alpha tests
+    {X_D3DRS_ALPHAREF                    =  61}xtDWORD, // BYTE
+    {X_D3DRS_SRCBLEND                    =  62}xtD3DBLEND,
+    {X_D3DRS_DESTBLEND                   =  63}xtD3DBLEND,
+    {X_D3DRS_ZWRITEENABLE                =  64}xtDWORD, // TRUE to enable Z writes
+    {X_D3DRS_DITHERENABLE                =  65}xtDWORD, // TRUE to enable dithering
+    {X_D3DRS_SHADEMODE                   =  66}xtD3DSHADEMODE,
+    {X_D3DRS_COLORWRITEENABLE            =  67}xtD3DCOLORWRITEENABLE, // *_ALPHA, etc. per-channel write enable
+    {X_D3DRS_STENCILZFAIL                =  68}xtD3DSTENCILOP, // Operation to do if stencil test passes and Z test fails
+    {X_D3DRS_STENCILPASS                 =  69}xtD3DSTENCILOP, // Operation to do if both stencil and Z tests pass
+    {X_D3DRS_STENCILFUNC                 =  70}xtD3DCMPFUNC,
+    {X_D3DRS_STENCILREF                  =  71}xtDWORD, // BYTE reference value used in stencil test
+    {X_D3DRS_STENCILMASK                 =  72}xtDWORD, // BYTE mask value used in stencil test
+    {X_D3DRS_STENCILWRITEMASK            =  73}xtDWORD, // BYTE write mask applied to values written to stencil buffer
+    {X_D3DRS_BLENDOP                     =  74}xtD3DBLENDOP,
+    {X_D3DRS_BLENDCOLOR                  =  75}xtD3DCOLOR, // D3DCOLOR for D3DBLEND_CONSTANTCOLOR (Xbox ext.)
+    {X_D3DRS_SWATHWIDTH                  =  76}xtD3DSWATHWIDTH, // Never used; Xbox ext.
+    {X_D3DRS_POLYGONOFFSETZSLOPESCALE    =  77}xtDWORD, // float Z factor for shadow maps (Xbox ext.)
+    {X_D3DRS_POLYGONOFFSETZOFFSET        =  78}xtDWORD, // Xbox ext.
+    {X_D3DRS_POINTOFFSETENABLE           =  79}xtDWORD, // Xbox ext.
+    {X_D3DRS_WIREFRAMEOFFSETENABLE       =  80}xtDWORD, // Xbox ext.
+    {X_D3DRS_SOLIDOFFSETENABLE           =  81}xtDWORD, // Xbox ext.
+    {X_D3DRS_DEPTHCLIPCONTROL            =  82}xtDWORD, // [4627+] Xbox ext.
+    {X_D3DRS_STIPPLEENABLE               =  83}xtDWORD, // [4627+] Xbox ext.
+    {X_D3DRS_SIMPLE_UNUSED8              =  84}xtDWORD, // [4627+]
+    {X_D3DRS_SIMPLE_UNUSED7              =  85}xtDWORD, // [4627+]
+    {X_D3DRS_SIMPLE_UNUSED6              =  86}xtDWORD, // [4627+]
+    {X_D3DRS_SIMPLE_UNUSED5              =  87}xtDWORD, // [4627+]
+    {X_D3DRS_SIMPLE_UNUSED4              =  88}xtDWORD, // [4627+]
+    {X_D3DRS_SIMPLE_UNUSED3              =  89}xtDWORD, // [4627+]
+    {X_D3DRS_SIMPLE_UNUSED2              =  90}xtDWORD, // [4627+]
+    {X_D3DRS_SIMPLE_UNUSED1              =  91}xtDWORD, // [4627+]
+    // End of "simple" render states, continuing with "deferred" render states :
+    {X_D3DRS_FOGENABLE                   =  92}xtDWORD,
+    {X_D3DRS_FOGTABLEMODE                =  93}xtD3DFOGMODE, // 93 No conversion needed; Xbox =  PC
+    {X_D3DRS_FOGSTART                    =  94}xtDWORD,
+    {X_D3DRS_FOGEND                      =  95}xtDWORD,
+    {X_D3DRS_FOGDENSITY                  =  96}xtDWORD,
+    {X_D3DRS_RANGEFOGENABLE              =  97}xtDWORD,
+    {X_D3DRS_WRAP0                       =  98}xtD3DWRAP,
+    {X_D3DRS_WRAP1                       =  99}xtD3DWRAP,
+    {X_D3DRS_WRAP2                       = 100}xtD3DWRAP,
+    {X_D3DRS_WRAP3                       = 101}xtD3DWRAP,
+    {X_D3DRS_LIGHTING                    = 102}xtDWORD,
+    {X_D3DRS_SPECULARENABLE              = 103}xtDWORD,
+    {X_D3DRS_LOCALVIEWER                 = 104}xtDWORD, // Dxbx addition
+    {X_D3DRS_COLORVERTEX                 = 105}xtDWORD,
+    {X_D3DRS_BACKSPECULARMATERIALSOURCE  = 106}xtD3DMCS, // Xbox ext. nsp.
+    {X_D3DRS_BACKDIFFUSEMATERIALSOURCE   = 107}xtD3DMCS, // Xbox ext. nsp.
+    {X_D3DRS_BACKAMBIENTMATERIALSOURCE   = 108}xtD3DMCS, // Xbox ext. nsp.
+    {X_D3DRS_BACKEMISSIVEMATERIALSOURCE  = 109}xtD3DMCS, // Xbox ext. nsp.
+    {X_D3DRS_SPECULARMATERIALSOURCE      = 110}xtD3DMCS, // No conversion needed; Xbox = PC
+    {X_D3DRS_DIFFUSEMATERIALSOURCE       = 111}xtD3DMCS, // No conversion needed; Xbox = PC
+    {X_D3DRS_AMBIENTMATERIALSOURCE       = 112}xtD3DMCS, // No conversion needed; Xbox = PC
+    {X_D3DRS_EMISSIVEMATERIALSOURCE      = 113}xtD3DMCS, // No conversion needed; Xbox = PC
+    {X_D3DRS_BACKAMBIENT                 = 114}xtD3DCOLOR, // Xbox ext. nsp.
+    {X_D3DRS_AMBIENT                     = 115}xtD3DCOLOR,
+    {X_D3DRS_POINTSIZE                   = 116}xtDWORD,
+    {X_D3DRS_POINTSIZE_MIN               = 117}xtDWORD,
+    {X_D3DRS_POINTSPRITEENABLE           = 118}xtDWORD,
+    {X_D3DRS_POINTSCALEENABLE            = 119}xtDWORD,
+    {X_D3DRS_POINTSCALE_A                = 120}xtDWORD,
+    {X_D3DRS_POINTSCALE_B                = 121}xtDWORD,
+    {X_D3DRS_POINTSCALE_C                = 122}xtDWORD,
+    {X_D3DRS_POINTSIZE_MAX               = 123}xtDWORD,
+    {X_D3DRS_PATCHEDGESTYLE              = 124}xtDWORD, // Dxbx addition
+    {X_D3DRS_PATCHSEGMENTS               = 125}xtDWORD,
+    {X_D3DRS_SWAPFILTER                  = 126}xtD3DMULTISAMPLE_TYPE, // [4361+] Xbox ext. nsp. D3DTEXF_LINEAR etc. filter to use for Swap
+    {X_D3DRS_PRESENTATIONINTERVAL        = 127}xtDWORD, // [4627+] Xbox ext. nsp.
+    {X_D3DRS_DEFERRED_UNUSED8            = 128}xtDWORD, // [4627+]
+    {X_D3DRS_DEFERRED_UNUSED7            = 129}xtDWORD, // [4627+]
+    {X_D3DRS_DEFERRED_UNUSED6            = 130}xtDWORD, // [4627+]
+    {X_D3DRS_DEFERRED_UNUSED5            = 131}xtDWORD, // [4627+]
+    {X_D3DRS_DEFERRED_UNUSED4            = 132}xtDWORD, // [4627+]
+    {X_D3DRS_DEFERRED_UNUSED3            = 133}xtDWORD, // [4627+]
+    {X_D3DRS_DEFERRED_UNUSED2            = 134}xtDWORD, // [4627+]
+    {X_D3DRS_DEFERRED_UNUSED1            = 135}xtDWORD, // [4627+]
+    // End of "deferred" render states, continuing with "complex" render states :
+    {X_D3DRS_PSTEXTUREMODES              = 136}xtDWORD, // Xbox ext.
+    {X_D3DRS_VERTEXBLEND                 = 137}xtD3DVERTEXBLENDFLAGS,
+    {X_D3DRS_FOGCOLOR                    = 138}xtDWORD,
+    {X_D3DRS_FILLMODE                    = 139}xtD3DFILLMODE,
+    {X_D3DRS_BACKFILLMODE                = 140}xtD3DFILLMODE, // Xbox ext. nsp.
+    {X_D3DRS_TWOSIDEDLIGHTING            = 141}xtDWORD, // Xbox ext. nsp.
+    {X_D3DRS_NORMALIZENORMALS            = 142}xtDWORD,
+    {X_D3DRS_ZENABLE                     = 143}xtDWORD,
+    {X_D3DRS_STENCILENABLE               = 144}xtDWORD,
+    {X_D3DRS_STENCILFAIL                 = 145}xtD3DSTENCILOP,
+    {X_D3DRS_FRONTFACE                   = 146}xtDWORD, // Xbox ext. nsp.
+    {X_D3DRS_CULLMODE                    = 147}xtD3DCULL,
+    {X_D3DRS_TEXTUREFACTOR               = 148}xtDWORD,
+    {X_D3DRS_ZBIAS                       = 149}xtDWORD,
+    {X_D3DRS_LOGICOP                     = 150}xtDWORD, // Xbox ext.
+    {X_D3DRS_EDGEANTIALIAS               = 151}xtDWORD, // Dxbx note : No Xbox ext. (according to Direct3D8) !
+    {X_D3DRS_MULTISAMPLEANTIALIAS        = 152}xtDWORD,
+    {X_D3DRS_MULTISAMPLEMASK             = 153}xtDWORD,
+    {X_D3DRS_MULTISAMPLETYPE             = 154}xtDWORD, // [-3911] Xbox ext. \_ aliasses  D3DMULTISAMPLE_TYPE
+//    {X_D3DRS_MULTISAMPLEMODE             = 154}xtDWORD, // [4361+] Xbox ext. /            D3DMULTISAMPLEMODE for the backbuffer
+    {X_D3DRS_MULTISAMPLERENDERTARGETMODE = 155}xtDWORD, // [4361+] Xbox ext.
+    {X_D3DRS_SHADOWFUNC                  = 156}xtD3DCMPFUNC, // Xbox ext.
+    {X_D3DRS_LINEWIDTH                   = 157}xtDWORD, // Xbox ext.
+    {X_D3DRS_SAMPLEALPHA                 = 158}xtDWORD, // Xbox ext.
+    {X_D3DRS_DXT1NOISEENABLE             = 159}xtDWORD, // Xbox ext.
+    {X_D3DRS_YUVENABLE                   = 160}xtDWORD, // [3911+] Xbox ext.
+    {X_D3DRS_OCCLUSIONCULLENABLE         = 161}xtDWORD, // [3911+] Xbox ext.
+    {X_D3DRS_STENCILCULLENABLE           = 162}xtDWORD, // [3911+] Xbox ext.
+    {X_D3DRS_ROPZCMPALWAYSREAD           = 163}xtDWORD, // [3911+] Xbox ext.
+    {X_D3DRS_ROPZREAD                    = 164}xtDWORD, // [3911+] Xbox ext.
+    {X_D3DRS_DONOTCULLUNCOMPRESSED       = 165}xtDWORD  // [3911+] Xbox ext.
+  );
 var
   DxbxRenderStateXB2PCCallback: array [X_D3DRS_FIRST..X_D3DRS_LAST] of TXB2PCFunc;
   DxbxMapActiveVersionToMostRecent: array [X_D3DRS_FIRST..X_D3DRS_LAST] of X_D3DRENDERSTATETYPE;
@@ -334,7 +525,7 @@ begin
     X_D3DRS_PRESENTATIONINTERVAL..X_D3DRS_DEFERRED_UNUSED1:
       Result := 4627;
 
-    X_D3DRS_MULTISAMPLERENDERTARGETMODE:
+    X_D3DRS_MULTISAMPLEMODE, X_D3DRS_MULTISAMPLERENDERTARGETMODE:
       Result := 4361;
 
     X_D3DRS_YUVENABLE..X_D3DRS_DONOTCULLUNCOMPRESSED:
@@ -385,6 +576,35 @@ begin
       Result := True;
   else
     Result := False;
+  end;
+end;
+
+function DxbxXB2PC_NOP(Value: DWORD): DWORD;
+begin
+  Result := Value;
+end;
+
+// Return a specific Xbox-to-PC converter for all render states types :
+function XBTypeFunc(xbType: TXBType): TXB2PCFunc;
+begin
+  case xbType of
+    xtD3DBLEND: Result := @EmuXB2PC_D3DBLEND;
+    xtD3DBLENDOP: Result := @EmuXB2PC_D3DBLENDOP;
+    xtD3DCMPFUNC: Result := @EmuXB2PC_D3DCMPFUNC;
+    xtD3DCOLOR: Result := @DxbxXB2PC_NOP; // No conversion needed.
+    xtD3DCOLORWRITEENABLE: Result := @EmuXB2PC_D3DCOLORWRITEENABLE;
+    xtD3DCULL: Result := @EmuXB2PC_D3DCULL;
+    xtD3DFILLMODE: Result := @EmuXB2PC_D3DFILLMODE;
+    xtD3DFOGMODE: Result := @DxbxXB2PC_NOP; // TODO : Conversion needed? or @EmuXB2PC_D3DFOGMODE;
+    xtD3DMCS: Result := @DxbxXB2PC_NOP; //TODO : Conversion needed? or @EmuXB2PC_D3DMCS;
+    xtD3DMULTISAMPLE_TYPE: Result := @EmuXB2PC_D3DMULTISAMPLE_TYPE;
+    xtD3DSHADEMODE: Result := @EmuXB2PC_D3DSHADEMODE;
+    xtD3DSTENCILOP: Result := @EmuXB2PC_D3DSTENCILOP;
+    xtD3DSWATHWIDTH: Result := @DxbxXB2PC_NOP; // No conversion needed. Xbox ext.
+    xtD3DVERTEXBLENDFLAGS: Result := @EmuXB2PC_D3DVERTEXBLENDFLAGS;
+    xtD3DWRAP: Result := @EmuXB2PC_D3DWRAP;
+  else // xtDWORD
+    Result := @DxbxXB2PC_NOP;
   end;
 end;
 
@@ -615,11 +835,6 @@ begin
   end;
 end;
 
-function DxbxXB2PC_NOP(Value: DWORD): DWORD;
-begin
-  Result := Value;
-end;
-
 procedure DxbxBuildRenderStateMappingTable(const aD3DRenderState: PDWORDs); {NOPATCH}
 var
   State: X_D3DRENDERSTATETYPE;
@@ -665,41 +880,7 @@ begin
 
   // Build a table with converter functions for all renderstates :
   for i := X_D3DRS_FIRST to X_D3DRS_LAST do
-    DxbxRenderStateXB2PCCallback[i] := @DxbxXB2PC_NOP;
-//
-  // For all render states that need a specific converter, assign the one handling the underlying type :
-  DxbxRenderStateXB2PCCallback[X_D3DRS_WRAP0] := @EmuXB2PC_D3DWRAP;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_WRAP1] := @EmuXB2PC_D3DWRAP;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_WRAP2] := @EmuXB2PC_D3DWRAP;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_WRAP3] := @EmuXB2PC_D3DWRAP;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_FILLMODE] := @EmuXB2PC_D3DFILLMODE;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_BACKFILLMODE] := @EmuXB2PC_D3DFILLMODE;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_SHADEMODE] := @EmuXB2PC_D3DSHADEMODE;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_SRCBLEND] := @EmuXB2PC_D3DBLEND;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_DESTBLEND] := @EmuXB2PC_D3DBLEND;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_ZFUNC] := @EmuXB2PC_D3DCMPFUNC;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_ALPHAFUNC] := @EmuXB2PC_D3DCMPFUNC;
-//  DxbxRenderStateXB2PCCallback[X_D3DRS_FOGTABLEMODE] := @EmuXB2PC_D3DFOGMODE; // No conversion needed; Xbox = PC
-  DxbxRenderStateXB2PCCallback[X_D3DRS_STENCILFAIL] := @EmuXB2PC_D3DSTENCILOP;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_CULLMODE] := @EmuXB2PC_D3DCULL;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_STENCILZFAIL] := @EmuXB2PC_D3DSTENCILOP;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_STENCILPASS] := @EmuXB2PC_D3DSTENCILOP;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_STENCILFUNC] := @EmuXB2PC_D3DCMPFUNC;
-//  DxbxRenderStateXB2PCCallback[X_D3DRS_DIFFUSEMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // No conversion needed; Xbox = PC
-//  DxbxRenderStateXB2PCCallback[X_D3DRS_BACKDIFFUSEMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // Never used; Xbox ext.
-//  DxbxRenderStateXB2PCCallback[X_D3DRS_SPECULARMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // No conversion needed; Xbox = PC
-//  DxbxRenderStateXB2PCCallback[X_D3DRS_BACKSPECULARMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // Never used; Xbox ext.
-//  DxbxRenderStateXB2PCCallback[X_D3DRS_AMBIENTMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // No conversion needed; Xbox = PC
-//  DxbxRenderStateXB2PCCallback[X_D3DRS_BACKAMBIENTMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // Never used; Xbox ext.
-//  DxbxRenderStateXB2PCCallback[X_D3DRS_EMISSIVEMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // No conversion needed; Xbox = PC
-//  DxbxRenderStateXB2PCCallback[X_D3DRS_BACKEMISSIVEMATERIALSOURCE] := @EmuXB2PC_D3DMCS; // Never used; Xbox ext.
-  DxbxRenderStateXB2PCCallback[X_D3DRS_VERTEXBLEND] := @EmuXB2PC_D3DVERTEXBLENDFLAGS;
-//  DxbxRenderStateXB2PCCallback[X_D3DRS_SWAPFILTER] := @EmuXB2PC_D3DMULTISAMPLE_TYPE; // Never used; Xbox ext.
-  DxbxRenderStateXB2PCCallback[X_D3DRS_COLORWRITEENABLE] := @EmuXB2PC_D3DCOLORWRITEENABLE;
-  DxbxRenderStateXB2PCCallback[X_D3DRS_BLENDOP] := @EmuXB2PC_D3DBLENDOP;
-//  DxbxRenderStateXB2PCCallback[X_D3DRS_SWATHWIDTH] := @EmuXB2PC_D3DSWATH; // Never used; Xbox ext.
-//  DxbxRenderStateXB2PCCallback[X_D3DRS_SHADOWFUNC] := @EmuXB2PC_D3DCMPFUNC; // Never used; Xbox ext.
-
+    DxbxRenderStateXB2PCCallback[i] := XBTypeFunc(DxbxRenderStateXBType[i]);
 end;
 
 var
