@@ -1309,7 +1309,7 @@ begin
 
     // Finally, correct dwVertexCount to take the new vertices into account :
     pPatchDesc.dwVertexCount := pPatchDesc.dwPrimitiveCount * VERTICES_PER_TRIANGLE;
-    // Dxbx Note : When drawing a QUADLIST, EmuPrimitiveType(PrimitiveType) will return D3D_TRIANGLELIST
+    // Dxbx Note : When drawing a QUADLIST, EmuXB2PC_D3DPrimitiveType(PrimitiveType) will return D3D_TRIANGLELIST
   end
   // LineLoop
   else if (pPatchDesc.PrimitiveType = X_D3DPT_LINELOOP) then
@@ -1685,7 +1685,7 @@ begin
   end;
 
   g_pD3DDevice.DrawPrimitiveUP(
-      EmuPrimitiveType(VPDesc.PrimitiveType),
+      EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
       VPDesc.dwPrimitiveCount,
       VPDesc.pVertexStreamZeroData,
       VPDesc.uiVertexStreamZeroStride);

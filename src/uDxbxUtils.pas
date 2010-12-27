@@ -182,6 +182,7 @@ function GetErrorString(const aError: DWord): string;
 
 function PointerToString(const aPointer: Pointer): string;
 function FloatToString(const aValue: float): string;
+function BOOL2String(const aValue: BOOL): string;
 
 function QuadPart(const aValue: PLARGE_INTEGER): Int64;
 function Log2(aValue: DWORD): DWORD; overload;
@@ -1023,6 +1024,14 @@ end;
 function FloatToString(const aValue: float): string;
 begin
   Result := FormatFloat('0.0', aValue); // TODO : Speed this up by avoiding Single>Extended cast & generic render code.
+end;
+
+function BOOL2String(const aValue: BOOL): string;
+begin
+  if aValue = BOOL_FALSE then
+    Result := 'FALSE'
+  else
+    Result := 'TRUE';
 end;
 
 function QuadPart(const aValue: PLARGE_INTEGER): Int64;

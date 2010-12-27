@@ -928,10 +928,7 @@ end;
 function RLogStack._(const aValue: BOOL; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'BOOL');
-  if aValue = BOOL_FALSE then
-    SetValue(UIntPtr(aValue), 'FALSE')
-  else
-    SetValue(UIntPtr(aValue), 'TRUE');
+  SetValue(UIntPtr(aValue), BOOL2String(aValue));
 end;
 
 function RLogStack._(const aValue: _BOOLEAN; const aName: string = ''): PLogStack;

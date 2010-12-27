@@ -140,6 +140,7 @@ var g_BuildVersion: WORD = DEFAULT_XDK_VERSION;
 var X_D3DSCM_CORRECTION_VersionDependent: int = 0;
 
 var
+  DxbxTextureStageStateXB2PCCallback: array [X_D3DTSS_FIRST..X_D3DTSS_LAST] of TXB2PCFunc;
   DxbxRenderStateXB2PCCallback: array [X_D3DRS_FIRST..X_D3DRS_LAST] of TXB2PCFunc;
   DxbxMapActiveVersionToMostRecent: array [X_D3DRS_FIRST..X_D3DRS_LAST] of X_D3DRENDERSTATETYPE;
   DxbxMapMostRecentToActiveVersion: array [X_D3DRS_FIRST..X_D3DRS_LAST] of X_D3DRENDERSTATETYPE;
@@ -303,6 +304,10 @@ begin
   // Build a table with converter functions for all renderstates :
   for i := X_D3DRS_FIRST to X_D3DRS_LAST do
     DxbxRenderStateXB2PCCallback[i] := TXB2PCFunc(DxbxXBTypeInfo[DxbxRenderStateInfo[i].T].F);
+
+  // Build a table with converter functions for all texture stage states :
+  for i := X_D3DTSS_FIRST to X_D3DTSS_LAST do
+    DxbxTextureStageStateXB2PCCallback[i] := TXB2PCFunc(DxbxXBTypeInfo[DxbxTextureStageStateInfo[i].T].F);
 end;
 
 const
@@ -629,7 +634,7 @@ begin
     Exit;
 
   // Convert Xbox value to PC value for current texture stage state :
-  PCValue := TXB2PCFunc(DxbxXBTypeInfo[DxbxTextureStageStateInfo[State].T].F)(XboxValue);
+  PCValue := DxbxTextureStageStateXB2PCCallback[State](XboxValue);
   // TODO : Prevent setting unchanged values
   // Transfer over the deferred texture stage state to PC :
   IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, State, PCValue);

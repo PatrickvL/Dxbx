@@ -85,6 +85,7 @@ uses
   uEmuXapi, // PXINPUT_FEEDBACK
   uEmuXG;
 
+function DxbxTypedValueToString(const aType: TXBType; const aValue: DWORD): string;
 function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0; iFace: int = Ord(D3DCUBEMAP_FACE_POSITIVE_X) - 1): Boolean;
 function DxbxFVF_GetTextureSize(const dwFVF: DWORD; const aTextureIndex: Integer): Integer;
 function DxbxFVFToVertexSizeInBytes(const dwFVF: DWORD; bIncludeTextures: Boolean = True): uint;
@@ -282,16 +283,12 @@ var
 type
   RLogStackHelper = record helper for RLogStack
     function _(const aValue: X_D3DPOOL; const aName: string = ''): PLogStack; overload;
-    function _(const aValue: X_D3DTRANSFORMSTATETYPE; const aName: string = ''): PLogStack; overload;
-    function _(const aValue: X_D3DPRIMITIVETYPE; const aName: string = ''): PLogStack; overload;
-    function _(const aValue: X_D3DFORMAT; const aName: string = ''): PLogStack; overload;
     function _(const aValue: D3DDEVTYPE; const aName: string = ''): PLogStack; overload;
     function _(const aValue: X_NV2AMETHOD; const aName: string = ''): PLogStack; overload;
-    function _(const aValue: X_D3DTEXTURESTAGESTATETYPE; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PD3DVIEWPORT; const aName: string = ''): PLogStack; overload;
     function _(const aValue: X_D3DVSDE; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PX_D3DResource; const aName: string = ''): PLogStack; overload;
-    function _(const aValue: X_D3DMULTISAMPLE_TYPE; const aName: string = ''): PLogStack; overload;
+    function _(const aType: TXBType; const aValue: DWORD; const aName: string = ''): PLogStack; overload;
   end;
 
 function RLogStackHelper._(const aValue: X_D3DPOOL; const aName: string = ''): PLogStack;
@@ -305,50 +302,6 @@ begin
     D3DPOOL_SCRATCH: SetValue(UIntPtr(aValue), 'D3DPOOL_SCRATCH');
   else SetValue(UIntPtr(aValue));
   end;
-end;
-
-function RLogStackHelper._(const aValue: X_D3DTRANSFORMSTATETYPE; const aName: string = ''): PLogStack;
-begin
-  Result := SetName(aName, 'X_D3DTRANSFORMSTATETYPE');
-  case aValue of
-    X_D3DTS_VIEW: SetValue(UIntPtr(aValue), 'X_D3DTS_VIEW');
-    X_D3DTS_PROJECTION: SetValue(UIntPtr(aValue), 'X_D3DTS_PROJECTION');
-    X_D3DTS_TEXTURE0: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE0');
-    X_D3DTS_TEXTURE1: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE1');
-    X_D3DTS_TEXTURE2: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE2');
-    X_D3DTS_TEXTURE3: SetValue(UIntPtr(aValue), 'X_D3DTS_TEXTURE3');
-    X_D3DTS_WORLD: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD');
-    X_D3DTS_WORLD1: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD1');
-    X_D3DTS_WORLD2: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD2');
-    X_D3DTS_WORLD3: SetValue(UIntPtr(aValue), 'X_D3DTS_WORLD3');
-    X_D3DTS_MAX: SetValue(UIntPtr(aValue), 'X_D3DTS_MAX');
-    X_D3DTS_FORCE_DWORD: SetValue(UIntPtr(aValue), 'X_D3DTS_FORCE_DWORD');
-  else SetValue(UIntPtr(aValue));
-  end;
-end;
-
-function RLogStackHelper._(const aValue: X_D3DPRIMITIVETYPE; const aName: string = ''): PLogStack;
-var
-  Str: string;
-begin
-  Result := SetName(aName, 'X_D3DPRIMITIVETYPE');
-  Str := X_D3DPRIMITIVETYPE2String(aValue);
-  if Str <> '' then
-    SetValue(UIntPtr(aValue), Str)
-  else
-    SetValue(UIntPtr(aValue));
-end;
-
-function RLogStackHelper._(const aValue: X_D3DFORMAT; const aName: string = ''): PLogStack;
-var
-  Str: string;
-begin
-  Result := SetName(aName, 'X_D3DFORMAT');
-  Str := X_D3DFORMAT2String(aValue);
-  if Str <> '' then
-    SetValue(UIntPtr(aValue), Str)
-  else
-    SetValue(UIntPtr(aValue));
 end;
 
 function RLogStackHelper._(const aValue: D3DDEVTYPE; const aName: string = ''): PLogStack;
@@ -371,15 +324,6 @@ begin
   rs := DxbxXboxMethodToRenderState(aValue);
   if rs in [X_D3DRS_FIRST..X_D3DRS_LAST] then
     SetValue(UIntPtr(aValue), 'NV2A_' + DxbxRenderStateInfo[rs].S)
-  else
-    SetValue(UIntPtr(aValue));
-end;
-
-function RLogStackHelper._(const aValue: X_D3DTEXTURESTAGESTATETYPE; const aName: string = ''): PLogStack;
-begin
-  Result := SetName(aName, 'X_D3DTEXTURESTAGESTATETYPE');
-  if aValue in [X_D3DTSS_FIRST..X_D3DTSS_LAST] then
-    SetValue(UIntPtr(aValue), DxbxTextureStageStateInfo[aValue].S)
   else
     SetValue(UIntPtr(aValue));
 end;
@@ -421,37 +365,22 @@ begin
     SetValue(UIntPtr(aValue), 'Resource');
 end;
 
-function RLogStackHelper._(const aValue: X_D3DMULTISAMPLE_TYPE; const aName: string = ''): PLogStack;
+function RLogStackHelper._(const aType: TXBType; const aValue: DWORD; const aName: string = ''): PLogStack;
+// Generic display of name, value and value-to-string conversion (if available)
 begin
-  Result := SetName(aName, 'X_D3DMULTISAMPLE_TYPE');
-  case aValue of
-    X_D3DMULTISAMPLE_NONE:
-      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_NONE');
-    X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR:
-      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR');
-    X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX:
-      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX');
-    X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR:
-      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR');
-    X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR:
-      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR');
-    X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR:
-      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR');
-    X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN:
-      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN');
-    X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR:
-      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR');
-    X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN:
-      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN');
-    X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN:
-      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN');
-    X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN:
-      SetValue(UIntPtr(aValue), 'X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN');
-  else SetValue(UIntPtr(aValue));
-  end;
+  Result := SetName(aName, DxbxXBTypeInfo[aType].S);
+  SetValue(UIntPtr(aValue), DxbxTypedValueToString(aType, aValue));
 end;
 
 //
+
+function DxbxTypedValueToString(const aType: TXBType; const aValue: DWORD): string;
+begin
+  if Assigned(DxbxXBTypeInfo[aType].R) then
+    Result := TXB2StringFunc(DxbxXBTypeInfo[aType].R)(aValue)
+  else
+    Result := '';
+end;
 
 function DxbxD3DErrorString(hResult: HRESULT): string;
 begin
@@ -591,7 +520,7 @@ begin
   ZeroMemory(@g_EmuCDPD, SizeOf(g_EmuCDPD));
 end;
 
-function DxbTextureFilterCapsToString(const TextureFilterCaps: DWORD): string;
+function DxbxTextureFilterCapsToString(const TextureFilterCaps: DWORD): string;
 begin
   Result := '';
   if (TextureFilterCaps and D3DPTFILTERCAPS_MINFPOINT) > 0 then Result := Result + 'D3DPTFILTERCAPS_MINFPOINT ';
@@ -606,7 +535,7 @@ begin
   if (TextureFilterCaps and D3DPTFILTERCAPS_MAGFGAUSSIANCUBIC) > 0 then Result := Result + 'D3DPTFILTERCAPS_MAGFGAUSSIANCUBIC ';
 end;
 
-function DxbTextureAddressCapsToString(const TextureAddressCaps: DWORD): string;
+function DxbxTextureAddressCapsToString(const TextureAddressCaps: DWORD): string;
 begin
   Result := '';
   if (TextureAddressCaps and D3DPTADDRESSCAPS_WRAP) > 0 then Result := Result + 'D3DPTADDRESSCAPS_WRAP ';
@@ -647,11 +576,11 @@ begin
     _(aD3DCaps.AlphaCmpCaps, 'AlphaCmpCaps').
     _(aD3DCaps.ShadeCaps, 'ShadeCaps').
     _(aD3DCaps.TextureCaps, 'TextureCaps').
-    _(aD3DCaps.TextureFilterCaps, 'TextureFilterCaps', DxbTextureFilterCapsToString(aD3DCaps.TextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DTexture8's
-    _(aD3DCaps.CubeTextureFilterCaps, 'CubeTextureFilterCaps', DxbTextureFilterCapsToString(aD3DCaps.CubeTextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DCubeTexture8's
-    _(aD3DCaps.VolumeTextureFilterCaps, 'VolumeTextureFilterCaps', DxbTextureFilterCapsToString(aD3DCaps.VolumeTextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DVolumeTexture8's
-    _(aD3DCaps.TextureAddressCaps, 'TextureAddressCaps', DxbTextureAddressCapsToString(aD3DCaps.TextureAddressCaps)). // D3DPTADDRESSCAPS for IDirect3DTexture8's
-    _(aD3DCaps.VolumeTextureAddressCaps, 'VolumeTextureAddressCaps', DxbTextureAddressCapsToString(aD3DCaps.VolumeTextureAddressCaps)). // D3DPTADDRESSCAPS for IDirect3DVolumeTexture8's
+    _(aD3DCaps.TextureFilterCaps, 'TextureFilterCaps', DxbxTextureFilterCapsToString(aD3DCaps.TextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DTexture8's
+    _(aD3DCaps.CubeTextureFilterCaps, 'CubeTextureFilterCaps', DxbxTextureFilterCapsToString(aD3DCaps.CubeTextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DCubeTexture8's
+    _(aD3DCaps.VolumeTextureFilterCaps, 'VolumeTextureFilterCaps', DxbxTextureFilterCapsToString(aD3DCaps.VolumeTextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DVolumeTexture8's
+    _(aD3DCaps.TextureAddressCaps, 'TextureAddressCaps', DxbxTextureAddressCapsToString(aD3DCaps.TextureAddressCaps)). // D3DPTADDRESSCAPS for IDirect3DTexture8's
+    _(aD3DCaps.VolumeTextureAddressCaps, 'VolumeTextureAddressCaps', DxbxTextureAddressCapsToString(aD3DCaps.VolumeTextureAddressCaps)). // D3DPTADDRESSCAPS for IDirect3DVolumeTexture8's
 
     _(aD3DCaps.LineCaps, 'LineCaps'). // D3DLINECAPS
 
@@ -728,7 +657,7 @@ begin
     _(aD3DCaps.PS20Caps.StaticFlowControlDepth, 'PS20Caps.StaticFlowControlDepth').
     _(aD3DCaps.PS20Caps.NumInstructionSlots, 'PS20Caps.NumInstructionSlots').
 
-    _('VertexTextureFilterCaps').SetValue(aD3DCaps.VertexTextureFilterCaps, DxbTextureFilterCapsToString(aD3DCaps.VertexTextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DTexture9's for texture, used in vertex shaders
+    _('VertexTextureFilterCaps').SetValue(aD3DCaps.VertexTextureFilterCaps, DxbxTextureFilterCapsToString(aD3DCaps.VertexTextureFilterCaps)). // D3DPTFILTERCAPS for IDirect3DTexture9's for texture, used in vertex shaders
     _(aD3DCaps.MaxVShaderInstructionsExecuted, 'MaxVShaderInstructionsExecuted'). // maximum number of vertex shader instructions that can be executed
     _(aD3DCaps.MaxPShaderInstructionsExecuted, 'MaxPShaderInstructionsExecuted'). // maximum number of pixel shader instructions that can be executed
     _(aD3DCaps.MaxVertexShader30InstructionSlots, 'MaxVertexShader30InstructionSlots').
@@ -2594,14 +2523,14 @@ begin
     LogBegin('PresentationParameters:').
       _(pPresentationParameters.BackBufferWidth, 'BackBufferWidth').
       _(pPresentationParameters.BackBufferHeight,'BackBufferHeight').
-      _(pPresentationParameters.BackBufferFormat, 'BackBufferFormat').
+      _(xtD3DFORMAT, DWORD(pPresentationParameters.BackBufferFormat), 'BackBufferFormat').
       _(pPresentationParameters.BackBufferCount,'BackBufferCount').
-      _(pPresentationParameters.MultiSampleType, 'MultiSampleType').
+      _(xtD3DMULTISAMPLE_TYPE, DWORD(pPresentationParameters.MultiSampleType), 'MultiSampleType').
       _(Ord(pPresentationParameters.SwapEffect), 'SwapEffect').
       _(pPresentationParameters.hDeviceWindow, 'hDeviceWindow').
       _(pPresentationParameters.Windowed, 'Windowed').
       _(pPresentationParameters.EnableAutoDepthStencil,'EnableAutoDepthStencil').
-      _(pPresentationParameters.AutoDepthStencilFormat, 'AutoDepthStencilFormat').
+      _(xtD3DFORMAT, DWORD(pPresentationParameters.AutoDepthStencilFormat), 'AutoDepthStencilFormat').
       _(pPresentationParameters.Flags, 'Flags').
       _(pPresentationParameters.FullScreen_RefreshRateInHz, 'FullScreen_RefreshRateInHz').
       _(pPresentationParameters.FullScreen_PresentationInterval, 'FullScreen_PresentationInterval').
@@ -2855,10 +2784,10 @@ begin
     LogBegin('EmuIDirect3D_CheckDeviceFormat').
       _(Adapter, 'Adapter').
       _(DeviceType, 'DeviceType').
-      _(AdapterFormat, 'AdapterFormat').
+      _(xtD3DFORMAT, DWORD(AdapterFormat), 'AdapterFormat').
       _(Usage, 'Usage').
       _(Int(RType), 'RType').
-      _(CheckFormat, 'CheckFormat').
+      _(xtD3DFORMAT, DWORD(CheckFormat), 'CheckFormat').
     LogEnd;
 
   if (RType > X_D3DRTYPE_INDEXBUFFER) then
@@ -3530,8 +3459,8 @@ begin
     LogBegin('EmuD3DDevice_CreateDepthStencilSurface').
       _(Width, 'Width').
       _(Height, 'Height').
-      _(Format, 'Format').
-      _(MultiSample, 'MultiSample').
+      _(xtD3DFORMAT, DWORD(Format), 'Format').
+      _(xtD3DMULTISAMPLE_TYPE, DWORD(MultiSample), 'MultiSample').
       _(ppSurface, 'ppSurface').
     LogEnd();
 
@@ -3579,7 +3508,7 @@ begin
     LogBegin('EmuD3DDevice_CreateImageSurface').
       _(Width, 'Width').
       _(Height, 'Height').
-      _(Format, 'Format').
+      _(xtD3DFORMAT, DWORD(Format), 'Format').
       _(ppBackBuffer, 'ppBackBuffer').
     LogEnd();
 
@@ -4103,7 +4032,7 @@ begin
     LogBegin('EmuD3DDevice_GetTextureStageState').
       _(Stage, 'Stage').
       _(DWORD(Type_), 'Type').
-      _(Type_VersionIndependent, 'Type_VersionIndependent').
+      _(xtD3DTEXTURESTAGESTATETYPE, Type_VersionIndependent, 'Type_VersionIndependent').
       _(pValue, 'pValue').
     LogEnd();
 
@@ -5002,7 +4931,7 @@ begin
       _(Height, 'Height').
       _(Levels, 'Levels').
       _(Usage, 'Usage').
-      _(Format, 'Format').
+      _(xtD3DFORMAT, DWORD(Format), 'Format').
       _(Pool, 'Pool').
       _(ppTexture, 'ppTexture').
     LogEnd();
@@ -5166,7 +5095,7 @@ begin
       _(Depth, 'Depth').
       _(Levels, 'Levels').
       _(Usage, 'Usage').
-      _(Format, 'Format').
+      _(xtD3DFORMAT, DWORD(Format), 'Format').
       _(Pool, 'Pool').
       _(ppVolumeTexture, 'ppVolumeTexture').
     LogEnd();
@@ -5231,7 +5160,7 @@ begin
       _(EdgeLength, 'EdgeLength').
       _(Levels, 'Levels').
       _(Usage, 'Usage').
-      _(Format, 'Format').
+      _(xtD3DFORMAT, DWORD(Format), 'Format').
       _(Pool, 'Pool').
       _(ppCubeTexture, 'ppCubeTexture').
     LogEnd();
@@ -5289,7 +5218,7 @@ begin
     LogBegin('EmuD3DDevice_CreateIndexBuffer').
       _(Length, 'Length').
       _(Usage, 'Usage').
-      _(Format, 'Format').
+      _(xtD3DFORMAT, DWORD(Format), 'Format').
       _(Pool, 'Pool').
       _(ppIndexBuffer, 'ppIndexBuffer').
     LogEnd();
@@ -5666,7 +5595,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_Begin').
-      _(PrimitiveType, 'PrimitiveType').
+      _(xtD3DPRIMITIVETYPE, DWORD(PrimitiveType), 'PrimitiveType').
     LogEnd();
 
   g_IVBPrimitiveType := PrimitiveType;
@@ -6126,19 +6055,6 @@ function XTL_EmuD3DDevice_Clear
     Stencil: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-
-  function _FlagsToStr: string;
-  begin
-    Result := '';
-    if (Flags and X_D3DCLEAR_ZBUFFER) > 0 then Result := Result + '|D3DCLEAR_ZBUFFER';
-    if (Flags and X_D3DCLEAR_STENCIL) > 0 then Result := Result + '|D3DCLEAR_STENCIL';
-    if (Flags and X_D3DCLEAR_TARGET_R) > 0 then Result := Result + '|D3DCLEAR_TARGET_R';
-    if (Flags and X_D3DCLEAR_TARGET_G) > 0 then Result := Result + '|D3DCLEAR_TARGET_G';
-    if (Flags and X_D3DCLEAR_TARGET_B) > 0 then Result := Result + '|D3DCLEAR_TARGET_B';
-    if (Flags and X_D3DCLEAR_TARGET_A) > 0 then Result := Result + '|D3DCLEAR_TARGET_A';
-    if Result <> '' then System.Delete(Result, 1, 1);
-  end;
-
 var
   PCFlags: DWORD;
 begin
@@ -6148,7 +6064,7 @@ begin
     LogBegin('EmuD3DDevice_Clear').
         _(Count, 'Count').
         _(pRects, 'pRects').
-        _(Flags, 'Flags', _FlagsToStr).
+        _(xtD3DCLEAR, Flags, 'Flags').
         _(Color, 'Color').
         _(Z, 'Z').
         _(Stencil, 'Stencil').
@@ -8110,9 +8026,9 @@ begin
     LogBegin('EmuD3DDevice_SetTextureState_BumpEnv').
       _(Stage, 'Stage').
       _(DWORD(Type_), 'Type').
-      _(Type_VersionIndependent, 'Type_VersionIndependent').
+      _(xtD3DTEXTURESTAGESTATETYPE, Type_VersionIndependent, 'Type_VersionIndependent').
       _(Value, 'Value').
-      _(DWToF(Value), 'Value (as Float)').
+      _(xtFloat, Value, 'Value (as Float)').
     LogEnd();
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
@@ -8325,15 +8241,22 @@ procedure XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   PCValue: DWORD;
+  Str: string;
 begin
   PCValue := Dxbx_SetRenderState(XboxRenderState, XboxValue);
 
   if MayLog(lfUnit or lfReturnValue) then
   begin
+    // If we have a renderer for this type, append the string representation of this value :
+    Str := DxbxTypedValueToString(DxbxRenderStateInfo[XboxRenderState].T, XboxValue);
+    if Str <> '' then
+      Str := '; // = ' + Str;
+
+    // Dump the value that's being forwarded to PC :
     if PCValue <> XboxValue then
-      DbgPrintf('%s := 0x%.08X (converted from Xbox value 0x%.08X)', [DxbxRenderStateInfo[XboxRenderState].S, PCValue, XboxValue])
+      DbgPrintf('  %s := 0x%.08X%s (converted from Xbox value 0x%.08X)', [DxbxRenderStateInfo[XboxRenderState].S, PCValue, Str, XboxValue])
     else
-      DbgPrintf('%s := 0x%.08X', [DxbxRenderStateInfo[XboxRenderState].S, PCValue]);
+      DbgPrintf('  %s := 0x%.08X%s', [DxbxRenderStateInfo[XboxRenderState].S, PCValue, Str]);
   end;
 end;
 
@@ -8699,20 +8622,23 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_SetTransform').
-      _(State, 'State').
+      _(xtD3DTRANSFORMSTATETYPE, DWORD(State), 'State').
       _(pMatrix, 'pMatrix').
     LogEnd();
 
   (* Commented by CXBX
-  DbgPrintf('pMatrix (%d)', [Ord(State)]);
-  DbgPrintf('{');
-  DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._11, pMatrix._12, pMatrix._13, pMatrix._14]);
-  DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._21, pMatrix._22, pMatrix._23, pMatrix._24]);
-  DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._31, pMatrix._32, pMatrix._33, pMatrix._34]);
-  DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._41, pMatrix._42, pMatrix._43, pMatrix._44]);
-  DbgPrintf('}');
+  if State = X_D3DTS_TEXTURE2 then // Dxbx test to see if chessboard texture actually moves in ModifyPixelShader (it does, although invisible)
+  begin
+    DbgPrintf('pMatrix (%d)', [Ord(State)]);
+    DbgPrintf('{');
+    DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._11, pMatrix._12, pMatrix._13, pMatrix._14]);
+    DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._21, pMatrix._22, pMatrix._23, pMatrix._24]);
+    DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._31, pMatrix._32, pMatrix._33, pMatrix._34]);
+    DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._41, pMatrix._42, pMatrix._43, pMatrix._44]);
+    DbgPrintf('}');
+  end;
 
-  if (Ord(State) = 6) and (pMatrix._11 = 1.0) and (pMatrix._22 = 1.0) and (pMatrix._33 = 1.0) and (pMatrix._44 = 1.0) then
+  if (State = X_D3DTS_WORLD{=6}) and (pMatrix._11 = 1.0) and (pMatrix._22 = 1.0) and (pMatrix._33 = 1.0) and (pMatrix._44 = 1.0) then
   begin
     Xtl_g_bSkipPush := TRUE;
     DbgPrintf('SkipPush ON');
@@ -8742,7 +8668,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_GetTransform').
-      _(State, 'State').
+      _(xtD3DTRANSFORMSTATETYPE, DWORD(State), 'State').
       _(pMatrix, 'pMatrix').
     LogEnd();
 
@@ -8983,7 +8909,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_DrawVertices').
-      _(PrimitiveType, 'PrimitiveType').
+      _(xtD3DPRIMITIVETYPE, DWORD(PrimitiveType), 'PrimitiveType').
       _(StartVertex, 'StartVertex').
       _(VertexCount, 'VertexCount').
     LogEnd();
@@ -9012,7 +8938,7 @@ begin
 
       g_pD3DDevice.DrawPrimitive
       (
-          EmuPrimitiveType(VPDesc.PrimitiveType),
+          EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
           VPDesc.dwOffset, // Dxbx note : Cxbx wrongly uses StartVertex here!
           VPDesc.dwPrimitiveCount
       );
@@ -9044,7 +8970,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_DrawVerticesUP').
-      _(PrimitiveType, 'PrimitiveType').
+      _(xtD3DPRIMITIVETYPE, DWORD(PrimitiveType), 'PrimitiveType').
       _(VertexCount, 'VertexCount').
       _(pVertexStreamZeroData, 'pVertexStreamZeroData').
       _(VertexStreamZeroStride, 'VertexStreamZeroStride').
@@ -9074,7 +9000,7 @@ begin
 
       g_pD3DDevice.DrawPrimitiveUP
       (
-          EmuPrimitiveType(VPDesc.PrimitiveType),
+          EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
           VPDesc.dwPrimitiveCount,
           VPDesc.pVertexStreamZeroData,
           VPDesc.uiVertexStreamZeroStride
@@ -9120,7 +9046,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_DrawIndexedVertices').
-      _(PrimitiveType, 'PrimitiveType').
+      _(xtD3DPRIMITIVETYPE, DWORD(PrimitiveType), 'PrimitiveType').
       _(VertexCount, 'VertexCount').
       _(pIndexData, 'pIndexData').
     LogEnd();
@@ -9279,7 +9205,7 @@ begin
       begin
         g_pD3DDevice.DrawIndexedPrimitive
         (
-          EmuPrimitiveType(VPDesc.PrimitiveType),
+          EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
   {$IFDEF DXBX_USE_D3D9}
           g_dwBaseVertexIndex, // TODO -oDxbx : Is this correct? And should we reset the used index?
   {$ENDIF}
@@ -9325,7 +9251,7 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_DrawIndexedVerticesUP').
-      _(PrimitiveType, 'PrimitiveType').
+      _(xtD3DPRIMITIVETYPE, DWORD(PrimitiveType), 'PrimitiveType').
       _(VertexCount, 'VertexCount').
       _(pIndexData, 'pIndexData').
       _(pVertexStreamZeroData, 'pVertexStreamZeroData').
@@ -9363,7 +9289,7 @@ begin
     begin
       g_pD3DDevice.DrawIndexedPrimitiveUP
       (
-          EmuPrimitiveType(VPDesc.PrimitiveType),
+          EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
           {MinVertexIndex=}0,
           VPDesc.dwVertexCount,
           VPDesc.dwPrimitiveCount,
@@ -9456,7 +9382,7 @@ begin
     LogBegin('EmuD3DDevice_SetTextureStageStateNotInline >>').
       _(Stage, 'Stage').
       _(DWORD(Type_), 'Type').
-      _(Type_VersionIndependent, 'Type_VersionIndependent').
+      _(xtD3DTEXTURESTAGESTATETYPE, Type_VersionIndependent, 'Type_VersionIndependent').
       _(Value, 'Value').
     LogEnd();
 
@@ -10244,9 +10170,9 @@ begin
     LogBegin('EmuIDirect3D_CheckDeviceMultiSampleType').
       _(Adapter, 'Adapter').
       _(DeviceType, 'DeviceType').
-      _(SurfaceFormat, 'SurfaceFormat').
+      _(xtD3DFORMAT, DWORD(SurfaceFormat), 'SurfaceFormat').
       _(Windowed, 'Windowed').
-      _(MultiSampleType, 'MultiSampleType').
+      _(xtD3DMULTISAMPLE_TYPE, DWORD(MultiSampleType), 'MultiSampleType').
     LogEnd();
 
   if (Adapter <> D3DADAPTER_DEFAULT) then
@@ -11574,7 +11500,7 @@ begin
       _(Width, 'Width').
       _(Height, 'Height').
       _(Usage, 'Usage').
-      _(Format, 'Format').
+      _(xtD3DFORMAT, DWORD(Format), 'Format').
     LogEnd();
     EmuSwapFS(fsXbox);
   end;
