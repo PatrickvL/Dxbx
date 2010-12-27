@@ -25,6 +25,8 @@ uses
   // Delphi
   Windows
   , SysUtils
+  // Jedi Win32API
+  , JwaWinType
   // DirectX
 {$IFDEF DXBX_USE_D3D9}
   , Direct3D9
@@ -33,7 +35,7 @@ uses
 {$ENDIF}
   // Dxbx
   , uTypes
-  , uDxbxUtils // FloatToString
+  , uDxbxUtils // BOOL2String
   , uDxbxKrnlUtils
   , uEmuD3D8Types
   , uEmuD3D8Utils
@@ -98,9 +100,6 @@ procedure DxbxDecodeResourceFormat(const ResourceFormat: DWORD;
   const pVSize: PDWORD;
   const pPSize: PDWORD);
 
-// simple render state encoding lookup table
-const X_D3DRSSE_UNK = $7fffffff;
-
 // Code translated from Convert.cpp :
 
 const
@@ -139,10 +138,29 @@ EmuPrimitiveTypeLookup: array [0..Ord(X_D3DPT_POLYGON)] of D3DPRIMITIVETYPE = (
 
 function DxbxXB2PC_NOP(Value: DWORD): DWORD;
 
+function DWFloat2String(aValue: DWORD): string;
+function X_D3DBLEND2String(aValue: DWORD): string;
+function X_D3DBLENDOP2String(aValue: DWORD): string;
 function X_D3DCLEAR2String(aValue: DWORD): string;
+function X_D3DCMPFUNC2String(aValue: DWORD): string;
+function X_D3DCOLORWRITEENABLE2String(aValue: DWORD): string;
+function X_D3DCULL2String(aValue: DWORD): string;
+function X_D3DDCC2String(aValue: DWORD): string;
+function X_D3DFOGMODE2String(aValue: DWORD): string;
+function X_D3DFRONT2String(aValue: DWORD): string;
+function X_D3DFILLMODE2String(aValue: DWORD): string;
+function X_D3DLOGICOP2String(aValue: DWORD): string;
+function X_D3DMCS2String(aValue: DWORD): string;
+function X_D3DMULTISAMPLE_TYPE2String(aValue: DWORD): string;
+function X_D3DSHADEMODE2String(aValue: DWORD): string;
+function X_D3DSTENCILOP2String(aValue: DWORD): string;
+function X_D3DSWATH2String(aValue: DWORD): string;
+function X_D3DTEXTUREADDRESS2String(aValue: DWORD): string;
+function X_D3DTEXTUREOP2String(aValue: DWORD): string;
 function X_D3DTEXTURESTAGESTATETYPE2String(aValue: DWORD): string;
 function X_D3DTRANSFORMSTATETYPE2String(aValue: DWORD): string;
-function X_D3DMULTISAMPLE_TYPE2String(aValue: DWORD): string;
+function X_D3DVSDE2String(aValue: DWORD): string;
+function X_D3DWRAP2String(aValue: DWORD): string;
 
 type
   TXB2PCFunc = function(Value: DWORD): DWORD;
@@ -150,6 +168,7 @@ type
 
   TXBType = (
     xt_Unknown = 0, // Defined as zero, to coincide with default value of DxbxRenderStateInfo.T and DxbxTextureStageStateInfo.T
+
     xtBOOL,
     xtBYTE,
     xtD3DBLEND,
@@ -159,20 +178,25 @@ type
     xtD3DCOLOR,
     xtD3DCOLORWRITEENABLE,
     xtD3DCULL,
+    xtD3DDCC,
     xtD3DFILLMODE,
     xtD3DFOGMODE,
     xtD3DFORMAT,
+    xtD3DFRONT,
+    xtD3DLOGICOP,
     xtD3DMCS,
     xtD3DMULTISAMPLE_TYPE,
     xtD3DPRIMITIVETYPE,
     xtD3DSHADEMODE,
     xtD3DSTENCILOP,
+    xtD3DSWATH,
     xtD3DTEXTUREADDRESS, // Used for TextureStageState X_D3DTSS_ADDRESSU, X_D3DTSS_ADDRESSV and X_D3DTSS_ADDRESSW
     xtD3DTEXTUREFILTERTYPE, // Used for TextureStageState X_D3DTSS_MAGFILTER, X_D3DTSS_MINFILTER and X_D3DTSS_MIPFILTER
     xtD3DTEXTUREOP, // Used for TextureStageState X_D3DTSS_COLOROP and X_D3DTSS_ALPHAOP
     xtD3DTEXTURESTAGESTATETYPE,
     xtD3DTRANSFORMSTATETYPE,
     xtD3DVERTEXBLENDFLAGS,
+    xtD3DVSDE,
     xtD3DWRAP,
     xtDWORD,
     xtFloat,
@@ -189,33 +213,39 @@ const
   // Table of Xbox-to-PC and Value-to-String converters for all registered types :
   DxbxXBTypeInfo: array [TXBType] of XBTypeInfo = (
     (S:'Unknown';                  F:@DxbxXB2PC_NOP),
-    (S:'BOOL';                     F:@DxbxXB2PC_NOP;                R:@BOOL2String),
-    (S:'BYTE';                     F:@DxbxXB2PC_NOP),
-    (S:'D3DBLEND';                 F:@EmuXB2PC_D3DBLEND),
-    (S:'D3DBLENDOP';               F:@EmuXB2PC_D3DBLENDOP),
+
+    (S:'BOOL';                     F:@DxbxXB2PC_NOP;                R:@BOOL2String),                  // Xbox = PC
+    (S:'BYTE';                     F:@DxbxXB2PC_NOP),                                                 // Xbox = PC
+    (S:'D3DBLEND';                 F:@EmuXB2PC_D3DBLEND;            R:@X_D3DBLEND2String),
+    (S:'D3DBLENDOP';               F:@EmuXB2PC_D3DBLENDOP;          R:@X_D3DBLENDOP2String),
     (S:'D3DCLEAR';                 F:@EmuXB2PC_D3DCLEAR_FLAGS;      R:@X_D3DCLEAR2String),
-    (S:'D3DCMPFUNC';               F:@EmuXB2PC_D3DCMPFUNC),
-    (S:'D3DCOLOR';                 F:@DxbxXB2PC_NOP),
-    (S:'D3DCOLORWRITEENABLE';      F:@EmuXB2PC_D3DCOLORWRITEENABLE),
-    (S:'D3DCULL';                  F:@EmuXB2PC_D3DCULL),
-    (S:'D3DFILLMODE';              F:@EmuXB2PC_D3DFILLMODE),
-    (S:'D3DFOGMODE';               F:@DxbxXB2PC_NOP),
+    (S:'D3DCMPFUNC';               F:@EmuXB2PC_D3DCMPFUNC;          R:@X_D3DCMPFUNC2String),
+    (S:'D3DCOLOR';                 F:@DxbxXB2PC_NOP),                                                 // Xbox = PC
+    (S:'D3DCOLORWRITEENABLE';      F:@EmuXB2PC_D3DCOLORWRITEENABLE; R:@X_D3DCOLORWRITEENABLE2String),
+    (S:'D3DCULL';                  F:@EmuXB2PC_D3DCULL;             R:@X_D3DCULL2String),
+    (S:'D3DDCC';                   F:@DxbxXB2PC_NOP;                R:@X_D3DDCC2String;               X:True),
+    (S:'D3DFILLMODE';              F:@EmuXB2PC_D3DFILLMODE;         R:@X_D3DFILLMODE2String),
+    (S:'D3DFOGMODE';               F:@DxbxXB2PC_NOP;                R:@X_D3DFOGMODE2String),          // Xbox = PC
     (S:'D3DFORMAT';                F:@EmuXB2PC_D3DFormat;           R:@X_D3DFORMAT2String),
-    (S:'D3DMCS';                   F:@DxbxXB2PC_NOP),
+    (S:'D3DFRONT';                 F:@DxbxXB2PC_NOP;                R:@X_D3DFRONT2String;             X:True),
+    (S:'D3DLOGICOP';               F:@DxbxXB2PC_NOP;                R:@X_D3DLOGICOP2String;           X:True),
+    (S:'D3DMCS';                   F:@DxbxXB2PC_NOP;                R:@X_D3DMCS2String),              // Xbox = PC
     (S:'D3DMULTISAMPLE_TYPE';      F:@EmuXB2PC_D3DMULTISAMPLE_TYPE; R:@X_D3DMULTISAMPLE_TYPE2String;  X:True),
     (S:'D3DPRIMITIVETYPE';         F:@EmuXB2PC_D3DPrimitiveType;    R:@X_D3DPRIMITIVETYPE2String),
-    (S:'D3DSHADEMODE';             F:@EmuXB2PC_D3DSHADEMODE),
-    (S:'D3DSTENCILOP';             F:@EmuXB2PC_D3DSTENCILOP),
-    (S:'D3DTEXTUREADDRESS';        F:@EmuXB2PC_D3DTEXTUREADDRESS),
+    (S:'D3DSHADEMODE';             F:@EmuXB2PC_D3DSHADEMODE;        R:@X_D3DSHADEMODE2String),
+    (S:'D3DSTENCILOP';             F:@EmuXB2PC_D3DSTENCILOP;        R:@X_D3DSTENCILOP2String),
+    (S:'D3DSWATH';                 F:@DxbxXB2PC_NOP;                R:@X_D3DSWATH2String;             X:True),
+    (S:'D3DTEXTUREADDRESS';        F:@EmuXB2PC_D3DTEXTUREADDRESS;   R:@X_D3DTEXTUREADDRESS2String),
     (S:'D3DTEXTUREFILTERTYPE';     F:@EmuXB2PC_D3DTEXTUREFILTERTYPE),
-    (S:'D3DTEXTUREOP';             F:@EmuXB2PC_D3DTEXTUREOP),
+    (S:'D3DTEXTUREOP';             F:@EmuXB2PC_D3DTEXTUREOP;        R:@X_D3DTEXTUREOP2String),
     (S:'D3DTEXTURESTAGESTATETYPE'; F:@EmuXB2PC_D3DTSS;              R:@X_D3DTEXTURESTAGESTATETYPE2String),
     (S:'D3DTRANSFORMSTATETYPE';    F:@EmuXB2PC_D3DTS;               R:@X_D3DTRANSFORMSTATETYPE2String),
     (S:'D3DVERTEXBLENDFLAGS';      F:@EmuXB2PC_D3DVERTEXBLENDFLAGS),
-    (S:'D3DWRAP';                  F:@EmuXB2PC_D3DWRAP),
-    (S:'DWORD';                    F:@DxbxXB2PC_NOP),
-    (S:'Float';                    F:@DxbxXB2PC_NOP;                R:@FloatToString),
-    (S:'LONG';                     F:@DxbxXB2PC_NOP)
+    (S:'D3DVSDE';                  F:@DxbxXB2PC_NOP;                R:@X_D3DVSDE2String),
+    (S:'D3DWRAP';                  F:@EmuXB2PC_D3DWRAP;             R:@X_D3DWRAP2String),
+    (S:'DWORD';                    F:@DxbxXB2PC_NOP),                                                 // Xbox = PC
+    (S:'Float';                    F:@DxbxXB2PC_NOP;                R:@DWFloat2String),               // Xbox = PC
+    (S:'LONG';                     F:@DxbxXB2PC_NOP)                                                  // Xbox = PC
   );
 
 type
@@ -309,13 +339,13 @@ const
     (S:'D3DRS_BLENDOP'                     {=  74}; V:3424; T:xtD3DBLENDOP;          X:False; PC:D3DRS_BLENDOP),
     (S:'D3DRS_BLENDCOLOR'                  {=  75}; V:3424; T:xtD3DCOLOR;            {$IFDEF DXBX_USE_D3D9}X:False; PC:D3DRS_BLENDFACTOR;{$ELSE}X:True;{$ENDIF} N:'D3DCOLOR for D3DBLEND_CONSTANTCOLOR'),
     // D3D9 D3DRS_BLENDFACTOR : D3DCOLOR used for a constant blend factor during alpha blending for devices that support D3DPBLENDCAPS_BLENDFACTOR
-    (S:'D3DRS_SWATHWIDTH'                  {=  76}; V:3424; {T:xtD3DSWATHWIDTH;}     X:True),
+    (S:'D3DRS_SWATHWIDTH'                  {=  76}; V:3424; T:xtD3DSWATH;            X:True),
     (S:'D3DRS_POLYGONOFFSETZSLOPESCALE'    {=  77}; V:3424; T:xtFloat;               X:True;  N:'float Z factor for shadow maps'),
     (S:'D3DRS_POLYGONOFFSETZOFFSET'        {=  78}; V:3424; T:xtFloat;               X:True),
     (S:'D3DRS_POINTOFFSETENABLE'           {=  79}; V:3424; T:xtBOOL;                X:True),
     (S:'D3DRS_WIREFRAMEOFFSETENABLE'       {=  80}; V:3424; T:xtBOOL;                X:True),
     (S:'D3DRS_SOLIDOFFSETENABLE'           {=  81}; V:3424; T:xtBOOL;                X:True),
-    (S:'D3DRS_DEPTHCLIPCONTROL'            {=  82}; V:4627; {T:xtD3DDCC;}            X:True),
+    (S:'D3DRS_DEPTHCLIPCONTROL'            {=  82}; V:4627; T:xtD3DDCC;              X:True),
     (S:'D3DRS_STIPPLEENABLE'               {=  83}; V:4627; T:xtBOOL;                X:True),
     (S:'D3DRS_SIMPLE_UNUSED8'              {=  84}; V:4627; T:xtDWORD;               X:True),
     (S:'D3DRS_SIMPLE_UNUSED7'              {=  85}; V:4627; T:xtDWORD;               X:True),
@@ -382,16 +412,16 @@ const
     (S:'D3DRS_ZENABLE'                     {= 143}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_ZENABLE), // D3DZBUFFERTYPE?
     (S:'D3DRS_STENCILENABLE'               {= 144}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_STENCILENABLE),
     (S:'D3DRS_STENCILFAIL'                 {= 145}; V:3424; T:xtD3DSTENCILOP;        X:False; PC:D3DRS_STENCILFAIL),
-    (S:'D3DRS_FRONTFACE'                   {= 146}; V:3424; T:xtDWORD;               X:True), // nsp.
+    (S:'D3DRS_FRONTFACE'                   {= 146}; V:3424; T:xtD3DFRONT;            X:True), // nsp.
     (S:'D3DRS_CULLMODE'                    {= 147}; V:3424; T:xtD3DCULL;             X:False; PC:D3DRS_CULLMODE),
     (S:'D3DRS_TEXTUREFACTOR'               {= 148}; V:3424; T:xtD3DCOLOR;            X:False; PC:D3DRS_TEXTUREFACTOR),
     (S:'D3DRS_ZBIAS'                       {= 149}; V:3424; T:xtLONG;                X:False; PC:{$IFDEF DXBX_USE_D3D9}D3DRS_DEPTHBIAS{$ELSE}D3DRS_ZBIAS{$ENDIF}),
-    (S:'D3DRS_LOGICOP'                     {= 150}; V:3424; T:xtDWORD;               X:True), // D3DLOGICOP?
+    (S:'D3DRS_LOGICOP'                     {= 150}; V:3424; T:xtD3DLOGICOP;          X:True), // nsp.
     (S:'D3DRS_EDGEANTIALIAS'               {= 151}; V:3424; T:xtBOOL;                X:False; PC:{$IFDEF DXBX_USE_D3D9}D3DRS_ANTIALIASEDLINEENABLE{$ELSE}D3DRS_EDGEANTIALIAS{$ENDIF}), // Dxbx note : No Xbox ext. (according to Direct3D8) !
     (S:'D3DRS_MULTISAMPLEANTIALIAS'        {= 152}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_MULTISAMPLEANTIALIAS),
     (S:'D3DRS_MULTISAMPLEMASK'             {= 153}; V:3424; T:xtDWORD;               X:False; PC:D3DRS_MULTISAMPLEMASK),
-//  (S:'D3DRS_MULTISAMPLETYPE'             {= 154}; V:3424; T:xtDWORD;               X:True), // [-3911] \_ aliasses  D3DMULTISAMPLE_TYPE
-    (S:'D3DRS_MULTISAMPLEMODE'             {= 154}; V:4361; T:xtDWORD;               X:True), // [4361+] /            D3DMULTISAMPLEMODE for the backbuffer
+//  (S:'D3DRS_MULTISAMPLETYPE'             {= 154}; V:3424; T:xtD3DMULTISAMPLE_TYPE; X:True), // [-3911] \_ aliasses  D3DMULTISAMPLE_TYPE
+    (S:'D3DRS_MULTISAMPLEMODE'             {= 154}; V:4361; T:xtD3DMULTISAMPLE_TYPE; X:True), // [4361+] /            D3DMULTISAMPLEMODE for the backbuffer
     (S:'D3DRS_MULTISAMPLERENDERTARGETMODE' {= 155}; V:4361; T:xtDWORD;               X:True),
     (S:'D3DRS_SHADOWFUNC'                  {= 156}; V:3424; T:xtD3DCMPFUNC;          X:True),
     (S:'D3DRS_LINEWIDTH'                   {= 157}; V:3424; T:xtFloat;               X:True),
@@ -578,18 +608,18 @@ end;
 function X_D3DTRANSFORMSTATETYPE2String(aValue: DWORD): string;
 begin
   case X_D3DTRANSFORMSTATETYPE(aValue) of
-    X_D3DTS_VIEW: Result := 'X_D3DTS_VIEW';
-    X_D3DTS_PROJECTION: Result := 'X_D3DTS_PROJECTION';
-    X_D3DTS_TEXTURE0: Result := 'X_D3DTS_TEXTURE0';
-    X_D3DTS_TEXTURE1: Result := 'X_D3DTS_TEXTURE1';
-    X_D3DTS_TEXTURE2: Result := 'X_D3DTS_TEXTURE2';
-    X_D3DTS_TEXTURE3: Result := 'X_D3DTS_TEXTURE3';
-    X_D3DTS_WORLD: Result := 'X_D3DTS_WORLD';
-    X_D3DTS_WORLD1: Result := 'X_D3DTS_WORLD1';
-    X_D3DTS_WORLD2: Result := 'X_D3DTS_WORLD2';
-    X_D3DTS_WORLD3: Result := 'X_D3DTS_WORLD3';
-    X_D3DTS_MAX: Result := 'X_D3DTS_MAX';
-    X_D3DTS_FORCE_DWORD: Result := 'X_D3DTS_FORCE_DWORD';
+    X_D3DTS_VIEW: Result := 'D3DTS_VIEW';
+    X_D3DTS_PROJECTION: Result := 'D3DTS_PROJECTION';
+    X_D3DTS_TEXTURE0: Result := 'D3DTS_TEXTURE0';
+    X_D3DTS_TEXTURE1: Result := 'D3DTS_TEXTURE1';
+    X_D3DTS_TEXTURE2: Result := 'D3DTS_TEXTURE2';
+    X_D3DTS_TEXTURE3: Result := 'D3DTS_TEXTURE3';
+    X_D3DTS_WORLD: Result := 'D3DTS_WORLD';
+    X_D3DTS_WORLD1: Result := 'D3DTS_WORLD1';
+    X_D3DTS_WORLD2: Result := 'D3DTS_WORLD2';
+    X_D3DTS_WORLD3: Result := 'D3DTS_WORLD3';
+    X_D3DTS_MAX: Result := 'D3DTS_MAX';
+    X_D3DTS_FORCE_DWORD: Result := 'D3DTS_FORCE_DWORD';
   else Result := '';
   end;
 end;
@@ -598,27 +628,27 @@ function X_D3DMULTISAMPLE_TYPE2String(aValue: DWORD): string;
 begin
   case X_D3DMULTISAMPLE_TYPE(aValue) of
     X_D3DMULTISAMPLE_NONE:
-      Result := 'X_D3DMULTISAMPLE_NONE';
+      Result := 'D3DMULTISAMPLE_NONE';
     X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR:
-      Result := 'X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR';
+      Result := 'D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR';
     X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX:
-      Result := 'X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX';
+      Result := 'D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX';
     X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR:
-      Result := 'X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR';
+      Result := 'D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR';
     X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR:
-      Result := 'X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR';
+      Result := 'D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR';
     X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR:
-      Result := 'X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR';
+      Result := 'D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR';
     X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN:
-      Result := 'X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN';
+      Result := 'D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN';
     X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR:
-      Result := 'X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR';
+      Result := 'D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR';
     X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN:
-      Result := 'X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN';
+      Result := 'D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN';
     X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN:
-      Result := 'X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN';
+      Result := 'D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN';
     X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN:
-      Result := 'X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN';
+      Result := 'D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN';
   else Result := '';
   end;
 end;
@@ -990,7 +1020,8 @@ end;
 
 function EmuXB2PC_D3DTEXTUREADDRESS(Value: DWORD): DWORD;
 begin
-  if (Value = 5) then
+  if (Value = X_D3DTADDRESS_CLAMPTOEDGE) then
+    // Note : PC has D3DTADDRESS_MIRRORONCE in it's place
     DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
   Result := Value;
@@ -1080,6 +1111,47 @@ begin
   end;
 end;
 
+function DWFloat2String(aValue: DWORD): string;
+begin
+  Result := FormatFloat('0.0', PFloat(@aValue)^); // TODO : Speed this up by avoiding Single>Extended cast & generic render code.
+end;
+
+function X_D3DBLEND2String(aValue: DWORD): string;
+begin
+  case X_D3DBLEND(aValue) of
+    X_D3DBLEND_ZERO             : Result := 'D3DBLEND_ZERO';
+    X_D3DBLEND_ONE              : Result := 'D3DBLEND_ONE';
+    X_D3DBLEND_SRCCOLOR         : Result := 'D3DBLEND_SRCCOLOR';
+    X_D3DBLEND_INVSRCCOLOR      : Result := 'D3DBLEND_INVSRCCOLOR';
+    X_D3DBLEND_SRCALPHA         : Result := 'D3DBLEND_SRCALPHA';
+    X_D3DBLEND_INVSRCALPHA      : Result := 'D3DBLEND_INVSRCALPHA';
+    X_D3DBLEND_DESTALPHA        : Result := 'D3DBLEND_DESTALPHA';
+    X_D3DBLEND_INVDESTALPHA     : Result := 'D3DBLEND_INVDESTALPHA';
+    X_D3DBLEND_DESTCOLOR        : Result := 'D3DBLEND_DESTCOLOR';
+    X_D3DBLEND_INVDESTCOLOR     : Result := 'D3DBLEND_INVDESTCOLOR';
+    X_D3DBLEND_SRCALPHASAT      : Result := 'D3DBLEND_SRCALPHASAT';
+    X_D3DBLEND_CONSTANTCOLOR    : Result := 'D3DBLEND_CONSTANTCOLOR';
+    X_D3DBLEND_INVCONSTANTCOLOR : Result := 'D3DBLEND_INVCONSTANTCOLOR';
+    X_D3DBLEND_CONSTANTALPHA    : Result := 'D3DBLEND_CONSTANTALPHA';
+    X_D3DBLEND_INVCONSTANTALPHA : Result := 'D3DBLEND_INVCONSTANTALPHA';
+  else Result := '';
+  end;
+end;
+
+function X_D3DBLENDOP2String(aValue: DWORD): string;
+begin
+  case X_D3DBLENDOP(aValue) of
+    X_D3DBLENDOP_ADD:               Result := 'D3DBLENDOP_ADD';
+    X_D3DBLENDOP_SUBTRACT:          Result := 'D3DBLENDOP_SUBTRACT';
+    X_D3DBLENDOP_REVSUBTRACT:       Result := 'D3DBLENDOP_REVSUBTRACT';
+    X_D3DBLENDOP_MIN:               Result := 'D3DBLENDOP_MIN';
+    X_D3DBLENDOP_MAX:               Result := 'D3DBLENDOP_MAX';
+    X_D3DBLENDOP_ADDSIGNED:         Result := 'D3DBLENDOP_ADDSIGNED';
+    X_D3DBLENDOP_REVSUBTRACTSIGNED: Result := 'D3DBLENDOP_REVSUBTRACTSIGNED';
+  else Result := '';
+  end;
+end;
+
 function X_D3DCLEAR2String(aValue: DWORD): string;
 begin
   Result := '';
@@ -1089,6 +1161,235 @@ begin
   if (aValue and X_D3DCLEAR_TARGET_G) > 0 then Result := Result + '|D3DCLEAR_TARGET_G';
   if (aValue and X_D3DCLEAR_TARGET_B) > 0 then Result := Result + '|D3DCLEAR_TARGET_B';
   if (aValue and X_D3DCLEAR_TARGET_A) > 0 then Result := Result + '|D3DCLEAR_TARGET_A';
+  if Result <> '' then System.Delete(Result, 1, 1);
+end;
+
+function X_D3DCMPFUNC2String(aValue: DWORD): string;
+begin
+  case X_D3DCMPFUNC(aValue) of
+    X_D3DCMP_NEVER       : Result := 'D3DCMP_NEVER';
+    X_D3DCMP_LESS        : Result := 'D3DCMP_LESS';
+    X_D3DCMP_EQUAL       : Result := 'D3DCMP_EQUAL';
+    X_D3DCMP_LESSEQUAL   : Result := 'D3DCMP_LESSEQUAL';
+    X_D3DCMP_GREATER     : Result := 'D3DCMP_GREATER';
+    X_D3DCMP_NOTEQUAL    : Result := 'D3DCMP_NOTEQUAL';
+    X_D3DCMP_GREATEREQUAL: Result := 'D3DCMP_GREATEREQUAL';
+    X_D3DCMP_ALWAYS      : Result := 'D3DCMP_ALWAYS';
+  else Result := '';
+  end;
+end;
+
+function X_D3DCOLORWRITEENABLE2String(aValue: DWORD): string;
+begin
+  if aValue = X_D3DCOLORWRITEENABLE_ALL then
+    Result := 'D3DCOLORWRITEENABLE_ALL'
+  else
+  begin
+    Result := '';
+    if (aValue and X_D3DCOLORWRITEENABLE_RED) > 0 then Result := Result + '|D3DCOLORWRITEENABLE_RED';
+    if (aValue and X_D3DCOLORWRITEENABLE_GREEN) > 0 then Result := Result + '|D3DCOLORWRITEENABLE_GREEN';
+    if (aValue and X_D3DCOLORWRITEENABLE_BLUE) > 0 then Result := Result + '|D3DCOLORWRITEENABLE_BLUE';
+    if (aValue and X_D3DCOLORWRITEENABLE_ALPHA) > 0 then Result := Result + '|D3DCOLORWRITEENABLE_ALPHA';
+    if Result <> '' then System.Delete(Result, 1, 1);
+  end;
+end;
+
+function X_D3DCULL2String(aValue: DWORD): string;
+begin
+  case X_D3DCULL(aValue) of
+    X_D3DCULL_NONE: Result := 'D3DCULL_NONE';
+    X_D3DCULL_CW:   Result := 'D3DCULL_CW';
+    X_D3DCULL_CCW:  Result := 'D3DCULL_CCW';
+  else Result := '';
+  end;
+end;
+
+function X_D3DDCC2String(aValue: DWORD): string;
+begin
+  // TODO : Are these flags or distinct values?
+  case aValue of
+    X_D3DDCC_CULLPRIMITIVE: Result := 'D3DDCC_CULLPRIMITIVE';
+    X_D3DDCC_CLAMP:         Result := 'D3DDCC_CLAMP';
+    X_D3DDCC_IGNORE_W_SIGN: Result := 'D3DDCC_IGNORE_W_SIGN';
+  else
+    Result := '';
+  end;
+end;
+
+function X_D3DFILLMODE2String(aValue: DWORD): string;
+begin
+  case X_D3DFILLMODE(aValue) of
+    X_D3DFILL_POINT: Result := 'D3DFILL_POINT';
+    X_D3DFILL_WIREFRAME: Result := 'D3DFILL_WIREFRAME';
+    X_D3DFILL_SOLID: Result := 'D3DFILL_SOLID';
+  else
+    Result := '';
+  end;
+end;
+
+function X_D3DFOGMODE2String(aValue: DWORD): string;
+begin
+  case X_D3DFOGMODE(aValue) of
+    X_D3DFOG_NONE: Result := 'D3DFOG_NONE';
+    X_D3DFOG_EXP: Result := 'D3DFOG_EXP';
+    X_D3DFOG_EXP2: Result := 'D3DFOG_EXP2';
+    X_D3DFOG_LINEAR: Result := 'D3DFOG_LINEAR';
+  else
+    Result := '';
+  end;
+end;
+
+function X_D3DFRONT2String(aValue: DWORD): string;
+begin
+  case X_D3DFRONT(aValue) of
+    X_D3DFRONT_CW:  Result := 'D3DFRONT_CW';
+    X_D3DFRONT_CCW: Result := 'D3DFRONT_CCW';
+  else Result := '';
+  end;
+end;
+
+function X_D3DLOGICOP2String(aValue: DWORD): string;
+begin
+  case X_D3DLOGICOP(aValue) of
+    X_D3DLOGICOP_NONE             : Result := 'D3DLOGICOP_NONE';
+    X_D3DLOGICOP_CLEAR            : Result := 'D3DLOGICOP_CLEAR';
+    X_D3DLOGICOP_AND              : Result := 'D3DLOGICOP_AND';
+    X_D3DLOGICOP_AND_REVERSE      : Result := 'D3DLOGICOP_AND_REVERSE';
+    X_D3DLOGICOP_COPY             : Result := 'D3DLOGICOP_COPY';
+    X_D3DLOGICOP_AND_INVERTED     : Result := 'D3DLOGICOP_AND_INVERTED';
+    X_D3DLOGICOP_NOOP             : Result := 'D3DLOGICOP_NOOP';
+    X_D3DLOGICOP_XOR              : Result := 'D3DLOGICOP_XOR';
+    X_D3DLOGICOP_OR               : Result := 'D3DLOGICOP_OR';
+    X_D3DLOGICOP_NOR              : Result := 'D3DLOGICOP_NOR';
+    X_D3DLOGICOP_EQUIV            : Result := 'D3DLOGICOP_EQUIV';
+    X_D3DLOGICOP_INVERT           : Result := 'D3DLOGICOP_INVERT';
+    X_D3DLOGICOP_OR_REVERSE       : Result := 'D3DLOGICOP_OR_REVERSE';
+    X_D3DLOGICOP_COPY_INVERTED    : Result := 'D3DLOGICOP_COPY_INVERTED';
+    X_D3DLOGICOP_OR_INVERTED      : Result := 'D3DLOGICOP_OR_INVERTED';
+    X_D3DLOGICOP_NAND             : Result := 'D3DLOGICOP_NAND';
+    X_D3DLOGICOP_SET              : Result := 'D3DLOGICOP_SET';
+  else Result := '';
+  end;
+end;
+
+function X_D3DMCS2String(aValue: DWORD): string;
+begin
+  case X_D3DMATERIALCOLORSOURCE(aValue) of
+    X_D3DMCS_MATERIAL: Result := 'D3DMCS_MATERIAL';
+    X_D3DMCS_COLOR1  : Result := 'D3DMCS_COLOR1';
+    X_D3DMCS_COLOR2  : Result := 'D3DMCS_COLOR2';
+  else Result := '';
+  end;
+end;
+
+function X_D3DSHADEMODE2String(aValue: DWORD): string;
+begin
+  case X_D3DSHADEMODE(aValue) of
+    X_D3DSHADE_FLAT   : Result := 'D3DSHADE_FLAT';
+    X_D3DSHADE_GOURAUD: Result := 'D3DSHADE_GOURAUD';
+  else Result := '';
+  end;
+end;
+
+function X_D3DSTENCILOP2String(aValue: DWORD): string;
+begin
+  case X_D3DSTENCILOP(aValue) of
+    X_D3DSTENCILOP_ZERO   : Result := 'D3DSTENCILOP_ZERO';
+    X_D3DSTENCILOP_KEEP   : Result := 'D3DSTENCILOP_KEEP';
+    X_D3DSTENCILOP_REPLACE: Result := 'D3DSTENCILOP_REPLACE';
+    X_D3DSTENCILOP_INCRSAT: Result := 'D3DSTENCILOP_INCRSAT';
+    X_D3DSTENCILOP_DECRSAT: Result := 'D3DSTENCILOP_DECRSAT';
+    X_D3DSTENCILOP_INVERT : Result := 'D3DSTENCILOP_INVERT';
+    X_D3DSTENCILOP_INCR   : Result := 'D3DSTENCILOP_INCR';
+    X_D3DSTENCILOP_DECR   : Result := 'D3DSTENCILOP_DECR';
+  else Result := '';
+  end;
+end;
+
+function X_D3DSWATH2String(aValue: DWORD): string;
+begin
+  case X_D3DSWATHWIDTH(aValue) of
+    X_D3DSWATH_8: Result := 'D3DSWATH_8';
+    X_D3DSWATH_16: Result := 'D3DSWATH_16';
+    X_D3DSWATH_32: Result := 'D3DSWATH_32';
+    X_D3DSWATH_64: Result := 'D3DSWATH_64';
+    X_D3DSWATH_128: Result := 'D3DSWATH_128';
+    X_D3DSWATH_OFF: Result := 'D3DSWATH_OFF';
+  else Result := '';
+  end;
+end;
+
+function X_D3DTEXTUREADDRESS2String(aValue: DWORD): string;
+begin
+  case aValue of
+    X_D3DTADDRESS_WRAP: Result := 'D3DTADDRESS_WRAP';
+    X_D3DTADDRESS_MIRROR: Result := 'D3DTADDRESS_MIRROR';
+    X_D3DTADDRESS_CLAMP: Result := 'D3DTADDRESS_CLAMP';
+    X_D3DTADDRESS_BORDER: Result := 'D3DTADDRESS_BORDER';
+    X_D3DTADDRESS_CLAMPTOEDGE: Result := 'D3DTADDRESS_CLAMPTOEDGE';
+  else Result := '';
+  end;
+end;
+
+function X_D3DTEXTUREOP2String(aValue: DWORD): string;
+begin
+  case X_D3DTEXTUREOP(aValue) of
+    X_D3DTOP_DISABLE: Result := 'D3DTOP_DISABLE';
+    X_D3DTOP_SELECTARG1: Result := 'D3DTOP_SELECTARG1';
+    X_D3DTOP_SELECTARG2: Result := 'D3DTOP_SELECTARG2';
+    X_D3DTOP_MODULATE: Result := 'D3DTOP_MODULATE';
+    X_D3DTOP_MODULATE2X: Result := 'D3DTOP_MODULATE2X';
+    X_D3DTOP_MODULATE4X: Result := 'D3DTOP_MODULATE4X';
+    X_D3DTOP_ADD: Result := 'D3DTOP_ADD';
+    X_D3DTOP_ADDSIGNED: Result := 'D3DTOP_ADDSIGNED';
+    X_D3DTOP_ADDSIGNED2X: Result := 'D3DTOP_ADDSIGNED2X';
+    X_D3DTOP_SUBTRACT: Result := 'D3DTOP_SUBTRACT';
+    X_D3DTOP_ADDSMOOTH: Result := 'D3DTOP_ADDSMOOTH';
+    X_D3DTOP_BLENDDIFFUSEALPHA: Result := 'D3DTOP_BLENDDIFFUSEALPHA';
+    X_D3DTOP_BLENDCURRENTALPHA: Result := 'D3DTOP_BLENDCURRENTALPHA';
+    X_D3DTOP_BLENDTEXTUREALPHA: Result := 'D3DTOP_BLENDTEXTUREALPHA';
+    X_D3DTOP_BLENDFACTORALPHA: Result := 'D3DTOP_BLENDFACTORALPHA';
+    X_D3DTOP_BLENDTEXTUREALPHAPM: Result := 'D3DTOP_BLENDTEXTUREALPHAPM';
+    X_D3DTOP_PREMODULATE: Result := 'D3DTOP_PREMODULATE';
+    X_D3DTOP_MODULATEALPHA_ADDCOLOR: Result := 'D3DTOP_MODULATEALPHA_ADDCOLOR';
+    X_D3DTOP_MODULATECOLOR_ADDALPHA: Result := 'D3DTOP_MODULATECOLOR_ADDALPHA';
+    X_D3DTOP_MODULATEINVALPHA_ADDCOLOR: Result := 'D3DTOP_MODULATEINVALPHA_ADDCOLOR';
+    X_D3DTOP_MODULATEINVCOLOR_ADDALPHA: Result := 'D3DTOP_MODULATEINVCOLOR_ADDALPHA';
+    X_D3DTOP_DOTPRODUCT3: Result := 'D3DTOP_DOTPRODUCT3';
+    X_D3DTOP_MULTIPLYADD: Result := 'D3DTOP_MULTIPLYADD';
+    X_D3DTOP_LERP: Result := 'D3DTOP_LERP';
+    X_D3DTOP_BUMPENVMAP: Result := 'D3DTOP_BUMPENVMAP';
+    X_D3DTOP_BUMPENVMAPLUMINANCE: Result := 'D3DTOP_BUMPENVMAPLUMINANCE';
+  else Result := '';
+  end;
+end;
+
+function X_D3DVSDE2String(aValue: DWORD): string;
+begin
+  case {X_D3DVSDE}(aValue) of
+    X_D3DVSDE_POSITION     : Result := 'D3DVSDE_POSITION';
+    X_D3DVSDE_BLENDWEIGHT  : Result := 'D3DVSDE_BLENDWEIGHT';
+    X_D3DVSDE_NORMAL       : Result := 'D3DVSDE_NORMAL';
+    X_D3DVSDE_DIFFUSE      : Result := 'D3DVSDE_DIFFUSE';
+    X_D3DVSDE_SPECULAR     : Result := 'D3DVSDE_SPECULAR';
+    X_D3DVSDE_FOG          : Result := 'D3DVSDE_FOG';
+    X_D3DVSDE_BACKDIFFUSE  : Result := 'D3DVSDE_BACKDIFFUSE';
+    X_D3DVSDE_BACKSPECULAR : Result := 'D3DVSDE_BACKSPECULAR';
+    X_D3DVSDE_TEXCOORD0    : Result := 'D3DVSDE_TEXCOORD0';
+    X_D3DVSDE_TEXCOORD1    : Result := 'D3DVSDE_TEXCOORD1';
+    X_D3DVSDE_TEXCOORD2    : Result := 'D3DVSDE_TEXCOORD2';
+    X_D3DVSDE_TEXCOORD3    : Result := 'D3DVSDE_TEXCOORD3';
+    X_D3DVSDE_VERTEX       : Result := 'D3DVSDE_VERTEX';
+  else Result := '';
+  end;
+end;
+
+function X_D3DWRAP2String(aValue: DWORD): string;
+begin
+  Result := '';
+  if (aValue and X_D3DWRAP_U) > 0 then Result := Result + '|D3DWRAP_U';
+  if (aValue and X_D3DWRAP_V) > 0 then Result := Result + '|D3DWRAP_V';
+  if (aValue and X_D3DWRAP_W) > 0 then Result := Result + '|D3DWRAP_W';
   if Result <> '' then System.Delete(Result, 1, 1);
 end;
 

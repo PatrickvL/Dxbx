@@ -1312,14 +1312,8 @@ const // DWORD Indexes for XTL_D3D__pDevice (aka D3D__pDevice) :
 //   Result := XTL_EmuMappedD3DRenderState[{X_D3DRENDERSTATETYPE}]^;
 
 // Dxbx note : The PS* render states map 1-on-1 to the X_D3DPIXELSHADERDEF record,
-// which leds me (PatrickvL) to suspect that SetPixelShader actually pushes the definition
-// into these render state slots - if that's the case, we would be better of to use these
-// render states as the source of the pixel shader definition, so alterations made via calls
-// to SetRenderState can effect our emulation too.  TODO : See if SetPixelShader does this.
-//
-// For this to happen, we will have to use a cache of already processed pixel shaders, as each
-// change could result in a different local shader. Also, the recompilation must be postponed
-// until the drawing phase (that is, in our DrawRectPatch and Draw*Vertices* patches).
+// SetPixelShader actually pushes the definition into these render state slots.
+// See XTL_EmuUpdateActivePixelShader for how this is employed.
 
 // The set starts out with "pixel-shader" render states (all Xbox extensions) :
 const X_D3DRS_PSALPHAINPUTS0              = 0;
@@ -1596,6 +1590,13 @@ const X_D3DTOP_MULTIPLYADD = 23;
 const X_D3DTOP_LERP = 24;
 const X_D3DTOP_BUMPENVMAP = 25;
 const X_D3DTOP_BUMPENVMAPLUMINANCE = 26;
+
+// X_D3DTEXTUREADDRESS values :
+const X_D3DTADDRESS_WRAP = 1;
+const X_D3DTADDRESS_MIRROR = 2;
+const X_D3DTADDRESS_CLAMP = 3;
+const X_D3DTADDRESS_BORDER = 4;
+const X_D3DTADDRESS_CLAMPTOEDGE = 5;
 
 // deferred texture stage state "unknown" flag
 const X_D3DTSS_UNK = $7fffffff;

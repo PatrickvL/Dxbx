@@ -278,6 +278,7 @@ const lfUnit = lfCxbx or lfGraphics;
 
 var
   g_Title: string = '';
+  g_SignalStateDump: Boolean = False;
   g_SignalScreenShot: Boolean = False;
 
 type
@@ -286,7 +287,6 @@ type
     function _(const aValue: D3DDEVTYPE; const aName: string = ''): PLogStack; overload;
     function _(const aValue: X_NV2AMETHOD; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PD3DVIEWPORT; const aName: string = ''): PLogStack; overload;
-    function _(const aValue: X_D3DVSDE; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PX_D3DResource; const aName: string = ''): PLogStack; overload;
     function _(const aType: TXBType; const aValue: DWORD; const aName: string = ''): PLogStack; overload;
   end;
@@ -333,27 +333,6 @@ begin
   Result := SetName(aName, 'PD3DVIEWPORT');
   SetValue(DWORD(aValue), Format('%d, %d, %d, %d, %f, %f',
       [aValue.X, aValue.Y, aValue.Width, aValue.Height, aValue.MinZ, aValue.MaxZ]));
-end;
-
-function RLogStackHelper._(const aValue: X_D3DVSDE; const aName: string = ''): PLogStack;
-begin
-  Result := SetName(aName, 'X_D3DVSDE');
-  case DWORD(aValue) of
-    X_D3DVSDE_POSITION     : SetValue(UIntPtr(aValue), 'X_D3DVSDE_POSITION');
-    X_D3DVSDE_BLENDWEIGHT  : SetValue(UIntPtr(aValue), 'X_D3DVSDE_BLENDWEIGHT');
-    X_D3DVSDE_NORMAL       : SetValue(UIntPtr(aValue), 'X_D3DVSDE_NORMAL');
-    X_D3DVSDE_DIFFUSE      : SetValue(UIntPtr(aValue), 'X_D3DVSDE_DIFFUSE');
-    X_D3DVSDE_SPECULAR     : SetValue(UIntPtr(aValue), 'X_D3DVSDE_SPECULAR');
-    X_D3DVSDE_FOG          : SetValue(UIntPtr(aValue), 'X_D3DVSDE_FOG');
-    X_D3DVSDE_BACKDIFFUSE  : SetValue(UIntPtr(aValue), 'X_D3DVSDE_BACKDIFFUSE');
-    X_D3DVSDE_BACKSPECULAR : SetValue(UIntPtr(aValue), 'X_D3DVSDE_BACKSPECULAR');
-    X_D3DVSDE_TEXCOORD0    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD0');
-    X_D3DVSDE_TEXCOORD1    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD1');
-    X_D3DVSDE_TEXCOORD2    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD2');
-    X_D3DVSDE_TEXCOORD3    : SetValue(UIntPtr(aValue), 'X_D3DVSDE_TEXCOORD3');
-    X_D3DVSDE_VERTEX       : SetValue(UIntPtr(aValue), 'X_D3DVSDE_VERTEX');
-  else SetValue(UIntPtr(aValue));
-  end;
 end;
 
 function RLogStackHelper._(const aValue: PX_D3DResource; const aName: string = ''): PLogStack;
@@ -668,6 +647,51 @@ begin
   LogStack.LogEnd();
 end;
 
+procedure DxbxDumpXboxStates();
+const
+  XboxExtStr: array [Boolean] of string = ('', '(Xbox ext.)');
+var
+  Stage: DWORD;
+  XboxTextureStageState: DWORD;
+  XboxValue: DWORD;
+  XboxRenderState: X_D3DRENDERSTATETYPE;
+begin
+  // Loop over all Xbox texture stage states :
+  for Stage := 0 to 4-1 do
+  begin
+    DbgPrintf('DxbxDumpXboxStates - Texture stage %d states :', [Stage]);
+    for XboxTextureStageState := X_D3DTSS_FIRST to X_D3DTSS_LAST do
+    begin
+      // Get the value and print it :
+      XboxValue := XTL_EmuD3DDeferredTextureState[Stage, Ord(DxbxFromNewVersion_D3DTSS(XboxTextureStageState))];
+      DbgPrintf('  %-33s[%d] = 0x%.08X; %s %s', [
+        DxbxTextureStageStateInfo[XboxTextureStageState].S,
+        Stage,
+        XboxValue,
+        DxbxTypedValueToString(DxbxTextureStageStateInfo[XboxTextureStageState].T, XboxValue),
+        XboxExtStr[DxbxTextureStageStateInfo[XboxTextureStageState].X]
+        ]);
+    end;
+  end;
+
+  DbgPrintf('DxbxDumpXboxStates - Render states :');
+  // Loop over all Xbox render states :
+  for XboxRenderState := X_D3DRS_FIRST to X_D3DRS_LAST do
+  begin
+    if (XTL_EmuMappedD3DRenderState[XboxRenderState] <> DummyRenderState) then
+    begin
+      // Get the value and print it :
+      XboxValue := XTL_EmuMappedD3DRenderState[XboxRenderState]^;
+      DbgPrintf('  %-33s = 0x%.08X; %s %s', [
+        DxbxRenderStateInfo[XboxRenderState].S,
+        XboxValue,
+        DxbxTypedValueToString(DxbxRenderStateInfo[XboxRenderState].T, XboxValue),
+        XboxExtStr[DxbxRenderStateInfo[XboxRenderState].X]
+        ]);
+    end;
+  end;
+end;
+
 procedure DxbxDumpNativeRenderStates();
 var
   XState: X_D3DRENDERSTATETYPE;
@@ -685,7 +709,7 @@ begin
 
     // Get the value and print it :
     g_pD3DDevice.GetRenderState(PCState, {out}Value);
-    DbgPrintf('  %-28s = 0x%.08X;', [DxbxRenderStateInfo[XState].S, Value]);
+    DbgPrintf('  %-33s = 0x%.08X;', [DxbxRenderStateInfo[XState].S, Value]);
   end;
 end;
 
@@ -1066,6 +1090,14 @@ begin
 {$ENDIF}
 
   g_bIsBusy := BOOL_TRUE;
+  if g_SignalStateDump then
+  begin
+    g_SignalStateDump := False;
+
+    DxbxDumpXboxStates();
+    DxbxDumpNativeRenderStates();
+  end;
+
   if g_SignalScreenShot then
   begin
     g_SignalScreenShot := False;
@@ -1793,6 +1825,10 @@ begin
         VK_F3:
         begin
           g_XBSound.SetMute(not g_XBSound.GetMute());
+        end;
+        VK_F7:
+        begin
+          g_SignalStateDump := True;
         end;
         VK_F8:
         begin
@@ -5622,7 +5658,7 @@ begin
   begin
     EmuSwapFS(fsWindows);
     LogBegin('EmuD3DDevice_SetVertexData2f').
-      _(Register_, 'Register').
+      _(xtD3DVSDE, DWORD(Register_), 'Register').
       _(a, 'a').
       _(b, 'b').
     LogEnd();
@@ -5661,7 +5697,7 @@ begin
   begin
     EmuSwapFS(fsWindows);
     LogBegin('EmuD3DDevice_SetVertexData2s').
-      _(Register_, 'Register').
+      _(xtD3DVSDE, DWORD(Register_), 'Register').
       _(a, 'a').
       _(b, 'b').
     LogEnd();
@@ -5694,7 +5730,7 @@ begin
   begin
     EmuSwapFS(fsWindows);
     LogBegin('EmuD3DDevice_SetVertexData4f').
-      _(Register_, 'Register').
+      _(xtD3DVSDE, DWORD(Register_), 'Register').
       _(a, 'a').
       _(b, 'b').
       _(c, 'c').
@@ -5894,7 +5930,7 @@ begin
   begin
     EmuSwapFS(fsWindows);
     LogBegin('EmuD3DDevice_SetVertexData4ub').
-      _(Register_, 'Register').
+      _(xtD3DVSDE, DWORD(Register_), 'Register').
       _(a, 'a').
       _(b, 'b').
       _(c, 'c').
@@ -5905,6 +5941,7 @@ begin
 
   fA := a; fB := b; fC := c; fD := d;
 
+// TODO -oDxbx : When and where should we do this? No XDK sample calls this...
 //  if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
   begin
     fA := fA / High(a);
@@ -5933,7 +5970,7 @@ begin
   begin
     EmuSwapFS(fsWindows);
     LogBegin('EmuD3DDevice_SetVertexData4s').
-      _(Register_, 'Register').
+      _(xtD3DVSDE, DWORD(Register_), 'Register').
       _(a, 'a').
       _(b, 'b').
       _(c, 'c').
@@ -5969,7 +6006,7 @@ begin
   begin
     EmuSwapFS(fsWindows);
     LogBegin('EmuD3DDevice_SetVertexDataColor').
-      _(Register_, 'Register').
+      _(xtD3DVSDE, DWORD(Register_), 'Register').
       _(Color, 'Color').
     LogEnd();
     EmuSwapFS(fsXbox);
@@ -8617,6 +8654,7 @@ function XTL_EmuD3DDevice_SetTransform
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   PCState: D3DTRANSFORMSTATETYPE;
+  PCMatrix: D3DMATRIX;
 begin
   EmuSwapFS(fsWindows);
 
@@ -8625,6 +8663,25 @@ begin
       _(xtD3DTRANSFORMSTATETYPE, DWORD(State), 'State').
       _(pMatrix, 'pMatrix').
     LogEnd();
+
+(* Dxbx attempt to fix Smashing Drive fog problems on ATI (no effect) :
+  if State = X_D3DTS_PROJECTION then
+  begin
+    // Dxbx addition : Make sure we work with "A W-Friendly Projection Matrix" :
+    if  (pMatrix._34 <> 1.0)
+    and (pMatrix._34 <> 0.0) then
+    begin
+      ZeroMemory(@PCMatrix, SizeOf(PCMatrix));
+      PCMatrix._11 := pMatrix._11 / pMatrix._34;
+      PCMatrix._22 := pMatrix._22 / pMatrix._34;
+      PCMatrix._33 := pMatrix._33 / pMatrix._34;
+      PCMatrix._43 := pMatrix._43 / pMatrix._34;
+      PCMatrix._34 := 1.0;
+      pMatrix := @PCMatrix;
+      DbgPrintf('Guaranteed "A W-Friendly Projection Matrix"');
+    end;
+  end;
+(*)
 
   (* Commented by CXBX
   if State = X_D3DTS_TEXTURE2 then // Dxbx test to see if chessboard texture actually moves in ModifyPixelShader (it does, although invisible)
