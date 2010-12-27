@@ -152,6 +152,8 @@ function X_D3DFILLMODE2String(aValue: DWORD): string;
 function X_D3DLOGICOP2String(aValue: DWORD): string;
 function X_D3DMCS2String(aValue: DWORD): string;
 function X_D3DMULTISAMPLE_TYPE2String(aValue: DWORD): string;
+function X_D3DMULTISAMPLEMODE2String(aValue: DWORD): string;
+function X_D3DSAMPLEALPHA2String(aValue: DWORD): string;
 function X_D3DSHADEMODE2String(aValue: DWORD): string;
 function X_D3DSTENCILOP2String(aValue: DWORD): string;
 function X_D3DSWATH2String(aValue: DWORD): string;
@@ -159,6 +161,7 @@ function X_D3DTEXTUREADDRESS2String(aValue: DWORD): string;
 function X_D3DTEXTUREOP2String(aValue: DWORD): string;
 function X_D3DTEXTURESTAGESTATETYPE2String(aValue: DWORD): string;
 function X_D3DTRANSFORMSTATETYPE2String(aValue: DWORD): string;
+function X_D3DVERTEXBLENDFLAGS2String(aValue: DWORD): string;
 function X_D3DVSDE2String(aValue: DWORD): string;
 function X_D3DWRAP2String(aValue: DWORD): string;
 
@@ -186,7 +189,9 @@ type
     xtD3DLOGICOP,
     xtD3DMCS,
     xtD3DMULTISAMPLE_TYPE,
+    xtD3DMULTISAMPLEMODE,
     xtD3DPRIMITIVETYPE,
+    xtD3DSAMPLEALPHA,
     xtD3DSHADEMODE,
     xtD3DSTENCILOP,
     xtD3DSWATH,
@@ -231,7 +236,9 @@ const
     (S:'D3DLOGICOP';               F:@DxbxXB2PC_NOP;                R:@X_D3DLOGICOP2String;           X:True),
     (S:'D3DMCS';                   F:@DxbxXB2PC_NOP;                R:@X_D3DMCS2String),              // Xbox = PC
     (S:'D3DMULTISAMPLE_TYPE';      F:@EmuXB2PC_D3DMULTISAMPLE_TYPE; R:@X_D3DMULTISAMPLE_TYPE2String;  X:True),
+    (S:'D3DMULTISAMPLEMODE';       F:@DxbxXB2PC_NOP;                R:@X_D3DMULTISAMPLEMODE2String;   X:True),
     (S:'D3DPRIMITIVETYPE';         F:@EmuXB2PC_D3DPrimitiveType;    R:@X_D3DPRIMITIVETYPE2String),
+    (S:'D3DSAMPLEALPHA';           F:@DxbxXB2PC_NOP;                R:@X_D3DSAMPLEALPHA2String;       X:True),
     (S:'D3DSHADEMODE';             F:@EmuXB2PC_D3DSHADEMODE;        R:@X_D3DSHADEMODE2String),
     (S:'D3DSTENCILOP';             F:@EmuXB2PC_D3DSTENCILOP;        R:@X_D3DSTENCILOP2String),
     (S:'D3DSWATH';                 F:@DxbxXB2PC_NOP;                R:@X_D3DSWATH2String;             X:True),
@@ -240,7 +247,7 @@ const
     (S:'D3DTEXTUREOP';             F:@EmuXB2PC_D3DTEXTUREOP;        R:@X_D3DTEXTUREOP2String),
     (S:'D3DTEXTURESTAGESTATETYPE'; F:@EmuXB2PC_D3DTSS;              R:@X_D3DTEXTURESTAGESTATETYPE2String),
     (S:'D3DTRANSFORMSTATETYPE';    F:@EmuXB2PC_D3DTS;               R:@X_D3DTRANSFORMSTATETYPE2String),
-    (S:'D3DVERTEXBLENDFLAGS';      F:@EmuXB2PC_D3DVERTEXBLENDFLAGS),
+    (S:'D3DVERTEXBLENDFLAGS';      F:@EmuXB2PC_D3DVERTEXBLENDFLAGS; R:@X_D3DVERTEXBLENDFLAGS2String),
     (S:'D3DVSDE';                  F:@DxbxXB2PC_NOP;                R:@X_D3DVSDE2String),
     (S:'D3DWRAP';                  F:@EmuXB2PC_D3DWRAP;             R:@X_D3DWRAP2String),
     (S:'DWORD';                    F:@DxbxXB2PC_NOP),                                                 // Xbox = PC
@@ -421,11 +428,11 @@ const
     (S:'D3DRS_MULTISAMPLEANTIALIAS'        {= 152}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_MULTISAMPLEANTIALIAS),
     (S:'D3DRS_MULTISAMPLEMASK'             {= 153}; V:3424; T:xtDWORD;               X:False; PC:D3DRS_MULTISAMPLEMASK),
 //  (S:'D3DRS_MULTISAMPLETYPE'             {= 154}; V:3424; T:xtD3DMULTISAMPLE_TYPE; X:True), // [-3911] \_ aliasses  D3DMULTISAMPLE_TYPE
-    (S:'D3DRS_MULTISAMPLEMODE'             {= 154}; V:4361; T:xtD3DMULTISAMPLE_TYPE; X:True), // [4361+] /            D3DMULTISAMPLEMODE for the backbuffer
-    (S:'D3DRS_MULTISAMPLERENDERTARGETMODE' {= 155}; V:4361; T:xtDWORD;               X:True),
+    (S:'D3DRS_MULTISAMPLEMODE'             {= 154}; V:4361; T:xtD3DMULTISAMPLEMODE;  X:True), // [4361+] /            D3DMULTISAMPLEMODE for the backbuffer
+    (S:'D3DRS_MULTISAMPLERENDERTARGETMODE' {= 155}; V:4361; T:xtD3DMULTISAMPLEMODE;  X:True),
     (S:'D3DRS_SHADOWFUNC'                  {= 156}; V:3424; T:xtD3DCMPFUNC;          X:True),
     (S:'D3DRS_LINEWIDTH'                   {= 157}; V:3424; T:xtFloat;               X:True),
-    (S:'D3DRS_SAMPLEALPHA'                 {= 158}; V:3424; T:xtDWORD;               X:True), // D3DSAMPLEALPHA?
+    (S:'D3DRS_SAMPLEALPHA'                 {= 158}; V:3424; T:xtD3DSAMPLEALPHA;      X:True),
     (S:'D3DRS_DXT1NOISEENABLE'             {= 159}; V:3424; T:xtBOOL;                X:True),
     (S:'D3DRS_YUVENABLE'                   {= 160}; V:3911; T:xtBOOL;                X:True),
     (S:'D3DRS_OCCLUSIONCULLENABLE'         {= 161}; V:3911; T:xtBOOL;                X:True),
@@ -624,6 +631,20 @@ begin
   end;
 end;
 
+function X_D3DVERTEXBLENDFLAGS2String(aValue: DWORD): string;
+begin
+  case X_D3DVERTEXBLENDFLAGS(aValue) of
+    X_D3DVBF_DISABLE           : Result := 'D3DVBF_DISABLE';
+    X_D3DVBF_1WEIGHTS          : Result := 'D3DVBF_1WEIGHTS';
+    X_D3DVBF_2WEIGHTS2MATRICES : Result := 'D3DVBF_2WEIGHTS2MATRICES';
+    X_D3DVBF_2WEIGHTS          : Result := 'D3DVBF_2WEIGHTS';
+    X_D3DVBF_3WEIGHTS3MATRICES : Result := 'D3DVBF_3WEIGHTS3MATRICES';
+    X_D3DVBF_3WEIGHTS          : Result := 'D3DVBF_3WEIGHTS';
+    X_D3DVBF_4WEIGHTS4MATRICES : Result := 'D3DVBF_4WEIGHTS4MATRICES';
+  else Result := '';
+  end;
+end;
+
 function X_D3DMULTISAMPLE_TYPE2String(aValue: DWORD): string;
 begin
   case X_D3DMULTISAMPLE_TYPE(aValue) of
@@ -649,6 +670,16 @@ begin
       Result := 'D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN';
     X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN:
       Result := 'D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN';
+  else Result := '';
+  end;
+end;
+
+function X_D3DMULTISAMPLEMODE2String(aValue: DWORD): string;
+begin
+  case X_D3DMULTISAMPLEMODE(aValue) of
+    X_D3DMULTISAMPLEMODE_1X: Result := 'D3DMULTISAMPLEMODE_1X';
+    X_D3DMULTISAMPLEMODE_2X: Result := 'D3DMULTISAMPLEMODE_2X';
+    X_D3DMULTISAMPLEMODE_4X: Result := 'D3DMULTISAMPLEMODE_4X';
   else Result := '';
   end;
 end;
@@ -1282,6 +1313,14 @@ begin
   end;
 end;
 
+function X_D3DSAMPLEALPHA2String(aValue: DWORD): string;
+begin
+  Result := '';
+  if (aValue and X_D3DSAMPLEALPHA_TOCOVERAGE) > 0 then Result := Result + '|X_D3DSAMPLEALPHA_TOCOVERAGE';
+  if (aValue and X_D3DSAMPLEALPHA_TOONE) > 0 then Result := Result + '|X_D3DSAMPLEALPHA_TOONE';
+  if Result <> '' then System.Delete(Result, 1, 1);
+end;
+
 function X_D3DSHADEMODE2String(aValue: DWORD): string;
 begin
   case X_D3DSHADEMODE(aValue) of
@@ -1453,7 +1492,7 @@ end;
 function EmuXB2PC_D3DPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  if Ord(PrimitiveType) >= Ord(X_D3DPT_MAX) then
+  if DWORD(PrimitiveType) >= Ord(X_D3DPT_MAX) then
     Result := D3DPRIMITIVETYPE($7FFFFFFF)
   else
     Result := EmuPrimitiveTypeLookup[Ord(PrimitiveType)];

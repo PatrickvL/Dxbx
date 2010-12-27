@@ -143,6 +143,7 @@ function XTL_EmuD3DDevice_UpdateOverlay(pSurface: PX_D3DSurface;
   ColorKey: D3DCOLOR): HRESULT; stdcall;
 function XTL_EmuD3DDevice_CreateVertexBuffer2(Length: UINT): PX_D3DVertexBuffer; stdcall;
 procedure XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+  Caller: string;
   XboxRenderState: X_D3DRenderStateType;
   XboxValue: DWORD
   ); {NOPATCH}
@@ -3268,6 +3269,17 @@ begin
     LogBegin('EmuD3D_KickOffAndWaitForIdle').LogEnd();
 
   // TODO -oCXBX: Actually do something
+{$IFDEF DXBX_USE_D3D9}
+  // DXBX: Own implementation of BlockUntilIdle
+  // create an event and spin wait on it
+  g_pD3DDevice.CreateQuery(D3DQUERYTYPE_EVENT, @pQuery);
+  pQuery.Issue(D3DISSUE_END);
+  while (pQuery.GetData(@data, sizeof(data), D3DGETDATA_FLUSH) = S_FALSE) do
+  begin
+    // busy wait
+  end;
+  pQuery._Release();
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -7840,35 +7852,10 @@ begin
   Result := (g_bHackUpdateSoftwareOverlay = False);
 end;
 
+(* Too high level : No patch needed, just calls KickOffAndWaitForIdle :
 procedure XTL_EmuD3DDevice_BlockUntilIdle(); stdcall;
 // Branch:dxbx  Translator:Shadow_Tj  Done:100
-{$IFDEF DXBX_USE_D3D9}
-var
-  pQuery: PIDirect3DQuery9;
-  data: BOOL;
-{$ENDIF}
-begin
-  EmuSwapFs(fsWindows);
-
-  if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : EmuD3DDevice_BlockUntilIdle();');
-
-{$IFDEF DXBX_USE_D3D9}
-  // DXBX: Own implementation of BlockUntilIdle
-  // create an event and spin wait on it
-  g_pD3DDevice.CreateQuery(D3DQUERYTYPE_EVENT, @pQuery);
-  pQuery.Issue(D3DISSUE_END);
-  while (pQuery.GetData(@data, sizeof(data), D3DGETDATA_FLUSH) = S_FALSE) do
-  begin
-    // busy wait
-  end;
-  pQuery._Release();
-{$ELSE}
-  Unimplemented('EmuD3DDevice_BlockUntilIdle');
-{$ENDIF}
-
-  EmuSwapFs(fsXbox);
-end;
+*)
 
 procedure XTL_EmuD3DDevice_BlockUntilVerticalBlank(); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -7920,7 +7907,7 @@ begin
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_SetTextureState_TexCoordIndex').
       _(Stage, 'Stage').
-      _(Value, 'Value').
+      _(DxbxTextureStageStateInfo[X_D3DTSS_TEXCOORDINDEX].T, Value, 'Value').
     LogEnd();
 
   // Native doesn't support D3DTSS_TCI_OBJECT, D3DTSS_TCI_SPHERE, D3DTSS_TCI_TEXGEN_MAX or higher:
@@ -7944,12 +7931,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_TwoSidedLighting
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetTextureState_TwoSidedLighting').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_TWOSIDEDLIGHTING, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetTextureState_TwoSidedLighting',
+    X_D3DRS_TWOSIDEDLIGHTING, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7962,12 +7946,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_BackFillMode
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_BackFillMode').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_BACKFILLMODE, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_BackFillMode',
+    X_D3DRS_BACKFILLMODE, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7984,7 +7965,7 @@ begin
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_SetTextureState_BorderColor').
       _(Stage, 'Stage').
-      _(Value, 'Value').
+      _(DxbxTextureStageStateInfo[X_D3DTSS_BORDERCOLOR].T, Value, 'Value').
     LogEnd();
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
@@ -8013,7 +7994,7 @@ begin
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_SetTextureState_ColorKeyColor').
       _(Stage, 'Stage').
-      _(Value, 'Value').
+      _(DxbxTextureStageStateInfo[X_D3DTSS_COLORKEYCOLOR].T, Value, 'Value').
     LogEnd();
 
   // Dxbx addition : Set this value into the TextureState structure too (so other code will read the new current value)
@@ -8064,7 +8045,7 @@ begin
       _(Stage, 'Stage').
       _(DWORD(Type_), 'Type').
       _(xtD3DTEXTURESTAGESTATETYPE, Type_VersionIndependent, 'Type_VersionIndependent').
-      _(Value, 'Value').
+      _(DxbxTextureStageStateInfo[Type_VersionIndependent].T, Value, 'Value').
       _(xtFloat, Value, 'Value (as Float)').
     LogEnd();
 
@@ -8088,12 +8069,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_FrontFace
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_FrontFace').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_FRONTFACE, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_FrontFace',
+    X_D3DRS_FRONTFACE, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8106,12 +8084,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_LogicOp
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_LogicOp').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_LOGICOP, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_LogicOp',
+    X_D3DRS_LOGICOP, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8124,12 +8099,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_NormalizeNormals
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_NormalizeNormals').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_NORMALIZENORMALS, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_NormalizeNormals',
+    X_D3DRS_NORMALIZENORMALS, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8142,12 +8114,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_TextureFactor
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_TextureFactor').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_TEXTUREFACTOR, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_TextureFactor',
+    X_D3DRS_TEXTUREFACTOR, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8160,12 +8129,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_ZBias
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-   LogBegin('EmuD3DDevice_SetRenderState_ZBias').
-     _(Value, 'Value').
-   LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_ZBIAS, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+   'EmuD3DDevice_SetRenderState_ZBias',
+   X_D3DRS_ZBIAS, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8178,12 +8144,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_EdgeAntiAlias
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_EdgeAntiAlias').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_EDGEANTIALIAS, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_EdgeAntiAlias',
+    X_D3DRS_EDGEANTIALIAS, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8196,12 +8159,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_FillMode
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_FillMode').
-      _(DWORD(Value), 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_FILLMODE, DWORD(Value));
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_FillMode',
+    X_D3DRS_FILLMODE, DWORD(Value));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8214,12 +8174,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_FogColor
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_FogColor').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_FOGCOLOR, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_FogColor',
+    X_D3DRS_FOGCOLOR, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8232,12 +8189,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_Dxt1NoiseEnable
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_Dxt1NoiseEnable').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_DXT1NOISEENABLE, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_Dxt1NoiseEnable',
+    X_D3DRS_DXT1NOISEENABLE, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8253,47 +8207,48 @@ var
 begin
   EmuSwapFS(fsWindows);
 
+  XboxRenderState := DxbxXboxMethodToRenderState(Method);
+
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_SetRenderState_Simple').
       _(Method, 'Method').
-      _(Value, 'Value').
+      _(DxbxRenderStateInfo[XboxRenderState].T, DWORD(Value), 'Value').
     LogEnd();
 
-  XboxRenderState := DxbxXboxMethodToRenderState(Method);
   // Dxbx note : Methods are already version-independant
   if (int(XboxRenderState) = -1) then
     EmuWarning('SetRenderState_Simple({Method=}0x%.08X, {Value=}0x%.08X) - unsupported method!', [Method, Value])
   else
     // Use a helper for the simple render states, as SetRenderStateNotInline
     // needs to be able to call it too :
-    XTL_EmuD3DDevice_SetRenderState_Simple_Internal(XboxRenderState, {Xbox}Value);
+    XTL_EmuD3DDevice_SetRenderState_Simple_Internal('', XboxRenderState, {Xbox}Value);
 
   EmuSwapFS(fsXbox);
 end;
 
 procedure XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+  Caller: string;
   XboxRenderState: X_D3DRenderStateType;
   XboxValue: DWORD
   ); {NOPATCH}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   PCValue: DWORD;
-  Str: string;
 begin
+  if (Caller <> '') and MayLog(lfUnit) then
+    LogBegin(Caller).
+      _(DxbxRenderStateInfo[XboxRenderState].T, XboxValue, 'Value').
+    LogEnd();
+
   PCValue := Dxbx_SetRenderState(XboxRenderState, XboxValue);
 
   if MayLog(lfUnit or lfReturnValue) then
   begin
-    // If we have a renderer for this type, append the string representation of this value :
-    Str := DxbxTypedValueToString(DxbxRenderStateInfo[XboxRenderState].T, XboxValue);
-    if Str <> '' then
-      Str := '; // = ' + Str;
-
     // Dump the value that's being forwarded to PC :
     if PCValue <> XboxValue then
-      DbgPrintf('  %s := 0x%.08X%s (converted from Xbox value 0x%.08X)', [DxbxRenderStateInfo[XboxRenderState].S, PCValue, Str, XboxValue])
+      DbgPrintf('  %s := 0x%.08X (converted from Xbox)', [DxbxRenderStateInfo[XboxRenderState].S, PCValue])
     else
-      DbgPrintf('  %s := 0x%.08X%s', [DxbxRenderStateInfo[XboxRenderState].S, PCValue, Str]);
+      DbgPrintf('  %s := 0x%.08X', [DxbxRenderStateInfo[XboxRenderState].S, PCValue]);
   end;
 end;
 
@@ -8305,12 +8260,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_VertexBlend
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_VertexBlend').
-      _(Ord(Value), 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_VERTEXBLEND, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_VertexBlend',
+    X_D3DRS_VERTEXBLEND, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8323,12 +8275,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_PSTextureModes
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_PSTextureModes').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_PSTEXTUREMODES, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_PSTextureModes',
+    X_D3DRS_PSTEXTUREMODES, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8341,12 +8290,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_CullMode
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_CullMode').
-      _(DWORD(Value), 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_CULLMODE, DWORD(Value));
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_CullMode',
+    X_D3DRS_CULLMODE, DWORD(Value));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8359,12 +8305,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_LineWidth
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_LineWidth').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_LINEWIDTH, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_LineWidth',
+    X_D3DRS_LINEWIDTH, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8377,12 +8320,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_StencilFail
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_StencilFail').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_STENCILFAIL, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_StencilFail',
+    X_D3DRS_STENCILFAIL, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8395,12 +8335,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_OcclusionCullEnable
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_OcclusionCullEnable').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_OCCLUSIONCULLENABLE, DWORD(Value));
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_OcclusionCullEnable',
+    X_D3DRS_OCCLUSIONCULLENABLE, DWORD(Value));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8413,12 +8350,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_StencilCullEnable
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_StencilCullEnable').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_STENCILCULLENABLE, DWORD(Value));
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_StencilCullEnable',
+    X_D3DRS_STENCILCULLENABLE, DWORD(Value));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8431,12 +8365,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_RopZCmpAlwaysRead
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_RopZCmpAlwaysRead').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_ROPZCMPALWAYSREAD, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_RopZCmpAlwaysRead',
+    X_D3DRS_ROPZCMPALWAYSREAD, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8449,12 +8380,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_RopZRead
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_RopZRead').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_ROPZREAD, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_RopZRead',
+    X_D3DRS_ROPZREAD, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8467,12 +8395,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_DoNotCullUncompressed
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_DoNotCullUncompressed').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_DONOTCULLUNCOMPRESSED, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_DoNotCullUncompressed',
+    X_D3DRS_DONOTCULLUNCOMPRESSED, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8485,12 +8410,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_ZEnable
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuIDirect3DDevice_SetRenderState_ZEnable').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_ZENABLE, DWORD(Value));
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuIDirect3DDevice_SetRenderState_ZEnable',
+    X_D3DRS_ZENABLE, DWORD(Value));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8503,12 +8425,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_StencilEnable
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_StencilEnable').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_STENCILENABLE, DWORD(Value));
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_StencilEnable',
+    X_D3DRS_STENCILENABLE, DWORD(Value));
 
   EmuSwapFS(fsXbox);
 end;
@@ -8521,12 +8440,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_MultiSampleAntiAlias
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_MultiSampleAntiAlias').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_MULTISAMPLEANTIALIAS, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_MultiSampleAntiAlias',
+    X_D3DRS_MULTISAMPLEANTIALIAS, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8539,12 +8455,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_MultiSampleMask
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_MultiSampleMask').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_MULTISAMPLEMASK, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_MultiSampleMask',
+    X_D3DRS_MULTISAMPLEMASK, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8557,12 +8470,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_MultiSampleMode
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_MultiSampleMode').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_MULTISAMPLEMODE, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_MultiSampleMode',
+    X_D3DRS_MULTISAMPLEMODE, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8575,12 +8485,9 @@ procedure XTL_EmuD3DDevice_SetRenderState_MultiSampleRenderTargetMode
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_MultiSampleRenderTargetMode').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_MULTISAMPLERENDERTARGETMODE, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_MultiSampleRenderTargetMode',
+    X_D3DRS_MULTISAMPLERENDERTARGETMODE, Value);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8654,7 +8561,7 @@ function XTL_EmuD3DDevice_SetTransform
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   PCState: D3DTRANSFORMSTATETYPE;
-  PCMatrix: D3DMATRIX;
+//  PCMatrix: D3DMATRIX;
 begin
   EmuSwapFS(fsWindows);
 
@@ -9440,7 +9347,7 @@ begin
       _(Stage, 'Stage').
       _(DWORD(Type_), 'Type').
       _(xtD3DTEXTURESTAGESTATETYPE, Type_VersionIndependent, 'Type_VersionIndependent').
-      _(Value, 'Value').
+      _(DxbxTextureStageStateInfo[Type_VersionIndependent].T, Value, 'Value').
     LogEnd();
 
   EmuSwapFS(fsXbox);
@@ -11000,12 +10907,9 @@ function XTL_EmuD3DDevice_SetRenderState_SampleAlpha
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetRenderState_SampleAlpha').
-      _(Value, 'Value').
-    LogEnd();
-
-  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(X_D3DRS_SAMPLEALPHA, Value);
+  XTL_EmuD3DDevice_SetRenderState_Simple_Internal(
+    'EmuD3DDevice_SetRenderState_SampleAlpha',
+    X_D3DRS_SAMPLEALPHA, Value);
 
   EmuSwapFS(fsXbox);
 
@@ -11743,19 +11647,18 @@ var
 begin
   EmuSwapFS(fsWindows);
 
+  XboxRenderState_VersionIndependent := DxbxVersionAdjust_D3DRS(State);
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_SetRenderState_SetRenderStateNotInline >>').
       _(State, 'State').
-      _(Value, 'Value').
+      _(DxbxRenderStateInfo[XboxRenderState_VersionIndependent].T, DWORD(Value), 'Value').
     LogEnd();
-
-  XboxRenderState_VersionIndependent := DxbxVersionAdjust_D3DRS(State);
 
   Result := D3D_OK;
   if (XboxRenderState_VersionIndependent <= X_D3DRS_SIMPLE_LAST) then
   begin
     // Pixel & Simple render states - Just pass them on to our helper :
-    XTL_EmuD3DDevice_SetRenderState_Simple_Internal(XboxRenderState_VersionIndependent, Value);
+    XTL_EmuD3DDevice_SetRenderState_Simple_Internal('', XboxRenderState_VersionIndependent, Value);
     EmuSwapFS(fsXbox);
     Exit;
   end;
@@ -11998,7 +11901,7 @@ exports
   XTL_EmuD3DDevice_BeginStateBlock,
   XTL_EmuD3DDevice_BeginVisibilityTest,
   XTL_EmuD3DDevice_BlockOnFence,
-  XTL_EmuD3DDevice_BlockUntilIdle,
+//  XTL_EmuD3DDevice_BlockUntilIdle, // Dxbx note : Disabled, too high level.
   XTL_EmuD3DDevice_BlockUntilVerticalBlank,
   XTL_EmuD3DDevice_CaptureStateBlock,
   XTL_EmuD3DDevice_Clear,
