@@ -316,6 +316,7 @@ const
 
 procedure DxbxInitializeDefaultRenderStates(const aParameters: PX_D3DPRESENT_PARAMETERS); {NOPATCH}
 var
+  f2dwZero: DWORD absolute fZero; // = F2DW(0.0)
   f2dwOne: DWORD absolute fOne; // = $3F800000 = F2DW(1.0)
 var
   i: Integer;
@@ -330,7 +331,7 @@ begin
 
   // Assign all Xbox default render states values :
   begin
-    // Make up a few pixel shader colors here (we really should find&use the actual defaults!) :
+    // Make up a few pixel shader colors here (TODO : we really should find&use the actual defaults!) :
     for i := X_D3DRS_PSCONSTANT0_0 to X_D3DRS_PSCONSTANT1_7 do
       XTL_EmuMappedD3DRenderState[i]^ := (X_D3DRS_PSCONSTANT1_7 - i) * $01010101;
 
@@ -355,8 +356,8 @@ begin
     XTL_EmuMappedD3DRenderState[X_D3DRS_BLENDOP]^ := DWORD(X_D3DBLENDOP_ADD);
     XTL_EmuMappedD3DRenderState[X_D3DRS_BLENDCOLOR]^ := 0;
     XTL_EmuMappedD3DRenderState[X_D3DRS_SWATHWIDTH]^ := DWORD(X_D3DSWATH_128);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POLYGONOFFSETZSLOPESCALE]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POLYGONOFFSETZOFFSET]^ := 0;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POLYGONOFFSETZSLOPESCALE]^ := f2dwZero;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POLYGONOFFSETZOFFSET]^ := f2dwZero;
     XTL_EmuMappedD3DRenderState[X_D3DRS_POINTOFFSETENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_WIREFRAMEOFFSETENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_SOLIDOFFSETENABLE]^ := BOOL_FALSE;
@@ -365,7 +366,7 @@ begin
 
     XTL_EmuMappedD3DRenderState[X_D3DRS_FOGENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_FOGTABLEMODE]^ := DWORD(X_D3DFOG_NONE);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGSTART]^ := 0;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGSTART]^ := f2dwZero;
     XTL_EmuMappedD3DRenderState[X_D3DRS_FOGEND]^ := f2dwOne;
     XTL_EmuMappedD3DRenderState[X_D3DRS_FOGDENSITY]^ := f2dwOne;
     XTL_EmuMappedD3DRenderState[X_D3DRS_RANGEFOGENABLE]^ := BOOL_FALSE;
@@ -388,12 +389,12 @@ begin
     XTL_EmuMappedD3DRenderState[X_D3DRS_BACKAMBIENT]^ := 0;
     XTL_EmuMappedD3DRenderState[X_D3DRS_AMBIENT]^ := 0;
     XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE]^ := f2dwOne;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MIN]^ := 0;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MIN]^ := f2dwZero;
     XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSPRITEENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALEENABLE]^ := BOOL_FALSE;
     XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_A]^ := f2dwOne;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_B]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_C]^ := 0;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_B]^ := f2dwZero;
+    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_C]^ := f2dwZero;
     XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MAX]^ := $42800000; // = F2DW(64.0) between D3DCAPS8.MaxPointSize and D3DRS_POINTSIZE_MIN (including)
     XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHEDGESTYLE]^ := 0; // = D3DPATCHEDGE_DISCRETE
     XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHSEGMENTS]^ := f2dwOne;
@@ -521,6 +522,11 @@ begin
 
   // Set this value into the RenderState structure too (so other code will read the new current value) :
   XTL_EmuMappedD3DRenderState[XboxRenderState]^ := XboxValue;
+
+  // Dxbx addition : Hack for Smashing drive (on ATI X1300), don't transfer fog (or everything becomes opaque) :
+  if  IsRunning(TITLEID_SmashingDrive)
+  and (XboxRenderState  in [X_D3DRS_FOGSTART, X_D3DRS_FOGEND, X_D3DRS_FOGDENSITY]) then
+    Exit;
 
   case XboxRenderState of
     // Pixel shader constants are handled in XTL_EmuUpdateActivePixelShader :
