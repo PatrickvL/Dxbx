@@ -27,7 +27,6 @@ unit uEmuD3D8;
 {.$define _DEBUG_TRACE_VB}
 {.$define _DEBUG_TRACK_VS_CONST}
 
-{$DEFINE DXBX_PIXELSHADER_HOOKS} // Disable this to try dynamic pixel shader support
 {.$DEFINE DXBX_TRY_DEEPER_DEVICE_INIT} // Try to run more of the original initialization code
 {.$DEFINE DXBX_INDEXED_QUADLIST_TEST} // Render indexed QUADLIST as indexed TRIANGLFANS (XDK Ripple sample improves, although text&help disappears)
 
@@ -154,6 +153,7 @@ var
   g_pDDSOverlay7: XTL_LPDIRECTDRAWSURFACE7 = NULL; // DirectDraw7 Overlay Surface
   g_pDDClipper7: XTL_LPDIRECTDRAWCLIPPER = NULL;    // DirectDraw7 Clipper
   g_CurrentVertexShader: DWORD = 0;
+  g_PixelShaderConstants: array [0..15] of DWORD; // All 16 Xbox Pixel Shader constants (as DWORD : ARGB)
   g_bFakePixelShaderLoaded: BOOL_ = FALSE;
   g_bIsFauxFullscreen: BOOL_ = FALSE;
   g_bHackUpdateSoftwareOverlay: BOOL_ = FALSE;
@@ -239,6 +239,8 @@ var g_EmuD3DTileCache: array [0..$08 - 1] of X_D3DTILE;
 
 // cached active texture
 var g_EmuD3DActiveTexture: array [0..X_D3DTS_STAGECOUNT-1] of PX_D3DBaseTexture; // = {0,0,0,0};
+
+var g_EmuD3DActivePixelShader: PX_D3DPixelShader = nil;
 
 // information passed to the create device proxy thread
 type EmuD3D8CreateDeviceProxyData = packed record
@@ -4570,49 +4572,142 @@ begin
   Result := hRet;
 end; // XTL_EmuD3DDevice_CreateVertexShader
 
+// TODO -oDxbx : Once we have unpatched D3D initialization working so that the original 'g_pDevice' and
+// the pushbuffer are initialized, then this patch can be removed (that is, IF we have a method to handle
+// or ignore the contents of the push buffer).
 function XTL_EmuD3DDevice_SetPixelShaderConstant
 (
   Register_: DWORD;
-  {CONST} pConstantData: PVOID;
+  {CONST} pConstantData: PD3DXColor;
   ConstantCount: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  pPSDef: PX_D3DPIXELSHADERDEF;
+  dwColor: DWORD;
+  i: int;
+  MappedRegister: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfPixelShader) then
     LogBegin('EmuD3DDevice_SetPixelShaderConstant').
       _(Register_, 'Register').
       _(pConstantData, 'pConstantData').
       _(ConstantCount, 'ConstantCount').
     LogEnd();
 
-  // TODO -oDxbx: This forwards the values to the native pixel shader, but we should also pack them
-  // and place them into X_D3DRS_PSCONSTANT* render state registers (using the PS_CONSTANTMAPPING macro)!
-  // It would probably be better to send these values to the native pixel shader later, at drawing time.
-  //
-  // for i := 0 to ConstantCount - 1 do
-  // begin
-  //   R := pConstantData[i * 4]; // also G B A
-  //   PSValue := ((Trunc(R * 255.0) and $FF) shl 16) or G .. or B .. or A;
-  //   XTL_EmuMappedD3DRenderState[EmuPC2XB_PSConstant(Register_ + i)]^ := PSValue;
-  // end;
+  // Get the active pixel shader definition (normally located at the start of the render state variables block) :
+  pPSDef := PX_D3DPIXELSHADERDEF(XTL_D3D__RenderState);
+  if pPSDef = nil then
+  begin
+    Assert(Assigned(g_EmuD3DActivePixelShader));
+    pPSDef := @(g_EmuD3DActivePixelShader.PshDef);
+  end;
 
-{$IFDEF DXBX_USE_D3D9}
-  g_pD3DDevice.SetPixelShaderConstantF
-  (
-    Register_,
-    PSingle(pConstantData),
-    ConstantCount
-  );
-{$ELSE}
-  g_pD3DDevice.SetPixelShaderConstant
-  (
-    Register_,
-    {untyped const}pConstantData^,
-    ConstantCount
-  );
-{$ENDIF}
+  // Handle all constants :
+  while ConstantCount > 0 do
+  begin
+    dwColor := D3DXColorToDWord(pConstantData^);
+
+    // Remember the given color (so we can return this value in GetPixelShaderConstant) :
+    g_PixelShaderConstants[Register_] := dwColor;
+
+    // The Xbox1 NV2A graphics chip has 18 constant registers;
+    // Two for each pixel shader stage and 2 for the final combiner stage.
+    // These 18 constants are coupled directly to their corresponding stage
+    // via the PSConstant0 and PSConstant1 arrays and PSFinalCombinerConstant0
+    // and PSFinalCombinerConstant1 values.
+    //
+    // Even though these mappings are hardwired, shader code is likely written
+    // with a different order of constants. To facilitate this, the Xbox D3D8
+    // implementation has a feature called 'constant mapping'. For this, there
+    // are 3 mappings appended to a shader : PSC0Mapping, PSC1Mapping (mapping
+    // the two constants for all 8 combiner stages) and PSFinalCombinerConstants
+    // (mapping the two constants for the final combiner stage).
+
+{
+    Note : On the XBox, pPSDef.PSC0Mapping / PSC1Mapping are only used
+    to map indexes in SetPixelShaderConstant; The pixel shader itself just uses
+    c0..c7 (read from PSConstant0[]), c8-c15 (read from PSConstant1[]) and for
+    the final combiner it's c0 and c1 are read from PSFinalCombinerConstant0/1.
+
+    // Example from TechCertGame :
+
+    // Declaration :
+    psd.PSC0Mapping = PS_CONSTANTMAPPING(15,15,15,15,15,15,0,2);  // = $20FFFFFF
+    psd.PSC1Mapping = PS_CONSTANTMAPPING(15,15,15,15,15,15,1,15); // = $F1FFFFFF
+
+    // Constant colors declared in shader :
+    psd.PSConstant0[1]=0xc0c0c0c0; // not mapped
+    psd.PSConstant0[6]=0xdfdfdfdf; // mapped to c0
+    psd.PSConstant1[6]=0xdfdfdfdf; // mapped to c1
+    psd.PSConstant0[7]=0x20202020; // mapped to c2
+
+    // Usage during rendering :
+    float fDiffuse[4] = ( 0.9f, 0.9f, 0.9f, 0.9f );
+    float fSpecular[4] = ( 0.0f, 0.0f, 0.0f, 0.0f );
+    float fAmbient[4] = ( 0.2f, 0.2f, 0.2f, 0.2f );
+    g_pd3dDevice->SetPixelShaderConstant( 0, fDiffuse, 1 );
+    g_pd3dDevice->SetPixelShaderConstant( 1, fSpecular, 1 );
+    g_pd3dDevice->SetPixelShaderConstant( 2, fAmbient, 1 );
+
+    // Decoding sample:
+    ConstMapping[0] :=  (pPSDef.PSC0Mapping shr  0) and $F);
+    ConstMapping[1] := ((pPSDef.PSC0Mapping shr  4) and $F);
+    ConstMapping[2] := ((pPSDef.PSC0Mapping shr  8) and $F);
+    ConstMapping[3] := ((pPSDef.PSC0Mapping shr 12) and $F); // ... etc
+
+    //function PS_CONSTANTMAPPING(s0,s1,s2,s3,s4,s5,s6,s7:): ,
+    //begin
+    //  Result := ((DWORD(s0) and $f) shl  0) or ((DWORD(s1) and $f) shl 4) or
+    //            ((DWORD(s2) and $f) shl  8) or ((DWORD(s3) and $f) shl 12) or
+    //            ((DWORD(s4) and $f) shl 16) or ((DWORD(s5) and $f) shl 20) or
+    //            ((DWORD(s6) and $f) shl 24) or ((DWORD(s7) and $f) shl 28),
+    //end,
+    // s0-s7 contain the offset of the D3D constant that corresponds to the
+    // c0 or c1 constant in stages 0 through 7.  These mappings are only used in
+    // SetPixelShaderConstant().
+}
+
+    // Here, we make sure that these mappings are honoured :
+
+    // Handle the C0 mappings for all 8 combiner stages :
+    for i := 0 to 8 - 1 do
+    begin
+      // For each stage, determine what constant offset is used :
+      MappedRegister := (pPSDef.PSC0Mapping shr (i * 4)) and $F;
+      if MappedRegister = Register_ then
+begin
+        // If that constant is now being set, put it in the correct render state slot :
+        XTL_EmuMappedD3DRenderState[X_D3DRS_PSCONSTANT0_0 + i]^ := dwColor;
+EmuWarning('Setting register %d (c0_%d)to 0x%0.8x', [Register_, i, dwColor]);
+end;
+
+      // Handle the C1 mappings in the same way :
+      MappedRegister := (pPSDef.PSC1Mapping shr (i * 4)) and $F;
+      if MappedRegister = Register_ then
+begin
+        XTL_EmuMappedD3DRenderState[X_D3DRS_PSCONSTANT1_0 + i]^ := dwColor;
+EmuWarning('Setting register %d (c1_%d)to 0x%0.8x', [Register_, i, dwColor]);
+end;
+    end;
+
+    // Also the c0 and c1 mappings for the final combiner stage :
+    for i := 0 to 2 - 1 do
+    begin
+      MappedRegister := (pPSDef.PSFinalCombinerConstants shr (i * 4)) and $F;
+      if MappedRegister = Register_ then
+begin
+        XTL_EmuMappedD3DRenderState[X_D3DRS_PSFINALCOMBINERCONSTANT0 + i]^ := dwColor;
+EmuWarning('Setting register %d (final c%d)to 0x%0.8x', [Register_, i, dwColor]);
+end;
+    end;
+
+    Dec(ConstantCount);
+    Inc(pConstantData);
+    Inc(Register_);
+  end;
 
   Result := D3D_OK;
 
@@ -4775,229 +4870,58 @@ begin
   XTL_EmuD3DDevice_SetVertexShaderConstant(Register_, pConstantData, ConstantCount div 4);
 end;
 
-{$IFDEF DXBX_PIXELSHADER_HOOKS}
-procedure XTL_EmuD3DDevice_DeletePixelShader
+(* Too high level : Just decreases given pixel shaders' ReferenceCount and frees the memory if zero
+function XTL_EmuD3DDevice_DeletePixelShader
 (
   Handle: DWORD
-); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-begin
-  EmuSwapFS(fsWindows);
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+*)
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_DeletePixelShader').
-      _(Handle, 'Handle').
-    LogEnd();
-
-  if (Handle = X_PIXELSHADER_FAKE_HANDLE) then
-  begin
-    // Cxbx: Do Nothing!
-  end
-  else
-  begin
-{$IFDEF DXBX_USE_D3D9}
-    {$MESSAGE 'fixme'}
-{$ELSE}
-    g_pD3DDevice.DeletePixelShader(Handle);
-{$ENDIF}
-  end;
-
-  EmuSwapFS(fsXbox);
-end;
-
+(* Too high level : Just allocates a X_D3DPixelShader and copies pPSDef into it.
 function XTL_EmuD3DDevice_CreatePixelShader
 (
   pPSDef: PX_D3DPIXELSHADERDEF;
   pHandle: PDWORD
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  ConvertedPixelShader: AnsiString;
-  pShader: XTL_LPD3DXBUFFER;
-  pErrors: XTL_LPD3DXBUFFER;
-  pFunction: PDWORD;
-begin
-  EmuSwapFS(fsWindows);
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+*)
 
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_CreatePixelShader').
-      _(pPSDef, 'pPSDef').
-      _(pHandle, 'pHandle').
-    LogEnd();
-
-  // TODO -oDxbx : Delay this until drawing time, so we can support ModifyPixelShader
-
-  // Attempt to recompile PixelShader
-  ConvertedPixelShader := AnsiString(XTL_EmuRecompilePshDef(pPSDef));
-
-  // assemble the shader
-  pShader := nil;
-  pErrors := nil;
-  Result := D3DXAssembleShader(
-    P_char(ConvertedPixelShader),
-    Length(ConvertedPixelShader),
-{$IFDEF DXBX_USE_D3D9}
-    {pDefines=}nil,
-    {pInclude=}nil,
-    {Flags=}0,
-{$ELSE}
-    {Flags=}0,
-    {ppConstants=}NULL,
-{$ENDIF}
-    {ppCompiledShader=}@pShader,
-    {ppCompilationErrors}@pErrors);
-
-  if Assigned(pShader) then
-  begin
-    pFunction := PDWORD(ID3DXBuffer(pShader).GetBufferPointer());
-
-    if (Result = D3D_OK) then
-      // redirect to windows d3d
-      Result := g_pD3DDevice.CreatePixelShader
-      (
-        pFunction,
-{$IFDEF DXBX_USE_D3D9}
-        PIDirect3DPixelShader9(pHandle) {$MESSAGE 'fixme'} // @pHandle?
-{$ELSE}
-        {out}pHandle^
-{$ENDIF}
-      );
-
-    // Dxbx note : We must release pShader here, else we would have a resource leak!
-    ID3DXBuffer(pShader)._Release;
-    pShader := nil;
-  end;
-
-  if FAILED(Result) then
-  begin
-    pHandle^ := X_PIXELSHADER_FAKE_HANDLE;
-    EmuWarning(string(AnsiString(PAnsiChar(ID3DXBuffer(pErrors).GetBufferPointer)))); // Dxbx addition
-    EmuWarning(string(ConvertedPixelShader));
-    EmuWarning('We''re lying about the creation of a pixel shader!');
-    Result := D3D_OK;
-  end;
-
-  // Dxbx addition : We release pErrors here (or it would become a resource leak!)
-  if Assigned(pErrors) then
-  begin
-    ID3DXBuffer(pErrors)._Release();
-    pErrors := nil;
-  end;
-
-  EmuSwapFS(fsXbox);
-end;
-
-{static}var dwHandle: DWORD = 0;
 function XTL_EmuD3DDevice_SetPixelShader
 (
   Handle: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-const
-  szDiffusePixelShader: P_char =
-    'ps.1.0'#13#10 +
-    'tex t0'#13#10 +
-    'mov r0, t0'#13#10;
 var
-  pShader: XTL_LPD3DXBUFFER;
-  pErrors: XTL_LPD3DXBUFFER;
+  pPSDef: PX_D3DPIXELSHADERDEF;
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfPixelShader) then
     LogBegin('EmuD3DDevice_SetPixelShader').
       _(Handle, 'Handle').
     LogEnd();
 
-  // TODO -oDxbx : Delay this until drawing time, so we can support ModifyPixelShader
-
-  // redirect to windows d3d
-  Result := D3D_OK;
-
   g_bFakePixelShaderLoaded := FALSE; // Dxbx fix : Always reset this
-  // Fake Programmable Pipeline
-  if (Handle = X_PIXELSHADER_FAKE_HANDLE) then
+
+  // Dxbx addition : Delay the actual pixel shader recompiling until drawing time,
+  // so we can support ModifyPixelShader and other dynamic pixel shader samples & games :
+
+  g_EmuD3DActivePixelShader := PX_D3DPixelShader(Handle);
+  if Assigned(g_EmuD3DActivePixelShader) then
   begin
-    // programmable pipeline
-    //*
-    if (dwHandle = 0) then
-    begin
-      // simplest possible pixel shader, simply output the texture input
-      pShader := nil;
-      pErrors := nil;
-
-      // assemble the shader
-      Result := D3DXAssembleShader(
-        szDiffusePixelShader,
-        strlen(szDiffusePixelShader),
-{$IFDEF DXBX_USE_D3D9}
-        {pDefines=}nil,
-        {pInclude=}nil,
-        {Flags=}0,
-{$ELSE}
-        {Flags=}0,
-        {ppConstants=}NULL,
-{$ENDIF}
-        {ppCompiledShader=}@pShader,
-        {ppCompilationErrors}@pErrors);
-
-      if Assigned(pShader) then
-      begin
-        if (Result = D3D_OK) then
-          // create the shader device handle
-          Result := g_pD3DDevice.CreatePixelShader(
-            ID3DXBuffer(pShader).GetBufferPointer(),
-{$IFDEF DXBX_USE_D3D9}
-            PIDirect3DPixelShader9(@dwHandle) {$MESSAGE 'fixme'} // @dwHandle?
-{$ELSE}
-            {out}dwHandle
-{$ENDIF}
-            );
-
-        // Dxbx note : We must release pShader here, else we would have a resource leak!
-        ID3DXBuffer(pShader)._Release;
-        pShader := nil;
-      end;
-
-      if (FAILED(Result)) then
-      begin
-        EmuWarning('Could not create pixel shader');
-        EmuWarning(string(AnsiString(PAnsiChar(ID3DXBuffer(pErrors).GetBufferPointer)))); // Dxbx addition
-      end;
-
-      // Dxbx addition : We release pErrors here (or it would become a resource leak!)
-      if Assigned(pErrors) then
-      begin
-        ID3DXBuffer(pErrors)._Release();
-        pErrors := nil;
-      end;
-    end;
-
-    if (not FAILED(Result)) then
-      Result := g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}IDirect3DPixelShader9{$MESSAGE 'fixme'}{$ENDIF}(dwHandle));
-
-    if (FAILED(Result)) then
-      EmuWarning('Could not set pixel shader!' +#13#10+ DxbxD3DErrorString(Result));
-    //*/
-
-    g_bFakePixelShaderLoaded := TRUE;
-  end
-  // Fixed Pipeline, or Recompiled Programmable Pipeline
-  else
-  begin
-    Result := g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}nil{$ELSE}Handle{$ENDIF});
+    // When we have an assigned pixel shader, try to copy it into D3D__RenderState,
+    // just like the Xbox does (but without the push-buffer fillings, as we don't
+    // support that yet - when we do, this entire patch can be removed):
+    pPSDef := PX_D3DPIXELSHADERDEF(XTL_D3D__RenderState);
+    if Assigned(pPSDef) then
+      memcpy(pPSDef, g_EmuD3DActivePixelShader.PshDef, SizeOf(X_D3DPIXELSHADERDEF));
   end;
 
-  if FAILED(Result) then
-  begin
-    EmuWarning('We''re lying about setting a pixel shader!');
-
-    Result := D3D_OK;
-  end;
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
-{$ENDIF DXBX_PIXELSHADER_HOOKS}
 
 function XTL_EmuD3DDevice_CreateTexture2
 (
@@ -10627,34 +10551,38 @@ begin
   Result := D3D_OK;
 end;
 
-
-{$IFDEF DXBX_PIXELSHADER_HOOKS}
+var InternalPixelShader: X_D3DPixelShader;
+// Dxbx note : This patch is not really needed, just points an internal X_D3DPixelShader to pPSDef, and calls SetPixelShader with that.
+// As soon as we have original D3D initialization working, this patch can be removed (until then,
+// this patch is needed, because unpatched it would access the uninitialized 'g_pDevice').
 function XTL_EmuD3DDevice_SetPixelShaderProgram
 (
   {CONST} pPSDef: PX_D3DPIXELSHADERDEF
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  dwHandle: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfPixelShader) then
     LogBegin('EmuD3DDevice_SetPixelShaderProgram >>').
       _(pPSDef, 'pPSDef').
     LogEnd();
 
+  if Assigned(pPSDef) then
+  begin
+    InternalPixelShader.RefCount := 1;  
+    InternalPixelShader.Flags := 0;  
+    InternalPixelShader.PshDef := pPSDef;  
+  end;
+  
   EmuSwapFS(fsXbox);
 
   // Redirect the creation and activation to the other patches we already have :
-  dwHandle := 0;
-  Result := XTL_EmuD3DDevice_CreatePixelShader(pPSDef, @dwHandle);
-  if (FAILED(Result)) then
-    dwHandle := X_PIXELSHADER_FAKE_HANDLE;
-
-  Result := XTL_EmuD3DDevice_SetPixelShader(dwHandle);
+  if Assigned(pPSDef) then
+    Result := XTL_EmuD3DDevice_SetPixelShader(DWORD(@InternalPixelShader))
+  else
+    Result := XTL_EmuD3DDevice_SetPixelShader(0);
 end;
-{$ENDIF DXBX_PIXELSHADER_HOOKS}
 
 function XTL_EmuD3DDevice_CreateStateBlock
 (
@@ -11941,7 +11869,6 @@ begin
 end;
 
 
-{$IFDEF DXBX_PIXELSHADER_HOOKS}
 function XTL_EmuD3DDevice_GetPixelShader
 (
   Value: PDWORD
@@ -11950,98 +11877,62 @@ function XTL_EmuD3DDevice_GetPixelShader
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfPixelShader) then
     LogBegin('EmuD3DDevice_GetPixelShader').
       _(Value, 'Value').
     LogEnd();
 
-  g_pD3DDevice.GetPixelShader(
-{$IFDEF DXBX_USE_D3D9}
-    PIDirect3DPixelShader9(Value)
-{$ELSE}
-    {out}Value^
-{$ENDIF}
-    );
+  Value^ := DWORD(g_EmuD3DActivePixelShader);
 
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
-{$ENDIF DXBX_PIXELSHADER_HOOKS}
 
 function XTL_EmuD3DDevice_GetPixelShaderConstant
 (
   Register_: DWORD;
-  pConstantData: PVOID;
+  pConstantData: PD3DXColor;
   ConstantCount: DWORD
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  if MayLog(lfUnit) then
+  if MayLog(lfUnit or lfPixelShader) then
     LogBegin('EmuD3DDevice_GetPixelShaderConstant').
       _(Register_, 'Register').
       _(pConstantData, 'pConstantData').
       _(ConstantCount, 'ConstantCount').
     LogEnd();
 
-{$IFDEF DXBX_USE_D3D9}
-  g_pD3DDevice.GetPixelShaderConstantF(Register_, pConstantData, ConstantCount);
-{$ELSE}
-  g_pD3DDevice.GetPixelShaderConstant(Register_, pConstantData, ConstantCount);
-{$ENDIF}
+  while ConstantCount > 0 do
+  begin
+    // Colors are defined in RGBA format, and range 0.0 - 1.0 (negative values
+    // can be obtained by supplying PS_INPUTMAPPING_SIGNED_NEGATE to the combiner
+    // that reads from these constants).
+    // Note : Just like the original Xbox, we read the values previously set
+    // by SetPixelShaderConstant, and not the values in the render state slots!
+    pConstantData^ := D3DXColorFromDWord(g_PixelShaderConstants[Register_]);
+
+    Dec(ConstantCount);
+    Inc(pConstantData);
+    Inc(Register_);
+  end;
 
   Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-{$IFDEF DXBX_PIXELSHADER_HOOKS}
+(* Too high level : No patch needed, just copies the given pixel shader to the supplied buffer.
 function XTL_EmuD3DDevice_GetPixelShaderFunction
 (
   Handle: DWORD;
   pData: PX_D3DPIXELSHADERDEF;
   pSizeOfData: PDWORD
 ): HRESULT; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:75
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit) then
-    LogBegin('XTL_EmuD3DDevice_GetPixelShaderFunction').
-      _(Handle, 'Handle').
-      _(pData, 'pData').
-      _(pSizeOfData, 'pSizeOfData').
-    LogEnd();
-
-  Result := D3DERR_INVALIDCALL;
-  if pSizeOfData <> NULL then
-  begin
-    if pData = NULL then
-    begin
-      pSizeOfData^ := SizeOf(X_D3DPIXELSHADERDEF);
-      Result := D3D_OK;
-    end
-    else
-    begin
-      if pSizeOfData^ < SizeOf(X_D3DPIXELSHADERDEF) then
-      begin
-        pSizeOfData^ := SizeOf(X_D3DPIXELSHADERDEF);
-        Result := D3DERR_MOREDATA;
-      end
-      else
-      begin
-        // TODO -oDxbx : memcpy(pData, CurrentPixelShader, SizeOf(X_D3DPIXELSHADERDEF));
-        Unimplemented('GetPixelShaderFunction needs access to the Handle''s PixelShader!');
-        Result := D3D_OK;
-      end;
-    end;
-  end;
-
-  EmuSwapFS(fsXbox);
-end;
-{$ENDIF DXBX_PIXELSHADER_HOOKS}
+*)
 
 exports
 
@@ -12145,9 +12036,7 @@ exports
   XTL_EmuD3DDevice_CreateIndexBuffer2,
   XTL_EmuD3DDevice_CreatePalette,
   XTL_EmuD3DDevice_CreatePalette2,
-{$IFDEF DXBX_PIXELSHADER_HOOKS}
-  XTL_EmuD3DDevice_CreatePixelShader,
-{$ENDIF}
+//  XTL_EmuD3DDevice_CreatePixelShader, // Dxbx note : Disabled, too high level.
   XTL_EmuD3DDevice_CreateStateBlock,
   XTL_EmuD3DDevice_CreateSurface,
   XTL_EmuD3DDevice_CreateSurface2,
@@ -12157,9 +12046,7 @@ exports
   XTL_EmuD3DDevice_CreateVertexBuffer2,
   XTL_EmuD3DDevice_CreateVertexShader,
   XTL_EmuD3DDevice_CreateVolumeTexture,
-{$IFDEF DXBX_PIXELSHADER_HOOKS}
-  XTL_EmuD3DDevice_DeletePixelShader,
-{$ENDIF}
+//  XTL_EmuD3DDevice_DeletePixelShader, // Dxbx note : Disabled, too high level.
   XTL_EmuD3DDevice_DeleteStateBlock,
   XTL_EmuD3DDevice_DeleteVertexShader,
   XTL_EmuD3DDevice_DrawIndexedVertices,
@@ -12194,13 +12081,9 @@ exports
   XTL_EmuD3DDevice_GetModelView, // ??
   XTL_EmuD3DDevice_GetOverlayUpdateStatus,
 //  XTL_EmuD3DDevice_GetOverscanColor, // Dxbx note : Disabled, too high level.
-{$IFDEF DXBX_PIXELSHADER_HOOKS}
   XTL_EmuD3DDevice_GetPixelShader,
-{$ENDIF}
   XTL_EmuD3DDevice_GetPixelShaderConstant,
-{$IFDEF DXBX_PIXELSHADER_HOOKS}
-  XTL_EmuD3DDevice_GetPixelShaderFunction,
-{$ENDIF}
+//  XTL_EmuD3DDevice_GetPixelShaderFunction, // Dxbx note : Disabled, too high level.
   XTL_EmuD3DDevice_GetProjectionViewportMatrix,
   XTL_EmuD3DDevice_GetPushBufferOffset,
   XTL_EmuD3DDevice_GetPushDistance,
@@ -12257,13 +12140,9 @@ exports
   XTL_EmuD3DDevice_SetModelView, // ??
 //  XTL_EmuD3DDevice_SetOverscanColor, // Dxbx note : Disabled, too high level.
   XTL_EmuD3DDevice_SetPalette,
-{$IFDEF DXBX_PIXELSHADER_HOOKS}
   XTL_EmuD3DDevice_SetPixelShader,
-{$ENDIF}
   XTL_EmuD3DDevice_SetPixelShaderConstant,
-{$IFDEF DXBX_PIXELSHADER_HOOKS}
   XTL_EmuD3DDevice_SetPixelShaderProgram,
-{$ENDIF}
   XTL_EmuD3DDevice_SetRenderState_BackFillMode,
   XTL_EmuD3DDevice_SetRenderState_CullMode,
   XTL_EmuD3DDevice_SetRenderState_DoNotCullUncompressed,

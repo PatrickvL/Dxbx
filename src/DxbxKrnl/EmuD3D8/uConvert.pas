@@ -72,7 +72,6 @@ function EmuXB2PC_D3DCULL(Value: X_D3DCULL): D3DCULL;
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT;
 function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; PrimitiveCount: int): int;
 function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE;
-function EmuXB2PC_PSConstant(Value: X_D3DRenderStateType): DWORD;
 
 procedure EmuUnswizzleRect
 (
@@ -1073,56 +1072,6 @@ begin
     Result := D3DPRIMITIVETYPE($7FFFFFFF)
   else
     Result := EmuPrimitiveTypeLookup[Ord(PrimitiveType)];
-end;
-
-function EmuXB2PC_PSConstant(Value: X_D3DRenderStateType): DWORD;
-// Branch:Dxbx  Translator:PatrickvL  Done:100
-begin
-  // TODO : Once the pixel shader generates a mapping table, use that here!
-  case Value of
-// TODO -o: Is this the real mapping, or do we need to do something else?
-    X_D3DRS_PSCONSTANT0_0: Result := 0;
-    X_D3DRS_PSCONSTANT0_1: Result := 1;
-    X_D3DRS_PSCONSTANT0_2: Result := 2;
-    X_D3DRS_PSCONSTANT0_3: Result := 3;
-    X_D3DRS_PSCONSTANT0_4: Result := 4;
-    X_D3DRS_PSCONSTANT0_5: Result := 5;
-    X_D3DRS_PSCONSTANT0_6: Result := 6;
-    X_D3DRS_PSCONSTANT0_7: Result := 7;
-
-    X_D3DRS_PSCONSTANT1_0: Result := 8;
-    X_D3DRS_PSCONSTANT1_1: Result := 9;
-    X_D3DRS_PSCONSTANT1_2: Result := 10;
-    X_D3DRS_PSCONSTANT1_3: Result := 11;
-    X_D3DRS_PSCONSTANT1_4: Result := 12;
-    X_D3DRS_PSCONSTANT1_5: Result := 13;
-    X_D3DRS_PSCONSTANT1_6: Result := 14;
-    X_D3DRS_PSCONSTANT1_7: Result := 15;
-(** )
-    X_D3DRS_PSCONSTANT0_0: Result := 0;
-    X_D3DRS_PSCONSTANT0_1: Result := 2;
-    X_D3DRS_PSCONSTANT0_2: Result := 4;
-    X_D3DRS_PSCONSTANT0_3: Result := 6;
-    X_D3DRS_PSCONSTANT0_4: Result := 8;
-    X_D3DRS_PSCONSTANT0_5: Result := 10;
-    X_D3DRS_PSCONSTANT0_6: Result := 12;
-    X_D3DRS_PSCONSTANT0_7: Result := 14;
-
-    X_D3DRS_PSCONSTANT1_0: Result := 1;
-    X_D3DRS_PSCONSTANT1_1: Result := 3;
-    X_D3DRS_PSCONSTANT1_2: Result := 5;
-    X_D3DRS_PSCONSTANT1_3: Result := 7;
-    X_D3DRS_PSCONSTANT1_4: Result := 9;
-    X_D3DRS_PSCONSTANT1_5: Result := 11;
-    X_D3DRS_PSCONSTANT1_6: Result := 13;
-    X_D3DRS_PSCONSTANT1_7: Result := 15;
-*)
-    X_D3DRS_PSFINALCOMBINERCONSTANT0: Result := 16;
-    X_D3DRS_PSFINALCOMBINERCONSTANT1: Result := 17;
-  else
-    Result := 0;
-    EmuWarning('Unsupported Value for EmuXB2PC_PSConstant: 0x%.08X', [Value]);
-  end;
 end;
 
 procedure EmuUnswizzleRect
