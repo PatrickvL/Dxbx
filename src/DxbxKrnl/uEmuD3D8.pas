@@ -4678,19 +4678,13 @@ begin
       // For each stage, determine what constant offset is used :
       MappedRegister := (pPSDef.PSC0Mapping shr (i * 4)) and $F;
       if MappedRegister = Register_ then
-begin
         // If that constant is now being set, put it in the correct render state slot :
         XTL_EmuMappedD3DRenderState[X_D3DRS_PSCONSTANT0_0 + i]^ := dwColor;
-EmuWarning('Setting register %d (c0_%d)to 0x%0.8x', [Register_, i, dwColor]);
-end;
 
       // Handle the C1 mappings in the same way :
       MappedRegister := (pPSDef.PSC1Mapping shr (i * 4)) and $F;
       if MappedRegister = Register_ then
-begin
         XTL_EmuMappedD3DRenderState[X_D3DRS_PSCONSTANT1_0 + i]^ := dwColor;
-EmuWarning('Setting register %d (c1_%d)to 0x%0.8x', [Register_, i, dwColor]);
-end;
     end;
 
     // Also the c0 and c1 mappings for the final combiner stage :
@@ -4698,10 +4692,7 @@ end;
     begin
       MappedRegister := (pPSDef.PSFinalCombinerConstants shr (i * 4)) and $F;
       if MappedRegister = Register_ then
-begin
         XTL_EmuMappedD3DRenderState[X_D3DRS_PSFINALCOMBINERCONSTANT0 + i]^ := dwColor;
-EmuWarning('Setting register %d (final c%d)to 0x%0.8x', [Register_, i, dwColor]);
-end;
     end;
 
     Dec(ConstantCount);
