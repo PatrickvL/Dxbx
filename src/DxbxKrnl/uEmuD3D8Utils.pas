@@ -478,7 +478,7 @@ end;
 function X_D3DPRIMITIVETYPE2String(const aValue: X_D3DPRIMITIVETYPE): string;
 begin
   case aValue of
-    X_D3DPT_NONE: Result := 'D3DPT_NONE';
+    X_D3DPT_NONE: Result := ''; // Dxbx addition
     X_D3DPT_POINTLIST: Result := 'D3DPT_POINTLIST';
     X_D3DPT_LINELIST: Result := 'D3DPT_LINELIST';
     X_D3DPT_LINELOOP: Result := 'D3DPT_LINELOOP';

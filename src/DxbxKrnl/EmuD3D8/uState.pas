@@ -523,10 +523,11 @@ begin
   // Set this value into the RenderState structure too (so other code will read the new current value) :
   XTL_EmuMappedD3DRenderState[XboxRenderState]^ := XboxValue;
 
-  // Dxbx addition : Hack for Smashing drive (on ATI X1300), don't transfer fog (or everything becomes opaque) :
-  if  IsRunning(TITLEID_SmashingDrive)
-  and (XboxRenderState  in [X_D3DRS_FOGSTART, X_D3DRS_FOGEND, X_D3DRS_FOGDENSITY]) then
-    Exit;
+// Disabled, as it messes up Nvidia rendering too much :
+//  // Dxbx addition : Hack for Smashing drive (on ATI X1300), don't transfer fog (or everything becomes opaque) :
+//  if  IsRunning(TITLEID_SmashingDrive)
+//  and (XboxRenderState  in [X_D3DRS_FOGSTART, X_D3DRS_FOGEND, X_D3DRS_FOGDENSITY]) then
+//    Exit;
 
   case XboxRenderState of
     // Pixel shader constants are handled in XTL_EmuUpdateActivePixelShader :
