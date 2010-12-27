@@ -2617,6 +2617,7 @@ begin
   begin
     // Add needs to be stored, we already have 2 MULs, so change the XMMC into an CND :
     Cur := @(Intermediate[i+2]);
+    // TODO : If CombinerMuxesOnMsb is False, we should compare to the LeastSignificantBit of r0.a - but how?
     Cur.Opcode := PO_CND;
     Cur.Modifier := INSMOD_NONE;
     // Begin the input of CND with the required r0.a parameter :

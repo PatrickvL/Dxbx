@@ -1519,7 +1519,7 @@ const X_D3DWRAP_V = $00001000;
 const X_D3DWRAP_W = $00100000;
 
 // X_D3DTEXTURESTAGESTATETYPE values :
-// Dxbx note : See DxbxVersionAdjust_D3DTSS(), as these might need correction for older SDK versions!
+// Dxbx note : See DxbxFromOldVersion_D3DTSS(), as these might need correction for older SDK versions!
 // The set starts out with "deferred" texture states :
 const X_D3DTSS_ADDRESSU = 0;
 const X_D3DTSS_ADDRESSV = 1;

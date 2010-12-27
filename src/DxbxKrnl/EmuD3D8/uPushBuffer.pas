@@ -390,7 +390,7 @@ var
             VPDesc.dwVertexCount,
             0,
             PrimitiveCount
-            // Dxbx : Why not this : EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, 0, VPDesc.dwPrimitiveCount
+            // Dxbx : Why not this : EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, 0, VPDesc.dwPrimitiveCount
           );
         end;
       end;
@@ -485,7 +485,7 @@ begin
             DbgPrintf('  NV2A_SetBeginEnd(PrimitiveType = %d)', [pdwPushData^]);
 {$endif}
 
-          PCPrimitiveType := EmuPrimitiveType(XBPrimitiveType);
+          PCPrimitiveType := EmuXB2PC_D3DPrimitiveType(XBPrimitiveType);
         end;
 
         Assert(dwCount = 1); // TODO -oDxbx: What if this isn't true?
@@ -587,7 +587,7 @@ begin
 
           g_pD3DDevice.DrawPrimitiveUP
           (
-              PCPrimitiveType, // Dxbx : Why not this : EmuPrimitiveType(VPDesc.PrimitiveType),
+              PCPrimitiveType, // Dxbx : Why not this : EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
               VPDesc.dwPrimitiveCount,
               VPDesc.pVertexStreamZeroData,
               VPDesc.uiVertexStreamZeroStride

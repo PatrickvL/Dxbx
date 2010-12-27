@@ -33,6 +33,7 @@ uses
 {$ENDIF}
   // Dxbx
   , uTypes
+  , uDxbxUtils // FloatToString
   , uDxbxKrnlUtils
   , uEmuD3D8Types
   , uEmuD3D8Utils
@@ -44,34 +45,32 @@ function EmuXBFormatIsCompressed(Format: X_D3DFORMAT): BOOL_;
 function EmuXBFormatIsLinear(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
 function EmuXBFormatHasAlpha(Format: X_D3DFORMAT): BOOL_;
 
-function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT;
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
-
-function EmuXB2PC_D3DLock(Flags: DWORD): DWORD;
-
-function EmuXB2PC_D3DMULTISAMPLE_TYPE(aType: X_D3DMULTISAMPLE_TYPE): D3DMULTISAMPLE_TYPE;
 function EmuPC2XB_D3DMULTISAMPLE_TYPE(aType: D3DMULTISAMPLE_TYPE): X_D3DMULTISAMPLE_TYPE;
 
-function EmuXB2PC_D3DTS(State: X_D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE;
-function EmuXB2PC_D3DTSS(Value: X_D3DTEXTURESTAGESTATETYPE): TD3DSamplerStateType;//=D3DSAMPLERSTATETYPE
-function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP;
 function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND;
+function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP;
+function EmuXB2PC_D3DCLEAR_FLAGS(Value: DWORD): DWORD;
 function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC;
+function EmuXB2PC_D3DCOLORWRITEENABLE(Value: X_D3DCOLORWRITEENABLE): DWORD;
+function EmuXB2PC_D3DCULL(Value: X_D3DCULL): D3DCULL;
 function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE;
+function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT;
+function EmuXB2PC_D3DLock(Flags: DWORD): DWORD;
+function EmuXB2PC_D3DMULTISAMPLE_TYPE(aType: X_D3DMULTISAMPLE_TYPE): D3DMULTISAMPLE_TYPE;
+function EmuXB2PC_D3DPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE;
+function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE;
 function EmuXB2PC_D3DSTENCILOP(Value: X_D3DSTENCILOP): D3DSTENCILOP;
 function EmuXB2PC_D3DTEXTUREADDRESS(Value: DWORD): DWORD;
 function EmuXB2PC_D3DTEXTUREFILTERTYPE(Value: DWORD): DWORD;
-function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE;
-function EmuXB2PC_D3DVERTEXBLENDFLAGS(Value: X_D3DVERTEXBLENDFLAGS): D3DVERTEXBLENDFLAGS;
-function EmuXB2PC_D3DCOLORWRITEENABLE(Value: X_D3DCOLORWRITEENABLE): DWORD;
 function EmuXB2PC_D3DTEXTUREOP(Value: X_D3DTEXTUREOP): DWORD;
-function EmuXB2PC_D3DCLEAR_FLAGS(Value: DWORD): DWORD;
+function EmuXB2PC_D3DTS(State: X_D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE;
+function EmuXB2PC_D3DTSS(Value: X_D3DTEXTURESTAGESTATETYPE): TD3DSamplerStateType;//=D3DSAMPLERSTATETYPE
+function EmuXB2PC_D3DVERTEXBLENDFLAGS(Value: X_D3DVERTEXBLENDFLAGS): D3DVERTEXBLENDFLAGS;
 function EmuXB2PC_D3DWRAP(Value: DWORD): DWORD;
-function EmuXB2PC_D3DCULL(Value: X_D3DCULL): D3DCULL;
 
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT;
 function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; PrimitiveCount: int): int;
-function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE;
 
 procedure EmuUnswizzleRect
 (
@@ -140,28 +139,39 @@ EmuPrimitiveTypeLookup: array [0..Ord(X_D3DPT_POLYGON)] of D3DPRIMITIVETYPE = (
 
 function DxbxXB2PC_NOP(Value: DWORD): DWORD;
 
+function X_D3DCLEAR2String(aValue: DWORD): string;
+function X_D3DTEXTURESTAGESTATETYPE2String(aValue: DWORD): string;
+function X_D3DTRANSFORMSTATETYPE2String(aValue: DWORD): string;
+function X_D3DMULTISAMPLE_TYPE2String(aValue: DWORD): string;
+
 type
   TXB2PCFunc = function(Value: DWORD): DWORD;
+  TXB2StringFunc = function(Value: DWORD): string;
 
   TXBType = (
     xt_Unknown = 0, // Defined as zero, to coincide with default value of DxbxRenderStateInfo.T and DxbxTextureStageStateInfo.T
-    xtBOOLEAN,
+    xtBOOL,
     xtBYTE,
     xtD3DBLEND,
     xtD3DBLENDOP,
+    xtD3DCLEAR,
     xtD3DCMPFUNC,
     xtD3DCOLOR,
     xtD3DCOLORWRITEENABLE,
     xtD3DCULL,
     xtD3DFILLMODE,
     xtD3DFOGMODE,
+    xtD3DFORMAT,
     xtD3DMCS,
     xtD3DMULTISAMPLE_TYPE,
+    xtD3DPRIMITIVETYPE,
     xtD3DSHADEMODE,
     xtD3DSTENCILOP,
     xtD3DTEXTUREADDRESS, // Used for TextureStageState X_D3DTSS_ADDRESSU, X_D3DTSS_ADDRESSV and X_D3DTSS_ADDRESSW
     xtD3DTEXTUREFILTERTYPE, // Used for TextureStageState X_D3DTSS_MAGFILTER, X_D3DTSS_MINFILTER and X_D3DTSS_MIPFILTER
     xtD3DTEXTUREOP, // Used for TextureStageState X_D3DTSS_COLOROP and X_D3DTSS_ALPHAOP
+    xtD3DTEXTURESTAGESTATETYPE,
+    xtD3DTRANSFORMSTATETYPE,
     xtD3DVERTEXBLENDFLAGS,
     xtD3DWRAP,
     xtDWORD,
@@ -171,35 +181,41 @@ type
   XBTypeInfo = record
     S: string;
     F: Pointer; // = TXB2PCFunc, but declared as pointer because of different argument & return types in the callbacks
+    R: Pointer; // = TXB2StringFunc, which can be used to render state blocks in a generic way(!)
     X: Boolean;
   end;
 
 const
-  // Table of Xbox-to-PC converters for all registered types :
+  // Table of Xbox-to-PC and Value-to-String converters for all registered types :
   DxbxXBTypeInfo: array [TXBType] of XBTypeInfo = (
-    (S:'Unknown';              F:@DxbxXB2PC_NOP),
-    (S:'BOOLEAN';              F:@DxbxXB2PC_NOP),
-    (S:'BYTE';                 F:@DxbxXB2PC_NOP),
-    (S:'D3DBLEND';             F:@EmuXB2PC_D3DBLEND),
-    (S:'D3DBLENDOP';           F:@EmuXB2PC_D3DBLENDOP),
-    (S:'D3DCMPFUNC';           F:@EmuXB2PC_D3DCMPFUNC),
-    (S:'D3DCOLOR';             F:@DxbxXB2PC_NOP),
-    (S:'D3DCOLORWRITEENABLE';  F:@EmuXB2PC_D3DCOLORWRITEENABLE),
-    (S:'D3DCULL';              F:@EmuXB2PC_D3DCULL),
-    (S:'D3DFILLMODE';          F:@EmuXB2PC_D3DFILLMODE),
-    (S:'D3DFOGMODE';           F:@DxbxXB2PC_NOP),
-    (S:'D3DMCS';               F:@DxbxXB2PC_NOP),
-    (S:'D3DMULTISAMPLE_TYPE';  F:@EmuXB2PC_D3DMULTISAMPLE_TYPE; X:True),
-    (S:'D3DSHADEMODE';         F:@EmuXB2PC_D3DSHADEMODE),
-    (S:'D3DSTENCILOP';         F:@EmuXB2PC_D3DSTENCILOP),
-    (S:'D3DTEXTUREADDRESS';    F:@EmuXB2PC_D3DTEXTUREADDRESS),
-    (S:'D3DTEXTUREFILTERTYPE'; F:@EmuXB2PC_D3DTEXTUREFILTERTYPE),
-    (S:'D3DTEXTUREOP';         F:@EmuXB2PC_D3DTEXTUREOP),
-    (S:'D3DVERTEXBLENDFLAGS';  F:@EmuXB2PC_D3DVERTEXBLENDFLAGS),
-    (S:'D3DWRAP';              F:@EmuXB2PC_D3DWRAP),
-    (S:'DWORD';                F:@DxbxXB2PC_NOP),
-    (S:'Float';                F:@DxbxXB2PC_NOP),
-    (S:'LONG';                 F:@DxbxXB2PC_NOP)
+    (S:'Unknown';                  F:@DxbxXB2PC_NOP),
+    (S:'BOOL';                     F:@DxbxXB2PC_NOP;                R:@BOOL2String),
+    (S:'BYTE';                     F:@DxbxXB2PC_NOP),
+    (S:'D3DBLEND';                 F:@EmuXB2PC_D3DBLEND),
+    (S:'D3DBLENDOP';               F:@EmuXB2PC_D3DBLENDOP),
+    (S:'D3DCLEAR';                 F:@EmuXB2PC_D3DCLEAR_FLAGS;      R:@X_D3DCLEAR2String),
+    (S:'D3DCMPFUNC';               F:@EmuXB2PC_D3DCMPFUNC),
+    (S:'D3DCOLOR';                 F:@DxbxXB2PC_NOP),
+    (S:'D3DCOLORWRITEENABLE';      F:@EmuXB2PC_D3DCOLORWRITEENABLE),
+    (S:'D3DCULL';                  F:@EmuXB2PC_D3DCULL),
+    (S:'D3DFILLMODE';              F:@EmuXB2PC_D3DFILLMODE),
+    (S:'D3DFOGMODE';               F:@DxbxXB2PC_NOP),
+    (S:'D3DFORMAT';                F:@EmuXB2PC_D3DFormat;           R:@X_D3DFORMAT2String),
+    (S:'D3DMCS';                   F:@DxbxXB2PC_NOP),
+    (S:'D3DMULTISAMPLE_TYPE';      F:@EmuXB2PC_D3DMULTISAMPLE_TYPE; R:@X_D3DMULTISAMPLE_TYPE2String;  X:True),
+    (S:'D3DPRIMITIVETYPE';         F:@EmuXB2PC_D3DPrimitiveType;    R:@X_D3DPRIMITIVETYPE2String),
+    (S:'D3DSHADEMODE';             F:@EmuXB2PC_D3DSHADEMODE),
+    (S:'D3DSTENCILOP';             F:@EmuXB2PC_D3DSTENCILOP),
+    (S:'D3DTEXTUREADDRESS';        F:@EmuXB2PC_D3DTEXTUREADDRESS),
+    (S:'D3DTEXTUREFILTERTYPE';     F:@EmuXB2PC_D3DTEXTUREFILTERTYPE),
+    (S:'D3DTEXTUREOP';             F:@EmuXB2PC_D3DTEXTUREOP),
+    (S:'D3DTEXTURESTAGESTATETYPE'; F:@EmuXB2PC_D3DTSS;              R:@X_D3DTEXTURESTAGESTATETYPE2String),
+    (S:'D3DTRANSFORMSTATETYPE';    F:@EmuXB2PC_D3DTS;               R:@X_D3DTRANSFORMSTATETYPE2String),
+    (S:'D3DVERTEXBLENDFLAGS';      F:@EmuXB2PC_D3DVERTEXBLENDFLAGS),
+    (S:'D3DWRAP';                  F:@EmuXB2PC_D3DWRAP),
+    (S:'DWORD';                    F:@DxbxXB2PC_NOP),
+    (S:'Float';                    F:@DxbxXB2PC_NOP;                R:@FloatToString),
+    (S:'LONG';                     F:@DxbxXB2PC_NOP)
   );
 
 type
@@ -275,13 +291,13 @@ const
     // End of "pixel-shader" render states, continuing with "simple" render states :
     (S:'D3DRS_ZFUNC'                       {=  57}; V:3424; T:xtD3DCMPFUNC;          X:False; PC:D3DRS_ZFUNC),
     (S:'D3DRS_ALPHAFUNC'                   {=  58}; V:3424; T:xtD3DCMPFUNC;          X:False; PC:D3DRS_ALPHAFUNC),
-    (S:'D3DRS_ALPHABLENDENABLE'            {=  59}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_ALPHABLENDENABLE; N:'TRUE to enable alpha blending'),
-    (S:'D3DRS_ALPHATESTENABLE'             {=  60}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_ALPHATESTENABLE; N:'TRUE to enable alpha tests'),
+    (S:'D3DRS_ALPHABLENDENABLE'            {=  59}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_ALPHABLENDENABLE; N:'TRUE to enable alpha blending'),
+    (S:'D3DRS_ALPHATESTENABLE'             {=  60}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_ALPHATESTENABLE; N:'TRUE to enable alpha tests'),
     (S:'D3DRS_ALPHAREF'                    {=  61}; V:3424; T:xtBYTE;                X:False; PC:D3DRS_ALPHAREF),
     (S:'D3DRS_SRCBLEND'                    {=  62}; V:3424; T:xtD3DBLEND;            X:False; PC:D3DRS_SRCBLEND),
     (S:'D3DRS_DESTBLEND'                   {=  63}; V:3424; T:xtD3DBLEND;            X:False; PC:D3DRS_DESTBLEND),
-    (S:'D3DRS_ZWRITEENABLE'                {=  64}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_ZWRITEENABLE; N:'TRUE to enable Z writes'),
-    (S:'D3DRS_DITHERENABLE'                {=  65}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_DITHERENABLE; N:'TRUE to enable dithering'),
+    (S:'D3DRS_ZWRITEENABLE'                {=  64}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_ZWRITEENABLE; N:'TRUE to enable Z writes'),
+    (S:'D3DRS_DITHERENABLE'                {=  65}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_DITHERENABLE; N:'TRUE to enable dithering'),
     (S:'D3DRS_SHADEMODE'                   {=  66}; V:3424; T:xtD3DSHADEMODE;        X:False; PC:D3DRS_SHADEMODE),
     (S:'D3DRS_COLORWRITEENABLE'            {=  67}; V:3424; T:xtD3DCOLORWRITEENABLE; X:False; PC:D3DRS_COLORWRITEENABLE), // *_ALPHA, etc. per-channel write enable
     (S:'D3DRS_STENCILZFAIL'                {=  68}; V:3424; T:xtD3DSTENCILOP;        X:False; PC:D3DRS_STENCILZFAIL; N:'Operation to do if stencil test passes and Z test fails'),
@@ -296,11 +312,11 @@ const
     (S:'D3DRS_SWATHWIDTH'                  {=  76}; V:3424; {T:xtD3DSWATHWIDTH;}     X:True),
     (S:'D3DRS_POLYGONOFFSETZSLOPESCALE'    {=  77}; V:3424; T:xtFloat;               X:True;  N:'float Z factor for shadow maps'),
     (S:'D3DRS_POLYGONOFFSETZOFFSET'        {=  78}; V:3424; T:xtFloat;               X:True),
-    (S:'D3DRS_POINTOFFSETENABLE'           {=  79}; V:3424; T:xtBOOLEAN;             X:True),
-    (S:'D3DRS_WIREFRAMEOFFSETENABLE'       {=  80}; V:3424; T:xtBOOLEAN;             X:True),
-    (S:'D3DRS_SOLIDOFFSETENABLE'           {=  81}; V:3424; T:xtBOOLEAN;             X:True),
+    (S:'D3DRS_POINTOFFSETENABLE'           {=  79}; V:3424; T:xtBOOL;                X:True),
+    (S:'D3DRS_WIREFRAMEOFFSETENABLE'       {=  80}; V:3424; T:xtBOOL;                X:True),
+    (S:'D3DRS_SOLIDOFFSETENABLE'           {=  81}; V:3424; T:xtBOOL;                X:True),
     (S:'D3DRS_DEPTHCLIPCONTROL'            {=  82}; V:4627; {T:xtD3DDCC;}            X:True),
-    (S:'D3DRS_STIPPLEENABLE'               {=  83}; V:4627; T:xtBOOLEAN;             X:True),
+    (S:'D3DRS_STIPPLEENABLE'               {=  83}; V:4627; T:xtBOOL;                X:True),
     (S:'D3DRS_SIMPLE_UNUSED8'              {=  84}; V:4627; T:xtDWORD;               X:True),
     (S:'D3DRS_SIMPLE_UNUSED7'              {=  85}; V:4627; T:xtDWORD;               X:True),
     (S:'D3DRS_SIMPLE_UNUSED6'              {=  86}; V:4627; T:xtDWORD;               X:True),
@@ -310,20 +326,20 @@ const
     (S:'D3DRS_SIMPLE_UNUSED2'              {=  90}; V:4627; T:xtDWORD;               X:True),
     (S:'D3DRS_SIMPLE_UNUSED1'              {=  91}; V:4627; T:xtDWORD;               X:True),
     // End of "simple" render states, continuing with "deferred" render states :
-    (S:'D3DRS_FOGENABLE'                   {=  92}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_FOGENABLE),
+    (S:'D3DRS_FOGENABLE'                   {=  92}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_FOGENABLE),
     (S:'D3DRS_FOGTABLEMODE'                {=  93}; V:3424; T:xtD3DFOGMODE;          X:False; PC:D3DRS_FOGTABLEMODE), // No conversion needed; Xbox = PC
     (S:'D3DRS_FOGSTART'                    {=  94}; V:3424; T:xtFloat;               X:False; PC:D3DRS_FOGSTART),
     (S:'D3DRS_FOGEND'                      {=  95}; V:3424; T:xtFloat;               X:False; PC:D3DRS_FOGEND),
     (S:'D3DRS_FOGDENSITY'                  {=  96}; V:3424; T:xtFloat;               X:False; PC:D3DRS_FOGDENSITY),
-    (S:'D3DRS_RANGEFOGENABLE'              {=  97}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_RANGEFOGENABLE),
+    (S:'D3DRS_RANGEFOGENABLE'              {=  97}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_RANGEFOGENABLE),
     (S:'D3DRS_WRAP0'                       {=  98}; V:3424; T:xtD3DWRAP;             X:False; PC:D3DRS_WRAP0),
     (S:'D3DRS_WRAP1'                       {=  99}; V:3424; T:xtD3DWRAP;             X:False; PC:D3DRS_WRAP1),
     (S:'D3DRS_WRAP2'                       {= 100}; V:3424; T:xtD3DWRAP;             X:False; PC:D3DRS_WRAP2),
     (S:'D3DRS_WRAP3'                       {= 101}; V:3424; T:xtD3DWRAP;             X:False; PC:D3DRS_WRAP3),
-    (S:'D3DRS_LIGHTING'                    {= 102}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_LIGHTING),
-    (S:'D3DRS_SPECULARENABLE'              {= 103}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_SPECULARENABLE),
-    (S:'D3DRS_LOCALVIEWER'                 {= 104}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_LOCALVIEWER),
-    (S:'D3DRS_COLORVERTEX'                 {= 105}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_COLORVERTEX),
+    (S:'D3DRS_LIGHTING'                    {= 102}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_LIGHTING),
+    (S:'D3DRS_SPECULARENABLE'              {= 103}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_SPECULARENABLE),
+    (S:'D3DRS_LOCALVIEWER'                 {= 104}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_LOCALVIEWER),
+    (S:'D3DRS_COLORVERTEX'                 {= 105}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_COLORVERTEX),
     (S:'D3DRS_BACKSPECULARMATERIALSOURCE'  {= 106}; V:3424; T:xtD3DMCS;              X:True), // nsp.
     (S:'D3DRS_BACKDIFFUSEMATERIALSOURCE'   {= 107}; V:3424; T:xtD3DMCS;              X:True), // nsp.
     (S:'D3DRS_BACKAMBIENTMATERIALSOURCE'   {= 108}; V:3424; T:xtD3DMCS;              X:True), // nsp.
@@ -336,8 +352,8 @@ const
     (S:'D3DRS_AMBIENT'                     {= 115}; V:3424; T:xtD3DCOLOR;            X:False; PC:D3DRS_AMBIENT),
     (S:'D3DRS_POINTSIZE'                   {= 116}; V:3424; T:xtFloat;               X:False; PC:D3DRS_POINTSIZE),
     (S:'D3DRS_POINTSIZE_MIN'               {= 117}; V:3424; T:xtFloat;               X:False; PC:D3DRS_POINTSIZE_MIN),
-    (S:'D3DRS_POINTSPRITEENABLE'           {= 118}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_POINTSPRITEENABLE),
-    (S:'D3DRS_POINTSCALEENABLE'            {= 119}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_POINTSCALEENABLE),
+    (S:'D3DRS_POINTSPRITEENABLE'           {= 118}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_POINTSPRITEENABLE),
+    (S:'D3DRS_POINTSCALEENABLE'            {= 119}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_POINTSCALEENABLE),
     (S:'D3DRS_POINTSCALE_A'                {= 120}; V:3424; T:xtFloat;               X:False; PC:D3DRS_POINTSCALE_A),
     (S:'D3DRS_POINTSCALE_B'                {= 121}; V:3424; T:xtFloat;               X:False; PC:D3DRS_POINTSCALE_B),
     (S:'D3DRS_POINTSCALE_C'                {= 122}; V:3424; T:xtFloat;               X:False; PC:D3DRS_POINTSCALE_C),
@@ -361,18 +377,18 @@ const
     (S:'D3DRS_FOGCOLOR'                    {= 138}; V:3424; T:xtD3DCOLOR;            X:False; PC:D3DRS_FOGCOLOR),
     (S:'D3DRS_FILLMODE'                    {= 139}; V:3424; T:xtD3DFILLMODE;         X:False; PC:D3DRS_FILLMODE),
     (S:'D3DRS_BACKFILLMODE'                {= 140}; V:3424; T:xtD3DFILLMODE;         X:True), // nsp.
-    (S:'D3DRS_TWOSIDEDLIGHTING'            {= 141}; V:3424; T:xtBOOLEAN;             X:True), // nsp.
-    (S:'D3DRS_NORMALIZENORMALS'            {= 142}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_NORMALIZENORMALS),
-    (S:'D3DRS_ZENABLE'                     {= 143}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_ZENABLE), // D3DZBUFFERTYPE?
-    (S:'D3DRS_STENCILENABLE'               {= 144}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_STENCILENABLE),
+    (S:'D3DRS_TWOSIDEDLIGHTING'            {= 141}; V:3424; T:xtBOOL;                X:True), // nsp.
+    (S:'D3DRS_NORMALIZENORMALS'            {= 142}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_NORMALIZENORMALS),
+    (S:'D3DRS_ZENABLE'                     {= 143}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_ZENABLE), // D3DZBUFFERTYPE?
+    (S:'D3DRS_STENCILENABLE'               {= 144}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_STENCILENABLE),
     (S:'D3DRS_STENCILFAIL'                 {= 145}; V:3424; T:xtD3DSTENCILOP;        X:False; PC:D3DRS_STENCILFAIL),
     (S:'D3DRS_FRONTFACE'                   {= 146}; V:3424; T:xtDWORD;               X:True), // nsp.
     (S:'D3DRS_CULLMODE'                    {= 147}; V:3424; T:xtD3DCULL;             X:False; PC:D3DRS_CULLMODE),
     (S:'D3DRS_TEXTUREFACTOR'               {= 148}; V:3424; T:xtD3DCOLOR;            X:False; PC:D3DRS_TEXTUREFACTOR),
     (S:'D3DRS_ZBIAS'                       {= 149}; V:3424; T:xtLONG;                X:False; PC:{$IFDEF DXBX_USE_D3D9}D3DRS_DEPTHBIAS{$ELSE}D3DRS_ZBIAS{$ENDIF}),
     (S:'D3DRS_LOGICOP'                     {= 150}; V:3424; T:xtDWORD;               X:True), // D3DLOGICOP?
-    (S:'D3DRS_EDGEANTIALIAS'               {= 151}; V:3424; T:xtBOOLEAN;             X:False; PC:{$IFDEF DXBX_USE_D3D9}D3DRS_ANTIALIASEDLINEENABLE{$ELSE}D3DRS_EDGEANTIALIAS{$ENDIF}), // Dxbx note : No Xbox ext. (according to Direct3D8) !
-    (S:'D3DRS_MULTISAMPLEANTIALIAS'        {= 152}; V:3424; T:xtBOOLEAN;             X:False; PC:D3DRS_MULTISAMPLEANTIALIAS),
+    (S:'D3DRS_EDGEANTIALIAS'               {= 151}; V:3424; T:xtBOOL;                X:False; PC:{$IFDEF DXBX_USE_D3D9}D3DRS_ANTIALIASEDLINEENABLE{$ELSE}D3DRS_EDGEANTIALIAS{$ENDIF}), // Dxbx note : No Xbox ext. (according to Direct3D8) !
+    (S:'D3DRS_MULTISAMPLEANTIALIAS'        {= 152}; V:3424; T:xtBOOL;                X:False; PC:D3DRS_MULTISAMPLEANTIALIAS),
     (S:'D3DRS_MULTISAMPLEMASK'             {= 153}; V:3424; T:xtDWORD;               X:False; PC:D3DRS_MULTISAMPLEMASK),
 //  (S:'D3DRS_MULTISAMPLETYPE'             {= 154}; V:3424; T:xtDWORD;               X:True), // [-3911] \_ aliasses  D3DMULTISAMPLE_TYPE
     (S:'D3DRS_MULTISAMPLEMODE'             {= 154}; V:4361; T:xtDWORD;               X:True), // [4361+] /            D3DMULTISAMPLEMODE for the backbuffer
@@ -380,13 +396,13 @@ const
     (S:'D3DRS_SHADOWFUNC'                  {= 156}; V:3424; T:xtD3DCMPFUNC;          X:True),
     (S:'D3DRS_LINEWIDTH'                   {= 157}; V:3424; T:xtFloat;               X:True),
     (S:'D3DRS_SAMPLEALPHA'                 {= 158}; V:3424; T:xtDWORD;               X:True), // D3DSAMPLEALPHA?
-    (S:'D3DRS_DXT1NOISEENABLE'             {= 159}; V:3424; T:xtBOOLEAN;             X:True),
-    (S:'D3DRS_YUVENABLE'                   {= 160}; V:3911; T:xtBOOLEAN;             X:True),
-    (S:'D3DRS_OCCLUSIONCULLENABLE'         {= 161}; V:3911; T:xtBOOLEAN;             X:True),
-    (S:'D3DRS_STENCILCULLENABLE'           {= 162}; V:3911; T:xtBOOLEAN;             X:True),
-    (S:'D3DRS_ROPZCMPALWAYSREAD'           {= 163}; V:3911; T:xtBOOLEAN;             X:True),
-    (S:'D3DRS_ROPZREAD'                    {= 164}; V:3911; T:xtBOOLEAN;             X:True),
-    (S:'D3DRS_DONOTCULLUNCOMPRESSED'       {= 165}; V:3911; T:xtBOOLEAN;             X:True)
+    (S:'D3DRS_DXT1NOISEENABLE'             {= 159}; V:3424; T:xtBOOL;                X:True),
+    (S:'D3DRS_YUVENABLE'                   {= 160}; V:3911; T:xtBOOL;                X:True),
+    (S:'D3DRS_OCCLUSIONCULLENABLE'         {= 161}; V:3911; T:xtBOOL;                X:True),
+    (S:'D3DRS_STENCILCULLENABLE'           {= 162}; V:3911; T:xtBOOL;                X:True),
+    (S:'D3DRS_ROPZCMPALWAYSREAD'           {= 163}; V:3911; T:xtBOOL;                X:True),
+    (S:'D3DRS_ROPZREAD'                    {= 164}; V:3911; T:xtBOOL;                X:True),
+    (S:'D3DRS_DONOTCULLUNCOMPRESSED'       {= 165}; V:3911; T:xtBOOL;                X:True)
   );
 (* Direct3D8 states unused :
     D3DRS_LINEPATTERN
@@ -549,6 +565,62 @@ end;
 function DxbxXB2PC_NOP(Value: DWORD): DWORD;
 begin
   Result := Value;
+end;
+
+function X_D3DTEXTURESTAGESTATETYPE2String(aValue: DWORD): string;
+begin
+  if aValue in [X_D3DTSS_FIRST..X_D3DTSS_LAST] then
+    Result := DxbxTextureStageStateInfo[aValue].S
+  else
+    Result := '';
+end;
+
+function X_D3DTRANSFORMSTATETYPE2String(aValue: DWORD): string;
+begin
+  case X_D3DTRANSFORMSTATETYPE(aValue) of
+    X_D3DTS_VIEW: Result := 'X_D3DTS_VIEW';
+    X_D3DTS_PROJECTION: Result := 'X_D3DTS_PROJECTION';
+    X_D3DTS_TEXTURE0: Result := 'X_D3DTS_TEXTURE0';
+    X_D3DTS_TEXTURE1: Result := 'X_D3DTS_TEXTURE1';
+    X_D3DTS_TEXTURE2: Result := 'X_D3DTS_TEXTURE2';
+    X_D3DTS_TEXTURE3: Result := 'X_D3DTS_TEXTURE3';
+    X_D3DTS_WORLD: Result := 'X_D3DTS_WORLD';
+    X_D3DTS_WORLD1: Result := 'X_D3DTS_WORLD1';
+    X_D3DTS_WORLD2: Result := 'X_D3DTS_WORLD2';
+    X_D3DTS_WORLD3: Result := 'X_D3DTS_WORLD3';
+    X_D3DTS_MAX: Result := 'X_D3DTS_MAX';
+    X_D3DTS_FORCE_DWORD: Result := 'X_D3DTS_FORCE_DWORD';
+  else Result := '';
+  end;
+end;
+
+function X_D3DMULTISAMPLE_TYPE2String(aValue: DWORD): string;
+begin
+  case X_D3DMULTISAMPLE_TYPE(aValue) of
+    X_D3DMULTISAMPLE_NONE:
+      Result := 'X_D3DMULTISAMPLE_NONE';
+    X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR:
+      Result := 'X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR';
+    X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX:
+      Result := 'X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX';
+    X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR:
+      Result := 'X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR';
+    X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR:
+      Result := 'X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR';
+    X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR:
+      Result := 'X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR';
+    X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN:
+      Result := 'X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN';
+    X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR:
+      Result := 'X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR';
+    X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN:
+      Result := 'X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN';
+    X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN:
+      Result := 'X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN';
+    X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN:
+      Result := 'X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN';
+  else Result := '';
+  end;
 end;
 
 // convert from xbox to pc color formats
@@ -1008,6 +1080,18 @@ begin
   end;
 end;
 
+function X_D3DCLEAR2String(aValue: DWORD): string;
+begin
+  Result := '';
+  if (aValue and X_D3DCLEAR_ZBUFFER) > 0 then Result := Result + '|D3DCLEAR_ZBUFFER';
+  if (aValue and X_D3DCLEAR_STENCIL) > 0 then Result := Result + '|D3DCLEAR_STENCIL';
+  if (aValue and X_D3DCLEAR_TARGET_R) > 0 then Result := Result + '|D3DCLEAR_TARGET_R';
+  if (aValue and X_D3DCLEAR_TARGET_G) > 0 then Result := Result + '|D3DCLEAR_TARGET_G';
+  if (aValue and X_D3DCLEAR_TARGET_B) > 0 then Result := Result + '|D3DCLEAR_TARGET_B';
+  if (aValue and X_D3DCLEAR_TARGET_A) > 0 then Result := Result + '|D3DCLEAR_TARGET_A';
+  if Result <> '' then System.Delete(Result, 1, 1);
+end;
+
 function EmuXB2PC_D3DCLEAR_FLAGS(Value: DWORD): DWORD;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
@@ -1065,7 +1149,7 @@ begin
 end;
 
 // convert xbox->pc primitive type
-function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE;
+function EmuXB2PC_D3DPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   if Ord(PrimitiveType) >= Ord(X_D3DPT_MAX) then
