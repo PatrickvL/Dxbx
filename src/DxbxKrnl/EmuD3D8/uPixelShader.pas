@@ -485,7 +485,7 @@ type PSH_OPCODE =
     PO_TEXBEM,
     PO_TEXBEML,
     PO_TEXBRDF, // Xbox ext.
-    PO_TEXTCOORD,
+    PO_TEXCOORD,
     PO_TEXKILL,
     PO_TEXDP3, // Note : ps.1.3 only
     PO_TEXDP3TEX, // Note : ps.1.3 only
@@ -531,7 +531,7 @@ var PSH_OPCODE_DEFS: array [PSH_OPCODE] of record mn: string; _Out, _In: int; no
   ({PO_TEXBEM} mn:'texbem';  _Out:1; _In:1; note:''),
   ({PO_TEXBEML} mn:'texbeml';  _Out:1; _In:1; note:''),
   ({PO_TEXBRDF} mn:'texbrdf';  _Out:1; _In:1; note:''), // Note : Not supported by Direct3D8 ?
-  ({PO_TEXTCOORD} mn:'textcoord';  _Out:1; _In:0; note:''),
+  ({PO_TEXCOORD} mn:'texcoord';  _Out:1; _In:0; note:''),
   ({PO_TEXKILL} mn:'texkill';  _Out:1; _In:0; note:''),
   ({PO_TEXDP3} mn:'texdp3';  _Out:1; _In:1; note:''),
   ({PO_TEXDP3TEX} mn:'texdp3tex';  _Out:1; _In:1; note:''),
@@ -605,7 +605,7 @@ const
   PSH_XBOX_MAX_T_REGISTER_COUNT = 4;
   PSH_XBOX_MAX_V_REGISTER_COUNT = 2;
   // Two extra constants are possible in the final combiner - give them fake numbers :
-  PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_MAX_C_REGISTER_COUNT + 1; // = 16
+  PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_MAX_C_REGISTER_COUNT; // = 16
   PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 17
   PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FC1 + 1; // = 18
 
@@ -813,6 +813,17 @@ type PSH_INTERMEDIATE_FORMAT = record
   end;
   PPSH_INTERMEDIATE_FORMAT = ^PSH_INTERMEDIATE_FORMAT;
 
+type
+  PPSH_RECOMPILED_SHADER = ^PSH_RECOMPILED_SHADER;
+  PSH_RECOMPILED_SHADER = record
+    Next: PPSH_RECOMPILED_SHADER;
+    PSDef: X_D3DPIXELSHADERDEF;
+    NewShaderStr: string;
+    ConvertedHandle: DWORD;
+    ConstInUse: array [0..PSH_XBOX_CONSTANT_MAX-1] of boolean;
+    ConstMapping: array [0..PSH_XBOX_CONSTANT_MAX-1] of int;
+  end;
+
 type PSH_XBOX_SHADER = record
     // Reserve enough slots for all shaders, so we need space for 18 constants, 4 texture addressing codes and 5 lines per opcode : :
     Intermediate: array[0..(PSH_XBOX_CONSTANT_MAX+X_D3DTS_STAGECOUNT+X_PSH_COMBINECOUNT * 5)] of PSH_INTERMEDIATE_FORMAT;
@@ -824,8 +835,9 @@ type PSH_XBOX_SHADER = record
     PSInputTexture: array[0..X_D3DTS_STAGECOUNT-1] of int;
 
     FinalCombinerFlags: PS_FINALCOMBINERSETTING;
+    // Note : The following constants are only needed for PSH_XBOX_SHADER.DecodedToString,
+    // they are not involved in the actual pixel shader recompilation anymore :
     FinalCombiner: RPSFinalCombiner;
-
     Combiners: array [0..X_PSH_COMBINECOUNT-1] of RPSCombinerStage;
     NumberOfCombiners: int;
     CombinerCountFlags: DWORD; // For PS_COMBINERCOUNTFLAGS
@@ -840,12 +852,12 @@ type PSH_XBOX_SHADER = record
     procedure DeleteIntermediate(Index: int);
     procedure DeleteLastIntermediate;
     function OriginalToString(pPSDef: PX_D3DPIXELSHADERDEF): string;
-    procedure Decode(pPSDef: PX_D3DPIXELSHADERDEF);
+    function Decode(pPSDef: PX_D3DPIXELSHADERDEF): PSH_RECOMPILED_SHADER;
     function DecodedToString(pPSDef: PX_D3DPIXELSHADERDEF): string;
     function DecodeTextureModes(pPSDef: PX_D3DPIXELSHADERDEF): Boolean;
     function MoveRemovableParametersRight: Boolean;
     procedure ConvertXboxOpcodesToNative(pPSDef: PX_D3DPIXELSHADERDEF);
-    function ConvertConstantsToNative(pPSDef: PX_D3DPIXELSHADERDEF): Boolean;
+    function ConvertConstantsToNative(pPSDef: PX_D3DPIXELSHADERDEF; var Recompiled: PSH_RECOMPILED_SHADER): Boolean;
     function RemoveUselessWrites: Boolean;
     function IsRegisterFreeFromIndexOnwards(aIndex: int; aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16): Boolean;
     procedure ReplaceRegisterFromIndexOnwards(aIndex: int;
@@ -874,7 +886,7 @@ type PSH_XBOX_SHADER = record
 // dump pixel shader definition to file
 procedure XTL_DumpPixelShaderToFile(pPSDef: PX_D3DPIXELSHADERDEF);
 // Recompile Xbox PixelShader def
-function XTL_EmuRecompilePshDef(pPSDef: PX_D3DPIXELSHADERDEF): string;
+function XTL_EmuRecompilePshDef(pPSDef: PX_D3DPIXELSHADERDEF): PSH_RECOMPILED_SHADER;
 
 implementation
 
@@ -1895,11 +1907,14 @@ begin
                   pPSDef.PSFinalCombinerConstants]);
 end;
 
-procedure PSH_XBOX_SHADER.Decode(pPSDef: PX_D3DPIXELSHADERDEF);
+function PSH_XBOX_SHADER.Decode(pPSDef: PX_D3DPIXELSHADERDEF): PSH_RECOMPILED_SHADER;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   i: int;
 begin
+  ZeroMemory(@Result, SizeOf(Result));
+  Result.PSDef := pPSDef^;
+
   // Azurik likes to create and destroy the same shader every frame! O_o
   LogFlags := lfUnit;
   if IsRunning(TITLEID_AZURIK) then
@@ -1964,8 +1979,6 @@ begin
     if NewIntermediate.DecodeFinalCombiner(pPSDef.PSFinalCombinerInputsABCD, pPSDef.PSFinalCombinerInputsEFG) then
     begin
       FinalCombinerFlags := PS_FINALCOMBINERSETTING((pPSDef.PSFinalCombinerInputsEFG shr 0) and $FF);
-//    FinalCombinerC0Mapping := (pPSDef.PSFinalCombinerConstants shr 0) and $F;
-//    FinalCombinerC1Mapping := (pPSDef.PSFinalCombinerConstants shr 4) and $F;
 //    dwPS_GLOBALFLAGS := (pPSDef.PSFinalCombinerConstants shr 8) and $1;
     end
     else
@@ -1996,7 +2009,7 @@ begin
   if RemoveUselessWrites then
     Log('RemoveUselessWrites');
 
-  if ConvertConstantsToNative(pPSDef) then
+  if ConvertConstantsToNative(pPSDef, {Recompiled=}Result) then
     Log('ConvertConstantsToNative');
 
   ConvertXboxOpcodesToNative(pPSDef);
@@ -2023,6 +2036,8 @@ begin
     Log('FixCoIssuedOpcodes');
 
   Log('End result');
+
+  Result.NewShaderStr := ToString;
 end;
 
 function PSH_XBOX_SHADER.DecodedToString(pPSDef: PX_D3DPIXELSHADERDEF): string;
@@ -2044,7 +2059,7 @@ var
 begin
   Result := '';
   // Show the contents to the user
-  _AddStr(#13#10'-----PixelShader Def Contents-----');
+  _AddStr(#13#10'-----PixelShader Definition Contents-----');
   _AddStr(OriginalToString(pPSDef));
 
   if (pPSDef.PSTextureModes > 0) then
@@ -2149,13 +2164,6 @@ begin
     _AddStr('Adjust texture flag: %s', [PS_GlobalFlagsStr[PS_GLOBALFLAGS(FinalCombiner.dwPS_GLOBALFLAGS)]]);
   end;
 
-(* TODO :
-  // These last DWORDs are used to define how Direct3D8 pixel shader constants map to the constant
-  // registers in each combiner stage. They are used by the Direct3D run-time software but not by the hardware.
-  PSC0Mapping: DWORD,                      // Mapping of c0 regs to D3D constants
-  PSC1Mapping: DWORD,                      // Mapping of c1 regs to D3D constants
-*)
-
   _AddStr(#13#10);
 end;
 
@@ -2208,7 +2216,7 @@ begin
       PS_TEXTUREMODES_PROJECT3D: Ins.Opcode := PO_TEX; // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
       PS_TEXTUREMODES_CUBEMAP: Ins.Opcode := PO_TEX; // argb = cubemap(r/q, s/q, t/q)
 {$ENDIF}
-      PS_TEXTUREMODES_PASSTHRU: Ins.Opcode := PO_TEXTCOORD;
+      PS_TEXTUREMODES_PASSTHRU: Ins.Opcode := PO_TEXCOORD;
       PS_TEXTUREMODES_CLIPPLANE: Ins.Opcode := PO_TEXKILL;
       PS_TEXTUREMODES_BUMPENVMAP: Ins.Opcode := PO_TEXBEM;
       PS_TEXTUREMODES_BUMPENVMAP_LUM: Ins.Opcode := PO_TEXBEML;
@@ -2308,143 +2316,63 @@ begin
   end;
 end; // MoveRemovableParametersRight
 
-function PSH_XBOX_SHADER.ConvertConstantsToNative(pPSDef: PX_D3DPIXELSHADERDEF): Boolean;
-// Define constants directly after the version instruction and before any other instruction :
-
-  procedure _SetColor(var NewIns: PSH_INTERMEDIATE_FORMAT; ConstColor: D3DCOLOR);
-  var
-    XColor: D3DCOLORVALUE;
-  begin
-    // Colors are defined in RGBA format, and range 0.0 - 1.0 (negative values
-    // can be obtained by supplying PS_INPUTMAPPING_SIGNED_NEGATE to the combiner
-    // that reads from these constants).
-    XColor := D3DXColorFromDWord(ConstColor);
-    NewIns.Parameters[0].SetConstValue(XColor.r);
-    NewIns.Parameters[1].SetConstValue(XColor.g);
-    NewIns.Parameters[2].SetConstValue(XColor.b);
-    NewIns.Parameters[3].SetConstValue(XColor.a);
-  end;
-
+function PSH_XBOX_SHADER.ConvertConstantsToNative(pPSDef: PX_D3DPIXELSHADERDEF; var Recompiled: PSH_RECOMPILED_SHADER): Boolean;
 var
   i, j: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
   CurArg: PPSH_IMD_ARGUMENT;
-  ConstMapping: array [0..PSH_XBOX_CONSTANT_MAX-1] of int;
-  ConstColors: array [0..PSH_XBOX_CONSTANT_MAX-1] of D3DCOLOR;
-  ConstInUse: array [0..PSH_XBOX_CONSTANT_MAX-1] of boolean;
-  NewIns: PSH_INTERMEDIATE_FORMAT;
+  NativeConstInUse: array [0..PSH_PC_MAX_C_REGISTER_COUNT-1] of boolean;
 
   // Try to fixup constants above the limit (c7 for PS.1.3) :
   function _MapConstant(ConstNr: int): int;
   begin
-    // 1-to-1 mapping for constants that can be supported native :
-    if (ConstNr < PSH_PC_MAX_C_REGISTER_COUNT) and (not ConstInUse[ConstNr]) then
+    // 1-to-1 mapping for constants that can be supported native (if not used already) :
+    if (ConstNr < PSH_PC_MAX_C_REGISTER_COUNT) and (not NativeConstInUse[ConstNr]) then
     begin
       Result := ConstNr;
       Exit;
     end;
 
-    // Assign not-yet-defined constants top-to-bottom
+    // Assign not-yet-defined constants bottom-to-up :
     Result := 0;
     while Result < PSH_PC_MAX_C_REGISTER_COUNT do
     begin
-      if not ConstInUse[Result] then
+      if not NativeConstInUse[Result] then
         Exit;
 
       Inc(Result);
     end;
 
-    // Unresolved - let it go unchanged...
+    // Unresolved - fallback to 1st constant :
     if Result >= PSH_PC_MAX_C_REGISTER_COUNT then
-      Result := ConstNr;
+      Result := 0;
+
+    EmuWarning('; Too many constants to emulate, this pixel shader will give unexpected output!');
   end;
 
   function _HandleConst(XboxConst: int; ConstColor: D3DCOLOR): int;
+  var
+    NativeConst: int;
   begin
-    if ConstMapping[XboxConst] < 0 then
-      // Determine and remember a new mapping :
-      ConstMapping[XboxConst] := _MapConstant(XboxConst);
+    if not Recompiled.ConstInUse[XboxConst] then
+    begin
+      // Determine and remember a new mapping to native :
+      NativeConst := _MapConstant(XboxConst);
+      NativeConstInUse[NativeConst] := True;
+      Recompiled.ConstMapping[XboxConst] := NativeConst;
+      Recompiled.ConstInUse[XboxConst] := True;
+    end;
 
-    ConstInUse[XboxConst] := True;
-    ConstColors[XboxConst] := ConstColor;
     // Return the (previously) determined mapping :
-    Result := ConstMapping[XboxConst];
+    Result := Recompiled.ConstMapping[XboxConst];
   end;
 
 begin
   Result := False;
 
-  // Keep track of which constants are already 'DEF'ined :
-  for i := 0 to High(ConstMapping) do
-  begin
-    ConstMapping[i] := -1;
-    ConstInUse[i] := False;
-  end;
-
-  // For now, use the PSC0Mapping and PSC1Mapping as predefined mappings :
-  for i := 0 to 8 - 1 do // XBOX has 2 * 8 constant registers (PSH_XBOX_MAX_C_REGISTER_COUNT)
-  begin
-    j := (pPSDef.PSC0Mapping shr (i * 4)) and $F;
-    ConstMapping[i] := j;
-
-    j := (pPSDef.PSC1Mapping shr (i * 4)) and $F;
-    ConstMapping[8+i] := j;
-  end;
-
-  // Do the same for the final combiner constants :
-  begin
-    j := (pPSDef.PSFinalCombinerConstants shr 0) and $F;
-    ConstMapping[PSH_XBOX_CONSTANT_FC0] := j;
-
-    j := (pPSDef.PSFinalCombinerConstants shr 4) and $F;
-    ConstMapping[PSH_XBOX_CONSTANT_FC1] := j;
-  end;
-
-{
-  Note : On the XBox, pPSDef.PSC0Mapping / PSC1Mapping are only used
-  to map indexes in SetPixelShaderConstant; The pixel shader itself just uses
-  c0..c7 (read from PSConstant0[]), c8-c15 (read from PSConstant1[]) and for
-  the final combiner it's c0 and c1 are read from PSFinalCombinerConstant0/1.
-
-  TODO : If we
-
-  // Example from TechCertGame :
-
-  // Declaration :
-  psd.PSC0Mapping = PS_CONSTANTMAPPING(15,15,15,15,15,15,0,2);  // = $20FFFFFF
-  psd.PSC1Mapping = PS_CONSTANTMAPPING(15,15,15,15,15,15,1,15); // = $F1FFFFFF
-
-  // Constant colors declared in shader :
-  psd.PSConstant0[1]=0xc0c0c0c0; // not mapped
-  psd.PSConstant0[6]=0xdfdfdfdf; // mapped to c0
-  psd.PSConstant1[6]=0xdfdfdfdf; // mapped to c1
-  psd.PSConstant0[7]=0x20202020; // mapped to c2
-
-  // Usage during rendering :
-  float fDiffuse[4] = ( 0.9f, 0.9f, 0.9f, 0.9f );
-  float fSpecular[4] = ( 0.0f, 0.0f, 0.0f, 0.0f );
-  float fAmbient[4] = ( 0.2f, 0.2f, 0.2f, 0.2f );
-  g_pd3dDevice->SetPixelShaderConstant( 0, fDiffuse, 1 );
-  g_pd3dDevice->SetPixelShaderConstant( 1, fSpecular, 1 );
-  g_pd3dDevice->SetPixelShaderConstant( 2, fAmbient, 1 );
-
-  // Decoding sample:
-  ConstMapping[0] :=  (pPSDef.PSC0Mapping shr  0) and $F);
-  ConstMapping[1] := ((pPSDef.PSC0Mapping shr  4) and $F);
-  ConstMapping[2] := ((pPSDef.PSC0Mapping shr  8) and $F);
-  ConstMapping[3] := ((pPSDef.PSC0Mapping shr 12) and $F); // ... etc
-
-  //function PS_CONSTANTMAPPING(s0,s1,s2,s3,s4,s5,s6,s7:): ,
-  //begin
-  //  Result := ((DWORD(s0) and $f) shl  0) or ((DWORD(s1) and $f) shl 4) or
-  //            ((DWORD(s2) and $f) shl  8) or ((DWORD(s3) and $f) shl 12) or
-  //            ((DWORD(s4) and $f) shl 16) or ((DWORD(s5) and $f) shl 20) or
-  //            ((DWORD(s6) and $f) shl 24) or ((DWORD(s7) and $f) shl 28),
-  //end,
-  // s0-s7 contain the offset of the D3D constant that corresponds to the
-  // c0 or c1 constant in stages 0 through 7.  These mappings are only used in
-  // SetPixelShaderConstant().
-}
+  // Note : Recompiled.ConstMapping and Recompiled.ConstInUse[i] are still empty here.
+  for i := 0 to PSH_PC_MAX_C_REGISTER_COUNT - 1 do
+    NativeConstInUse[i] := False;
 
   // Loop over all opcodes to update the constant-indexes (Xbox uses C0 and C1 in each combiner) :
   for i := 0 to IntermediateCount - 1 do
@@ -2453,14 +2381,17 @@ begin
     Cur := @(Intermediate[i]);
     for j := 0 to PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 do
     begin
+      // Only handle arguments that address a constant register :
       CurArg := @(Cur.Parameters[j]);
       if CurArg.Type_ <> PARAM_C then
         Continue;
 
-      // See if C0 and/or C1 are used :
+      // For each constant being addressed, we find out which Xbox constant it is,
+      // and map it to a native constant (as far as we have space for them) :
       case CurArg.Address of
         0: // Handle C0 (if present) :
         begin
+          // The final combiner has a separate C0 constant :
           if Cur.CombinerStageNr = XFC_COMBINERSTAGENR then
             CurArg.Address := _HandleConst(PSH_XBOX_CONSTANT_FC0, pPSDef.PSFinalCombinerConstant0)
           else
@@ -2470,12 +2401,14 @@ begin
               // C0 actually ranges from c0 to c7, one for each possible combiner stage (X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7) :
               CurArg.Address := _HandleConst(Cur.CombinerStageNr, pPSDef.PSConstant0[Cur.CombinerStageNr])
             else
+              // Non-unique just reads the same C0 in every stage :
               CurArg.Address := _HandleConst(0, pPSDef.PSConstant0[0]);
           end;
         end;
 
         1: // Handle C1 (if present) :
         begin
+          // The final combiner has a separate C1 constant :
           if Cur.CombinerStageNr = XFC_COMBINERSTAGENR then
             CurArg.Address := _HandleConst(PSH_XBOX_CONSTANT_FC1, pPSDef.PSFinalCombinerConstant1)
           else
@@ -2485,27 +2418,13 @@ begin
               // C1 actually ranges from c8 to c15, one for each possible combiner stage (X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7) :
               CurArg.Address := _HandleConst(Cur.CombinerStageNr + 8, pPSDef.PSConstant1[Cur.CombinerStageNr])
             else
+              // Non-unique just reads the same C1 in every stage :
               CurArg.Address := _HandleConst(1, pPSDef.PSConstant1[0]);
           end;
         end;
       end; // case
     end; // for arguments
   end; // for opcodes
-
-  // Now that we know all constants, insert the constant DEFinitions :
-  NewIns.Initialize(PO_DEF);
-  for i := High(ConstMapping) downto 0 do
-    // Only output constants in use and available in ps1.3 :
-    // TODO : Switch over to ps.2.0 or higher to more constants available (32 actually)
-    // (PS.2.0 requires Direct3D9 however, so that must come first...)
-    if ConstInUse[i] and (ConstMapping[i] < PSH_PC_MAX_C_REGISTER_COUNT) then
-    begin
-      // Output a new opcode to define this constant :
-      NewIns.Output[0].SetRegister(PARAM_C, ConstMapping[i], MASK_RGBA);
-      _SetColor(NewIns, ConstColors[i]);
-      InsertIntermediate(@NewIns, 0);
-      Result := True;
-    end;
 end; // ConvertConstantsToNative
 
 function PSH_XBOX_SHADER.RemoveUselessWrites: Boolean;
@@ -3481,10 +3400,7 @@ begin
   // TODO : Use the INSMOD_SAT instruction modifier instead of the ARGMOD_SATURATE argument modifier
   // TODO : Condense constants registers, to avoid the non-existant C8-C15 (requires a mapping in SetPixelShaderConstant too...)
   // TODO : Convert numeric arguments (-2, -1, 0, 1, 2) into modifiers on the other argument
-  // TODO : Fixup C8..C15 + FC0+FC1 constants - ps.1.3 goes only up to C7 (PS.3.0 has 224, but needs a complete Direct3D9 port)
-  // With a bit of luck, there are gaps in the constant-usage (which we could remove via a mapping table),
-  // or some of the additional constants could be identical to one of C0..C7, in which case we could
-  // switch them over (hopeing that no SetPixelShaderConstant call updates these).
+  // TODO : Complete to port to D3D9 to support all 18 constants (including C8..C15 + FC0+FC1)
 
   if MoveRemovableParametersRight then
     Result := True;
@@ -3869,16 +3785,12 @@ begin
   end;
 end;
 
-function XTL_EmuRecompilePshDef(pPSDef: PX_D3DPIXELSHADERDEF): string;
+function XTL_EmuRecompilePshDef(pPSDef: PX_D3DPIXELSHADERDEF): PSH_RECOMPILED_SHADER;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   PSH: PSH_XBOX_SHADER;
 begin
-  PSH.Decode(pPSDef);
-  Result := PSH.ToString;
-
-  // TODO : Return a record instead, so it can also contain the constant mapping table,
-  // and can be put in a collection for faster re-use.
+  Result := PSH.Decode(pPSDef);
 end;
 
 end.

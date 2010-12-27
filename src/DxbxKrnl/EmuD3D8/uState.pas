@@ -25,6 +25,7 @@ interface
 uses
   // Delphi
   Windows,
+  SysUtils, // strlen
   Classes,
   Math, // IfThen
   // DirectX
@@ -96,12 +97,14 @@ procedure DxbxUpdatePixelContainer(
 
 procedure DxbxUpdateNativeD3DResources(); {NOPATCH}
 
+const X_D3DRS_UNSUPPORTED = X_D3DRS_LAST+1;
+
 // XDK version independent renderstate table, containing pointers to the original locations.
-var XTL_EmuMappedD3DRenderState: array [X_D3DRS_FIRST..X_D3DRS_LAST+1] of PDWORD; // +1 for the unsupported value
+var XTL_EmuMappedD3DRenderState: array [X_D3DRS_FIRST..X_D3DRS_LAST+1] of PDWORD; // 1 extra for the unsupported value
 
 // Dxbx addition : Dummy value (and pointer to that) to transparently ignore unsupported render states :
-const X_D3DRS_UNSUPPORTED = X_D3DRS_LAST+1;
-var DummyRenderState: PDWORD = @(XTL_EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED]); // Unsupported states share this pointer value
+var DummyRenderStateValue: X_D3DRENDERSTATETYPE = 0;
+const DummyRenderState: PDWORD = @DummyRenderStateValue; // Unsupported states share this pointer value
 
 // Dxbx indicator of an unsupported render state (returned when processing an Xbox extension) :
 const D3DRS_UNSUPPORTED = D3DRENDERSTATETYPE(0); // Defined as zero, to coincide with default value of DxbxRenderStateInfo.PC
@@ -144,7 +147,8 @@ var
 implementation
 
 uses
-  uEmuD3D8; // g_BuildVersion
+  uEmuD3D8, // g_BuildVersion
+  uPixelShader;
 
 // Convert a 'method' DWORD into it's associated 'pixel-shader' or 'simple' render state.
 function DxbxXboxMethodToRenderState(const aMethod: X_NV2AMETHOD): X_D3DRenderStateType; {NOPATCH}
@@ -283,6 +287,10 @@ begin
     end;
   end;
 
+  // Initialize the dummy render state :
+  DummyRenderStateValue := 0;
+  XTL_EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED] := DummyRenderState;
+
   // Log the start address of the "deferred" render states (not needed anymore, just to keep logging the same) :
   begin
     // Calculate the location of D3DDeferredRenderState via an XDK-dependent offset to _D3D__RenderState :
@@ -297,9 +305,6 @@ begin
     DxbxRenderStateXB2PCCallback[i] := TXB2PCFunc(DxbxXBTypeInfo[DxbxRenderStateInfo[i].T].F);
 end;
 
-var
-  DummyRenderStateValue: X_D3DRENDERSTATETYPE;
-
 const
   fZero: Float = 0.0;
   fOne: Float = 1.0;
@@ -310,10 +315,6 @@ var
 var
   i: Integer;
 begin
-  // Initialize the dummy render state :
-  DummyRenderStateValue := 0;
-  DummyRenderState := @DummyRenderStateValue;
-
   // First, clear out all render states :
   for i := X_D3DRS_FIRST to X_D3DRS_LAST do
     XTL_EmuMappedD3DRenderState[i]^ := 0;
@@ -502,9 +503,7 @@ end;
 function Dxbx_SetRenderState(const XboxRenderState: X_D3DRenderStateType; XboxValue: DWORD): DWORD; {NOPATCH}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
-  RenderStateValue: TD3DColorValue;
   PCRenderState: TD3DRenderStateType;
-  Tmp: DWORD;
 begin
   Result := XboxValue;
 
@@ -518,33 +517,11 @@ begin
   // Set this value into the RenderState structure too (so other code will read the new current value) :
   XTL_EmuMappedD3DRenderState[XboxRenderState]^ := XboxValue;
 
-  (*if (X_D3DRS_PS_FIRST <= XboxRenderState) and (XboxRenderState <= X_D3DRS_PS_LAST) then
-    ; // TODO -oDxbx : Dirty the current PixelShader, so we can support ModifyPixelShader *)
-
   case XboxRenderState of
-    // Handle the pixel shader constants separately :
+    // Pixel shader constants are handled in XTL_EmuUpdateActivePixelShader :
     X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT1_7,
     X_D3DRS_PSFINALCOMBINERCONSTANT0, X_D3DRS_PSFINALCOMBINERCONSTANT1:
-    begin
-      // Convert Xbox render state to Pixel shader constant number :
-      Tmp := EmuXB2PC_PSConstant(XboxRenderState);
-
-      // Safeguard against overflowing native pixel shader constant count :
-      if Tmp >= D3DDP_MAXTEXCOORD then // TODO : Use D3DDP_MAXCONST
-        // TODO : What should we do when the constant is not supported?
-        Exit;
-
-      // Convert color DWORD to a D3DColor :
-      RenderStateValue := D3DXColorFromDWord(XboxValue);
-
-      // Set the constant locally :
-  {$IFDEF DXBX_USE_D3D9}
-      g_pD3DDevice.SetPixelShaderConstantF(Tmp, PSingle(@RenderStateValue), 1);
-  {$ELSE}
-      g_pD3DDevice.SetPixelShaderConstant(Tmp, {untyped const}RenderStateValue, 1);
-  {$ENDIF}
       Exit;
-    end;
 
     X_D3DRS_DEFERRED_FIRST..X_D3DRS_DEFERRED_LAST:
     begin
@@ -577,6 +554,10 @@ begin
       end;
     end;
   end;
+
+  // Skip Xbox extensions :
+  if DxbxRenderStateInfo[XboxRenderState].X then
+    Exit;
 
   // Map the Xbox state to a PC state, and check if it's supported :
   PCRenderState := DxbxRenderStateInfo[XboxRenderState].PC;
@@ -623,6 +604,7 @@ begin
   begin
     // Read the current Xbox value, and set it locally :
     XboxValue := XTL_EmuMappedD3DRenderState[XboxRenderState]^;
+    // TODO : Prevent setting unchanged values
     Dxbx_SetRenderState(XboxRenderState, XboxValue);
   end;
 
@@ -648,6 +630,7 @@ begin
 
   // Convert Xbox value to PC value for current texture stage state :
   PCValue := TXB2PCFunc(DxbxXBTypeInfo[DxbxTextureStageStateInfo[State].T].F)(XboxValue);
+  // TODO : Prevent setting unchanged values
   // Transfer over the deferred texture stage state to PC :
   IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, State, PCValue);
 end;
@@ -696,38 +679,6 @@ begin
         end;
       end;
     end;
-  end;
-
-  if (g_bFakePixelShaderLoaded) then
-  begin
-    g_pD3DDevice.SetRenderState(D3DRS_FOGENABLE, BOOL_FALSE);
-
-    // programmable pipeline
-    (* Dxbx note : If the following is enabled, Sokoban loses it's textures, so disable it for now :
-    for v:=0 to X_D3DTS_STAGECOUNT-1 do
-    begin
-      g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DISABLE);
-      g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
-    end;
-    *)
-
-    // fixed pipeline
-    (* Cxbx has this disabled :
-    for v:=0 to 4-1 do
-    begin
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLOROP,   D3DTOP_MODULATE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLORARG1, D3DTA_TEXTURE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLORARG2, D3DTA_CURRENT);
-
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAOP,   D3DTOP_MODULATE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAARG2, D3DTA_CURRENT);
-    end;
-
-    g_pD3DDevice.SetRenderState(D3DRS_NORMALIZENORMALS, BOOL_TRUE);
-    g_pD3DDevice.SetRenderState(D3DRS_LIGHTING,BOOL_TRUE);
-    g_pD3DDevice.SetRenderState(D3DRS_AMBIENT, $FFFFFFFF);
-    *)
   end;
 end;
 
@@ -1119,9 +1070,210 @@ begin
   end;
 end; // XTL_EmuUpdateActiveTexture
 
-procedure XTL_EmuUpdateActivePixelShader(); {NOPATCH}
+function RecompilePixelShader(pPSDef: PX_D3DPIXELSHADERDEF): PSH_RECOMPILED_SHADER;
+const
+  szDiffusePixelShader: P_char =
+    'ps.1.0'#13#10 +
+    'tex t0'#13#10 +
+    'mov r0, t0'#13#10;
+var
+  ConvertedPixelShaderStr: AnsiString;
+  hRet: DWORD;
+  pShader: XTL_LPD3DXBUFFER;
+  pErrors: XTL_LPD3DXBUFFER;
+  pFunction: PDWORD;
 begin
-  // TODO : Move XTL_EmuD3DDevice_SetPixelShader and related code over to here, so the patches can go (we gain dynamic shaders too!)
+  // Attempt to recompile PixelShader
+  Result := XTL_EmuRecompilePshDef(pPSDef);
+  ConvertedPixelShaderStr := AnsiString(Result.NewShaderStr);
+
+  // assemble the shader
+  pShader := nil;
+  pErrors := nil;
+  hRet := D3DXAssembleShader(
+    P_char(ConvertedPixelShaderStr),
+    Length(ConvertedPixelShaderStr),
+{$IFDEF DXBX_USE_D3D9}
+    {pDefines=}nil,
+    {pInclude=}nil,
+    {Flags=}0,
+{$ELSE}
+    {Flags=}0,
+    {ppConstants=}NULL,
+{$ENDIF}
+    {ppCompiledShader=}@pShader,
+    {ppCompilationErrors}@pErrors);
+
+  if pShader = nil then
+  begin
+    EmuWarning('Could not create pixel shader');
+    EmuWarning(string(AnsiString(PAnsiChar(ID3DXBuffer(pErrors).GetBufferPointer)))); // Dxbx addition
+
+    hRet := D3DXAssembleShader(
+      szDiffusePixelShader,
+      strlen(szDiffusePixelShader),
+{$IFDEF DXBX_USE_D3D9}
+      {pDefines=}nil,
+      {pInclude=}nil,
+      {Flags=}0,
+{$ELSE}
+      {Flags=}0,
+      {ppConstants=}NULL,
+{$ENDIF}
+      {ppCompiledShader=}@pShader,
+      {ppCompilationErrors}@pErrors);
+
+    if pShader = nil then
+      DxbxKrnlCleanup('Cannot fall back to the most simple pixel shader!');
+
+    EmuWarning('We''re lying about the creation of a pixel shader!');
+  end;
+
+  if Assigned(pShader) then
+  begin
+    pFunction := PDWORD(ID3DXBuffer(pShader).GetBufferPointer());
+
+    if (hRet = D3D_OK) then
+      // redirect to windows d3d
+      {hRet := }g_pD3DDevice.CreatePixelShader
+      (
+        pFunction,
+{$IFDEF DXBX_USE_D3D9}
+        PIDirect3DPixelShader9(@Result.ConvertedHandle) {$MESSAGE 'fixme'}
+{$ELSE}
+        {out}Result.ConvertedHandle
+{$ENDIF}
+      );
+
+    // Dxbx note : We must release pShader here, else we would have a resource leak!
+    ID3DXBuffer(pShader)._Release;
+    pShader := nil;
+  end;
+
+  // Dxbx addition : We release pErrors here (or it would become a resource leak!)
+  if Assigned(pErrors) then
+  begin
+    ID3DXBuffer(pErrors)._Release();
+    pErrors := nil;
+  end;
+end;
+
+var RecompiledShaders_Head: PPSH_RECOMPILED_SHADER = nil;
+
+function XTL_EmuUpdateActivePixelShader(): HRESULT; {NOPATCH}
+var
+  pPSDef: PX_D3DPIXELSHADERDEF;
+  RecompiledPixelShader: PPSH_RECOMPILED_SHADER;
+  ConvertedPixelShaderHandle: DWORD;
+  i: int;
+  Register_: DWORD;
+  dwColor: D3DCOLOR;
+  fColor: D3DCOLORVALUE;
+begin
+  Result := D3D_OK;
+
+  // Our SetPixelShader patch remembered the latest set pixel shader, see if it's assigned :
+  if Assigned(g_EmuD3DActivePixelShader) then
+  begin
+    // We could read g_EmuD3DActivePixelShader.PshDef, but since this is copied into
+    // D3D__RenderState (which contents might have been changed after the call to
+    // SetPixelShader), we use the address of XTL_D3D__RenderState as the real pixel
+    // shader definition :
+    pPSDef := PX_D3DPIXELSHADERDEF(XTL_D3D__RenderState);
+    if pPSDef = nil then
+      // If we haven't found the symbol, then we can fall back to the given definition :
+      pPSDef := g_EmuD3DActivePixelShader.PshDef;
+
+    // Now, see if we already have a shader compiled for this declaration :
+    RecompiledPixelShader := RecompiledShaders_Head;
+    while Assigned(RecompiledPixelShader) do
+    begin
+      // Only compare parts that form a unique shader (ignore the constants and Direct3D8 run-time fields) :
+      if  (memcmp(@(RecompiledPixelShader.PSDef.PSAlphaInputs[0]), @(pPSDef.PSAlphaInputs[0]), (8+2)*SizeOf(DWORD)) = 0)
+      and (memcmp(@(RecompiledPixelShader.PSDef.PSAlphaOutputs[0]), @(pPSDef.PSAlphaOutputs[0]), (8+8+3+8+4)*SizeOf(DWORD)) = 0) then
+        Break;
+
+      RecompiledPixelShader := RecompiledPixelShader.Next;
+    end;
+
+    // If none was found, recompile this shader and remember it :
+    if not Assigned(RecompiledPixelShader) then
+    begin
+      // Recompile this pixel shader :
+      New(RecompiledPixelShader);
+      RecompiledPixelShader^ := RecompilePixelShader(pPSDef);
+      // Add this shader to the chain :
+      RecompiledPixelShader.Next := RecompiledShaders_Head;
+      RecompiledShaders_Head := RecompiledPixelShader;
+    end;
+
+    // Switch to the converted pixel shader :
+    ConvertedPixelShaderHandle := RecompiledPixelShader.ConvertedHandle;
+
+    // Set constants, not based on g_PixelShaderConstants, but based on
+    // the render state slots containing the pixel shader constants,
+    // as these could have been updated via SetRenderState or otherwise :
+    for i := 0 to High(RecompiledPixelShader.ConstInUse) do
+    begin
+      if RecompiledPixelShader.ConstInUse[i] then
+      begin
+        // Read the register we can use on PC :
+        Register_ := RecompiledPixelShader.ConstMapping[i];
+        // Read the corresponding pixel shader slot :
+        if i >= 16 then
+          dwColor := XTL_EmuMappedD3DRenderState[X_D3DRS_PSFINALCOMBINERCONSTANT0 + i - 16]^
+        else
+          dwColor := XTL_EmuMappedD3DRenderState[X_D3DRS_PSCONSTANT0_0 + i]^;
+
+EmuWarning('Setting register %d to 0x%0.8x', [Register_, dwColor]);
+        // Convert it back to 4 floats, so we can... :
+        fColor := D3DXColorFromDWord(dwColor);
+        // Set that value locally :
+{$IFDEF DXBX_USE_D3D9}
+        g_pD3DDevice.SetPixelShaderConstantF(Register_, PSingle(@fColor), 1);
+{$ELSE}
+        g_pD3DDevice.SetPixelShaderConstant(Register_, {untyped const}fColor, 1);
+{$ENDIF}
+      end;
+    end;
+
+  end
+  else
+    ConvertedPixelShaderHandle := 0;
+
+  g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}Pointer{$ENDIF}(ConvertedPixelShaderHandle));
+
+  if (g_bFakePixelShaderLoaded) then
+  begin
+    g_pD3DDevice.SetRenderState(D3DRS_FOGENABLE, BOOL_FALSE);
+
+    // programmable pipeline
+    (* Dxbx note : If the following is enabled, Sokoban loses it's textures, so disable it for now :
+    for v:=0 to X_D3DTS_STAGECOUNT-1 do
+    begin
+      g_pD3DDevice.SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DISABLE);
+      g_pD3DDevice.SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+    end;
+    *)
+
+    // fixed pipeline
+    (* Cxbx has this disabled :
+    for v:=0 to 4-1 do
+    begin
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLOROP,   D3DTOP_MODULATE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLORARG1, D3DTA_TEXTURE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLORARG2, D3DTA_CURRENT);
+
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAOP,   D3DTOP_MODULATE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+    end;
+
+    g_pD3DDevice.SetRenderState(D3DRS_NORMALIZENORMALS, BOOL_TRUE);
+    g_pD3DDevice.SetRenderState(D3DRS_LIGHTING,BOOL_TRUE);
+    g_pD3DDevice.SetRenderState(D3DRS_AMBIENT, $FFFFFFFF);
+    *)
+  end;
 end;
 
 procedure XTL_EmuUpdateActiveVertexShader(); {NOPATCH}
