@@ -279,7 +279,7 @@ begin
   // in cases where logging is disabled. And besides: If logging is enabled, both flags have
   // to be checked anyway, so in that scenario the checking-order is not really important :
   Result := ((aFlags and pLogFlags_Disabled^) = 0)
-        and ((aFlags or pLogFlags_Enabled^) > 0);
+        and ((aFlags and pLogFlags_Enabled^) > 0);
 end;
 
 // Checks whether the given address is a valid address
