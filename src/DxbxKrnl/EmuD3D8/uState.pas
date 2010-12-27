@@ -1225,7 +1225,6 @@ begin
         else
           dwColor := XTL_EmuMappedD3DRenderState[X_D3DRS_PSCONSTANT0_0 + i]^;
 
-EmuWarning('Setting register %d to 0x%0.8x', [Register_, dwColor]);
         // Convert it back to 4 floats, so we can... :
         fColor := D3DXColorFromDWord(dwColor);
         // Set that value locally :

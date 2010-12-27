@@ -909,7 +909,7 @@ begin
 
   if MayLog(lfUnit or lfReturnValue or lfFile) then
     if (Result = STATUS_SUCCESS) then
-      DbgPrintf('EmuKrnl : NtCreateFile FileHandle^ = 0x%.08X', [FileHandle^]);
+      DbgPrintf('EmuKrnl : NtCreateFile FileHandle^ = 0x%.08X', [FileHandle^])
     else
 //    if (Result <> STATUS_OBJECT_NAME_COLLISION) then
       EmuWarning('NtCreateFile failed! (%s)', [NTStatusToString(Result)]);
