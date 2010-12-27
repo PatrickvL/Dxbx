@@ -1020,25 +1020,26 @@ begin
     // the type of input register usage, is to look at the D3DVSD_REG / D3DVSDT_*
     // registration. (How to get that here?)
     i := 0;
-    while pRecompiledDeclaration.Stream < $FF do
+    while (pRecompiledDeclaration.Stream < $FF) and (i < VSH_XBOX_MAX_V_REGISTER_COUNT) do
     begin
-      case pRecompiledDeclaration.Usage of
-        D3DDECLUSAGE_POSITION: DclStr := 'dcl_position';
-        D3DDECLUSAGE_BLENDWEIGHT: DclStr := 'dcl_blendweight';
-        D3DDECLUSAGE_NORMAL: DclStr := 'dcl_normal';
-        D3DDECLUSAGE_COLOR: DclStr := 'dcl_color' + AnsiString(IntToStr(pRecompiledDeclaration.UsageIndex));
-        D3DDECLUSAGE_FOG: DclStr := 'dcl_fog';
-        D3DDECLUSAGE_TEXCOORD: DclStr := 'dcl_texcoord' + AnsiString(IntToStr(pRecompiledDeclaration.UsageIndex));
-      else
-        DclStr := '; dcl_unknown';
+      if RegVUsage[i] then
+      begin
+        case pRecompiledDeclaration.Usage of
+          D3DDECLUSAGE_POSITION: DclStr := 'dcl_position';
+          D3DDECLUSAGE_BLENDWEIGHT: DclStr := 'dcl_blendweight';
+          D3DDECLUSAGE_NORMAL: DclStr := 'dcl_normal';
+          D3DDECLUSAGE_COLOR: DclStr := 'dcl_color' + AnsiString(IntToStr(pRecompiledDeclaration.UsageIndex));
+          D3DDECLUSAGE_FOG: DclStr := 'dcl_fog';
+          D3DDECLUSAGE_TEXCOORD: DclStr := 'dcl_texcoord' + AnsiString(IntToStr(pRecompiledDeclaration.UsageIndex));
+        else
+          DclStr := '; dcl_unknown';
+        end;
+
+        Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s v%d'#13#10, [DclStr, i]));
+        Inc(pRecompiledDeclaration);
       end;
 
-      while not RegVUsage[i] do
-        Inc(i);
-
-      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s v%d'#13#10, [DclStr, i]));
       Inc(i);
-      Inc(pRecompiledDeclaration);
     end;
 
 {$IFDEF DXBX_USE_VS30}
@@ -2212,6 +2213,7 @@ type _VSH_PATCH_DATA = record
     ConvertedStride: DWORD;
     TypePatchData: VSH_TYPE_PATCH_DATA;
     StreamPatchData: VSH_STREAM_PATCH_DATA;
+    StreamHadPos: Boolean; // D3D9 only, to differentiate between D3DDECLUSAGE_POSITION and D3DDECLUSAGE_NORMAL
   end; // size = 5136 (as in Cxbx)
   VSH_PATCH_DATA = _VSH_PATCH_DATA;
   PVSH_PATCH_DATA = ^VSH_PATCH_DATA;
@@ -2503,6 +2505,7 @@ begin
     pPatchData.CurrentStreamNumber := VshGetVertexStream(pToken^);
     DbgVshPrintf(#9'D3DVSD_STREAM(%d),'#13#10, [pPatchData.CurrentStreamNumber]);
 
+    pPatchData.StreamHadPos := False;
     Inc(pPatchData.StreamPatchData.NbrStreams);
   end;
 end; // VshConvertToken_STREAM
@@ -2550,6 +2553,7 @@ var
   NewSize: DWORD;
 {$IFDEF DXBX_USE_D3D9}
   NewDataType: D3DDECLTYPE;
+  NewUsage: D3DDECLUSAGE;
   Index: Integer;
 {$ELSE}
   NewDataType: DWORD;
@@ -2564,6 +2568,7 @@ begin
   DataType := (pToken^ shr X_D3DVSD_DATATYPESHIFT) and $FF;
 {$IFDEF DXBX_USE_D3D9}
   NewDataType := D3DDECLTYPE(0);
+  NewUsage := D3DDECLUSAGE(0);
 {$ELSE}
   NewDataType := 0;
 {$ENDIF}
@@ -2573,16 +2578,31 @@ begin
       DbgVshPrintf('D3DVSDT_FLOAT1');
       NewDataType := D3DVSDT_FLOAT1;
       NewSize := 1*sizeof(FLOAT);
+{$IFDEF DXBX_USE_D3D9}
+      NewUsage := D3DDECLUSAGE_BLENDWEIGHT;
+{$ENDIF}
     end;
     { $22=}X_D3DVSDT_FLOAT2: begin
       DbgVshPrintf('D3DVSDT_FLOAT2');
       NewDataType := D3DVSDT_FLOAT2;
       NewSize := 2*sizeof(FLOAT);
+{$IFDEF DXBX_USE_D3D9}
+      NewUsage := D3DDECLUSAGE_TEXCOORD;
+{$ENDIF}
     end;
     { $32=}X_D3DVSDT_FLOAT3: begin
       DbgVshPrintf('D3DVSDT_FLOAT3');
       NewDataType := D3DVSDT_FLOAT3;
       NewSize := 3*sizeof(FLOAT);
+{$IFDEF DXBX_USE_D3D9}
+      if pPatchData.StreamHadPos then
+        NewUsage := D3DDECLUSAGE_NORMAL
+      else
+      begin
+        pPatchData.StreamHadPos := True;
+        NewUsage := D3DDECLUSAGE_POSITION;
+      end;
+{$ENDIF}
     end;
     { $42=}X_D3DVSDT_FLOAT4: begin
       DbgVshPrintf('D3DVSDT_FLOAT4');
@@ -2593,6 +2613,10 @@ begin
       DbgVshPrintf('D3DVSDT_D3DCOLOR');
       NewDataType := D3DVSDT_D3DCOLOR;
       NewSize := sizeof(D3DCOLOR);
+{$IFDEF DXBX_USE_D3D9}
+      NewUsage := D3DDECLUSAGE_COLOR;
+      // Inc Index for diffuse/specular ?
+{$ENDIF}
     end;
     { $25=}X_D3DVSDT_SHORT2: begin
       DbgVshPrintf('D3DVSDT_SHORT2');
@@ -2709,7 +2733,7 @@ begin
   pRecompiled.Offset := pPatchData.ConvertedStride;
   pRecompiled._Type := NewDataType;
   pRecompiled.Method := D3DDECLMETHOD_DEFAULT;
-  pRecompiled.Usage := NewVertexRegister; // Ex. D3DDECLUSAGE_COLOR etc
+  pRecompiled.Usage := NewUsage;
   pRecompiled.UsageIndex := Index;
 
   // Step to next element

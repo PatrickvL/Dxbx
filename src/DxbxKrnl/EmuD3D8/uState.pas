@@ -1252,7 +1252,7 @@ begin
   else
     ConvertedPixelShaderHandle := 0;
 
-  g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}Pointer{$ENDIF}(ConvertedPixelShaderHandle));
+  g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}IDirect3DPixelShader9{$ENDIF}(ConvertedPixelShaderHandle));
 
   if (g_bFakePixelShaderLoaded) then
   begin

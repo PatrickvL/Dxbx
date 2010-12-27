@@ -3262,6 +3262,11 @@ end; // XTL_EmuDirect3D_EnumAdapterModes
 
 procedure XTL_EmuD3D_KickOffAndWaitForIdle(); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+{$IFDEF DXBX_USE_D3D9}
+var
+  pQuery: PIDirect3DQuery9;
+  data: BOOL;
+{$ENDIF}
 begin
   EmuSwapFS(fsWindows);
 
