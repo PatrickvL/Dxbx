@@ -291,10 +291,10 @@ const
 
 type
   _KSYSTEM_TIME = record
-    LowPart: ULONG;
-    High1Time: LONG;
-    High2Time: LONG;
-  end;
+    {0x00}LowPart: ULONG;
+    {0x04}High1Time: LONG;
+    {0x08}High2Time: LONG;
+  end; // Size = 0x0C
 
   KSYSTEM_TIME = _KSYSTEM_TIME;
   PKSYSTEM_TIME = ^KSYSTEM_TIME;
@@ -321,71 +321,71 @@ type
   _KUSER_SHARED_DATA = record
     // Current low 32-bit of tick count and tick count multiplier.
     // N.B. The tick count is updated each time the clock ticks.
-    {volatile} TickCountLowDeprecated: ULONG;
-    TickCountMultiplier: ULONG;
+    {0x000}{volatile} TickCountLowDeprecated: ULONG;
+    {0x004}TickCountMultiplier: ULONG;
     // Current 64-bit interrupt time in 100ns units.
-    {volatile} InterruptTime: KSYSTEM_TIME;
+    {0x008}{volatile} InterruptTime: KSYSTEM_TIME;
     // Current 64-bit system time in 100ns units.
-    {volatile} SystemTime: KSYSTEM_TIME;
+    {0x014}{volatile} SystemTime: KSYSTEM_TIME;
     // Current 64-bit time zone bias.
-    {volatile} TimeZoneBias: KSYSTEM_TIME;
-    ImageNumberLow: WORD;
-    ImageNumberHigh: WORD;
-    NtSystemRoot: array [0..260-1] of WCHAR;
-    MaxStackTraceDepth: ULONG;
-    CryptoExponent: ULONG;
-    TimeZoneId: ULONG;
-    LargePageMinimum: ULONG;
-    Reserved2: array [0..7-1] of ULONG;
-    NtProductType: NT_PRODUCT_TYPE;
-    ProductTypeIsValid: UCHAR;
-    NtMajorVersion: ULONG;
-    NtMinorVersion: ULONG;
-    ProcessorFeatures: array [0..PROCESSOR_FEATURE_MAX-1] of UCHAR;
-    Reserved1: ULONG;
-    Reserved3: ULONG;
-    {volatile} TimeSlip: ULONG;
-    AlternativeArchitecture: ALTERNATIVE_ARCHITECTURE_TYPE;
-    SystemExpirationDate: LARGE_INTEGER;
-    SuiteMask: ULONG;
-    KdDebuggerEnabled: UCHAR;
-    NXSupportPolicy: UCHAR;
-    {volatile} ActiveConsoleId: ULONG;
-    {volatile} DismountCount: ULONG;
-    ComPlusPackage: ULONG;
-    LastSystemRITEventTickCount: ULONG;
-    NumberOfPhysicalPages: ULONG;
-    SafeBootMode: UCHAR;
-    SharedDataFlags: ULONG;
-    TraceLogging: ULONG; { Dxbx note this flag contains :
+    {0x020}{volatile} TimeZoneBias: KSYSTEM_TIME;
+    {0x02C}ImageNumberLow: WORD;
+    {0x02E}ImageNumberHigh: WORD;
+    {0x030}NtSystemRoot: array [0..260-1] of WCHAR;
+    {0x238}MaxStackTraceDepth: ULONG;
+    {0x23c}CryptoExponent: ULONG;
+    {0x240}TimeZoneId: ULONG;
+    {0x244}LargePageMinimum: ULONG;
+    {0x248}Reserved2: array [0..7-1] of ULONG;
+    {0x264}NtProductType: NT_PRODUCT_TYPE;
+    {0x268}ProductTypeIsValid: UCHAR;
+    {0x26c}NtMajorVersion: ULONG;
+    {0x270}NtMinorVersion: ULONG;
+    {0x274}ProcessorFeatures: array [0..PROCESSOR_FEATURE_MAX-1] of UCHAR;
+    {0x2b4}Reserved1: ULONG;
+    {0x2b8}Reserved3: ULONG;
+    {0x2bc}{volatile} TimeSlip: ULONG;
+    {0x2c0}AlternativeArchitecture: ALTERNATIVE_ARCHITECTURE_TYPE;
+    {0x2c8}SystemExpirationDate: LARGE_INTEGER;
+    {0x2d0}SuiteMask: ULONG;
+    {0x2d4}KdDebuggerEnabled: UCHAR;
+    {0x2d5}NXSupportPolicy: UCHAR;
+    {0x2d8}{volatile} ActiveConsoleId: ULONG;
+    {0x2dc}{volatile} DismountCount: ULONG;
+    {0x2e0}ComPlusPackage: ULONG;
+    {0x2e4}LastSystemRITEventTickCount: ULONG;
+    {0x2e8}NumberOfPhysicalPages: ULONG;
+    {0x2ec}SafeBootMode: UCHAR;
+    {0x2f0}SharedDataFlags: ULONG;
+    {0x2f4}TraceLogging: ULONG; { Dxbx note this flag contains :
      ULONG DbgErrorPortPresent: 1;
      ULONG DbgElevationEnabled: 1;
      ULONG DbgVirtEnabled: 1;
      ULONG DbgInstallerDetectEnabled: 1;
      ULONG SystemDllRelocated: 1;
      ULONG SpareBits: 27; }
-    TestRetInstruction: ULONGLONG;
-    SystemCall: ULONG;
-    SystemCallReturn: ULONG;
-    SystemCallPad: array [0..3-1] of ULONGLONG;
-    {union} case Integer of
+    {0x2f8}TestRetInstruction: ULONGLONG;
+    {0x300}SystemCall: ULONG;
+    {0x304}SystemCallReturn: ULONG;
+    {0x308}SystemCallPad: array [0..3-1] of ULONGLONG;
+    {0x320}{union} case Integer of
       0:( {volatile} TickCount: KSYSTEM_TIME);
       1:( {volatile} TickCountQuad: ULONG64;
     {end of union, fallthrough:}
-    Cookie: ULONG;
-    Wow64SharedInformation: array [0..MAX_WOW64_SHARED_ENTRIES-1] of ULONG;
+    {0x32C}Cookie: ULONG;
+    {0x330}Wow64SharedInformation: array [0..MAX_WOW64_SHARED_ENTRIES-1] of ULONG;
     // Below is for Vista and up :
-    UserModeGlobalLogger: array [0..8-1] of WORD;
-    HeapTracingPid: array [0..2] of ULONG;
-    CritSecTracingPid: array [0..2] of ULONG;
-    ImageFileExecutionOptions: ULONG;
-    {union} case Integer of
+    {0x370}UserModeGlobalLogger: array [0..8-1] of WORD;
+    {0x380}HeapTracingPid: array [0..2] of ULONG;
+    {0x38C}CritSecTracingPid: array [0..2] of ULONG;
+    {0x398}ImageFileExecutionOptions: ULONG;
+    {0x39C}{union} case Integer of
       0:( AffinityPad: UINT64);
       1:( ActiveProcessorAffinity: ULONG;
     {end of union, fallthrough:}
-    InterruptTimeBias: UINT64;
+    {0x3A4}InterruptTimeBias: UINT64;
     );); // close all unions
-  end;
+  end; // Size = 0x3AC
   // TODO -oDxbx : Fix the above declaration, as currently TickCount ends up at offset $318,
   // while it should be at offset $320 - maybe this is due to a Delpi alignment issue?
   KUSER_SHARED_DATA = _KUSER_SHARED_DATA;

@@ -3273,7 +3273,8 @@ begin
   if MayLog(lfUnit) then
     LogBegin('EmuD3D_KickOffAndWaitForIdle').LogEnd();
 
-  // TODO -oCXBX: Actually do something
+  // TODO : Actually do something - maybe call XTL_EmuD3DDevice_KickPushBuffer ?
+
 {$IFDEF DXBX_USE_D3D9}
   // DXBX: Own implementation of BlockUntilIdle
   // create an event and spin wait on it
@@ -11500,6 +11501,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+(* Too high level : These methods just fill a FixupBuffer, which we handle via XTL_EmuApplyPushBufferFixup.
 function XTL_EmuD3DPushBuffer_SetModelView
 (
   pPushBuffer: PX_D3DPushBuffer;
@@ -11509,18 +11511,6 @@ function XTL_EmuD3DPushBuffer_SetModelView
   {CONST}pComposite: PD3DMATRIX
 ): HRESULT; stdcall;
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
-begin
-  EmuSwapFS(fsWindows);
-
-(*  D3DPushBuffer_SetModelView(pPushBuffer, Offset, pModelView, pInverseModelView, pComposite);
-  return D3D_OK; *)
-
-  Unimplemented('XTL_EmuD3DPushBuffer_SetModelView');
-
-  Result := D3D_OK;
-
-  EmuSwapFS(fsXbox);
-end;
 
 function XTL_EmuD3DPushBuffer_SetVertexBlendModelView
 (
@@ -11532,18 +11522,6 @@ function XTL_EmuD3DPushBuffer_SetVertexBlendModelView
   {CONST}pProjectionViewport: PD3DMATRIX
 ): HRESULT; stdcall
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
-begin
-  EmuSwapFS(fsWindows);
-
-(*  D3DPushBuffer_SetVertexBlendModelView(pPushBuffer, Offset, Count, pModelViews, pInverseModelViews, pProjectionViewport);
-  return D3D_OK; *)
-
-  Unimplemented('XTL_EmuD3DPushBuffer_SetVertexBlendModelView');
-
-  Result := D3D_OK;
-
-  EmuSwapFS(fsXbox);
-end;
 
 function XTL_EmuD3DPushBuffer_SetVertexShaderInputDirect
 (
@@ -11555,14 +11533,6 @@ function XTL_EmuD3DPushBuffer_SetVertexShaderInputDirect
   {CONST}pProjectionViewport: PD3DMATRIX
 ): HRESULT; stdcall
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
-begin
-  EmuSwapFS(fsWindows);
-
-  Unimplemented('XTL_EmuD3DPushBuffer_SetVertexShaderInputDirect');
-  Result := D3D_OK;
-
-  EmuSwapFS(fsXbox);
-end;
 
 function XTL_EmuD3DPushBuffer_SetPalette
 (
@@ -11572,18 +11542,6 @@ function XTL_EmuD3DPushBuffer_SetPalette
   pPalette: PX_D3DPalette
 ): HRESULT; stdcall
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
-begin
-  EmuSwapFS(fsWindows);
-
-(*  D3DPushBuffer_SetPalette(pPushBuffer, Offset, Stage, pPalette);
-  return D3D_OK; *)
-
-  Unimplemented('XTL_EmuD3DPushBuffer_SetPalette');
-
-  Result := D3D_OK;
-
-  EmuSwapFS(fsXbox);
-end;
 
 function XTL_EmuD3DPushBuffer_SetVertexShaderConstant
 (
@@ -11594,18 +11552,6 @@ function XTL_EmuD3DPushBuffer_SetVertexShaderConstant
   ConstantCount: DWORD
 ): HRESULT; stdcall
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
-begin
-  EmuSwapFS(fsWindows);
-
-(*D3DPushBuffer_SetVertexShaderConstant(pPushBuffer, Offset, Register, pConstantData, ConstantCount);
-  return D3D_OK; *)
-
-  Unimplemented('XTL_EmuD3DPushBuffer_SetVertexShaderConstant');
-
-  Result := D3D_OK;
-
-  EmuSwapFS(fsXbox);
-end;
 
 function XTL_EmuD3DPushBuffer_SetRenderState
 (
@@ -11615,14 +11561,6 @@ function XTL_EmuD3DPushBuffer_SetRenderState
   Value: DWORD
 ): HRESULT; stdcall
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
-begin
-  EmuSwapFS(fsWindows);
-
-  Unimplemented('XTL_EmuD3DPushBuffer_SetRenderState');
-  Result := D3D_OK;
-
-  EmuSwapFS(fsXbox);
-end;
 
 function XTL_EmuD3DPushBuffer_CopyRects
 (
@@ -11632,14 +11570,7 @@ function XTL_EmuD3DPushBuffer_CopyRects
   pDestinationSurface: PIDirect3DSurface
 ): HRESULT; stdcall
 // Branch:DXBX  Translator:Shadow_Tj  Done:0
-begin
-  EmuSwapFS(fsWindows);
-
-  Unimplemented('XTL_EmuD3DPushBuffer_CopyRects');
-  Result := D3D_OK;
-
-  EmuSwapFS(fsXbox);
-end;
+*)
 
 function XTL_EmuD3DDevice_SetRenderStateNotInline
 (
