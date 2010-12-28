@@ -57,7 +57,6 @@ function DxbxVersionAdjust_D3DRS(const XboxRenderState_VersionDependent: X_D3DRE
 function Dxbx_SetRenderState(const XboxRenderState: X_D3DRenderStateType; XboxValue: DWORD): DWORD; {NOPATCH}
 function DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE): HResult;
 
-function DxbxTextureStageStateIsXboxExtension(const Value: X_D3DTEXTURESTAGESTATETYPE): Boolean; {NOPATCH}
 function DxbxFromOldVersion_D3DTSS(const OldValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
 function DxbxFromNewVersion_D3DTSS(const NewValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
 
@@ -472,20 +471,6 @@ begin
         Inc(Result, OLD_X_D3DTSS_ADDRESSU)
       else
         Dec(Result, {NEW}X_D3DTSS_COLOROP);
-  end;
-end;
-
-function DxbxTextureStageStateIsXboxExtension(const Value: X_D3DTEXTURESTAGESTATETYPE): Boolean; {NOPATCH}
-// Branch:Dxbx  Translator:PatrickvL  Done:100
-begin
-  case Value of
-    X_D3DTSS_COLORKEYOP,
-    X_D3DTSS_COLORSIGN,
-    X_D3DTSS_ALPHAKILL,
-    X_D3DTSS_COLORKEYCOLOR:
-      Result := True;
-  else
-    Result := False;
   end;
 end;
 

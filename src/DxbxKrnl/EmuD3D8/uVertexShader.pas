@@ -2213,7 +2213,9 @@ type _VSH_PATCH_DATA = record
     ConvertedStride: DWORD;
     TypePatchData: VSH_TYPE_PATCH_DATA;
     StreamPatchData: VSH_STREAM_PATCH_DATA;
-    StreamHadPos: Boolean; // D3D9 only, to differentiate between D3DDECLUSAGE_POSITION and D3DDECLUSAGE_NORMAL
+{$IFDEF DXBX_USE_D3D9}
+    DeclPosition: Boolean; // Needed to output D3DDECLUSAGE_POSITION only once
+{$ENDIF}
   end; // size = 5136 (as in Cxbx)
   VSH_PATCH_DATA = _VSH_PATCH_DATA;
   PVSH_PATCH_DATA = ^VSH_PATCH_DATA;
@@ -2505,7 +2507,6 @@ begin
     pPatchData.CurrentStreamNumber := VshGetVertexStream(pToken^);
     DbgVshPrintf(#9'D3DVSD_STREAM(%d),'#13#10, [pPatchData.CurrentStreamNumber]);
 
-    pPatchData.StreamHadPos := False;
     Inc(pPatchData.StreamPatchData.NbrStreams);
   end;
 end; // VshConvertToken_STREAM
@@ -2595,13 +2596,13 @@ begin
       NewDataType := D3DVSDT_FLOAT3;
       NewSize := 3*sizeof(FLOAT);
 {$IFDEF DXBX_USE_D3D9}
-      if pPatchData.StreamHadPos then
-        NewUsage := D3DDECLUSAGE_NORMAL
-      else
+      if not pPatchData.DeclPosition then
       begin
-        pPatchData.StreamHadPos := True;
+        pPatchData.DeclPosition := True;
         NewUsage := D3DDECLUSAGE_POSITION;
-      end;
+      end
+      else
+        NewUsage := D3DDECLUSAGE_NORMAL
 {$ENDIF}
     end;
     { $42=}X_D3DVSDT_FLOAT4: begin
