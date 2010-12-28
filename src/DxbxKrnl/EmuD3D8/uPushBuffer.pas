@@ -131,7 +131,10 @@ procedure XTL_EmuExecutePushBuffer
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   if (pFixup <> NULL) then
+  begin
     XTL_EmuApplyPushBufferFixup(PDWORD(pPushBuffer.Data), PDWORD(pFixup.Data + pFixup.Run));
+    // TODO : Should we change this in a while Assigned(pFixup := pFixup.Next) ?
+  end;
 
   XTL_EmuExecutePushBufferRaw(PDWORD(pPushBuffer.Data));
 end;
