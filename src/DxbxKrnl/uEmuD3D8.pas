@@ -4092,7 +4092,7 @@ begin
   if Assigned(PValue) then
   begin
     // Check if this is an Xbox extension  :
-    if DxbxTextureStageStateIsXboxExtension(Type_VersionIndependent) then
+    if DxbxTextureStageStateInfo[Type_VersionIndependent].X then
       PValue^ := XTL_EmuD3DDeferredTextureState[Stage, Ord(Type_)]
     else
       IDirect3DDevice_GetTextureStageState(g_pD3DDevice, Stage, Type_VersionIndependent, {out}pValue^);

@@ -235,7 +235,7 @@ const
     (S:'D3DFRONT';                 F:@DxbxXB2PC_NOP;                R:@X_D3DFRONT2String;             X:True),
     (S:'D3DLOGICOP';               F:@DxbxXB2PC_NOP;                R:@X_D3DLOGICOP2String;           X:True),
     (S:'D3DMCS';                   F:@DxbxXB2PC_NOP;                R:@X_D3DMCS2String),              // Xbox = PC
-    (S:'D3DMULTISAMPLE_TYPE';      F:@EmuXB2PC_D3DMULTISAMPLE_TYPE; R:@X_D3DMULTISAMPLE_TYPE2String;  X:True),
+    (S:'D3DMULTISAMPLE_TYPE';      F:@EmuXB2PC_D3DMULTISAMPLE_TYPE; R:@X_D3DMULTISAMPLE_TYPE2String),
     (S:'D3DMULTISAMPLEMODE';       F:@DxbxXB2PC_NOP;                R:@X_D3DMULTISAMPLEMODE2String;   X:True),
     (S:'D3DPRIMITIVETYPE';         F:@EmuXB2PC_D3DPrimitiveType;    R:@X_D3DPRIMITIVETYPE2String),
     (S:'D3DSAMPLEALPHA';           F:@DxbxXB2PC_NOP;                R:@X_D3DSAMPLEALPHA2String;       X:True),
