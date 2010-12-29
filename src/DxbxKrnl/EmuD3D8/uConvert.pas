@@ -47,6 +47,10 @@ function EmuXBFormatIsCompressed(Format: X_D3DFORMAT): BOOL_;
 function EmuXBFormatIsLinear(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
 function EmuXBFormatHasAlpha(Format: X_D3DFORMAT): BOOL_;
 
+procedure EmuXB2PC_D3DSURFACE_DESC(const SurfaceDesc: PX_D3DSURFACE_DESC; const pDesc: PD3DSURFACE_DESC; const CallerName: string);
+procedure EmuPC2XB_D3DSURFACE_DESC(const SurfaceDesc: D3DSURFACE_DESC; const pDesc: PX_D3DSURFACE_DESC; const CallerName: string);
+procedure EmuPC2XB_D3DVOLUME_DESC(const VolumeDesc: TD3DVolumeDesc; const pDesc: PX_D3DVOLUME_DESC; const CallerName: string);
+
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
 function EmuPC2XB_D3DMULTISAMPLE_TYPE(aType: D3DMULTISAMPLE_TYPE): X_D3DMULTISAMPLE_TYPE;
 
@@ -207,6 +211,9 @@ type
     xtFloat,
     xtLONG);
 
+  function DxbxTypedValueToString(const aType: TXBType; const aValue: DWORD): string;
+
+type
   XBTypeInfo = record
     S: string;
     F: Pointer; // = TXB2PCFunc, but declared as pointer because of different argument & return types in the callbacks
@@ -604,6 +611,14 @@ begin
   Result := Value;
 end;
 
+function DxbxTypedValueToString(const aType: TXBType; const aValue: DWORD): string;
+begin
+  if Assigned(DxbxXBTypeInfo[aType].R) then
+    Result := TXB2StringFunc(DxbxXBTypeInfo[aType].R)(aValue)
+  else
+    Result := '';
+end;
+
 function X_D3DTEXTURESTAGESTATETYPE2String(aValue: DWORD): string;
 begin
   if aValue in [X_D3DTSS_FIRST..X_D3DTSS_LAST] then
@@ -682,6 +697,59 @@ begin
     X_D3DMULTISAMPLEMODE_4X: Result := 'D3DMULTISAMPLEMODE_4X';
   else Result := '';
   end;
+end;
+
+// TODO : Move to appropriate unit :
+procedure EmuXB2PC_D3DSURFACE_DESC(const SurfaceDesc: PX_D3DSURFACE_DESC; const pDesc: PD3DSURFACE_DESC; const CallerName: string);
+begin
+  // Convert Format (Xbox->PC)
+  pDesc.Format := EmuXB2PC_D3DFormat(SurfaceDesc.Format);
+  pDesc._Type := D3DRESOURCETYPE(SurfaceDesc.Type_);
+
+//  if (Ord(pDesc.Type_) > 7) then
+//    DxbxKrnlCleanup(CallerName + ': pDesc->Type > 7');
+
+  pDesc.Usage := SurfaceDesc.Usage;
+{$IFNDEF DXBX_USE_D3D9}
+  pDesc.Size := GetSurfaceSize(@SurfaceDesc);
+{$ENDIF}
+  pDesc.MultiSampleType := EmuXB2PC_D3DMULTISAMPLE_TYPE(SurfaceDesc.MultiSampleType);
+  pDesc.Width  := SurfaceDesc.Width;
+  pDesc.Height := SurfaceDesc.Height;
+end;
+
+// TODO : Move to appropriate unit :
+procedure EmuPC2XB_D3DSURFACE_DESC(const SurfaceDesc: D3DSURFACE_DESC; const pDesc: PX_D3DSURFACE_DESC; const CallerName: string);
+begin
+  // Convert Format (PC->Xbox)
+  pDesc.Format := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
+  pDesc.Type_ := X_D3DRESOURCETYPE(SurfaceDesc._Type);
+
+  if (Ord(pDesc.Type_) > 7) then
+    DxbxKrnlCleanup(CallerName + ': pDesc->Type > 7');
+
+  pDesc.Usage := SurfaceDesc.Usage;
+  pDesc.Size := GetSurfaceSize(@SurfaceDesc);
+  pDesc.MultiSampleType := EmuPC2XB_D3DMULTISAMPLE_TYPE(SurfaceDesc.MultiSampleType);
+  pDesc.Width  := SurfaceDesc.Width;
+  pDesc.Height := SurfaceDesc.Height;
+end;
+
+// TODO : Move to appropriate unit :
+procedure EmuPC2XB_D3DVOLUME_DESC(const VolumeDesc: TD3DVolumeDesc; const pDesc: PX_D3DVOLUME_DESC; const CallerName: string);
+begin
+  // Convert Format (PC->Xbox)
+  pDesc.Format := EmuPC2XB_D3DFormat(VolumeDesc.Format);
+  pDesc.Type_ :=  X_D3DRESOURCETYPE(VolumeDesc._Type);
+
+  if (Ord(pDesc.Type_) > 7) then
+    DxbxKrnlCleanup(CallerName + ': pDesc->Type > 7');
+
+  pDesc.Usage := VolumeDesc.Usage;
+  pDesc.Size := GetVolumeSize(@VolumeDesc);
+  pDesc.Width := VolumeDesc.Width;
+  pDesc.Height := VolumeDesc.Height;
+  pDesc.Depth := VolumeDesc.Depth;
 end;
 
 // convert from xbox to pc color formats

@@ -25,6 +25,8 @@ uses
   // Delphi
   Windows,
   SysUtils, // Format
+  // Jedi Win32API
+  JwaWinType, // PFLOAT
   // DirectX
   Direct3D, // PD3DCOLOR
 {$IFDEF DXBX_USE_D3D9}
@@ -80,6 +82,8 @@ function IDirect3DDevice_SetTextureStageState(const aDirect3DDevice: IDirect3DDe
 function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;
 
 function F2DW(const aValue: Float): DWORD; inline;
+function DW2F(const aValue: DWORD): FLOAT; inline;
+function ClampIntToByte(const aValue: Integer): Byte;
 
 function GetSurfaceSize(const aSurface: PD3DSurfaceDesc): LongWord;
 function GetVolumeSize(const aVolume: PD3DVolumeDesc): LongWord;
@@ -447,8 +451,26 @@ begin
 end;
 
 function F2DW(const aValue: Float): DWORD;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   Result := PDWORD(@aValue)^;
+end;
+
+function DW2F(const aValue: DWORD): FLOAT;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+begin
+  Result := PFLOAT(@aValue)^;
+end;
+
+function ClampIntToByte(const aValue: Integer): Byte;
+begin
+  if aValue < 0 then
+    Result := 0
+  else
+    if aValue > 255 then
+      Result := 255
+    else
+      Result := aValue;
 end;
 
 // Returns size of the surface, in bytes.
