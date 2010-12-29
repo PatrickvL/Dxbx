@@ -5879,7 +5879,7 @@ end;
 
 function XTL_EmuD3DDevice_SetIndices
 (
-  pIndexData: PX_D3DIndexBuffer;
+  pIndexBuffer: PX_D3DIndexBuffer;
   BaseVertexIndex: UINT
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -5892,13 +5892,13 @@ begin
 
   if MayLog(lfUnit) then
     LogBegin('EmuD3DDevice_SetIndices').
-      _(pIndexData, 'pIndexData').
+      _(pIndexBuffer, 'pIndexBuffer').
       _(BaseVertexIndex, 'BaseVertexIndex').
     LogEnd();
 
   { // Commented out by CXBX
   fflush(stdout);
-  if (pIndexData <> 0) then
+  if (pIndexBuffer <> 0) then
   begin
     chk := 0; // Dxbx : this should become a writeable const
     if (chk++ = 0) then
@@ -5908,45 +5908,71 @@ begin
   end;
   }
 
-  Result := D3D_OK;
-
-  g_dwBaseVertexIndex := BaseVertexIndex;
-
-  if (pIndexData <> nil) then
+  if (pIndexBuffer <> nil) then
   begin
-    g_pIndexBuffer := pIndexData;
+    // TODO : Do a AddRef on Xbox resource 'pIndexBuffer'
 
     if IsRunning(TITLEID_Halo) then // HACK: Halo Hack
-      if (pIndexData.Emu.Lock = $00840863) then
-        pIndexData.Emu.Lock := 0;
+      if (pIndexBuffer.Emu.Lock = $00840863) then
+        pIndexBuffer.Emu.Lock := 0;
 
-    EmuVerifyResourceIsRegistered(pIndexData);
+    EmuVerifyResourceIsRegistered(pIndexBuffer);
 
     if IsRunning(TITLEID_UnrealChampionship) then // HACK: Unreal Championship
     begin
-      if ((pIndexData.Emu.Lock and $FFFF0000) = $00490000) or ((pIndexData.Emu.Lock and $F0000000) <> $00000000) or
-          (pIndexData.Emu.Lock = $10) then
+      if ((pIndexBuffer.Emu.Lock and $FFFF0000) = $00490000) or ((pIndexBuffer.Emu.Lock and $F0000000) <> $00000000) or
+          (pIndexBuffer.Emu.Lock = $10) then
       begin
         Result := E_FAIL;
         goto fail;
       end;
     end;
 
-    pPCIndexBuffer := pIndexData.Emu.IndexBuffer;
-    DxbxUnlockD3DResource(pIndexData); // Dxbx addition
-    if (pIndexData.Emu.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
+    pPCIndexBuffer := pIndexBuffer.Emu.IndexBuffer;
+    DxbxUnlockD3DResource(pIndexBuffer); // Dxbx addition
+    if (pIndexBuffer.Emu.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
       Result := g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pPCIndexBuffer){$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, BaseVertexIndex{$ENDIF});
   end
   else
-  begin
-    g_pIndexBuffer := nil;
+    g_pD3DDevice.SetIndices(nil{$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, BaseVertexIndex{$ENDIF});
 
-    Result := g_pD3DDevice.SetIndices(nil{$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, BaseVertexIndex{$ENDIF});
-  end;
+  if Assigned(g_pIndexBuffer) then
+    ; // TODO : Do a Release on Xbox resource 'g_pIndexBuffer'
+
+  g_pIndexBuffer := pIndexBuffer;
+  g_dwBaseVertexIndex := BaseVertexIndex;
+  Result := D3D_OK;
 
 fail:
   EmuSwapFS(fsXbox);
 end;
+
+function XTL_EmuD3DDevice_GetIndices
+(
+  ppIndexBuffer: PPX_D3DIndexBuffer;
+  pBaseVertexIndex: PUINT
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    LogBegin('EmuD3DDevice_GetIndices').
+      _(ppIndexBuffer, 'ppIndexBuffer').
+      _(pBaseVertexIndex, 'pBaseVertexIndex').
+    LogEnd();
+  end;
+
+  ppIndexBuffer^ := g_pIndexBuffer;
+  if Assigned(ppIndexBuffer^) then
+  begin
+    // TODO : Do a AddRef on Xbox resource 'ppIndexBuffer^'
+    pBaseVertexIndex^ := g_dwBaseVertexIndex
+  end
+  else
+    pBaseVertexIndex^ := 0;
+end;
+
 
 function XTL_EmuD3DDevice_GetTexture
 (
@@ -11520,8 +11546,8 @@ exports
   XTL_EmuD3DDevice_CreateCubeTexture, // TODO -oDxbx : Make this obsolete
   XTL_EmuD3DDevice_CreateDepthStencilSurface,
   XTL_EmuD3DDevice_CreateImageSurface,
-  XTL_EmuD3DDevice_CreateIndexBuffer,
-  XTL_EmuD3DDevice_CreateIndexBuffer2,
+  XTL_EmuD3DDevice_CreateIndexBuffer, // TODO -oDxbx : Make this obsolete
+  XTL_EmuD3DDevice_CreateIndexBuffer2, // TODO -oDxbx : Make this obsolete
 //  XTL_EmuD3DDevice_CreatePalette, // Dxbx note : Disabled, too high level.
 //  XTL_EmuD3DDevice_CreatePalette2, // Dxbx note : Disabled, too high level.
 //  XTL_EmuD3DDevice_CreatePixelShader, // Dxbx note : Disabled, too high level.
@@ -11563,6 +11589,7 @@ exports
   XTL_EmuD3DDevice_GetDisplayFieldStatus,
   XTL_EmuD3DDevice_GetDisplayMode,
   XTL_EmuD3DDevice_GetGammaRamp,
+  XTL_EmuD3DDevice_GetIndices,
   XTL_EmuD3DDevice_GetLight,
   XTL_EmuD3DDevice_GetLightEnable,
   XTL_EmuD3DDevice_GetMaterial,
