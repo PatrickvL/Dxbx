@@ -29,6 +29,7 @@ uses
   Classes,
   Math, // IfThen
   // DirectX
+  Direct3D, // PD3DCOLOR
 {$IFDEF DXBX_USE_D3D9}
   Direct3D9,
   D3DX9,
@@ -79,6 +80,7 @@ procedure DxbxGetFormatRelatedVariables(
 
 procedure DxbxUpdatePixelContainer(
   pPixelContainer: PX_D3DPixelContainer;
+  pPaletteColors: PD3DCOLOR;
   dwCommonType: DWORD;
 
   dwWidth: DWORD;
@@ -94,6 +96,7 @@ procedure DxbxUpdatePixelContainer(
   CacheFormat: X_D3DFORMAT
   ); {NOPATCH}
 
+function DxbxGetDataFromXboxResource(pThis: PX_D3DResource): Pointer;
 procedure DxbxUpdateNativeD3DResources(); {NOPATCH}
 
 const X_D3DRS_UNSUPPORTED = X_D3DRS_LAST+1;
@@ -772,6 +775,7 @@ end;
 // in XTL_EmuUpdateActiveTexture too, so it's generalize in this single implementation.
 procedure DxbxUpdatePixelContainer(
   pPixelContainer: PX_D3DPixelContainer;
+  pPaletteColors: PD3DCOLOR;
   dwCommonType: DWORD;
 
   dwWidth: DWORD;
@@ -824,7 +828,7 @@ begin
   ConvertP8ToARGB := (CacheFormat = X_D3DFMT_P8);
   if ConvertP8ToARGB then
   begin
-    if g_pCurrentPalette = nil then
+    if pPaletteColors = nil then
     begin
       EmuWarning('Unsupported texture format D3DFMT_P8, no palette active to convert from!');
       Exit;
@@ -946,7 +950,7 @@ begin
                 // Read P8 pixel :
                 p := Byte(pTextureCache[src_yp + x]);
                 // Read the corresponding ARGB from the palette and store it in the new texture :
-                PDWORDs(pDest)[dst_yp + x] := PDWORDs(g_pCurrentPalette)[p];
+                PDWORDs(pDest)[dst_yp + x] := PDWORDs(pPaletteColors)[p];
 
                 // Step to the next pixel, check if we've done one scanline :
                 Inc(x);
@@ -1028,6 +1032,7 @@ procedure XTL_EmuUpdateActiveTexture(); {NOPATCH}
 var
   Stage: int;
   pPixelContainer: PX_D3DPixelContainer;
+  pPaletteColors: PD3DCOLOR;
   X_Format: X_D3DFORMAT;
   dwWidth: DWORD;
   dwHeight: DWORD;
@@ -1056,7 +1061,13 @@ begin
 
       bSwizzled := False;
 
-      DxbxUpdatePixelContainer(pPixelContainer, X_D3DCOMMON_TYPE_TEXTURE,
+      // Make sure we do the following texture conversion with the palette from this stage :
+      if Assigned(g_EmuD3DActivePalette[Stage]) then
+        pPaletteColors := PD3DCOLOR(DxbxGetDataFromXboxResource(g_EmuD3DActivePalette[Stage]))
+      else
+        pPaletteColors := g_pCurrentPalette; // Hack, in case we come here without an active texture (should normally be nil)
+
+      DxbxUpdatePixelContainer(pPixelContainer, pPaletteColors, X_D3DCOMMON_TYPE_TEXTURE,
         dwWidth, dwHeight, dwBPP, dwDepth, dwPitch, dwMipMapLevels,
         bSwizzled, bCompressed, dwCompressedSize, bCubeMap, {CacheFormat=}X_Format);
 
@@ -1275,6 +1286,17 @@ end;
 procedure XTL_EmuUpdateActiveVertexShader(); {NOPATCH}
 begin
   // TODO : Move XTL_EmuD3DDevice_CreateVertexShader and related code over to here, so the patches can go
+end;
+
+function DxbxGetDataFromXboxResource(pThis: PX_D3DResource): Pointer;
+var
+  Ptr: UIntPtr;
+begin
+  Ptr := pThis.Data;
+  if (Ptr and $80000000) > 0 then
+    Result := Pointer(Ptr and $7FFFFFFF)
+  else
+    Result := Pointer(Ptr);
 end;
 
 procedure DxbxUpdateNativeD3DResources(); {NOPATCH}

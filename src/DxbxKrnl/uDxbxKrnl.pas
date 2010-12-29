@@ -389,7 +389,7 @@ begin
   if MayLog(lfUnit) then
     DbgPrintf('EmuMain : Initializing Direct3D.');
 
-  XTL_EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+  DxbxD3DInit(pXbeHeader, dwXbeHeaderSize);
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuMain : Initial thread starting.');
