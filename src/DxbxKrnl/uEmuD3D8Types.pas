@@ -458,6 +458,7 @@ const
   X_D3DFMT_UNKNOWN = $FFFFFFFF-3;  // Unique declaration to make overloads possible
 
 type X_D3DFORMAT = X_D3DFMT_L8..X_D3DFMT_UNKNOWN;
+type PX_D3DFORMAT = ^X_D3DFORMAT;
 
 type X_D3DPOOL = D3DPOOL; // alias
 

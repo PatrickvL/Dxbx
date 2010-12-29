@@ -41,6 +41,8 @@ uses
   , uEmuD3D8Utils
   , uEmu;
 
+function DxbxXB2PC_D3DFormat(const X_Format: X_D3DFORMAT; const aResourceType: TD3DResourceType; const CacheFormat: PX_D3DFORMAT = nil): D3DFORMAT;
+
 function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
 function EmuXBFormatIsYUV(Format: X_D3DFORMAT): BOOL_;
 function EmuXBFormatIsCompressed(Format: X_D3DFORMAT): BOOL_;
@@ -547,6 +549,48 @@ const
   );
 
 implementation
+
+function DxbxXB2PC_D3DFormat(const X_Format: X_D3DFORMAT; const aResourceType: TD3DResourceType; const CacheFormat: PX_D3DFORMAT = nil): D3DFORMAT;
+begin
+  if Assigned(CacheFormat) then
+    CacheFormat^ := X_Format; // Save this for later; DxbxUpdatePixelContainer should convert when needed!
+
+  // Convert Format (Xbox->PC)
+  Result := EmuXB2PC_D3DFormat(X_Format);
+
+  // TODO -oCXBX: HACK: Devices that don't support this should somehow emulate it!
+  // TODO -oDxbx: Non-supported formats should be emulated in a generic way
+  // TODO -oDxbx : Check device caps too!
+  case Result of
+    D3DFMT_P8:
+    begin
+      EmuWarning('D3DFMT_P8 is an unsupported texture format! Allocating D3DFMT_L8');
+      Result := D3DFMT_L8;
+    end;
+    D3DFMT_D16:
+    begin
+      EmuWarning('D3DFMT_D16 is an unsupported texture format!');
+      if aResourceType = D3DRTYPE_TEXTURE then
+        Result := D3DFMT_R5G6B5
+      else
+        // D3DRTYPE_VOLUMETEXTURE, D3DRTYPE_CUBETEXTURE
+        Result := D3DFMT_X8R8G8B8; // also CheckDeviceMultiSampleType
+    end;
+    D3DFMT_D24S8:
+    begin
+      EmuWarning('D3DFMT_D24S8 is an unsupported texture format! Allocating D3DFMT_X8R8G8B8');
+      Result := D3DFMT_X8R8G8B8;
+    end;
+    D3DFMT_YUY2:
+    begin
+      if aResourceType = D3DRTYPE_CUBETEXTURE then
+        DxbxKrnlCleanup('YUV not supported for cube textures');
+    end;
+  else
+//    if Assigned(CacheFormat) then
+//      CacheFormat^ := X_D3DFMT_UNKNOWN; // Means 'not important' as it's not used in DxbxUpdatePixelContainer
+  end;
+end;
 
 // is this format swizzled, and if so - how many BPP?
 function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
