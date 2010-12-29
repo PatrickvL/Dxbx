@@ -1033,6 +1033,7 @@ var
   Stage: int;
   pPixelContainer: PX_D3DPixelContainer;
   pPaletteColors: PD3DCOLOR;
+  PCFormat: D3DFORMAT;
   X_Format: X_D3DFORMAT;
   dwWidth: DWORD;
   dwHeight: DWORD;
@@ -1044,6 +1045,8 @@ var
   bCompressed: BOOL_;
   dwCompressedSize: DWORD;
   bCubeMap: BOOL_;
+//  LockedRect: D3DLOCKED_RECT;
+//  pSrc, pDest: PByte;
 begin
   for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
   begin
@@ -1059,7 +1062,38 @@ begin
         {var}dwWidth, {var}dwHeight, {var}dwBPP, {var}dwDepth, {var}dwPitch, {var}dwMipMapLevels,
         {var}bSwizzled, {var}bCompressed, {var}dwCompressedSize, {var}bCubeMap);
 
-      bSwizzled := False;
+      // Dxbx addition : Dynamic texture creation - untested & unfinished!
+      // TODO's : Support render target surfaces, check device caps, generic format data conversion, ect
+      if pPixelContainer.Emu.Lock = 0 then
+      begin
+        PCFormat := DxbxXB2PC_D3DFormat(X_Format, D3DRTYPE_TEXTURE, nil);
+//        if bCubeMap then
+//          IDirect3DDevice_CreateCubeTexture
+//          (g_pD3DDevice,
+//            {EdgeLength=}dwWidth,
+//            dwMipMapLevels
+//            {Usage=}0,
+//            PCFormat,
+//            {Pool=}D3DPOOL_DEFAULT,
+//            @(pPixelContainer.Emu.CubeTexture)
+//          );
+//        else
+          IDirect3DDevice_CreateTexture
+          (g_pD3DDevice,
+            dwWidth, dwHeight, dwDepth,
+            {Usage=}0,
+            PCFormat,
+            {Pool=}D3DPOOL_DEFAULT,
+            @(pPixelContainer.Emu.Texture)
+          );
+//          IDirect3DTexture(pPixelContainer.Emu.Texture).LockRect(0, {out}LockedRect, NULL, 0);
+//          pSrc := PBYTE(DxbxGetDataFromXboxResource(pPixelContainer));
+//          pDest := LockedRect.pBits;
+//          memcpy(pDest, pSrc, dwWidth * dwHeight * dwBPP);
+//          IDirect3DTexture(pPixelContainer.Emu.Texture).UnlockRect(0);
+      end
+      else
+        bSwizzled := False;
 
       // Make sure we do the following texture conversion with the palette from this stage :
       if Assigned(g_EmuD3DActivePalette[Stage]) then

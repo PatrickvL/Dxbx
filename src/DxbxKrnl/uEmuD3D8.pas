@@ -1127,51 +1127,6 @@ begin
   pPixelContainer.Size := DxbxEncodeDimensionsIntoSize(g_dwOverlayW, g_dwOverlayH, g_dwOverlayP);
 end;
 
-type
-  PX_D3DFORMAT = ^X_D3DFORMAT;
-
-function DxbxXB2PC_D3DFormat(const X_Format: X_D3DFORMAT; const aResourceType: TD3DResourceType; const CacheFormat: PX_D3DFORMAT = nil): D3DFORMAT;
-begin
-  if Assigned(CacheFormat) then
-    CacheFormat^ := X_Format; // Save this for later; DxbxUpdatePixelContainer should convert when needed!
-
-  // Convert Format (Xbox->PC)
-  Result := EmuXB2PC_D3DFormat(X_Format);
-
-  // TODO -oCXBX: HACK: Devices that don't support this should somehow emulate it!
-  // TODO -oDxbx: Non-supported formats should be emulated in a generic way
-  // TODO -oDxbx : Check device caps too!
-  case Result of
-    D3DFMT_P8:
-    begin
-      EmuWarning('D3DFMT_P8 is an unsupported texture format! Allocating D3DFMT_L8');
-      Result := D3DFMT_L8;
-    end;
-    D3DFMT_D16:
-    begin
-      EmuWarning('D3DFMT_D16 is an unsupported texture format!');
-      if aResourceType = D3DRTYPE_TEXTURE then
-        Result := D3DFMT_R5G6B5
-      else
-        // D3DRTYPE_VOLUMETEXTURE, D3DRTYPE_CUBETEXTURE
-        Result := D3DFMT_X8R8G8B8; // also CheckDeviceMultiSampleType
-    end;
-    D3DFMT_D24S8:
-    begin
-      EmuWarning('D3DFMT_D24S8 is an unsupported texture format! Allocating D3DFMT_X8R8G8B8');
-      Result := D3DFMT_X8R8G8B8;
-    end;
-    D3DFMT_YUY2:
-    begin
-      if aResourceType = D3DRTYPE_CUBETEXTURE then
-        DxbxKrnlCleanup('YUV not supported for cube textures');
-    end;
-  else
-//    if Assigned(CacheFormat) then
-//      CacheFormat^ := X_D3DFMT_UNKNOWN; // Means 'not important' as it's not used in DxbxUpdatePixelContainer
-  end;
-end;
-
 // Direct3D initialization (called before emulation begins)
 procedure DxbxD3DInit(XbeHeader: PXBEIMAGE_HEADER; XbeHeaderSize: uint32); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -11562,7 +11517,7 @@ exports
   XTL_EmuD3DDevice_CaptureStateBlock,
   XTL_EmuD3DDevice_Clear,
   XTL_EmuD3DDevice_CopyRects,
-  XTL_EmuD3DDevice_CreateCubeTexture,
+  XTL_EmuD3DDevice_CreateCubeTexture, // TODO -oDxbx : Make this obsolete
   XTL_EmuD3DDevice_CreateDepthStencilSurface,
   XTL_EmuD3DDevice_CreateImageSurface,
   XTL_EmuD3DDevice_CreateIndexBuffer,
@@ -11573,12 +11528,12 @@ exports
   XTL_EmuD3DDevice_CreateStateBlock,
   XTL_EmuD3DDevice_CreateSurface,
   XTL_EmuD3DDevice_CreateSurface2,
-  XTL_EmuD3DDevice_CreateTexture,
-  XTL_EmuD3DDevice_CreateTexture2,
+  XTL_EmuD3DDevice_CreateTexture, // TODO -oDxbx : Make this obsolete
+  XTL_EmuD3DDevice_CreateTexture2, // TODO -oDxbx : Make this obsolete
   XTL_EmuD3DDevice_CreateVertexBuffer,
   XTL_EmuD3DDevice_CreateVertexBuffer2,
   XTL_EmuD3DDevice_CreateVertexShader,
-  XTL_EmuD3DDevice_CreateVolumeTexture,
+  XTL_EmuD3DDevice_CreateVolumeTexture, // TODO -oDxbx : Make this obsolete
 //  XTL_EmuD3DDevice_DeletePixelShader, // Dxbx note : Disabled, too high level.
   XTL_EmuD3DDevice_DeleteStateBlock,
   XTL_EmuD3DDevice_DeleteVertexShader,
@@ -11770,9 +11725,9 @@ exports
   XTL_EmuD3DResource_FreePrivateData,
   XTL_EmuD3DResource_GetDevice,
   XTL_EmuD3DResource_GetPrivateData,
-  XTL_EmuD3DResource_GetType,
+  XTL_EmuD3DResource_GetType, // TODO -oDxbx : Make this obsolete
   XTL_EmuD3DResource_IsBusy,
-  XTL_EmuD3DResource_Register,
+  XTL_EmuD3DResource_Register, // TODO -oDxbx : Make this obsolete
   XTL_EmuD3DResource_Release,
   XTL_EmuD3DResource_SetPrivateData,
 
