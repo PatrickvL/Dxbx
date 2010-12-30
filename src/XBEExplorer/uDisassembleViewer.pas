@@ -166,13 +166,16 @@ var
   i: Integer;
 
   procedure _UpdateCRC(const aFixedOffset: Integer);
+  var
+    Offset: Integer;
   begin
     // Don't calculate CRC is already done, or we're before the end of the 32 pattern bytes :
     if (CRCLength >= 0) or (aFixedOffset <= 32) then
       Exit;
 
     CRCLength := aFixedOffset - 32;
-    CRCValue := CalcCRC16(@(PByte(MyDisassemble.Buffer)[32]), CRCLength);
+    Offset := aAddress - UIntPtr(FRegionInfo.VirtualAddres) + 32;
+    CRCValue := CalcCRC16(@(PByte(MyDisassemble.Buffer)[Offset]), CRCLength);
   end;
 
   function _AnalyzeFunction: Integer;
