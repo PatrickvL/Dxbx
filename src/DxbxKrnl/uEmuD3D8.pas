@@ -715,6 +715,22 @@ begin
     Result := IDirect3DResource(pResource.Emu.Resource).GetType();
 end;
 
+procedure DxbxXboxResource_AddRef(pResource: PX_D3DResource); //: int;
+begin
+  Inc(pResource.Common); // Dxbx note : Just ignore X_D3DCOMMON_REFCOUNT_MASK, as we assume the RefCount won't overflow anyway
+  // Result := pResource.Common and X_D3DCOMMON_REFCOUNT_MASK;
+end;
+
+procedure DxbxXboxResource_Release(pResource: PX_D3DResource); //: int;
+begin
+  if (pResource.Common and X_D3DCOMMON_REFCOUNT_MASK) <= 1 then
+    XboxFree(pResource) // TODO : Shouldn't we do something more here, like free the Data?
+  // Exit(0);
+  else
+    Dec(pResource.Common); // Dxbx note : We ignore X_D3DCOMMON_REFCOUNT_MASK, as tested underflow already
+  // Result := pResource.Common and X_D3DCOMMON_REFCOUNT_MASK;
+end;
+
 function DxbxUpdateResourceFields(pResource: PX_D3DResource): Boolean;
 var
   ResourceType: TD3DResourceType;
@@ -5021,21 +5037,40 @@ end;
 function XTL_EmuD3DDevice_GetDepthStencilSurface2(): PX_D3DSurface; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-  EmuSwapFS(fsWindows);
-
   if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
     DbgPrintf('EmuD3D8 : EmuD3DDevice_GetDepthStencilSurface2(); >>');
-
-  EmuSwapFS(fsXbox);
+    EmuSwapFS(fsXbox);
+  end;
 
   XTL_EmuD3DDevice_GetDepthStencilSurface(@Result);
 end;
 
-(* Too high level : No patch needed, just reads g_OverscanColor@D3D@@3KA :
-function XTL_EmuD3DDevice_GetOverscanColor(): D3DCOLOR; stdcall;
-// Branch:Dxbx  Translator:Shadow_Tj  Done:0
-// Note : When we had this patch active, it removed all tree-leafs in Turok Start screen...
-*)
+function XTL_EmuD3DDevice_SetTile
+(
+  Index: DWORD;
+  {CONST} pTile: PX_D3DTILE
+): HRESULT; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3DDevice_SetTile').
+      _(Index, 'Index').
+      _(pTile, 'pTile').
+    LogEnd();
+
+  if (pTile = NULL) or (pTile.pMemory = NULL) then
+    ZeroMemory(@(g_EmuD3DTileCache[Index]), sizeof(X_D3DTILE))
+  else
+    memcpy(@(g_EmuD3DTileCache[Index]), pTile, sizeof(X_D3DTILE));
+
+  EmuSwapFS(fsXbox);
+
+  Result := D3D_OK;
+end;
 
 function XTL_EmuD3DDevice_GetTile
 (
@@ -5060,27 +5095,27 @@ begin
   Result := D3D_OK;
 end;
 
-function XTL_EmuD3DDevice_SetTileNoWait
-(
-  Index: DWORD;
-  {CONST} pTile: PX_D3DTILE
-): HRESULT; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+procedure XTL_EmuD3DDevice_SetTileCompressionTagBits(
+  Partition: DWORD;
+  Address: DWORD;
+  pData: PDWORD;
+  Count: DWORD
+);
 begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetTileNoWait').
-      _(Index, 'Index').
-      _(pTile, 'pTile').
+    LogBegin('EmuD3DDevice_SetTileCompressionTagBits').
+      _(Partition, 'Partition').
+      _(Address, 'Address').
+      _(pData, 'pData').
+      _(Count, 'Count').
     LogEnd();
 
-  if (pTile <> NULL) then
-    memcpy(@(g_EmuD3DTileCache[Index]), pTile, sizeof(X_D3DTILE));
+  //D3DDevice_SetTileCompressionTagBits(Partition, Address, pData, Count);
+  Unimplemented('XTL_EmuD3DDevice_SetTileCompressionTagBits');
 
   EmuSwapFS(fsXbox);
-
-  Result := D3D_OK;
 end;
 
 procedure XTL_EmuD3DDevice_GetTileCompressionTagBits(
@@ -5124,29 +5159,6 @@ begin
 //  return D3DDevice_GetTileCompressionTags(ZStartTag, ZEndTag);
   Unimplemented('XTL_EmuD3DDevice_GetTileCompressionTags');
   Result := D3D_OK;
-
-  EmuSwapFS(fsXbox);
-end;
-
-procedure XTL_EmuD3DDevice_SetTileCompressionTagBits(
-  Partition: DWORD;
-  Address: DWORD;
-  pData: PDWORD;
-  Count: DWORD
-);
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit) then
-    LogBegin('EmuD3DDevice_SetTileCompressionTagBits').
-      _(Partition, 'Partition').
-      _(Address, 'Address').
-      _(pData, 'pData').
-      _(Count, 'Count').
-    LogEnd();
-
-  //D3DDevice_SetTileCompressionTagBits(Partition, Address, pData, Count);
-  Unimplemented('XTL_EmuD3DDevice_SetTileCompressionTagBits');
 
   EmuSwapFS(fsXbox);
 end;
@@ -5877,11 +5889,11 @@ begin
 end;
 
 
-function XTL_EmuD3DDevice_SetIndices
+procedure XTL_EmuD3DDevice_SetIndices
 (
   pIndexBuffer: PX_D3DIndexBuffer;
   BaseVertexIndex: UINT
-): HRESULT; stdcall;
+); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 label
   fail;
@@ -5910,7 +5922,7 @@ begin
 
   if (pIndexBuffer <> nil) then
   begin
-    // TODO : Do a AddRef on Xbox resource 'pIndexBuffer'
+    DxbxXboxResource_AddRef(pIndexBuffer);
 
     if IsRunning(TITLEID_Halo) then // HACK: Halo Hack
       if (pIndexBuffer.Emu.Lock = $00840863) then
@@ -5923,7 +5935,6 @@ begin
       if ((pIndexBuffer.Emu.Lock and $FFFF0000) = $00490000) or ((pIndexBuffer.Emu.Lock and $F0000000) <> $00000000) or
           (pIndexBuffer.Emu.Lock = $10) then
       begin
-        Result := E_FAIL;
         goto fail;
       end;
     end;
@@ -5931,27 +5942,26 @@ begin
     pPCIndexBuffer := pIndexBuffer.Emu.IndexBuffer;
     DxbxUnlockD3DResource(pIndexBuffer); // Dxbx addition
     if (pIndexBuffer.Emu.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
-      Result := g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pPCIndexBuffer){$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, BaseVertexIndex{$ENDIF});
+      g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(pPCIndexBuffer){$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, BaseVertexIndex{$ENDIF});
   end
   else
     g_pD3DDevice.SetIndices(nil{$IFDEF DXBX_USE_D3D9}{$MESSAGE 'fixme'}{$ELSE}, BaseVertexIndex{$ENDIF});
 
   if Assigned(g_pIndexBuffer) then
-    ; // TODO : Do a Release on Xbox resource 'g_pIndexBuffer'
+    DxbxXboxResource_Release(g_pIndexBuffer);
 
   g_pIndexBuffer := pIndexBuffer;
   g_dwBaseVertexIndex := BaseVertexIndex;
-  Result := D3D_OK;
 
 fail:
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3DDevice_GetIndices
+procedure XTL_EmuD3DDevice_GetIndices
 (
   ppIndexBuffer: PPX_D3DIndexBuffer;
   pBaseVertexIndex: PUINT
-): HRESULT; stdcall;
+); stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   if MayLog(lfUnit) then
@@ -5966,8 +5976,8 @@ begin
   ppIndexBuffer^ := g_pIndexBuffer;
   if Assigned(ppIndexBuffer^) then
   begin
-    // TODO : Do a AddRef on Xbox resource 'ppIndexBuffer^'
-    pBaseVertexIndex^ := g_dwBaseVertexIndex
+    DxbxXboxResource_AddRef(ppIndexBuffer^);
+    pBaseVertexIndex^ := g_dwBaseVertexIndex;
   end
   else
     pBaseVertexIndex^ := 0;
@@ -10598,6 +10608,40 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+var g_OverscanColor: D3DCOLOR;
+
+procedure XTL_EmuD3DDevice_SetOverscanColor
+(
+  Color: D3DCOLOR
+); stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    LogBegin('XTL_EmuD3DDevice_SetOverscanColor').
+      _(Color, 'D3DCOLOR').
+    LogEnd();
+    EmuSwapFS(fsXbox);
+  end;
+
+  g_OverscanColor := Color;
+end;
+
+
+function XTL_EmuD3DDevice_GetOverscanColor(): D3DCOLOR; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    LogBegin('XTL_EmuD3DDevice_GetOverscanColor').LogEnd();
+    EmuSwapFS(fsXbox);
+  end;
+
+  Result := g_OverscanColor;
+end;
+
 procedure XTL_EmuD3DVertexBuffer_Lock
 (
   pVertexBuffer: PX_D3DVertexBuffer;
@@ -11595,7 +11639,7 @@ exports
   XTL_EmuD3DDevice_GetMaterial,
   XTL_EmuD3DDevice_GetModelView, // ??
   XTL_EmuD3DDevice_GetOverlayUpdateStatus,
-//  XTL_EmuD3DDevice_GetOverscanColor, // Dxbx note : Disabled, too high level.
+  XTL_EmuD3DDevice_GetOverscanColor,
   XTL_EmuD3DDevice_GetPixelShader,
   XTL_EmuD3DDevice_GetPixelShaderConstant,
 //  XTL_EmuD3DDevice_GetPixelShaderFunction, // Dxbx note : Disabled, too high level.
@@ -11653,7 +11697,7 @@ exports
   XTL_EmuD3DDevice_SetLight,
   XTL_EmuD3DDevice_SetMaterial,
   XTL_EmuD3DDevice_SetModelView, // ??
-//  XTL_EmuD3DDevice_SetOverscanColor, // Dxbx note : Disabled, too high level.
+  XTL_EmuD3DDevice_SetOverscanColor,
   XTL_EmuD3DDevice_SetPalette,
   XTL_EmuD3DDevice_SetPixelShader,
   XTL_EmuD3DDevice_SetPixelShaderConstant,
@@ -11707,9 +11751,9 @@ exports
   XTL_EmuD3DDevice_SetTextureState_ColorKeyColor,
 //  XTL_EmuD3DDevice_SetTextureState_ParameterCheck, // Not yet implemented
   XTL_EmuD3DDevice_SetTextureState_TexCoordIndex,
+  XTL_EmuD3DDevice_SetTile,
+  XTL_EmuD3DDevice_SetTile name PatchPrefix + '?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z', // Dxbx note : SetTile is applied to SetTileNoWait in Cxbx 4361 OOPVA's!
   XTL_EmuD3DDevice_SetTileCompressionTagBits,
-  XTL_EmuD3DDevice_SetTileNoWait name PatchPrefix + '?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z',
-  XTL_EmuD3DDevice_SetTileNoWait name PatchPrefix + 'D3DDevice_SetTile', // Dxbx note : SetTileNoWait is applied to SetTile in Cxbx 4361 OOPVA's!
   XTL_EmuD3DDevice_SetTransform,
   XTL_EmuD3DDevice_SetVertexBlendModelView, // ??
   XTL_EmuD3DDevice_SetVertexData2f,

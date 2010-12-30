@@ -814,13 +814,13 @@ var
   NewTexture: XTL_PIDirect3DTexture8;
   OldTexture: XTL_PIDirect3DTexture8;
   dwDataSize: DWORD;
-  pTextureCache: PBytes;
+  pTmpTextureBuffer: PBytes;
   src_yp: uint32;
   dst_yp: uint32;
   x: uint32;
   p: Byte;
 begin
-  pTextureCache := nil; // To prevent compiler warnings
+  pTmpTextureBuffer := nil; // To prevent compiler warnings
 
   iRect := Classes.Rect(0, 0, 0, 0);
   iPoint := Classes.Point(0, 0);
@@ -857,7 +857,7 @@ begin
                            or (Log2(dwPitch * SizeOf(D3DCOLOR)) shl X_D3DFORMAT_PSIZE_SHIFT);
 
     dwDataSize := dwPitch * dwHeight; // Number of P8 (byte sized) pixels
-    pTextureCache := DxbxMalloc(dwDataSize);
+    pTmpTextureBuffer := DxbxMalloc(dwDataSize);
   end;
 
   nrfaces := ifThen(bCubemap, 6, 1);
@@ -931,11 +931,11 @@ begin
               // First we need to unswizzle the texture data to a temporary buffer :
               if bSwizzled then // Dxbx hack : Don't unswizzle twice!
                 EmuUnswizzleRect(
-                  pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, pTextureCache,
+                  pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, pTmpTextureBuffer,
                   dwPitch, iRect, iPoint, dwBPP
                 )
               else
-                memcpy(pTextureCache, pSrc + dwMipOffs, dwMipWidth * dwMipHeight);
+                memcpy(pTmpTextureBuffer, pSrc + dwMipOffs, dwMipWidth * dwMipHeight);
 
               // Lookup the colors of the paletted pixels in the current pallette
               // and write the expanded color back to the texture :
@@ -948,7 +948,7 @@ begin
                 Dec(dwDataSize);
 
                 // Read P8 pixel :
-                p := Byte(pTextureCache[src_yp + x]);
+                p := Byte(pTmpTextureBuffer[src_yp + x]);
                 // Read the corresponding ARGB from the palette and store it in the new texture :
                 PDWORDs(pDest)[dst_yp + x] := PDWORDs(pPaletteColors)[p];
 
@@ -1017,7 +1017,7 @@ begin
   if ConvertP8ToARGB then
   begin
     // Flush unused data buffers
-    DxbxFree(pTextureCache); // pTextureCache := nil;
+    DxbxFree(pTmpTextureBuffer); // pTmpTextureBuffer := nil;
     // Destroy old texture :
     for level := 0 to dwMipMapLevels - 1 do
       repeat until IDirect3DTexture(OldTexture).UnlockRect(level) <= D3D_OK;
