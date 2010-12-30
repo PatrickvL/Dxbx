@@ -1207,6 +1207,7 @@ var
   pPSDef: PX_D3DPIXELSHADERDEF;
   RecompiledPixelShader: PPSH_RECOMPILED_SHADER;
   ConvertedPixelShaderHandle: DWORD;
+  CurrentPixelShader: DWORD;
   i: int;
   Register_: DWORD;
   dwColor: D3DCOLOR;
@@ -1249,9 +1250,25 @@ begin
       RecompiledShaders_Head := RecompiledPixelShader;
     end;
 
-    // Switch to the converted pixel shader :
+    // Switch to the converted pixel shader (if it's any different from our currently active
+    // pixel shader, to avoid many unnecessary state changes on the local side).
     ConvertedPixelShaderHandle := RecompiledPixelShader.ConvertedHandle;
+    g_pD3DDevice.GetPixelShader({out}CurrentPixelShader);
+    if CurrentPixelShader <> ConvertedPixelShaderHandle then
+      g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}IDirect3DPixelShader9{$ENDIF}(ConvertedPixelShaderHandle));
 
+    // Note : We set the constants /after/ setting the shader, so that any
+    // constants in the shader declaration can be overwritten (this will be
+    // needed for the final combiner constants at least)!
+
+(* This must be done once we somehow forward the vertex-shader oFog output to the pixel shader FOG input register :
+    // Disable native fog if pixel shader is said to handle it :
+    if (RecompiledPixelShader.PSDef.PSFinalCombinerInputsABCD > 0)
+    or (RecompiledPixelShader.PSDef.PSFinalCombinerInputsEFG > 0) then
+    begin
+      g_pD3DDevice.SetRenderState(D3DRS_FOGENABLE, BOOL_FALSE);
+    end;
+*)
     // Set constants, not based on g_PixelShaderConstants, but based on
     // the render state slots containing the pixel shader constants,
     // as these could have been updated via SetRenderState or otherwise :
@@ -1259,17 +1276,26 @@ begin
     begin
       if RecompiledPixelShader.ConstInUse[i] then
       begin
+        // Read the color from the corresponding render state slot :
+        case i of
+          PSH_XBOX_CONSTANT_FOG:
+            dwColor := XTL_EmuMappedD3DRenderState[X_D3DRS_FOGCOLOR]^ or $FF000000;
+            // Note : FOG.RGB is correct like this, but FOG.a should be coming
+            // from the vertex shader (oFog) - however, D3D8 does not forward this...
+          PSH_XBOX_CONSTANT_FC0:
+            dwColor := XTL_EmuMappedD3DRenderState[X_D3DRS_PSFINALCOMBINERCONSTANT0]^;
+          PSH_XBOX_CONSTANT_FC1:
+            dwColor := XTL_EmuMappedD3DRenderState[X_D3DRS_PSFINALCOMBINERCONSTANT1]^;
+        else
+            dwColor := XTL_EmuMappedD3DRenderState[X_D3DRS_PSCONSTANT0_0 + i]^;
+        end;
+
+        // Convert it back to 4 floats  :
+        fColor := D3DXColorFromDWord(dwColor);
         // Read the register we can use on PC :
         Register_ := RecompiledPixelShader.ConstMapping[i];
-        // Read the corresponding pixel shader slot :
-        if i >= 16 then
-          dwColor := XTL_EmuMappedD3DRenderState[X_D3DRS_PSFINALCOMBINERCONSTANT0 + i - 16]^
-        else
-          dwColor := XTL_EmuMappedD3DRenderState[X_D3DRS_PSCONSTANT0_0 + i]^;
-
-        // Convert it back to 4 floats, so we can... :
-        fColor := D3DXColorFromDWord(dwColor);
-        // Set that value locally :
+        // TODO : Avoid the following setter if it's no different from the previous update (this might speed things up)
+        // Set the value locally in this register :
 {$IFDEF DXBX_USE_D3D9}
         g_pD3DDevice.SetPixelShaderConstantF(Register_, PSingle(@fColor), 1);
 {$ELSE}
@@ -1277,12 +1303,12 @@ begin
 {$ENDIF}
       end;
     end;
-
   end
   else
+  begin
     ConvertedPixelShaderHandle := 0;
-
-  g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}IDirect3DPixelShader9{$ENDIF}(ConvertedPixelShaderHandle));
+    g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}IDirect3DPixelShader9{$ENDIF}(ConvertedPixelShaderHandle));
+  end;
 
   if (g_bFakePixelShaderLoaded) then
   begin

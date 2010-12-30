@@ -604,10 +604,11 @@ const
   PSH_XBOX_MAX_R_REGISTER_COUNT = 2;
   PSH_XBOX_MAX_T_REGISTER_COUNT = 4;
   PSH_XBOX_MAX_V_REGISTER_COUNT = 2;
-  // Two extra constants are possible in the final combiner - give them fake numbers :
-  PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_MAX_C_REGISTER_COUNT; // = 16
-  PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 17
-  PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FC1 + 1; // = 18
+  // Extra constants to support features not present in Native D3D :
+  PSH_XBOX_CONSTANT_FOG = PSH_XBOX_MAX_C_REGISTER_COUNT; // = 16
+  PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_CONSTANT_FOG + 1; // = 17
+  PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 18
+  PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FC1 + 1; // = 19
 
 {$IFDEF DXBX_USE_PS_3_0}
   PSH_PC_MAX_C_REGISTER_COUNT = 224; // ps 3.0
@@ -825,8 +826,8 @@ type
   end;
 
 type PSH_XBOX_SHADER = record
-    // Reserve enough slots for all shaders, so we need space for 18 constants, 4 texture addressing codes and 5 lines per opcode : :
-    Intermediate: array[0..(PSH_XBOX_CONSTANT_MAX+X_D3DTS_STAGECOUNT+X_PSH_COMBINECOUNT * 5)] of PSH_INTERMEDIATE_FORMAT;
+    // Reserve enough slots for all shaders, so we need space for 2 constants, 4 texture addressing codes and 5 lines per opcode : :
+    Intermediate: array[0..(2+X_D3DTS_STAGECOUNT+X_PSH_COMBINECOUNT * 5)] of PSH_INTERMEDIATE_FORMAT;
     IntermediateCount: int;
 
     PSTextureModes: array[0..X_D3DTS_STAGECOUNT-1] of PS_TEXTUREMODES;
@@ -2411,6 +2412,17 @@ begin
     begin
       // Only handle arguments that address a constant register :
       CurArg := @(Cur.Parameters[j]);
+
+      // The Fog register is not supported on PC so we convert it to a constant too :
+      // (But only if the MASK is not solely accessing the alpha-channel - we don't support that)
+      if (CurArg.Type_ = PARAM_FOG) and (CurArg.Mask <> MASK_A) then
+      begin
+        CurArg.Type_ := PARAM_C;
+        CurArg.Address := _HandleConst(PSH_XBOX_CONSTANT_FOG);
+        CurArg.Mask := CurArg.Mask and (not MASK_A);
+        Continue;
+      end;
+
       if CurArg.Type_ <> PARAM_C then
         Continue;
 
@@ -2769,8 +2781,8 @@ begin
       PARAM_FOG:
       begin
         // Change FOG into a constant of 1.0, as we can't simulate it otherwise :
-        CurArg.SetConstValue(1.0);
-        Cur.CommentString := 'final combiner - FOG not emulated, using 1.';
+//        CurArg.SetConstValue(1.0);
+//        Cur.CommentString := 'final combiner - FOG not emulated, using 1.';
       end;
     end;
   end; // for input
