@@ -2330,6 +2330,23 @@ var
   Cur: PPSH_INTERMEDIATE_FORMAT;
   CurArg: PPSH_IMD_ARGUMENT;
   NativeConstInUse: array [0..PSH_PC_MAX_C_REGISTER_COUNT-1] of boolean;
+  OriginalConstantNr: Int16;
+  EmittedNewConstant: Boolean;
+  NewIns: PSH_INTERMEDIATE_FORMAT;
+
+  procedure _SetColor(var NewIns: PSH_INTERMEDIATE_FORMAT; ConstColor: D3DCOLOR);
+  var
+    XColor: D3DCOLORVALUE;
+  begin
+    // Colors are defined in RGBA format, and range 0.0 - 1.0 (negative values
+    // can be obtained by supplying PS_INPUTMAPPING_SIGNED_NEGATE to the combiner
+    // that reads from these constants).
+    XColor := D3DXColorFromDWord(ConstColor);
+    NewIns.Parameters[0].SetConstValue(XColor.r);
+    NewIns.Parameters[1].SetConstValue(XColor.g);
+    NewIns.Parameters[2].SetConstValue(XColor.b);
+    NewIns.Parameters[3].SetConstValue(XColor.a);
+  end;
 
   // Try to fixup constants above the limit (c7 for PS.1.3) :
   function _MapConstant(ConstNr: int): int;
@@ -2358,7 +2375,7 @@ var
     EmuWarning('; Too many constants to emulate, this pixel shader will give unexpected output!');
   end;
 
-  function _HandleConst(XboxConst: int; ConstColor: D3DCOLOR): int;
+  function _HandleConst(XboxConst: int): int;
   var
     NativeConst: int;
   begin
@@ -2369,6 +2386,9 @@ var
       NativeConstInUse[NativeConst] := True;
       Recompiled.ConstMapping[XboxConst] := NativeConst;
       Recompiled.ConstInUse[XboxConst] := True;
+      // Make sure we can check this is a new constant (so we can emit a constant declaration
+      // for any final combiner constants - because those cannot be set via SetPixelShaderConstant) :
+      EmittedNewConstant := True;
     end;
 
     // Return the (previously) determined mapping :
@@ -2394,6 +2414,11 @@ begin
       if CurArg.Type_ <> PARAM_C then
         Continue;
 
+      // Make sure we can detect new constants (and if it was C0 or C1),
+      // as we need this for fixing up final combiner constants :
+      EmittedNewConstant := False;
+      OriginalConstantNr := CurArg.Address;
+
       // For each constant being addressed, we find out which Xbox constant it is,
       // and map it to a native constant (as far as we have space for them) :
       case CurArg.Address of
@@ -2401,16 +2426,16 @@ begin
         begin
           // The final combiner has a separate C0 constant :
           if Cur.CombinerStageNr = XFC_COMBINERSTAGENR then
-            CurArg.Address := _HandleConst(PSH_XBOX_CONSTANT_FC0, pPSDef.PSFinalCombinerConstant0)
+            CurArg.Address := _HandleConst(PSH_XBOX_CONSTANT_FC0)
           else
           begin
             // See if C0 has a unique index per combiner stage :
             if CombinerHasUniqueC0 then
               // C0 actually ranges from c0 to c7, one for each possible combiner stage (X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7) :
-              CurArg.Address := _HandleConst(Cur.CombinerStageNr, pPSDef.PSConstant0[Cur.CombinerStageNr])
+              CurArg.Address := _HandleConst(Cur.CombinerStageNr)
             else
               // Non-unique just reads the same C0 in every stage :
-              CurArg.Address := _HandleConst(0, pPSDef.PSConstant0[0]);
+              CurArg.Address := _HandleConst(0);
           end;
         end;
 
@@ -2418,19 +2443,35 @@ begin
         begin
           // The final combiner has a separate C1 constant :
           if Cur.CombinerStageNr = XFC_COMBINERSTAGENR then
-            CurArg.Address := _HandleConst(PSH_XBOX_CONSTANT_FC1, pPSDef.PSFinalCombinerConstant1)
+            CurArg.Address := _HandleConst(PSH_XBOX_CONSTANT_FC1)
           else
           begin
             // See if C1 has a unique index per combiner stage :
             if CombinerHasUniqueC1 then
               // C1 actually ranges from c8 to c15, one for each possible combiner stage (X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7) :
-              CurArg.Address := _HandleConst(Cur.CombinerStageNr + 8, pPSDef.PSConstant1[Cur.CombinerStageNr])
+              CurArg.Address := _HandleConst(Cur.CombinerStageNr + 8)
             else
               // Non-unique just reads the same C1 in every stage :
-              CurArg.Address := _HandleConst(1, pPSDef.PSConstant1[0]);
+              CurArg.Address := _HandleConst(1);
           end;
         end;
       end; // case
+
+      // New constants solely used for the final combiner must be DEFined separately,
+      // as there's no other way to set these (SetPixelShaderConstant can only write
+      // to the 16 slots X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7) :
+      if (Cur.CombinerStageNr = XFC_COMBINERSTAGENR) and EmittedNewConstant then
+      begin
+        // Output a new opcode to define this constant :
+        NewIns.Initialize(PO_DEF);
+        NewIns.Output[0].SetRegister(PARAM_C, CurArg.Address, MASK_RGBA);
+        if OriginalConstantNr = 0 then
+          _SetColor(NewIns, pPSDef.PSFinalCombinerConstant0)
+        else
+          _SetColor(NewIns, pPSDef.PSFinalCombinerConstant1);
+
+        InsertIntermediate(@NewIns, 0);
+      end;
     end; // for arguments
   end; // for opcodes
 end; // ConvertConstantsToNative
