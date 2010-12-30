@@ -1958,14 +1958,22 @@ begin
 
   for i := 0 to NumberOfCombiners - 1 do
   begin
+    // Check that the RGB and Alpha inputs do the same operation :
     if  ((pPSDef.PSRGBInputs[i] and PS_NoChannelsMask) = (pPSDef.PSAlphaInputs[i] and PS_NoChannelsMask))
+    // Check if all RGB channels are set to read from PS_CHANNEL_RGB :
+    and ((pPSDef.PSRGBInputs[i] and PS_AlphaChannelsMask) = 0)
+    // Check if all Alpha channels are set to read from PS_CHANNEL_ALPHA :
+    and ((pPSDef.PSAlphaInputs[i] and PS_AlphaChannelsMask) = PS_AlphaChannelsMask)
+    // Check that RGB and Alpha output to the same register(s) :
     and (pPSDef.PSRGBOutputs[i] = pPSDef.PSAlphaOutputs[i]) then
     begin
+      // In this case, we can convert RGB and Alpha together :
       if not NewIntermediate.Decode(i, pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i], MASK_RGBA) then
         DeleteLastIntermediate;
     end
     else
     begin
+      // Otherwise, we need to convert RGB and Alpha separately :
       if not NewIntermediate.Decode(i, pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i], MASK_RGB) then
         DeleteLastIntermediate;
 
