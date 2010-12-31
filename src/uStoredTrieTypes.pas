@@ -101,7 +101,7 @@ type
 {$ENDIF}
     LibVersion: TLibVersion; /// The version number of this library
     LibNameIndex: TStringTableIndex; // The name of this library, in the form of an index into the StringTable.
-//    LibFlags: TLibFlags;
+    LibFlags: TLibFlags;
   end;
 
   PStoredLibrariesList = ^TStoredLibrariesList;
