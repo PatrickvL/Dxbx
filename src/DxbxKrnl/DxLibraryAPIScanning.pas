@@ -1679,16 +1679,19 @@ end; // PrintSymbolList
 ///
 
 procedure TSymbolManager.DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
+const
+  CompleteStr: array [Boolean] of string = ('incomplete', 'complete');
 var
   CurrentXbeLibraryVersion: PXBE_LIBRARYVERSION;
   CurrentLibName: string;
   StoredLibrary: PStoredLibrary;
   StoredLibraryName: string;
-  StoredLibraryIsIncomplete: Boolean;
+  StoredLibraryIsComplete: Boolean;
+  StoredLibraryIsVersionExact: Boolean;
   i, j: Integer;
   StoredLibraryVersions: TStringList;
   BestStoredLibraryIndex: Integer;
-  PrevBestStoredLibraryIndex: Integer;
+  RemoveRest: Boolean;
 begin
   // Loop over all libraries :
   CurrentXbeLibraryVersion := pLibraryVersion;
@@ -1713,60 +1716,110 @@ begin
 
     // Collect all known library-numbers with the same name in a stringlist :
     StoredLibraryVersions.Clear;
-    for j := 0 to PatternTrieReader.StoredSignatureTrieHeader.LibraryTable.NrOfLibraries - 1 do
+    j := PatternTrieReader.StoredSignatureTrieHeader.LibraryTable.NrOfLibraries;
+    while j > 0 do
     begin
+      Dec(j);
       StoredLibrary := PatternTrieReader.GetStoredLibrary(j);
       StoredLibraryName := PatternTrieReader.GetString(StoredLibrary.LibNameIndex);
       if SameText(StoredLibraryName, CurrentLibName) then
-        StoredLibraryVersions.AddObject(IntToStr(StoredLibrary.LibVersion), TObject(j));
+      begin
+        StoredLibraryIsComplete := not (lfIsIncomplete in StoredLibrary.LibFlags);
+        StoredLibraryIsVersionExact := (StoredLibrary.LibVersion = CurrentXbeLibraryVersion.wBuildVersion);
+        // See if this library is complete and an exact version-match :
+        if StoredLibraryIsComplete and StoredLibraryIsVersionExact then
+        begin
+          // Then clear all other candidates and don't look further once we add this one :
+          StoredLibraryVersions.Clear;
+          j := 0;
+        end;
+
+        // Add this version (which might end up being the only version, see above) :
+        StoredLibraryVersions.AddObject(IntToStr(StoredLibrary.LibVersion), TObject(StoredLibrary));
+      end;
     end;
 
-    PrevBestStoredLibraryIndex := -1;
-    BestStoredLibraryIndex := -1;
+    // See if there where multiple candidates :
+    if StoredLibraryVersions.Count > 1 then
+    begin
+      // Sort the list and search (nearest) index of the needed version :
+      StoredLibraryVersions.Sort;
 
-    // Sort the list and search (nearest) index of the needed version :
+      // Step right until a complete lib is found, remove everything behind that :
+      if StoredLibraryVersions.Find(IntToStr(CurrentXbeLibraryVersion.wBuildVersion), {var}BestStoredLibraryIndex) then
+        // Skip exact hits themselves :
+        j := BestStoredLibraryIndex + 1
+      else
+        j := BestStoredLibraryIndex;
+      RemoveRest := False;
+      while j < StoredLibraryVersions.Count do
+      begin
+        if RemoveRest then
+        begin
+          StoredLibraryVersions.Delete(j);
+          Continue;
+        end;
+
+        StoredLibrary := PStoredLibrary(StoredLibraryVersions.Objects[j]);
+        StoredLibraryIsComplete := not (lfIsIncomplete in StoredLibrary.LibFlags);
+        if StoredLibraryIsComplete then
+          RemoveRest := True;
+
+        Inc(j);
+      end;
+
+      // Step left until a complete lib is found, remove everything behind that :
+      j := BestStoredLibraryIndex;
+      RemoveRest := False;
+      while j > 0 do
+      begin
+        Dec(j);
+        if RemoveRest then
+        begin
+          StoredLibraryVersions.Delete(j);
+          Continue;
+        end;
+
+        StoredLibrary := PStoredLibrary(StoredLibraryVersions.Objects[j]);
+        StoredLibraryIsComplete := not (lfIsIncomplete in StoredLibrary.LibFlags);
+        if StoredLibraryIsComplete then
+          RemoveRest := True;
+      end;
+    end;
+
     if StoredLibraryVersions.Count > 0 then
     begin
-      StoredLibraryVersions.Sort;
-      if StoredLibraryVersions.Find(IntToStr(CurrentXbeLibraryVersion.wBuildVersion), {var}j) then
-        // Exact hit :
-        BestStoredLibraryIndex := Integer(StoredLibraryVersions.Objects[j])
-      else
+      // Loop over all remaining versions :
+      for j := 0 to StoredLibraryVersions.Count - 1 do
       begin
-        // No exact hit, try a range of the surrounding two versions if possible :
-        if j <= 0 then
-          j := 0
-        else
-          PrevBestStoredLibraryIndex := Integer(StoredLibraryVersions.Objects[j-1]);
+        StoredLibrary := PStoredLibrary(StoredLibraryVersions.Objects[j]);
+        StoredLibraryName := PatternTrieReader.GetString(StoredLibrary.LibNameIndex);
+        StoredLibraryIsComplete := not (lfIsIncomplete in StoredLibrary.LibFlags);
+        StoredLibraryIsVersionExact := (StoredLibrary.LibVersion = CurrentXbeLibraryVersion.wBuildVersion);
 
-        BestStoredLibraryIndex := Integer(StoredLibraryVersions.Objects[j]);
-      end;
-    end;
-
-    if BestStoredLibraryIndex >= 0 then
-    begin
-      StoredLibrary := PatternTrieReader.GetStoredLibrary(BestStoredLibraryIndex);
-      StoredLibraryName := PatternTrieReader.GetString(StoredLibrary.LibNameIndex);
-      StoredLibraryIsIncomplete := lfIsIncomplete in StoredLibrary.LibFlags;
-      if SameText(StoredLibraryName, 'D3D8') then
-        LibD3D8 := StoredLibrary;
-
-      // Add this library to a set we'll use in the detection-code :
-      FLibraryVersionsToScan := FLibraryVersionsToScan + [LibraryVersionNumberToFlag(StoredLibrary.LibVersion)];
-      if (StoredLibrary.LibVersion = CurrentXbeLibraryVersion.wBuildVersion)
-      and (StoredLibraryIsIncomplete  = False) then
-        DbgPrintf('... Got patterns for exactly this version!')
-      else
-      begin
-        UsingLibraryApproximations := True;
-        DbgPrintf('... Approximating this with patterns from version %d', [StoredLibrary.LibVersion]);
-        if PrevBestStoredLibraryIndex > -1 then
+        // Remember the D3D8 library (needed later) :
+        if SameText(StoredLibraryName, 'D3D8') then
         begin
-          StoredLibrary := PatternTrieReader.GetStoredLibrary(PrevBestStoredLibraryIndex);
-          FLibraryVersionsToScan := FLibraryVersionsToScan + [LibraryVersionNumberToFlag(StoredLibrary.LibVersion)];
-          DbgPrintf('    and version %d.', [StoredLibrary.LibVersion]);
+          if (LibD3D8 = nil) or StoredLibraryIsVersionExact then
+            LibD3D8 := StoredLibrary;
         end;
-      end;
+
+        // Add this library to a set we'll use in the detection-code :
+        FLibraryVersionsToScan := FLibraryVersionsToScan + [LibraryVersionNumberToFlag(StoredLibrary.LibVersion)];
+        if StoredLibraryIsVersionExact
+        and StoredLibraryIsComplete then
+          DbgPrintf('... Got patterns for exactly this version!')
+        else
+        begin
+          if j = 0 then
+          begin
+            UsingLibraryApproximations := True;
+            DbgPrintf('... Approximating this with patterns from %s version %d', [CompleteStr[StoredLibraryIsComplete], StoredLibrary.LibVersion]);
+          end
+          else
+            DbgPrintf('    and %s version %d', [CompleteStr[StoredLibraryIsComplete], StoredLibrary.LibVersion]);
+        end;
+      end; // for
     end
     else
       DbgPrintf('... No patterns registered for this library!');
