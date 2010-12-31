@@ -1714,6 +1714,15 @@ begin
 
     CurrentLibName := MapLibraryAbbreviationToLibraryName(CurrentLibName);
 
+    if SameText(CurrentLibName, 'libcmt') then
+    begin
+      // HACK : Skip libcmt, as it disturbs the pattern scanning too much (it must be reinstated as soon as we know why this happens) :
+      DbgPrintf('... Skipping "' + CurrentLibName + '" library! (Causes symbol scanning problems)');
+      // Don't forget to skip to the next library :
+      Inc(CurrentXbeLibraryVersion);
+      Continue;
+    end;
+
     // Collect all known library-numbers with the same name in a stringlist :
     StoredLibraryVersions.Clear;
     j := PatternTrieReader.StoredSignatureTrieHeader.LibraryTable.NrOfLibraries;
