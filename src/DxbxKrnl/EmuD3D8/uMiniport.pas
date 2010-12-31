@@ -57,7 +57,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__InitHardware(
+function XTL_EmuD3D_CMiniport_InitHardware(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -68,19 +68,19 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    // D3D__CMiniport__InitHardware(v8 + 8968);
-    LogBegin('XTL_EmuD3D__CMiniport__InitHardware').
+    // D3D_CMiniport_InitHardware(v8 + 8968);
+    LogBegin('XTL_EmuD3D_CMiniport_InitHardware').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('XTL_EmuD3D__CMiniport__InitHardware');
+  Unimplemented('XTL_EmuD3D_CMiniport_InitHardware');
   Result := True;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__CreateCtxDmaObject(
+function XTL_EmuD3D_CMiniport_CreateCtxDmaObject(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -96,8 +96,8 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    // D3D__CMiniport__CreateCtxDmaObject(v8 + 8968, 6, 2, 0, 67088383, &v22);
-    LogBegin('D3D__CMiniport__CreateCtxDmaObject').
+    // D3D_CMiniport_CreateCtxDmaObject(v8 + 8968, 6, 2, 0, 67088383, &v22);
+    LogBegin('D3D_CMiniport_CreateCtxDmaObject').
       _(This, 'This').
       _(a2, 'a2').
       _(a3, 'a3').
@@ -107,13 +107,13 @@ begin
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__CreateCtxDmaObject');
+  Unimplemented('D3D_CMiniport_CreateCtxDmaObject');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__DacProgramGammaRamp(
+function XTL_EmuD3D_CMiniport_DacProgramGammaRamp(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -125,20 +125,20 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    // result = D3D__CMiniport__DacProgramGammaRamp(D3D__g_pDevice + 8968, 768 * result + D3D__g_pDevice + 8968 + 532);
-    LogBegin('D3D__CMiniport__DacProgramGammaRamp').
+    // result = D3D_CMiniport_DacProgramGammaRamp(D3D__g_pDevice + 8968, 768 * result + D3D__g_pDevice + 8968 + 532);
+    LogBegin('D3D_CMiniport_DacProgramGammaRamp').
       _(This, 'This').
       _(a2, 'a2').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__DacProgramGammaRamp');
+  Unimplemented('D3D_CMiniport_DacProgramGammaRamp');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__InitDMAChannel(
+function XTL_EmuD3D_CMiniport_InitDMAChannel(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -154,8 +154,8 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    // D3D__CMiniport__InitDMAChannel(v8 + 8968, 8302, 0, &v22, 0, &v23);
-    LogBegin('D3D__CMiniport__InitDMAChannel').
+    // D3D_CMiniport_InitDMAChannel(v8 + 8968, 8302, 0, &v22, 0, &v23);
+    LogBegin('D3D_CMiniport_InitDMAChannel').
       _(This, 'This').
       _(a2, 'a2').
       _(a3, 'a3').
@@ -167,13 +167,13 @@ begin
 
   PDWORD(a6)^ := 0;
 
-  Unimplemented('D3D__CMiniport__InitDMAChannel');
+  Unimplemented('D3D_CMiniport_InitDMAChannel');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__BindToChannel(
+function XTL_EmuD3D_CMiniport_BindToChannel(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -185,20 +185,20 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    // D3D__CMiniport__BindToChannel(v8 + 8968, &v22);
-    LogBegin('D3D__CMiniport__BindToChannel').
+    // D3D_CMiniport_BindToChannel(v8 + 8968, &v22);
+    LogBegin('D3D_CMiniport_BindToChannel').
       _(This, 'This').
       _(a2, 'a2').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__BindToChannel');
+  Unimplemented('D3D_CMiniport_BindToChannel');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__CreateGrObject(
+function XTL_EmuD3D_CMiniport_CreateGrObject(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -212,8 +212,8 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    // D3D__CMiniport__CreateGrObject(v8 + 8968, 17, 98, &v27);
-    LogBegin('D3D__CMiniport__CreateGrObject').
+    // D3D_CMiniport_CreateGrObject(v8 + 8968, 17, 98, &v27);
+    LogBegin('D3D_CMiniport_CreateGrObject').
       _(This, 'This').
       _(a2, 'a2').
       _(a3, 'a3').
@@ -221,13 +221,13 @@ begin
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__CreateGrObject');
+  Unimplemented('D3D_CMiniport_CreateGrObject');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__CreateTile(
+function XTL_EmuD3D_CMiniport_CreateTile(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -245,7 +245,7 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__CreateTile').
+    LogBegin('D3D_CMiniport_CreateTile').
       _(This, 'This').
       _(TileRegion, 'TileRegion').
       _(Offset, 'Offset').
@@ -257,13 +257,13 @@ begin
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__CreateTile');
+  Unimplemented('D3D_CMiniport_CreateTile');
   Result := TRUE;
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__DumpClocks(
+procedure XTL_EmuD3D_CMiniport_DumpClocks(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid); register; // thiscall simulation - See Translation guide
@@ -273,17 +273,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__DumpClocks').
+    LogBegin('D3D_CMiniport_DumpClocks').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__DumpClocks');
+  Unimplemented('D3D_CMiniport_DumpClocks');
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__MapRegisters(
+function XTL_EmuD3D_CMiniport_MapRegisters(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -294,18 +294,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__MapRegisters').
+    LogBegin('D3D_CMiniport_MapRegisters').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__MapRegisters');
+  Unimplemented('D3D_CMiniport_MapRegisters');
   Result := TRUE;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__GetGeneralInfo(
+function XTL_EmuD3D_CMiniport_GetGeneralInfo(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -316,18 +316,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__GetGeneralInfo').
+    LogBegin('D3D_CMiniport_GetGeneralInfo').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__GetGeneralInfo');
+  Unimplemented('D3D_CMiniport_GetGeneralInfo');
   Result := TRUE;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__ReserveInstMem(
+function XTL_EmuD3D_CMiniport_ReserveInstMem(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -339,19 +339,19 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__ReserveInstMem').
+    LogBegin('D3D_CMiniport_ReserveInstMem').
       _(This, 'This').
       _(blocks, 'blocks').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__ReserveInstMem');
+  Unimplemented('D3D_CMiniport_ReserveInstMem');
   Result := 0;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__InitEngines(
+function XTL_EmuD3D_CMiniport_InitEngines(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -362,18 +362,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__InitEngines').
+    LogBegin('D3D_CMiniport_InitEngines').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__InitEngines');
+  Unimplemented('D3D_CMiniport_InitEngines');
   Result := TRUE;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__LoadEngines(
+function XTL_EmuD3D_CMiniport_LoadEngines(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -384,18 +384,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__LoadEngines').
+    LogBegin('D3D_CMiniport_LoadEngines').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__LoadEngines');
+  Unimplemented('D3D_CMiniport_LoadEngines');
   Result := TRUE;
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__InitGammaRamp(
+procedure XTL_EmuD3D_CMiniport_InitGammaRamp(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -406,17 +406,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__InitGammaRamp').
+    LogBegin('D3D_CMiniport_InitGammaRamp').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__InitGammaRamp');
+  Unimplemented('D3D_CMiniport_InitGammaRamp');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__GetAddressInfo(
+procedure XTL_EmuD3D_CMiniport_GetAddressInfo(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -431,7 +431,7 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__GetAddressInfo').
+    LogBegin('D3D_CMiniport_GetAddressInfo').
       _(This, 'This').
       _(pLinearAddress, 'pLinearAddress').
       _(ppAddress, 'ppAddress').
@@ -440,12 +440,12 @@ begin
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__GetAddressInfo');
+  Unimplemented('D3D_CMiniport_GetAddressInfo');
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__SetDmaRange(
+function XTL_EmuD3D_CMiniport_SetDmaRange(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -458,20 +458,20 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__SetDmaRange').
+    LogBegin('D3D_CMiniport_SetDmaRange').
       _(This, 'This').
       _(DmaContext, 'DmaContext').
       _(pSurface, 'pSurface').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__SetDmaRange');
+  Unimplemented('D3D_CMiniport_SetDmaRange');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__ShutdownEngines(
+procedure XTL_EmuD3D_CMiniport_ShutdownEngines(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid); register;// thiscall simulation - See Translation guide
@@ -481,17 +481,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__ShutdownEngines').
+    LogBegin('D3D_CMiniport_ShutdownEngines').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__ShutdownEngines');
+  Unimplemented('D3D_CMiniport_ShutdownEngines');
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__DestroyTile(
+function XTL_EmuD3D_CMiniport_DestroyTile(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -504,20 +504,20 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__DestroyTile').
+    LogBegin('D3D_CMiniport_DestroyTile').
       _(This, 'This').
       _(TileRegion, 'TileRegion').
       _(ZOffset, 'ZOffset').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__DestroyTile');
+  Unimplemented('D3D_CMiniport_DestroyTile');
   Result := TRUE;
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__TilingUpdateIdle(
+procedure XTL_EmuD3D_CMiniport_TilingUpdateIdle(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -529,17 +529,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__TilingUpdateIdle').
+    LogBegin('D3D_CMiniport_TilingUpdateIdle').
       _(This, 'This').
+      _(dmapush, 'dmapush').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__TilingUpdateIdle');
+  Unimplemented('D3D_CMiniport_TilingUpdateIdle');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalMcControlInit(
+procedure XTL_EmuD3D_CMiniport_HalMcControlInit(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -550,17 +551,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalMcControlInit').
+    LogBegin('D3D_CMiniport_HalMcControlInit').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalMcControlInit');
+  Unimplemented('D3D_CMiniport_HalMcControlInit');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalFbControlInit(
+procedure XTL_EmuD3D_CMiniport_HalFbControlInit(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -571,17 +572,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalFbControlInit').
+    LogBegin('D3D_CMiniport_HalFbControlInit').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalFbControlInit');
+  Unimplemented('D3D_CMiniport_HalFbControlInit');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalDacControlInit(
+procedure XTL_EmuD3D_CMiniport_HalDacControlInit(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -592,17 +593,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalDacControlInit').
+    LogBegin('D3D_CMiniport_HalDacControlInit').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalDacControlInit');
+  Unimplemented('D3D_CMiniport_HalDacControlInit');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalVideoControlInit(
+procedure XTL_EmuD3D_CMiniport_HalVideoControlInit(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -613,17 +614,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalVideoControlInit').
+    LogBegin('D3D_CMiniport_HalVideoControlInit').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalVideoControlInit');
+  Unimplemented('D3D_CMiniport_HalVideoControlInit');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalGrControlInit(
+procedure XTL_EmuD3D_CMiniport_HalGrControlInit(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -634,17 +635,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalGrControlInit').
+    LogBegin('D3D_CMiniport_HalGrControlInit').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalGrControlInit');
+  Unimplemented('D3D_CMiniport_HalGrControlInit');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalFifoControlInit(
+procedure XTL_EmuD3D_CMiniport_HalFifoControlInit(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -655,17 +656,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalFifoControlInit').
+    LogBegin('D3D_CMiniport_HalFifoControlInit').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalFifoControlInit');
+  Unimplemented('D3D_CMiniport_HalFifoControlInit');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalGrControlLoad(
+procedure XTL_EmuD3D_CMiniport_HalGrControlLoad(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -676,17 +677,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalGrControlLoad').
+    LogBegin('D3D_CMiniport_HalGrControlLoad').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalGrControlLoad');
+  Unimplemented('D3D_CMiniport_HalGrControlLoad');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalGrIdle(
+procedure XTL_EmuD3D_CMiniport_HalGrIdle(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -697,17 +698,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalGrIdle').
+    LogBegin('D3D_CMiniport_HalGrIdle').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalGrIdle');
+  Unimplemented('D3D_CMiniport_HalGrIdle');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalGrLoadChannelContext(
+procedure XTL_EmuD3D_CMiniport_HalGrLoadChannelContext(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -719,17 +720,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalGrLoadChannelContext').
+    LogBegin('D3D_CMiniport_HalGrLoadChannelContext').
       _(This, 'This').
+      _(ChID, 'ChID').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalGrLoadChannelContext');
+  Unimplemented('D3D_CMiniport_HalGrLoadChannelContext');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalGrUnloadChannelContext(
+procedure XTL_EmuD3D_CMiniport_HalGrUnloadChannelContext(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -741,17 +743,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalGrUnloadChannelContext').
+    LogBegin('D3D_CMiniport_HalGrUnloadChannelContext').
       _(This, 'This').
+      _(ChID, 'ChID').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalGrUnloadChannelContext');
+  Unimplemented('D3D_CMiniport_HalGrUnloadChannelContext');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalFifoControlLoad(
+procedure XTL_EmuD3D_CMiniport_HalFifoControlLoad(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -762,17 +765,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalFifoControlLoad').
+    LogBegin('D3D_CMiniport_HalFifoControlLoad').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalFifoControlLoad');
+  Unimplemented('D3D_CMiniport_HalFifoControlLoad');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalFifoContextSwitch(
+procedure XTL_EmuD3D_CMiniport_HalFifoContextSwitch(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -784,17 +787,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalFifoContextSwitch').
+    LogBegin('D3D_CMiniport_HalFifoContextSwitch').
       _(This, 'This').
+      _(ChID, 'ChID').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalFifoContextSwitch');
+  Unimplemented('D3D_CMiniport_HalFifoContextSwitch');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalMpControlInit(
+procedure XTL_EmuD3D_CMiniport_HalMpControlInit(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -805,17 +809,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalMpControlInit').
+    LogBegin('D3D_CMiniport_HalMpControlInit').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalMpControlInit');
+  Unimplemented('D3D_CMiniport_HalMpControlInit');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalDacUnload(
+procedure XTL_EmuD3D_CMiniport_HalDacUnload(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -826,17 +830,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalDacUnload').
+    LogBegin('D3D_CMiniport_HalDacUnload').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalDacUnload');
+  Unimplemented('D3D_CMiniport_HalDacUnload');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalDacProgramMClk(
+procedure XTL_EmuD3D_CMiniport_HalDacProgramMClk(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -847,17 +851,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalDacProgramMClk').
+    LogBegin('D3D_CMiniport_HalDacProgramMClk').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalDacProgramMClk');
+  Unimplemented('D3D_CMiniport_HalDacProgramMClk');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalDacProgramNVClk(
+procedure XTL_EmuD3D_CMiniport_HalDacProgramNVClk(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -868,17 +872,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalDacProgramNVClk').
+    LogBegin('D3D_CMiniport_HalDacProgramNVClk').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalDacProgramNVClk');
+  Unimplemented('D3D_CMiniport_HalDacProgramNVClk');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalDacProgramPClk(
+procedure XTL_EmuD3D_CMiniport_HalDacProgramPClk(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -889,17 +893,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalDacProgramPClk').
+    LogBegin('D3D_CMiniport_HalDacProgramPClk').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalDacProgramPClk');
+  Unimplemented('D3D_CMiniport_HalDacProgramPClk');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalFifoHashAdd(
+procedure XTL_EmuD3D_CMiniport_HalFifoHashAdd(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -915,7 +919,7 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalFifoHashAdd').
+    LogBegin('D3D_CMiniport_HalFifoHashAdd').
       _(This, 'This').
       _(entry, 'entry').
       _(handle, 'handle').
@@ -925,12 +929,12 @@ begin
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalFifoHashAdd');
+  Unimplemented('D3D_CMiniport_HalFifoHashAdd');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalGrInitObjectContext(
+procedure XTL_EmuD3D_CMiniport_HalGrInitObjectContext(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -943,19 +947,19 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalGrInitObjectContext').
+    LogBegin('D3D_CMiniport_HalGrInitObjectContext').
       _(This, 'This').
       _(Instance, 'Instance').
       _(ClassNum, 'ClassNum').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalGrInitObjectContext');
+  Unimplemented('D3D_CMiniport_HalGrInitObjectContext');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalGrInit3d(
+procedure XTL_EmuD3D_CMiniport_HalGrInit3d(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -966,17 +970,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalGrInit3d').
+    LogBegin('D3D_CMiniport_HalGrInit3d').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalGrInit3d');
+  Unimplemented('D3D_CMiniport_HalGrInit3d');
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__HalDacLoad(
+procedure XTL_EmuD3D_CMiniport_HalDacLoad(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -987,17 +991,17 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__HalDacLoad').
+    LogBegin('D3D_CMiniport_HalDacLoad').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__HalDacLoad');
+  Unimplemented('D3D_CMiniport_HalDacLoad');
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__GetPresentFlagsFromAvInfo(
+function XTL_EmuD3D_CMiniport_GetPresentFlagsFromAvInfo(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -1009,19 +1013,19 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__GetPresentFlagsFromAvInfo').
+    LogBegin('D3D_CMiniport_GetPresentFlagsFromAvInfo').
       _(This, 'This').
       _(AvInfo, 'AvInfo').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__GetPresentFlagsFromAvInfo');
+  Unimplemented('D3D_CMiniport_GetPresentFlagsFromAvInfo');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__GetDisplayCapabilities(
+function XTL_EmuD3D_CMiniport_GetDisplayCapabilities(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -1032,18 +1036,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__GetDisplayCapabilities').
+    LogBegin('D3D_CMiniport_GetDisplayCapabilities').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__GetDisplayCapabilities');
+  Unimplemented('D3D_CMiniport_GetDisplayCapabilities');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__IsFlipPending(
+function XTL_EmuD3D_CMiniport_IsFlipPending(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -1054,18 +1058,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__GetDisplayCapabilities').
+    LogBegin('D3D_CMiniport_GetDisplayCapabilities').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__GetDisplayCapabilities');
+  Unimplemented('D3D_CMiniport_GetDisplayCapabilities');
   Result := TRUE;
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__VBlankFlip(
+procedure XTL_EmuD3D_CMiniport_VBlankFlip(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -1078,19 +1082,19 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__VBlankFlip').
+    LogBegin('D3D_CMiniport_VBlankFlip').
       _(This, 'This').
       _(Offset, 'Offset').
       _(FlipTime, 'FlipTime').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__VBlankFlip');
+  Unimplemented('D3D_CMiniport_VBlankFlip');
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__VBlank(
+function XTL_EmuD3D_CMiniport_VBlank(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -1101,18 +1105,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__VBlank').
+    LogBegin('D3D_CMiniport_VBlank').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__VBlank');
+  Unimplemented('D3D_CMiniport_VBlank');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__ServiceGrInterrupt(
+function XTL_EmuD3D_CMiniport_ServiceGrInterrupt(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -1123,18 +1127,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__ServiceGrInterrupt').
+    LogBegin('D3D_CMiniport_ServiceGrInterrupt').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__ServiceGrInterrupt');
+  Unimplemented('D3D_CMiniport_ServiceGrInterrupt');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__ServiceFifoInterrupt(
+function XTL_EmuD3D_CMiniport_ServiceFifoInterrupt(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -1145,18 +1149,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__ServiceFifoInterrupt').
+    LogBegin('D3D_CMiniport_ServiceFifoInterrupt').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__ServiceFifoInterrupt');
+  Unimplemented('D3D_CMiniport_ServiceFifoInterrupt');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__ServiceMediaPortInterrupt(
+function XTL_EmuD3D_CMiniport_ServiceMediaPortInterrupt(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -1167,18 +1171,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__ServiceMediaPortInterrupt').
+    LogBegin('D3D_CMiniport_ServiceMediaPortInterrupt').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__ServiceMediaPortInterrupt');
+  Unimplemented('D3D_CMiniport_ServiceMediaPortInterrupt');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__ServiceVideoInterrupt(
+function XTL_EmuD3D_CMiniport_ServiceVideoInterrupt(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
@@ -1189,18 +1193,18 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__ServiceVideoInterrupt').
+    LogBegin('D3D_CMiniport_ServiceVideoInterrupt').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__ServiceVideoInterrupt');
+  Unimplemented('D3D_CMiniport_ServiceVideoInterrupt');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuD3D__CMiniport__SoftwareMethod(
+procedure XTL_EmuD3D_CMiniport_SoftwareMethod(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -1213,19 +1217,19 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    LogBegin('D3D__CMiniport__ServiceVideoInterrupt').
+    LogBegin('D3D_CMiniport_ServiceVideoInterrupt').
       _(This, 'This').
       _(Method, 'Method').
       _(Data, 'Data').
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__ServiceVideoInterrupt');
+  Unimplemented('D3D_CMiniport_ServiceVideoInterrupt');
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D__CMiniport__SetVideoMode(
+function XTL_EmuD3D_CMiniport_SetVideoMode(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
@@ -1243,9 +1247,9 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    // D3D__CMiniport__SetVideoMode(v8 + 8968, *(_DWORD *)a2, *(_DWORD *)(a2 + 4), *(_DWORD *)(a2 + 44),
+    // D3D_CMiniport_SetVideoMode(v8 + 8968, *(_DWORD *)a2, *(_DWORD *)(a2 + 4), *(_DWORD *)(a2 + 44),
    //   *(_DWORD *)(a2 + 40), *(_DWORD *)(a2 + 8), *(_DWORD *)(a2 + 48), v7);
-    LogBegin('D3D__CMiniport__SetVideoMode').
+    LogBegin('D3D_CMiniport_SetVideoMode').
       _(This, 'This').
       _(a2, 'a2').
       _(a3, 'a3').
@@ -1257,7 +1261,7 @@ begin
     LogEnd();
   end;
 
-  Unimplemented('D3D__CMiniport__SetVideoMode');
+  Unimplemented('D3D_CMiniport_SetVideoMode');
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
@@ -1279,78 +1283,78 @@ end;
 exports
 //  XTL_EmuGlobalAlloc, // TODO : Move this to a better unit. This patch crashes EviLoader!
 
-//  XTL_EmuD3D__CMiniport__ApplyLGSFix name PatchPrefix + '?ApplyLGSFix@CMiniport@D3D@@QAEXXZ', // not implemented
-  XTL_EmuD3D__CMiniport__BindToChannel name PatchPrefix + '?BindToChannel@CMiniport@D3D@@QAEHPAUOBJECTINFO@12@@Z',
-  XTL_EmuD3D__CMiniport__CreateCtxDmaObject name PatchPrefix + '?CreateCtxDmaObject@CMiniport@D3D@@QAEHKKPAXKPAUOBJECTINFO@12@@Z',
-  XTL_EmuD3D__CMiniport__CreateGrObject name PatchPrefix + '?CreateGrObject@CMiniport@D3D@@QAEHKKPAUOBJECTINFO@12@@Z',
-  XTL_EmuD3D__CMiniport__CreateTile name PatchPrefix + '?CreateTile@CMiniport@D3D@@QAEHKKKKKKK@Z',
-  XTL_EmuD3D__CMiniport__DacProgramGammaRamp name PatchPrefix + '?DacProgramGammaRamp@CMiniport@D3D@@QAEXPAU_D3DGAMMARAMP@@@',
-//  XTL_EmuD3D__CMiniport__DacProgramVideoStart name PatchPrefix + '?DacProgramVideoStart@CMiniport@D3D@@QAEXK@Z', // not implemented
-//  XTL_EmuD3D__CMiniport__DisableInterrupts name PatchPrefix + '?DisableInterrupts@CMiniport@D3D@@QAEXPAX@Z', // not implemented
-  XTL_EmuD3D__CMiniport__DumpClocks name PatchPrefix + '?DumpClocks@CMiniport@D3D@@AAEXXZ',
-//  XTL_EmuD3D__CMiniport__EnableTimer name PatchPrefix + '?EnableTimer@CMiniport@D3D@@AAEXH@Z', // not implemented
-//  XTL_EmuD3D__CMiniport__FixupPushBuffer name PatchPrefix + '?FixupPushBuffer@D3D@@YGXPAUPushBufferFixup@1@@Z', // not implemented
-  XTL_EmuD3D__CMiniport__HalDacLoad name PatchPrefix + '?HalDacLoad@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__HalDacProgramMClk name PatchPrefix + '?HalDacProgramMClk@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__HalDacProgramNVClk name PatchPrefix + '?HalDacProgramNVClk@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__HalDacProgramPClk name PatchPrefix + '?HalDacProgramPClk@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__HalDacUnload name PatchPrefix + '?HalDacUnload@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__DestroyTile name PatchPrefix + '?DestroyTile@CMiniport@D3D@@QAEHKK@Z',
-//  XTL_EmuD3D__CMiniport__DisableInterrupts name PatchPrefix + '?DisableInterrupts@CMiniport@D3D@@QAEXPAX@Z', // not implemented
-//  XTL_EmuD3D__CMiniport__Dpc name PatchPrefix + '?Dpc@CMiniport@D3D@@SGXPAU_KDPC@@PAX11@Z', // not implemented
-//  XTL_EmuD3D__CMiniport__EnableInterrupts name PatchPrefix + '?EnableInterrupts@CMiniport@D3D@@QAEXPAX@Z', // not implemented
-  XTL_EmuD3D__CMiniport__GetAddressInfo name PatchPrefix + '?GetAddressInfo@CMiniport@D3D@@AAEXPAXPAPAXPAKH@Z',
-  XTL_EmuD3D__CMiniport__GetDisplayCapabilities name PatchPrefix + '?GetDisplayCapabilities@CMiniport@D3D@@SGKXZ',
-  XTL_EmuD3D__CMiniport__GetGeneralInfo name PatchPrefix + '?GetGeneralInfo@CMiniport@D3D@@AAEHXZ',
-//  XTL_EmuD3D__CMiniport__GetRefreshRate name PatchPrefix + '?GetRefreshRate@CMiniport@D3D@@QAEKXZ', // not implemented
-//  XTL_EmuD3D__CMiniport__GetTime name PatchPrefix + '?GetTime@CMiniport@D3D@@QAEKXZ', // not implemented
-//  XTL_EmuD3D__CMiniport__GetTimerTime name PatchPrefix + '?GetTimerTime@CMiniport@D3D@@AAE_KXZ', // not implemented
-//  XTL_EmuD3D__CMiniport__GetTSC name PatchPrefix + '?GetTSC@CMiniport@D3D@@SG_KXZ', // not implemented
-  XTL_EmuD3D__CMiniport__GetPresentFlagsFromAvInfo name PatchPrefix + '?GetPresentFlagsFromAvInfo@CMiniport@D3D@@SGKK@ZZ',
-//  XTL_EmuD3D__CMiniport__GrDone name PatchPrefix + '?GrDone@CMiniport@D3D@@AAEXXZ', // not implemented
-  XTL_EmuD3D__CMiniport__HalDacControlInit name PatchPrefix + '?HalDacControlInit@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__HalFbControlInit name PatchPrefix + '?HalFbControlInit@CMiniport@D3D@@AAEXXZ',
-//  XTL_EmuD3D__CMiniport__HalFifoAllocDMA name PatchPrefix + '?HalFifoAllocDMA@CMiniport@D3D@@AAEXKKKPAUOBJECTINFO@12@@Z', // not implemented
-  XTL_EmuD3D__CMiniport__HalFifoContextSwitch name PatchPrefix + '?HalFifoContextSwitch@CMiniport@D3D@@AAEXK@Z',
-  XTL_EmuD3D__CMiniport__HalFifoControlLoad name PatchPrefix + '?HalFifoControlLoad@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__HalFifoControlInit name PatchPrefix + '?HalFifoControlInit@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__HalFifoHashAdd name PatchPrefix + '?HalFifoHashAdd@CMiniport@D3D@@AAEXKKKKK@Z',
-  XTL_EmuD3D__CMiniport__HalGrControlLoad name PatchPrefix + '?HalGrControlLoad@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__HalGrControlInit name PatchPrefix + '?HalGrControlInit@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__HalGrIdle name PatchPrefix + '?HalGrIdle@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__HalGrInit3d name PatchPrefix + '?HalGrInit3d@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__HalGrInitObjectContext name PatchPrefix + '?HalGrInitObjectContext@CMiniport@D3D@@AAEXKK@Z',
-  XTL_EmuD3D__CMiniport__HalGrLoadChannelContext name PatchPrefix + '?HalGrLoadChannelContext@CMiniport@D3D@@AAEXK@Z',
-  XTL_EmuD3D__CMiniport__HalGrUnloadChannelContext name PatchPrefix + '?HalGrUnloadChannelContext@CMiniport@D3D@@AAEXK@Z',
-  XTL_EmuD3D__CMiniport__HalMcControlInit name PatchPrefix + '?HalMcControlInit@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__HalMpControlInit name PatchPrefix + '?HalMpControlInit@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__HalVideoControlInit name PatchPrefix + '?HalVideoControlInit@CMiniport@D3D@@AAEXXZ',
-  XTL_EmuD3D__CMiniport__InitDMAChannel name PatchPrefix + '?InitDMAChannel@CMiniport@D3D@@QAEHKPAUOBJECTINFO@12@0KPAPAX@Z',
-  XTL_EmuD3D__CMiniport__InitEngines name PatchPrefix + '?InitEngines@CMiniport@D3D@@AAEHXZ',
-  XTL_EmuD3D__CMiniport__InitHardware name PatchPrefix + '?InitHardware@CMiniport@D3D@@QAEHXZ',
-  XTL_EmuD3D__CMiniport__InitGammaRamp name PatchPrefix + '?InitGammaRamp@CMiniport@D3D@@AAEXK@Z',
-//  XTL_EmuD3D__CMiniport__IsOddField name PatchPrefix + '?IsOddField@CMiniport@D3D@@QAEHXZ', // not implemented
-//  XTL_EmuD3D__CMiniport__Isr name PatchPrefix + '?Isr@CMiniport@D3D@@SGEPAU_KINTERRUPT@@PAX@Z', // not implemented
-  XTL_EmuD3D__CMiniport__IsFlipPending name PatchPrefix + '?IsFlipPending@CMiniport@D3D@@QAEHXZ',
-  XTL_EmuD3D__CMiniport__LoadEngines name PatchPrefix + '?LoadEngines@CMiniport@D3D@@AAEHXZ',
-  XTL_EmuD3D__CMiniport__MapRegisters name PatchPrefix + '?MapRegisters@CMiniport@D3D@@AAEHXZ',
-  XTL_EmuD3D__CMiniport__ReserveInstMem name PatchPrefix + '?ReserveInstMem@CMiniport@D3D@@AAEKK@Z',
-  XTL_EmuD3D__CMiniport__ServiceFifoInterrupt name PatchPrefix + '?ServiceFifoInterrupt@CMiniport@D3D@@AAEKXZ',
-  XTL_EmuD3D__CMiniport__ServiceGrInterrupt name PatchPrefix + '?ServiceGrInterrupt@CMiniport@D3D@@AAEKXZ',
-  XTL_EmuD3D__CMiniport__ServiceMediaPortInterrupt name PatchPrefix + '?ServiceMediaPortInterrupt@CMiniport@D3D@@AAEKXZ',
-//  XTL_EmuD3D__CMiniport__ServiceTimerInterrupt name PatchPrefix + '?ServiceTimerInterrupt@CMiniport@D3D@@AAEKXZ', // not implemented
-//  XTL_EmuD3D__Cminiport__ServiceQueuedFlips name PatchPrefix + '?ServiceQueuedFlips@CMiniport@D3D@@AAEKXZ', // // not implemented
-  XTL_EmuD3D__CMiniport__ServiceVideoInterrupt name PatchPrefix + '?ServiceVideoInterrupt@CMiniport@D3D@@AAEKXZ',
-  XTL_EmuD3D__CMiniport__SetDmaRange name PatchPrefix + '?SetDmaRange@CMiniport@D3D@@QAEKKPAUD3DSurface@@@Z',
-//  XTL_EmuD3D__CMiniport__SetTimerAlarm name PatchPrefix + '?SetTimerAlarm@CMiniport@D3D@@AAEX_KH@Z', // not implemented
-//  XTL_EmuD3D__CMiniport__SetTimerCallbackAlarm name PatchPrefix + '?SetTimerCallbackAlarm@CMiniport@D3D@@QAEX_KP6AXK@ZK@Z', // not implemented
-  XTL_EmuD3D__CMiniport__SetVideoMode name PatchPrefix + '?SetVideoMode@CMiniport@D3D@@QAEXKKKKW4_D3DFORMAT@@KK@Z',
-  XTL_EmuD3D__CMiniport__SoftwareMethod name PatchPrefix + '?SoftwareMethod@CMiniport@D3D@@AAEXK@Z',
-  XTL_EmuD3D__CMiniport__ShutdownEngines name PatchPrefix + '?ShutdownEngines@CMiniport@D3D@@QAEXXZ',
-//  XTL_EmuD3D__CMiniport__ShutdownNotification name PatchPrefix + '?ShutdownNotification@CMiniport@D3D@@SGXPAU_HAL_SHUTDOWN_REGISTRATION@@@Z', // not implemented
-  XTL_EmuD3D__CMiniport__TilingUpdateIdle name PatchPrefix + '?TilingUpdateIdle@CMiniport@D3D@@QAEXPAK@Z',
-  XTL_EmuD3D__CMiniport__VBlank name PatchPrefix + '?VBlank@CMiniport@D3D@@AAEKXZ',
-  XTL_EmuD3D__CMiniport__VBlankFlip name PatchPrefix + '?VBlankFlip@CMiniport@D3D@@AAEXKK@Z'
+//  XTL_EmuD3D_CMiniport_ApplyLGSFix, // not implemented
+  XTL_EmuD3D_CMiniport_BindToChannel,
+  XTL_EmuD3D_CMiniport_CreateCtxDmaObject,
+  XTL_EmuD3D_CMiniport_CreateGrObject,
+  XTL_EmuD3D_CMiniport_CreateTile,
+  XTL_EmuD3D_CMiniport_DacProgramGammaRamp,
+//  XTL_EmuD3D_CMiniport_DacProgramVideoStart, // not implemented
+  XTL_EmuD3D_CMiniport_DestroyTile,
+//  XTL_EmuD3D_CMiniport_DisableInterrupts, // not implemented
+//  XTL_EmuD3D_CMiniport_DisableInterrupts, // not implemented
+//  XTL_EmuD3D_CMiniport_Dpc, // not implemented
+  XTL_EmuD3D_CMiniport_DumpClocks,
+//  XTL_EmuD3D_CMiniport_EnableInterrupts, // not implemented
+//  XTL_EmuD3D_CMiniport_EnableTimer, // not implemented
+//  XTL_EmuD3D_CMiniport_FixupPushBuffer, // not implemented
+  XTL_EmuD3D_CMiniport_GetAddressInfo,
+  XTL_EmuD3D_CMiniport_GetDisplayCapabilities,
+  XTL_EmuD3D_CMiniport_GetGeneralInfo,
+  XTL_EmuD3D_CMiniport_GetPresentFlagsFromAvInfo,
+//  XTL_EmuD3D_CMiniport_GetRefreshRate, // not implemented
+//  XTL_EmuD3D_CMiniport_GetTime, // not implemented
+//  XTL_EmuD3D_CMiniport_GetTimerTime, // not implemented
+//  XTL_EmuD3D_CMiniport_GetTSC, // not implemented
+//  XTL_EmuD3D_CMiniport_GrDone, // not implemented
+  XTL_EmuD3D_CMiniport_HalDacControlInit,
+  XTL_EmuD3D_CMiniport_HalDacLoad,
+  XTL_EmuD3D_CMiniport_HalDacProgramMClk,
+  XTL_EmuD3D_CMiniport_HalDacProgramNVClk,
+  XTL_EmuD3D_CMiniport_HalDacProgramPClk,
+  XTL_EmuD3D_CMiniport_HalDacUnload,
+  XTL_EmuD3D_CMiniport_HalFbControlInit,
+//  XTL_EmuD3D_CMiniport_HalFifoAllocDMA, // not implemented
+  XTL_EmuD3D_CMiniport_HalFifoContextSwitch,
+  XTL_EmuD3D_CMiniport_HalFifoControlInit,
+  XTL_EmuD3D_CMiniport_HalFifoControlLoad,
+  XTL_EmuD3D_CMiniport_HalFifoHashAdd,
+  XTL_EmuD3D_CMiniport_HalGrControlInit,
+  XTL_EmuD3D_CMiniport_HalGrControlLoad,
+  XTL_EmuD3D_CMiniport_HalGrIdle,
+  XTL_EmuD3D_CMiniport_HalGrInit3d,
+  XTL_EmuD3D_CMiniport_HalGrInitObjectContext,
+  XTL_EmuD3D_CMiniport_HalGrLoadChannelContext,
+  XTL_EmuD3D_CMiniport_HalGrUnloadChannelContext,
+  XTL_EmuD3D_CMiniport_HalMcControlInit,
+  XTL_EmuD3D_CMiniport_HalMpControlInit,
+  XTL_EmuD3D_CMiniport_HalVideoControlInit,
+  XTL_EmuD3D_CMiniport_InitDMAChannel,
+  XTL_EmuD3D_CMiniport_InitEngines,
+  XTL_EmuD3D_CMiniport_InitGammaRamp,
+  XTL_EmuD3D_CMiniport_InitHardware,
+//  XTL_EmuD3D_CMiniport_IsOddField, // not implemented
+  XTL_EmuD3D_CMiniport_IsFlipPending,
+//  XTL_EmuD3D_CMiniport_Isr, // not implemented
+  XTL_EmuD3D_CMiniport_LoadEngines,
+  XTL_EmuD3D_CMiniport_MapRegisters,
+  XTL_EmuD3D_CMiniport_ReserveInstMem,
+  XTL_EmuD3D_CMiniport_ServiceFifoInterrupt,
+  XTL_EmuD3D_CMiniport_ServiceGrInterrupt,
+  XTL_EmuD3D_CMiniport_ServiceMediaPortInterrupt,
+//  XTL_EmuD3D_CMiniport_ServiceQueuedFlips, // not implemented
+//  XTL_EmuD3D_CMiniport_ServiceTimerInterrupt, // not implemented
+  XTL_EmuD3D_CMiniport_ServiceVideoInterrupt,
+  XTL_EmuD3D_CMiniport_SetDmaRange,
+//  XTL_EmuD3D_CMiniport_SetTimerAlarm, // not implemented
+//  XTL_EmuD3D_CMiniport_SetTimerCallbackAlarm, // not implemented
+  XTL_EmuD3D_CMiniport_SetVideoMode,
+  XTL_EmuD3D_CMiniport_ShutdownEngines,
+//  XTL_EmuD3D_CMiniport_ShutdownNotification, // not implemented
+  XTL_EmuD3D_CMiniport_SoftwareMethod,
+  XTL_EmuD3D_CMiniport_TilingUpdateIdle,
+  XTL_EmuD3D_CMiniport_VBlank,
+  XTL_EmuD3D_CMiniport_VBlankFlip
   ;
 
 
