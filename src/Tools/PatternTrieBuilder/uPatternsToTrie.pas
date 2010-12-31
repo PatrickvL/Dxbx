@@ -1611,6 +1611,13 @@ function GeneratePatternTrie(const aFileList: TStrings; const aOnlyPatches: Bool
         Assert(LibName <> '');
         Assert(LibVersion > 0);
 
+        if SameText(LibName, 'libcmt') then
+        begin
+          // HACK : Skip libcmt, as it disturbs the pattern scanning too much (it must be reinstated as soon as we know why this happens) :
+          WriteLn('HACK! Skipping "', LibName, '" library, version ', LibVersion, '...');
+          Continue;
+        end;
+
         WriteLn('Processing "', LibName, '" library, version ', LibVersion, '...');
 
         // Create and initialize this new library :
