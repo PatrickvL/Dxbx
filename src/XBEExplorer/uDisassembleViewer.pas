@@ -212,21 +212,18 @@ var
       if MyDisassemble.GetReferencedMemoryAddress({var}ReferencedAddress, {var}IsRelative) then
       begin
         ReferencedSymbol := GetLabelByVA(Pointer(ReferencedAddress), {aInLabelMode=}False);
-        // Only mention symbols that appear at the exact address (as we cannot depend on inter-function distances) :
-        if (ReferencedSymbol <> '') and (Pos('+', ReferencedSymbol) <= 0) then
-        begin
-          // We found a reference with label and all, register it :
-          r := Length(References);
-          SetLength(References, r + 1);
-          References[r].Offset := Result - 4;
-          References[r].ReferencedSymbol := ReferencedSymbol;
 
-          // Determine direct or relative addressing :
-          if IsRelative then
-            References[r].ReferenceType := 'R'
-          else
-            References[r].ReferenceType := 'D';
-        end;
+        // We found a reference, register it (even when we don't have a label) :
+        r := Length(References);
+        SetLength(References, r + 1);
+        References[r].Offset := Result - 4;
+        References[r].ReferencedSymbol := ReferencedSymbol;
+
+        // Determine direct or relative addressing :
+        if IsRelative then
+          References[r].ReferenceType := 'R'
+        else
+          References[r].ReferenceType := 'D';
 
         // Calculate CRCLength and CRCValue if possible :
         r := Result - 4;
@@ -285,7 +282,10 @@ begin
 
   // Add the references :
   for i := 0 to Length(References) - 1 do
-    Result := Result + Format(' ^%0.4x%s %s', [References[i].Offset, References[i].ReferenceType, References[i].ReferencedSymbol]);
+    // Only mention symbols that appear at the exact address (as we cannot depend on inter-function distances) :
+    if  (References[i].ReferencedSymbol <> '')
+    and (Pos('+', References[i].ReferencedSymbol) <= 0)  then
+      Result := Result + Format(' ^%0.4x%s %s', [References[i].Offset, References[i].ReferenceType, References[i].ReferencedSymbol]);
 
   Result := Result + #13#10;
 end;
@@ -477,10 +477,10 @@ begin
           Address := UIntPtr(FRegionInfo.Buffer) + Address - UIntPtr(FRegionInfo.VirtualAddres);
           Result := TryReadLiteralString(PAnsiChar(Address));
         end;
-      end;
 
-      if Result <> '' then
+        // Always indicate a reference (even when we have no label) :
         Result := '; ' + Result;
+      end;
     end;
   end; // case
 end;
