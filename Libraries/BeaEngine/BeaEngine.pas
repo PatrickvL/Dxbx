@@ -101,10 +101,10 @@ uses Windows,SysUtils;
   type
 
      TINSTRTYPE = packed record
-          Category : longint;
+          Category : longint; // INSTRUCTION_TYPE
           Opcode : longint;
           Mnemonic : array[0..15] of AnsiChar;
-          BranchType : longint;
+          BranchType : longint; // BRANCH_TYPE
           Flags : TEFLStruct;
           AddrValue : int64;
           Immediat : int64;
@@ -115,9 +115,9 @@ uses Windows,SysUtils;
 
      TARGTYPE = packed record
           ArgMnemonic : array[0..31] of AnsiChar;
-          ArgType : longint;
+          ArgType : longint; // ARGUMENTS_TYPE
           ArgSize : longint;
-          AccessMode : longint;
+          AccessMode : longint; // READ / WRITE ?
           Memory : TMEMORYTYPE;
           SegmentReg : longint;
        end;

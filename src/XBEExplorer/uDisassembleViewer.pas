@@ -163,6 +163,7 @@ var
   CRCValue: Integer;
   SymbolSize: Integer;
   SymbolName: string;
+  IsNewSymbol: Boolean;
   i: Integer;
 
   procedure _UpdateCRC(const aFixedOffset: Integer);
@@ -186,6 +187,7 @@ var
     ReferencedSymbol: string;
     r: Integer;
     ReferencedAddress: Cardinal;
+    IsRelative: Boolean;
   begin
     Result := 0;
     Offset := aAddress - UIntPtr(FRegionInfo.VirtualAddres);
@@ -207,10 +209,11 @@ var
         PatternPrefixStr := PatternPrefixStr + StringReplace(MyDisassemble.HexStr, ' ', '', [rfReplaceAll]);
 
       // See if this instuction references another address, of which we know the name :
-      if MyDisassemble.GetReferencedMemoryAddress({var}ReferencedAddress) then
+      if MyDisassemble.GetReferencedMemoryAddress({var}ReferencedAddress, {var}IsRelative) then
       begin
         ReferencedSymbol := GetLabelByVA(Pointer(ReferencedAddress), {aInLabelMode=}False);
-        if ReferencedSymbol <> '' then
+        // Only mention symbols that appear at the exact address (as we cannot depend on inter-function distances) :
+        if (ReferencedSymbol <> '') and (Pos('+', ReferencedSymbol) <= 0) then
         begin
           // We found a reference with label and all, register it :
           r := Length(References);
@@ -219,8 +222,8 @@ var
           References[r].ReferencedSymbol := ReferencedSymbol;
 
           // Determine direct or relative addressing :
-          if MyDisassemble.IsOpcode(OPCODE_CALL) then
-            References[r].ReferenceType := 'R' // TODO : Check more opcodes
+          if IsRelative then
+            References[r].ReferenceType := 'R'
           else
             References[r].ReferenceType := 'D';
         end;
@@ -254,10 +257,13 @@ var
 
 begin
   SymbolName := GetLabelByVA(Pointer(aAddress));
-  if SymbolName = '' then
+  IsNewSymbol := (SymbolName = '');
+  if IsNewSymbol then
     SymbolName := Format('?Symbol_%0.8x', [aAddress]);
 
   SymbolName := InputBox('Generate pattern', 'Enter symbol name', SymbolName);
+  if IsNewSymbol then
+    AddSymbolToList(SymbolList, Pointer(aAddress), SymbolName);
 
   PatternPrefixStr := '';
   CRCLength := -1;
@@ -290,8 +296,8 @@ procedure TDisassembleViewer.CreatePatternExecute(Sender: TObject);
 // which turns out to be necessary to support XDK versions we have no patterns for.
 begin
   Clipboard.AsText :=
-    Format('; Xbe Explorer generated pattern, derived from address $%0.8x in "%s" :'#13#10'%s',
-    [Address, m_szAsciiTitle, GeneratePatternForAddress(Address)]);
+    Format('; Xbe Explorer generated pattern, derived from address $%0.8x in "%s" (%s %d):'#13#10'%s',
+    [Address, m_szAsciiTitle, FRegionInfo.Name, FRegionInfo.Version, GeneratePatternForAddress(Address)]);
 end;
 
 procedure TDisassembleViewer.GotoAddress(GotoAddressStr: string);
@@ -413,6 +419,7 @@ function TDisassembleViewer.GetTextByCell(aCol, aRow: Integer): string;
 var
   Offset: Cardinal;
   Address: UIntPtr;
+  IsRelative: Boolean;
 begin
   // Handle fixed cells (meaning: header-row) :
   Result := '';
@@ -458,7 +465,7 @@ begin
       // while we're working with a Raw Xbe - so we need to do a bit of address-
       // conversion wizardry to make this work :
       Result := '';
-      if MyDisassemble.GetReferencedMemoryAddress({var}Address) then
+      if MyDisassemble.GetReferencedMemoryAddress({var}Address, {var}IsRelative) then
       begin
         Result := MyDisassemble.GetLabelStr(Pointer(Address), {InLabelMode=}False);
         if  (Result = '')

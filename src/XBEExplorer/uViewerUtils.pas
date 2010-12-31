@@ -26,6 +26,7 @@ type
     FileOffset: Cardinal;
     VirtualAddres: Pointer;
     Name: string;
+    Version: Integer;
   end;
 
 var
