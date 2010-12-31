@@ -131,7 +131,7 @@ type
     procedure AddLeafHit(const aAddress: PByte; const aFirstFunctionIndex: PFunctionIndex; const NrChildren: Integer);
     procedure CheckSectionAddressForPatternHit(const aTestAddress: PByte);
     procedure ScanAddressRangeForPatternHits(const pXbeHeader: PXBEIMAGE_HEADER);
-    procedure ConvertLeafsIntoSymbols();
+    procedure ConvertLeafHitsIntoSymbols();
   protected // Intermediate symbol registration :
     FIntermediateSymbolRegistrationsCount: Integer;
     MyIntermediateSymbolRegistrations: array of TSymbolInformation;
@@ -739,7 +739,7 @@ begin
   end;
 end; // ScanAddressRangeForPatternHits
 
-procedure TSymbolManager.ConvertLeafsIntoSymbols();
+procedure TSymbolManager.ConvertLeafHitsIntoSymbols();
 
   function _IsAliasFunction(aStoredLibraryFunction1, aStoredLibraryFunction2: PStoredLibraryFunction): Boolean;
   var
@@ -843,7 +843,7 @@ begin
         end;
     end; // for aliases
   end; // for leafs
-end; // ConvertLeafsIntoSymbols
+end; // ConvertLeafHitsIntoSymbols
 
 
 function _IsTestCase(const aAddress: UIntPtr; const aMangledName: string): Boolean;
@@ -1468,7 +1468,7 @@ var
   w: Word;
   CurrentSymbol: TSymbolInformation;
 begin
-  // Note: FSymbolCount is grown in ConvertLeafsIntoSymbols using calls to AddSymbol
+  // Note: FSymbolCount is grown in ConvertLeafHitsIntoSymbols using calls to AddSymbol
   MySymbols.Count := FSymbolCount;
   FSymbolCount := 0;
   for w := Low(w) to High(w) do
@@ -1547,6 +1547,7 @@ begin
 
     // Do the following twice, first for 'known' addresses, then for all others :
     ScanningInKnownAddresses := True;
+    // TODO : Should we really do this? CR_WRONG_SECTION suggests that it'd better to not register outside the valid sections...
     repeat
       // Loop over all locations matching up to this leaf (and thus potentially hitting this function) :
       CurrentHit := MyDetectedLeafs[LeafID].FirstHit;
@@ -1683,6 +1684,7 @@ var
   CurrentLibName: string;
   StoredLibrary: PStoredLibrary;
   StoredLibraryName: string;
+  StoredLibraryIsIncomplete: Boolean;
   i, j: Integer;
   StoredLibraryVersions: TStringList;
   BestStoredLibraryIndex: Integer;
@@ -1745,12 +1747,14 @@ begin
     begin
       StoredLibrary := PatternTrieReader.GetStoredLibrary(BestStoredLibraryIndex);
       StoredLibraryName := PatternTrieReader.GetString(StoredLibrary.LibNameIndex);
+      StoredLibraryIsIncomplete := lfIsIncomplete in StoredLibrary.LibFlags;
       if SameText(StoredLibraryName, 'D3D8') then
         LibD3D8 := StoredLibrary;
 
       // Add this library to a set we'll use in the detection-code :
       FLibraryVersionsToScan := FLibraryVersionsToScan + [LibraryVersionNumberToFlag(StoredLibrary.LibVersion)];
-      if StoredLibrary.LibVersion = CurrentXbeLibraryVersion.wBuildVersion then
+      if (StoredLibrary.LibVersion = CurrentXbeLibraryVersion.wBuildVersion)
+      and (StoredLibraryIsIncomplete  = False) then
         DbgPrintf('... Got patterns for exactly this version!')
       else
       begin
@@ -2052,7 +2056,7 @@ begin
         // Scan the xbe memory using the trie, resulting in a bunch of LeafHits :
         ScanAddressRangeForPatternHits(pXbeHeader);
 
-        ConvertLeafsIntoSymbols();
+        ConvertLeafHitsIntoSymbols();
 
         PrioritizeSymbolScan();
 

@@ -787,6 +787,7 @@ begin // Save
       StoredLibrary.LibVersion := PVersionedXboxLibrary(VersionedLibraries[i]).LibVersion;
       PVersionedXboxLibrary(VersionedLibraries[i]).LibNameIndex := UniqueStrings.IndexOf(PVersionedXboxLibrary(VersionedLibraries[i]).LibName);
       StoredLibrary.LibNameIndex := PVersionedXboxLibrary(VersionedLibraries[i]).LibNameIndex;
+      StoredLibrary.LibFlags := PVersionedXboxLibrary(VersionedLibraries[i]).LibFlags;
       OutputFile.WriteBuffer(StoredLibrary, SizeOf(StoredLibrary));
     end;
 
@@ -1279,18 +1280,24 @@ const
 const
   MAX_NR_OF_SYMBOL_REFERENCES = High(Byte);
 
+
 type
+  TScanPart = (spPatterns, spInformation);
+
   PPatternScanningContext = ^RPatternScanningContext;
   RPatternScanningContext = packed record
     VersionedXboxLibrary: PVersionedXboxLibrary;
     OnlyPatches: Boolean;
     FunctionList: TStringList;
     PatternTrie: TPatternTrie;
+    ScanPart: TScanPart;
   end;
 
 function ParseAndAppendPatternLineToTrie_Callback(aLine: PAnsiChar; aLength: Integer; aContext: PPatternScanningContext): Boolean;
 const
   PATTERN_START_OF_NAME = 85;
+  Marker_IsIncomplete = 'IsIncomplete';
+  MarkerLen_IsIncomplete = Length(Marker_IsIncomplete);
 var
   VersionedXboxLibraryFunction: PVersionedXboxLibraryFunction;
   i: Integer;
@@ -1309,8 +1316,8 @@ var
   end;
 
 begin
-  // Stop scanning at a '-' marker (or at #0) :
-  if (aLine^ = #0) or (aLine^ = '-') then
+  // Stop scanning at #0 :
+  if (aLine^ = #0) then
   begin
     Result := False;
     Exit;
@@ -1319,7 +1326,26 @@ begin
   // Continue scanning following lines :
   Result := True;
 
-  // Skip lines that don't start with a hexadecimal character :
+  // Switch scanning mode at the '-' marker :
+  if (aLine^ = '-') then
+  begin
+    aContext.ScanPart := spInformation;
+    Exit;
+  end;
+
+  if aContext.ScanPart = spInformation then
+  begin
+    // Detect if this is a manually created (and thus incomplete) library.
+    // This fact is used in the symbol scanning code - incomplete patterns
+    // are not used as a 'definite' when scanning for symbols (especially
+    // when we have no version-exact patterns for a title) :
+    if strncmp(aLine, Marker_IsIncomplete, MarkerLen_IsIncomplete) = 0 then
+      Include(aContext.VersionedXboxLibrary.LibFlags, lfIsIncomplete);
+
+    Exit;
+  end;
+
+  // Skip lines that don't start with a hexadecimal character (so this skips ';' comment lines too) :
   if not (aLine^ in ['0'..'9','a'..'z','A'..'Z']) then
     Exit;
 
@@ -1521,6 +1547,7 @@ begin
   PatternScanningContext.OnlyPatches := aOnlyPatches;
   PatternScanningContext.VersionedXboxLibrary := aLibrary;
   PatternScanningContext.FunctionList := TStringList.Create;
+  PatternScanningContext.ScanPart := spPatterns;
   try
     // Quickly scan all pattern lines and add them to the FunctionList :
     ScanPCharLines(aPatterns, @ParseAndAppendPatternLineToTrie_Callback, @PatternScanningContext);
@@ -1591,6 +1618,8 @@ function GeneratePatternTrie(const aFileList: TStrings; const aOnlyPatches: Bool
         VersionedXboxLibrary.LibVersion := LibVersion;
         VersionedXboxLibrary.LibVersionFlag := LibraryVersionNumberToFlag(LibVersion);
         VersionedXboxLibrary.LibName := LibName;
+        VersionedXboxLibrary.LibFlags := [];
+
         aPatternTrie.VersionedLibraries.Add(VersionedXboxLibrary);
 
         // If the file is a .lib :
@@ -1604,13 +1633,6 @@ function GeneratePatternTrie(const aFileList: TStrings; const aOnlyPatches: Bool
         else
           // Load pattern file into memory (assuming the file ext is .pat) :
           Input.LoadFromFile(FilePath);
-
-        // Detect if this is a manually created (and thus incomplete) library.
-        // This fact is used in the symbol scanning code - incomplete patterns
-        // are not used as a 'definite' when scanning for symbols (especially
-        // when we have no version-exact patterns for a title) :
-        if PAnsiChar(Input.Memory)^ = ';' then
-          VersionedXboxLibrary.LibFlags := [lfIsIncomplete];
 
         // Parse patterns in this file and append them to the trie :
         ParseAndAppendPatternsToTrie(Input.Memory, aPatternTrie, aOnlyPatches, VersionedXboxLibrary);
