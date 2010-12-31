@@ -352,6 +352,7 @@ function GetReadableTitle(const pCertificate: PXBE_CERTIFICATE): string;
 function GameRegionToString(const aGameRegion: Cardinal): string;
 function GameDisplayFrequency(const aGameRegion: Cardinal): int;
 
+procedure AddSymbolToList(const aStringList: TStringList; const Address: Pointer; MangledName: string);
 procedure LoadSymbolsFromCache(const aStringList: TStringList; const aCacheFile: string);
 
 var
@@ -359,6 +360,13 @@ var
   m_szAsciiTitle: string;
 
 implementation
+
+procedure AddSymbolToList(const aStringList: TStringList; const Address: Pointer; MangledName: string);
+begin
+  aStringList.AddObject(MangledName, TObject(Address));
+  // Sort the list again (TODO : Maybe we should insert at the right spot later, but this was faster to implement) :
+  aStringList.CustomSort(@SortObjects);
+end;
 
 procedure LoadSymbolsFromCache(const aStringList: TStringList; const aCacheFile: string);
 var

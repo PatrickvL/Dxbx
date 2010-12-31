@@ -304,6 +304,7 @@ begin
     RegionInfo.FileOffset := Hdr.dwRawAddr;
     RegionInfo.VirtualAddres := Pointer(Hdr.dwVirtualAddr);
     RegionInfo.Name := 'section "' + Grid.Cells[0, Grid.Row] + '"';
+    RegionInfo.Version := 0; // TODO : Map section to library and write that version into this field
 
     TSectionViewer(Grid.Tag).SetRegion(RegionInfo);
   end;

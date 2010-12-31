@@ -26,6 +26,7 @@ uses
   // 3rd Party
   BeaEngine,
   // Dxbx
+  uConsts,
   uTypes;
 
 type
@@ -59,7 +60,7 @@ type
     function HexStr: string;
     function IsOpcode(const aOpcode: Integer): Boolean;
     function GetLabelStr(const aVirtualAddr: Pointer; const aInLabelMode: Boolean = True): string;
-    function GetReferencedMemoryAddress(var TargetAddress: Cardinal): Boolean;
+    function GetReferencedMemoryAddress(var TargetAddress: Cardinal; var IsRelative: Boolean): Boolean;
 //    function ArgReadsFromMemory(const aArgNr: Integer): Boolean;
 //    function ArgMemoryAddress(const aArgNr: Integer): Cardinal;
   end;
@@ -148,16 +149,12 @@ function RDisassemble.HexStr: string;
 var
   OpcodeLen: Byte;
 begin
-  if MyDisAsm.Instruction.Opcode > $FFFF then
-    if MyDisAsm.Instruction.Opcode > $FFFFFF then
-      OpcodeLen := 4
-    else
-      OpcodeLen := 3
+  // This guess towards where the opcode starts and the data begins might not be correct,
+  // but is good enough for most situations and doesn't cost much evaluation-wise :
+  if FLen >= 5 then
+    OpcodeLen := FLen - 4
   else
-    if MyDisAsm.Instruction.Opcode > $FF then
-      OpcodeLen := 2
-    else
-      OpcodeLen := 1;
+    OpcodeLen := 1;
 
   // Split HexStr in operand(+space+arguments) :
   Result := PByteToHexString(@PBytes(FBuffer)[FCurrentOffset], OpcodeLen);
@@ -181,17 +178,21 @@ begin
   end;
 end;
 
-function RDisassemble.GetReferencedMemoryAddress(var TargetAddress: Cardinal): Boolean;
+function RDisassemble.GetReferencedMemoryAddress(var TargetAddress: Cardinal; var IsRelative: Boolean): Boolean;
 begin
   Result := (FLen > 4);
   if not Result then
     Exit;
 
+  {var}IsRelative := False;
   Result := ((MyDisAsm.Instruction.Category and $0000FFFF) in [DATA_TRANSFER, CONTROL_TRANSFER])
         and (MyDisasm.Instruction.AddrValue > 0);
   if Result then
   begin
     {var}TargetAddress := MyDisasm.Instruction.AddrValue;
+    // Test-case at $0027C77A in "Jedi Knight II" (xapilib 4721)
+    // 0027C845 FF15 68822E00 call dword ptr [$002E8268] ; __imp__NtClose@4
+    {var}IsRelative := IsOpcode(OPCODE_CALL);
     Exit;
   end;
 
