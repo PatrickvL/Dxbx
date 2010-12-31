@@ -1280,7 +1280,7 @@ begin
     Referenced[i].Symbol := FindOrAddVersionedSymbol(CurrentSymbol.StoredLibraryFunction.AvailableInVersions, Referenced[i].StoredSymbolReference.NameIndex, Function_);
 
     // Skip operators (they're often compiled-in on multiple places, like 'operator new' and 'operator new[]')
-    // And other symbols thatn can appear multiple times (like __SEH_prolog and __SEH_epilog) :
+    // And other symbols that can appear multiple times (like __SEH_prolog and __SEH_epilog) :
     if Referenced[i].Symbol.IsRepeatedSymbol then
       Continue;
 

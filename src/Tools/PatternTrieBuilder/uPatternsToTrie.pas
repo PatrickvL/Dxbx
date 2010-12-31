@@ -1401,10 +1401,14 @@ var
 
     // No __tls stuff :
     if StartsWithString(SymbolReferencedFunctionName,'__tls')
-    // No internal labels :
-    or StartsWithString(SymbolReferencedFunctionName, '$L')
+    // No internal labels (mainly $L and $T) :
+    or StartsWithString(SymbolReferencedFunctionName, '$')
     // No ___ stuff :
-    or StartsWithString(SymbolReferencedFunctionName, '___') then
+    or StartsWithString(SymbolReferencedFunctionName, '___')
+    // No __SEH_ stuff :
+    or StartsWithString(SymbolReferencedFunctionName, '__SEH_')
+    // No __real@ stuff :
+    or StartsWithString(SymbolReferencedFunctionName, '__real@') then
     begin
       Result := False;
       Exit;
@@ -1608,8 +1612,8 @@ function GeneratePatternTrie(const aFileList: TStrings; const aOnlyPatches: Bool
           LibVersion := StrToIntDef(VersionStr, 0);
         end;
 
-        Assert(LibName <> '');
-        Assert(LibVersion > 0);
+        if (LibName = '') or (LibVersion = 0) then
+          Continue;
 
         if SameText(LibName, 'libcmt') then
         begin
