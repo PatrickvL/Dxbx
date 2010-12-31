@@ -185,27 +185,28 @@ begin
     Exit;
 
   {var}IsRelative := False;
-  Result := ((MyDisAsm.Instruction.Category and $0000FFFF) in [DATA_TRANSFER, CONTROL_TRANSFER])
-        and (MyDisasm.Instruction.AddrValue > 0);
-  if Result then
+  if ((MyDisAsm.Instruction.Category and $0000FFFF) in [DATA_TRANSFER, CONTROL_TRANSFER]) then
   begin
-    {var}TargetAddress := MyDisasm.Instruction.AddrValue;
-    // Test-case at $0027C77A in "Jedi Knight II" (xapilib 4721)
-    // 0027C845 FF15 68822E00 call dword ptr [$002E8268] ; __imp__NtClose@4
-    {var}IsRelative := IsOpcode(OPCODE_CALL);
-    Exit;
-  end;
+    Result := (MyDisasm.Instruction.AddrValue > 0);
+    if Result then
+    begin
+      {var}TargetAddress := MyDisasm.Instruction.AddrValue;
+      // Test-case at $0027C77A in "Jedi Knight II" (xapilib 4721)
+      // 0027C845 FF15 68822E00 call dword ptr [$002E8268] ; __imp__NtClose@4
+      {var}IsRelative := IsOpcode(OPCODE_CALL);
+      Exit;
+    end;
 
-  Result := ((MyDisAsm.Instruction.Category and $0000FFFF) in [CONTROL_TRANSFER])
-        and (MyDisasm.Instruction.Immediat > 0);
-  if Result then
-  begin
-    {var}TargetAddress := MyDisasm.Instruction.Immediat;
-    Exit;
+    Result := (MyDisasm.Instruction.Immediat > 0);
+    if Result then
+    begin
+      {var}TargetAddress := MyDisasm.Instruction.Immediat;
+      Exit;
+    end;
   end;
 
   with GetArg(2)^ do
-    if  (SegmentReg = DSReg)
+    if  (SegmentReg in [0, DSReg])
     and (Memory.BaseRegister = 0)
     and ((ArgType and $FFFF0000) >= MEMORY_TYPE) then
     begin
@@ -216,7 +217,7 @@ begin
     end;
 
   with GetArg(1)^ do
-    if  (SegmentReg = DSReg)
+    if  (SegmentReg in [0, DSReg])
     and (Memory.BaseRegister = 0)
     and ((ArgType and $FFFF0000) >= MEMORY_TYPE) then
     begin
