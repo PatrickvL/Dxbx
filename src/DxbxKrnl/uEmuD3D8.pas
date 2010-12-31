@@ -1112,10 +1112,10 @@ begin
   if Result = UINT(D3DERR_DEVICELOST) then
   repeat
     Result := g_pD3DDevice.TestCooperativeLevel;
-    if(Result = UINT(D3DERR_DEVICELOST)) then //Device is lost and cannot be reset yet
+    if (Result = UINT(D3DERR_DEVICELOST)) then //Device is lost and cannot be reset yet
       Sleep(500) //Wait a bit so we don't burn through cycles for no reason
     else
-      if(Result = UINT(D3DERR_DEVICENOTRESET)) then //Lost but we can reset it now
+      if (Result = UINT(D3DERR_DEVICENOTRESET)) then //Lost but we can reset it now
         Result := g_pD3DDevice.Reset({const}g_EmuCDPD.NativePresentationParameters);
   until Result = UINT(D3D_OK);
 end;
@@ -1852,7 +1852,7 @@ begin
   while (true) do
   begin
     // if we have been signalled, create the device with cached parameters
-    if(g_EmuCDPD.bReady) then
+    if (g_EmuCDPD.bReady) then
     begin
       if MayLog(lfUnit) then
         DbgPrintf('EmuD3D8 : CreateDevice proxy thread received request.');
@@ -2446,7 +2446,7 @@ begin
   begin
     pPCResource := pThis.Emu.Resource;
 
-    if(pThis.Emu.Lock = $8000BEEF) then
+    if (pThis.Emu.Lock = $8000BEEF) then
     begin
       // Inc(pThis.Emu.Lock); // TODO : This gives $8000BEF0, which is otherwise unhandled! What to do?
       uRet := pThis.Emu.Lock;
@@ -2498,7 +2498,7 @@ begin
     Exit;
   end;
 
-  if(IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
+  if (IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
   begin
     dwPtr := DWORD(pThis.Emu.Lock);
     pRefCount := PDWORD(dwPtr);
@@ -4764,12 +4764,12 @@ begin
   g_pD3DDevice.GetViewport({out}currentViewport);
   // resize to fit current viewport (otherwise crashes occur)
 //  begin
-//    if(dwX < currentViewport.X) then
+//    if (dwX < currentViewport.X) then
 //    begin
 //      EmuWarning('Moving Viewport->X to %d', [currentViewport.X]);
 //      pViewport.X := currentViewport.X;
 //    end;
-//    if(dwY < currentViewport.Y) then
+//    if (dwY < currentViewport.Y) then
 //    begin
 //      EmuWarning('Moving Viewport->Y to %d', [currentViewport.Y]);
 //      pViewport.Y := currentViewport.Y;
@@ -4791,16 +4791,16 @@ begin
 
   // restore originals
 //  begin
-//    if(dwX < currentViewport.X) then
+//    if (dwX < currentViewport.X) then
 //      pViewport.X := dwX;
 //
-//    if(dwY < currentViewport.Y) then
+//    if (dwY < currentViewport.Y) then
 //      pViewport.Y := dwY;
 //
-//    if(dwWidth > currentViewport.Width) then
+//    if (dwWidth > currentViewport.Width) then
 //      pViewport.Width := dwWidth;
 //
-//    if(dwHeight > currentViewport.Height) then
+//    if (dwHeight > currentViewport.Height) then
 //      pViewport.Height := dwHeight;
 //  end;
 
@@ -6896,7 +6896,7 @@ begin
 
   // - DXBX - DO NOT ENABLE GetVSync CHECK... ALMOST EVERY GAME CRASHES WHEN YOU DO NOT WAIT !!!
   // segaGT tends to freeze with this on
-  //    if(g_XBVideo.GetVSync())
+  //    if (g_XBVideo.GetVSync())
   IDirectDraw7(g_pDD7).WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
 
   EmuSwapFS(fsXbox);
@@ -8791,7 +8791,7 @@ begin
       end;
     end;
 
-    if(not bActiveIB) then
+    if (not bActiveIB) then
     begin
       g_pD3DDevice.SetIndices(nil{$IFNDEF DXBX_USE_D3D9}, 0{$ENDIF});
       IDirect3DIndexBuffer(pPCIndexBuffer)._Release();
@@ -11566,7 +11566,7 @@ exports
   XTL_EmuD3D_PixelJar_Get2DSurfaceDescD,
   XTL_EmuD3D_PixelJar_Lock2DSurface,
 
-  XTL_EmuD3DBaseTexture_GetLevelCount,
+{//??}  XTL_EmuD3DBaseTexture_GetLevelCount, // Crashes Turok after opening movie, if unpatched (rev.1532)
 
   XTL_EmuD3DCubeTexture_GetCubeMapSurface2,
   XTL_EmuD3DCubeTexture_GetLevelDesc,

@@ -3152,8 +3152,7 @@ begin
         // Don't optimize if the output is needed for CND or CMP (which must read from r0) :
         // This fixes : "(Validation Error) First source for cnd instruction must be 'r0.a'" in Modify Pixel Shader XDK sample.
         if  (Intermediate[j].Opcode in [PO_CND, PO_CMP])
-        and (Op0.Output[0].Type_ = PARAM_R)
-        and (Op0.Output[0].Address = 0) then
+        and (Op0.Output[0].IsRegister(PARAM_R, 0)) then
           Break;
 
         // TODO : Add other prevention rules here (like too many texture-reads, and other scases)
@@ -3217,8 +3216,7 @@ begin
     end;
 
     // Fix Crash bandicoot xfc leftover r3 :
-    if  (Op0.Output[0].Type_ = PARAM_R)
-    and (Op0.Output[0].Address = FakeRegNr_Prod) then
+    if  (Op0.Output[0].IsRegister(PARAM_R, FakeRegNr_Prod)) then
     begin
       // The final combiner uses r3, try to use r1 instead :
       if IsRegisterFreeFromIndexOnwards(i, PARAM_R, 1) then
