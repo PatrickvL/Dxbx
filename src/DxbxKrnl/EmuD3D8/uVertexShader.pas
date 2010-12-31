@@ -96,6 +96,28 @@ const VERSION_XVSW =                    $77;  // Xbox vertex read/write shader
 const VSH_XBOX_MAX_INSTRUCTION_COUNT =  136;  // The maximum Xbox shader instruction count
 const VSH_MAX_INTERMEDIATE_COUNT =      1024; // The maximum number of intermediate format slots
 
+type _VSH_SWIZZLE =
+(
+    SWIZZLE_X = 0,
+    SWIZZLE_Y,
+    SWIZZLE_Z,
+    SWIZZLE_W
+);
+VSH_SWIZZLE = _VSH_SWIZZLE;
+
+type DxbxSwizzles = array [0..4-1] of VSH_SWIZZLE;
+
+type DxbxMask = DWORD;
+  PDxbxMask = ^DxbxMask;
+
+const
+  MASK_X = $001;
+  MASK_Y = $002;
+  MASK_Z = $004;
+  MASK_W = $008;
+  MASK_XYZ = MASK_X or MASK_Y or MASK_Z;
+  MASK_XYZW = MASK_X or MASK_Y or MASK_Z or MASK_W;
+
 // Local types
 type _VSH_FIELD_NAME =
 (
@@ -190,20 +212,11 @@ const OREG_MAPPING: array [VSH_OREG_NAME] of Integer = (
     10, // OREG_OT3
     -1, // OREG_UNUSED3
     -1, // OREG_UNUSED4
-    11 // OREG_A0X
+    11  // OREG_A0X
   );
 
   VSH_XBOX_MAX_O_REGISTER_COUNT = Ord(High(VSH_OREG_NAME));
 {$ENDIF DXBX_USE_VS30}
-
-type _VSH_PARAMETER_TYPE =
-(
-    PARAM_UNKNOWN = 0,
-    PARAM_R,
-    PARAM_V,
-    PARAM_C
-);
-VSH_PARAMETER_TYPE = _VSH_PARAMETER_TYPE;
 
 type _VSH_OUTPUT_TYPE =
 (
@@ -212,12 +225,31 @@ type _VSH_OUTPUT_TYPE =
 );
 VSH_OUTPUT_TYPE = _VSH_OUTPUT_TYPE;
 
+type VSH_ARGUMENT_TYPE =
+(
+    PARAM_UNKNOWN = 0,
+    PARAM_R,          // Temporary registers
+    PARAM_V,          // Vertex registers
+    PARAM_C,          // Constant registers, set by SetVertexShaderConstant
+    PARAM_O
+);
+VSH_PARAMETER_TYPE = VSH_ARGUMENT_TYPE; // Alias, to indicate difference between a parameter and a generic argument
+
 type _VSH_OUTPUT_MUX =
 (
     OMUX_MAC = 0,
     OMUX_ILU
 );
 VSH_OUTPUT_MUX = _VSH_OUTPUT_MUX;
+
+type _VSH_IMD_OUTPUT_TYPE =
+(
+    IMD_OUTPUT_C,
+    IMD_OUTPUT_R,
+    IMD_OUTPUT_O,
+    IMD_OUTPUT_A0X
+);
+VSH_IMD_OUTPUT_TYPE = _VSH_IMD_OUTPUT_TYPE;
 
 // Dxbx note : ILU stands for 'Inverse Logic Unit' opcodes
 type _VSH_ILU =
@@ -268,46 +300,32 @@ type _VSH_OPCODE_PARAMS = record
   VSH_OPCODE_PARAMS = _VSH_OPCODE_PARAMS;
   PVSH_OPCODE_PARAMS = ^VSH_OPCODE_PARAMS;
 
-type _VSH_SWIZZLE =
-(
-    SWIZZLE_X = 0,
-    SWIZZLE_Y,
-    SWIZZLE_Z,
-    SWIZZLE_W
-);
-VSH_SWIZZLE = _VSH_SWIZZLE;
-
-type DxbxSwizzles = array [0..4-1] of VSH_SWIZZLE;
-
-type DxbxMask = DWORD;
-  PDxbxMask = ^DxbxMask;
-
-const
-  MASK_X = $001;
-  MASK_Y = $002;
-  MASK_Z = $004;
-  MASK_W = $008;
-  MASK_XYZ = MASK_X or MASK_Y or MASK_Z;
-  MASK_XYZW = MASK_X or MASK_Y or MASK_Z or MASK_W;
-
-type _VSH_PARAMETER = record
+type _VSH_IMD_OUTPUT = object
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-    Neg: boolean;                           // TRUE if negated, FALSE if not
-    ParameterType: VSH_PARAMETER_TYPE;      // Parameter type, R, V or C
-    Address: int16;                         // Register address
-    Swizzle: DxbxSwizzles;                  // The four swizzles
-    Mask: DxbxMask;                         // Read channels, to ease up comparisions (swizzle is still leading!)
+    Type_: VSH_IMD_OUTPUT_TYPE;
+    Mask: DxbxMask;
+    Address: int16;
+    function IsRegister(aRegType: VSH_IMD_OUTPUT_TYPE; aAddress: int16): Boolean;
+  end; // size = 12 (as in Cxbx)
+  VSH_IMD_OUTPUT = _VSH_IMD_OUTPUT;
+  PVSH_IMD_OUTPUT = ^VSH_IMD_OUTPUT;
+
+type _VSH_PARAMETER = object
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+    Neg: boolean;                    // TRUE if negated, FALSE if not
+    Type_: VSH_ARGUMENT_TYPE;        // Argument type; R, V or C for parameters, C or O for output
+    Address: int16;                  // Register address
+    Mask: DxbxMask;                  // Read channels, to ease up comparisions (swizzle is still leading!)
+    Swizzle: DxbxSwizzles;           // The four swizzles
+    function IsRegister(aRegType: VSH_ARGUMENT_TYPE; aAddress: int16): Boolean;
   end; // size = 28 (as in Cxbx)
   VSH_PARAMETER = _VSH_PARAMETER;
   PVSH_PARAMETER = ^VSH_PARAMETER;
 
-type _VSH_OUTPUT = record
+type _VSH_OUTPUT = object(VSH_PARAMETER)
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     // Output register
-    OutputMux: VSH_OUTPUT_MUX;       // MAC or ILU used as output
-    OutputType: VSH_OUTPUT_TYPE;     // C or O
-    OutputMask: DxbxMask;
-    OutputAddress: int16;
+    OutputMux: VSH_OUTPUT_MUX;  // MAC or ILU used as output
     // MAC output R register
     MACRMask: DxbxMask;
     MACRAddress: int16;//boolean;
@@ -331,31 +349,12 @@ type _VSH_SHADER_INSTRUCTION = record
   VSH_SHADER_INSTRUCTION = _VSH_SHADER_INSTRUCTION;
   PVSH_SHADER_INSTRUCTION = ^VSH_SHADER_INSTRUCTION;
 
-type _VSH_IMD_OUTPUT_TYPE =
-(
-    IMD_OUTPUT_C,
-    IMD_OUTPUT_R,
-    IMD_OUTPUT_O,
-    IMD_OUTPUT_A0X
-);
-VSH_IMD_OUTPUT_TYPE = _VSH_IMD_OUTPUT_TYPE;
-
 type _VSH_IMD_INSTRUCTION_TYPE =
 (
     IMD_MAC,
     IMD_ILU
 );
 VSH_IMD_INSTRUCTION_TYPE = _VSH_IMD_INSTRUCTION_TYPE;
-
-type _VSH_IMD_OUTPUT = record
-// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-    Type_: VSH_IMD_OUTPUT_TYPE;
-    Mask: DxbxMask;
-    Address: int16;
-  end; // size = 12 (as in Cxbx)
-  VSH_IMD_OUTPUT = _VSH_IMD_OUTPUT;
-  PVSH_IMD_OUTPUT = ^VSH_IMD_OUTPUT;
-
 
 type _VSH_IMD_PARAMETER = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -381,6 +380,8 @@ type _VSH_INTERMEDIATE_FORMAT = record
     ILU: VSH_ILU;
     Output: VSH_IMD_OUTPUT;
     Parameters: array [0..3-1] of VSH_IMD_PARAMETER;
+    function ReadsFromRegister(aRegType: VSH_ARGUMENT_TYPE; aAddress: Int16): Boolean;
+    function WritesToRegister(aRegType: VSH_ARGUMENT_TYPE; aAddress: Int16): Boolean;
   end; // size = 136 (as in Cxbx)
   VSH_INTERMEDIATE_FORMAT = _VSH_INTERMEDIATE_FORMAT;
   PVSH_INTERMEDIATE_FORMAT = ^VSH_INTERMEDIATE_FORMAT;
@@ -401,6 +402,7 @@ type _VSH_XBOX_SHADER = record
     ShaderHeader: VSH_SHADER_HEADER;
     IntermediateCount: uint16;
     Intermediate: array [0..VSH_MAX_INTERMEDIATE_COUNT -1] of VSH_INTERMEDIATE_FORMAT;
+    function IsRegisterReadUntilNextWrite(aIndex: int; aRegType: VSH_ARGUMENT_TYPE; aAddress: Int16): Boolean;
   end; // size = 139272 (as in Cxbx)
   VSH_XBOX_SHADER = _VSH_XBOX_SHADER;
   PVSH_XBOX_SHADER = ^VSH_XBOX_SHADER;
@@ -602,6 +604,72 @@ const lfUnit = lfCxbx or lfDxbx or lfVertexShader;
 
 // VertexShader.h
 
+function VSH_IMD_OUTPUT.IsRegister(aRegType: VSH_IMD_OUTPUT_TYPE; aAddress: int16): Boolean;
+begin
+  Result := (Type_ = aRegType)
+        and (Address = aAddress);
+end;
+
+function VSH_PARAMETER.IsRegister(aRegType: VSH_ARGUMENT_TYPE; aAddress: int16): Boolean;
+begin
+  Result := (Type_ = aRegType)
+        and (Address = aAddress);
+end;
+
+function VSH_INTERMEDIATE_FORMAT.ReadsFromRegister(aRegType: VSH_ARGUMENT_TYPE; aAddress: Int16): Boolean;
+var
+  i: int;
+begin
+  // Check all parameters :
+  for i := 0 to 3-1 do
+  begin
+    if not Parameters[i].Active then
+      Continue;
+
+    // Check if one of them reads from the given register :
+    Result := Parameters[i].Parameter.IsRegister(aRegType, aAddress);
+    if Result then
+      Exit;
+  end;
+
+  Result := False;
+end;
+
+function VSH_INTERMEDIATE_FORMAT.WritesToRegister(aRegType: VSH_ARGUMENT_TYPE; aAddress: Int16): Boolean;
+begin
+  // Check the output :
+  case aRegType of
+//    PARAM_UNKNOWN: Result := False;
+    PARAM_R: Result := Output.IsRegister(IMD_OUTPUT_R, aAddress);
+    PARAM_C: Result := Output.IsRegister(IMD_OUTPUT_C, aAddress);
+    PARAM_O: Result := Output.IsRegister(IMD_OUTPUT_O, aAddress);
+//    IMD_OUTPUT_A0X ??
+  else
+    Result := False;
+  end;
+end;
+
+// Return at what index the given register is written to (and if any reads take place in between).
+function VSH_XBOX_SHADER.IsRegisterReadUntilNextWrite(aIndex: int; aRegType: VSH_ARGUMENT_TYPE; aAddress: Int16): Boolean;
+var
+  i: int;
+  Cur: PVSH_INTERMEDIATE_FORMAT;
+begin
+  Result := False;
+  for i := aIndex to IntermediateCount - 1 do
+  begin
+    Cur := @(Intermediate[i]);
+    if Cur.WritesToRegister(aRegType, aAddress) then
+      Exit;
+
+    if Cur.ReadsFromRegister(aRegType, aAddress) then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+end;
+
 procedure DbgVshPrintf(aStr: string); overload;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
@@ -683,7 +751,7 @@ end;
 function HasMACO(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  Result := IsInUse(pInstruction.Output.OutputMask) and
+  Result := IsInUse(pInstruction.Output.Mask) and
             (pInstruction.Output.OutputMux = OMUX_MAC) and
             (pInstruction.MAC <> MAC_NOP);
 end;
@@ -691,7 +759,7 @@ end;
 function HasMACARL(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  Result := (* Cxbx : (not IsInUse(pInstruction.Output.OutputMask)) and
+  Result := (* Cxbx : (not IsInUse(pInstruction.Output.Mask)) and
             (pInstruction.Output.OutputMux = OMUX_MAC) and*)
             (pInstruction.MAC = MAC_ARL);
 end;
@@ -705,7 +773,7 @@ end;
 function HasILUO(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  Result := IsInUse(pInstruction.Output.OutputMask) and
+  Result := IsInUse(pInstruction.Output.Mask) and
             (pInstruction.Output.OutputMux = OMUX_ILU) and
             (pInstruction.ILU <> ILU_NOP);
 end;
@@ -760,8 +828,8 @@ begin
 
   // Get parameter A
   pInstruction.A.Neg := Boolean(VshGetField(pShaderToken, FLD_A_NEG) > 0);
-  pInstruction.A.ParameterType := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_A_MUX));
-  case pInstruction.A.ParameterType of
+  pInstruction.A.Type_ := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_A_MUX));
+  case pInstruction.A.Type_ of
     PARAM_R:
       pInstruction.A.Address := VshGetField(pShaderToken, FLD_A_R);
 
@@ -772,7 +840,7 @@ begin
       pInstruction.A.Address := ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
 
   else
-    DbgVshPrintf('Invalid instruction, parameter A type unknown %d'#13#10, [Ord(pInstruction.A.ParameterType)]);
+    DbgVshPrintf('Invalid instruction, parameter A type unknown %d'#13#10, [Ord(pInstruction.A.Type_)]);
     Exit;
   end;
 
@@ -784,8 +852,8 @@ begin
 
   // Get parameter B
   pInstruction.B.Neg := Boolean(VshGetField(pShaderToken, FLD_B_NEG) > 0);
-  pInstruction.B.ParameterType := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_B_MUX));
-  case pInstruction.B.ParameterType of
+  pInstruction.B.Type_ := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_B_MUX));
+  case pInstruction.B.Type_ of
     PARAM_R:
       pInstruction.B.Address := VshGetField(pShaderToken, FLD_B_R);
 
@@ -796,7 +864,7 @@ begin
       pInstruction.B.Address := ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
 
   else
-    DbgVshPrintf('Invalid instruction, parameter B type unknown %d'#13#10, [Ord(pInstruction.B.ParameterType)]);
+    DbgVshPrintf('Invalid instruction, parameter B type unknown %d'#13#10, [Ord(pInstruction.B.Type_)]);
     Exit;
   end;
 
@@ -808,8 +876,8 @@ begin
 
   // Get parameter C
   pInstruction.C.Neg := Boolean(VshGetField(pShaderToken, FLD_C_NEG) > 0);
-  pInstruction.C.ParameterType := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_C_MUX));
-  case pInstruction.C.ParameterType of
+  pInstruction.C.Type_ := VSH_PARAMETER_TYPE(VshGetField(pShaderToken, FLD_C_MUX));
+  case pInstruction.C.Type_ of
     PARAM_R:
       pInstruction.C.Address := (VshGetField(pShaderToken, FLD_C_R_HIGH) shl 2) or
                                    VshGetField(pShaderToken, FLD_C_R_LOW);
@@ -820,7 +888,7 @@ begin
       pInstruction.C.Address := ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
 
   else
-    DbgVshPrintf('Invalid instruction, parameter C type unknown %d'#13#10, [Ord(pInstruction.C.ParameterType)]);
+    DbgVshPrintf('Invalid instruction, parameter C type unknown %d'#13#10, [Ord(pInstruction.C.Type_)]);
     Exit;
   end;
 
@@ -833,17 +901,22 @@ begin
   // Get output
 
   // Output register
-  pInstruction.Output.OutputType := VSH_OUTPUT_TYPE(VshGetField(pShaderToken, FLD_OUT_ORB));
-  case pInstruction.Output.OutputType of
+  case VSH_OUTPUT_TYPE(VshGetField(pShaderToken, FLD_OUT_ORB)) of
     OUTPUT_C:
-     pInstruction.Output.OutputAddress := ConvertCRegister(VshGetField(pShaderToken, FLD_OUT_ADDRESS));
+    begin
+      pInstruction.Output.Type_ := PARAM_C;
+      pInstruction.Output.Address := ConvertCRegister(VshGetField(pShaderToken, FLD_OUT_ADDRESS));
+    end;
 
     OUTPUT_O:
-     pInstruction.Output.OutputAddress := VshGetField(pShaderToken, FLD_OUT_ADDRESS) and $F;
+    begin
+      pInstruction.Output.Type_ := PARAM_O;
+      pInstruction.Output.Address := VshGetField(pShaderToken, FLD_OUT_ADDRESS) and $F;
+    end;
   end;
 
   pInstruction.Output.OutputMux := VSH_OUTPUT_MUX(VshGetField(pShaderToken, FLD_OUT_MUX));
-  VshSetMask(@pInstruction.Output.OutputMask,
+  VshSetMask(@pInstruction.Output.Mask,
     Boolean(VshGetField(pShaderToken, FLD_OUT_O_MASK_X) > 0),
     Boolean(VshGetField(pShaderToken, FLD_OUT_O_MASK_Y) > 0),
     Boolean(VshGetField(pShaderToken, FLD_OUT_O_MASK_Z) > 0),
@@ -870,22 +943,24 @@ begin
 end; // VshParseInstruction
 
 // Print functions
-function VshGetRegisterName(ParameterType: VSH_PARAMETER_TYPE): _char;
+function VshGetRegisterName(aArgumentType: VSH_PARAMETER_TYPE): string;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  case (ParameterType) of
+  case (aArgumentType) of
     PARAM_R:
       Result := 'r';
     PARAM_V:
       Result := 'v';
     PARAM_C:
       Result := 'c';
+    PARAM_O:
+      Result := 'oPos';
   else
     Result := '?';
   end;
 end;
 
-procedure VshWriteOutputMask(const OutputMask: DxbxMask;
+procedure VshWriteOutputMask(const Mask: DxbxMask;
                              pDisassembly: P_char;
                              pDisassemblyPos: Puint32);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -895,17 +970,17 @@ const
   _z: array [Boolean] of AnsiString = ('', 'z');
   _w: array [Boolean] of AnsiString = ('', 'w');
 begin
-  if (OutputMask and MASK_XYZW) = MASK_XYZW then
+  if (Mask and MASK_XYZW) = MASK_XYZW then
   begin
     // All components are there, no need to print the mask
     Exit;
   end;
 
   Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, '.%s%s%s%s', [
-    _x[(OutputMask and MASK_X) > 0],
-    _y[(OutputMask and MASK_Y) > 0],
-    _z[(OutputMask and MASK_Z) > 0],
-    _w[(OutputMask and MASK_W) > 0]]));
+    _x[(Mask and MASK_X) > 0],
+    _y[(Mask and MASK_Y) > 0],
+    _z[(Mask and MASK_Z) > 0],
+    _w[(Mask and MASK_W) > 0]]));
 end;
 
 procedure VshWriteParameter(pParameter: PVSH_IMD_PARAMETER;
@@ -921,8 +996,8 @@ var
 begin
   Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, ', %s%s', [
                 _neg[pParameter.Parameter.Neg],
-                VshGetRegisterName(pParameter.Parameter.ParameterType)]));
-  if (pParameter.Parameter.ParameterType = PARAM_C) and (pParameter.IndexesWithA0_X) then
+                VshGetRegisterName(pParameter.Parameter.Type_)]));
+  if (pParameter.Parameter.Type_ = PARAM_C) and (pParameter.IndexesWithA0_X) then
   begin
     // Only display the offset if it's not 0.
     if (pParameter.Parameter.Address) > 0 then
@@ -1078,17 +1153,19 @@ begin
   begin
     pIntermediate := @(pShader.Intermediate[i]);
 
-    if(i = 128) then
+    if (i = 128) then
     begin
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '; -- Passing the truncation limit --'#13#10));
     end;
+
     // Writing combining sign if necessary
-    if(pIntermediate.IsCombined) then
+    if (pIntermediate.IsCombined) then
     begin
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '+'));
     end;
+
     // Print the op code
-    if(pIntermediate.InstructionType = IMD_MAC) then
+    if (pIntermediate.InstructionType = IMD_MAC) then
     begin
       // Dxbx addition : Safeguard against incorrect MAC opcodes :
       if (Ord(pIntermediate.MAC) > Ord(HIGH(VSH_MAC))) then
@@ -1106,13 +1183,13 @@ begin
     end;
 
     // Print the output parameter
-    if(pIntermediate.Output.Type_ = IMD_OUTPUT_A0X) then
+    if (pIntermediate.Output.Type_ = IMD_OUTPUT_A0X) then
     begin
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'a0.x'))
     end
     else
     begin
-      case(pIntermediate.Output.Type_) of
+      case (pIntermediate.Output.Type_) of
         IMD_OUTPUT_C:
           Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'c%d', [pIntermediate.Output.Address]));
         IMD_OUTPUT_R:
@@ -1140,11 +1217,12 @@ begin
     for j := 0 to 3-1 do
     begin
       pParameter := @(pIntermediate.Parameters[j]);
-      if(pParameter.Active) then
+      if (pParameter.Active) then
       begin
         VshWriteParameter(pParameter, pDisassembly, @DisassemblyPos);
       end;
     end;
+
     Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, #13#10));
     Inc(i);
   end;
@@ -1298,12 +1376,12 @@ begin
   pIntermediate.MAC := pInstruction.MAC;
 
   // Output param
-  if pInstruction.Output.OutputType = OUTPUT_C then
+  if pInstruction.Output.Type_ = PARAM_C then
     pIntermediate.Output.Type_ := IMD_OUTPUT_C
   else
     pIntermediate.Output.Type_ := IMD_OUTPUT_O;
-  pIntermediate.Output.Address := pInstruction.Output.OutputAddress;
-  pIntermediate.Output.Mask := pInstruction.Output.OutputMask;
+  pIntermediate.Output.Address := pInstruction.Output.Address;
+  pIntermediate.Output.Mask := pInstruction.Output.Mask;
 
   // Other parameters
   VshAddParameters(pInstruction, ILU_NOP, pInstruction.MAC, @pIntermediate.Parameters[0]);
@@ -1333,7 +1411,7 @@ begin
 
   // Output param
   pIntermediate.Output.Type_ := IMD_OUTPUT_A0X;
-  pIntermediate.Output.Address := pInstruction.Output.OutputAddress;
+  pIntermediate.Output.Address := pInstruction.Output.Address;
 
   // Other parameters
   VshAddParameters(pInstruction, ILU_NOP, pInstruction.MAC, @pIntermediate.Parameters[0]);
@@ -1372,8 +1450,8 @@ begin
           Break;
 
         // Check if this instruction writes to the .W component of the same input parameter :
-        if ((pShader.Intermediate[i].Output.Type_ = IMD_OUTPUT_C) and (pParameter.ParameterType = PARAM_C))
-        or ((pShader.Intermediate[i].Output.Type_ = IMD_OUTPUT_R) and (pParameter.ParameterType = PARAM_R)) then
+        if ((pShader.Intermediate[i].Output.Type_ = IMD_OUTPUT_C) and (pParameter.Type_ = PARAM_C))
+        or ((pShader.Intermediate[i].Output.Type_ = IMD_OUTPUT_R) and (pParameter.Type_ = PARAM_R)) then
         begin
           WIsWritten := (pShader.Intermediate[i].Output.Address = pParameter.Address)
                     and ((pShader.Intermediate[i].Output.Mask and MASK_W) > 0);
@@ -1452,13 +1530,13 @@ begin
   pIntermediate.ILU := pInstruction.ILU;
 
   // Output param
-  if pInstruction.Output.OutputType = OUTPUT_C then
+  if pInstruction.Output.Type_ = PARAM_C then
     pIntermediate.Output.Type_ := IMD_OUTPUT_C
   else
     pIntermediate.Output.Type_ := IMD_OUTPUT_O;
 
-  pIntermediate.Output.Address := pInstruction.Output.OutputAddress;
-  pIntermediate.Output.Mask := pInstruction.Output.OutputMask;
+  pIntermediate.Output.Address := pInstruction.Output.Address;
+  pIntermediate.Output.Mask := pInstruction.Output.Mask;
 
   // Other parameters
   VshAddParameters(pInstruction, pInstruction.ILU, MAC_NOP, @pIntermediate.Parameters[0]);
@@ -1580,93 +1658,89 @@ end;
 procedure VshRemoveScreenSpaceInstructions(pShader: PVSH_XBOX_SHADER);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
-  PosC38: int16;
+  RccOutputRegAddress: int;
   deleted: int;
   i: int;
-  k: int;
-  j: int;
   pIntermediate: PVSH_INTERMEDIATE_FORMAT;
-  pIntermediate1W: PVSH_INTERMEDIATE_FORMAT;
   MulIntermediate: VSH_INTERMEDIATE_FORMAT;
   AddIntermediate: VSH_INTERMEDIATE_FORMAT;
 begin
-  PosC38 := -1;
   deleted := 0;
-  // Dxbx note : Translated 'for' to 'while', because counter is incremented twice :
-  i := 0; while i < pShader.IntermediateCount do
+  RccOutputRegAddress := -1;
+
+  // Dxbx note : Run backwards, so we don't need to consider index-differences because of deletions
+  // and because this scan actually needs to see "mad oPos.xyz, r12, r#.x, c-37" first to determine '#' :
+  i := pShader.IntermediateCount; while i > 0 do
   begin
+    Dec(i);
     pIntermediate := @pShader.Intermediate[i];
 
-    for k := 0 to 3-1 do
-    begin
-      if (pIntermediate.Parameters[k].Active) then
-      begin
 {$IFDEF DXBX_REMOVE_V9_FOR_COMPRESSEDVERTICES}
-        if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_V) and
-           (pIntermediate.Parameters[k].Parameter.Address = 9) then
-        begin
-            VshDeleteIntermediate(pShader, i);
-            Inc(deleted);
-            Dec(i);
-            DbgVshPrintf('Removed v9 access'#13#10);
-        end else
+    // The faulty instruction reads "mov oT0, V9", just check for V9 :
+    // TODO : This must become a generic fix (either remove or declare/guess undeclared vertex registers).
+    if pIntermediate.Parameters[0].Parameter.IsRegister(PARAM_V, 9) then
+    begin
+      VshDeleteIntermediate(pShader, i);
+      DbgVshPrintf('Removed v9 access'#13#10);
+    end else
 {$ENDIF}
-        if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_C) and
-           (not pIntermediate.Parameters[k].IndexesWithA0_X) then
-        begin
-          if (pIntermediate.Parameters[k].Parameter.Address = X_D3DSCM_RESERVED_CONSTANT2{=-37}) then
-          begin
-            // Found c-37, remove the instruction
-            if (k = 2) and
-               pIntermediate.Parameters[1].Active and
-               (pIntermediate.Parameters[1].Parameter.ParameterType = PARAM_R) then
-            begin
-              DbgVshPrintf('PosC38 = %d i = %d'#13#10, [PosC38, i]);
-              for j := (i-1) downto 0 do
-              begin
-                pIntermediate1W := @pShader.Intermediate[j];
-                // Time to start searching for +rcc r#.x, r12.w
-                if (pIntermediate1W.InstructionType = IMD_ILU) and
-                    (pIntermediate1W.ILU = ILU_RCC) and
-                    (pIntermediate1W.Output.Type_ = IMD_OUTPUT_R) and
-                    (pIntermediate1W.Output.Address = pIntermediate.Parameters[1].Parameter.Address) then
-                begin
-                  DbgVshPrintf('Deleted +rcc r1.x, r12.w'#13#10);
-                  VshDeleteIntermediate(pShader, j);
-                  Inc(deleted);
-                  Dec(i);
-                  //Dec(j);
-                  break;
-                end;
-              end;
-            end;
-            VshDeleteIntermediate(pShader, i);
-            Inc(deleted);
-            Dec(i);
-            DbgVshPrintf('Deleted mad oPos.xyz, r12, r1.x, c-37'#13#10);
-            break;
-          end
-          else if (pIntermediate.Parameters[k].Parameter.Address = X_D3DSCM_RESERVED_CONSTANT1{=-38}) then
-          begin
-            VshDeleteIntermediate(pShader, i);
-            PosC38 := i;
-            Inc(deleted);
-            Dec(i);
-            DbgVshPrintf('Deleted mul oPos.xyz, r12, c-38'#13#10);
-          end;
-        end;
+    // The two special instructions (both MAC opcodes) should only be tested on the 3rd parameter (when it's not indexed) :
+    if  (pIntermediate.InstructionType = IMD_MAC)
+    and (not pIntermediate.Parameters[2].IndexesWithA0_X) then
+    begin
+      // Check for "mad oPos.xyz, r12, r#.x, c-37"
+      if (pIntermediate.MAC = MAC_MAD)
+      and (pIntermediate.Parameters[2].Parameter.IsRegister(PARAM_C, X_D3DSCM_RESERVED_CONSTANT2{=-37}))
+      and (pIntermediate.Parameters[1].Active)
+      and (pIntermediate.Parameters[1].Parameter.Type_ = PARAM_R) then
+      begin
+        // Found the instruction, so remove it (but remember the '#' part) :
+        RccOutputRegAddress := pIntermediate.Parameters[1].Parameter.Address;
+        VshDeleteIntermediate(pShader, i);
+        DbgVshPrintf('Deleted mad oPos.xyz, r12, r#.x, c-37'#13#10);
+        Inc(deleted);
+        Continue;
+      end;
+
+      // Check for "mul oPos.xyz, r12, c-38"
+      if  (pIntermediate.MAC = MAC_MUL)
+      and (pIntermediate.Output.IsRegister(IMD_OUTPUT_O, ORD(OREG_OPOS)))
+      and (pIntermediate.Parameters[0].Parameter.IsRegister(PARAM_R, 12))
+      and (pIntermediate.Parameters[1].Parameter.IsRegister(PARAM_C, X_D3DSCM_RESERVED_CONSTANT1{=-38})) then
+      begin
+        // Found the instruction, so remove it :
+        VshDeleteIntermediate(pShader, i);
+        DbgVshPrintf('Deleted mul oPos.xyz, r12, c-38'#13#10);
+        Inc(deleted);
+        Continue;
       end;
     end;
 
-    Inc(i);
-  end;
+    // Check for "+rcc r#.x, r12.w" (once we know what register to search for) :
+    if  (RccOutputRegAddress >= 0)
+    and (pIntermediate.InstructionType = IMD_ILU)
+    and (pIntermediate.ILU = ILU_RCC)
+    and (pIntermediate.Output.IsRegister(IMD_OUTPUT_R, RccOutputRegAddress)) then
+    begin
+      // Dxbx addition : Check that this output register is not read (until being written to) again.
+      // (Note, that the "mad oPos.xyz, r12, r#.x, c-37" instruction is already removed, since we
+      // execute this search backwards, so that won't give us a false positive here) :
+      if not pShader.IsRegisterReadUntilNextWrite(i+1, PARAM_R, RccOutputRegAddress) then
+      begin
+        DbgVshPrintf('Deleted (+)rcc r#.x, r12.w'#13#10);
+        VshDeleteIntermediate(pShader, i);
+        // Don't count this deletion (it might not happen and is not relevant for the following code)
+      end;
+    end;
+
+  end; // while instructions
 
   // If we couldn't find the generic screen space transformation we're
   // assuming that the shader writes direct screen coordinates that must be
   // normalized. This hack will fail if (a) the shader uses custom screen
   // space transformation, (b) reads r10 or r11 after we have written to
   // them, or (c) doesn't reserve c-38 and c-37 for scale and offset.
-  if (deleted <> 3) then
+  if (deleted <> 2) then
   begin
     EmuWarning('Applying screen space vertex shader patching hack!');
     // Dxbx note : Translated 'for' to 'while', because counter is incremented twice :
@@ -1676,8 +1750,7 @@ begin
 
       // Find instructions outputting to oPos.
       // (?opcode? oPos.[mask], ...)
-      if (pIntermediate.Output.Type_ = IMD_OUTPUT_O) and
-         (pIntermediate.Output.Address = Ord(OREG_OPOS)) then
+      if pIntermediate.Output.IsRegister(IMD_OUTPUT_O, Ord(OREG_OPOS)) then
       begin
         // Redirect output to r11. (?opcode? r11.[mask], ...)
         pIntermediate.Output.Type_    := IMD_OUTPUT_R;
@@ -1693,14 +1766,14 @@ begin
         // Set first parameter :
         MulIntermediate.Parameters[0].Active                  := TRUE;
         MulIntermediate.Parameters[0].IndexesWithA0_X         := FALSE;
-        MulIntermediate.Parameters[0].Parameter.ParameterType := PARAM_R;
+        MulIntermediate.Parameters[0].Parameter.Type_ := PARAM_R;
         MulIntermediate.Parameters[0].Parameter.Address       := 11;
         MulIntermediate.Parameters[0].Parameter.Neg           := FALSE;
         VshSetSwizzle(@MulIntermediate.Parameters[0].Parameter, SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
         // Set second parameter :
         MulIntermediate.Parameters[1].Active                  := TRUE;
         MulIntermediate.Parameters[1].IndexesWithA0_X         := FALSE;
-        MulIntermediate.Parameters[1].Parameter.ParameterType := PARAM_C;
+        MulIntermediate.Parameters[1].Parameter.Type_ := PARAM_C;
         // Dxbx note : Cxbx calls ConvertCRegister(58) here, but doing a conversion seems incorrect.
         // That, and the constant address is also corrected afterwards, so use the original :
         MulIntermediate.Parameters[1].Parameter.Address       := X_D3DSCM_RESERVED_CONSTANT1{=-38};
@@ -1778,8 +1851,7 @@ var
     if (RegisterAddress = 12) then
       Result := (pIntermediate.Output.Type_ = IMD_OUTPUT_O)
     else
-      Result := (pIntermediate.Output.Type_ = IMD_OUTPUT_R)
-            and (pIntermediate.Output.Address = RegisterAddress);
+      Result := (pIntermediate.Output.IsRegister(IMD_OUTPUT_R, RegisterAddress));
   end;
 
   function _ReadsRegister(pIntermediate: PVSH_INTERMEDIATE_FORMAT; RegisterAddress: int): int;
@@ -1788,7 +1860,7 @@ var
     while Result >= 0 do
     begin
       if  (pIntermediate.Parameters[Result].Active)
-      and (pIntermediate.Parameters[Result].Parameter.ParameterType = PARAM_R)
+      and (pIntermediate.Parameters[Result].Parameter.Type_ = PARAM_R)
       and (pIntermediate.Parameters[Result].Parameter.Address = RegisterAddress) then
         Exit;
 
@@ -1811,7 +1883,7 @@ var
       // Check that the only reads on this register happen on channels that are written to in this range :
       for j := 0 to 2 do
         if  (pIntermediate.Parameters[j].Active)
-        and (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_R)
+        and (pIntermediate.Parameters[j].Parameter.Type_ = PARAM_R)
         and (pIntermediate.Parameters[j].Parameter.Address = RegisterAddress) then
           if ((pIntermediate.Parameters[j].Parameter.Mask and (not WrittenMask)) > 0) then
           begin
@@ -2007,13 +2079,13 @@ begin
 
     for j := 0 to 3-1 do
     begin
-      if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_R) then
+      if (pIntermediate.Parameters[j].Parameter.Type_ = PARAM_R) then
       begin
         // Dxbx fix : Here, Active does seem to apply :
         if (pIntermediate.Parameters[j].Active) then
           Inc(RUsage[pIntermediate.Parameters[j].Parameter.Address]);
       end else
-      if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_C) then
+      if (pIntermediate.Parameters[j].Parameter.Type_ = PARAM_C) then
       begin
         // Dxbx fix : PARAM_C correction shouldn't depend on Active!
 
@@ -2023,7 +2095,7 @@ begin
         // TODO -oDxbx : Find out why MatrixPaletteSkinning is flickering so much
         Inc(pIntermediate.Parameters[j].Parameter.Address, X_D3DSCM_CORRECTION);
       end else
-      if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_V) then
+      if (pIntermediate.Parameters[j].Parameter.Type_ = PARAM_V) then
       begin
 {$IFDEF DXBX_USE_D3D9}
         if (pIntermediate.Parameters[j].Active) then
@@ -2061,7 +2133,7 @@ begin
 
         TmpIntermediate.MAC := MAC_ADD;
         TmpIntermediate.Parameters[0].IndexesWithA0_X := FALSE;
-        TmpIntermediate.Parameters[0].Parameter.ParameterType := PARAM_R;
+        TmpIntermediate.Parameters[0].Parameter.Type_ := PARAM_R;
         TmpIntermediate.Parameters[0].Parameter.Address := DPHReplacement;
         TmpIntermediate.Parameters[0].Parameter.Neg := FALSE;
         // VshSetSwizzle(@TmpIntermediate.Parameters[0].Parameter, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
@@ -2079,7 +2151,7 @@ begin
         pIntermediate.MAC := MAC_DP3;
         TmpIntermediate.MAC := MAC_ADD;
         TmpIntermediate.Parameters[0].IndexesWithA0_X := FALSE;
-        TmpIntermediate.Parameters[0].Parameter.ParameterType := PARAM_R;
+        TmpIntermediate.Parameters[0].Parameter.Type_ := PARAM_R;
         TmpIntermediate.Parameters[0].Parameter.Address := TmpIntermediate.Output.Address;
         TmpIntermediate.Parameters[0].Parameter.Neg := FALSE;
 
@@ -2133,8 +2205,7 @@ begin
     for j := 0 to pShader.IntermediateCount - 1 do
     begin
       pIntermediate := @pShader.Intermediate[j];
-      if (pIntermediate.Output.Type_ = IMD_OUTPUT_O) and
-         (pIntermediate.Output.Address = Ord(OREG_OPOS)) then
+      if (pIntermediate.Output.IsRegister(IMD_OUTPUT_O, Ord(OREG_OPOS))) then
       begin
         // Found instruction writing to oPos
         pIntermediate.Output.Type_ := IMD_OUTPUT_R;
@@ -2146,7 +2217,7 @@ begin
       begin
         if (pIntermediate.Parameters[k].Active) then
         begin
-          if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_R) and
+          if (pIntermediate.Parameters[k].Parameter.Type_ = PARAM_R) and
              (pIntermediate.Parameters[k].Parameter.Address = 12) then
           begin
             // Found a r12 used as a parameter; replace
@@ -2154,13 +2225,13 @@ begin
             Inc(RUsage[R12Replacement]);
           end
 // Dxbx fix : C-38 is readily available to us!
-//          else if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_C) and
+//          else if (pIntermediate.Parameters[k].Parameter.Type_ = PARAM_C) and
 //                  (pIntermediate.Parameters[k].Parameter.Address = ({58=}X_D3DSCM_RESERVED_CONSTANT1{=-38}+X_D3DSCM_CORRECTION{=96})) and
 //                  (not pIntermediate.Parameters[k].IndexesWithA0_X) then
 // if (not bNoReservedConstants) then
 //          begin
 //            // Found c-38, replace it with r12.w
-//            pIntermediate.Parameters[k].Parameter.ParameterType := PARAM_R;
+//            pIntermediate.Parameters[k].Parameter.Type_ := PARAM_R;
 //            pIntermediate.Parameters[k].Parameter.Address := R12Replacement;
 //            Inc(RUsage[R12Replacement]);
 //            VshSetSwizzle(@pIntermediate.Parameters[k].Parameter, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
@@ -2178,7 +2249,7 @@ begin
     pOPosWriteBack.Output.Address := Ord(OREG_OPOS);
     VshSetMask(@pOPosWriteBack.Output.Mask, TRUE, TRUE, TRUE, TRUE);
     pOPosWriteBack.Parameters[0].Active := TRUE;
-    pOPosWriteBack.Parameters[0].Parameter.ParameterType := PARAM_R;
+    pOPosWriteBack.Parameters[0].Parameter.Type_ := PARAM_R;
     pOPosWriteBack.Parameters[0].Parameter.Address := R12Replacement;
     Inc(RUsage[R12Replacement]);
     VshSetSwizzle(@pOPosWriteBack.Parameters[0].Parameter, SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
@@ -2904,7 +2975,7 @@ begin
   pErrors := nil;
 
   // TODO -oCXBX: support this situation..
-  if(pFunction = NULL) then
+  if (pFunction = NULL) then
   begin
     Result := E_FAIL;
     Exit;
@@ -2912,7 +2983,7 @@ begin
 
   ppRecompiled^ := NULL;
   pOriginalSize^ := 0;
-  if(nil=pShader) then
+  if (nil=pShader) then
   begin
     EmuWarning('Couldn''t allocate memory for vertex shader conversion buffer');
     hRet := E_OUTOFMEMORY;
