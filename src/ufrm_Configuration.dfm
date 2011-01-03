@@ -80,17 +80,13 @@ object fmConfiguration: TfmConfiguration
     Top = 8
     Width = 554
     Height = 441
-    ActivePage = TabSheet4
+    ActivePage = TabSheet3
     Anchors = [akLeft, akTop, akRight, akBottom]
     Style = tsFlatButtons
     TabOrder = 1
     OnChange = ConfigControlChange
     object TabSheet1: TTabSheet
       Caption = 'Controller'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Image1: TImage
         Left = 0
         Top = 0
@@ -298,10 +294,6 @@ object fmConfiguration: TfmConfiguration
     object TabSheet2: TTabSheet
       Caption = 'Video'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         546
         410)
@@ -413,10 +405,6 @@ object fmConfiguration: TfmConfiguration
     object TabSheet4: TTabSheet
       Caption = 'Sound'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         546
         410)
@@ -469,10 +457,6 @@ object fmConfiguration: TfmConfiguration
     object TabSheet3: TTabSheet
       Caption = 'Logging'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object GroupBox2: TGroupBox
         Left = 3
         Top = 0
@@ -513,7 +497,7 @@ object fmConfiguration: TfmConfiguration
         end
         object btnDisableAll: TButton
           Left = 455
-          Top = 24
+          Top = 86
           Width = 75
           Height = 25
           Caption = '&Disable All'
@@ -522,12 +506,21 @@ object fmConfiguration: TfmConfiguration
         end
         object btnEnableAll: TButton
           Left = 455
-          Top = 55
+          Top = 24
           Width = 75
           Height = 25
           Caption = '&Enable All'
           TabOrder = 2
           OnClick = btnEnableAllClick
+        end
+        object btnIgnoreAll: TButton
+          Left = 455
+          Top = 55
+          Width = 75
+          Height = 25
+          Caption = '&Ignore All'
+          TabOrder = 3
+          OnClick = btnIgnoreAllClick
         end
       end
     end
@@ -536,7 +529,7 @@ object fmConfiguration: TfmConfiguration
     Left = 32
     Top = 220
     Bitmap = {
-      494C010103000500100010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000500140010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

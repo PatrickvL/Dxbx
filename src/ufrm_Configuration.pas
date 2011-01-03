@@ -127,6 +127,7 @@ type
     mnuSaveConfig: TMenuItem;
     actLoadConfig: TAction;
     actSaveConfig: TAction;
+    btnIgnoreAll: TButton;
     procedure FormCreate(Sender: TObject);
     procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
     procedure btnOkClick(Sender: TObject);
@@ -143,6 +144,7 @@ type
     procedure btnEnableAllClick(Sender: TObject);
     procedure actSaveConfigExecute(Sender: TObject);
     procedure actLoadConfigExecute(Sender: TObject);
+    procedure btnIgnoreAllClick(Sender: TObject);
   private
     MyDirectDraw: IDirectDraw7;
     FXBVideo : XBVideo;
@@ -868,6 +870,11 @@ end;
 procedure TfmConfiguration.btnEnableAllClick(Sender: TObject);
 begin
   ChangeStatusAllSettings(lsEnabled);
+end;
+
+procedure TfmConfiguration.btnIgnoreAllClick(Sender: TObject);
+begin
+  ChangeStatusAllSettings(lsIgnored);
 end;
 
 procedure TfmConfiguration.btnLoadLogConfigClick(Sender: TObject);
