@@ -301,8 +301,8 @@ begin
       Result := (Result * 3) div 4;
   end
   else
-    // Assume it's a global variable of type DWORD :
-    Result := SizeOf(DWORD);
+    // Assume it's a global variable of type BYTE (was DWORD, but some variables are probably smaller) :
+    Result := SizeOf(BYTE);
 end;
 
 function TSymbolInformation.GetSymbolReferenceCount: Integer;
@@ -777,7 +777,7 @@ procedure TSymbolManager.ConvertLeafHitsIntoSymbols();
     Result := (aSymbol1.Name <> aSymbol2.Name)
           and _IsAliasFunction(aSymbol1.StoredLibraryFunction, aSymbol2.StoredLibraryFunction);
     if Result then
-      Result := (aSymbol1.SymbolReferenceCount > 0)
+      Result := (aSymbol1.Length > 4)
             or SameStr(aSymbol1.UnmangledName, aSymbol2.UnmangledName);
   end;
 

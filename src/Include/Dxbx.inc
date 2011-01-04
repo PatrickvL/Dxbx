@@ -169,6 +169,12 @@
   {$WARN UNSAFE_CAST OFF}
 {$ENDIF}
 
+{$IFDEF COMPILER12_UP} // TODO : Use SUPPORTS_WEAKLINKRTTI once jedi.inc offers this
+  // Reduce executable size by leaving out all compiler-generated RTTI :
+  {$WEAKLINKRTTI ON}
+  {$RTTI EXPLICIT METHODS([]) PROPERTIES([]) FIELDS([])}
+{$ENDIF}
+
 // End of Dxbx specific compiler settings
 
 {$ENDIF ~DXBX_INC}
