@@ -2233,7 +2233,7 @@ begin
       PS_TEXTUREMODES_DOT_ST: Ins.Opcode := PO_TEXM3X2TEX;
       PS_TEXTUREMODES_DOT_ZW: Ins.Opcode := PO_TEXM3X2DEPTH; // Note : requires ps.1.3 and a preceding texm3x2pad
 //    PS_TEXTUREMODES_DOT_RFLCT_DIFF: Ins.Opcode := PO_TEXM3X3DIFF; // Note : Not supported by Direct3D8 ?
-      PS_TEXTUREMODES_DOT_RFLCT_SPEC: Ins.Opcode := PO_TEXM3X3VSPEC;
+      PS_TEXTUREMODES_DOT_RFLCT_SPEC: Ins.Opcode := PO_TEXM3X3SPEC; // Note : Needs 3 arguments!
       PS_TEXTUREMODES_DOT_STR_3D: Ins.Opcode := PO_TEXM3X3TEX; // Note : Uses a 3d texture
       PS_TEXTUREMODES_DOT_STR_CUBE: Ins.Opcode := PO_TEXM3X3TEX; // Note : Uses a cube texture
       PS_TEXTUREMODES_DPNDNT_AR: Ins.Opcode := PO_TEXREG2AR;
@@ -2265,9 +2265,10 @@ begin
     begin
       // Add the third argument :
       case PSTextureModes[Stage] of
+        PS_TEXTUREMODES_DOT_RFLCT_SPEC,
         PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST:
         begin
-          Ins.Parameters[0].SetRegister(PARAM_C, 0, 0);
+          Ins.Parameters[1].SetRegister(PARAM_C, 0, 0);
           Ins.CommentString := 'Dxbx guess'; // TODO : Where do we get the 3rd argument to this?
         end;
       end;
@@ -2415,11 +2416,23 @@ begin
 
       // The Fog register is not supported on PC so we convert it to a constant too :
       // (But only if the MASK is not solely accessing the alpha-channel - we don't support that)
-      if (CurArg.Type_ = PARAM_FOG) and (CurArg.Mask <> MASK_A) then
+      if (CurArg.Type_ = PARAM_FOG) then
       begin
-        CurArg.Type_ := PARAM_C;
-        CurArg.Address := _HandleConst(PSH_XBOX_CONSTANT_FOG);
-        CurArg.Mask := CurArg.Mask and (not MASK_A);
+        if (CurArg.Mask <> MASK_A) then
+        begin
+          CurArg.Type_ := PARAM_C;
+          CurArg.Address := _HandleConst(PSH_XBOX_CONSTANT_FOG);
+          CurArg.Mask := CurArg.Mask and (not MASK_A);
+        end
+        else
+        begin
+          // Until we can get Alpha fog from the vertex shader somehow,
+          // set it to a constant value, so these shaders (like appearing
+          // in Dolphin samples) still compile and give reasonable output :
+          CurArg.SetConstValue(1.0);
+          Cur.CommentString := 'FOG.a not emulated, using 1.';
+        end;
+
         Continue;
       end;
 
