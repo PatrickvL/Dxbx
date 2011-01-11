@@ -82,8 +82,6 @@ var g_bPBSkipPusher: _bool = false;
 procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD); {NOPATCH}
 {$ENDIF}
 
-procedure EmuUnswizzleActiveTexture(); {NOPATCH}
-
 implementation
 
 uses
@@ -139,118 +137,6 @@ begin
   XTL_EmuExecutePushBufferRaw(PDWORD(pPushBuffer.Data));
 end;
 
-// Note Dxbx: Before, EmuUnswizzleActiveTexture messed up the callers stack (like in Cubemap sample), but not anymore since rev 1245
-procedure EmuUnswizzleActiveTexture(); {NOPATCH}
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  pPixelContainer: PX_D3DPixelContainer;
-  X_Format: DWord;
-  dwBPP: DWord;
-  pPCTexture: XTL_PIDirect3DTexture8;
-  dwLevelCount: DWord;
-  v: uint32;
-  SurfaceDesc: D3DSURFACE_DESC;
-  hRet: HRESULT;
-  LockedRect: D3DLOCKED_RECT;
-
-  dwWidth: DWord;
-  dwHeight: DWord;
-  dwDepth: DWord;
-  dwPitch: DWord;
-  iRect: TRect;
-  iPoint: TPoint;
-
-  pTemp: Pointer;
-
-  Stage: int;
-begin
-  for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
-  begin
-    // for current usages, we're always on stage 0
-    pPixelContainer := PX_D3DPixelContainer(g_EmuD3DActiveTexture[Stage]);
-
-    if (pPixelContainer = NULL) or (0 = (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
-      Continue;
-
-// Dxbx addition, doesn't help in fixing EmuUnswizzleActiveTexture...
-//    if IsSpecialResource(pPixelContainer.Data) then
-//      Continue;
-
-    X_Format := (pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
-    dwBPP := 0;
-
-    if (not EmuXBFormatIsSwizzled(X_Format, @dwBPP)) then
-      Continue;
-
-    // TODO -oCXBX: potentially CRC to see if this surface was actually modified..
-
-    //
-    // unswizzle texture
-    //
-
-    begin
-      pPCTexture := pPixelContainer.Emu.Texture;
-
-      dwLevelCount := IDirect3DTexture(pPCTexture).GetLevelCount();
-
-      if dwLevelCount > 0 then // Dxbx addition, to prevent underflow
-      for v := 0 to dwLevelCount - 1 do
-      begin
-// Dxbx note : The code in this block makes Cubemap crash (this somehow overwrites the callers stack)
-        // Dxbx addition : Remove lock for each level separately :
-        IDirect3DTexture(pPCTexture).UnlockRect(v);
-
-        hRet := IDirect3DTexture(pPCTexture).GetLevelDesc(v, {out}SurfaceDesc);
-
-        if (FAILED(hRet)) then
-          continue;
-
-        //
-        // perform unswizzle
-        //
-
-        begin
-          // Cxbx has this commented out :
-          //if (SurfaceDesc.Format <> XTL_D3DFMT_A8R8G8B8) then
-          //  break;
-          //DxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', [SurfaceDesc.Format]);
-
-          hRet := IDirect3DTexture(pPCTexture).LockRect(v, {out}LockedRect, NULL, 0);
-
-          if (FAILED(hRet)) then
-            continue;
-
-          dwWidth := SurfaceDesc.Width;
-          dwHeight := SurfaceDesc.Height;
-          dwDepth := 1;
-          dwPitch := LockedRect.Pitch;
-          iRect := Classes.Rect(0,0,0,0);
-          iPoint := Classes.Point(0,0);
-
-          pTemp := DxbxMalloc(dwHeight * dwPitch);
-
-          EmuUnswizzleRect
-          (
-              LockedRect.pBits, dwWidth, dwHeight, dwDepth,
-              pTemp, dwPitch, iRect, iPoint, dwBPP
-          );
-
-          memcpy({dest=}LockedRect.pBits, {src=}pTemp, dwPitch * dwHeight);
-
-          DxbxFree(pTemp);
-
-          IDirect3DTexture(pPCTexture).UnlockRect(v); // Dxbx fix : Cxbx unlocks level 0 each time!
-        end;
-      end;
-
-      if MayLog(lfUnit) then
-        DbgPrintf('Active texture was unswizzled');
-    end;
-
-    // Dxbx note : Only set this _after_ processing all levels :
-    pPixelContainer.Common := pPixelContainer.Common and (not X_D3DCOMMON_ISLOCKED);
-  end;
-end;
 
 procedure XTL_EmuApplyPushBufferFixup
 (
