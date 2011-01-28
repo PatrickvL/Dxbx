@@ -1512,24 +1512,25 @@ begin
   case Result[1] of
     '?':
       begin
+        // XP has no problem with those Flags, but Win7 have problems with these flags
         UnmangleFlags := 0
                       // UNDNAME_COMPLETE               // Enable full undecoration
-                      or UNDNAME_NO_LEADING_UNDERSCORES // Remove leading underscores from MS extended keywords
-                      or UNDNAME_NO_MS_KEYWORDS         // Disable expansion of MS extended keywords
-                      or UNDNAME_NO_FUNCTION_RETURNS    // Disable expansion of return type for primary declaration
-                      or UNDNAME_NO_ALLOCATION_MODEL    // Disable expansion of the declaration model
-                      or UNDNAME_NO_ALLOCATION_LANGUAGE // Disable expansion of the declaration language specifier
-                      or UNDNAME_NO_MS_THISTYPE         // NYI Disable expansion of MS keywords on the 'this' type for primary declaration
-                      or UNDNAME_NO_CV_THISTYPE         // NYI Disable expansion of CV modifiers on the 'this' type for primary declaration
-                      or UNDNAME_NO_THISTYPE            // Disable all modifiers on the 'this' type
-                      or UNDNAME_NO_ACCESS_SPECIFIERS   // Disable expansion of access specifiers for members
-                      or UNDNAME_NO_THROW_SIGNATURES    // Disable expansion of 'throw-signatures' for functions and pointers to functions
-                      or UNDNAME_NO_MEMBER_TYPE         // Disable expansion of 'static' or 'virtual'ness of members
-                      or UNDNAME_NO_RETURN_UDT_MODEL    // Disable expansion of MS model for UDT returns
-                      or UNDNAME_32_BIT_DECODE          // Undecorate 32-bit decorated names
+//                      or UNDNAME_NO_LEADING_UNDERSCORES // Remove leading underscores from MS extended keywords
+//                      or UNDNAME_NO_MS_KEYWORDS         // Disable expansion of MS extended keywords
+//                      or UNDNAME_NO_FUNCTION_RETURNS    // Disable expansion of return type for primary declaration
+//                      or UNDNAME_NO_ALLOCATION_MODEL    // Disable expansion of the declaration model
+//                      or UNDNAME_NO_ALLOCATION_LANGUAGE // Disable expansion of the declaration language specifier
+//                      or UNDNAME_NO_MS_THISTYPE         // NYI Disable expansion of MS keywords on the 'this' type for primary declaration
+//                      or UNDNAME_NO_CV_THISTYPE         // NYI Disable expansion of CV modifiers on the 'this' type for primary declaration
+//                      or UNDNAME_NO_THISTYPE            // Disable all modifiers on the 'this' type
+//                      or UNDNAME_NO_ACCESS_SPECIFIERS   // Disable expansion of access specifiers for members
+//                      or UNDNAME_NO_THROW_SIGNATURES    // Disable expansion of 'throw-signatures' for functions and pointers to functions
+//                      or UNDNAME_NO_MEMBER_TYPE         // Disable expansion of 'static' or 'virtual'ness of members
+//                      or UNDNAME_NO_RETURN_UDT_MODEL    // Disable expansion of MS model for UDT returns
+//                      or UNDNAME_32_BIT_DECODE          // Undecorate 32-bit decorated names
                       or UNDNAME_NAME_ONLY              // Crack only the name for primary declaration;
-                      or UNDNAME_NO_ARGUMENTS           // Don't undecorate arguments to function
-                      or UNDNAME_NO_SPECIAL_SYMS        // Don't undecorate special names (v-table, vcall, vector xxx, metatype, etc)
+//                      or UNDNAME_NO_ARGUMENTS           // Don't undecorate arguments to function
+//                      or UNDNAME_NO_SPECIAL_SYMS        // Don't undecorate special names (v-table, vcall, vector xxx, metatype, etc)
                       ;
 
         // Do Microsoft symbol demangling :

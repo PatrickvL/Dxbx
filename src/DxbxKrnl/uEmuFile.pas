@@ -409,7 +409,7 @@ begin
   if IsFile then
     Result := True // Actually, this is the Config sectors partition (partition0) registered as a file
   else
-    Result := ForceDirectories(ExtractFilePath(NativePath));
+    Result := ForceDirectories(NativePath);
   if Result then
   begin
     i := Length(Devices);
