@@ -1165,7 +1165,7 @@ function EmuXB2PC_D3DTEXTUREADDRESS(Value: DWORD): DWORD;
 begin
   if (Value = X_D3DTADDRESS_CLAMPTOEDGE) then
     // Note : PC has D3DTADDRESS_MIRRORONCE in it's place
-    DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
+    EmuWarning('ClampToEdge is unsupported (temporarily)');
 
   Result := Value;
 end;
