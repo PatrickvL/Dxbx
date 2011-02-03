@@ -360,13 +360,23 @@ begin
 
   // create thread, using our special proxy technique
   begin
-{$IFDEF DXBX_DISABLE_FS_FIXUP}
+    // If for some reason XapiStartup wasn't found, assume it's the first thread coming here :
+    if XTL_Emu_mainXapiStartup = nil then
+    begin
+      EmuWarning('mainXapiStartup not found, assuming it''s running from the first created thread!');
+      XTL_Emu_mainXapiStartup := Addr(StartAddress);
+    end;
+
+    // See if this thread is for mainXapiStartup :
     if Addr(StartAddress) = XTL_Emu_mainXapiStartup then
     begin
+      // Mark that XapiInitProcess is now also triggered (needed to activate Xbox allocation) :
+      DxbxKrnl_XapiInitProcessExecuted := True;
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
       Addr(StartAddress) := Addr(Dxbx_Emu_mainXapiStartup);
       DbgPrintf('Skipping _mainXapiStartup@4, calling our version...');
-    end;
 {$ENDIF}
+    end;
 
     // PCSTProxy is responsible for cleaning up this pointer
     iPCSTProxyParam.StartAddress := Addr(StartAddress);

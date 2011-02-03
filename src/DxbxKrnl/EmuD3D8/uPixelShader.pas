@@ -1768,9 +1768,9 @@ begin
 //  Normal optimizations apply, like when A = PS_REGISTER_ZERO, all we have left is C + D (add r0.rgb, C.rgb, D.rgb)
 //  Also, if D = PS_REGISTER_ZERO, the add can be changed into a mov (if the result isn't already in r0.rgb)
 
-  // TODO : XSokoban looses it's font rendering when the final combiner is emitted,
-  // when disabled, the font reappears (in various colors). This could be because
-  // the constants are not properly set locally...
+  // Note : Previously, XSokoban lost it's font rendering when the final combiner was emitted,
+  // when disabled, the font reappeared (in various colors). This was because constants where
+  // not properly set locally.
 
   Self.Opcode := PO_XFC;
   Self.CombinerStageNr := XFC_COMBINERSTAGENR;
@@ -2233,7 +2233,7 @@ begin
       PS_TEXTUREMODES_DOT_ST: Ins.Opcode := PO_TEXM3X2TEX;
       PS_TEXTUREMODES_DOT_ZW: Ins.Opcode := PO_TEXM3X2DEPTH; // Note : requires ps.1.3 and a preceding texm3x2pad
 //    PS_TEXTUREMODES_DOT_RFLCT_DIFF: Ins.Opcode := PO_TEXM3X3DIFF; // Note : Not supported by Direct3D8 ?
-      PS_TEXTUREMODES_DOT_RFLCT_SPEC: Ins.Opcode := PO_TEXM3X3SPEC; // Note : Needs 3 arguments!
+      PS_TEXTUREMODES_DOT_RFLCT_SPEC: Ins.Opcode := PO_TEXM3X3VSPEC;
       PS_TEXTUREMODES_DOT_STR_3D: Ins.Opcode := PO_TEXM3X3TEX; // Note : Uses a 3d texture
       PS_TEXTUREMODES_DOT_STR_CUBE: Ins.Opcode := PO_TEXM3X3TEX; // Note : Uses a cube texture
       PS_TEXTUREMODES_DPNDNT_AR: Ins.Opcode := PO_TEXREG2AR;
@@ -2265,7 +2265,6 @@ begin
     begin
       // Add the third argument :
       case PSTextureModes[Stage] of
-        PS_TEXTUREMODES_DOT_RFLCT_SPEC,
         PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST:
         begin
           Ins.Parameters[1].SetRegister(PARAM_C, 0, 0);
@@ -3809,10 +3808,10 @@ end;
 // that is at all possible!)
 //
 // register | Xbox range | Native range | Xbox      | Native    |
-//  C0..C8  |  0.0 - 1.0 |   -1.0 - 1.0 | readonly  | readonly  |
+//  C0..C8  |  0.0 - 1.0 !   -1.0 - 1.0 | readonly  | readonly  |
 //  R0..R1  | -1.0 - 1.0 |   -1.0 - 1.0 | writeable | writeable |
 //  T0..T3  | -1.0 - 1.0 |   -1.0 - 1.0 | writeable | writeable |
-//  V0..V1  | -1.0 - 1.0 |    0.0 - 1.0 | writeable | readonly  |
+//  V0..V1  | -1.0 - 1.0 !    0.0 - 1.0 | writeable ! readonly  |
 //
 // "-C0_bias_x2" shifts range from [ 0..1] to [-1..1]
 // "-V0_bias_d2" shifts range from [-1..1] to [ 0..1]

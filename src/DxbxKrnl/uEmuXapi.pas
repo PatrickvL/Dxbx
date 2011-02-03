@@ -51,10 +51,9 @@ uses
   uXBController,
   uXboxLibraryUtils; // PatchPrefix
 
-{$IFDEF DXBX_DISABLE_FS_FIXUP}
 var
   XTL_Emu_mainXapiStartup: PVOID;
-
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
   XTL_Org_XapiInitProcess: function (): int; stdcall;
   XTL_Org_rtinit: function (): int; stdcall;
   XTL_Org_cinit: function (): int; stdcall;
@@ -921,20 +920,6 @@ function XTL_EmuCreateMutex
     lpName: LPCSTR
 ): HANDLE; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit) then
-    LogBegin('EmuCreateMutex').
-      _(lpMutexAttributes, 'lpMutexAttributes').
-      _(bInitialOwner, 'bInitialOwner').
-      _(lpName, 'lpName').
-    LogEnd();
-
-  Result := CreateMutexA(PSecurityAttributes(lpMutexAttributes), bInitialOwner <> BOOL_FALSE, lpName);
-
-  EmuSwapFS(fsXbox);
-end;
 *)
 
 (* Dxbx note : Disabled, too high level. See xboxkrnl_NtClose
@@ -943,18 +928,6 @@ function XTL_EmuCloseHandle
     hObject: HANDLE
 ): BOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit or lfDxbx}
-    LogBegin('EmuCloseHandle').
-      _(hObject, 'hObject').
-    LogEnd();
-
-  Result := BOOL(CloseHandle(hObject));
-
-  EmuSwapFS(fsXbox);
-end;
 *)
 
 function XTL_EmuSetThreadPriorityBoost

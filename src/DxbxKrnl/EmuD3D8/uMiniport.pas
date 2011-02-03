@@ -26,16 +26,39 @@ interface
 uses
   // Delphi
   Windows
+  // Jedi Win32API
+  , JwaWinType
+  , JwaNative
+  // DirectX
+{$IFDEF DXBX_USE_D3D9}
+  , Direct3D9
+  , D3DX9
+{$ELSE}
+  , Direct3D8 // D3DDEVTYPE
+  , D3DX8 // PD3DXVECTOR4
+{$ENDIF}
   // Dxbx
   , uTypes
   , uLog
+  , uTime // DxbxTimer
+  , uDxbxUtils // sscanf
+  , uDxbxKrnl // g_CPUXbox
   , uEmuD3D8Types
+  , uEmuD3D8Utils // iif
+  , uConvert // EmuXB2PC_D3DMULTISAMPLE_TYPE
+  , uState // XTL_D3D__Device
   , uXboxLibraryUtils // PatchPrefix
+  , uEmu // g_hEmuWindow
   , uEmuKrnl // Unimplemented
   , uEmuFS
+  , uEmuAlloc
   ;
 
 implementation
+
+uses
+  uPushBuffer, // test
+  uEmuD3D8; // g_EmuCDPD
 
 const lfUnit = lfDxbx or lfGraphics;
 
@@ -63,18 +86,24 @@ function XTL_EmuD3D_CMiniport_InitHardware(
   {1 ECX}This: Pvoid
   ): _bool; register; // thiscall simulation - See Translation guide
 // Branch:Dxbx  Translator:PatrickvL  Done:0
+var
+  GPURegisterBase: Pointer;
 begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
   begin
     // D3D_CMiniport_InitHardware(v8 + 8968);
-    LogBegin('XTL_EmuD3D_CMiniport_InitHardware').
+    LogBegin('D3D_CMiniport_InitHardware').
       _(This, 'This').
     LogEnd();
   end;
 
-  Unimplemented('XTL_EmuD3D_CMiniport_InitHardware');
+  GPURegisterBase := DxbxCalloc(64*1024, 1);
+  PPointer(This)^ := GPURegisterBase;
+  DbgPrintf('Allocated a block of 64 KB to serve as the GPUs RegisterBase at 0x%.08x', [GPURegisterBase]);
+
+
   Result := True;
 
   EmuSwapFS(fsXbox);
@@ -138,17 +167,89 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+type
+  OBJECTINFO = record
+    Handle: ULONG;
+    SubChannel: USHORT;
+    Engine: USHORT;
+    ClassNum: ULONG;
+    Instance: ULONG;
+  end;
+  POBJECTINFO = ^OBJECTINFO;
+
+  Nv2AControlDma = record
+    Ignored: array [0..$10-1] of DWORD;
+    Put: PDWord;
+    Get: PDWord;
+    Reference: UInt32;
+    Ignored2: array [0..$7ED-1] of DWORD;
+  end;
+  PNv2AControlDma = ^Nv2AControlDma;
+  PPNv2AControlDma = ^PNv2AControlDma;
+
+var
+  g_Nv2ADMAChannel: PNv2AControlDma = nil;
+
+// timing thread procedure
+function EmuThreadHandleNv2ADMA(lpVoid: LPVOID): DWORD; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  UpdateTimer: DxbxTimer;
+  Nv2ADMAChannel: PNv2AControlDma;
+  Pusher: PPusher;
+  pdwPushData: PDWord;
+begin
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuD3D8 : Nv2A DMA thread is running.');
+
+  UpdateTimer.InitFPS(100); // 100 updates per second should be enough
+
+  Pusher := PPusher(PPointer(XTL_D3D__Device)^);
+  Nv2ADMAChannel := g_Nv2ADMAChannel;
+
+  LogBegin('NV2AThread').
+    _(Nv2ADMAChannel, 'Nv2ADMAChannel').
+    _(Nv2ADMAChannel.Put, 'Nv2ADMAChannel.Put').
+    _(Nv2ADMAChannel.Get, 'Nv2ADMAChannel.Get').
+    _(Nv2ADMAChannel.Reference, 'Nv2ADMAChannel.Reference').
+    _(Pusher, 'Pusher').
+    _(Pusher.m_pPut, 'Pusher.m_pPut').
+    _(Pusher.m_pThreshold, 'Pusher.m_pThreshold').
+  LogEnd();
+
+  while true do // TODO -oDxbx: When do we break out of this while loop ?
+  begin
+    // TODO : Emulate the pushbuffer here!
+
+    pdwPushData := Nv2ADMAChannel.Get;
+    if Assigned(pdwPushData) then
+    try
+      XTL_EmuExecutePushBufferRaw({From=}pdwPushData, {To=}Pusher.m_pPut);
+    except
+      DbgPrintf('PUSHBUFFER EXCEPTION!');
+    end;
+
+    // Fake a read by the Nv2A, by moving the DMA 'Get' location
+    // up to where the pushbuffer is currently filled, so that
+    // the BusyLoop in CDevice.Init finished cleanly :
+    Nv2ADMAChannel.Get := Pusher.m_pPut;
+    UpdateTimer.Wait;
+  end; // while
+end;
+
 function XTL_EmuD3D_CMiniport_InitDMAChannel(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
-  {6 stack}a6: int;
-  {5 stack}a5: int;
-  {4 stack}a4: Pvoid;
-  {3 stack}a3: int;
-  {2 stack}a2: Pvoid
+  {6 stack}ppChannel: PPNv2AControlDma;
+  {5 stack}Offset: ULONG;
+  {4 stack}DataContext: POBJECTINFO;
+  {3 stack}ErrorContext: POBJECTINFO;
+  {2 stack}Class_: ULONG
   ): int; register; // thiscall simulation - See Translation guide
 // Branch:Dxbx  Translator:PatrickvL  Done:0
+var
+  dwThreadId: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -157,17 +258,30 @@ begin
     // D3D_CMiniport_InitDMAChannel(v8 + 8968, 8302, 0, &v22, 0, &v23);
     LogBegin('D3D_CMiniport_InitDMAChannel').
       _(This, 'This').
-      _(a2, 'a2').
-      _(a3, 'a3').
-      _(a4, 'a4').
-      _(a5, 'a5').
-      _(a6, 'a6').
+      _(Class_, 'Class').
+      _(ErrorContext, 'ErrorContext').
+      _(DataContext, 'DataContext').
+      _(Offset, 'Offset').
+      _(ppChannel, 'ppChannel').
     LogEnd();
   end;
 
-  PDWORD(a6)^ := 0;
+  // Allocate a fake DMA channel :
+  g_Nv2ADMAChannel := PNv2AControlDma(DxbxCalloc(SizeOf(Nv2AControlDma), 1));
 
-  Unimplemented('D3D_CMiniport_InitDMAChannel');
+  // Create our DMA pushbuffer 'handling' thread :
+  begin
+    dwThreadId := 0;
+    {hThread :=} CreateThread(nil, 0, @EmuThreadHandleNv2ADMA, nil, 0, {var}dwThreadId);
+//    // Make sure callbacks run on the same core as the one that runs Xbox1 code :
+    SetThreadAffinityMask(dwThreadId, g_CPUXbox);
+    // If possible, assign this thread to another core than the one that runs Xbox1 code :
+//    SetThreadAffinityMask(dwThreadId, g_CPUOthers);
+  end;
+
+  // Return the channel :
+  ppChannel^ := g_Nv2ADMAChannel;
+
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
@@ -1001,6 +1115,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+(* Too high level
 function XTL_EmuD3D_CMiniport_GetPresentFlagsFromAvInfo(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
@@ -1008,22 +1123,7 @@ function XTL_EmuD3D_CMiniport_GetPresentFlagsFromAvInfo(
   {2 stack}AvInfo: DWORD
 ): DWORD; register;// thiscall simulation - See Translation guide
 // Branch:Dxbx  Translator:Shadow_tj  Done:0
-begin
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit) then
-  begin
-    LogBegin('D3D_CMiniport_GetPresentFlagsFromAvInfo').
-      _(This, 'This').
-      _(AvInfo, 'AvInfo').
-    LogEnd();
-  end;
-
-  Unimplemented('D3D_CMiniport_GetPresentFlagsFromAvInfo');
-  Result := S_OK;
-
-  EmuSwapFS(fsXbox);
-end;
+*)
 
 function XTL_EmuD3D_CMiniport_GetDisplayCapabilities(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
@@ -1229,51 +1329,108 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuD3D_CMiniport_SetVideoMode(
+procedure DxbxPostponedCreateDeviceViaSetRenderTarget(pRenderTarget: PX_D3DSurface; pNewZStencil: PX_D3DSurface);
+var
+  hRet: HRESULT;
+begin
+  // Since InitializeFrameBuffers is already done when we get here,
+  // we can examine the resulting buffers to determine BackBufferCount,
+  // EnableAutoDepthStencil and AutoDepthStencilFormat. For now use hardcoded values :
+  if Assigned(pNewZStencil) then
+  begin
+    g_EmuCDPD.pPresentationParameters.EnableAutoDepthStencil := BOOL_TRUE;
+    g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := GetD3DFormat(pNewZStencil);
+  end;
+
+  DxbxCreateDevice();
+
+  // If the g_EmuD3DActiveRenderTarget is not yet assigned, we're probably dealing with
+  // the first call, right after creating the D3D device. Check this and couple the
+  // native backbuffer to this buffer :
+  if Assigned(pRenderTarget) then
+  begin
+    hRet := IDirect3DDevice_GetRenderTarget(g_pD3DDevice, @(pRenderTarget.Emu.Surface));
+    if FAILED(hRet) then
+      DxbxD3DError('XTL_EmuD3DDevice_SetRenderTarget', 'Initial IDirect3DDevice_GetRenderTarget failed!', pRenderTarget, hRet);
+    IDirect3DSurface(pRenderTarget.Emu.Surface)._Release;
+
+    // Until we can read the Xbox device frame buffers, fake them here :
+    g_EmuD3DFrameBuffers[0] := pRenderTarget;
+    g_EmuD3DFrameBuffers[1] := pRenderTarget;
+    g_EmuD3DFrameBuffers[2] := pRenderTarget;
+  end;
+
+  if Assigned(pNewZStencil) then
+  begin
+    hRet := IDirect3DDevice_GetDepthStencilSurface(g_pD3DDevice, @(pNewZStencil.Emu.Surface));
+    if FAILED(hRet) then
+      DxbxD3DError('XTL_EmuD3DDevice_SetRenderTarget', 'Initial IDirect3DDevice_GetDepthStencilSurface failed!', pNewZStencil, hRet);
+    IDirect3DSurface(pNewZStencil.Emu.Surface)._Release;
+  end;
+end;
+
+procedure XTL_EmuD3D_CMiniport_SetVideoMode(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid;
-  {8 stack}a8: int;
-  {7 stack}a7: int;
-  {6 stack}a6: int;
-  {5 stack}a5: int;
-  {4 stack}a4: int;
-  {3 stack}a3: int;
-  {2 stack}a2: int
-  ): int; register; // thiscall simulation - See Translation guide
+  {8 stack}FrontBufferPitch: DWORD;
+  {7 stack}FullScreen_PresentationInterval: DWORD;
+  {6 stack}BackBufferFormat: X_D3DFORMAT;
+  {5 stack}Flags: DWORD;
+  {4 stack}FullScreen_RefreshRateInHz: DWORD;
+  {3 stack}BackBufferHeight: DWORD;
+  {2 stack}BackBufferWidth: DWORD
+  ); register; // thiscall simulation - See Translation guide
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
   begin
-    // D3D_CMiniport_SetVideoMode(v8 + 8968, *(_DWORD *)a2, *(_DWORD *)(a2 + 4), *(_DWORD *)(a2 + 44),
-   //   *(_DWORD *)(a2 + 40), *(_DWORD *)(a2 + 8), *(_DWORD *)(a2 + 48), v7);
     LogBegin('D3D_CMiniport_SetVideoMode').
       _(This, 'This').
-      _(a2, 'a2').
-      _(a3, 'a3').
-      _(a4, 'a4').
-      _(a5, 'a5').
-      _(a6, 'a6').
-      _(a7, 'a7').
-      _(a8, 'a8').
+      _(BackBufferWidth, 'BackBufferWidth').
+      _(BackBufferHeight, 'BackBufferHeight').
+      _(FullScreen_RefreshRateInHz, 'FullScreen_RefreshRateInHz').
+      _(Flags, 'Flags').
+      _(BackBufferFormat, 'BackBufferFormat').
+      _(FullScreen_PresentationInterval, 'FullScreen_PresentationInterval').
+      _(FrontBufferPitch, 'FrontBufferPitch').
     LogEnd();
   end;
 
-  Unimplemented('D3D_CMiniport_SetVideoMode');
-  Result := S_OK;
+  // Since we have no access to the Xbox presentation parameters, allocate one ourselves here :
+  g_EmuCDPD.pPresentationParameters := DxbxCalloc(SizeOf(X_D3DPRESENT_PARAMETERS), 1);
+  g_EmuCDPD.pPresentationParameters.BackBufferWidth := BackBufferWidth;
+  g_EmuCDPD.pPresentationParameters.BackBufferHeight := BackBufferHeight;
+  g_EmuCDPD.pPresentationParameters.BackBufferFormat := BackBufferFormat;
+  g_EmuCDPD.pPresentationParameters.BackBufferCount := 1; // ??
+//  g_EmuCDPD.pPresentationParameters.MultiSampleType := X_D3DMULTISAMPLE_NONE; // ??
+  g_EmuCDPD.pPresentationParameters.SwapEffect := D3DSWAPEFFECT_DISCARD; // ??
+//  g_EmuCDPD.pPresentationParameters.hDeviceWindow := 0; // ??
+//  g_EmuCDPD.pPresentationParameters.Windowed := BOOL_FALSE; // ??
+//  g_EmuCDPD.pPresentationParameters.EnableAutoDepthStencil := BOOL_TRUE; // ??
+//  g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := X_D3DFMT_D24S8; // ??
+  g_EmuCDPD.pPresentationParameters.Flags := Flags;
+  g_EmuCDPD.pPresentationParameters.FullScreen_RefreshRateInHz := FullScreen_RefreshRateInHz;
+  g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := FullScreen_PresentationInterval;
+//  g_EmuCDPD.pPresentationParameters.BufferSurfaces[0..2] := nil; // ??
+//  g_EmuCDPD.pPresentationParameters.DepthStencilSurface := nil; // ??
+
+  // Instead of creating the device here, postpone it to the first call to SetRenderTarget,
+  // so that we can intercept the (already created) Xbox backbuffer and depthbuffer formats :
+  DxbxOnSetRenderTarget := DxbxPostponedCreateDeviceViaSetRenderTarget;
 
   EmuSwapFS(fsXbox);
 end;
 
-// This unit is an attempt to run Direct3D_CreateDevice and D3D__CDevice__Init unpatched.
+// This unit attempts to run Direct3D_CreateDevice, D3D__CDevice__Init and D3D__CDevice_UnInit unpatched.
 //
 // D3D__CDevice__Init calls these methods, that should still be patched (if not already) :
 //
-//      D3D__BusyLoop();
-//    D3D__InitializeHardware();
-//    result = D3D__CDevice__InitializeFrameBuffers(v8, a2);
+//      D3D__BusyLoop(); // Waits until the current pushbuffer contents are handled (we have EmuThreadHandleNv2ADMA for that)
+//    D3D__InitializeHardware(); // Just send a few commands to the pushbuffer (no need to patch that)
+//    result = D3D__CDevice__InitializeFrameBuffers(v8, a2); // Creates the backbuffer(s) and (optionally) a depthbuffer
 //      v7 = D3D__PixelJar__GetPitch(v8 + 8552);
 //      D3DDevice_SetVertexShader(2);
 //      D3DDevice_SetRenderTarget(v8 + 8528, v4);
@@ -1301,7 +1458,7 @@ exports
   XTL_EmuD3D_CMiniport_GetAddressInfo,
   XTL_EmuD3D_CMiniport_GetDisplayCapabilities,
   XTL_EmuD3D_CMiniport_GetGeneralInfo,
-  XTL_EmuD3D_CMiniport_GetPresentFlagsFromAvInfo,
+//  XTL_EmuD3D_CMiniport_GetPresentFlagsFromAvInfo, // Too high level
 //  XTL_EmuD3D_CMiniport_GetRefreshRate, // not implemented
 //  XTL_EmuD3D_CMiniport_GetTime, // not implemented
 //  XTL_EmuD3D_CMiniport_GetTimerTime, // not implemented
@@ -1333,8 +1490,8 @@ exports
   XTL_EmuD3D_CMiniport_InitEngines,
   XTL_EmuD3D_CMiniport_InitGammaRamp,
   XTL_EmuD3D_CMiniport_InitHardware,
-//  XTL_EmuD3D_CMiniport_IsOddField, // not implemented
   XTL_EmuD3D_CMiniport_IsFlipPending,
+//  XTL_EmuD3D_CMiniport_IsOddField, // not implemented
 //  XTL_EmuD3D_CMiniport_Isr, // not implemented
   XTL_EmuD3D_CMiniport_LoadEngines,
   XTL_EmuD3D_CMiniport_MapRegisters,

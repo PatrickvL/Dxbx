@@ -596,8 +596,8 @@ begin
       _(DWORD(BaseAddress), 'pBaseAddress', IntToHex(Integer(BaseAddress^), 8)).
       _(ZeroBits, 'ZeroBits').
       _(DWORD(AllocationSize), 'pAllocationSize', IntToHex(AllocationSize^, 8)).
-      _(AllocationType, 'AllocationType').
-      _(Protect, 'Protect').
+      _(AllocationType, 'AllocationType', AllocationTypeToString(AllocationType)).
+      _(Protect, 'Protect', AllocationTypeToString(Protect)). // ??
     LogEnd();
 
   // As suggested by Blueshogun, this fix denies any invalid flags, and removes
@@ -608,6 +608,9 @@ begin
   begin
     AllocationType := AllocationType and (not MEM_NOZERO);
     Result := JwaNative.NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
+    if (Result = STATUS_SUCCESS) then
+      if MayLog(lfUnit or lfReturnValue) then
+        DbgPrintf('Allocated 0x%0.8x', [UIntPtr(BaseAddress^)]);
   end;
 
   EmuSwapFS(fsXbox);

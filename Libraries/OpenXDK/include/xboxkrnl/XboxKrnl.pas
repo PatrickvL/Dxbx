@@ -107,7 +107,9 @@ type         ULONG = Cardinal;
 type         DWORD = Cardinal;
 type         SIZE_T, *PSIZE_T = Cardinal;
 type         ACCESS_MASK, *PACCESS_MASK = Cardinal;
+*)
 type         PHYSICAL_ADDRESS = Cardinal;
+(*
 type                  INT_PTR = LongInt;
 type   __int64      LONGLONG = Integer;
 type   __int64    ULONGLONG = Word;

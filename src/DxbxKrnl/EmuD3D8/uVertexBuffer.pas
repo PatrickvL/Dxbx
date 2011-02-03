@@ -56,14 +56,11 @@ uses
   , uConvert
   , uVertexShader;
 
-const MAX_NBR_STREAMS = 16;
-
 type _VertexPatchDesc = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-    PrimitiveType: X_D3DPRIMITIVETYPE;
-    dwVertexCount: DWORD;
-    dwPrimitiveCount: DWORD;
-    dwOffset: DWORD;
+    PrimitiveType: X_D3DPRIMITIVETYPE; // input, can be updated by PatchPrimitive
+    dwVertexCount: DWORD; // input
+    dwPrimitiveCount: DWORD; // output
     // Data if Draw...UP call
     pVertexStreamZeroData: PVOID;
     uiVertexStreamZeroStride: UINT;
@@ -143,8 +140,8 @@ type VertexPatcher = object
     function PatchStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
     // Normalize texture coordinates in FVF stream if needed
     function NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
-    // Patches the primitive of the stream
-    function PatchPrimitive(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
+    // Patches the primitive type
+    procedure PatchPrimitive(pPatchDesc: PVertexPatchDesc);
   end; // size = 336 (as in Cxbx)
 
 // inline vertex buffer emulation
@@ -175,6 +172,11 @@ procedure XTL_EmuFlushIVB(); {NOPATCH}
 
 procedure CRC32Init;
 function CRC32(data: PByte; len: int): uint;
+
+const
+  VERTICES_PER_QUAD = 4;
+  VERTICES_PER_TRIANGLE = 3;
+  TRIANGLES_PER_QUAD = 2;
 
 const VERTEX_BUFFER_CACHE_SIZE = 64;
 const MAX_STREAM_NOT_USED_TIME = (2 * CLOCKS_PER_SEC); // TODO -oCXBX: Trim the not used time
@@ -648,6 +650,8 @@ var
   uiType: UINT;
   dwPacked: int; // needs to be signed
 begin
+  DxbxUpdateActiveVertexBufferStreams(); // Do this here, so that GetStreamSource succeeds
+
   // FVF buffers doesn't have Xbox extensions, but texture coordinates may
   // need normalization if used with linear textures.
   if (VshHandleIsFVF(pPatchDesc.hVertexShader)) then
@@ -693,6 +697,7 @@ begin
     // Dxbx addition : Don't update pPatchDesc.dwVertexCount because an indexed draw
     // can (and will) use less vertices than the supplied nr of indexes. Thix fixes
     // the missing parts in the CompressedVertices sample (in Vertex shader mode).
+    pStreamPatch.ConvertedStride := max(pStreamPatch.ConvertedStride, uiStride); // ??
     dwNewSize := uiVertexCount * pStreamPatch.ConvertedStride;
 
     if (FAILED(IDirect3DVertexBuffer(pOrigVertexBuffer).Lock(0, 0, {out}TLockData(pOrigData), 0))) then
@@ -717,7 +722,8 @@ begin
     begin
       DxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero!');
     end;
-    uiStride  := pPatchDesc.uiVertexStreamZeroStride;
+    uiStride := pPatchDesc.uiVertexStreamZeroStride;
+    pStreamPatch.ConvertedStride := max(pStreamPatch.ConvertedStride, uiStride); // ??
     pOrigData := Puint08(pPatchDesc.pVertexStreamZeroData);
     // TODO -oCXBX: This is sometimes the number of indices, which isn't too good
     uiVertexCount := pPatchDesc.dwVertexCount;
@@ -755,16 +761,19 @@ begin
         end;
 
         X_D3DVSDT_SHORT1: begin // Make it SHORT2 and set the second short to 0
-          PSHORTs(pNewDataPos)[0] := PSHORT(@pOrigVertex[dwPosOrig])^;
+          PSHORTs(pNewDataPos)[0] := PSHORTs(@pOrigVertex[dwPosOrig])[0];
           PSHORTs(pNewDataPos)[1] := $00;
 
           Inc(dwPosOrig, 1 * sizeof(SHORT));
         end;
 
         X_D3DVSDT_SHORT3: begin // Make it SHORT4 and set the last short to 1
-          memcpy(pNewDataPos,
-                 @pOrigVertex[dwPosOrig],
-                 3 * sizeof(SHORT));
+          PSHORTs(pNewDataPos)[0] := PSHORTs(@pOrigVertex[dwPosOrig])[0];
+          PSHORTs(pNewDataPos)[1] := PSHORTs(@pOrigVertex[dwPosOrig])[1];
+          PSHORTs(pNewDataPos)[2] := PSHORTs(@pOrigVertex[dwPosOrig])[2];
+//          memcpy(pNewDataPos,
+//                 @pOrigVertex[dwPosOrig],
+//                 3 * sizeof(SHORT));
           PSHORTs(pNewDataPos)[3] := 1; // Dxbx note : NOT 32767 !
 
           Inc(dwPosOrig, 3 * sizeof(SHORT));
@@ -900,8 +909,7 @@ function VertexPatcher.NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream
 // Branch:shogun  Revision:163  Translator:PatrickvL  Done:100
 var
   bHasLinearTex: _bool;
-  bTexIsLinear: array [0..4-1] of _bool;
-  pLinearPixelContainer: array [0..4-1] of PX_D3DPixelContainer;
+  pActivePixelContainer: array [0..X_D3DTS_STAGECOUNT-1] of record bTexIsLinear: _bool; Width, Height: int; end;
   i: uint08;
   pPixelContainer: PX_D3DPixelContainer;
   X_Format: X_D3DFORMAT;
@@ -909,18 +917,19 @@ var
   pNewVertexBuffer: XTL_PIDirect3DVertexBuffer8;
   pStream: PPATCHEDSTREAM;
   pData: Puint08;
-  pUVData: Puint08;
 {$IFDEF DXBX_USE_D3D9}
   uiOffsetInBytes: uint;
 {$ENDIF}
   uiStride: uint;
   uiVertexCount: uint;
-
   Desc: D3DVERTEXBUFFER_DESC;
-  pOrigData: PByte;
-  uiOffset: uint;
+
   dwTexN: DWORD;
+  uiOffset: uint;
+  pUVData: PFLOATs;
   uiVertex: uint32;
+
+  pOrigData: PByte;
 begin
   // Dxbx addition :
   // Assert(VshHandleIsFVF(pPatchDesc.hVertexShader), 'This function is only meant for FVF cases!');
@@ -929,17 +938,23 @@ begin
   bHasLinearTex := false;
   pStream := nil; // DXBX - pstream might not have been initialized
 
-  for i := 0 to 4-1 do
+  for i := 0 to X_D3DTS_STAGECOUNT-1 do
   begin
     pPixelContainer := PX_D3DPixelContainer(g_EmuD3DActiveTexture[i]);
-    bTexIsLinear[i] := false;
+    pActivePixelContainer[i].bTexIsLinear := false;
     if Assigned(pPixelContainer) then
     begin
-      X_Format := X_D3DFORMAT((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
+      X_Format := GetD3DFormat(pPixelContainer);
       if EmuXBFormatIsLinear(X_Format) then
       begin
-        bHasLinearTex := true; bTexIsLinear[i] := true;
-        pLinearPixelContainer[i] := pPixelContainer;
+        // This is often hit by the help screen in XDK samples.
+        bHasLinearTex := true;
+        // Remember linearity, width and height :
+        pActivePixelContainer[i].bTexIsLinear := true;
+        DxbxDecodeSizeIntoDimensions(pPixelContainer.Size,
+          @(pActivePixelContainer[i].Width),
+          @(pActivePixelContainer[i].Height),
+          {pPitch=}nil);
       end;
     end
   end;
@@ -998,46 +1013,48 @@ begin
     end;
   end;
 
-  // Locate texture coordinate offset in vertex structure.
-  uiOffset := DxbxFVFToVertexSizeInBytes(pPatchDesc.hVertexShader, {aIncludeTextures}False);
-
-  dwTexN := (pPatchDesc.hVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT;
-
   // Normalize texture coordinates.
+  dwTexN := (pPatchDesc.hVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT;
   if (dwTexN >= 1) then // Dxbx addition, no need to test this every loop
-  if uiVertexCount > 0 then // Dxbx addition, to prevent underflow
-  for uiVertex := 0 to uiVertexCount - 1 do
   begin
-    pUVData := Puint08(pData + (uiVertex * uiStride) + uiOffset);
-
-    if (bTexIsLinear[0]) then
+    // Don't normalize coordinates not used by the shader :
+    while dwTexN < X_D3DTS_STAGECOUNT do
     begin
-      PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[0].Size and X_D3DSIZE_WIDTH_MASK) + 1);
-      PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[0].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
+      pActivePixelContainer[dwTexN].bTexIsLinear := False;
+      Inc(dwTexN);
     end;
 
-    if (dwTexN >= 2) then
+    // Locate texture coordinate offset in vertex structure.
+    uiOffset := DxbxFVFToVertexSizeInBytes(pPatchDesc.hVertexShader, {aIncludeTextures}False);
+    pUVData := PFLOATs(pData + uiOffset);
+    if uiVertexCount > 0 then // Dxbx addition, to prevent underflow
+    for uiVertex := 0 to uiVertexCount - 1 do
     begin
-      if (bTexIsLinear[1]) then
+      if pActivePixelContainer[0].bTexIsLinear then
       begin
-        PFLOATs(pUVData)[2] := PFLOATs(pUVData)[2] / (( pLinearPixelContainer[1].Size and X_D3DSIZE_WIDTH_MASK) + 1);
-        PFLOATs(pUVData)[3] := PFLOATs(pUVData)[3] / (((pLinearPixelContainer[1].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
+        pUVData[0] := pUVData[0] / pActivePixelContainer[0].Width;
+        pUVData[1] := pUVData[1] / pActivePixelContainer[0].Height;
       end;
 
-      if (dwTexN >= 3) then
+      if pActivePixelContainer[3].bTexIsLinear then
       begin
-        if (bTexIsLinear[2]) then
-        begin
-          PFLOATs(pUVData)[4] := PFLOATs(pUVData)[4] / (( pLinearPixelContainer[2].Size and X_D3DSIZE_WIDTH_MASK) + 1);
-          PFLOATs(pUVData)[5] := PFLOATs(pUVData)[5] / (((pLinearPixelContainer[2].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
-        end;
-
-        if((dwTexN >= 4) and bTexIsLinear[3]) then
-        begin
-          PFLOATs(pUVData)[6] := PFLOATs(pUVData)[6] / (( pLinearPixelContainer[3].Size and X_D3DSIZE_WIDTH_MASK) + 1);
-          PFLOATs(pUVData)[7] := PFLOATs(pUVData)[7] / (((pLinearPixelContainer[3].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
-        end;
+        pUVData[2] := pUVData[2] / pActivePixelContainer[1].Width;
+        pUVData[3] := pUVData[3] / pActivePixelContainer[1].Height;
       end;
+
+      if pActivePixelContainer[2].bTexIsLinear then
+      begin
+        pUVData[4] := pUVData[4] / pActivePixelContainer[2].Width;
+        pUVData[5] := pUVData[5] / pActivePixelContainer[2].Height;
+      end;
+
+      if pActivePixelContainer[3].bTexIsLinear then
+      begin
+        pUVData[6] := pUVData[6] / pActivePixelContainer[3].Width;
+        pUVData[7] := pUVData[7] / pActivePixelContainer[3].Height;
+      end;
+
+      Inc(Puint08(pUVData), uiStride);
     end;
   end;
 
@@ -1063,59 +1080,37 @@ begin
   Result := m_bPatched;
 end; // VertexPatcher.NormalizeTexCoords
 
-const
-  VERTICES_PER_QUAD = 4;
-  VERTICES_PER_TRIANGLE = 3;
-  TRIANGLES_PER_QUAD = 2;
-
-function VertexPatcher.PatchPrimitive(pPatchDesc: PVertexPatchDesc;
-                                      uiStream: UINT): _bool;
+procedure VertexPatcher.PatchPrimitive(pPatchDesc: PVertexPatchDesc);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  pStream: PPATCHEDSTREAM;
-  dwOriginalSize: DWORD;
-  dwNewSize: DWORD;
-  dwOriginalSizeWR: DWORD;
-  dwNewSizeWR: DWORD;
-  pOrigVertexData: PBYTE;
-  pPatchedVertexData: PBYTE;
-  Desc: D3DVERTEXBUFFER_DESC;
-
-  pPatch012: Puint08;
-  pPatch34: Puint08;
-  pPatch5: Puint08;
-
-  pOrig012: Puint08;
-  pOrig23: Puint08;
-
-  i: uint32;
-  z: uint32;
-
-  dwRemainingSize : DWORD;
 begin
-  pStream := @(m_pStreams[uiStream]);
-
   if(pPatchDesc.PrimitiveType < X_D3DPT_POINTLIST) or (pPatchDesc.PrimitiveType >= X_D3DPT_MAX) then
   begin
     DxbxKrnlCleanup('Unknown primitive type: 0x%.02X', [Ord(pPatchDesc.PrimitiveType)]);
   end;
 
-  // Unsupported primitives that don't need deep patching.
-  case(pPatchDesc.PrimitiveType) of
+  case (pPatchDesc.PrimitiveType) of
     X_D3DPT_QUADLIST: begin
       // Dxbx speedup for Billboard sample - draw 1 quad as 2 triangles :
       if (pPatchDesc.dwVertexCount = 4) then
+        // Draw 1 quad as a 2 triangles in a fan (which both have the same winding order) :
         pPatchDesc.PrimitiveType := X_D3DPT_TRIANGLEFAN;
-        // TODO : We could render more quads with a fixed index list through DrawIndexedPrimitive()
+        // Note : We render 2 and more quads using a fixed index list through DrawIndexedPrimitive()
       end;
 
-    // Quad strip is just like a triangle strip, but requires two
-    // vertices per primitive.
     X_D3DPT_QUADSTRIP: begin
-      // Dxbx note : Shouldn't the 'two vertices per primitive' requirement always be met?
-      // In other words : Is the next fixup ever needed at all?
-      Dec(pPatchDesc.dwVertexCount, pPatchDesc.dwVertexCount mod 2);
-      pPatchDesc.PrimitiveType := X_D3DPT_TRIANGLESTRIP;
+(* Given trianglestrips work from 1 quad and up, this is not really necessary :
+      if (pPatchDesc.dwVertexCount = 4) then
+        // Draw 1 quad as a 2 triangles in a fan (which both have the same winding order) :
+        pPatchDesc.PrimitiveType := X_D3DPT_TRIANGLEFAN
+      else*)
+        // A quadstrip starts with 4 vertices and adds 2 vertices per additional quad.
+        // This is much like a trianglstrip, which starts with 3 vertices and adds
+        // 1 vertex per additional triangle, so we use that instead. The planar nature
+        // of the quads 'survives' through this change. There's a catch though :
+        // In a trianglestrip, every 2nd triangle has an opposing winding order,
+        // which would cause backface culling - but this seems to be intelligently
+        // handled by d3d :
+        pPatchDesc.PrimitiveType := X_D3DPT_TRIANGLESTRIP;
       end;
 
     // Convex polygon is the same as a triangle fan.
@@ -1125,219 +1120,6 @@ begin
   end;
 
   pPatchDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(pPatchDesc.PrimitiveType, pPatchDesc.dwVertexCount);
-
-  // Skip primitives that don't need further patching.
-  case (pPatchDesc.PrimitiveType) of
-    X_D3DPT_QUADLIST: begin
-      //EmuWarning('VertexPatcher::PatchPrimitive: Processing D3DPT_QUADLIST');
-      end;
-    X_D3DPT_LINELOOP: begin
-      //EmuWarning('VertexPatcher::PatchPrimitive: Processing D3DPT_LINELOOP');
-      end;
-
-  else //    default:
-    Result := false;
-    Exit;
-  end;
-
-  if Assigned(pPatchDesc.pVertexStreamZeroData) and (uiStream > 0) then
-  begin
-    DxbxKrnlCleanup('Draw..UP call with more than one stream!');
-  end;
-
-  pStream.uiOrigStride := 0;
-
-  // sizes of our part in the vertex buffer
-  dwOriginalSize    := 0;
-  dwNewSize         := 0;
-
-  // sizes with the rest of the buffer
-  //dwOriginalSizeWR  := 0; // DXBX: Value Assigned never used
-  //dwNewSizeWR       := 0; // DXBX: Value Assigned never used
-
-  // vertex data arrays
-  pOrigVertexData := nil;
-  pPatchedVertexData := nil;
-
-  if (pPatchDesc.pVertexStreamZeroData = nil) then
-  begin
-    g_pD3DDevice.GetStreamSource(
-      0,
-      PIDirect3DVertexBuffer(@(pStream.pOriginalStream)),
-{$IFDEF DXBX_USE_D3D9}
-      {out}pStream.uiOffsetInBytes,
-{$ENDIF}
-      {out}pStream.uiOrigStride);
-  end
-  else
-  begin
-    pStream.uiOrigStride := pPatchDesc.uiVertexStreamZeroStride;
-  end;
-  pStream.uiNewStride := pStream.uiOrigStride; // The stride is still the same
-
-  // Quad list
-  if (pPatchDesc.PrimitiveType = X_D3DPT_QUADLIST) then
-  begin
-    // We're going to convert 1 quad (4 vertices) to 2 triangles (2*3=6 vertices),
-    // so that's 2 times as many primitives, and 50% more vertices :
-    pPatchDesc.dwPrimitiveCount := pPatchDesc.dwPrimitiveCount * TRIANGLES_PER_QUAD;
-
-    // This is a list of squares/rectangles, so we convert it to a list of triangles
-    dwOriginalSize  := pPatchDesc.dwVertexCount * pStream.uiOrigStride;
-    dwNewSize       := pPatchDesc.dwVertexCount * pStream.uiNewStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD div VERTICES_PER_QUAD;
-  end
-  // Line loop
-  else if (pPatchDesc.PrimitiveType = X_D3DPT_LINELOOP) then
-  begin
-    Inc(pPatchDesc.dwPrimitiveCount, 1);
-
-    // We will add exactly one more line
-    dwOriginalSize  :=  pPatchDesc.dwVertexCount      * pStream.uiOrigStride;
-    dwNewSize       := (pPatchDesc.dwVertexCount + 1) * pStream.uiNewStride;
-  end;
-
-  if(pPatchDesc.pVertexStreamZeroData = nil) then
-  begin
-    // Retrieve the original buffer size
-    begin
-      if (FAILED(IDirect3DVertexBuffer(pStream.pOriginalStream).GetDesc({out}Desc))) then
-      begin
-        DxbxKrnlCleanup('Could not retrieve buffer size');
-      end;
-
-      // Here we save the full buffer size
-      dwOriginalSizeWR := Desc.Size;
-
-      // So we can now calculate the size of the rest (dwOriginalSizeWR - dwOriginalSize) and
-      // add it to our new calculated size of the patched buffer
-      dwNewSizeWR := dwNewSize + dwOriginalSizeWR - dwOriginalSize;
-    end;
-
-    g_pD3DDevice.CreateVertexBuffer(dwNewSizeWR, {Usage=}0, {FVF=}0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer(@(pStream.pPatchedStream)){$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF});
-
-    if (pStream.pOriginalStream <> nil) then
-    begin
-      IDirect3DVertexBuffer(pStream.pOriginalStream).Lock(0, 0, {out}TLockData(pOrigVertexData), 0);
-    end;
-
-    if (pStream.pPatchedStream <> nil) then
-    begin
-      IDirect3DVertexBuffer(pStream.pPatchedStream).Lock(0, 0, {out}TLockData(pPatchedVertexData), 0);
-    end;
-  end
-  else
-  begin
-    dwOriginalSizeWR := dwOriginalSize;
-    dwNewSizeWR := dwNewSize;
-
-    m_pNewVertexStreamZeroData := DxbxMalloc(dwNewSizeWR);
-    m_bAllocatedStreamZeroData := true;
-
-    pPatchedVertexData := m_pNewVertexStreamZeroData;
-    pOrigVertexData := pPatchDesc.pVertexStreamZeroData;
-
-    pPatchDesc.pVertexStreamZeroData := pPatchedVertexData;
-  end;
-
-(* Dxbx Note : This seems to be completely wrong, as for starters the dwOffset isn't multiplied with the stride,
-   and what about the preceding vertices, shouldn't they be converted too?!?
-   This mainly becomes a problem whenever dwOffset <> 0 though.
-*)
-  // Copy the nonmodified data
-  begin
-    if (pPatchDesc.dwOffset > 0) then
-    begin
-      // Copy the part _before_ the indicated offset (TODO : Why not convert the whole stream?)
-      memcpy(pPatchedVertexData, pOrigVertexData, pPatchDesc.dwOffset * pStream.uiOrigStride);
-    end;
-    dwRemainingSize := dwOriginalSizeWR - (pPatchDesc.dwOffset * pStream.uiOrigStride) - dwOriginalSize;
-    if (dwRemainingSize > 0) then
-    begin
-      // Copy the part _after_ the indicated stretch :
-      memcpy(
-        pPatchedVertexData + (pPatchDesc.dwOffset * pStream.uiOrigStride) + dwNewSize,
-        pOrigVertexData + (pPatchDesc.dwOffset * pStream.uiOrigStride) + dwOriginalSize,
-        dwRemainingSize);
-    end;
-  end;
-
-  // Quad list; Convert each quad to two triangles :
-  if (pPatchDesc.PrimitiveType = X_D3DPT_QUADLIST) then
-  begin
-    // Calculate where the new vertices should go :
-    pPatch012 := @pPatchedVertexData[ pPatchDesc.dwOffset      * pStream.uiNewStride];
-    pPatch34 :=  @pPatchedVertexData[(pPatchDesc.dwOffset + 3) * pStream.uiNewStride];
-    pPatch5 :=   @pPatchedVertexData[(pPatchDesc.dwOffset + 5) * pStream.uiNewStride];
-
-    // Calculate where the original vertices come from :
-    pOrig012 := @pOrigVertexData[ pPatchDesc.dwOffset      * pStream.uiOrigStride];
-    pOrig23 :=  @pOrigVertexData[(pPatchDesc.dwOffset + 2) * pStream.uiOrigStride];
-
-    // Note : DO NOT change pPatchDesc.dwOffset as the new vertex buffer is filled at the same offset!
-
-    // Dxbx note : Cxbx handles primitives, but it's cleaner to loop over vertices :
-    // Loop over all quads :
-    if (pPatchDesc.dwVertexCount div VERTICES_PER_QUAD) > 0 then // Dxbx addition, to prevent underflow
-    for i := 0 to (pPatchDesc.dwVertexCount div VERTICES_PER_QUAD) - 1 do
-    begin
-      memcpy(pPatch012, pOrig012, pStream.uiOrigStride * 3); // Vertex T1_V0,T1_V1,T1_V2 := Vertex Q_V0,Q_V1,Q_V2
-      memcpy(pPatch34,  pOrig23,  pStream.uiOrigStride * 2); // Vertex T2_V0,T2_V1       := Vertex           Q_V2,Q_V3
-      memcpy(pPatch5,   pOrig012, pStream.uiOrigStride);     // Vertex             T2_V2 := Vertex Q_V0
-      // Dxbx note : Cxbx copies in four steps (0,1,2 + 2 + 3 + 0), but it can be done in three (0,1,2 + 2,3 + 0)!
-
-      if  (VshHandleIsFVF(pPatchDesc.hVertexShader)) // Dxbx addition - check if we're actually working with an FVF
-      and ((pPatchDesc.hVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZRHW) then
-      begin
-        for z := 0 to (VERTICES_PER_TRIANGLE*TRIANGLES_PER_QUAD)-1 do
-        begin
-          // For all vertices, change the z and rhw component to 1.0 if they are equal to 0.0 :
-          // TODO : Explain why this is needed...?
-          if (PFLOATs(@pPatch012[z * pStream.uiNewStride])[2] = 0.0) then
-              PFLOATs(@pPatch012[z * pStream.uiNewStride])[2] := 1.0;
-          if (PFLOATs(@pPatch012[z * pStream.uiNewStride])[3] = 0.0) then
-              PFLOATs(@pPatch012[z * pStream.uiNewStride])[3] := 1.0;
-        end;
-      end;
-
-      Inc(pPatch012, pStream.uiNewStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD);
-      Inc(pPatch34,  pStream.uiNewStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD);
-      Inc(pPatch5,   pStream.uiNewStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD);
-
-      Inc(pOrig012, pStream.uiOrigStride * VERTICES_PER_QUAD);
-      Inc(pOrig23,  pStream.uiOrigStride * VERTICES_PER_QUAD);
-    end; // for
-
-    // Finally, correct dwVertexCount to take the new vertices into account :
-    pPatchDesc.dwVertexCount := pPatchDesc.dwPrimitiveCount * VERTICES_PER_TRIANGLE;
-    // Dxbx Note : When drawing a QUADLIST, EmuXB2PC_D3DPrimitiveType(PrimitiveType) will return D3D_TRIANGLELIST
-  end
-  // LineLoop
-  else if (pPatchDesc.PrimitiveType = X_D3DPT_LINELOOP) then
-  begin
-    // Copy all vertices
-    memcpy(@pPatchedVertexData[pPatchDesc.dwOffset], @pOrigVertexData[pPatchDesc.dwOffset], dwOriginalSize);
-    // Append a second copy of the first vertex to the end, completing the strip to form a loop :
-    memcpy(@pPatchedVertexData[pPatchDesc.dwOffset + dwOriginalSize], @pOrigVertexData[pPatchDesc.dwOffset], pStream.uiOrigStride);
-
-    // Finally, correct dwVertexCount to take the new vertex into account :
-    Inc(pPatchDesc.dwVertexCount, 1);
-  end;
-
-  if (pPatchDesc.pVertexStreamZeroData = nil) then
-  begin
-    if (pStream.pOriginalStream <> nil) then // Dxbx addition - release the lock we got earlier
-      IDirect3DVertexBuffer(pStream.pOriginalStream).Unlock();
-
-    if (pStream.pPatchedStream <> nil) then // Dxbx addition - release the lock we got earlier
-      IDirect3DVertexBuffer(pStream.pPatchedStream).Unlock();
-
-    g_pD3DDevice.SetStreamSource(0, IDirect3DVertexBuffer(pStream.pPatchedStream), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0, {$ENDIF} pStream.uiNewStride);
-  end;
-
-  pPatchDesc.uiVertexStreamZeroStride := pStream.uiNewStride; // Only usefull if changed (which it isn't)
-  m_bPatched := true;
-
-  Result := true;
 end; // VertexPatcher.PatchPrimitive
 
 function VertexPatcher.Apply(pPatchDesc: PVertexPatchDesc; pbFatalError: P_bool): _bool;
@@ -1365,10 +1147,6 @@ begin
 //      continue;
 //    end;
 
-    // Dxbx note : Cxbx does 'LocalPatched |= PatchPrimitive();' which is a arithmetic or operation.
-    // In Delphi, booleans are lazy evaluated, which could mean missing the call completly. We fix that like this :
-    if PatchPrimitive(pPatchDesc, uiStream) then
-      LocalPatched := True;
     if PatchStream(pPatchDesc, uiStream) then
       LocalPatched := True;
 
@@ -1382,6 +1160,8 @@ begin
 
     Patched := Patched or LocalPatched;
   end;
+
+  PatchPrimitive(pPatchDesc);
 
   Result := Patched;
 end; // VertexPatcher.Apply
@@ -1452,8 +1232,6 @@ var
   VertPatch: VertexPatcher;
   //bPatched: _bool;
 begin
-  DxbxUpdateNativeD3DResources();
-
   // Make sure g_pIVBVertexBuffer has enough space :
   if Length(g_pIVBVertexBuffer) < Integer(sizeof(_D3DIVB)*g_IVBTblOffs) then
     SetLength(g_pIVBVertexBuffer, (sizeof(_D3DIVB)*g_IVBTblOffs));
@@ -1649,6 +1427,8 @@ begin
     end;
   end;
 
+  DxbxUpdateNativeD3DResources();
+
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
   // Dxbx note : Instead of calculating this above (when v=0),
@@ -1657,7 +1437,6 @@ begin
 
   VPDesc.PrimitiveType := g_IVBPrimitiveType;
   VPDesc.dwVertexCount := g_IVBTblOffs;
-  VPDesc.dwOffset := 0;
   VPDesc.pVertexStreamZeroData := g_pIVBVertexBuffer;
   VPDesc.uiVertexStreamZeroStride := uiStride;
   VPDesc.hVertexShader := dwCurFVF; // TODO -oDxbx : Why does Cxbx use g_CurrentVertexShader ?
@@ -1684,11 +1463,7 @@ begin
 {$ENDIF}
   end;
 
-  g_pD3DDevice.DrawPrimitiveUP(
-      EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
-      VPDesc.dwPrimitiveCount,
-      VPDesc.pVertexStreamZeroData,
-      VPDesc.uiVertexStreamZeroStride);
+  DxbxDrawPrimitiveUP(VPDesc);
 
   if(bFVF) then
   begin
