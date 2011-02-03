@@ -252,7 +252,8 @@ begin
 
     if not DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
       DbgPrintf('EmuMain : Couldn''t duplicate handle!');
-      DxbxKrnlRegisterThread(hDupHandle); // Dxbx note : Is this correct? hDupHandle is a process, not a thread handle?
+
+    DxbxKrnlRegisterThread(hDupHandle); // Dxbx note : Is this correct? hDupHandle is a process, not a thread handle?
   end;
 
   // initialize FS segment selector
@@ -360,8 +361,8 @@ begin
     g_hCurDir := FindNtSymbolicLinkObjectByVolumeLetter(DxbxDefaultXbeVolumeLetter).RootDirectoryHandle;
     // TODO -oDxbx: Make sure this path is set in g_EmuXbePath (xboxkrnl_XeImageFileName) too.
 
-    (* Too high level, as (the unpatched) XapiInitProcess does this for us :
     DxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
+    (* Too high level, as (the unpatched) XapiInitProcess does this for us :
     DxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1); // Partition1 goes to E: (Data files, savegames, etc.)
     DxbxCreateSymbolicLink(DriveF, DeviceHarddisk0Partition2); // Partition2 goes to F: (Shell files, dashboard, etc.)
 

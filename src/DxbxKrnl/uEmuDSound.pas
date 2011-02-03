@@ -583,7 +583,7 @@ begin
     Result := aFalse;
 end;
 
-function GetSoundError(aResult: HRESULT): String;
+function GetSoundError(aResult: HRESULT): string;
 begin
   case aResult of
     DSERR_ALLOCATED:

@@ -23,11 +23,11 @@ program PatternTrieBuilder;
 
 uses
   SysUtils,
-  uPatternsToTrie in '..\..\src\Tools\PatternTrieBuilder\uPatternsToTrie.pas',
-  uDxbxUtils in '..\..\src\uDxbxUtils.pas',
-  uStoredTrieTypes in '..\..\src\uStoredTrieTypes.pas',
-  uTypes in '..\..\src\uTypes.pas',
-  uCRC16 in '..\..\src\uCRC16.pas';
+  uPatternsToTrie in '..\..\src2\Tools\PatternTrieBuilder\uPatternsToTrie.pas',
+  uDxbxUtils in '..\..\src2\uDxbxUtils.pas',
+  uStoredTrieTypes in '..\..\src2\uStoredTrieTypes.pas',
+  uTypes in '..\..\src2\uTypes.pas',
+  uCRC16 in '..\..\src2\uCRC16.pas';
 
 begin
   try

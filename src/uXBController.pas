@@ -875,6 +875,15 @@ begin
   Controller.Gamepad.sThumbLY := 0;
   Controller.Gamepad.sThumbRX := 0;
   Controller.Gamepad.sThumbRY := 0;
+  Controller.Gamepad.wButtons := 0;
+  Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_A] := 0;
+  Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_B] := 0;
+  Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_X] := 0;
+  Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_Y] := 0;
+  Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_BLACK] := 0;
+  Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_WHITE] := 0;
+  Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_LEFT_TRIGGER] := 0;
+  Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] := 0;
 
   // Poll all devices
   for v := Low(XBCtrlObject) to High(XBCtrlObject) do

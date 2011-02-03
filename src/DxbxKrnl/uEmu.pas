@@ -1,4 +1,4 @@
- (*
+(*
     This file is part of Dxbx - a XBox emulator written in Delphi (ported over from cxbx)
     Copyright (C) 2007 Shadow_tj and other members of the development team.
 
@@ -49,9 +49,6 @@ uses
 
 // exception handler
 function EmuException(ExceptionInfo: LPEXCEPTION_POINTERS): int; stdcall;
-
-// check the allocation size of a given virtual address
-function EmuCheckAllocationSize(pBase: PVOID; largeBound: _bool): int;
 
 // print call stack trace
 {$ifdef _DEBUG}
@@ -128,6 +125,9 @@ const
 
 implementation
 
+uses
+  uEmuKrnlMM;
+
 // print out a warning message to the kernel debug log file
 procedure EmuWarning(szWarningMessage: string);
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
@@ -141,44 +141,6 @@ procedure EmuWarning(szWarningMessage: string; const Args: array of const);
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
   EmuWarning(DxbxFormat(szWarningMessage, Args, {MayRenderArguments=}True));
-end;
-
-function ExceptionCodeToString(ExceptionCode: DWORD): string;
-begin
-  case ExceptionCode of
-    STATUS_BREAKPOINT               : Result := 'STATUS_BREAKPOINT';
-    STATUS_WAIT_0                   : Result := 'STATUS_WAIT_0';
-    STATUS_ABANDONED_WAIT_0         : Result := 'STATUS_ABANDONED_WAIT_0';
-    STATUS_USER_APC                 : Result := 'STATUS_USER_APC';
-    STATUS_TIMEOUT                  : Result := 'STATUS_TIMEOUT';
-    STATUS_PENDING                  : Result := 'STATUS_PENDING';
-    STATUS_SEGMENT_NOTIFICATION     : Result := 'STATUS_SEGMENT_NOTIFICATION';
-    STATUS_GUARD_PAGE_VIOLATION     : Result := 'STATUS_GUARD_PAGE_VIOLATION';
-    STATUS_DATATYPE_MISALIGNMENT    : Result := 'STATUS_DATATYPE_MISALIGNMENT';
-    STATUS_SINGLE_STEP              : Result := 'STATUS_SINGLE_STEP';
-    STATUS_IN_PAGE_ERROR            : Result := 'STATUS_IN_PAGE_ERROR';
-    STATUS_INVALID_HANDLE           : Result := 'STATUS_INVALID_HANDLE';
-    STATUS_NO_MEMORY                : Result := 'STATUS_NO_MEMORY';
-    STATUS_ILLEGAL_INSTRUCTION      : Result := 'STATUS_ILLEGAL_INSTRUCTION';
-    STATUS_NONCONTINUABLE_EXCEPTION : Result := 'STATUS_NONCONTINUABLE_EXCEPTION';
-    STATUS_INVALID_DISPOSITION      : Result := 'STATUS_INVALID_DISPOSITION';
-    STATUS_ACCESS_VIOLATION         : Result := 'STATUS_ACCESS_VIOLATION';
-    STATUS_ARRAY_BOUNDS_EXCEEDED    : Result := 'STATUS_ARRAY_BOUNDS_EXCEEDED';
-    STATUS_FLOAT_DENORMAL_OPERAND   : Result := 'STATUS_FLOAT_DENORMAL_OPERAND';
-    STATUS_FLOAT_DIVIDE_BY_ZERO     : Result := 'STATUS_FLOAT_DIVIDE_BY_ZERO';
-    STATUS_FLOAT_INEXACT_RESULT     : Result := 'STATUS_FLOAT_INEXACT_RESULT';
-    STATUS_FLOAT_INVALID_OPERATION  : Result := 'STATUS_FLOAT_INVALID_OPERATION';
-    STATUS_FLOAT_OVERFLOW           : Result := 'STATUS_FLOAT_OVERFLOW';
-    STATUS_FLOAT_STACK_CHECK        : Result := 'STATUS_FLOAT_STACK_CHECK';
-    STATUS_FLOAT_UNDERFLOW          : Result := 'STATUS_FLOAT_UNDERFLOW';
-    STATUS_INTEGER_DIVIDE_BY_ZERO   : Result := 'STATUS_INTEGER_DIVIDE_BY_ZERO';
-    STATUS_INTEGER_OVERFLOW         : Result := 'STATUS_INTEGER_OVERFLOW';
-    STATUS_PRIVILEGED_INSTRUCTION   : Result := 'STATUS_PRIVILEGED_INSTRUCTION';
-    STATUS_STACK_OVERFLOW           : Result := 'STATUS_STACK_OVERFLOW';
-    STATUS_CONTROL_C_EXIT           : Result := 'STATUS_CONTROL_C_EXIT';
-  else
-    Result := 'unknown';
-  end;
 end;
 
 // exception handler
@@ -204,6 +166,12 @@ begin
   g_bEmuException := true;
 
   E := ExceptionInfo.ExceptionRecord;
+
+// W7 fix : No logging, to prevent kernel calls (via memory allocation and/or I/O) :
+//  DbgPrintf('EmuMain : EmuException() with code 0x%.08x (%s) triggered at address 0x%.08x', [
+//    E.ExceptionCode,
+//    NTStatusToString(E.ExceptionCode),
+//    UIntPtr(C.Eip)]);
 
   case E.ExceptionCode of
     // STATUS_ILLEGAL_INSTRUCTION ?
@@ -254,6 +222,16 @@ begin
     Exit;
   end;
 
+//  // Dxbx addition : Generic insb skip :
+//  if  (PBytes(E.ExceptionAddress)[0] = $6C) then
+//  begin
+//    // Skip it, and continue :
+//    Inc(C.Eip, 1);
+//
+//    Result := True;
+//    Exit;
+//  end;
+
   // TODO : Add other illegal opcodes here
 
   DbgPrintf('EmuMain : Unhandled opcode!?!');
@@ -273,28 +251,38 @@ var
 begin
   Result := False;
 
-  // From CreateDevice :
-  // 0001AD5C 89 1500000080 mov dword ptr [$80000000],edx
-  if  (PBytes(E.ExceptionAddress)[0] = $89)
-  and (PBytes(E.ExceptionAddress)[1] = $15)
-  and (E.NumberParameters = 2)
+  // Skip write to $80000000 (as happens in '?Init@CDevice@D3D@@QAEJPAU_D3DPRESENT_PARAMETERS_@@@Z')  :
+  if  (E.NumberParameters = 2)
   and (E.ExceptionInformation[1] = $80000000) then
   begin
-    Inc(C.Eip, 6);
-    Result := True;
-    Exit;
-  end;
+    // From Wings of War :
+    // 0011E20F A3 00000080 mov dword ptr [$80000000],eax
+    if (PBytes(E.ExceptionAddress)[0] = $A3) then
+    begin
+      Inc(C.Eip, 5);
+      Result := True;
+      Exit;
+    end;
 
-  // From CreateDevice :
-  // 0001ADA4 C7 0500000080EFBEADDE mov dword ptr [$80000000],$DEADBEEF
-  if  (PBytes(E.ExceptionAddress)[0] = $C7)
-  and (PBytes(E.ExceptionAddress)[1] = $05)
-  and (E.NumberParameters = 2)
-  and (E.ExceptionInformation[1] = $80000000) then
-  begin
-    Inc(C.Eip, 10);
-    Result := True;
-    Exit;
+    // From CreateDevice :
+    // 0001AD5C 89 1500000080 mov dword ptr [$80000000],edx
+    if  (PBytes(E.ExceptionAddress)[0] = $89)
+    and (PBytes(E.ExceptionAddress)[1] = $15) then
+    begin
+      Inc(C.Eip, 6);
+      Result := True;
+      Exit;
+    end;
+
+    // From CreateDevice :
+    // 0001ADA4 C7 0500000080EFBEADDE mov dword ptr [$80000000],$DEADBEEF
+    if  (PBytes(E.ExceptionAddress)[0] = $C7)
+    and (PBytes(E.ExceptionAddress)[1] = $05)then
+    begin
+      Inc(C.Eip, 10);
+      Result := True;
+      Exit;
+    end;
   end;
 
 {$IFDEF GAME_HACKS_ENABLED}
@@ -491,42 +479,6 @@ begin
       Result := True;
     end;
   end;
-end;
-
-// check how many bytes were allocated for a structure
-function EmuCheckAllocationSize(pBase: PVOID; largeBound: _bool): Integer;
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
-var
-  MemoryBasicInfo: MEMORY_BASIC_INFORMATION;
-
-  dwRet: DWORD;
-begin
-{$IFDEF _DEBUG_ALLOC}
-  dwRet := DxbxVirtualQueryDebug(pBase, MemoryBasicInfo, SizeOf(MemoryBasicInfo));
-  if (dwRet = -1) then
-{$ENDIF}
-    dwRet := VirtualQuery(pBase, {var}MemoryBasicInfo, SizeOf(MemoryBasicInfo));
-
-  if dwRet = 0 then
-  begin
-    Result := 0;
-    Exit;
-  end;
-
-  if MemoryBasicInfo.State <> MEM_COMMIT then
-  begin
-    Result := 0;
-    Exit;
-  end;
-
-  // this is a hack in order to determine when pointers come from a large write-combined database
-  if largeBound and (MemoryBasicInfo.RegionSize > (5 * 1024 * 1024)) then
-  begin
-    Result := -1;
-    Exit;
-  end;
-
-  Result := Integer(MemoryBasicInfo.RegionSize) - (IntPtr(pBase) - IntPtr(MemoryBasicInfo.BaseAddress));
 end;
 
 procedure EmuCleanup(const szErrorMessage: string);

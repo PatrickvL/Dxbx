@@ -41,20 +41,27 @@ uses
   , uEmuD3D8Utils
   , uEmu;
 
-function DxbxXB2PC_D3DFormat(const X_Format: X_D3DFORMAT; const aResourceType: TD3DResourceType; const CacheFormat: PX_D3DFORMAT = nil): D3DFORMAT;
 
-function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
-function EmuXBFormatIsYUV(Format: X_D3DFORMAT): BOOL_;
-function EmuXBFormatIsCompressed(Format: X_D3DFORMAT): BOOL_;
-function EmuXBFormatIsLinear(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
-function EmuXBFormatHasAlpha(Format: X_D3DFORMAT): BOOL_;
+// Caps to string :
+function DxbxLineCapsToString(const LineCaps: DWORD): string; // LineCaps
+function DxbxRasterCapsToString(const RasterCaps: DWORD): string; // RasterCaps
+function DxbxCmpCapsToString(const CmpCaps: DWORD): string; // ZCmpCaps, AlphaCmpCaps
+function DxbxBlendCapsToString(const BlendCaps: DWORD): string; // SourceBlendCaps, DestBlendCaps
+function DxbxShadeCapsToString(const ShadeCaps: DWORD): string; // ShadeCaps
+function DxbxTextureCapsToString(const TextureCaps: DWORD): string; // TextureCaps
+function DxbxTextureFilterCapsToString(const TextureFilterCaps: DWORD): string; // TextureFilterCaps
+function DxbxTextureAddressCapsToString(const TextureAddressCaps: DWORD): string; // TextureAddressCaps
+function DxbxStencilCapsToString(const StencilCaps: DWORD): string; // StencilCaps
+function DxbxTextureOpCapsToString(const TextureOpCaps: DWORD): string; // TextureOpCaps
+function DxbxFVFCapsToString(const FVFCaps: DWORD): string; // FVFCaps
+function DxbxVertexProcessingCapsToString(const VertexProcessingCaps: DWORD): string; // VertexProcessingCaps
+
+function DxbxD3DUsageToString(const dwUsage: DWORD): string;
+function DxbxD3DPoolToString(const Pool: D3DPOOL): string;
 
 procedure EmuXB2PC_D3DSURFACE_DESC(const SurfaceDesc: PX_D3DSURFACE_DESC; const pDesc: PD3DSURFACE_DESC; const CallerName: string);
-procedure EmuPC2XB_D3DSURFACE_DESC(const SurfaceDesc: D3DSURFACE_DESC; const pDesc: PX_D3DSURFACE_DESC; const CallerName: string);
-procedure EmuPC2XB_D3DVOLUME_DESC(const VolumeDesc: TD3DVolumeDesc; const pDesc: PX_D3DVOLUME_DESC; const CallerName: string);
 
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
-function EmuPC2XB_D3DMULTISAMPLE_TYPE(aType: D3DMULTISAMPLE_TYPE): X_D3DMULTISAMPLE_TYPE;
 
 function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND;
 function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP;
@@ -93,19 +100,6 @@ procedure EmuUnswizzleRect
     dwBPP: DWORD
 ); {NOPATCH}
 
-function DxbxEncodeDimensionsIntoSize(const Width, Height, Pitch: DWORD): DWORD;
-procedure DxbxDecodeSizeIntoDimensions(const Size: DWORD; out Width, Height, Pitch: DWORD);
-
-procedure DxbxDecodeResourceFormat(const ResourceFormat: DWORD;
-  const pCubeMap: PBoolean;
-  const pBorder: PBoolean;
-  const pDimens: PDWORD;
-  const pFormat: PDWORD;
-  const pMipMap: PDWORD;
-  const pUSize: PDWORD;
-  const pVSize: PDWORD;
-  const pPSize: PDWORD);
-
 // Code translated from Convert.cpp :
 
 const
@@ -132,7 +126,7 @@ EmuPrimitiveTypeLookup: array [0..Ord(X_D3DPT_POLYGON)] of D3DPRIMITIVETYPE = (
     D3DPRIMITIVETYPE(0),   // NULL                   = 0
     D3DPT_POINTLIST,       // X_D3DPT_POINTLIST      = 1,
     D3DPT_LINELIST,        // X_D3DPT_LINELIST       = 2,
-    D3DPT_LINESTRIP,       // X_D3DPT_LINELOOP       = 3,  Xbox
+    D3DPT_LINESTRIP,       // X_D3DPT_LINELOOP       = 3,  Xbox, closes the line by drawing 1 lie from last to first vertex
     D3DPT_LINESTRIP,       // X_D3DPT_LINESTRIP      = 4,
     D3DPT_TRIANGLELIST,    // X_D3DPT_TRIANGLELIST   = 5,
     D3DPT_TRIANGLESTRIP,   // X_D3DPT_TRIANGLESTRIP  = 6,
@@ -150,6 +144,7 @@ function X_D3DBLENDOP2String(aValue: DWORD): string;
 function X_D3DCLEAR2String(aValue: DWORD): string;
 function X_D3DCMPFUNC2String(aValue: DWORD): string;
 function X_D3DCOLORWRITEENABLE2String(aValue: DWORD): string;
+function X_D3DCUBEMAP_FACES2String(aValue: DWORD): string;
 function X_D3DCULL2String(aValue: DWORD): string;
 function X_D3DDCC2String(aValue: DWORD): string;
 function X_D3DFOGMODE2String(aValue: DWORD): string;
@@ -159,6 +154,8 @@ function X_D3DLOGICOP2String(aValue: DWORD): string;
 function X_D3DMCS2String(aValue: DWORD): string;
 function X_D3DMULTISAMPLE_TYPE2String(aValue: DWORD): string;
 function X_D3DMULTISAMPLEMODE2String(aValue: DWORD): string;
+function X_D3DPRIMITIVETYPE2String(const aValue: X_D3DPRIMITIVETYPE): string;
+function X_D3DRESOURCETYPE2String(const aValue: X_D3DRESOURCETYPE): string;
 function X_D3DSAMPLEALPHA2String(aValue: DWORD): string;
 function X_D3DSHADEMODE2String(aValue: DWORD): string;
 function X_D3DSTENCILOP2String(aValue: DWORD): string;
@@ -186,6 +183,7 @@ type
     xtD3DCMPFUNC,
     xtD3DCOLOR,
     xtD3DCOLORWRITEENABLE,
+    xtD3DCUBEMAP_FACES,
     xtD3DCULL,
     xtD3DDCC,
     xtD3DFILLMODE,
@@ -197,6 +195,7 @@ type
     xtD3DMULTISAMPLE_TYPE,
     xtD3DMULTISAMPLEMODE,
     xtD3DPRIMITIVETYPE,
+    xtD3DRESOURCETYPE,
     xtD3DSAMPLEALPHA,
     xtD3DSHADEMODE,
     xtD3DSTENCILOP,
@@ -236,6 +235,7 @@ const
     (S:'D3DCMPFUNC';               F:@EmuXB2PC_D3DCMPFUNC;          R:@X_D3DCMPFUNC2String),
     (S:'D3DCOLOR';                 F:@DxbxXB2PC_NOP),                                                 // Xbox = PC
     (S:'D3DCOLORWRITEENABLE';      F:@EmuXB2PC_D3DCOLORWRITEENABLE; R:@X_D3DCOLORWRITEENABLE2String),
+    (S:'D3DCUBEMAP_FACES';         F:@DxbxXB2PC_NOP;                R:@X_D3DCUBEMAP_FACES2String),
     (S:'D3DCULL';                  F:@EmuXB2PC_D3DCULL;             R:@X_D3DCULL2String),
     (S:'D3DDCC';                   F:@DxbxXB2PC_NOP;                R:@X_D3DDCC2String;               X:True),
     (S:'D3DFILLMODE';              F:@EmuXB2PC_D3DFILLMODE;         R:@X_D3DFILLMODE2String),
@@ -247,6 +247,7 @@ const
     (S:'D3DMULTISAMPLE_TYPE';      F:@EmuXB2PC_D3DMULTISAMPLE_TYPE; R:@X_D3DMULTISAMPLE_TYPE2String),
     (S:'D3DMULTISAMPLEMODE';       F:@DxbxXB2PC_NOP;                R:@X_D3DMULTISAMPLEMODE2String;   X:True),
     (S:'D3DPRIMITIVETYPE';         F:@EmuXB2PC_D3DPrimitiveType;    R:@X_D3DPRIMITIVETYPE2String),
+    (S:'D3DRESOURCETYPE';          F:@DxbxXB2PC_NOP;                R:@X_D3DRESOURCETYPE2String),
     (S:'D3DSAMPLEALPHA';           F:@DxbxXB2PC_NOP;                R:@X_D3DSAMPLEALPHA2String;       X:True),
     (S:'D3DSHADEMODE';             F:@EmuXB2PC_D3DSHADEMODE;        R:@X_D3DSHADEMODE2String),
     (S:'D3DSTENCILOP';             F:@EmuXB2PC_D3DSTENCILOP;        R:@X_D3DSTENCILOP2String),
@@ -438,7 +439,7 @@ const
     (S:'D3DRS_MULTISAMPLEMASK'             {= 153}; V:3424; T:xtDWORD;               X:False; PC:D3DRS_MULTISAMPLEMASK),
 //  (S:'D3DRS_MULTISAMPLETYPE'             {= 154}; V:3424; T:xtD3DMULTISAMPLE_TYPE; X:True), // [-3911] \_ aliasses  D3DMULTISAMPLE_TYPE
     (S:'D3DRS_MULTISAMPLEMODE'             {= 154}; V:4361; T:xtD3DMULTISAMPLEMODE;  X:True), // [4361+] /            D3DMULTISAMPLEMODE for the backbuffer
-    (S:'D3DRS_MULTISAMPLERENDERTARGETMODE' {= 155}; V:4361; T:xtD3DMULTISAMPLEMODE;  X:True),
+    (S:'D3DRS_MULTISAMPLERENDERTARGETMODE' {= 155}; V:4242; T:xtD3DMULTISAMPLEMODE;  X:True),
     (S:'D3DRS_SHADOWFUNC'                  {= 156}; V:3424; T:xtD3DCMPFUNC;          X:True),
     (S:'D3DRS_LINEWIDTH'                   {= 157}; V:3424; T:xtFloat;               X:True),
     (S:'D3DRS_SAMPLEALPHA'                 {= 158}; V:3424; T:xtD3DSAMPLEALPHA;      X:True),
@@ -512,7 +513,7 @@ type
   end;
 
 const
-  DxbxTextureStageStateInfo: array [X_D3DTSS_FIRST..X_D3DTSS_LAST] of TextureStageStateInfo = (
+  DxbxTextureStageStateInfo: array [X_D3DTSS_FIRST..X_D3DTSS_UNSUPPORTED] of TextureStageStateInfo = (
     //  String                         Ord   Type                            XboxExt? Native
     (S:'D3DTSS_ADDRESSU'              {= 0}; T:xtD3DTEXTUREADDRESS;          X:False; PC:D3DSAMP_ADDRESSU),
     (S:'D3DTSS_ADDRESSV'              {= 1}; T:xtD3DTEXTUREADDRESS;          X:False; PC:D3DSAMP_ADDRESSV),
@@ -545,109 +546,326 @@ const
     (S:'D3DTSS_BUMPENVLOFFSET'        {=27}; T:xtFloat;                      X:False; PC:TD3DSamplerStateType(D3DTSS_BUMPENVLOFFSET)),
     (S:'D3DTSS_TEXCOORDINDEX'         {=28}; {T:xtD3DTSS_TCI;}               X:False; PC:TD3DSamplerStateType(D3DTSS_TEXCOORDINDEX)),
     (S:'D3DTSS_BORDERCOLOR'           {=29}; T:xtD3DCOLOR;                   X:False; PC:D3DSAMP_BORDERCOLOR),
-    (S:'D3DTSS_COLORKEYCOLOR'         {=30}; T:xtD3DCOLOR;                   X:True)
+    (S:'D3DTSS_COLORKEYCOLOR'         {=30}; T:xtD3DCOLOR;                   X:True),
+    (S:'unsupported'                  {=31}; T:xtDWORD;                      X:True)
   );
 
 implementation
 
-function DxbxXB2PC_D3DFormat(const X_Format: X_D3DFORMAT; const aResourceType: TD3DResourceType; const CacheFormat: PX_D3DFORMAT = nil): D3DFORMAT;
+// TODO : Add DxbxDevCapsToString(D3DDEVCAPS) // DevCaps
+
+// TODO : Add DxbxPrimitiveMiscCapsToString(D3DPMISCCAPS) // PrimitiveMiscCaps
+
+function DxbxLineCapsToString(const LineCaps: DWORD): string; // LineCaps
 begin
-  if Assigned(CacheFormat) then
-    CacheFormat^ := X_Format; // Save this for later; DxbxUpdatePixelContainer should convert when needed!
-
-  // Convert Format (Xbox->PC)
-  Result := EmuXB2PC_D3DFormat(X_Format);
-
-  // TODO -oCXBX: HACK: Devices that don't support this should somehow emulate it!
-  // TODO -oDxbx: Non-supported formats should be emulated in a generic way
-  // TODO -oDxbx : Check device caps too!
-  case Result of
-    D3DFMT_P8:
-    begin
-      EmuWarning('D3DFMT_P8 is an unsupported texture format! Allocating D3DFMT_L8');
-      Result := D3DFMT_L8;
-    end;
-    D3DFMT_D16:
-    begin
-      EmuWarning('D3DFMT_D16 is an unsupported texture format!');
-      if aResourceType = D3DRTYPE_TEXTURE then
-        Result := D3DFMT_R5G6B5
-      else
-        // D3DRTYPE_VOLUMETEXTURE, D3DRTYPE_CUBETEXTURE
-        Result := D3DFMT_X8R8G8B8; // also CheckDeviceMultiSampleType
-    end;
-    D3DFMT_D24S8:
-    begin
-      EmuWarning('D3DFMT_D24S8 is an unsupported texture format! Allocating D3DFMT_X8R8G8B8');
-      Result := D3DFMT_X8R8G8B8;
-    end;
-    D3DFMT_YUY2:
-    begin
-      if aResourceType = D3DRTYPE_CUBETEXTURE then
-        DxbxKrnlCleanup('YUV not supported for cube textures');
-    end;
-  else
-//    if Assigned(CacheFormat) then
-//      CacheFormat^ := X_D3DFMT_UNKNOWN; // Means 'not important' as it's not used in DxbxUpdatePixelContainer
+  if LineCaps = 0 then
+  begin
+    Result := '';
+    Exit;
   end;
+
+  Result := 'D3DLINECAPS';
+  if (LineCaps and D3DLINECAPS_TEXTURE) > 0 then Result := Result + '.TEXTURE';
+  if (LineCaps and D3DLINECAPS_ZTEST) > 0 then Result := Result + '.ZTEST';
+  if (LineCaps and D3DLINECAPS_BLEND) > 0 then Result := Result + '.BLEND';
+  if (LineCaps and D3DLINECAPS_ALPHACMP) > 0 then Result := Result + '.ALPHACMP';
+  if (LineCaps and D3DLINECAPS_FOG) > 0 then Result := Result + '.FOG';
+{$IFDEF DXBX_USE_D3D9}
+  if (LineCaps and D3DLINECAPS_ANTIALIAS) > 0 then Result := Result + '.ANTIALIAS';
+{$ENDIF}
 end;
 
-// is this format swizzled, and if so - how many BPP?
-function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
-// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+function DxbxRasterCapsToString(const RasterCaps: DWORD): string; // RasterCaps
 begin
-  if Format in [X_D3DFMT_L8..X_D3DFMT_INDEX16] then
+  if RasterCaps = 0 then
   begin
-    if Assigned(pBPP) then
-      pBPP^ := D3DFMT_INFO[Format].BPP;
+    Result := '';
+    Exit;
+  end;
 
-    Result := (D3DFMT_INFO[Format].Flags and FMFL_SWIZZLED) > 0;
-  end
-  else
-    Result := False;
+  Result := 'D3DPRASTERCAPS';
+  if (RasterCaps and D3DPRASTERCAPS_DITHER) > 0 then Result := Result + '.DITHER';
+  if (RasterCaps and D3DPRASTERCAPS_ZTEST) > 0 then Result := Result + '.ZTEST';
+  if (RasterCaps and D3DPRASTERCAPS_FOGVERTEX) > 0 then Result := Result + '.FOGVERTEX';
+  if (RasterCaps and D3DPRASTERCAPS_FOGTABLE) > 0 then Result := Result + '.FOGTABLE';
+  if (RasterCaps and D3DPRASTERCAPS_MIPMAPLODBIAS) > 0 then Result := Result + '.MIPMAPLODBIAS';
+  if (RasterCaps and D3DPRASTERCAPS_ZBUFFERLESSHSR) > 0 then Result := Result + '.ZBUFFERLESSHSR';
+  if (RasterCaps and D3DPRASTERCAPS_FOGRANGE) > 0 then Result := Result + '.FOGRANGE';
+  if (RasterCaps and D3DPRASTERCAPS_ANISOTROPY) > 0 then Result := Result + '.ANISOTROPY';
+  if (RasterCaps and D3DPRASTERCAPS_WBUFFER) > 0 then Result := Result + '.WBUFFER';
+  if (RasterCaps and D3DPRASTERCAPS_WFOG) > 0 then Result := Result + '.WFOG';
+  if (RasterCaps and D3DPRASTERCAPS_ZFOG) > 0 then Result := Result + '.ZFOG';
+  if (RasterCaps and D3DPRASTERCAPS_COLORPERSPECTIVE) > 0 then Result := Result + '.COLORPERSPECTIVE';
+{$IFNDEF DXBX_USE_D3D9}
+  if (RasterCaps and D3DPRASTERCAPS_PAT) > 0 then Result := Result + '.PAT';
+  if (RasterCaps and D3DPRASTERCAPS_ANTIALIASEDGES) > 0 then Result := Result + '.ANTIALIASEDGES';
+  if (RasterCaps and D3DPRASTERCAPS_ZBIAS) > 0 then Result := Result + '.ZBIAS';
+  if (RasterCaps and D3DPRASTERCAPS_STRETCHBLTMULTISAMPLE) > 0 then Result := Result + '.STRETCHBLTMULTISAMPLE';
+{$ELSE}
+  if (RasterCaps and D3DPRASTERCAPS_SCISSORTEST) > 0 then Result := Result + '.SCISSORTEST';
+  if (RasterCaps and D3DPRASTERCAPS_SLOPESCALEDEPTHBIAS) > 0 then Result := Result + '.SLOPESCALEDEPTHBIAS';
+  if (RasterCaps and D3DPRASTERCAPS_DEPTHBIAS) > 0 then Result := Result + '.DEPTHBIAS';
+  if (RasterCaps and D3DPRASTERCAPS_MULTISAMPLE_TOGGLE) > 0 then Result := Result + '.MULTISAMPLE_TOGGLE';
+{$ENDIF}
 end;
 
-// is this format yuv?
-function EmuXBFormatIsYUV(Format: X_D3DFORMAT): BOOL_;
-// Branch:Dxbx  Translator:PatrickvL  Done:100
+function DxbxCmpCapsToString(const CmpCaps: DWORD): string; // ZCmpCaps, AlphaCmpCaps
 begin
-  if Format in [X_D3DFMT_L8..X_D3DFMT_INDEX16] then
-    Result := (D3DFMT_INFO[Format].Flags and FMFL_YUV) > 0
-  else
-    Result := False;
-end;
-
-// is this format compressed?
-function EmuXBFormatIsCompressed(Format: X_D3DFORMAT): BOOL_;
-// Branch:Dxbx  Translator:PatrickvL  Done:100
-begin
-  if Format in [X_D3DFMT_L8..X_D3DFMT_INDEX16] then
-    Result := (D3DFMT_INFO[Format].Flags and FMFL_COMPRESSED) > 0
-  else
-    Result := False;
-end;
-
-// is this format linear?
-function EmuXBFormatIsLinear(Format: X_D3DFORMAT; pBPP: PDWord = nil): BOOL_;
-// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-begin
-  if Format in [X_D3DFMT_L8..X_D3DFMT_INDEX16] then
+  if CmpCaps = 0 then
   begin
-    if Assigned(pBPP) then
-      pBPP^ := D3DFMT_INFO[Format].BPP;
+    Result := '';
+    Exit;
+  end;
 
-    Result := (D3DFMT_INFO[Format].Flags and FMFL_LINEAR) > 0;
-  end
-  else
-    Result := False;
+  Result := 'D3DPCMPCAPS';
+  if (CmpCaps and D3DPCMPCAPS_NEVER) > 0 then Result := Result + '.NEVER';
+  if (CmpCaps and D3DPCMPCAPS_LESS) > 0 then Result := Result + '.LESS';
+  if (CmpCaps and D3DPCMPCAPS_EQUAL) > 0 then Result := Result + '.EQUAL';
+  if (CmpCaps and D3DPCMPCAPS_LESSEQUAL) > 0 then Result := Result + '.LESSEQUAL';
+  if (CmpCaps and D3DPCMPCAPS_GREATER) > 0 then Result := Result + '.GREATER';
+  if (CmpCaps and D3DPCMPCAPS_NOTEQUAL) > 0 then Result := Result + '.NOTEQUAL';
+  if (CmpCaps and D3DPCMPCAPS_GREATEREQUAL) > 0 then Result := Result + '.GREATEREQUAL';
+  if (CmpCaps and D3DPCMPCAPS_ALWAYS) > 0 then Result := Result + '.ALWAYS';
 end;
 
-function EmuXBFormatHasAlpha(Format: X_D3DFORMAT): BOOL_;
+function DxbxBlendCapsToString(const BlendCaps: DWORD): string; // SourceBlendCaps, DestBlendCaps
 begin
-  if Format in [X_D3DFMT_L8..X_D3DFMT_INDEX16] then
-    Result := (D3DFMT_INFO[Format].Flags and FMFL_HASALPHA) > 0
+  if BlendCaps = 0 then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  Result := 'D3DPBLENDCAPS';
+  if (BlendCaps and D3DPBLENDCAPS_ZERO) > 0 then Result := Result + '.ZERO';
+  if (BlendCaps and D3DPBLENDCAPS_ONE) > 0 then Result := Result + '.ONE';
+  if (BlendCaps and D3DPBLENDCAPS_SRCCOLOR) > 0 then Result := Result + '.SRCCOLOR';
+  if (BlendCaps and D3DPBLENDCAPS_INVSRCCOLOR) > 0 then Result := Result + '.INVSRCCOLOR';
+  if (BlendCaps and D3DPBLENDCAPS_SRCALPHA) > 0 then Result := Result + '.SRCALPHA';
+  if (BlendCaps and D3DPBLENDCAPS_INVSRCALPHA) > 0 then Result := Result + '.INVSRCALPHA';
+  if (BlendCaps and D3DPBLENDCAPS_DESTALPHA) > 0 then Result := Result + '.DESTALPHA';
+  if (BlendCaps and D3DPBLENDCAPS_INVDESTALPHA) > 0 then Result := Result + '.INVDESTALPHA';
+  if (BlendCaps and D3DPBLENDCAPS_DESTCOLOR) > 0 then Result := Result + '.DESTCOLOR';
+  if (BlendCaps and D3DPBLENDCAPS_INVDESTCOLOR) > 0 then Result := Result + '.INVDESTCOLOR';
+  if (BlendCaps and D3DPBLENDCAPS_SRCALPHASAT) > 0 then Result := Result + '.SRCALPHASAT';
+  if (BlendCaps and D3DPBLENDCAPS_BOTHSRCALPHA) > 0 then Result := Result + '.BOTHSRCALPHA';
+  if (BlendCaps and D3DPBLENDCAPS_BOTHINVSRCALPHA) > 0 then Result := Result + '.BOTHINVSRCALPHA';
+{$IFDEF DXBX_USE_D3D9}
+  if (BlendCaps and D3DPBLENDCAPS_BLENDFACTOR) > 0 then Result := Result + '.BLENDFACTOR';
+{$ENDIF}
+end;
+
+function DxbxShadeCapsToString(const ShadeCaps: DWORD): string; // ShadeCaps
+begin
+  if ShadeCaps = 0 then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  Result := 'D3DPSHADECAPS';
+  if (ShadeCaps and D3DPSHADECAPS_COLORGOURAUDRGB) > 0 then Result := Result + '.COLORGOURAUDRGB';
+  if (ShadeCaps and D3DPSHADECAPS_SPECULARGOURAUDRGB) > 0 then Result := Result + '.SPECULARGOURAUDRGB';
+  if (ShadeCaps and D3DPSHADECAPS_ALPHAGOURAUDBLEND) > 0 then Result := Result + '.ALPHAGOURAUDBLEND';
+  if (ShadeCaps and D3DPSHADECAPS_FOGGOURAUD) > 0 then Result := Result + '.FOGGOURAUD';
+end;
+
+function DxbxTextureCapsToString(const TextureCaps: DWORD): string; // TextureCaps
+begin
+  if TextureCaps = 0 then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  Result := 'D3DPTEXTURECAPS';
+  if (TextureCaps and D3DPTEXTURECAPS_PERSPECTIVE) > 0 then Result := Result + '.PERSPECTIVE';
+  if (TextureCaps and D3DPTEXTURECAPS_POW2) > 0 then Result := Result + '.POW2';
+  if (TextureCaps and D3DPTEXTURECAPS_ALPHA) > 0 then Result := Result + '.ALPHA';
+  if (TextureCaps and D3DPTEXTURECAPS_SQUAREONLY) > 0 then Result := Result + '.SQUAREONLY';
+  if (TextureCaps and D3DPTEXTURECAPS_TEXREPEATNOTSCALEDBYSIZE) > 0 then Result := Result + '.TEXREPEATNOTSCALEDBYSIZE';
+  if (TextureCaps and D3DPTEXTURECAPS_ALPHAPALETTE) > 0 then Result := Result + '.ALPHAPALETTE';
+  if (TextureCaps and D3DPTEXTURECAPS_NONPOW2CONDITIONAL) > 0 then Result := Result + '.NONPOW2CONDITIONAL';
+  if (TextureCaps and D3DPTEXTURECAPS_PROJECTED) > 0 then Result := Result + '.PROJECTED';
+  if (TextureCaps and D3DPTEXTURECAPS_CUBEMAP) > 0 then Result := Result + '.CUBEMAP';
+  if (TextureCaps and D3DPTEXTURECAPS_VOLUMEMAP) > 0 then Result := Result + '.VOLUMEMAP';
+  if (TextureCaps and D3DPTEXTURECAPS_MIPMAP) > 0 then Result := Result + '.MIPMAP';
+  if (TextureCaps and D3DPTEXTURECAPS_MIPVOLUMEMAP) > 0 then Result := Result + '.MIPVOLUMEMAP';
+  if (TextureCaps and D3DPTEXTURECAPS_MIPCUBEMAP) > 0 then Result := Result + '.MIPCUBEMAP';
+  if (TextureCaps and D3DPTEXTURECAPS_CUBEMAP_POW2) > 0 then Result := Result + '.CUBEMAP_POW2';
+  if (TextureCaps and D3DPTEXTURECAPS_VOLUMEMAP_POW2) > 0 then Result := Result + '.VOLUMEMAP_POW2';
+{$IFDEF DXBX_USE_D3D9}
+  if (TextureCaps and D3DPTEXTURECAPS_NOPROJECTEDBUMPENV) > 0 then Result := Result + '.NOPROJECTEDBUMPENV';
+{$ENDIF}
+end;
+
+function DxbxTextureFilterCapsToString(const TextureFilterCaps: DWORD): string; // TextureFilterCaps
+begin
+  if TextureFilterCaps = 0 then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  Result := 'D3DPTFILTERCAPS';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MINFPOINT) > 0 then Result := Result + '.MINFPOINT';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MINFLINEAR) > 0 then Result := Result + '.MINFLINEAR';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MINFANISOTROPIC) > 0 then Result := Result + '.MINFANISOTROPIC';
+{$IFDEF DXBX_USE_D3D9}
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MINFPYRAMIDALQUAD) > 0 then Result := Result + '.MINFPYRAMIDALQUAD';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MINFGAUSSIANQUAD) > 0 then Result := Result + '.MINFGAUSSIANQUAD';
+{$ENDIF}
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MIPFPOINT) > 0 then Result := Result + '.MIPFPOINT';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MIPFLINEAR) > 0 then Result := Result + '.MIPFLINEAR';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MAGFPOINT) > 0 then Result := Result + '.MAGFPOINT';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MAGFLINEAR) > 0 then Result := Result + '.MAGFLINEAR';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MAGFANISOTROPIC) > 0 then Result := Result + '.MAGFANISOTROPIC';
+{$IFNDEF DXBX_USE_D3D9}
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MAGFAFLATCUBIC) > 0 then Result := Result + '.MAGFAFLATCUBIC';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MAGFGAUSSIANCUBIC) > 0 then Result := Result + '.MAGFGAUSSIANCUBIC';
+{$ELSE}
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD) > 0 then Result := Result + '.MAGFPYRAMIDALQUAD';
+  if (TextureFilterCaps and D3DPTFILTERCAPS_MAGFGAUSSIANQUAD) > 0 then Result := Result + '.MAGFGAUSSIANQUAD';
+{$ENDIF}
+end;
+
+function DxbxTextureAddressCapsToString(const TextureAddressCaps: DWORD): string; // TextureAddressCaps
+begin
+  if TextureAddressCaps = 0 then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  Result := 'D3DPTADDRESSCAPS';
+  if (TextureAddressCaps and D3DPTADDRESSCAPS_WRAP) > 0 then Result := Result + '.WRAP';
+  if (TextureAddressCaps and D3DPTADDRESSCAPS_MIRROR) > 0 then Result := Result + '.MIRROR';
+  if (TextureAddressCaps and D3DPTADDRESSCAPS_CLAMP) > 0 then Result := Result + '.CLAMP';
+  if (TextureAddressCaps and D3DPTADDRESSCAPS_BORDER) > 0 then Result := Result + '.BORDER';
+  if (TextureAddressCaps and D3DPTADDRESSCAPS_INDEPENDENTUV) > 0 then Result := Result + '.INDEPENDENTUV';
+  if (TextureAddressCaps and D3DPTADDRESSCAPS_MIRRORONCE) > 0 then Result := Result + '.MIRRORONCE';
+end;
+
+function DxbxStencilCapsToString(const StencilCaps: DWORD): string; // StencilCaps
+begin
+  if StencilCaps = 0 then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  Result := 'D3DSTENCILCAPS';
+  if (StencilCaps and D3DSTENCILCAPS_KEEP) > 0 then Result := Result + '.KEEP';
+  if (StencilCaps and D3DSTENCILCAPS_ZERO) > 0 then Result := Result + '.ZERO';
+  if (StencilCaps and D3DSTENCILCAPS_REPLACE) > 0 then Result := Result + '.REPLACE';
+  if (StencilCaps and D3DSTENCILCAPS_INCRSAT) > 0 then Result := Result + '.INCRSAT';
+  if (StencilCaps and D3DSTENCILCAPS_DECRSAT) > 0 then Result := Result + '.DECRSAT';
+  if (StencilCaps and D3DSTENCILCAPS_INVERT) > 0 then Result := Result + '.INVERT';
+  if (StencilCaps and D3DSTENCILCAPS_INCR) > 0 then Result := Result + '.INCR';
+  if (StencilCaps and D3DSTENCILCAPS_DECR) > 0 then Result := Result + '.DECR';
+{$IFDEF DXBX_USE_D3D9}
+  if (StencilCaps and D3DSTENCILCAPS_TWOSIDED) > 0 then Result := Result + '.TWOSIDED';
+{$ENDIF}
+end;
+
+function DxbxTextureOpCapsToString(const TextureOpCaps: DWORD): string; // TextureOpCaps
+begin
+  if TextureOpCaps = 0 then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  Result := 'D3DSTENCILCAPS';
+  if (TextureOpCaps and D3DTEXOPCAPS_DISABLE) > 0 then Result := Result + '.DISABLE';
+  if (TextureOpCaps and D3DTEXOPCAPS_SELECTARG1) > 0 then Result := Result + '.SELECTARG1';
+  if (TextureOpCaps and D3DTEXOPCAPS_SELECTARG2) > 0 then Result := Result + '.SELECTARG2';
+  if (TextureOpCaps and D3DTEXOPCAPS_MODULATE) > 0 then Result := Result + '.MODULATE';
+  if (TextureOpCaps and D3DTEXOPCAPS_MODULATE2X) > 0 then Result := Result + '.MODULATE2X';
+  if (TextureOpCaps and D3DTEXOPCAPS_MODULATE4X) > 0 then Result := Result + '.MODULATE4X';
+  if (TextureOpCaps and D3DTEXOPCAPS_ADD) > 0 then Result := Result + '.ADD';
+  if (TextureOpCaps and D3DTEXOPCAPS_ADDSIGNED) > 0 then Result := Result + '.ADDSIGNED';
+  if (TextureOpCaps and D3DTEXOPCAPS_ADDSIGNED2X) > 0 then Result := Result + '.ADDSIGNED2X';
+  if (TextureOpCaps and D3DTEXOPCAPS_SUBTRACT) > 0 then Result := Result + '.SUBTRACT';
+  if (TextureOpCaps and D3DTEXOPCAPS_ADDSMOOTH) > 0 then Result := Result + '.ADDSMOOTH';
+  if (TextureOpCaps and D3DTEXOPCAPS_BLENDDIFFUSEALPHA) > 0 then Result := Result + '.BLENDDIFFUSEALPHA';
+  if (TextureOpCaps and D3DTEXOPCAPS_BLENDTEXTUREALPHA) > 0 then Result := Result + '.BLENDTEXTUREALPHA';
+  if (TextureOpCaps and D3DTEXOPCAPS_BLENDFACTORALPHA) > 0 then Result := Result + '.BLENDFACTORALPHA';
+  if (TextureOpCaps and D3DTEXOPCAPS_BLENDTEXTUREALPHAPM) > 0 then Result := Result + '.BLENDTEXTUREALPHAPM';
+  if (TextureOpCaps and D3DTEXOPCAPS_BLENDCURRENTALPHA) > 0 then Result := Result + '.BLENDCURRENTALPHA';
+  if (TextureOpCaps and D3DTEXOPCAPS_PREMODULATE) > 0 then Result := Result + '.PREMODULATE';
+  if (TextureOpCaps and D3DTEXOPCAPS_MODULATEALPHA_ADDCOLOR) > 0 then Result := Result + '.MODULATEALPHA_ADDCOLOR';
+  if (TextureOpCaps and D3DTEXOPCAPS_MODULATECOLOR_ADDALPHA) > 0 then Result := Result + '.MODULATECOLOR_ADDALPHA';
+  if (TextureOpCaps and D3DTEXOPCAPS_MODULATEINVALPHA_ADDCOLOR) > 0 then Result := Result + '.MODULATEINVALPHA_ADDCOLOR';
+  if (TextureOpCaps and D3DTEXOPCAPS_MODULATEINVCOLOR_ADDALPHA) > 0 then Result := Result + '.MODULATEINVCOLOR_ADDALPHA';
+  if (TextureOpCaps and D3DTEXOPCAPS_BUMPENVMAP) > 0 then Result := Result + '.BUMPENVMAP';
+  if (TextureOpCaps and D3DTEXOPCAPS_BUMPENVMAPLUMINANCE) > 0 then Result := Result + '.BUMPENVMAPLUMINANCE';
+  if (TextureOpCaps and D3DTEXOPCAPS_DOTPRODUCT3) > 0 then Result := Result + '.DOTPRODUCT3';
+  if (TextureOpCaps and D3DTEXOPCAPS_MULTIPLYADD) > 0 then Result := Result + '.MULTIPLYADD';
+  if (TextureOpCaps and D3DTEXOPCAPS_LERP) > 0 then Result := Result + '.LERP';
+end;
+
+function DxbxFVFCapsToString(const FVFCaps: DWORD): string; // FVFCaps
+begin
+  Result := 'D3DFVFCAPS_TEXCOORDCOUNT=' + IntToStr(FVFCaps and D3DFVFCAPS_TEXCOORDCOUNTMASK);
+  if (FVFCaps and D3DFVFCAPS_DONOTSTRIPELEMENTS) > 0 then Result := Result + ' D3DFVFCAPS_DONOTSTRIPELEMENTS';
+  if (FVFCaps and D3DFVFCAPS_PSIZE) > 0 then Result := Result + ' D3DFVFCAPS_PSIZE';
+end;
+
+function DxbxVertexProcessingCapsToString(const VertexProcessingCaps: DWORD): string; // VertexProcessingCaps
+begin
+  if VertexProcessingCaps = 0 then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  Result := 'D3DVTXPCAPS';
+  if (VertexProcessingCaps and D3DVTXPCAPS_TEXGEN) > 0 then Result := Result + '.TEXGEN';
+  if (VertexProcessingCaps and D3DVTXPCAPS_MATERIALSOURCE7) > 0 then Result := Result + '.MATERIALSOURCE7';
+  if (VertexProcessingCaps and D3DVTXPCAPS_DIRECTIONALLIGHTS) > 0 then Result := Result + '.DIRECTIONALLIGHTS';
+  if (VertexProcessingCaps and D3DVTXPCAPS_POSITIONALLIGHTS) > 0 then Result := Result + '.POSITIONALLIGHTS';
+  if (VertexProcessingCaps and D3DVTXPCAPS_LOCALVIEWER) > 0 then Result := Result + '.LOCALVIEWER';
+  if (VertexProcessingCaps and D3DVTXPCAPS_TWEENING) > 0 then Result := Result + '.TWEENING';
+{$IFNDEF DXBX_USE_D3D9}
+  if (VertexProcessingCaps and D3DVTXPCAPS_NO_VSDT_UBYTE4) > 0 then Result := Result + '.NO_VSDT_UBYTE4';
+{$ELSE}
+  if (VertexProcessingCaps and D3DVTXPCAPS_TEXGEN_SPHEREMAP) > 0 then Result := Result + '.TEXGEN_SPHEREMAP';
+  if (VertexProcessingCaps and D3DVTXPCAPS_NO_TEXGEN_NONLOCALVIEWER) > 0 then Result := Result + '.NO_TEXGEN_NONLOCALVIEWER';
+{$ENDIF}
+end;
+
+
+function DxbxD3DUsageToString(const dwUsage: DWORD): string;
+begin
+  if dwUsage = 0 then
+  begin
+    Result := '0';
+    Exit;
+  end;
+
+  Result := 'D3DUSAGE';
+  if (dwUsage and D3DUSAGE_RENDERTARGET) > 0 then Result := Result + '.RENDERTARGET';
+  if (dwUsage and D3DUSAGE_DEPTHSTENCIL) > 0 then Result := Result + '.DEPTHSTENCIL';
+  if (dwUsage and D3DUSAGE_WRITEONLY) > 0 then Result := Result + '.WRITEONLY';
+  if (dwUsage and D3DUSAGE_SOFTWAREPROCESSING) > 0 then Result := Result + '.SOFTWAREPROCESSING';
+  if (dwUsage and D3DUSAGE_DONOTCLIP) > 0 then Result := Result + '.DONOTCLIP';
+  if (dwUsage and D3DUSAGE_POINTS) > 0 then Result := Result + '.POINTS';
+  if (dwUsage and D3DUSAGE_RTPATCHES) > 0 then Result := Result + '.RTPATCHES';
+  if (dwUsage and D3DUSAGE_NPATCHES) > 0 then Result := Result + '.NPATCHES';
+  if (dwUsage and D3DUSAGE_DYNAMIC) > 0 then Result := Result + '.DYNAMIC';
+end;
+
+function DxbxD3DPoolToString(const Pool: D3DPOOL): string;
+begin
+  case Pool of
+    D3DPOOL_DEFAULT: Result := 'D3DPOOL_DEFAULT';
+    D3DPOOL_MANAGED: Result := 'D3DPOOL_MANAGED';
+    D3DPOOL_SYSTEMMEM: Result := 'D3DPOOL_SYSTEMMEM';
+    D3DPOOL_SCRATCH: Result := 'D3DPOOL_SCRATCH';
   else
-    Result := False;
+    Result := '';
+  end;
 end;
 
 function DxbxXB2PC_NOP(Value: DWORD): DWORD;
@@ -760,40 +978,6 @@ begin
   pDesc.MultiSampleType := EmuXB2PC_D3DMULTISAMPLE_TYPE(SurfaceDesc.MultiSampleType);
   pDesc.Width  := SurfaceDesc.Width;
   pDesc.Height := SurfaceDesc.Height;
-end;
-
-// TODO : Move to appropriate unit :
-procedure EmuPC2XB_D3DSURFACE_DESC(const SurfaceDesc: D3DSURFACE_DESC; const pDesc: PX_D3DSURFACE_DESC; const CallerName: string);
-begin
-  // Convert Format (PC->Xbox)
-  pDesc.Format := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
-  pDesc.Type_ := X_D3DRESOURCETYPE(SurfaceDesc._Type);
-
-  if (Ord(pDesc.Type_) > 7) then
-    DxbxKrnlCleanup(CallerName + ': pDesc->Type > 7');
-
-  pDesc.Usage := SurfaceDesc.Usage;
-  pDesc.Size := GetSurfaceSize(@SurfaceDesc);
-  pDesc.MultiSampleType := EmuPC2XB_D3DMULTISAMPLE_TYPE(SurfaceDesc.MultiSampleType);
-  pDesc.Width  := SurfaceDesc.Width;
-  pDesc.Height := SurfaceDesc.Height;
-end;
-
-// TODO : Move to appropriate unit :
-procedure EmuPC2XB_D3DVOLUME_DESC(const VolumeDesc: TD3DVolumeDesc; const pDesc: PX_D3DVOLUME_DESC; const CallerName: string);
-begin
-  // Convert Format (PC->Xbox)
-  pDesc.Format := EmuPC2XB_D3DFormat(VolumeDesc.Format);
-  pDesc.Type_ :=  X_D3DRESOURCETYPE(VolumeDesc._Type);
-
-  if (Ord(pDesc.Type_) > 7) then
-    DxbxKrnlCleanup(CallerName + ': pDesc->Type > 7');
-
-  pDesc.Usage := VolumeDesc.Usage;
-  pDesc.Size := GetVolumeSize(@VolumeDesc);
-  pDesc.Width := VolumeDesc.Width;
-  pDesc.Height := VolumeDesc.Height;
-  pDesc.Depth := VolumeDesc.Depth;
 end;
 
 // convert from xbox to pc color formats
@@ -961,29 +1145,6 @@ begin
                'If this value is greater than 0xFFFF contact blueshogun!', [Ord(aType)] );
 
     Result := D3DMULTISAMPLE_NONE;
-  end;
-end;
-
-// convert from pc to xbox multisample formats
-function EmuPC2XB_D3DMULTISAMPLE_TYPE(aType: D3DMULTISAMPLE_TYPE): X_D3DMULTISAMPLE_TYPE;
-// Branch:Dxbx  Translator:PatrickvL  Done:100
-begin
-  case aType of
-    D3DMULTISAMPLE_NONE:
-      Result := X_D3DMULTISAMPLE_NONE;
-
-    D3DMULTISAMPLE_2_SAMPLES:
-      Result := X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX;
-
-    D3DMULTISAMPLE_4_SAMPLES:
-      Result := X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN;
-
-    D3DMULTISAMPLE_9_SAMPLES:
-      Result := X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN;
-  else
-    EmuWarning('Unknown Multisample Type (0x%X)!', [Ord(aType)] );
-
-    Result := X_D3DMULTISAMPLE_NONE;//=$0011;
   end;
 end;
 
@@ -1337,6 +1498,20 @@ begin
   end;
 end;
 
+
+function X_D3DCUBEMAP_FACES2String(aValue: DWORD): string;
+begin
+  case D3DCUBEMAP_FACES(aValue) of
+    D3DCUBEMAP_FACE_POSITIVE_X: Result := 'D3DCUBEMAP_FACE_POSITIVE_X';
+    D3DCUBEMAP_FACE_NEGATIVE_X: Result := 'D3DCUBEMAP_FACE_NEGATIVE_X';
+    D3DCUBEMAP_FACE_POSITIVE_Y: Result := 'D3DCUBEMAP_FACE_POSITIVE_Y';
+    D3DCUBEMAP_FACE_NEGATIVE_Y: Result := 'D3DCUBEMAP_FACE_NEGATIVE_Y';
+    D3DCUBEMAP_FACE_POSITIVE_Z: Result := 'D3DCUBEMAP_FACE_POSITIVE_Z';
+    D3DCUBEMAP_FACE_NEGATIVE_Z: Result := 'D3DCUBEMAP_FACE_NEGATIVE_Z';
+  else Result := '';
+  end;
+end;
+
 function X_D3DCULL2String(aValue: DWORD): string;
 begin
   case X_D3DCULL(aValue) of
@@ -1349,14 +1524,11 @@ end;
 
 function X_D3DDCC2String(aValue: DWORD): string;
 begin
-  // TODO : Are these flags or distinct values?
-  case aValue of
-    X_D3DDCC_CULLPRIMITIVE: Result := 'D3DDCC_CULLPRIMITIVE';
-    X_D3DDCC_CLAMP:         Result := 'D3DDCC_CLAMP';
-    X_D3DDCC_IGNORE_W_SIGN: Result := 'D3DDCC_IGNORE_W_SIGN';
-  else
-    Result := '';
-  end;
+  Result := '';
+  if (aValue and X_D3DDCC_CULLPRIMITIVE) > 0 then Result := Result + '|D3DDCC_CULLPRIMITIVE';
+  if (aValue and X_D3DDCC_CLAMP) > 0 then Result := Result + '|D3DDCC_CLAMP';
+  if (aValue and X_D3DDCC_IGNORE_W_SIGN) > 0 then Result := Result + '|D3DDCC_IGNORE_W_SIGN';
+  if Result <> '' then System.Delete(Result, 1, 1);
 end;
 
 function X_D3DFILLMODE2String(aValue: DWORD): string;
@@ -1425,11 +1597,49 @@ begin
   end;
 end;
 
+function X_D3DPRIMITIVETYPE2String(const aValue: X_D3DPRIMITIVETYPE): string;
+begin
+  case aValue of
+    X_D3DPT_NONE: Result := ''; // Dxbx addition
+    X_D3DPT_POINTLIST: Result := 'D3DPT_POINTLIST';
+    X_D3DPT_LINELIST: Result := 'D3DPT_LINELIST';
+    X_D3DPT_LINELOOP: Result := 'D3DPT_LINELOOP';
+    X_D3DPT_LINESTRIP: Result := 'D3DPT_LINESTRIP';
+    X_D3DPT_TRIANGLELIST: Result := 'D3DPT_TRIANGLELIST';
+    X_D3DPT_TRIANGLESTRIP: Result := 'D3DPT_TRIANGLESTRIP';
+    X_D3DPT_TRIANGLEFAN: Result := 'D3DPT_TRIANGLEFAN';
+    X_D3DPT_QUADLIST: Result := 'D3DPT_QUADLIST';
+    X_D3DPT_QUADSTRIP: Result := 'D3DPT_QUADSTRIP';
+    X_D3DPT_POLYGON: Result := 'D3DPT_POLYGON';
+    X_D3DPT_MAX: Result := 'D3DPT_MAX';
+    X_D3DPT_INVALID: Result := 'D3DPT_INVALID';
+  else Result := '';
+  end;
+end;
+
+function X_D3DRESOURCETYPE2String(const aValue: X_D3DRESOURCETYPE): string;
+begin
+  case aValue of
+    X_D3DRTYPE_NONE: Result := 'D3DRTYPE_NONE';
+    X_D3DRTYPE_SURFACE: Result := 'D3DRTYPE_SURFACE';
+    X_D3DRTYPE_VOLUME: Result := 'D3DRTYPE_VOLUME';
+    X_D3DRTYPE_TEXTURE: Result := 'D3DRTYPE_TEXTURE';
+    X_D3DRTYPE_VOLUMETEXTURE: Result := 'D3DRTYPE_VOLUMETEXTURE';
+    X_D3DRTYPE_CUBETEXTURE: Result := 'D3DRTYPE_CUBETEXTURE';
+    X_D3DRTYPE_VERTEXBUFFER: Result := 'D3DRTYPE_VERTEXBUFFER';
+    X_D3DRTYPE_INDEXBUFFER: Result := 'D3DRTYPE_INDEXBUFFER';
+    X_D3DRTYPE_PUSHBUFFER: Result := 'D3DRTYPE_PUSHBUFFER';
+    X_D3DRTYPE_PALETTE: Result := 'D3DRTYPE_PALETTE';
+    X_D3DRTYPE_FIXUP: Result := 'D3DRTYPE_FIXUP';
+  else Result := '';
+  end;
+end;
+
 function X_D3DSAMPLEALPHA2String(aValue: DWORD): string;
 begin
   Result := '';
-  if (aValue and X_D3DSAMPLEALPHA_TOCOVERAGE) > 0 then Result := Result + '|X_D3DSAMPLEALPHA_TOCOVERAGE';
-  if (aValue and X_D3DSAMPLEALPHA_TOONE) > 0 then Result := Result + '|X_D3DSAMPLEALPHA_TOONE';
+  if (aValue and X_D3DSAMPLEALPHA_TOCOVERAGE) > 0 then Result := Result + '|D3DSAMPLEALPHA_TOCOVERAGE';
+  if (aValue and X_D3DSAMPLEALPHA_TOONE) > 0 then Result := Result + '|D3DSAMPLEALPHA_TOONE';
   if Result <> '' then System.Delete(Result, 1, 1);
 end;
 
@@ -1549,16 +1759,10 @@ function EmuXB2PC_D3DCLEAR_FLAGS(Value: DWORD): DWORD;
 begin
   Result := 0;
 
-  // TODO -oCXBX: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
-  if (Value and (not X_D3DCLEAR_ALL_SUPPORTED)) > 0 then
-    EmuWarning('Unsupported D3DCLEAR flags : 0x%.08X', [Value and (not X_D3DCLEAR_ALL_SUPPORTED)]);
-
-  if (Value and X_D3DCLEAR_TARGET) > 0 then
-    Result := Result or D3DCLEAR_TARGET;
-  if (Value and X_D3DCLEAR_ZBUFFER) > 0 then
-    Result := Result or D3DCLEAR_ZBUFFER;
-  if (Value and X_D3DCLEAR_STENCIL) > 0 then
-    Result := Result or D3DCLEAR_STENCIL;
+  // Dxbx note : Xbox can clear A,R,G and B independently, but PC has to clear them all :
+  if (Value and X_D3DCLEAR_TARGET) > 0 then Result := Result or D3DCLEAR_TARGET;
+  if (Value and X_D3DCLEAR_ZBUFFER) > 0 then Result := Result or D3DCLEAR_ZBUFFER;
+  if (Value and X_D3DCLEAR_STENCIL) > 0 then Result := Result or D3DCLEAR_STENCIL;
 end;
 
 function EmuXB2PC_D3DWRAP(Value: DWORD): DWORD;
@@ -1620,7 +1824,7 @@ procedure EmuUnswizzleRect
     dwPitch: DWORD;
     rSrc: TRECT;
     poDst: TPOINT;
-    dwBPP: DWORD
+    dwBPP: DWORD // expressed in Bytes Per Pixel
 ); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -1649,9 +1853,6 @@ begin
 
   i := 1;
   j := 1;
-
-//  MARKED OUT CXBX:
-// while ((i >= dwWidth) or (i >= dwHeight) or (i >= dwDepth)) do
 
   while ((i <= dwWidth) or (i <= dwHeight) or (i <= dwDepth)) do
   begin
@@ -1735,46 +1936,12 @@ begin
 
         dwU := (dwU - dwMaskU) and dwMaskU;
       end;
-      pDstBuff := PVOID(DWORD(pDstBuff)+(dwPitch-dwWidth*dwBPP));
+      pDstBuff := PVOID(DWORD(pDstBuff)+(dwPitch-(dwWidth*dwBPP)));
       dwV := (dwV - dwMaskV) and dwMaskV;
     end;
     dwW := (dwW - dwMaskW) and dwMaskW;
   end;
 end; // EmuUnswizzleRect NOPATCH
-
-function DxbxEncodeDimensionsIntoSize(const Width, Height, Pitch: DWORD): DWORD;
-begin
-  Result := ((( Width         - 1){shl X_D3DSIZE_WIDTH_SHIFT}) and X_D3DSIZE_WIDTH_MASK )
-         or ((( Height        - 1) shl X_D3DSIZE_HEIGHT_SHIFT) and X_D3DSIZE_HEIGHT_MASK)
-         or ((((Pitch div 64) - 1) shl X_D3DSIZE_PITCH_SHIFT ) and X_D3DSIZE_PITCH_MASK );
-end;
-
-procedure DxbxDecodeSizeIntoDimensions(const Size: DWORD; out Width, Height, Pitch: DWORD);
-begin
-  {out}Width  := (((Size and X_D3DSIZE_WIDTH_MASK ){shr X_D3DSIZE_WIDTH_SHIFT}) + 1);
-  {out}Height := (((Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
-  {out}Pitch  := (((Size and X_D3DSIZE_PITCH_MASK ) shr X_D3DSIZE_PITCH_SHIFT ) + 1) * X_D3DTEXTURE_PITCH_ALIGNMENT;
-end;
-
-procedure DxbxDecodeResourceFormat(const ResourceFormat: DWORD;
-  const pCubeMap: PBoolean;
-  const pBorder: PBoolean;
-  const pDimens: PDWORD;
-  const pFormat: PDWORD;
-  const pMipMap: PDWORD;
-  const pUSize: PDWORD;
-  const pVSize: PDWORD;
-  const pPSize: PDWORD);
-begin
-  if Assigned(pCubeMap) then pCubeMap^ :=        (ResourceFormat and X_D3DFORMAT_CUBEMAP) > 0;
-  if Assigned(pBorder)  then pBorder^  :=        (ResourceFormat and X_D3DFORMAT_BORDERSOURCE_COLOR) > 0;
-  if Assigned(pDimens)  then pDimens^  :=        (ResourceFormat and X_D3DFORMAT_DIMENSION_MASK) shr X_D3DFORMAT_DIMENSION_SHIFT;
-  if Assigned(pFormat)  then pFormat^  :=        (ResourceFormat and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
-  if Assigned(pMipMap)  then pMipMap^  :=        (ResourceFormat and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
-  if Assigned(pUSize)   then pUSize^   := 1 shl ((ResourceFormat and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
-  if Assigned(pVSize)   then pVSize^   := 1 shl ((ResourceFormat and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
-  if Assigned(pPSize)   then pPSize^   := 1 shl ((ResourceFormat and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT);
-end;
 
 end.
 

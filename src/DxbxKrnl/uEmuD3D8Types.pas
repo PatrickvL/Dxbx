@@ -368,8 +368,8 @@ const
   - Volumes cannot be cube mapped and vice versa
 
   Maximum dimensions :
-  2D : 4096x4096
-  3D : 512x512x512
+  2D : 4096x4096 (12 mipmap levels)
+  3D : 512x512x512 (9 mipmap levels)
 
 *)
   // Xbox D3DFORMAT types :
@@ -467,12 +467,14 @@ type X_D3DSHADEMODE = (
   X_D3DSHADE_GOURAUD            = $1d01,
   X_D3DSHADE_FORCE_DWORD        = $7fffffff
 );
+
 type X_D3DFILLMODE = (
   X_D3DFILL_POINT              = $1b00,
   X_D3DFILL_WIREFRAME          = $1b01,
   X_D3DFILL_SOLID              = $1b02,
   X_D3DFILL_FORCE_DWORD        = $7fffffff
 );
+
 type X_D3DBLEND = (
   X_D3DBLEND_ZERO               = 0,
   X_D3DBLEND_ONE                = 1,
@@ -491,6 +493,7 @@ type X_D3DBLEND = (
   X_D3DBLEND_INVCONSTANTALPHA   = $8004,
   X_D3DBLEND_FORCE_DWORD        = $7fffffff
 );
+
 type X_D3DBLENDOP = (
   X_D3DBLENDOP_ADD              = $8006,
   X_D3DBLENDOP_SUBTRACT         = $800a,
@@ -593,7 +596,7 @@ type X_D3DMATERIALCOLORSOURCE = (
   X_D3DMCS_FORCE_DWORD      = $7fffffff
 );
 
-// Values for D3DRS_DEPTHCLIPCONTROL renderstate (Xbox ext.)
+// Flags for D3DRS_DEPTHCLIPCONTROL renderstate (Xbox ext.)
 const X_D3DDCC_CULLPRIMITIVE = $001;
 const X_D3DDCC_CLAMP         = $010;
 const X_D3DDCC_IGNORE_W_SIGN = $100;
@@ -608,8 +611,7 @@ type X_D3DMULTISAMPLEMODE = (
 const X_D3DSAMPLEALPHA_TOCOVERAGE = $0010;
 const X_D3DSAMPLEALPHA_TOONE      = $0100;
 
-const
-  X_D3DVSD_DATATYPESHIFT = 16;
+const X_D3DVSD_DATATYPESHIFT = 16;
 
 // Primitives supported by draw-primitive API
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -672,6 +674,24 @@ const X_D3DPRESENTFLAG_LOCKABLE_BACKBUFFER = $00000001;
 const X_D3DPRESENTFLAG_INTERLACED          = $00000020;
 const X_D3DPRESENTFLAG_FIELD               = $00000080;
 
+// D3DUSAGE values (all but the Xbox extensions match the PC versions) :
+const X_D3DUSAGE_RENDERTARGET           = $00000001;
+const X_D3DUSAGE_DEPTHSTENCIL           = $00000002;
+// for Vertex/Index buffers
+const X_D3DUSAGE_WRITEONLY              = $00000008;
+const X_D3DUSAGE_POINTS                 = $00000040;
+const X_D3DUSAGE_RTPATCHES              = $00000080;
+const X_D3DUSAGE_DYNAMIC                = $00000200;
+// for CreateVertexShader
+const X_D3DUSAGE_PERSISTENTDIFFUSE      = $00000400;   // Xbox ext.
+const X_D3DUSAGE_PERSISTENTSPECULAR     = $00000800;   // Xbox ext.
+const X_D3DUSAGE_PERSISTENTBACKDIFFUSE  = $00001000;   // Xbox ext.
+const X_D3DUSAGE_PERSISTENTBACKSPECULAR = $00002000;   // Xbox ext.
+// for CreateTexture/CreateImageSurface
+const X_D3DUSAGE_BORDERSOURCE_COLOR     = $00000000;   // Xbox ext.
+const X_D3DUSAGE_BORDERSOURCE_TEXTURE   = $00010000;   // Xbox ext.
+
+
 type X_D3DVERTEXBLENDFLAGS= (
     X_D3DVBF_DISABLE           = 0,     // Disable vertex blending
     X_D3DVBF_1WEIGHTS          = 1,     // 2 matrix blending
@@ -684,7 +704,6 @@ type X_D3DVERTEXBLENDFLAGS= (
     X_D3DVBF_MAX               = 7,
     X_D3DVBF_FORCE_DWORD       = $7fffffff
 );
-
 
 type _D3DCOPYRECTCOLORFORMAT = (
     D3DCOPYRECT_COLOR_FORMAT_DEFAULT                 = 0,
@@ -740,7 +759,6 @@ type _D3DCOPYRECTSTATE = record
   end;
   D3DCOPYRECTSTATE = _D3DCOPYRECTSTATE;
   PD3DCOPYRECTSTATE = ^D3DCOPYRECTSTATE;
-
 
 type _D3DCOPYRECTROPSTATE = record            // Xbox extension
     Rop: DWORD;              // Ternary raster operation.
@@ -953,9 +971,7 @@ type X_D3DResource = object
   end; // size = 12 (as in Cxbx)
   PX_D3DResource = ^X_D3DResource;
 
-
-
-// d3d resource "common" masks
+// D3D resource "common" masks
 const X_D3DCOMMON_REFCOUNT_MASK      = $0000FFFF;
 const X_D3DCOMMON_TYPE_MASK          = $00070000;
 const X_D3DCOMMON_TYPE_SHIFT         = 16;
@@ -968,24 +984,12 @@ const X_D3DCOMMON_TYPE_SURFACE       = $00050000; // Also covers Volume resource
 const X_D3DCOMMON_TYPE_FIXUP         = $00060000;
 const X_D3DCOMMON_INTREFCOUNT_MASK   = $00780000;
 const X_D3DCOMMON_INTREFCOUNT_SHIFT  = 19;
+const X_D3DCOMMON_INTREFCOUNT_1      = (1 shl X_D3DCOMMON_INTREFCOUNT_SHIFT); // Dxbx addition
 const X_D3DCOMMON_VIDEOMEMORY        = $00800000; // Not used.
 const X_D3DCOMMON_D3DCREATED         = $01000000;
 const X_D3DCOMMON_ISLOCKED           = $02000000; // Surface is currently locked (potential unswizzle candidate)
 const X_D3DCOMMON_UNUSED_MASK        = $FC000000;
 const X_D3DCOMMON_UNUSED_SHIFT       = 25;
-
-// special resource data flags (must set _SPECIAL *AND* specific flag(s))
-const X_D3DRESOURCE_DATA_FLAG_SPECIAL = $FFFF0000;
-const X_D3DRESOURCE_DATA_FLAG_SURFACE = $00000001; // Backbuffer surface, etc
-const X_D3DRESOURCE_DATA_FLAG_YUVSURF = $00000002; // YUV memory surface
-const X_D3DRESOURCE_DATA_FLAG_D3DREND = $00000004; // D3D Render Target
-const X_D3DRESOURCE_DATA_FLAG_D3DSTEN = $00000008; // D3D Stencil Surface
-
-function IsSpecialResource(x: DWORD): Boolean; // forward
-function IsResourcePixelContainer(const aResource: PX_D3DResource): Boolean;
-
-// special resource lock flags
-const X_D3DRESOURCE_LOCK_FLAG_NOSIZE  = $EFFFFFFF;
 
 // Lock flags
 const X_D3DLOCK_NOFLUSH  = $00000010; // Xbox extension
@@ -1088,6 +1092,8 @@ const X_D3DSIZE_PITCH_SHIFT  = 24;
 
 const X_D3DTEXTURE_PITCH_ALIGNMENT = 64;
 
+const X_D3DTEXTURE_CUBEFACE_ALIGNMENT = 128;
+
 type X_D3DBaseTexture = object(X_D3DPixelContainer)
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   end; // size = 20 (as in Cxbx)
@@ -1120,6 +1126,7 @@ type X_D3DCubeTexture = object(X_D3DBaseTexture)
 
 type X_D3DSurface = object(X_D3DPixelContainer)
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+    Parent: PX_D3DBaseTexture;
   end; // size = 20 (as in Cxbx)
   PX_D3DSurface = ^X_D3DSurface;
   PPX_D3DSurface = ^PX_D3DSurface;
@@ -1317,7 +1324,7 @@ const // DWORD Indexes for XTL_D3D__pDevice (aka D3D__pDevice) :
 
 // Dxbx note : The PS* render states map 1-on-1 to the X_D3DPIXELSHADERDEF record,
 // SetPixelShader actually pushes the definition into these render state slots.
-// See XTL_EmuUpdateActivePixelShader for how this is employed.
+// See DxbxUpdateActivePixelShader for how this is employed.
 
 // The set starts out with "pixel-shader" render states (all Xbox extensions) :
 const X_D3DRS_PSALPHAINPUTS0              = 0;
@@ -1509,9 +1516,7 @@ const X_D3DRS_COMPLEX_LAST = X_D3DRS_DONOTCULLUNCOMPRESSED;
 const X_D3DRS_FIRST = X_D3DRS_PS_FIRST;
 const X_D3DRS_LAST = X_D3DRS_COMPLEX_LAST;
 
-// deferred render state "unknown" flag
-const X_D3DRS_UNK = $7fffffff;
-
+// X_D3DWRAP values :
 const X_D3DWRAP_U = $00000010;
 const X_D3DWRAP_V = $00001000;
 const X_D3DWRAP_W = $00100000;
@@ -1551,6 +1556,7 @@ const X_D3DTSS_BUMPENVLOFFSET = 27;
 const X_D3DTSS_TEXCOORDINDEX = 28;
 const X_D3DTSS_BORDERCOLOR = 29;
 const X_D3DTSS_COLORKEYCOLOR = 30; // Xbox ext.
+const X_D3DTSS_UNSUPPORTED = 31; // Note : Somehow, this one comes through D3DDevice_SetTextureStageStateNotInline sometimes
 // End of texture states.
 
 // Texture state boundaries :
@@ -1601,6 +1607,22 @@ const X_D3DTADDRESS_MIRROR = 2;
 const X_D3DTADDRESS_CLAMP = 3;
 const X_D3DTADDRESS_BORDER = 4;
 const X_D3DTADDRESS_CLAMPTOEDGE = 5;
+
+// X_D3DCLEAR values :
+const X_D3DCLEAR_ZBUFFER = $00000001;
+const X_D3DCLEAR_STENCIL = $00000002;
+const X_D3DCLEAR_TARGET_R = $00000010;  // Clear target surface R component (Xbox ext.)
+const X_D3DCLEAR_TARGET_G = $00000020;  // Clear target surface G component (Xbox ext.)
+const X_D3DCLEAR_TARGET_B = $00000040;  // Clear target surface B component (Xbox ext.)
+const X_D3DCLEAR_TARGET_A = $00000080;  // Clear target surface A component (Xbox ext.)
+const X_D3DCLEAR_TARGET = X_D3DCLEAR_TARGET_R or X_D3DCLEAR_TARGET_G or X_D3DCLEAR_TARGET_B or X_D3DCLEAR_TARGET_A;
+
+// X_D3DCOLORWRITEENABLE values :
+const X_D3DCOLORWRITEENABLE_RED   = (1 shl 16);
+const X_D3DCOLORWRITEENABLE_GREEN = (1 shl 8);
+const X_D3DCOLORWRITEENABLE_BLUE  = (1 shl 0);
+const X_D3DCOLORWRITEENABLE_ALPHA = (1 shl 24);
+const X_D3DCOLORWRITEENABLE_ALL   = $01010101; // Xbox ext.
 
 // deferred texture stage state "unknown" flag
 const X_D3DTSS_UNK = $7fffffff;
@@ -1659,17 +1681,6 @@ type _X_STREAMINPUT = record
   PX_STREAMINPUT = ^X_STREAMINPUT;
   PPX_STREAMINPUT = ^PX_STREAMINPUT;
 
-const
-  X_D3DCLEAR_ZBUFFER = $00000001;
-  X_D3DCLEAR_STENCIL = $00000002;
-  X_D3DCLEAR_TARGET_R = $00000010;  // Clear target surface R component
-  X_D3DCLEAR_TARGET_G = $00000020;  // Clear target surface G component
-  X_D3DCLEAR_TARGET_B = $00000040;  // Clear target surface B component
-  X_D3DCLEAR_TARGET_A = $00000080;  // Clear target surface A component
-  X_D3DCLEAR_TARGET  = $000000f0;
-
-  X_D3DCLEAR_ALL_SUPPORTED = X_D3DCLEAR_ZBUFFER or X_D3DCLEAR_STENCIL or X_D3DCLEAR_TARGET;
-
 const // vertex shader input registers for fixed function vertex shader
   // Name                  Register number      D3DFVF
   X_D3DVSDE_POSITION     = 0; // Corresponds to D3DFVF_XYZ
@@ -1714,29 +1725,9 @@ const
   X_D3DVSDT_FLOAT2H     = $72; // xbox ext. 3D float that expands to (value, value, 0.0, value). Useful for projective texture coordinates.
   X_D3DVSDT_NONE        = $02; // xbox ext. nsp
 
-const
-  X_D3DCOLORWRITEENABLE_RED   = (1 shl 16);
-  X_D3DCOLORWRITEENABLE_GREEN = (1 shl 8);
-  X_D3DCOLORWRITEENABLE_BLUE  = (1 shl 0);
-  X_D3DCOLORWRITEENABLE_ALPHA = (1 shl 24);
-  X_D3DCOLORWRITEENABLE_ALL   = $01010101; // Xbox ext.
-
-type Dxbx4Booleans = array [0..4-1] of boolean;
-  PDxbx4Booleans = ^Dxbx4Booleans;
+const MAX_NBR_STREAMS = 16;
 
 implementation
-
-function IsSpecialResource(x: DWORD): Boolean;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-begin
- Result := (x and X_D3DRESOURCE_DATA_FLAG_SPECIAL) = X_D3DRESOURCE_DATA_FLAG_SPECIAL;
-end;
-
-function IsResourcePixelContainer(const aResource: PX_D3DResource): Boolean;
-begin
-  Result := ((aResource.Common and X_D3DCOMMON_TYPE_MASK) = X_D3DCOMMON_TYPE_TEXTURE)
-         or ((aResource.Common and X_D3DCOMMON_TYPE_MASK) = X_D3DCOMMON_TYPE_SURFACE);
-end;
 
 end.
 

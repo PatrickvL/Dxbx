@@ -44,6 +44,7 @@ uses
   uEmuShared,
   uState, // XTL_EmuD3DDeferredTextureState
   uEmu, // EmuWarning
+  uEmuXapi, // XTL_Emu_mainXapiStartup
   uEmuExe; // ReinitXbeImageHeader, ReinitExeImageHeader
 
 // Scanning steps:
@@ -1705,6 +1706,9 @@ begin
 
   StoredLibraryVersions := TStringList.Create;
 
+  // For OpenSDK / SDLx linked XBEs, assume 4627 libs where used :
+  g_BuildVersion := DEFAULT_XDK_VERSION; // TODO -oDxbx: Make this configurable!
+
   // Loop over all library versions in the executable:
   for i := 0 to pXbeHeader.dwLibraryVersions - 1 do
   begin
@@ -1713,6 +1717,9 @@ begin
       DbgPrintf('DxbxHLE : Library "%s" is version %d', [CurrentLibName, CurrentXbeLibraryVersion.wBuildVersion]);
 
     CurrentLibName := MapLibraryAbbreviationToLibraryName(CurrentLibName);
+
+    if SameText(CurrentLibName, 'D3D8') then
+      g_BuildVersion := CurrentXbeLibraryVersion.wBuildVersion;
 
     if SameText(CurrentLibName, 'libcmt') then
     begin
@@ -1837,12 +1844,6 @@ begin
     Inc(CurrentXbeLibraryVersion);
   end; // for all library versions
 
-  if Assigned(LibD3D8) then
-    g_BuildVersion := LibD3D8.LibVersion
-  else
-    // For OpenSDK / SDLx linked XBEs, assume 4627 libs where used :
-    g_BuildVersion := DEFAULT_XDK_VERSION; // TODO -oDxbx: Make this configurable!
-
   if g_BuildVersion <= 4361 then
     X_D3DSCM_CORRECTION_VersionDependent := X_D3DSCM_CORRECTION
   else
@@ -1887,9 +1888,8 @@ begin
 
   // Resolve the address of the _XapiProcessHeap symbol (at least referenced once, from XapiInitProcess) :
   XTL_XapiProcessHeap := _Find('_XapiProcessHeap');
-{$IFDEF DXBX_DISABLE_FS_FIXUP}
   XTL_Emu_mainXapiStartup := _Find('_mainXapiStartup@4');
-
+{$IFDEF DXBX_DISABLE_FS_FIXUP}
   Pointer(@XTL_Org_XapiInitProcess) := _Find('_XapiInitProcess@0');
   Pointer(@XTL_Org_rtinit) := _Find('_rtinit');
   Pointer(@XTL_Org_cinit) := _Find('_cinit');
@@ -1898,13 +1898,25 @@ begin
 
   // Locate a few important D3D addresses :
 
-  if g_BuildVersion <= 4361 then // Is this the correct version?
-    XTL_D3D__Device := _Find('_D3D__g_Device') // for 3911 (+8 is called D3D__DirtyFlags in 4627)
-  else
-    XTL_D3D__Device := _Find('_D3D__pDevice'); // for 4726 and 5933
-  // Other names are : '_D3D__Device'
+  begin // Locate the global Device structure address :
+    if g_BuildVersion >= 4627 then
+      XTL_D3D__Device := _Find('_D3D__pDevice')
+    else
+      if g_BuildVersion >= 4242 then
+        XTL_D3D__Device := _Find('?g_pDevice@D3D@@3PAVCDevice@1@A')
+      else
+        XTL_D3D__Device := _Find('_D3D__g_Device'); // for 3911 (+8 is called D3D__DirtyFlags in 4627)
 
-  XTL_Direct3D_CreateDevice := _Find('_Direct3D_CreateDevice@24');
+    // Again, but now without versions :
+    if XTL_D3D__Device = nil then
+      XTL_D3D__Device := _Find('?g_pDevice@D3D@@3PAVCDevice@1@A'); // 4361
+    if XTL_D3D__Device = nil then
+      XTL_D3D__Device := _Find('_D3D__g_Device'); // for 3911 (+8 is called D3D__DirtyFlags in 4627)
+    if XTL_D3D__Device = nil then
+      XTL_D3D__Device := _Find('_D3D__pDevice'); // for 4726 and 5933
+    if XTL_D3D__Device = nil then
+      XTL_D3D__Device := _Find('_D3D__Device');
+  end;
 
   XTL_D3D__RenderState := _Find('_D3D__RenderState');
   XTL_EmuD3DDeferredTextureState := _Find('_D3D__TextureState');

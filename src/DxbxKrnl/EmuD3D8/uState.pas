@@ -44,59 +44,42 @@ uses
   uConvert,
   uDxbxUtils, // iif
   uDxbxKrnlUtils,
+  uResourceTracker, // g_DataToTexture
   uEmu,
   uEmuAlloc,
+  uEmuKrnlMM,
   uEmuD3D8Types,
-  uEmuD3D8Utils;
+  uEmuD3D8Utils,
+  uNV2A;
 
+function DxbxXboxMethodToString(const aMethod: X_NV2AMETHOD): string; {NOPATCH}
 function DxbxXboxMethodToRenderState(const aMethod: X_NV2AMETHOD): X_D3DRenderStateType; {NOPATCH}
 
 procedure DxbxBuildRenderStateMappingTable(const aD3DRenderState: PDWORDs); {NOPATCH}
-procedure DxbxInitializeDefaultRenderStates(const aParameters: PX_D3DPRESENT_PARAMETERS); {NOPATCH}
 
 function DxbxVersionAdjust_D3DRS(const XboxRenderState_VersionDependent: X_D3DRENDERSTATETYPE): X_D3DRENDERSTATETYPE; {NOPATCH}
+
 function Dxbx_SetRenderState(const XboxRenderState: X_D3DRenderStateType; XboxValue: DWORD): DWORD; {NOPATCH}
-function DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE): HResult;
+procedure DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE);
 
 function DxbxFromOldVersion_D3DTSS(const OldValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
 function DxbxFromNewVersion_D3DTSS(const NewValue: X_D3DTEXTURESTAGESTATETYPE): X_D3DTEXTURESTAGESTATETYPE; {NOPATCH}
 
-procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
-procedure XTL_EmuUpdateActiveTexture(); {NOPATCH}
+function DxbxAssureNativeResource(pResource: PX_D3DResource; Usage: DWORD = 0): XTL_PIDirect3DResource8;
 
-procedure DxbxGetFormatRelatedVariables(
-  const pPixelContainer: PX_D3DPixelContainer;
-  const X_Format: X_D3DFORMAT;
-  var dwWidth: DWORD;
-  var dwHeight: DWORD;
-  var dwBPP: DWORD;
-  var dwDepth: DWORD;
-  var dwPitch: DWORD;
-  var dwMipMapLevels: DWORD;
-  var bSwizzled: BOOL_;
-  var bCompressed: BOOL_;
-  var dwCompressedSize: DWORD;
-  var bCubeMap: BOOL_); {NOPATCH}
+procedure DxbxPitchedCopy(pDest, pSrc: PByte; dwDestPitch, dwSrcPitch, dwWidthInBytes, dwHeight: int);
 
-procedure DxbxUpdatePixelContainer(
-  pPixelContainer: PX_D3DPixelContainer;
-  pPaletteColors: PD3DCOLOR;
-  dwCommonType: DWORD;
+function DxbxXB2PC_D3DFormat(const X_Format: X_D3DFORMAT; const aResourceType: X_D3DRESOURCETYPE; var aUsage: DWORD): D3DFORMAT;
 
-  dwWidth: DWORD;
-  dwHeight: DWORD;
-  dwBPP: DWORD;
-  dwDepth: DWORD;
-  dwPitch: DWORD;
-  dwMipMapLevels: DWORD;
-  bSwizzled: BOOL_;
-  bCompressed: BOOL_;
-  dwCompressedSize: DWORD;
-  bCubeMap: BOOL_;
-  CacheFormat: X_D3DFORMAT
-  ); {NOPATCH}
+function DxbxUpdateNativePixelContainer(const pXboxBaseTexture: PX_D3DBaseTexture; Stage: int): XTL_PIDirect3DBaseTexture8;
+procedure DxbxUpdateActiveVertexBufferStreams(); {NOPATCH}
 
-function DxbxGetDataFromXboxResource(pThis: PX_D3DResource): Pointer;
+procedure DxbxUpdateActiveRenderTarget(); {NOPATCH}
+procedure DxbxRemoveIndexBuffer(Data: PWORD);
+procedure DxbxUpdateActiveIndexBuffer(pwIndexData: PWORD; IndexCount: UINT; out StartIndex: UINT);
+
+function DxbxUpdateNativeSurface(const pXboxSurface: PX_D3DSurface; D3DUsage: DWORD): XTL_PIDirect3DSurface8;
+
 procedure DxbxUpdateNativeD3DResources(); {NOPATCH}
 
 const X_D3DRS_UNSUPPORTED = X_D3DRS_LAST+1;
@@ -124,17 +107,6 @@ var XTL_D3D__RenderState: PDWORDs = nil;
 type D3D_InitializeD3dState = function(): int; cdecl;
 var XTL_D3D_InitializeD3dState: D3D_InitializeD3dState;
 
-type  Direct3D_CreateDevice = function(
-    Adapter: UINT;
-    DeviceType: D3DDEVTYPE;
-    hFocusWindow: HWND;
-    BehaviorFlags: DWORD;
-    pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
-    ppReturnedDeviceInterface: XTL_PPIDirect3DDevice8
-): HRESULT; stdcall;
-var XTL_Direct3D_CreateDevice: Direct3D_CreateDevice;
-
-
 const DEFAULT_XDK_VERSION = 4627; // TODO -oDxbx : Make this configurable
 var g_BuildVersion: WORD = DEFAULT_XDK_VERSION;
 // var g_OrigBuildVersion: uint32; // Dxbx note : Unused
@@ -153,40 +125,137 @@ uses
   uEmuD3D8, // g_BuildVersion
   uPixelShader;
 
+function DxbxXboxMethodToString(const aMethod: X_NV2AMETHOD): string; {NOPATCH}
+var
+  rs: X_D3DRenderStateType;
+begin
+  case aMethod of
+    {00000100}NV2A_NOP: Result := 'NV2A_NOP';
+    {00000104}NV2A_NOTIFY: Result := 'NV2A_NOTIFY';
+    {00000120}NV2A_FLIP_READ: Result := 'NV2A_FLIP_READ';
+    {00000180}NV2A_DMA_NOTIFY: Result := 'NV2A_DMA_NOTIFY';
+    {00000184}NV2A_DMA_TEXTURE0: Result := 'NV2A_DMA_TEXTURE0';
+    {00000184}NV2A_DMA_TEXTURE1: Result := 'NV2A_DMA_TEXTURE1';
+    {00000190}NV2A_DMA_STATE: Result := 'NV2A_DMA_STATE';
+    {00000194}NV2A_DMA_COLOR: Result := 'NV2A_DMA_COLOR';
+    {00000198}NV2A_DMA_ZETA: Result := 'NV2A_DMA_ZETA';
+    {0000019c}NV2A_DMA_VTXBUF0: Result := 'NV2A_DMA_VTXBUF0';
+    {000001a0}NV2A_DMA_VTXBUF1: Result := 'NV2A_DMA_VTXBUF1';
+    {000001a4}NV2A_DMA_FENCE: Result := 'NV2A_DMA_FENCE';
+    {000001a8}NV2A_DMA_QUERY: Result := 'NV2A_DMA_QUERY';
+    {00000200}NV2A_RT_HORIZ: Result := 'NV2A_RT_HORIZ';
+    {00000204}NV2A_RT_VERT: Result := 'NV2A_RT_VERT';
+    {00000208}NV2A_RT_FORMAT: Result := 'NV2A_RT_FORMAT';
+    {000002a4}NV2A_FOG_ENABLE: Result := 'NV2A_FOG_ENABLE';
+    {00000260}NV2A_RC_IN_ALPHA_0: Result := 'NV2A_RC_IN_ALPHA_0';
+    {00000264}NV2A_RC_IN_ALPHA_1: Result := 'NV2A_RC_IN_ALPHA_1';
+    {00000268}NV2A_RC_IN_ALPHA_2: Result := 'NV2A_RC_IN_ALPHA_2';
+    {0000026c}NV2A_RC_IN_ALPHA_3: Result := 'NV2A_RC_IN_ALPHA_3';
+    {00000270}NV2A_RC_IN_ALPHA_4: Result := 'NV2A_RC_IN_ALPHA_4';
+    {00000274}NV2A_RC_IN_ALPHA_5: Result := 'NV2A_RC_IN_ALPHA_5';
+    {00000278}NV2A_RC_IN_ALPHA_6: Result := 'NV2A_RC_IN_ALPHA_6';
+    {0000027c}NV2A_RC_IN_ALPHA_7: Result := 'NV2A_RC_IN_ALPHA_7';
+    {00000288}NV2A_RC_FINAL0: Result := 'NV2A_RC_FINAL0';
+    {0000028c}NV2A_RC_FINAL1: Result := 'NV2A_RC_FINAL1';
+    {00000294}NV2A_LIGHT_MODEL: Result := 'NV2A_LIGHT_MODEL';
+    {00000298}NV2A_COLOR_MATERIAL: Result := 'NV2A_COLOR_MATERIAL';
+    {000002c0}NV2A_VIEWPORT_CLIP_HORIZ_0: Result := 'NV2A_VIEWPORT_CLIP_HORIZ_0';
+    {00000300}NV2A_ALPHA_FUNC_ENABLE: Result := 'NV2A_ALPHA_FUNC_ENABLE';
+    {00000304}NV2A_BLEND_FUNC_ENABLE: Result := 'NV2A_BLEND_FUNC_ENABLE';
+    {00000308}NV2A_CULL_FACE_ENABLE: Result := 'NV2A_CULL_FACE_ENABLE';
+    {0000030C}NV2A_DEPTH_TEST_ENABLE: Result := 'NV2A_DEPTH_TEST_ENABLE';
+    {00000310}NV2A_DITHER_ENABLE: Result := 'NV2A_DITHER_ENABLE';
+    {00000314}NV2A_LIGHTING_ENABLE: Result := 'NV2A_LIGHTING_ENABLE';
+    {00000318}NV2A_POINT_PARAMETERS_ENABLE: Result := 'NV2A_POINT_PARAMETERS_ENABLE';
+    {0000031c}NV2A_POINT_SMOOTH_ENABLE: Result := 'NV2A_POINT_SMOOTH_ENABLE';
+    {00000320}NV2A_LINE_SMOOTH_ENABLE: Result := 'NV2A_LINE_SMOOTH_ENABLE';
+    {0000032c}NV2A_STENCIL_ENABLE: Result := 'NV2A_STENCIL_ENABLE';
+    {00000330}NV2A_POLYGON_OFFSET_POINT_ENABLE: Result := 'NV2A_POLYGON_OFFSET_POINT_ENABLE';
+    {00000334}NV2A_POLYGON_OFFSET_LINE_ENABLE: Result := 'NV2A_POLYGON_OFFSET_LINE_ENABLE';
+    {00000338}NV2A_POLYGON_OFFSET_FILL_ENABLE: Result := 'NV2A_POLYGON_OFFSET_FILL_ENABLE';
+    {0000033c}NV2A_ALPHA_FUNC_FUNC: Result := 'NV2A_ALPHA_FUNC_FUNC';
+    {00000340}NV2A_ALPHA_FUNC_REF: Result := 'NV2A_ALPHA_FUNC_REF';
+    {00000344}NV2A_BLEND_FUNC_SRC: Result := 'NV2A_BLEND_FUNC_SRC';
+    {00000348}NV2A_BLEND_FUNC_DST: Result := 'NV2A_BLEND_FUNC_DST';
+    {0000034c}NV2A_BLEND_COLOR: Result := 'NV2A_BLEND_COLOR';
+    {00000350}NV2A_BLEND_EQUATION: Result := 'NV2A_BLEND_EQUATION';
+    {00000354}NV2A_DEPTH_FUNC: Result := 'NV2A_DEPTH_FUNC';
+    {00000358}NV2A_COLOR_MASK: Result := 'NV2A_COLOR_MASK';
+    {0000035c}NV2A_DEPTH_WRITE_ENABLE: Result := 'NV2A_DEPTH_WRITE_ENABLE';
+    {00000360}NV2A_STENCIL_MASK: Result := 'NV2A_STENCIL_MASK';
+    {00000364}NV2A_STENCIL_FUNC_FUNC: Result := 'NV2A_STENCIL_FUNC_FUNC';
+    {00000368}NV2A_STENCIL_FUNC_REF: Result := 'NV2A_STENCIL_FUNC_REF';
+    {0000038c}NV2A_POLYGON_MODE_FRONT: Result := 'NV2A_POLYGON_MODE_FRONT';
+    {0000039c}NV2A_CULL_FACE: Result := 'NV2A_CULL_FACE';
+    {000003a8}NV2A_MATERIAL_FACTOR_FRONT_R: Result := 'NV2A_MATERIAL_FACTOR_FRONT_R';
+    {000003ac}NV2A_MATERIAL_FACTOR_FRONT_G: Result := 'NV2A_MATERIAL_FACTOR_FRONT_G';
+    {000003b0}NV2A_MATERIAL_FACTOR_FRONT_B: Result := 'NV2A_MATERIAL_FACTOR_FRONT_B';
+    {000003b4}NV2A_MATERIAL_FACTOR_FRONT_A: Result := 'NV2A_MATERIAL_FACTOR_FRONT_A';
+    {000003b8}NV2A_SEPARATE_SPECULAR_ENABLE: Result := 'NV2A_SEPARATE_SPECULAR_ENABLE';
+    {000003bc}NV2A_ENABLED_LIGHTS: Result := 'NV2A_ENABLED_LIGHTS';
+    {0000043c}NV2A_POINT_SIZE: Result := 'NV2A_POINT_SIZE';
+    {000009fc}NV2A_FLAT_SHADE_OP: Result := 'NV2A_FLAT_SHADE_OP';
+    {00000a10}NV2A_LIGHT_MODEL_FRONT_AMBIENT_R: Result := 'NV2A_LIGHT_MODEL_FRONT_AMBIENT_R';
+    {00000a14}NV2A_LIGHT_MODEL_FRONT_AMBIENT_G: Result := 'NV2A_LIGHT_MODEL_FRONT_AMBIENT_G';
+    {00000a18}NV2A_LIGHT_MODEL_FRONT_AMBIENT_B: Result := 'NV2A_LIGHT_MODEL_FRONT_AMBIENT_B';
+    {00000a50}NV2A_EYE_POSITION_0: Result := 'NV2A_EYE_POSITION_0';
+    {00000a60}NV2A_RC_CONSTANT_COLOR0_0: Result := 'NV2A_RC_CONSTANT_COLOR0_0';
+    {000016BC}NV2A_EDGEFLAG_ENABLE: Result := 'NV2A_EDGEFLAG_ENABLE';
+    {00001710}NV2A_VTX_CACHE_INVALIDATE: Result := 'NV2A_VTX_CACHE_INVALIDATE';
+    {000017c4}NV2A_LIGHT_MODEL_TWO_SIDE_ENABLE: Result := 'NV2A_LIGHT_MODEL_TWO_SIDE_ENABLE';
+    {00001D6C}NV2A_SEMAPHORE_OFFSET: Result := 'NV2A_SEMAPHORE_OFFSET';
+    {00001D78}NV2A_DEPTHCLIPCONTROL: Result := 'NV2A_DEPTHCLIPCONTROL';
+    {00001d84}NV2A_OCCLUDE_ZSTENCIL_EN: Result := 'NV2A_OCCLUDE_ZSTENCIL_EN';
+    {00001d8c}NV2A_CLEAR_DEPTH_VALUE: Result := 'NV2A_CLEAR_DEPTH_VALUE';
+    {00001d98}NV2A_CLEAR_RECT_HORIZONTAL: Result := 'NV2A_CLEAR_RECT_HORIZONTAL';
+    {00001d9c}NV2A_CLEAR_RECT_VERTICAL: Result := 'NV2A_CLEAR_RECT_VERTICAL';
+    {00001e68}NV2A_SHADOW_ZSLOPE_THRESHOLD: Result := 'NV2A_SHADOW_ZSLOPE_THRESHOLD';
+    {00001e70}NV2A_TX_SHADER_OP: Result := 'NV2A_TX_SHADER_OP';
+    {00001e78}NV2A_TX_SHADER_PREVIOUS: Result := 'NV2A_TX_SHADER_PREVIOUS';
+    {00001ea4}NV2A_VP_UPLOAD_CONST_ID: Result := 'NV2A_VP_UPLOAD_CONST_ID';
+  else
+    rs := DxbxXboxMethodToRenderState(aMethod);
+    if rs in [X_D3DRS_FIRST..X_D3DRS_LAST] then
+      Result := 'NV2A_' + DxbxRenderStateInfo[rs].S
+    else
+      Result := '';
+  end;
+end;
+
 // Convert a 'method' DWORD into it's associated 'pixel-shader' or 'simple' render state.
 function DxbxXboxMethodToRenderState(const aMethod: X_NV2AMETHOD): X_D3DRenderStateType; {NOPATCH}
 begin
   // Dxbx note : Let the compiler sort this out, should be much quicker :
   case (aMethod and $00001fff) of
-    $00000100: Result := X_D3DRS_PS_RESERVED; // XDK 3424 uses $00000100 (NOP), while 3911 onwards uses $00001d90 (SET_COLOR_CLEAR_VALUE)
-    $00000260: Result := X_D3DRS_PSALPHAINPUTS0;
-    $00000264: Result := X_D3DRS_PSALPHAINPUTS1;
-    $00000268: Result := X_D3DRS_PSALPHAINPUTS2;
-    $0000026c: Result := X_D3DRS_PSALPHAINPUTS3;
-    $00000270: Result := X_D3DRS_PSALPHAINPUTS4;
-    $00000274: Result := X_D3DRS_PSALPHAINPUTS5;
-    $00000278: Result := X_D3DRS_PSALPHAINPUTS6;
-    $0000027c: Result := X_D3DRS_PSALPHAINPUTS7;
-    $00000288: Result := X_D3DRS_PSFINALCOMBINERINPUTSABCD;
-    $0000028c: Result := X_D3DRS_PSFINALCOMBINERINPUTSEFG;
-    $00000300: Result := X_D3DRS_ALPHATESTENABLE;
-    $00000304: Result := X_D3DRS_ALPHABLENDENABLE;
-    $00000310: Result := X_D3DRS_DITHERENABLE;
-    $00000330: Result := X_D3DRS_POINTOFFSETENABLE;
-    $00000334: Result := X_D3DRS_WIREFRAMEOFFSETENABLE;
-    $00000338: Result := X_D3DRS_SOLIDOFFSETENABLE;
-    $0000033c: Result := X_D3DRS_ALPHAFUNC;
-    $00000340: Result := X_D3DRS_ALPHAREF;
-    $00000344: Result := X_D3DRS_SRCBLEND;
-    $00000348: Result := X_D3DRS_DESTBLEND;
-    $0000034c: Result := X_D3DRS_BLENDCOLOR;
-    $00000350: Result := X_D3DRS_BLENDOP;
-    $00000354: Result := X_D3DRS_ZFUNC;
-    $00000358: Result := X_D3DRS_COLORWRITEENABLE;
-    $0000035c: Result := X_D3DRS_ZWRITEENABLE;
-    $00000360: Result := X_D3DRS_STENCILWRITEMASK;
-    $00000364: Result := X_D3DRS_STENCILFUNC;
-    $00000368: Result := X_D3DRS_STENCILREF;
+    {00000100}NV2A_NOP: Result := X_D3DRS_PS_RESERVED; // XDK 3424 uses $00000100 (NOP), while 3911 onwards uses $00001d90 (SET_COLOR_CLEAR_VALUE)
+    {00000260}NV2A_RC_IN_ALPHA_0: Result := X_D3DRS_PSALPHAINPUTS0;
+    {00000264}NV2A_RC_IN_ALPHA_1: Result := X_D3DRS_PSALPHAINPUTS1;
+    {00000268}NV2A_RC_IN_ALPHA_2: Result := X_D3DRS_PSALPHAINPUTS2;
+    {0000026c}NV2A_RC_IN_ALPHA_3: Result := X_D3DRS_PSALPHAINPUTS3;
+    {00000270}NV2A_RC_IN_ALPHA_4: Result := X_D3DRS_PSALPHAINPUTS4;
+    {00000274}NV2A_RC_IN_ALPHA_5: Result := X_D3DRS_PSALPHAINPUTS5;
+    {00000278}NV2A_RC_IN_ALPHA_6: Result := X_D3DRS_PSALPHAINPUTS6;
+    {0000027c}NV2A_RC_IN_ALPHA_7: Result := X_D3DRS_PSALPHAINPUTS7;
+    {00000288}NV2A_RC_FINAL0: Result := X_D3DRS_PSFINALCOMBINERINPUTSABCD;
+    {0000028c}NV2A_RC_FINAL1: Result := X_D3DRS_PSFINALCOMBINERINPUTSEFG;
+    {00000300}NV2A_ALPHA_FUNC_ENABLE: Result := X_D3DRS_ALPHATESTENABLE;
+    {00000304}NV2A_BLEND_FUNC_ENABLE: Result := X_D3DRS_ALPHABLENDENABLE;
+    {00000310}NV2A_DITHER_ENABLE: Result := X_D3DRS_DITHERENABLE;
+    {00000330}NV2A_POLYGON_OFFSET_POINT_ENABLE: Result := X_D3DRS_POINTOFFSETENABLE;
+    {00000334}NV2A_POLYGON_OFFSET_LINE_ENABLE: Result := X_D3DRS_WIREFRAMEOFFSETENABLE;
+    {00000338}NV2A_POLYGON_OFFSET_FILL_ENABLE: Result := X_D3DRS_SOLIDOFFSETENABLE;
+    {0000033c}NV2A_ALPHA_FUNC_FUNC: Result := X_D3DRS_ALPHAFUNC;
+    {00000340}NV2A_ALPHA_FUNC_REF: Result := X_D3DRS_ALPHAREF;
+    {00000344}NV2A_BLEND_FUNC_SRC: Result := X_D3DRS_SRCBLEND;
+    {00000348}NV2A_BLEND_FUNC_DST: Result := X_D3DRS_DESTBLEND;
+    {0000034c}NV2A_BLEND_COLOR: Result := X_D3DRS_BLENDCOLOR;
+    {00000350}NV2A_BLEND_EQUATION: Result := X_D3DRS_BLENDOP;
+    {00000354}NV2A_DEPTH_FUNC: Result := X_D3DRS_ZFUNC;
+    {00000358}NV2A_COLOR_MASK: Result := X_D3DRS_COLORWRITEENABLE;
+    {0000035c}NV2A_DEPTH_WRITE_ENABLE: Result := X_D3DRS_ZWRITEENABLE;
+    {00000360}NV2A_STENCIL_MASK: Result := X_D3DRS_STENCILWRITEMASK;
+    {00000364}NV2A_STENCIL_FUNC_FUNC: Result := X_D3DRS_STENCILFUNC;
+    {00000368}NV2A_STENCIL_FUNC_REF: Result := X_D3DRS_STENCILREF;
     $0000036c: Result := X_D3DRS_STENCILMASK;
     $00000374: Result := X_D3DRS_STENCILZFAIL;
     $00000378: Result := X_D3DRS_STENCILPASS;
@@ -194,7 +263,7 @@ begin
     $00000384: Result := X_D3DRS_POLYGONOFFSETZSLOPESCALE;
     $00000388: Result := X_D3DRS_POLYGONOFFSETZOFFSET;
     $000009f8: Result := X_D3DRS_SWATHWIDTH;
-    $00000a60: Result := X_D3DRS_PSCONSTANT0_0;
+    {00000a60}NV2A_RC_CONSTANT_COLOR0_0: Result := X_D3DRS_PSCONSTANT0_0;
     $00000a64: Result := X_D3DRS_PSCONSTANT0_1;
     $00000a68: Result := X_D3DRS_PSCONSTANT0_2;
     $00000a6c: Result := X_D3DRS_PSCONSTANT0_3;
@@ -228,7 +297,7 @@ begin
     $00000adc: Result := X_D3DRS_PSRGBINPUTS7;
     $0000147c: Result := X_D3DRS_STIPPLEENABLE;
     $000017f8: Result := X_D3DRS_PSCOMPAREMODE;
-    $00001d78: Result := X_D3DRS_DEPTHCLIPCONTROL;
+    {00001D78}NV2A_DEPTHCLIPCONTROL: Result := X_D3DRS_DEPTHCLIPCONTROL;
     $00001d90: Result := X_D3DRS_SIMPLE_UNUSED1;
 //    $00001d90: Result := X_D3DRS_SIMPLE_UNUSED2;
 //    $00001d90: Result := X_D3DRS_SIMPLE_UNUSED3;
@@ -249,7 +318,7 @@ begin
     $00001e5c: Result := X_D3DRS_PSRGBOUTPUTS7;
     $00001e60: Result := X_D3DRS_PSCOMBINERCOUNT;
     $00001e74: Result := X_D3DRS_PSDOTMAPPING;
-    $00001e78: Result := X_D3DRS_PSINPUTTEXTURE;
+    {00001e78}NV2A_TX_SHADER_PREVIOUS: Result := X_D3DRS_PSINPUTTEXTURE;
     // Missing : $0000????: Result := X_D3DRS_PSTEXTUREMODES;
   else
     int(Result) := -1;
@@ -312,138 +381,6 @@ begin
     DxbxTextureStageStateXB2PCCallback[i] := TXB2PCFunc(DxbxXBTypeInfo[DxbxTextureStageStateInfo[i].T].F);
 end;
 
-const
-  fZero: Float = 0.0;
-  fOne: Float = 1.0;
-
-procedure DxbxInitializeDefaultRenderStates(const aParameters: PX_D3DPRESENT_PARAMETERS); {NOPATCH}
-var
-  f2dwZero: DWORD absolute fZero; // = F2DW(0.0)
-  f2dwOne: DWORD absolute fOne; // = $3F800000 = F2DW(1.0)
-var
-  i: Integer;
-begin
-  // First, clear out all render states :
-  for i := X_D3DRS_FIRST to X_D3DRS_LAST do
-    XTL_EmuMappedD3DRenderState[i]^ := 0;
-
-  // Now set the "deferred" states to 'unknown' :
-  for i := X_D3DRS_DEFERRED_FIRST to X_D3DRS_DEFERRED_LAST do
-    XTL_EmuMappedD3DRenderState[i]^ := X_D3DRS_UNK; // TODO : Explain why the default 0 causes dots in PointSprites sample!
-
-  // Assign all Xbox default render states values :
-  begin
-    // Make up a few pixel shader colors here (TODO : we really should find&use the actual defaults!) :
-    for i := X_D3DRS_PSCONSTANT0_0 to X_D3DRS_PSCONSTANT1_7 do
-      XTL_EmuMappedD3DRenderState[i]^ := (X_D3DRS_PSCONSTANT1_7 - i) * $01010101;
-
-    // The following default value assigments are derived from 5933 g_InitialRenderStates filling :
-    XTL_EmuMappedD3DRenderState[X_D3DRS_ZFUNC]^ := DWORD(X_D3DCMP_LESSEQUAL);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_ALPHAFUNC]^ := DWORD(X_D3DCMP_ALWAYS);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_ALPHABLENDENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_ALPHATESTENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_ALPHAREF]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_SRCBLEND]^ := DWORD(X_D3DBLEND_ONE);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_DESTBLEND]^ := DWORD(X_D3DBLEND_ZERO);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_ZWRITEENABLE]^ := BOOL_TRUE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_DITHERENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_SHADEMODE]^ := DWORD(X_D3DSHADE_GOURAUD);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_COLORWRITEENABLE]^ := X_D3DCOLORWRITEENABLE_ALL;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILZFAIL]^ := DWORD(X_D3DSTENCILOP_KEEP);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILPASS]^ := DWORD(X_D3DSTENCILOP_KEEP);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILFUNC]^ := DWORD(X_D3DCMP_ALWAYS);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILREF]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILMASK]^ := $FFFFFFFF;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILWRITEMASK]^ := $FFFFFFFF;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_BLENDOP]^ := DWORD(X_D3DBLENDOP_ADD);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_BLENDCOLOR]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_SWATHWIDTH]^ := DWORD(X_D3DSWATH_128);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POLYGONOFFSETZSLOPESCALE]^ := f2dwZero;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POLYGONOFFSETZOFFSET]^ := f2dwZero;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTOFFSETENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_WIREFRAMEOFFSETENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_SOLIDOFFSETENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_DEPTHCLIPCONTROL]^ := X_D3DDCC_CULLPRIMITIVE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_STIPPLEENABLE]^ := BOOL_FALSE;
-
-    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGTABLEMODE]^ := DWORD(X_D3DFOG_NONE);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGSTART]^ := f2dwZero;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGEND]^ := f2dwOne;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGDENSITY]^ := f2dwOne;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_RANGEFOGENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP0]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP1]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP2]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_WRAP3]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_LIGHTING]^ := BOOL_TRUE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_SPECULARENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_LOCALVIEWER]^ := BOOL_TRUE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_COLORVERTEX]^ := BOOL_TRUE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_BACKSPECULARMATERIALSOURCE]^ := DWORD(X_D3DMCS_COLOR2);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_BACKDIFFUSEMATERIALSOURCE]^ := DWORD(X_D3DMCS_COLOR1);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_BACKAMBIENTMATERIALSOURCE]^ := DWORD(X_D3DMCS_MATERIAL);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_BACKEMISSIVEMATERIALSOURCE]^ := DWORD(X_D3DMCS_MATERIAL);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_SPECULARMATERIALSOURCE]^ := DWORD(X_D3DMCS_COLOR2);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_DIFFUSEMATERIALSOURCE]^ := DWORD(X_D3DMCS_COLOR1);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_AMBIENTMATERIALSOURCE]^ := DWORD(X_D3DMCS_MATERIAL);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_EMISSIVEMATERIALSOURCE]^ := DWORD(X_D3DMCS_MATERIAL);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_BACKAMBIENT]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_AMBIENT]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE]^ := f2dwOne;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MIN]^ := f2dwZero;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSPRITEENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALEENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_A]^ := f2dwOne;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_B]^ := f2dwZero;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSCALE_C]^ := f2dwZero;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSIZE_MAX]^ := $42800000; // = F2DW(64.0) between D3DCAPS8.MaxPointSize and D3DRS_POINTSIZE_MIN (including)
-    XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHEDGESTYLE]^ := 0; // = D3DPATCHEDGE_DISCRETE
-    XTL_EmuMappedD3DRenderState[X_D3DRS_PATCHSEGMENTS]^ := f2dwOne;
-//    XTL_EmuMappedD3DRenderState[X_D3DRS_SWAPFILTER]^ := aParameters.MultiSampleType; // DEADBEEF
-//    XTL_EmuMappedD3DRenderState[X_D3DRS_PRESENTATIONINTERVAL]^ := aParameters.FullScreen_PresentationInterval; // DEADBEEF
-
-    // X_D3DRS_DEFERRED_UNUSED8 .. X_D3DRS_DEFERRED_UNUSED1 ?
-    XTL_EmuMappedD3DRenderState[X_D3DRS_PSTEXTUREMODES]^ := 0;
-
-    XTL_EmuMappedD3DRenderState[X_D3DRS_VERTEXBLEND]^ := DWORD(X_D3DVBF_DISABLE);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_FOGCOLOR]^ := 0;
-
-    XTL_EmuMappedD3DRenderState[X_D3DRS_FILLMODE]^ := DWORD(X_D3DFILL_SOLID);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_BACKFILLMODE]^ := DWORD(X_D3DFILL_SOLID);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_TWOSIDEDLIGHTING]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_NORMALIZENORMALS]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_ZENABLE]^ := DWORD(D3DZB_USEW);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILFAIL]^ := DWORD(X_D3DSTENCILOP_KEEP);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_FRONTFACE]^ := DWORD(X_D3DFRONT_CW);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_CULLMODE]^ := DWORD(X_D3DCULL_CCW);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_TEXTUREFACTOR]^ := $FFFFFFFF;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_ZBIAS]^ := 0;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_LOGICOP]^ := DWORD(X_D3DLOGICOP_NONE);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_EDGEANTIALIAS]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEANTIALIAS]^ := BOOL_TRUE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEMASK]^ := $FFFFFFFF;
-//    XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLEMODE]^ := aParameters.MultiSampleType; // DEADBEEF
-    XTL_EmuMappedD3DRenderState[X_D3DRS_MULTISAMPLERENDERTARGETMODE]^ := DWORD(X_D3DMULTISAMPLEMODE_1X);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_SHADOWFUNC]^ := DWORD(X_D3DCMP_NEVER);
-    XTL_EmuMappedD3DRenderState[X_D3DRS_LINEWIDTH]^ := f2dwOne;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_SAMPLEALPHA]^ := 0; // Unknown default
-    XTL_EmuMappedD3DRenderState[X_D3DRS_DXT1NOISEENABLE]^ := BOOL_TRUE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_YUVENABLE]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_OCCLUSIONCULLENABLE]^ := BOOL_TRUE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_STENCILCULLENABLE]^ := BOOL_TRUE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_ROPZCMPALWAYSREAD]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_ROPZREAD]^ := BOOL_FALSE;
-    XTL_EmuMappedD3DRenderState[X_D3DRS_DONOTCULLUNCOMPRESSED]^ := BOOL_FALSE;
-
-    if DxbxFix_HasZBuffer then
-      XTL_EmuMappedD3DRenderState[X_D3DRS_ZENABLE]^ := D3DZB_TRUE
-    else
-      XTL_EmuMappedD3DRenderState[X_D3DRS_ZENABLE]^ := D3DZB_FALSE;
-  end;
-end;
-
 // Converts the input render state from a version-dependent into a version-neutral value.
 function DxbxVersionAdjust_D3DRS(const XboxRenderState_VersionDependent: X_D3DRENDERSTATETYPE): X_D3DRENDERSTATETYPE; {NOPATCH}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
@@ -492,6 +429,9 @@ begin
       else
         Dec(Result, 10);
   end;
+
+  if (Result > X_D3DTSS_LAST) then
+    Result := X_D3DTSS_UNSUPPORTED;
 end;
 
 function Dxbx_SetRenderState(const XboxRenderState: X_D3DRenderStateType; XboxValue: DWORD): DWORD; {NOPATCH}
@@ -511,6 +451,10 @@ begin
   // Set this value into the RenderState structure too (so other code will read the new current value) :
   XTL_EmuMappedD3DRenderState[XboxRenderState]^ := XboxValue;
 
+  // Skip Xbox extensions :
+  if DxbxRenderStateInfo[XboxRenderState].X then
+    Exit;
+
 // Disabled, as it messes up Nvidia rendering too much :
 //  // Dxbx addition : Hack for Smashing drive (on ATI X1300), don't transfer fog (or everything becomes opaque) :
 //  if  IsRunning(TITLEID_SmashingDrive)
@@ -518,7 +462,7 @@ begin
 //    Exit;
 
   case XboxRenderState of
-    // Pixel shader constants are handled in XTL_EmuUpdateActivePixelShader :
+    // Pixel shader constants are handled in DxbxUpdateActivePixelShader :
     X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT1_7,
     X_D3DRS_PSFINALCOMBINERCONSTANT0, X_D3DRS_PSFINALCOMBINERCONSTANT1:
       Exit;
@@ -555,10 +499,6 @@ begin
     end;
   end;
 
-  // Skip Xbox extensions :
-  if DxbxRenderStateInfo[XboxRenderState].X then
-    Exit;
-
   // Map the Xbox state to a PC state, and check if it's supported :
   PCRenderState := DxbxRenderStateInfo[XboxRenderState].PC;
   if PCRenderState = D3DRS_UNSUPPORTED then
@@ -593,7 +533,11 @@ begin
   end;
 end; // Dxbx_SetRenderState
 
-function DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE): HResult;
+var
+  TransferAll: Boolean = True;
+  TransferredValues: array [X_D3DRS_FIRST..X_D3DRS_LAST] of DWORD;
+
+procedure DxbxTransferRenderState(const XboxRenderState: X_D3DRENDERSTATETYPE);
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   XboxValue: DWORD;
@@ -604,14 +548,17 @@ begin
   begin
     // Read the current Xbox value, and set it locally :
     XboxValue := XTL_EmuMappedD3DRenderState[XboxRenderState]^;
-    // TODO : Prevent setting unchanged values
-    Dxbx_SetRenderState(XboxRenderState, XboxValue);
-  end;
+    // Prevent setting unchanged values :
+    if TransferAll or (TransferredValues[XboxRenderState] <> XboxValue) then
+    begin
+      TransferredValues[XboxRenderState] := XboxValue;
 
-  Result := D3D_OK;
+      Dxbx_SetRenderState(XboxRenderState, XboxValue);
+    end;
+  end;
 end;
 
-function DxbxTransferTextureStageState(Stage: int; State: X_D3DTEXTURESTAGESTATETYPE): HResult;
+function DxbxTransferTextureStageState(ReadStage, WriteStage: int; State: X_D3DTEXTURESTAGESTATETYPE): HResult;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   XboxValue: DWORD;
@@ -624,7 +571,7 @@ begin
     // TODO -oDxbx : Emulate these Xbox extensions somehow
     Exit;
 
-  XboxValue := XTL_EmuD3DDeferredTextureState[Stage, Ord(DxbxFromNewVersion_D3DTSS(State))];
+  XboxValue := XTL_EmuD3DDeferredTextureState[ReadStage, Ord(DxbxFromNewVersion_D3DTSS(State))];
   if (XboxValue = X_D3DTSS_UNK) then
     Exit;
 
@@ -632,176 +579,529 @@ begin
   PCValue := DxbxTextureStageStateXB2PCCallback[State](XboxValue);
   // TODO : Prevent setting unchanged values
   // Transfer over the deferred texture stage state to PC :
-  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, Stage, State, PCValue);
-end;
+  IDirect3DDevice_SetTextureStageState(g_pD3DDevice, WriteStage, State, PCValue);
+end; // DxbxTransferTextureStageState
 
-procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
-// Branch:shogun  Revision:163  Translator:PatrickvL  Done:100
+{.$define _DEBUG_DUMP_TEXTURE_SETTEXTURE}
+
+procedure DxbxDumpResource(pPixelContainer: PX_D3DPixelContainer);
 var
-  State: int;
-  Stage: int;
-  XboxValue: DWORD;
-  PCValue: DWORD;
-  pPCTexture: XTL_PIDirect3DBaseTexture8;
+  FileName: AnsiString;
 begin
-  // Generic transfer of all Xbox deferred render states to PC :
-  for State := X_D3DRS_DEFERRED_FIRST to X_D3DRS_DEFERRED_LAST do
-    DxbxTransferRenderState(X_D3DRENDERSTATETYPE(State));
-
-  // Certain D3DTS values need to be checked on each Draw[Indexed]^Vertices
-  if (XTL_EmuD3DDeferredTextureState <> nil) then
+(*
+{$ifdef _DEBUG_DUMP_TEXTURE_SETTEXTURE}
+  if (pTexture <> NULL) and (pTexture.Emu.Texture <> NULL) then
   begin
-    for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
-      for State := X_D3DTSS_DEFERRED_FIRST to X_D3DTSS_DEFERRED_LAST do
-        DxbxTransferTextureStageState(Stage, State);
-
-    // if point sprites are enabled, copy stage 3 over to 0
-    if (XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSPRITEENABLE]^ = DWord(BOOL_TRUE)) then // Dxbx note : DWord cast to prevent warning
-    begin
-      // set the point sprites texture
-      g_pD3DDevice.GetTexture(3, PIDirect3DBaseTexture(@pPCTexture));
-      g_pD3DDevice.SetTexture(0, IDirect3DBaseTexture(pPCTexture));
-      // TODO -oDXBX: Should we clear the pPCTexture interface (and how)?
-
-      // disable all other stages
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 1, X_D3DTSS_COLOROP, D3DTOP_DISABLE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 1, X_D3DTSS_ALPHAOP, D3DTOP_DISABLE);
-
-      // copy over the stage
-      for State := 0 to X_D3DTS_STAGESIZE-1 do
+    // dwDumpTexture := 0; // Dxbx note : Do not reset 'static' var
+    case (IDirect3DResource(pPixelContainer.Emu.Resource).GetType()) of
+      D3DRTYPE_TEXTURE:
       begin
-        XboxValue := XTL_EmuD3DDeferredTextureState[3, Ord(DxbxFromNewVersion_D3DTSS(State))];
-        if (XboxValue <> X_D3DTSS_UNK) then
+        sprintf(@szBuffer[0], 'SetTextureNorm - %.03d (0x%.08X).bmp', [dwDumpTexture, UIntPtr(pPixelContainer.Emu.Texture)]);
+        Inc(dwDumpTexture);
+        IDirect3DTexture(pPixelContainer.Emu.Texture).UnlockRect(0);
+
+        D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture(pPixelContainer.Emu.Texture), NULL);
+      end;
+
+      D3DRTYPE_CUBETEXTURE:
+      begin
+        face := 0;
+        while face < 6 do
         begin
-          PCValue := XboxValue; // TODO : Use registry of callbacks to do this conversion.
-          IDirect3DDevice_GetTextureStageState(g_pD3DDevice, 3, State, {out}PCValue);
-          IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 0, State, PCValue);
+          Inc(dwDumpTexture);
+          sprintf(@szBuffer[0], 'SetTextureCube%d - %.03d (0x%.08X).bmp', [face, dwDumpTexture, UIntPtr(pPixelContainer.Emu.Texture)]);
+          IDirect3DTexture(pPixelContainer.Emu.CubeTexture).UnlockRect(face);
+          D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture(pPixelContainer.Emu.Texture), NULL);
+          Inc(Face);
         end;
       end;
-    end;
   end;
+*)
+  FileName := AnsiString(Format('D:\!tmp_texture_%0.8x.dds', [UIntPtr(pPixelContainer){, level, face}]));
+  D3DXSaveTextureToFileA(PAnsiChar(FileName), D3DXIFF_DDS, IDirect3DTexture(pPixelContainer.Emu.Texture), NULL);
+  // TODO : Dump all mipmap levels too (but how?!)
+  // TODO : Depending type, switch to D3DXSaveSurfaceToFileA or D3DXSaveVolumeToFileA
 end;
 
-procedure DxbxGetFormatRelatedVariables(
-  const pPixelContainer: PX_D3DPixelContainer;
-  const X_Format: X_D3DFORMAT;
-  var dwWidth: DWORD;
-  var dwHeight: DWORD;
-  var dwBPP: DWORD;
-  var dwDepth: DWORD;
-  var dwPitch: DWORD;
-  var dwMipMapLevels: DWORD;
-  var bSwizzled: BOOL_;
-  var bCompressed: BOOL_;
-  var dwCompressedSize: DWORD;
-  var bCubeMap: BOOL_); {NOPATCH}
-// Branch:Dxbx  Translator:PatrickvL  Done:100
+procedure DxbxPitchedCopy(pDest, pSrc: PByte; dwDestPitch, dwSrcPitch, dwWidthInBytes, dwHeight: int);
 var
   v: uint32;
-  MaxMipMapLevels: uint;
 begin
-  dwWidth := 1; dwHeight := 1; dwBPP := 1; dwDepth := 1; dwPitch := 0; dwMipMapLevels := 1;
-  bSwizzled := FALSE; bCompressed := FALSE; dwCompressedSize := 0;
-  bCubeMap := (pPixelContainer.Format and X_D3DFORMAT_CUBEMAP) > 0;
-
-  // Interpret Width/Height/BPP
-  bSwizzled := EmuXBFormatIsSwizzled(X_Format, @dwBPP);
-  if bSwizzled then
+  if (dwWidthInBytes = dwDestPitch) and (dwWidthInBytes = dwSrcPitch) then
   begin
-    dwWidth := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
-    dwHeight := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
-    dwMipMapLevels := (pPixelContainer.Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
-    dwDepth := 1;// HACK? 1 shl ((pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT);
-    dwPitch := dwWidth * dwBPP;
+    memcpy(pDest, pSrc, dwWidthInBytes * dwHeight);
   end
   else
   begin
-    bCompressed := EmuXBFormatIsCompressed(X_Format);
-    if bCompressed then
+    if dwHeight > 0 then // Dxbx addition, to prevent underflow
+    for v := 0 to dwHeight - 1 do
     begin
-      dwWidth  := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
-      dwHeight := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
-      dwDepth  := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT);
-      dwMipMapLevels := (pPixelContainer.Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
+      memcpy(pDest, pSrc, dwWidthInBytes);
 
-      // D3DFMT_DXT2...D3DFMT_DXT5 : 128bits per block/per 16 texels
-      dwCompressedSize := dwWidth * dwHeight;
-
-      if (X_Format = X_D3DFMT_DXT1) then // 64bits per block/per 16 texels
-        dwCompressedSize := dwCompressedSize div 2;
-
-      dwBPP := 1;
-    end
-    else
-    begin
-      // The rest should be linear (this also includes the YUV formats) :
-      if not EmuXBFormatIsLinear(X_Format, @dwBPP) then
-        DxbxKrnlCleanup('0x%.08X is not a supported format!', [X_Format]);
-
-      DxbxDecodeSizeIntoDimensions(pPixelContainer.Size, {out}dwWidth, {out}dwHeight, {out}dwPitch);
+      Inc(pDest, dwDestPitch);
+      Inc(pSrc, dwSrcPitch);
     end;
-  end;
-
-  // TODO -oDxbx : Cxbx doesn't do the following for X_D3DCOMMON_TYPE_SURFACE resources, so
-  // we should determine if it harms us having this here, and make it conditional if needed:
-  if (bSwizzled or bCompressed) then
-  begin
-    if dwMipMapLevels > 0 then // Dxbx addition, to prevent underflow
-    for v := 0 to dwMipMapLevels - 1 do
-    begin
-      if (((1 shl v) >= dwWidth) or ((1 shl v) >= dwHeight)) then
-      begin
-        dwMipMapLevels := v + 1;
-        break;
-      end;
-    end;
-  end;
-
-  // Dxbx addition : Limit Turok to 6 MipMap levels - anything more leads to crashes... but WHY?!?
-  if IsRunning(TITLEID_TurokNTSC) then
-    MaxMipMapLevels := 6
-  else
-    // On the other hand, Battlestar Galactica crashes if we limit to 6 (9 does the trick). Here also : but WHY?!?
-    MaxMipMapLevels := 9;
-
-  if (dwMipMapLevels > MaxMipMapLevels) then
-  begin
-    EmuWarning('Limited MipMapLevels to %d (instead of %d)', [MaxMipMapLevels, dwMipMapLevels]);
-    dwMipMapLevels := MaxMipMapLevels;
   end;
 end;
 
-// Dxbx Note: This code is taken from XTL_EmuIDirect3DResource_Register and occured
-// in XTL_EmuUpdateActiveTexture too, so it's generalize in this single implementation.
-procedure DxbxUpdatePixelContainer(
-  pPixelContainer: PX_D3DPixelContainer;
-  pPaletteColors: PD3DCOLOR;
-  dwCommonType: DWORD;
+function DxbxLockD3DPixelContainer(
+  const pPixelContainer: PX_D3DPixelContainer;
+  out LockedBox: D3DLOCKED_BOX;
+  level: int;
+  face: int = Ord(D3DCUBEMAP_FACE_POSITIVE_X)): HRESULT;
+var
+  ResourceType: X_D3DRESOURCETYPE;
+//  Box: D3DBOX;
+  LockedRect: D3DLOCKED_RECT;
+begin
+  LockedBox.pBits := nil;
+  ResourceType := DxbxGetResourceType(pPixelContainer);
+//  Box.Left := 0;
+//  Box.Top := 0;
+//  Box.Right := 64;
+//  Box.Bottom := 64;
+//  Box.Front := face;
+//  Box.Back := face;
+  case ResourceType of
+    X_D3DRTYPE_SURFACE:
+      Result := IDirect3DSurface(pPixelContainer.Emu.Surface).LockRect(LockedRect, {pRect=}NULL, {Flags=}0);
 
-  dwWidth: DWORD;
-  dwHeight: DWORD;
-  dwBPP: DWORD;
-  dwDepth: DWORD;
-  dwPitch: DWORD;
-  dwMipMapLevels: DWORD;
-  bSwizzled: BOOL_;
-  bCompressed: BOOL_;
-  dwCompressedSize: DWORD;
-  bCubeMap: BOOL_;
-  CacheFormat: X_D3DFORMAT
-  ); {NOPATCH}
+    X_D3DRTYPE_VOLUME:
+      // TODO -oDxbx : Totally untested! Volume's aren't used yet!
+      Result := IDirect3DVolume(pPixelContainer.Emu.Volume).LockBox({out}LockedBox, {@Box=}NULL, {Flags=}0);
+
+    X_D3DRTYPE_TEXTURE:
+      Result := IDirect3DTexture(pPixelContainer.Emu.Texture).LockRect(level, {out}LockedRect, {pRect=}NULL, {Flags=}0);
+
+    X_D3DRTYPE_VOLUMETEXTURE:
+      // TODO -oDxbx : Totally untested! VolumeTexture's aren't used yet!?
+      Result := IDirect3DVolumeTexture(pPixelContainer.Emu.VolumeTexture).LockBox(level, {out}LockedBox, {@Box=}NULL, {Flags=}0);
+
+    X_D3DRTYPE_CUBETEXTURE:
+      Result := IDirect3DCubeTexture(pPixelContainer.Emu.CubeTexture).LockRect(D3DCUBEMAP_FACES(face), level, LockedRect, {pRect=}NULL, {Flags=}0); // D3DLOCK_DISCARD ? (Needs dynamic texture)
+  else
+    Result := D3DERR_WRONGTEXTUREFORMAT;
+  end;
+
+  if FAILED(Result) then
+    Exit;
+
+  if LockedBox.pBits = nil then
+  begin
+    // Return pitch & bits for 2D pixel via a LockedBox, to allow easier usage by callers :
+    {out}LockedBox.RowPitch := LockedRect.Pitch;
+    {out}LockedBox.SlicePitch := 0; // 2D textures don't use slices
+    {out}LockedBox.pBits := LockedRect.pBits;
+  end;
+
+  DbgPrintf('LOCKED %s Level=%d Face=%d pBits=%0.8x', [ResourceToString(pPixelContainer), level, face, UIntPtr(LockedBox.pBits)]);
+end;
+
+procedure DxbxDetermineSurFaceAndLevelByData(const DxbxPixelJar: RDxbxDecodedPixelContainer; out Level: int; out FaceType: D3DCUBEMAP_FACES);
+var
+  ParentData: UIntPtr;
+  SurfaceData: UIntPtr;
+begin
+  ParentData := UIntPtr(DxbxGetDataFromXboxResource(PX_D3DSurface(DxbxPixelJar.pPixelContainer).Parent));
+  SurfaceData := UIntPtr(DxbxGetDataFromXboxResource(DxbxPixelJar.pPixelContainer));
+
+  // Step to the correct face :
+  FaceType := D3DCUBEMAP_FACE_POSITIVE_X;
+  while FaceType < D3DCUBEMAP_FACE_NEGATIVE_Z do
+  begin
+    if ParentData >= SurfaceData then
+      Break;
+
+    Inc(ParentData, DxbxPixelJar.dwFacePitch);
+    Inc(FaceType);
+  end;
+
+  // Step to the correct mipmap level :
+  Level := 0;
+  while Level < X_MAX_MIPMAPS do
+  begin
+    if ParentData + DxbxPixelJar.MipMapOffsets[Level] >= SurfaceData then
+      Break;
+
+    Inc(Level);
+  end;
+end;
+
+procedure DxbxAdjustTextureDimensions(ResourceType: D3DRESOURCETYPE; dwWidth: PUINT; dwHeight: PUINT);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  NeedsConversion: Boolean;
+  NewWidth, NewHeight: UINT;
+  v: int;
+  mask: int;
+begin
+  NeedsConversion := False;
+  case ResourceType of
+    D3DRTYPE_SURFACE,
+    D3DRTYPE_VOLUME,
+    D3DRTYPE_TEXTURE:
+      NeedsConversion := ((g_D3DCaps.TextureCaps and D3DPTEXTURECAPS_POW2) <> 0);
+    D3DRTYPE_VOLUMETEXTURE:
+//      NeedsConversion := ((g_D3DCaps.TextureCaps and D3DPTEXTURECAPS_VOLUMEMAP_POW2) <> 0);
+      NeedsConversion := False; // No conversion, as Xbox1 never does anything else but power-of-two volumes!
+    D3DRTYPE_CUBETEXTURE:
+//      NeedsConversion := ((g_D3DCaps.TextureCaps and D3DPTEXTURECAPS_CUBEMAP_POW2) <> 0);
+      NeedsConversion := False; // No conversion, as Xbox1 never does anything else but power-of-two cubemaps!
+  end;
+
+  if NeedsConversion then
+  begin
+    // Ensure a given width/height are powers of 2 :
+    NewWidth := 0; NewHeight := 0;
+
+    for v := 0 to 32-1 do
+    begin
+      mask := 1 shl v;
+
+      if (dwWidth^ and mask) > 0 then
+        NewWidth := mask;
+
+      if (dwHeight^ and mask) > 0 then
+        NewHeight := mask;
+    end;
+
+    if (dwWidth^ <> NewWidth) then
+    begin
+      NewWidth := NewWidth shl 1;
+      EmuWarning('Needed to resize width (%d->%d)', [dwWidth^, NewWidth]);
+    end;
+
+    if (dwHeight^ <> NewHeight) then
+    begin
+      NewHeight := NewHeight shl 1;
+      EmuWarning('Needed to resize height (%d->%d)', [dwHeight^, NewHeight]);
+    end;
+
+    dwWidth^ := NewWidth;
+    dwHeight^ := NewHeight;
+  end;
+
+  // Dxbx addition : Ensure the square-requirement when needed :
+  NeedsConversion := ((g_D3DCaps.TextureCaps and D3DPTEXTURECAPS_SQUAREONLY) <> 0);
+  if NeedsConversion then
+  begin
+    // If squary textures are required, copy the longest dimension to the other :
+    if dwWidth^ > dwHeight^ then
+    begin
+      EmuWarning('Needed to square height (%d->%d)', [dwHeight^, dwWidth^]);
+      dwHeight^ := dwWidth^;
+    end
+    else
+    begin
+      EmuWarning('Needed to square width (%d->%d)', [dwWidth^, dwHeight^]);
+      dwWidth^ := dwHeight^;
+    end;
+  end;
+end; // DxbxAdjustTextureDimensions
+
+function DxbxXB2PC_D3DFormat(const X_Format: X_D3DFORMAT; const aResourceType: X_D3DRESOURCETYPE; var aUsage: DWORD): D3DFORMAT;
+var
+  FirstResult: D3DFORMAT;
+begin
+  // Convert Format (Xbox->PC)
+  Result := EmuXB2PC_D3DFormat(X_Format);
+  FirstResult := Result;
+
+  // Dxbx addition : : Check device caps :
+  if g_pD3D.CheckDeviceFormat(
+    g_EmuCDPD.CreationParameters.AdapterOrdinal,
+    g_EmuCDPD.CreationParameters.DeviceType,
+    g_EmuCDPD.NativePresentationParameters.BackBufferFormat,
+    aUsage,
+    _D3DRESOURCETYPE(aResourceType),
+    Result) = D3D_OK then
+      Exit;
+
+  // TODO -oCXBX: HACK: Devices that don't support this should somehow emulate it!
+  // TODO -oDxbx: Non-supported formats should be emulated in a generic way
+  case Result of
+    D3DFMT_P8:
+      // Note : Allocate a BPP-identical format instead of P8 (which is nearly never supported natively),
+      // so that we at least have a BPP-identical format. Conversion to RGB is done later,
+      // in DxbxUpdateNativePixelContainer :
+      Result := D3DFMT_L8;
+    D3DFMT_D16:
+      case aResourceType of
+        X_D3DRTYPE_TEXTURE,
+        X_D3DRTYPE_VOLUMETEXTURE,
+        X_D3DRTYPE_CUBETEXTURE:
+        begin
+          if (aUsage and X_D3DUSAGE_DEPTHSTENCIL) > 0 then
+          begin
+            Result := D3DFMT_D16_LOCKABLE;
+            // ATI Fix : Does this card support D16 DepthStencil textures ?
+            if g_pD3D.CheckDeviceFormat(
+              g_EmuCDPD.CreationParameters.AdapterOrdinal,
+              g_EmuCDPD.CreationParameters.DeviceType,
+              g_EmuCDPD.NativePresentationParameters.BackBufferFormat,
+              aUsage,
+              _D3DRESOURCETYPE(aResourceType),
+              Result) <> D3D_OK then
+            begin
+              // If not, fall back to a format that's the same size and is most probably supported :
+              Result := D3DFMT_R5G6B5; // Note : If used in shaders, this will give unpredictable channel mappings!
+
+              // Since this cannot longer be created as a DepthStencil, reset the usage flag :
+              {var}aUsage := D3DUSAGE_RENDERTARGET; // TODO : Why rendertarget instead? This asks for a testcase!
+            end;
+          end
+          else
+            Result := D3DFMT_R5G6B5; // also CheckDeviceMultiSampleType
+        end;
+        X_D3DRTYPE_SURFACE:
+          Result := D3DFMT_D16_LOCKABLE;
+      end;
+    D3DFMT_D24S8:
+      case aResourceType of
+        X_D3DRTYPE_TEXTURE,
+        X_D3DRTYPE_VOLUMETEXTURE,
+        X_D3DRTYPE_CUBETEXTURE:
+        begin
+          Result := D3DFMT_A8R8G8B8;
+          // Since this cannot longer be created as a DepthStencil, reset the usage flag :
+          {var}aUsage := D3DUSAGE_RENDERTARGET;
+        end;
+      end;
+    D3DFMT_V16U16:
+      // This fixes NoSortAlphaBlend (after B button - z-replace) on nvidia:
+      Result := D3DFMT_A8R8G8B8;
+
+    D3DFMT_YUY2:
+      Result := D3DFMT_V8U8; // Use another format that's also 16 bits wide
+//      if aResourceType = X_D3DRTYPE_CUBETEXTURE then
+//        DxbxKrnlCleanup('YUV not supported for cube textures');
+  end;
+
+  if FirstResult <> Result then
+    EmuWarning('%s is an unsupported format for %s! Allocating %s', [
+      X_D3DFORMAT2String(X_Format),
+      X_D3DRESOURCETYPE2String(aResourceType),
+      D3DFORMAT2String(Result)]);
+end;
+
+// Check if a native resource exists for the given xbox resource (if not, create one).
+function DxbxAssureNativeResource(pResource: PX_D3DResource; Usage: DWORD = 0): XTL_PIDirect3DResource8;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  hRet: HRESULT;
+  ResourceType: X_D3DRESOURCETYPE;
+  dwSize: DWORD;
+  Pool: D3DPOOL;
+  DxbxPixelJar: RDxbxDecodedPixelContainer;
+  PCParent: XTL_PIDirect3DBaseTexture8;
+  PCFormat: D3DFORMAT;
+  Level: int;
+  FaceType: D3DCUBEMAP_FACES;
+  DebugStr: string;
+begin
+  Result := nil;
+  if (pResource = NULL) then
+    Exit;
+
+  Result := pResource.Emu.Resource;
+  if Assigned(Result) then
+    Exit;
+
+  DbgPrintf('DxbxAssureNativeResource: %s D3DUSAGE=%s', [ResourceToString(pResource), DxbxD3DUsageToString(Usage)]);
+
+  DebugStr := '';
+  hRet := D3DERR_WRONGTEXTUREFORMAT;
+  Pool := D3DPOOL_MANAGED;
+  ResourceType := DxbxGetResourceType(pResource);
+  case ResourceType of
+    X_D3DRTYPE_VERTEXBUFFER:
+    begin
+      dwSize := EmuCheckAllocationSize(DxbxGetDataFromXboxResource(pResource), true);
+      if (dwSize = DWORD(-1)) then
+      begin
+        EmuWarning('Vertex buffer allocation size unknown');
+      end
+      else
+      begin
+        DbgPrintf('DxbxAssureNativeResource: Vertex buffer bytes : %d', [dwSize]);
+        hRet := g_pD3DDevice.CreateVertexBuffer(
+          dwSize,
+          {Usage=}0, // ignored according to Xbox docs
+          {FVF=}0, // ignored according to Xbox docs
+          Pool, // Note : If we don't supply D3DPOOL_MANAGED here, the PointSprites and Gamepad XDK samples crash!
+          {ppVertexBuffer=}@(pResource.Emu.VertexBuffer) // IDirect3DVertexBuffer
+          {$IFDEF DXBX_USE_D3D9}, {pSharedHandle=}NULL{$ENDIF}
+        );
+      end;
+    end;
+
+    X_D3DRTYPE_INDEXBUFFER:
+    begin
+      dwSize := EmuCheckAllocationSize(DxbxGetDataFromXboxResource(pResource), true);
+      if (dwSize = DWORD(-1)) then
+      begin
+        // TODO -oCXBX: once this is known to be working, remove the warning
+        EmuWarning('Index buffer allocation size unknown');
+
+//          pResource.Emu.Lock := X_D3DRESOURCE_LOCK_FLAG_NOSIZE;
+
+        // Cxbx has 'break'; Delphi can't do that, so we use an else-block
+{$IFDEF GAME_HACKS_ENABLED}
+        // Halo dwSize = 0x336;
+{$ENDIF}
+      end
+      else
+      begin
+        DbgPrintf('DxbxAssureNativeResource: Index buffer bytes : %d (%d indices)', [dwSize, dwSize div SizeOf(Word)]);
+        hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice,
+          dwSize, {Usage=}0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
+          @(pResource.Emu.IndexBuffer));
+      end;
+    end;
+
+//    X_D3DRTYPE_VOLUME,
+    X_D3DRTYPE_SURFACE,
+    X_D3DRTYPE_CUBETEXTURE,
+    X_D3DRTYPE_VOLUMETEXTURE,
+    X_D3DRTYPE_TEXTURE:
+    begin
+      g_DataToTexture.insert(DWORD(pResource.Data), pResource);
+
+      // Decode the texture dimensions and other attributes :
+      DxbxGetFormatRelatedVariables(PX_D3DPixelContainer(pResource), {out}DxbxPixelJar);
+
+      PCFormat := DxbxXB2PC_D3DFormat(DxbxPixelJar.X_Format, ResourceType, {var}Usage);
+
+      // Adjust the pool if we're creating a render target or stencil buffer :
+      if Usage <> 0 then
+        Pool := D3DPOOL_DEFAULT; // Default D3DPOOL_MANAGED doesn't work, nor does D3DPOOL_SCRATCH or D3DPOOL_SYSTEMMEM
+
+      // Depending it's attributes, create a CubeTexture, VolumeTexture or normal Texture :
+      case ResourceType of
+//        X_D3DRTYPE_VOLUME: // IDirect3DVolume
+        X_D3DRTYPE_SURFACE:
+        begin
+          // Retrieve the PC resource that represents the parent of this surface,
+          // including it's contents (updated if necessary) :
+          // Samples like CubeMap show that render target formats must be applied to both surface and texture:
+          PCParent := DxbxUpdateNativePixelContainer(PX_D3DSurface(pResource).Parent, {Stage=}-Usage); // Note: -1 Signals surface-usage
+          // TODO : Do this when we don't need a content-copy (like when working inside Clear) :
+          // PCParent := XTL_PIDirect3DBaseTexture8(DxbxAssureNativeResource(PX_D3DSurface(pResource).Parent, Usage));
+          if Assigned(PCParent) then
+          begin
+            // Determine which face & mipmap level where used in the creation of this Xbox surface, using the Data pointer :
+            DxbxDetermineSurFaceAndLevelByData(DxbxPixelJar, {out}Level, {out}FaceType);
+            case DxbxGetResourceType(PX_D3DSurface(pResource).Parent) of
+              X_D3DRTYPE_TEXTURE:
+              begin
+                hRet := IDirect3DTexture(PCParent).GetSurfaceLevel(
+                  Level,
+                  @(pResource.Emu.Surface) // IDirect3DSurface
+                );
+                int(FaceType) := -1;
+              end;
+              X_D3DRTYPE_CUBETEXTURE:
+              begin
+                hRet := IDirect3DCubeTexture(PCParent).GetCubeMapSurface(
+                  FaceType,
+                  Level,
+                  @(pResource.Emu.Surface) // IDirect3DSurface
+                );
+                // PS: It's probably needed to patch up the destruction of this surface too!
+                // PS2: We also need a mechanism to remove obsolete native resources,
+                // like the native CubeMap texture that's used for this surfaces' parent.
+              end;
+            else
+              DxbxD3DError('DxbxAssureNativeResource', 'Unhandled D3DSurface.Parent type!', pResource);
+            end;
+
+//            if not FAILED(hRet) then
+//              DxbxUnlockD3DResource(PX_D3DSurface(pResource).Parent, Level, Ord(FaceType));
+          end
+          else
+            // Differentiate between images & depth buffers :
+            if EmuXBFormatIsRenderTarget(DxbxPixelJar.X_Format) then
+            begin
+              hRet := IDirect3DDevice_CreateImageSurface(g_pD3DDevice,
+                DxbxPixelJar.dwWidth, DxbxPixelJar.dwHeight,
+                PCFormat,
+                @(pResource.Emu.Surface) // IDirect3DSurface
+              );
+            end
+            else
+              if EmuXBFormatIsDepthBuffer(DxbxPixelJar.X_Format) then
+                hRet := IDirect3DDevice_CreateDepthStencilSurface(g_pD3DDevice,
+                  DxbxPixelJar.dwWidth, DxbxPixelJar.dwHeight,
+                  PCFormat,
+                  {MultiSampleType=}D3DMULTISAMPLE_NONE, // TODO : Determine real MultiSampleType
+                  @(pResource.Emu.Surface) // IDirect3DSurface
+                )
+              else
+                DxbxD3DError('DxbxAssureNativeResource', 'Unhandled Surface format!', pResource);
+        end;
+        X_D3DRTYPE_CUBETEXTURE:
+          hRet := IDirect3DDevice_CreateCubeTexture(g_pD3DDevice,
+            {EdgeLength=}DxbxPixelJar.dwWidth,
+            DxbxPixelJar.dwMipMapLevels,
+            Usage,
+            PCFormat,
+            Pool, // Note : Cube textures created with D3DPOOL_DEFAULT are not lockable
+            @(pResource.Emu.CubeTexture) // IDirect3DCubeTexture
+          );
+        X_D3DRTYPE_VOLUMETEXTURE:
+          hRet := IDirect3DDevice_CreateVolumeTexture(g_pD3DDevice,
+            DxbxPixelJar.dwWidth, DxbxPixelJar.dwHeight, DxbxPixelJar.dwDepth, DxbxPixelJar.dwMipMapLevels,
+            Usage,  // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+            PCFormat,
+            Pool,
+            @(pResource.Emu.VolumeTexture) // IDirect3DVolumeTexture
+          );
+        X_D3DRTYPE_TEXTURE:
+        begin
+          hRet := IDirect3DDevice_CreateTexture(g_pD3DDevice,
+            DxbxPixelJar.dwWidth, DxbxPixelJar.dwHeight, DxbxPixelJar.dwMipMapLevels,
+            Usage,
+            PCFormat,
+            Pool,
+            @(pResource.Emu.Texture) // IDirect3DTexture
+          );
+        end;
+      end;
+      DebugStr := ' PCFormat=' + D3DFormat2String(PCFormat);
+    end;
+//    X_D3DRTYPE_PUSHBUFFER: ; // ??
+//    X_D3DRTYPE_FIXUP: ; // ??
+//    X_D3DRTYPE_PALETTE: ; // ??
+  end;
+
+  DebugStr := Format('Usage=%s Pool=%s%s', [DxbxD3DUsageToString(Usage), DxbxD3DPoolToString(Pool), DebugStr]);
+  if (FAILED(hRet)) then
+    DxbxD3DError('DxbxAssureNativeResource', 'Could not create native resource! ' + DebugStr, pResource, hRet)
+  else
+    DbgPrintf('Created %s %s', [ResourceToString(pResource), DebugStr]);
+
+  Result := pResource.Emu.Resource;
+end; // DxbxAssureNativeResource
+
+var
+  pTmpBufferSize: uint = 0;
+  pTmpBuffer: PBytes = nil;
+
+function DxbxUpdateNativePixelContainer(const pXboxBaseTexture: PX_D3DBaseTexture; Stage: int): XTL_PIDirect3DBaseTexture8;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
+  MustCopyToNative: Boolean;
+  D3DUsage: DWORD;
   nrfaces: uint32;
   face: uint32;
-  dwCompressedOffset: DWORD;
-  dwMipOffs: DWORD;
+  nrslices: uint32;
+  slice: uint32;
   dwMipWidth: DWORD;
   dwMipHeight: DWORD;
   dwMipPitch: DWORD;
   level: uint;
   hRet: HRESULT;
-  LockedRect: D3DLOCKED_RECT;
+  LockedBox: D3DLOCKED_BOX;
   iRect: TRect;
   iPoint: TPOINT;
   pSrc: PByte;
@@ -809,23 +1109,75 @@ var
 
   v: uint32;
 
+  DxbxPixelJar: RDxbxDecodedPixelContainer;
+  pPaletteColors: PD3DCOLOR;
   // Palette conversion variables (expanding D3DFMT_P8 to D3DFMT_A8R8G8B8) :
   ConvertP8ToARGB: Boolean;
   NewTexture: XTL_PIDirect3DTexture8;
   OldTexture: XTL_PIDirect3DTexture8;
   dwDataSize: DWORD;
-  pTmpTextureBuffer: PBytes;
   src_yp: uint32;
   dst_yp: uint32;
   x: uint32;
   p: Byte;
 begin
-  pTmpTextureBuffer := nil; // To prevent compiler warnings
+  if pXboxBaseTexture = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // For now, only do an initial copy :
+  MustCopyToNative := (pXboxBaseTexture.Emu.Resource = nil);
+  // TODO : Later, we want to refresh the copy if needed (perhaps if a crc check fails)
+
+  DxbxGetFormatRelatedVariables(pXboxBaseTexture, {out}DxbxPixelJar);
+
+  // To support surfaces, check if we called this with a negative surface (and correct this) :
+  if Stage < 0 then
+  begin
+    D3DUsage := -Stage;
+
+    // Check if the usage indicates a rendertarget resource :
+    if (D3DUsage and D3DUSAGE_RENDERTARGET) > 0 then
+      // If however the format doesn't allow that sort of usage :
+      if not EmuXBFormatIsRenderTarget(DxbxPixelJar.X_Format) then // TODO : Check this on PC format instead of Xbox!
+        // Fur runs through Clear with this (no RENDERTARGET on surface.parent texture) :
+        D3DUsage := D3DUsage and (not D3DUSAGE_RENDERTARGET);
+
+    // Check if the usage indicates a depth stencil resource :
+    if (D3DUsage and D3DUSAGE_DEPTHSTENCIL) > 0 then
+      // If however the format doesn't allow that sort of usage :
+      if not EmuXBFormatIsDepthBuffer(DxbxPixelJar.X_Format) then // TODO : Check this on PC format instead of Xbox!
+      begin
+        // Note : Samples like NoSortAlphaBlend use a depth stencil that's surface over a texture.
+        // In that case, the surface must be marked as a depth stencil, but the underlying texture
+        // must be created normally. This fixes NoSortAlphaBlend, ShadowBuffer and ZSprite samples
+        // (no D3DUSAGE_DEPTHSTENCIL on surface.parent texture) :
+        D3DUsage := D3DUsage and (not D3DUSAGE_DEPTHSTENCIL);
+        // PS : XDK sample ZSprite fakes a D3DUSAGE_DEPTHSTENCIL by putting D3DFMT_LIN_D24S8 in the Resource.Format!
+      end;
+
+    Stage := 0; // Just a guess - what else could we use?
+  end
+  else
+    D3DUsage := 0;
+
+  // Make sure we have a native resource :
+  Result := XTL_PIDirect3DBaseTexture8(DxbxAssureNativeResource(pXboxBaseTexture, D3DUsage));
+  if not MustCopyToNative then
+    Exit;
+
+  // Make sure we do the following texture conversion with the palette from this stage :
+  if Assigned(g_EmuD3DActivePalette[Stage]) then
+    pPaletteColors := PD3DCOLOR(DxbxGetDataFromXboxResource(g_EmuD3DActivePalette[Stage]))
+  else
+    pPaletteColors := g_pCurrentPalette; // TODO : Remove this hack, in case we come here without an active palette (should normally be nil)
 
   iRect := Classes.Rect(0, 0, 0, 0);
   iPoint := Classes.Point(0, 0);
 
-  ConvertP8ToARGB := (CacheFormat = X_D3DFMT_P8);
+  ConvertP8ToARGB := (DxbxPixelJar.X_Format = X_D3DFMT_P8);
   if ConvertP8ToARGB then
   begin
     if pPaletteColors = nil then
@@ -836,283 +1188,410 @@ begin
 
     EmuWarning('Unsupported texture format D3DFMT_P8, expanding to D3DFMT_A8R8G8B8');
 
+    // Create a replacement RGB texture instead of the temporary L8 texture :
     hRet := IDirect3DDevice_CreateTexture(g_pD3DDevice,
-      dwWidth, dwHeight, dwMipMapLevels,
-      {Usage=}0,//D3DUSAGE_RENDERTARGET,
+      DxbxPixelJar.dwWidth, DxbxPixelJar.dwHeight, DxbxPixelJar.dwMipMapLevels,
+      {Usage=}0, // Luckily, P8 cannot use the D3DUSAGE_RENDERTARGET flag!
       D3DFMT_A8R8G8B8,
       D3DPOOL_MANAGED, @NewTexture
     );
     if FAILED(hRet) then
-      DxbxKrnlCleanup('Couldn''t create P8 replacement texture!');
+      DxbxD3DError('DxbxUpdateNativePixelContainer', 'Couldn''t create P8 replacement texture!', pXboxBaseTexture, hRet);
 
-    OldTexture := pPixelContainer.Emu.Texture;
-    pPixelContainer.Emu.Texture := NewTexture;
+    OldTexture := pXboxBaseTexture.Emu.Texture;
+    pXboxBaseTexture.Emu.Texture := NewTexture;
 
     // Set new format in the resource header :
-    pPixelContainer.Format := (pPixelContainer.Format and not X_D3DFORMAT_FORMAT_MASK)
+    pXboxBaseTexture.Format := (pXboxBaseTexture.Format and not X_D3DFORMAT_FORMAT_MASK)
                            or (X_D3DFMT_A8R8G8B8 shl X_D3DFORMAT_FORMAT_SHIFT);
 
     // Set new pitch in the resource header :
-    pPixelContainer.Format := (pPixelContainer.Format and not X_D3DFORMAT_PSIZE_MASK)
-                           or (Log2(dwPitch * SizeOf(D3DCOLOR)) shl X_D3DFORMAT_PSIZE_SHIFT);
-
-    dwDataSize := dwPitch * dwHeight; // Number of P8 (byte sized) pixels
-    pTmpTextureBuffer := DxbxMalloc(dwDataSize);
+    pXboxBaseTexture.Format := (pXboxBaseTexture.Format and not X_D3DFORMAT_PSIZE_MASK)
+                           or (Log2(DxbxPixelJar.dwRowPitch * SizeOf(D3DCOLOR)) shl X_D3DFORMAT_PSIZE_SHIFT);
   end;
 
-  nrfaces := ifThen(bCubemap, 6, 1);
+  // Grow the temporary buffer when needed:
+  dwDataSize := DxbxPixelJar.dwRowPitch * DxbxPixelJar.dwHeight * DxbxPixelJar.dwDepth; // Number bytes needed for input pixels
+  if pTmpBufferSize < dwDataSize then
+  begin
+    pTmpBufferSize := dwDataSize;
+    if pTmpBuffer <> nil then
+      DxbxFree(pTmpBuffer);
+    pTmpBuffer := DxbxMalloc(dwDataSize);
+  end;
+
+  // This outer loop walks over all faces (6 for CubeMaps, just 1 for anything else) :
+  nrfaces := ifThen(DxbxPixelJar.bIsCubeMap, 6, 1);
   for face := 0 to nrfaces - 1 do
   begin
-    // as we iterate through mipmap levels, we'll adjust the source resource offset
-    dwCompressedOffset := 0;
+    dwMipWidth := DxbxPixelJar.dwWidth;
+    dwMipHeight := DxbxPixelJar.dwHeight;
+    dwMipPitch := DxbxPixelJar.dwRowPitch;
 
-    dwMipOffs := 0;
-    dwMipWidth := dwWidth;
-    dwMipHeight := dwHeight;
-    dwMipPitch := dwPitch;
-
-    // iterate through the number of mipmap levels
-    if dwMipMapLevels > 0 then // Dxbx addition, to prevent underflow
-    for level := 0 to dwMipMapLevels - 1 do
+    // This 2nd loop iterates through all mipmap levels :
+    if DxbxPixelJar.dwMipMapLevels > 0 then // Dxbx addition, to prevent underflow
+    for level := 0 to DxbxPixelJar.dwMipMapLevels - 1 do
     begin
-      // Dxbx addition : Remove old lock(s) :
-      DxbxUnlockD3DResource(pPixelContainer, level, face);
+      // Copy over data (deswizzle if necessary)
 
-      // copy over data (deswizzle if necessary)
-      if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
-        hRet := IDirect3DSurface(pPixelContainer.Emu.Surface).LockRect(LockedRect, NULL, 0)
-      else
+      hRet := DxbxLockD3DPixelContainer(pXboxBaseTexture, {out}LockedBox, level, face);
+      if (FAILED(hRet)) then
       begin
-        if (bCubemap) then
-          hRet := IDirect3DCubeTexture(pPixelContainer.Emu.CubeTexture).LockRect(D3DCUBEMAP_FACES(face), 0, LockedRect, NULL, 0)
-        else
-          hRet := IDirect3DTexture(pPixelContainer.Emu.Texture).LockRect(level, {out}LockedRect, NULL, 0);
+        DxbxD3DError('DxbxUpdateNativePixelContainer', 'Call to DxbxLockD3DPixelContainer failed!', pXboxBaseTexture, hRet, {bHalt=}False);
+        Continue;
       end;
 
-      // Dxbx addition : Mirror the behaviour in EmuUnswizzleActiveTexture :
-      if hRet <> S_OK then
-        Continue;
+      // TODO -oCXBX: potentially CRC to see if this surface was actually modified..
 
-      pSrc := PBYTE(pPixelContainer.Data);
-      pDest := LockedRect.pBits;
-      if pSrc = pDest then
-        Continue;
-
-      if ConvertP8ToARGB then // Dxbx hack : Update Data member only when converting
-        if (face = 0) and (level = 0) then
-          pPixelContainer.Data := UIntPtr(pDest);
-
-      if (IsSpecialResource(pPixelContainer.Data) and ((pPixelContainer.Data and X_D3DRESOURCE_DATA_FLAG_SURFACE) > 0)) then
+      // This inner loop walks over all slices (1 for anything but 3D textures - those
+      // use the correct amount for the current mipmap level, but never go below 1) :
+      nrslices := DxbxPixelJar.MipMapSlices[level];
+      for slice := 0 to nrslices - 1 do
       begin
-        EmuWarning('Attempt to registered to another resource''s data (eww!)');
-
-        // TODO -oCXBX: handle this horrible situation
-        if dwMipHeight > 0 then // Dxbx addition, to prevent underflow
-        for v := 0 to dwMipHeight - 1 do
+        pDest := LockedBox.pBits;
+        // Determine the Xbox data pointer and step it to the correct mipmap, face and/or slice :
+        pSrc := DxbxGetDataFromXboxResource(pXboxBaseTexture);
+        Inc(pSrc, DxbxPixelJar.MipMapOffsets[level]);
+        if DxbxPixelJar.bIsCubeMap then
+          Inc(pSrc, DxbxPixelJar.dwFacePitch * face)
+        else
         begin
-          memset(pDest, 0, dwMipWidth * dwBPP);
-
-          Inc(pDest, LockedRect.Pitch);
-          // Inc(pSrc, dwMipPitch); // Dxbx note : Unused
-        end;
-      end
-      else
-      begin
-        if (bSwizzled) or ConvertP8ToARGB then // Dxbx hack : Even convert when already unswizzled!
-        begin
-          if (DWORD(pSrc) = $80000000) then
+          if DxbxPixelJar.bIs3D then
           begin
-            // TODO -oCXBX: Fix or handle this situation..?
+            // Use the Xbox slice pitch (from the current level) to step to each slice in src :
+            Inc(pSrc, DxbxPixelJar.SlicePitches[level] * slice);
+            // Use the native SlicePitch (from the locked box) th step to eac slice in dest :
+            Inc(pDest, uint(LockedBox.SlicePitch) * slice);
+          end;
+        end;
+
+        if (DxbxPixelJar.bIsSwizzled) or ConvertP8ToARGB then // Dxbx hack : Even convert when already unswizzled!
+        begin
+          // TODO -oDxbx: This crashes on "minimario2ddemo", even though all arguments seem alright,
+          // It seems that the unpatched function IDirect3DDevice_CreateSurface2 AND's the result
+          // of MmAllocateContiguousMemoryEx with $0FFFFFFF which makes us loose the high nibble!!!
+
+          if slice = 0 then
+          begin
+            // First we need to unswizzle the texture data to a temporary buffer :
+            EmuUnswizzleRect(
+              pSrc, dwMipWidth, dwMipHeight, DxbxPixelJar.dwDepth,
+              pTmpBuffer, dwMipPitch,
+              iRect, iPoint, DxbxPixelJar.dwBPP div 8
+            );
+          end;
+
+          if ConvertP8ToARGB then
+          begin
+            Assert(DxbxPixelJar.bIsSwizzled, 'P8 not swizzled?');
+
+            // Lookup the colors of the paletted pixels in the current pallette
+            // and write the expanded color back to the texture :
+            src_yp := 0;
+            dst_yp := 0;
+            x := 0;
+//            dwDataSize := (dwMipWidth * dwMipHeight * DxbxPixelJar.dwBPP div 8);
+            dwDataSize := (dwMipPitch * dwMipHeight);
+            while dwDataSize > 0 do
+            begin
+              Dec(dwDataSize);
+
+              // Read P8 pixel :
+              p := Byte(pTmpBuffer[src_yp + x]);
+              // Read the corresponding ARGB from the palette and store it in the new texture :
+              PDWORDs(pDest)[dst_yp + x] := PDWORDs(pPaletteColors)[p];
+
+              // Step to the next pixel, check if we've done one scanline :
+              Inc(x);
+              if (x = dwMipWidth) then
+              begin
+                // Step to the start of the next scanline :
+                x := 0;
+                Inc(src_yp, dwMipPitch div SizeOf(Byte)); // src pitch is expressed in bytes
+                Inc(dst_yp, LockedBox.RowPitch div SizeOf(D3DCOLOR)); // dst pitch is expressed in D3DCOLOR's
+              end;
+            end;
           end
           else
           begin
-            if ConvertP8ToARGB then
-            begin
-              // First we need to unswizzle the texture data to a temporary buffer :
-              if bSwizzled then // Dxbx hack : Don't unswizzle twice!
-                EmuUnswizzleRect(
-                  pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, pTmpTextureBuffer,
-                  dwPitch, iRect, iPoint, dwBPP
-                )
-              else
-                memcpy(pTmpTextureBuffer, pSrc + dwMipOffs, dwMipWidth * dwMipHeight);
-
-              // Lookup the colors of the paletted pixels in the current pallette
-              // and write the expanded color back to the texture :
-              src_yp := 0;
-              dst_yp := 0;
-              x := 0;
-              dwDataSize := (dwMipWidth * dwMipHeight);
-              while dwDataSize > 0 do
-              begin
-                Dec(dwDataSize);
-
-                // Read P8 pixel :
-                p := Byte(pTmpTextureBuffer[src_yp + x]);
-                // Read the corresponding ARGB from the palette and store it in the new texture :
-                PDWORDs(pDest)[dst_yp + x] := PDWORDs(pPaletteColors)[p];
-
-                // Step to the next pixel, check if we've done one scanline :
-                Inc(x);
-                if (x = dwMipWidth) then
-                begin
-                  // Step to the start of the next scanline :
-                  x := 0;
-                  Inc(src_yp, dwMipPitch div SizeOf(Byte)); // src pitch is expressed in bytes
-                  Inc(dst_yp, LockedRect.Pitch div SizeOf(D3DCOLOR)); // dst pitch is expressed in D3DCOLOR's
-                end;
-              end;
-            end
-            else
-            begin
-              EmuUnswizzleRect(
-                pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, pDest,
-                LockedRect.Pitch, iRect, iPoint, dwBPP
-              );
-            end;
+            // Copy the unswizzled temporary data buffer back to the destination buffer :
+            DxbxPitchedCopy(
+              pDest,
+              {pSrc=}PByte(@(pTmpBuffer[DxbxPixelJar.SlicePitches[level] * slice])),
+              {DestPitch=}LockedBox.RowPitch, {SrcPitch=}dwMipPitch,
+//              {WidthInBytes=}dwMipWidth * DxbxPixelJar.dwBPP div 8, dwMipHeight);
+              {WidthInBytes=}dwMipPitch, dwMipHeight);
           end;
         end
-        else if (bCompressed) then
+        else if (DxbxPixelJar.bIsCompressed) then
         begin
           // NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
-          memcpy(pDest, pSrc + dwCompressedOffset, dwCompressedSize shr (level * 2));
-
-          Inc(dwCompressedOffset, (dwCompressedSize shr (level * 2)));
+          memcpy(pDest, pSrc, DxbxPixelJar.MipMapOffsets[1] shr (level * 2));
         end
         else
-        begin
-          if (DWORD(LockedRect.Pitch) = dwMipPitch) and (dwMipPitch = dwMipWidth * dwBPP) then
-          begin
-            // TODO -oDxbx: This crashes on "minimario2ddemo", even though all arguments seem alright,
-            // It seems that the unpatched function IDirect3DDevice_CreateSurface2 AND's the result
-            // of MmAllocateContiguousMemoryEx with $0FFFFFFF which makes us loose the high nibble!!!
-            memcpy(pDest, pSrc + dwMipOffs, dwMipPitch * dwMipHeight);
-          end
-          else
-          begin
-            if dwMipHeight > 0 then // Dxbx addition, to prevent underflow
-            for v := 0 to dwMipHeight - 1 do
-            begin
-              memcpy(pDest, pSrc + dwMipOffs, dwMipWidth * dwBPP);
+          // Unmodified copy :
+          DxbxPitchedCopy(
+            pDest, pSrc,
+            {DestPitch=}LockedBox.RowPitch, {SrcPitch=}dwMipPitch,
+//            {WidthInBytes=}dwMipWidth * DxbxPixelJar.dwBPP div 8, dwMipHeight);
+            {WidthInBytes=}dwMipPitch, dwMipHeight);
 
-              Inc(pDest, LockedRect.Pitch);
-              Inc(pSrc, dwMipPitch);
-            end;
-          end;
-        end;
+      end; // for slices
 
+      DxbxUnlockD3DResource(pXboxBaseTexture, level, face);
 
+      // Step to next mipmap level (but never go below minimum) :
+      if dwMipWidth > DxbxPixelJar.dwMinXYValue then
+      begin
+        dwMipWidth := dwMipWidth div 2;
+        dwMipPitch := dwMipPitch div 2;
       end;
 
-      DxbxUnlockD3DResource(pPixelContainer, level, face);
+      if dwMipHeight > DxbxPixelJar.dwMinXYValue then
+        dwMipHeight := dwMipHeight div 2;
+    end; // for mipmap levels
+  end; // for faces
 
-      Inc(dwMipOffs, dwMipPitch * dwMipHeight);
-
-      dwMipWidth := dwMipWidth div 2;
-      dwMipHeight := dwMipHeight div 2;
-      dwMipPitch := dwMipPitch div 2;
-    end;
-  end;
+//DxbxDumpResource(pXboxBaseTexture);
 
   if ConvertP8ToARGB then
   begin
-    // Flush unused data buffers
-    DxbxFree(pTmpTextureBuffer); // pTmpTextureBuffer := nil;
     // Destroy old texture :
-    for level := 0 to dwMipMapLevels - 1 do
+    for level := 0 to DxbxPixelJar.dwMipMapLevels - 1 do
       repeat until IDirect3DTexture(OldTexture).UnlockRect(level) <= D3D_OK;
     while IDirect3DTexture(OldTexture)._Release > 0 do ;
   end;
+end; // DxbxUpdateNativePixelContainer
+
+function DxbxUpdateNativeVertexBuffer(const StreamNumber: Integer; var Stride: UINT): XTL_PIDirect3DVertexBuffer8;
+var
+  pXboxVertexBuffer: PX_D3DVertexBuffer;
+  MustCopyToNative: Boolean;
+  pData: PBYTE;
+  pBase: PBYTE;
+  dwSize: UINT;
+  hRet: HRESULT;
+  Info: RDxbxAllocationInfo;
+begin
+  pXboxVertexBuffer := g_EmuD3DActiveStreams[StreamNumber];
+  if pXboxVertexBuffer = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // For now, always do a copy :
+  MustCopyToNative := True;
+//  MustCopyToNative := (pXboxVertexBuffer.Emu.Resource = nil);
+  // TODO : Later, we want to refresh the copy only if needed (perhaps if a crc check fails)
+  Result := XTL_PIDirect3DVertexBuffer8(DxbxAssureNativeResource(pXboxVertexBuffer));
+  if Assigned(Result) and MustCopyToNative then
+  begin
+    pData := nil;
+    hRet := IDirect3DVertexBuffer(Result).Lock(0, 0, {out}TLockData(pData), 0);
+    if FAILED(hRet) then
+      DxbxD3DError('DxbxUpdateNativeVertexBuffer', 'VertexBuffer Lock failed!', pXboxVertexBuffer, hRet);
+
+    // Get the allocation information for this address :
+    Info := DxbxGetAllocationInfo(pXboxVertexBuffer.Data);
+    // Calculate the native address for this :
+    pBase := Pointer(UIntPtr(Info.BaseAddress) + Info.Offset);
+    // Calcalute how big this buffer can be maximally :
+    dwSize := Info.AllocatedSize - Info.Offset;
+    // Copy that :
+    memcpy(pData, pBase, dwSize);
+    // TODO : Instead creating a copy, we should probably do the vertex patching right here!
+
+    IDirect3DVertexBuffer(Result).Unlock();
+
+    g_EmuD3DActiveStreamSizes[StreamNumber] := dwSize div Stride;
+  end;
+
 end;
 
-//var g_EmuD3DConvertedTexture: array [0..X_D3DTS_STAGECOUNT-1] of PX_D3DBaseTexture; // = {0,0,0,0};
-
-procedure XTL_EmuUpdateActiveTexture(); {NOPATCH}
-// Branch:shogun  Revision:162  Translator:Shadow_Tj  Done:100
-var
-  Stage: int;
-  pPixelContainer: PX_D3DPixelContainer;
-  pPaletteColors: PD3DCOLOR;
-  PCFormat: D3DFORMAT;
-  X_Format: X_D3DFORMAT;
-  dwWidth: DWORD;
-  dwHeight: DWORD;
-  dwBPP: DWORD;
-  dwDepth: DWORD;
-  dwPitch: DWORD;
-  dwMipMapLevels: DWORD;
-  bSwizzled: BOOL_;
-  bCompressed: BOOL_;
-  dwCompressedSize: DWORD;
-  bCubeMap: BOOL_;
-//  LockedRect: D3DLOCKED_RECT;
-//  pSrc, pDest: PByte;
-begin
-  for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
-  begin
-    pPixelContainer := g_EmuD3DActiveTexture[Stage];
-    if (pPixelContainer = NULL) then
-      Continue;
-
-    X_Format := X_D3DFORMAT((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
-    if X_Format = X_D3DFMT_P8 then // Dxbx note : For now, do only P8 conversions (later on others can be handled too)
-    if (IDirect3DResource(pPixelContainer.Emu.Resource).GetType() = D3DRTYPE_TEXTURE) then
-    begin
-      DxbxGetFormatRelatedVariables(pPixelContainer, X_Format,
-        {var}dwWidth, {var}dwHeight, {var}dwBPP, {var}dwDepth, {var}dwPitch, {var}dwMipMapLevels,
-        {var}bSwizzled, {var}bCompressed, {var}dwCompressedSize, {var}bCubeMap);
-
-      // Dxbx addition : Dynamic texture creation - untested & unfinished!
-      // TODO's : Support render target surfaces, check device caps, generic format data conversion, ect
-      if pPixelContainer.Emu.Lock = 0 then
-      begin
-        PCFormat := DxbxXB2PC_D3DFormat(X_Format, D3DRTYPE_TEXTURE, nil);
-//        if bCubeMap then
-//          IDirect3DDevice_CreateCubeTexture
-//          (g_pD3DDevice,
-//            {EdgeLength=}dwWidth,
-//            dwMipMapLevels
-//            {Usage=}0,
-//            PCFormat,
-//            {Pool=}D3DPOOL_DEFAULT,
-//            @(pPixelContainer.Emu.CubeTexture)
-//          );
-//        else
-          IDirect3DDevice_CreateTexture
-          (g_pD3DDevice,
-            dwWidth, dwHeight, dwDepth,
-            {Usage=}0,
-            PCFormat,
-            {Pool=}D3DPOOL_DEFAULT,
-            @(pPixelContainer.Emu.Texture)
-          );
-//          IDirect3DTexture(pPixelContainer.Emu.Texture).LockRect(0, {out}LockedRect, NULL, 0);
-//          pSrc := PBYTE(DxbxGetDataFromXboxResource(pPixelContainer));
-//          pDest := LockedRect.pBits;
-//          memcpy(pDest, pSrc, dwWidth * dwHeight * dwBPP);
-//          IDirect3DTexture(pPixelContainer.Emu.Texture).UnlockRect(0);
-      end
-      else
-        bSwizzled := False;
-
-      // Make sure we do the following texture conversion with the palette from this stage :
-      if Assigned(g_EmuD3DActivePalette[Stage]) then
-        pPaletteColors := PD3DCOLOR(DxbxGetDataFromXboxResource(g_EmuD3DActivePalette[Stage]))
-      else
-        pPaletteColors := g_pCurrentPalette; // Hack, in case we come here without an active texture (should normally be nil)
-
-      DxbxUpdatePixelContainer(pPixelContainer, pPaletteColors, X_D3DCOMMON_TYPE_TEXTURE,
-        dwWidth, dwHeight, dwBPP, dwDepth, dwPitch, dwMipMapLevels,
-        bSwizzled, bCompressed, dwCompressedSize, bCubeMap, {CacheFormat=}X_Format);
-
-      DxbxUnlockD3DResource(pPixelContainer); // Dxbx addition
-      g_pD3DDevice.SetTexture(Stage, IDirect3DTexture(pPixelContainer.Emu.Texture));
-    end;
-
+type
+  PConvertedIndexBuffer = ^RConvertedIndexBuffer;
+  RConvertedIndexBuffer = record
+    Next: PConvertedIndexBuffer;
+    IndexData: PWORD;
+    IndexEnd: PWORD;
+    pPCIndexBuffer: XTL_PIDirect3DIndexBuffer8;
   end;
-end; // XTL_EmuUpdateActiveTexture
 
-function RecompilePixelShader(pPSDef: PX_D3DPIXELSHADERDEF): PSH_RECOMPILED_SHADER;
+var
+  ConvertedIndexBuffers_Head: PConvertedIndexBuffer = nil;
+
+// Remove all native index buffers that overlap the given memory address.
+procedure DxbxRemoveIndexBuffer(Data: PWORD);
+
+  function _Remove(Curr: PConvertedIndexBuffer): PConvertedIndexBuffer;
+  begin
+    Result := Curr.Next;
+    DbgPrintf('DxbxRemoveIndexBuffer: Removing buffer for 0x%0.8x-0x%0.8x', [Curr.IndexData, Curr.IndexEnd]);
+    IInterface(Curr.pPCIndexBuffer)._Release();
+    DxbxFree(Curr);
+  end;
+
+var
+  Prev: PConvertedIndexBuffer;
+  Curr: PConvertedIndexBuffer;
+begin
+  // Loop over all cached index buffers :
+  Prev := nil;
+  Curr := ConvertedIndexBuffers_Head;
+  while Assigned(Curr) do
+  begin
+    // See if it overlaps the given address :
+    if (Curr.IndexData <= Data) and (Data < Curr.IndexEnd) then
+    begin
+      Curr := _Remove(Curr); // Curr is next or nil after this
+      if Assigned(Prev) then
+        Prev.Next := Curr // Skip removed entry
+      else
+        ConvertedIndexBuffers_Head := Curr; // Start after removed entry
+    end
+    else
+    begin
+      // Don't remove, step to next
+      Prev := Curr;
+      Curr := Curr.Next;
+    end;
+  end;
+end;
+
+procedure DxbxUpdateActiveIndexBuffer(pwIndexData: PWORD; IndexCount: UINT; out StartIndex: UINT);
+var
+  pwInitialStart: PWORD;
+  pwIndexEnd: PWORD;
+  MustCopy: Boolean;
+  ConvertedIndexBuffer: PConvertedIndexBuffer;
+  pData: PBYTE;
+  hRet: HRESULT;
+begin
+  pwInitialStart := pwIndexData; // Remember this to calculate StartIndex later!
+  pwIndexEnd := pwIndexData + IndexCount;
+  MustCopy := False;
+
+  // Note : We assume that all outdated index buffer(s) are already removed,
+  // so that we'll never merge with buffers already destroyed on the Xbox side!
+
+  // Now, see if we already have a (partial) index buffer for this range :
+  ConvertedIndexBuffer := ConvertedIndexBuffers_Head;
+  while Assigned(ConvertedIndexBuffer) do
+  begin
+    // Check if the given index range overlaps with this buffer :
+    if (pwIndexData > ConvertedIndexBuffer.IndexEnd) then
+      // new buffer starts beyond current (so no overlap)
+    else if (pwIndexEnd < ConvertedIndexBuffer.IndexData) then
+      // new buffer end before current (so no overlap)
+    else
+      // The new and current buffer overlap - we found a merge candidate!
+      Break;
+
+    ConvertedIndexBuffer := ConvertedIndexBuffer.Next;
+  end;
+
+  // Did we find a merge candidate?
+  if ConvertedIndexBuffer = nil then
+  begin
+    DbgPrintf('DxbxUpdateActiveIndexBuffer: Creating new buffer for 0x%0.8x-0x%0.8x (%d indices)', [pwIndexData, pwIndexEnd, pwIndexEnd-pwIndexData]);
+
+    // No merge, so add a new converted index buffer to the chain :
+    ConvertedIndexBuffer := DxbxCalloc(SizeOf(RConvertedIndexBuffer), 1);
+    ConvertedIndexBuffer.Next := ConvertedIndexBuffers_Head;
+    ConvertedIndexBuffers_Head := ConvertedIndexBuffer;
+
+    MustCopy := True;
+  end
+  else
+  begin
+    // We found an existing index buffer, see if we must extend it's bounds :
+
+    if (pwIndexData < ConvertedIndexBuffer.IndexData) then
+      MustCopy := True // The merge has a new start pointer
+    else
+      pwIndexData := ConvertedIndexBuffer.IndexData; // The merge keeps the old start pointer
+
+    if (pwIndexEnd > ConvertedIndexBuffer.IndexEnd) then
+      MustCopy := True // The merge has a new end pointer
+    else
+      pwIndexEnd := ConvertedIndexBuffer.IndexEnd; // The merge keeps the old end pointer
+
+    // TODO : What if this grow causes two (or more) existing ranges to overlap - we should merge them all...
+    // TOOD : What if the index buffer exceeds D3DCaps.MaxVertexIndex ?
+
+    // TODO : If not MustCopy, Add a CRC check on the contents (forcing MustCopy) ?
+
+    if MustCopy then
+    begin
+      DbgPrintf('DxbxUpdateActiveIndexBuffer: Enlarging buffer to 0x%0.8x-0x%0.8x (%d indices)', [pwIndexData, pwIndexEnd, pwIndexEnd-pwIndexData]);
+
+      // Remove previous native buffer (this might leave one stale reference,
+      // but this one will be released automatically in the next SetIndices call) :
+      IDirect3DIndexBuffer(ConvertedIndexBuffer.pPCIndexBuffer)._Release;
+      ConvertedIndexBuffer.pPCIndexBuffer := nil;
+    end;
+  end;
+
+  if MustCopy then
+  begin
+    // Remember the (new) buffer bounds :
+    ConvertedIndexBuffer.IndexData := pwIndexData;
+    ConvertedIndexBuffer.IndexEnd := pwIndexEnd;
+    IndexCount := pwIndexEnd - pwIndexData; // Calculate the number of WORD's between start & end
+
+    // Create a new native index buffer of the above determined size :
+    hRet := IDirect3DDevice_CreateIndexBuffer(g_pD3DDevice,
+      IndexCount * SizeOf(Word),
+      D3DUSAGE_WRITEONLY,
+      D3DFMT_INDEX16,
+      D3DPOOL_MANAGED,
+      @ConvertedIndexBuffer.pPCIndexBuffer);
+    if FAILED(hRet) then
+      DxbxD3DError('DxbxUpdateActiveIndexBuffer', 'IndexBuffer Create Failed!', nil, hRet);
+
+    // Copy the xbox indexes into this native buffer :
+    pData := nil;
+    IDirect3DIndexBuffer(ConvertedIndexBuffer.pPCIndexBuffer).Lock(0, 0, {out}TLockData(pData), 0);
+    if (pData = nil) then
+      DxbxD3DError('DxbxUpdateActiveIndexBuffer', 'Could not lock index buffer!');
+
+    DbgPrintf('DxbxUpdateActiveIndexBuffer: Copying %d indices (D3DFMT_INDEX16)', [IndexCount]);
+    memcpy({dest}pData, {src}pwIndexData, IndexCount * SizeOf(Word)); // TODO : Why does this crash at the 4th copy in Cartoon sample?
+
+    IDirect3DIndexBuffer(ConvertedIndexBuffer.pPCIndexBuffer).Unlock();
+  end;
+
+  // Activate the new native index buffer :
+  hRet := g_pD3DDevice.SetIndices(IDirect3DIndexBuffer(ConvertedIndexBuffer.pPCIndexBuffer){$IFNDEF DXBX_USE_D3D9}, {BaseVertexIndex=}0{$ENDIF});
+  if (FAILED(hRet)) then
+    DxbxKrnlCleanup('DxbxUpdateActiveIndexBuffer : SetIndices Failed!'#13#10 + DxbxD3DErrorString(hRet));
+
+  // Make sure the caller knows what StartIndex it has to use to point to the indicated index start pointer :
+  {out}StartIndex := pwInitialStart - ConvertedIndexBuffer.IndexData;
+end; // DxbxUpdateActiveIndexBuffer
+
+function DxbxUpdateNativeSurface(const pXboxSurface: PX_D3DSurface; D3DUsage: DWORD): XTL_PIDirect3DSurface8;
+var
+  MustCopyToNative: Boolean;
+begin
+  if pXboxSurface = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // For now, only do an initial copy :
+  MustCopyToNative := (pXboxSurface.Emu.Resource = nil);
+  // TODO : Later, we want to refresh the copy if needed (perhaps if a crc check fails)
+  Result := XTL_PIDirect3DSurface8(DxbxAssureNativeResource(pXboxSurface, D3DUsage));
+  if MustCopyToNative then
+  begin
+    // TODO : How to copy?
+  end;
+end;
+
+function DxbxRecompilePixelShader(pPSDef: PX_D3DPIXELSHADERDEF): PSH_RECOMPILED_SHADER;
 const
   szDiffusePixelShader: P_char =
     'ps.1.0'#13#10 +
@@ -1198,11 +1677,12 @@ begin
     ID3DXBuffer(pErrors)._Release();
     pErrors := nil;
   end;
-end;
+end; // DxbxRecompilePixelShader
 
 var RecompiledShaders_Head: PPSH_RECOMPILED_SHADER = nil;
 
-function XTL_EmuUpdateActivePixelShader(): HRESULT; {NOPATCH}
+function DxbxUpdateActivePixelShader(): HRESULT; {NOPATCH}
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   pPSDef: PX_D3DPIXELSHADERDEF;
   RecompiledPixelShader: PPSH_RECOMPILED_SHADER;
@@ -1244,7 +1724,7 @@ begin
     begin
       // Recompile this pixel shader :
       New(RecompiledPixelShader);
-      RecompiledPixelShader^ := RecompilePixelShader(pPSDef);
+      RecompiledPixelShader^ := DxbxRecompilePixelShader(pPSDef);
       // Add this shader to the chain :
       RecompiledPixelShader.Next := RecompiledShaders_Head;
       RecompiledShaders_Head := RecompiledPixelShader;
@@ -1253,7 +1733,12 @@ begin
     // Switch to the converted pixel shader (if it's any different from our currently active
     // pixel shader, to avoid many unnecessary state changes on the local side).
     ConvertedPixelShaderHandle := RecompiledPixelShader.ConvertedHandle;
+
+{$IFDEF DXBX_USE_D3D9}
+    g_pD3DDevice.GetPixelShader({out}PIDirect3DPixelShader9(@CurrentPixelShader));
+{$ELSE}
     g_pD3DDevice.GetPixelShader({out}CurrentPixelShader);
+{$ENDIF}
     if CurrentPixelShader <> ConvertedPixelShaderHandle then
       g_pD3DDevice.SetPixelShader({$IFDEF DXBX_USE_D3D9}IDirect3DPixelShader9{$ENDIF}(ConvertedPixelShaderHandle));
 
@@ -1262,6 +1747,7 @@ begin
     // needed for the final combiner constants at least)!
 
 (* This must be done once we somehow forward the vertex-shader oFog output to the pixel shader FOG input register :
+   We could use the unused oT4.x to output fog from the vertex shader, and read it with 'texcoord t4' in pixel shader!
     // Disable native fog if pixel shader is said to handle it :
     if (RecompiledPixelShader.PSDef.PSFinalCombinerInputsABCD > 0)
     or (RecompiledPixelShader.PSDef.PSFinalCombinerInputsEFG > 0) then
@@ -1325,7 +1811,7 @@ begin
 
     // fixed pipeline
     (* Cxbx has this disabled :
-    for v:=0 to 4-1 do
+    for v:=0 to X_D3DTS_STAGECOUNT-1 do
     begin
       IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLOROP,   D3DTOP_MODULATE);
       IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLORARG1, D3DTA_TEXTURE);
@@ -1343,28 +1829,140 @@ begin
   end;
 end;
 
-procedure XTL_EmuUpdateActiveVertexShader(); {NOPATCH}
+procedure DxbxUpdateActiveVertexShader(); {NOPATCH}
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   // TODO : Move XTL_EmuD3DDevice_CreateVertexShader and related code over to here, so the patches can go
 end;
 
-function DxbxGetDataFromXboxResource(pThis: PX_D3DResource): Pointer;
+procedure DxbxUpdateActiveTextures(); {NOPATCH}
+// Branch:Dxbx  Translator:Patrick  Done:100
 var
-  Ptr: UIntPtr;
+  Stage: int;
+  pPCTexture: XTL_PIDirect3DBaseTexture8;
+  hRet: HRESULT;
 begin
-  Ptr := pThis.Data;
-  if (Ptr and $80000000) > 0 then
-    Result := Pointer(Ptr and $7FFFFFFF)
+  for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
+  begin
+    // Create textures dynamically :
+    pPCTexture := DxbxUpdateNativePixelContainer(g_EmuD3DActiveTexture[Stage], Stage);
+    hRet := g_pD3DDevice.SetTexture(Stage, IDirect3DTexture(pPCTexture));
+    if FAILED(hRet) then
+      DxbxD3DError('DxbxUpdateActiveTextures', 'SetTexture failed!', g_EmuD3DActiveTexture[Stage], hRet);
+  end; // for Stage
+end; // DxbxUpdateActiveTextures
+
+procedure DxbxTransferTextureStage(ReadStage, WriteStage: int; StateFrom: int = X_D3DTSS_DEFERRED_FIRST; StateTo: int = X_D3DTSS_DEFERRED_LAST);
+var
+  State: int;
+begin
+  for State := StateFrom to StateTo do
+    DxbxTransferTextureStageState(ReadStage, WriteStage, State);
+end;
+
+procedure DxbxUpdateDeferredStates(); {NOPATCH}
+// Branch:shogun  Revision:163  Translator:PatrickvL  Done:100
+var
+  State: int;
+  pPCTexture: XTL_PIDirect3DBaseTexture8;
+begin
+  // Generic transfer of all Xbox deferred render states to PC :
+  for State := X_D3DRS_DEFERRED_FIRST to X_D3DRS_DEFERRED_LAST do
+    DxbxTransferRenderState(X_D3DRENDERSTATETYPE(State));
+
+  TransferAll := False; // TODO : When do we need to reset this to True?
+
+  // Certain D3DTS values need to be checked on each Draw[Indexed]^Vertices
+  if (XTL_EmuD3DDeferredTextureState = nil) then
+    Exit;
+
+  // if point sprites are enabled, copy stage 3 over to 0
+  if (XTL_EmuMappedD3DRenderState[X_D3DRS_POINTSPRITEENABLE]^ = DWord(BOOL_TRUE)) then // Dxbx note : DWord cast to prevent warning
+  begin
+    // set the point sprites texture
+    g_pD3DDevice.GetTexture(3, PIDirect3DBaseTexture(@pPCTexture));
+    g_pD3DDevice.SetTexture(0, IDirect3DBaseTexture(pPCTexture));
+    // TODO -oDXBX: Should we clear the pPCTexture interface (and how)?
+
+    // disable all other stages
+    IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 1, X_D3DTSS_COLOROP, D3DTOP_DISABLE);
+    IDirect3DDevice_SetTextureStageState(g_pD3DDevice, 1, X_D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+
+    // Copy over stage 3 to 0 (ignoring stage 3):
+    DxbxTransferTextureStage(3, 0, X_D3DTSS_FIRST, X_D3DTSS_LAST);
+  end
   else
-    Result := Pointer(Ptr);
+  begin
+    // Copy stage 0 and 3 as-is :
+    DxbxTransferTextureStage(0, 0);
+    DxbxTransferTextureStage(3, 3);
+  end;
+
+  // Handle stage 1 and 2 too :
+  DxbxTransferTextureStage(1, 1);
+  DxbxTransferTextureStage(2, 2);
+
+  // Dxbx note : If we don't transfer the stages in this order, many XDK samples
+  // either don't show the controller image in their help screen, or (like in
+  // the 'Tiling' and 'BeginPush' XDK samples) colors & textures are wrong!
+
+end; // DxbxUpdateDeferredStates
+
+procedure DxbxUpdateActiveVertexBufferStreams(); {NOPATCH}
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  StreamNumber: Integer;
+  Stride: UINT;
+  pPCVertexBuffer: XTL_PIDirect3DVertexBuffer8;
+  hRet: HRESULT;
+begin
+  for StreamNumber := 0 to MAX_NBR_STREAMS - 1 do
+  begin
+    Stride := g_EmuD3DActiveStreamStrides[StreamNumber];
+    pPCVertexBuffer := DxbxUpdateNativeVertexBuffer(StreamNumber, {var}Stride);
+    hRet := g_pD3DDevice.SetStreamSource(StreamNumber, IDirect3DVertexBuffer(pPCVertexBuffer), {$IFDEF DXBX_USE_D3D9}{OffsetInBytes=}0, {$ENDIF}Stride);
+    if FAILED(hRet) then
+      DxbxD3DError('DxbxUpdateActiveVertexBufferStreams', 'SetStreamSource failed!', g_EmuD3DActiveStreams[StreamNumber], hRet);
+  end; // for Streams
+end; // DxbxUpdateActiveVertexBufferStreams
+
+procedure DxbxUpdateActiveRenderTarget(); {NOPATCH}
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  pPCRenderTarget: XTL_PIDirect3DSurface8;
+  pPCDepthStencil: XTL_PIDirect3DSurface8;
+  hRet: HRESULT;
+begin
+  // TODO : Should we use the defaults when one of these is nil?
+  pPCRenderTarget := DxbxUpdateNativeSurface(g_EmuD3DActiveRenderTarget, D3DUSAGE_RENDERTARGET);
+  pPCDepthStencil := DxbxUpdateNativeSurface(g_EmuD3DActiveDepthStencil, D3DUSAGE_DEPTHSTENCIL);
+
+{$IFDEF DXBX_USE_D3D9}
+  hRet := g_pD3DDevice.SetRenderTarget({RenderTargetIndex=}0, IDirect3DSurface(pPCRenderTarget));
+  g_pD3DDevice.SetDepthStencilSurface(IDirect3DSurface9(pPCDepthStencil));
+{$ELSE}
+  hRet := g_pD3DDevice.SetRenderTarget(IDirect3DSurface(pPCRenderTarget), IDirect3DSurface(pPCDepthStencil));
+  // This tries to fix VolumeFog on ATI :
+  if FAILED(hRet) then
+  begin
+    // TODO : Maybe some info : http://forums.create.msdn.com/forums/t/2124.aspx
+    EmuWarning('SetRenderTarget failed! Trying ATI fix'#13#10 + DxbxD3DErrorString(hRet));
+    hRet := g_pD3DDevice.SetRenderTarget(IDirect3DSurface(pPCRenderTarget), nil);
+  end;
+{$ENDIF}
+  if FAILED(hRet) then
+    EmuWarning('SetRenderTarget failed!'#13#10 + DxbxD3DErrorString(hRet));
 end;
 
 procedure DxbxUpdateNativeD3DResources(); {NOPATCH}
 begin
-  XTL_EmuUpdateDeferredStates();
-  XTL_EmuUpdateActivePixelShader();
-  XTL_EmuUpdateActiveVertexShader();
-  XTL_EmuUpdateActiveTexture();
+  DxbxUpdateActiveVertexShader();
+  DxbxUpdateActiveTextures();
+  DxbxUpdateActivePixelShader();
+  DxbxUpdateDeferredStates(); // BeginPush sample shows us that this must come *after* texture update!
+  DxbxUpdateActiveVertexBufferStreams();
+  DxbxUpdateActiveRenderTarget();
 end;
 
 end.
+

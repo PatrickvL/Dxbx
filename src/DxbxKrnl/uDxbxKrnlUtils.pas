@@ -65,6 +65,7 @@ function ShareAccessToString(ShareAccess: ULONG): string;
 function NTStatusToString(aStatus: NTSTATUS): string;
 function FileInformationClassToString(FileInformationClass: FILE_INFORMATION_CLASS): string;
 function FsInformationClassToString(FsInformationClass: FS_INFORMATION_CLASS): string;
+function AllocationTypeToString(AllocationType: DWORD): string;
 
 var
   // ! thread local storage
@@ -75,6 +76,7 @@ var
   DxbxKrnl_XbeHeader: PXBEIMAGE_HEADER; // TODO -oDxbx : How about using g_XbeHeader instead?
   // parent window handle
   DxbxKrnl_hEmuParent: HWND;
+  DxbxKrnl_XapiInitProcessExecuted: Boolean = False;
 
   // thread handles
   g_hThreads: array [0..MAXIMUM_XBOX_THREADS - 1] of Handle;
@@ -1186,6 +1188,42 @@ begin
   else
     Result := '';
   end;
+end;
+
+function AllocationTypeToString(AllocationType: DWORD): string;
+begin
+  Result := '';
+  AppendFlagStr({var}Result, AllocationType, PAGE_NOACCESS, 'PAGE_NOACCESS');
+  AppendFlagStr({var}Result, AllocationType, PAGE_READONLY, 'PAGE_READONLY');
+  AppendFlagStr({var}Result, AllocationType, PAGE_READWRITE, 'PAGE_READWRITE');
+  AppendFlagStr({var}Result, AllocationType, PAGE_WRITECOPY, 'PAGE_WRITECOPY');
+  AppendFlagStr({var}Result, AllocationType, PAGE_EXECUTE, 'PAGE_EXECUTE');
+  AppendFlagStr({var}Result, AllocationType, PAGE_EXECUTE_READ, 'PAGE_EXECUTE_READ');
+  AppendFlagStr({var}Result, AllocationType, PAGE_EXECUTE_READWRITE, 'PAGE_EXECUTE_READWRITE');
+  AppendFlagStr({var}Result, AllocationType, PAGE_EXECUTE_WRITECOPY, 'PAGE_EXECUTE_WRITECOPY');
+  AppendFlagStr({var}Result, AllocationType, PAGE_GUARD, 'PAGE_GUARD');
+  AppendFlagStr({var}Result, AllocationType, PAGE_NOCACHE, 'PAGE_NOCACHE');
+  AppendFlagStr({var}Result, AllocationType, PAGE_WRITECOMBINE, 'PAGE_WRITECOMBINE');
+  AppendFlagStr({var}Result, AllocationType, MEM_COMMIT, 'MEM_COMMIT');
+  AppendFlagStr({var}Result, AllocationType, MEM_RESERVE, 'MEM_RESERVE');
+  AppendFlagStr({var}Result, AllocationType, MEM_DECOMMIT, 'MEM_DECOMMIT');
+  AppendFlagStr({var}Result, AllocationType, MEM_RELEASE, 'MEM_RELEASE');
+  AppendFlagStr({var}Result, AllocationType, MEM_FREE, 'MEM_FREE');
+  AppendFlagStr({var}Result, AllocationType, MEM_PRIVATE, 'MEM_PRIVATE');
+  AppendFlagStr({var}Result, AllocationType, MEM_MAPPED, 'MEM_MAPPED');
+  AppendFlagStr({var}Result, AllocationType, MEM_RESET, 'MEM_RESET');
+  AppendFlagStr({var}Result, AllocationType, MEM_TOP_DOWN, 'MEM_TOP_DOWN');
+  AppendFlagStr({var}Result, AllocationType, MEM_WRITE_WATCH, 'MEM_WRITE_WATCH');
+  AppendFlagStr({var}Result, AllocationType, MEM_PHYSICAL, 'MEM_PHYSICAL');
+  AppendFlagStr({var}Result, AllocationType, SEC_FILE, 'SEC_FILE');
+  AppendFlagStr({var}Result, AllocationType, SEC_IMAGE, 'SEC_IMAGE');
+  AppendFlagStr({var}Result, AllocationType, SEC_RESERVE, 'SEC_RESERVE');
+  AppendFlagStr({var}Result, AllocationType, SEC_COMMIT, 'SEC_COMMIT');
+  AppendFlagStr({var}Result, AllocationType, SEC_NOCACHE, 'SEC_NOCACHE');
+  AppendFlagStr({var}Result, AllocationType, MEM_LARGE_PAGES, 'MEM_LARGE_PAGES');
+  AppendFlagStr({var}Result, AllocationType, MEM_4MB_PAGES, 'MEM_4MB_PAGES');
+//  MEM_IMAGE              = SEC_IMAGE;
+//  WRITE_WATCH_FLAG_RESET = $01;
 end;
 
 end.

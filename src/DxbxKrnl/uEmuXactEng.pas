@@ -126,7 +126,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('XTL_EmuIXACTEngineCreate').
+    LogBegin('IXACTEngineCreate').
       _(pParams, 'pParams').
       _(ppEngine, 'ppEngine').
     LogEnd();
@@ -279,7 +279,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('XTL_EmuIXACTEngine_CreateSoundSource').
+    LogBegin('IXACTEngine_CreateSoundSource').
       _(pThis, 'pThis').
       _(dwFlags, 'dwFlags').
       _(ppSoundSource, 'ppSoundSource').
@@ -592,7 +592,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('XTL_EmuIXACTEngine_GetNotification').
+    LogBegin('IXACTEngine_GetNotification').
       _(pThis, 'pThis').
       _(pNotificationDesc, 'pNotificationDesc').
       _(pNotification, 'pNotification').

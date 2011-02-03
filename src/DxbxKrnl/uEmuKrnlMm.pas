@@ -19,8 +19,6 @@ unit uEmuKrnlMm;
 
 {$INCLUDE Dxbx.inc}
 
-{$DEFINE _MM_CONTIGUOUS_ALTERNATE}
-
 interface
 
 uses
@@ -28,10 +26,10 @@ uses
   Windows,
   SysUtils,
   // Jedi Win32API
-  JwaWinType,
   JwaWinBase,
-  JwaWinNT,
+  JwaWinType,
   JwaNative,
+  JwaWinNT,
   JwaNTStatus,
   // OpenXDK
   XboxKrnl,
@@ -39,16 +37,29 @@ uses
   uConsts,
   uTypes,
   uLog,
+  uDxbxUtils,
   uResourceTracker,
   uDxbxKrnlUtils,
+  uEmu,
   uEmuAlloc,
   uEmuFS,
-  uEmu,
-  uEmuKrnl,
-  uDxbxKrnl;
+  uEmuKrnl;
 
 var {102}xboxkrnl_MmGlobalData: array [0..8-1] of PVOID = (nil, nil, nil, nil, nil, nil, nil, nil);
 // Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
+
+type
+  RDxbxAllocationInfo = record
+    PageNr: uint;
+    BaseAddress: PVOID;
+    Offset: uint;
+    AllocatedSize: ULONG;
+  end;
+
+function DxbxGetAllocationInfo(const XboxData: UIntPtr): RDxbxAllocationInfo;
+function DxbxGetNativeContiguousMemoryAddress(const XboxData: UIntPtr): Pointer;
+// check the allocation size of a given virtual address
+function EmuCheckAllocationSize(pBase: PVOID; largeBound: _bool): int;
 
 function xboxkrnl_MmAllocateContiguousMemory(
   NumberOfBytes: ULONG
@@ -136,6 +147,91 @@ implementation
 
 const lfUnit = lfCxbx or lfKernel or lfMemory;
 
+const
+  X_NR_PAGES = XBOX_MEMORY_SIZE div PAGE_SIZE; // NrPages = 64 MB / 4 Kb (PageSize) = 16384 pages
+  X_PAGES_MASK = X_NR_PAGES - 1;
+
+var
+  MmAllocatedSize: array [0..X_NR_PAGES-1] of ULONG;
+  MmAllocatedBase: array [0..X_NR_PAGES-1] of PVOID;
+
+function DxbxGetPageNr(const XboxData: UIntPtr): uint;
+begin
+  Result := (XboxData shr PAGE_SHIFT) and X_PAGES_MASK;
+end;
+
+function DxbxGetAllocationInfo(const XboxData: UIntPtr): RDxbxAllocationInfo;
+var
+  PageNr: uint;
+  BaseAddress: PVOID;
+begin
+  // Calculate the page of this address and look up the actual base address :
+  PageNr := DxbxGetPageNr(XboxData);
+  BaseAddress := MmAllocatedBase[PageNr];
+
+  // Calculate if the given address is an offset into the real allocation :
+  Result.Offset := XboxData - UIntPtr(BaseAddress);
+  Result.BaseAddress := BaseAddress;
+
+  // See if we need to adjust the real page number :
+  if Result.Offset > 0 then
+    PageNr := DxbxGetPageNr(UIntPtr(BaseAddress));
+
+  Result.PageNr := PageNr;
+  // Get the number of bytes that where allocated :
+  Result.AllocatedSize := MmAllocatedSize[PageNr];
+end;
+
+function DxbxGetNativeContiguousMemoryAddress(const XboxData: UIntPtr): Pointer;
+var
+  Info: RDxbxAllocationInfo;
+begin
+  // Get the allocation information for this address :
+  Info := DxbxGetAllocationInfo(XboxData);
+  // Return the native address for this
+  Result := Pointer(UIntPtr(Info.BaseAddress) + Info.Offset);
+end;
+
+// check how many bytes were allocated for a structure
+function EmuCheckAllocationSize(pBase: PVOID; largeBound: _bool): Integer;
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
+var
+  Info: RDxbxAllocationInfo;
+//  MemoryBasicInfo: MEMORY_BASIC_INFORMATION;
+//  dwRet: DWORD;
+begin
+  Info := DxbxGetAllocationInfo(UIntPtr(pBase));
+  Result := Info.AllocatedSize - Info.Offset;
+(*
+{$IFDEF _DEBUG_ALLOC}
+  dwRet := DxbxVirtualQueryDebug(pBase, MemoryBasicInfo, SizeOf(MemoryBasicInfo));
+  if (dwRet = -1) then
+{$ENDIF}
+    dwRet := VirtualQuery(pBase, {var}MemoryBasicInfo, SizeOf(MemoryBasicInfo));
+
+  if dwRet = 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  if MemoryBasicInfo.State <> MEM_COMMIT then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  // this is a hack in order to determine when pointers come from a large write-combined database
+  if largeBound and (MemoryBasicInfo.RegionSize > (5 * 1024 * 1024)) then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  Result := Integer(MemoryBasicInfo.RegionSize) - (IntPtr(pBase) - IntPtr(MemoryBasicInfo.BaseAddress));
+*)
+end;
+
 // MmAllocateContiguousMemory:
 // Allocates a range of physically contiguous, cache-aligned memory from the
 // non-paged pool (= main pool on XBOX).
@@ -146,46 +242,22 @@ function xboxkrnl_MmAllocateContiguousMemory(
   NumberOfBytes: ULONG
   ): PVOID; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  pRet: PVOID;
-{$IFNDEF _MM_CONTIGUOUS_ALTERNATE}
-  dwRet: DWORD;
-{$ENDIF}
 begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    LogBegin('EmuKrnl : MmAllocateContiguousMemory').
+    LogBegin('EmuKrnl : MmAllocateContiguousMemory >').
       _(NumberOfBytes, 'NumberOfBytes').
     LogEnd();
 
-{$IFDEF _MM_CONTIGUOUS_ALTERNATE}
-  pRet := VirtualAlloc(NULL, NumberOfBytes, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-{$ELSE}
-  //
-  // Cxbx NOTE: Kludgey (but necessary) solution:
-  //
-  // Since this memory must be aligned on a page boundary, we must allocate an extra page
-  // so that we can return a valid page aligned pointer
-  //
-
-  pRet := DxbxMalloc(NumberOfBytes + PAGE_SIZE);
-
-  // align to page boundary
-  begin
-    dwRet := DWORD(pRet);
-    Inc(dwRet, PAGE_SIZE - (dwRet mod PAGE_SIZE));
-    g_AlignCache.insert({uiKey=}dwRet, {pResource=}pRet);
-    pRet := PVOID(dwRet);
-  end;
-{$ENDIF}
-
-  if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : MmAllocateContiguous returned 0x%.08X', [pRet]);
-
   EmuSwapFS(fsXbox);
-  Result := pRet;
+
+  Result := xboxkrnl_MmAllocateContiguousMemoryEx(NumberOfBytes, 0, $7FFFFFFF, 0, PAGE_READWRITE);
 end;
+
+var
+  TotalRequested: DWORD = 0;
+  TotalAllocated: DWORD = 0;
 
 function xboxkrnl_MmAllocateContiguousMemoryEx(
   NumberOfBytes: ULONG;
@@ -201,9 +273,7 @@ const
 {$WRITEABLECONST OFF}
 var
   pRet: PVOID;
-{$IFNDEF _MM_CONTIGUOUS_ALTERNATE}
-  dwRet: DWORD;
-{$ENDIF}
+  PageNr: uint;
 begin
   EmuSwapFS(fsWindows);
 
@@ -213,39 +283,46 @@ begin
       _(LowestAcceptableAddress, 'LowestAcceptableAddress').
       _(HighestAcceptableAddress, 'HighestAcceptableAddress').
       _(Alignment, 'Alignment').
-      _(ProtectionType, 'ProtectionType').
+      _(ProtectionType, 'ProtectionType', AllocationTypeToString(ProtectionType)).
     LogEnd();
 
-{$IFDEF _MM_CONTIGUOUS_ALTERNATE}
-  pRet := VirtualAlloc(NULL, NumberOfBytes, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-{$ELSE}
-  //
-  // NOTE: Kludgey (but necessary) solution:
-  //
-  // Since this memory must be aligned on a page boundary, we must allocate an extra page
-  // so that we can return a valid page aligned pointer
-  //
-
-  pRet := DxbxMalloc(NumberOfBytes + PAGE_SIZE);
-
-  // align to page boundary
+  pRet := NULL;
+  if NumberOfBytes > 0 then
   begin
-    dwRet := DWORD(pRet);
-    Inc(dwRet, PAGE_SIZE - (dwRet mod PAGE_SIZE));
-    g_AlignCache.insert({uiKey=}dwRet, {pResource=}pRet);
-    pRet := PVOID(dwRet);
-  end;
-{$ENDIF}
+    Inc(TotalRequested, NumberOfBytes);
+    pRet := VirtualAlloc(NULL, NumberOfBytes, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    Inc(TotalAllocated, RoundUp(NumberOfBytes, PAGE_SIZE));
 
-  if IsRunning(TITLEID_Halo) then
-  begin
-    if Count < 4 then
-      g_HaloHack[Count] := uint32(pRet);
-    Inc(Count);
+    Assert((UIntPtr(pRet) and (PAGE_SIZE-1)) = 0); // Returned address should be page-aligned
+
+    PageNr := DxbxGetPageNr(UIntPtr(pRet));
+
+    Assert(MmAllocatedSize[PageNr] = 0, 'Allocation size conflict!');
+    MmAllocatedSize[PageNr] := NumberOfBytes;
+
+    while Integer(NumberOfBytes) > 0 do
+    begin
+      Assert(MmAllocatedBase[PageNr] = NULL, 'Allocation range conflict!');
+
+      MmAllocatedBase[PageNr] := pRet;
+      PageNr := (PageNr + 1) and X_PAGES_MASK;
+      Dec(NumberOfBytes, PAGE_SIZE);
+    end;
+
+    if IsRunning(TITLEID_Halo) then
+    begin
+      if Count < 4 then
+        g_HaloHack[Count] := uint32(pRet);
+      Inc(Count);
+    end;
   end;
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : MmAllocateContiguousEx returned 0x%.08X', [pRet]);
+  begin
+    DbgPrintf('EmuKrnl : MmAllocateContiguousMemoryEx returned 0x%.08X', [pRet]);
+    DbgPrintf('EmuKrnl : Total requested memory increased to : 0x%.08X', [TotalRequested]);
+    DbgPrintf('EmuKrnl : Total allocated memory increased to : 0x%.08X', [TotalAllocated]);
+  end;
 
   EmuSwapFS(fsXbox);
 
@@ -342,10 +419,10 @@ procedure xboxkrnl_MmFreeContiguousMemory(
   BaseAddress: PVOID
   ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-{$IFNDEF _MM_CONTIGUOUS_ALTERNATE}
 var
-  OrigBaseAddress: PVOID;
-{$ENDIF}
+  Info: RDxbxAllocationInfo;
+  PageNr: uint;
+  NumberOfBytes: ULONG;
 begin
   EmuSwapFS(fsWindows);
 
@@ -354,29 +431,44 @@ begin
       _(BaseAddress, 'BaseAddress').
     LogEnd();
 
-{$IFDEF _MM_CONTIGUOUS_ALTERNATE}
-  if(BaseAddress <> @xLaunchDataPage) then
+  if (BaseAddress <> @xLaunchDataPage) then
     VirtualFree(BaseAddress, 0, MEM_RELEASE)
-{$ELSE}
-  OrigBaseAddress := g_AlignCache.remove({uiKey=}uint32(BaseAddress));
-  if OrigBaseAddress = nil then
-    OrigBaseAddress := BaseAddress;
-
-  if(OrigBaseAddress <> @xLaunchDataPage) then
-  begin
-    DxbxFree(OrigBaseAddress);
-  end
-{$ENDIF}
   else
   begin
     if MayLog(lfUnit) then
       DbgPrintf('Ignored MmFreeContiguousMemory(&xLaunchDataPage)');
   end;
 
-  // TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
+  Info := DxbxGetAllocationInfo(UIntPtr(BaseAddress));
+  PageNr := Info.PageNr;
+  NumberOfBytes := Info.AllocatedSize;
+  Dec(TotalRequested, NumberOfBytes);
+  Dec(TotalAllocated, RoundUp(NumberOfBytes, PAGE_SIZE));
+
+  // Check and reset :
+  Assert(NumberOfBytes > 0);
+  MmAllocatedSize[PageNr] := 0;
+
+  while Integer(NumberOfBytes) > 0 do
+  begin
+    Assert(MmAllocatedBase[PageNr] = Info.BaseAddress, 'Allocation range conflict!');
+
+    MmAllocatedBase[PageNr] := nil;
+    PageNr := (PageNr + 1) and X_PAGES_MASK;
+    Dec(NumberOfBytes, PAGE_SIZE);
+  end;
+
+  // Sokoban crashes after this, at reset time (press Black + White to hit this).
   // Tracing in assembly shows the crash takes place quite a while further, so it's probably
   // not related to this call per-se. The strangest thing is, that if we let the debugger step
   // all the way through, the crash doesn't occur. Adding a Sleep(100) here doesn't help though.
+  // Note 2011-01-26: The new emulation seems to fix this!
+
+  if MayLog(lfUnit) then
+  begin
+    DbgPrintf('EmuKrnl : Total requested memory reduced to : 0x%.08X', [TotalRequested]);
+    DbgPrintf('EmuKrnl : Total allocated memory reduced to : 0x%.08X', [TotalAllocated]);
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -676,5 +768,10 @@ begin
   Result := S_OK;
   EmuSwapFS(fsXbox);
 end;
+
+initialization
+
+  ZeroMemory(@MmAllocatedSize[0], SizeOf(MmAllocatedSize));
+  ZeroMemory(@MmAllocatedBase[0], SizeOf(MmAllocatedBase));
 
 end.
