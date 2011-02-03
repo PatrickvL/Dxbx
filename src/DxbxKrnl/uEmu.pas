@@ -188,7 +188,9 @@ var
   E: PEXCEPTION_RECORD;
   C: PCONTEXT;
 begin
-  EmuSwapFS(fsWindows);
+  // PLEASE DO NOT DO EMUSWAPFS HERE
+  // HOW LESS HOW BETTER
+  // Windows 7 is crashing on the EmuSwapFS and Logging
 
   Result := EXCEPTION_CONTINUE_SEARCH;
   C := ExceptionInfo.ContextRecord;
@@ -203,12 +205,8 @@ begin
 
   E := ExceptionInfo.ExceptionRecord;
 
-  DbgPrintf('EmuMain : EmuException() with code 0x%.08x (%s) triggered at address 0x%.08x', [
-    E.ExceptionCode,
-    ExceptionCodeToString(E.ExceptionCode),
-    UIntPtr(C.Eip)]);
-
   case E.ExceptionCode of
+    // STATUS_ILLEGAL_INSTRUCTION ?
     STATUS_PRIVILEGED_INSTRUCTION:
       if HandlePrivilegedInstruction(E, C) then
       begin
@@ -226,19 +224,18 @@ begin
     STATUS_BREAKPOINT:
       if HandleBreakpoint(E, C) then
       begin
-        DbgPrintf('EmuMain : Handled breakpoint!');
         Result := EXCEPTION_CONTINUE_EXECUTION;
       end;
   end; // case E.ExceptionCode
 
   if Result <> EXCEPTION_CONTINUE_EXECUTION then
+  begin
     DumpException(E, C);
 
-  fflush(stdout);
+    fflush(stdout);
+  end;
 
   g_bEmuException := false;
-
-  EmuSwapFS(fsXbox);
 end; // EmuException
 
 function HandlePrivilegedInstruction(E: PEXCEPTION_RECORD; C: PCONTEXT): Boolean;
