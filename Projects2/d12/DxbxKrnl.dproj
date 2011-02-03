@@ -1,0 +1,184 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{8b2167f6-cb6e-43de-810e-f9eb8f9772f3}</ProjectGuid>
+			<MainSource>DxbxKrnl.dpr</MainSource>
+			<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+			<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+			<DCC_DependencyCheckOutputName>..\..\bin\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
+			<ProjectVersion>12.0</ProjectVersion>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_ExeOutput>..\..\bin</DCC_ExeOutput>
+			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;..\..\Libraries\jwapi\Includes;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_DependencyCheckOutputName>..\..\bin\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
+			<GenDll>true</GenDll>
+			<DCC_DcuOutput>..\..\dcu</DCC_DcuOutput>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_ExeOutput>..\..\bin</DCC_ExeOutput>
+			<DCC_DcuOutput>..\..\dcu</DCC_DcuOutput>
+			<Version>7.0</Version>
+			<DCC_DebugInformation>False</DCC_DebugInformation>
+			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<Version>7.0</Version>
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+			<DCC_ResourcePath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\jwapi\Win32API;..\..\Libraries\DirectX9;$(DCC_ResourcePath)</DCC_ResourcePath>
+			<DCC_ObjPath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\jwapi\Win32API;..\..\Libraries\DirectX9;$(DCC_ObjPath)</DCC_ObjPath>
+			<DCC_IncludePath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\jwapi\Win32API;..\..\Libraries\DirectX9;$(DCC_IncludePath)</DCC_IncludePath>
+			<DCC_DcuOutput>..\..\dcu</DCC_DcuOutput>
+			<DCC_ObjOutput>..\..\dcu</DCC_ObjOutput>
+			<DCC_HppOutput>..\..\dcu</DCC_HppOutput>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="DxbxKrnl.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<RcCompile Include="..\..\src\Tools\PatternTrieBuilder\StoredTrie.rc">
+				<ContainerId>RC</ContainerId>
+				<Form>StoredTrie.res</Form>
+			</RcCompile>
+			<DCCReference Include="..\..\src\uLog.pas"/>
+			<DCCReference Include="..\..\src\uMutex.pas"/>
+			<DCCReference Include="..\..\src\uStoredTrieTypes.pas"/>
+			<DCCReference Include="..\..\src\uTime.pas"/>
+			<DCCReference Include="..\..\src\uTypes.pas"/>
+			<DCCReference Include="..\..\src\uXBController.pas"/>
+			<DCCReference Include="..\..\src\uXbe.pas"/>
+			<DCCReference Include="..\..\src\uXboxLibraryUtils.pas"/>
+			<DCCReference Include="..\..\src\uXbVideo.pas"/>
+			<DCCReference Include="..\..\src\uConsoleClass.pas"/>
+			<DCCReference Include="..\..\src\uConsts.pas"/>
+			<DCCReference Include="..\..\src\uCRC16.pas"/>
+			<DCCReference Include="..\..\src\uEmuShared.pas"/>
+			<DCCReference Include="..\..\src\uError.pas"/>
+			<DCCReference Include="..\..\src\uKernelThunk.pas"/>
+			<DCCReference Include="..\..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas"/>
+			<DCCReference Include="..\..\Libraries\Jcl\windows\JclDebug.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuAlloc.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuDInput.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuDSound.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuFile.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuFS.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnl.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlAv.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlDbg.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlEx.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlFs.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlHal.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlIo.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlKd.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlKe.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlMm.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlNt.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlOb.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlPs.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlRtl.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlXbox.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlXc.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlXe.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuLDT.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXapi.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXG.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXOnline.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXTL.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uHLEIntercept.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\DxLibraryAPIScanning.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uDxbxDebugUtils.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uDxbxKrnl.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uDxbxKrnlUtils.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmu.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uState.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uVertexBuffer.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uVertexShader.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uConvert.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uPushBuffer.pas"/>
+			<DCCReference Include="..\..\src\uDxbxUtils.pas"/>
+			<DCCReference Include="..\..\src\uEmuExe.pas"/>
+			<DCCReference Include="..\..\src\uProlog.pas"/>
+			<DCCReference Include="..\..\src\uExe.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uResourceTracker.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Utils.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas"/>
+			<DCCReference Include="..\..\src\uFileSystem.pas"/>
+			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uPixelShader.pas"/>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType>VCLApplication</Borland.ProjectType>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+						<Parameters Name="HostApplication">D:\henkjan\test\dxbx\dxbx2\Bin\Dxbx.exe</Parameters>
+						<Parameters Name="RunParams">D:\henkjan\test\playable\amiga\default.xbe</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1043</VersionInfo>
+						<VersionInfo Name="CodePage">1252</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+					<Source>
+						<Source Name="MainSource">DxbxKrnl.dpr</Source>
+					</Source>
+				</Delphi.Personality>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>
