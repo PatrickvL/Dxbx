@@ -101,7 +101,8 @@ uses
   uEmuXactEng in '..\..\src\DxbxKrnl\uEmuXactEng.pas',
   uXbSound in '..\..\src\uXbSound.pas',
   DbgConsole in '..\..\src\DxbxKrnl\DbgConsole.pas',
-  uMiniport in '..\..\src\DxbxKrnl\EmuD3D8\uMiniport.pas';
+  uMiniport in '..\..\src\DxbxKrnl\EmuD3D8\uMiniport.pas',
+  uNV2A in '..\..\src2\DxbxKrnl\EmuD3D8\uNV2A.pas';
 
 {$IMAGEBASE $10000000}
 
