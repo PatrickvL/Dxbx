@@ -185,6 +185,7 @@
 			<DCCReference Include="..\..\src\uXbSound.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\DbgConsole.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uMiniport.pas"/>
+			<DCCReference Include="..\..\src2\DxbxKrnl\EmuD3D8\uNV2A.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
