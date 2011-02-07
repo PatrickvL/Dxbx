@@ -44,7 +44,7 @@
 			<DelphiCompile Include="SvnBuilder.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="..\..\src2\Tools\SvnBuilder\frmMain.pas">
+			<DCCReference Include="..\..\src\Tools\SvnBuilder\frmMain.pas">
 				<Form>Main</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\Libraries\DelphiSvn\SvnClient.pas"/>

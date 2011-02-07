@@ -19,22 +19,22 @@ program XdkTracker;
 
 uses
   Forms,
-  u_About in '..\..\src2\Tools\XdkTracker\src\u_About.pas' {frm_About},
-  ufrm_Main in '..\..\src2\Tools\XdkTracker\src\ufrm_Main.pas' {frmXdkTracker},
-  uPublisher in '..\..\src2\Tools\XdkTracker\src\uPublisher.pas' {frm_Publisher},
-  uImportGames in '..\..\src2\Tools\XdkTracker\src\uImportGames.pas' {frm_XBEList},
-  uData in '..\..\src2\Tools\XdkTracker\src\uData.pas',
-  uConsts in '..\..\src2\uConsts.pas',
-  uXbe in '..\..\src2\uXbe.pas',
-  uTypes in '..\..\src2\uTypes.pas',
-  uTime in '..\..\src2\uTime.pas',
-  uLog in '..\..\src2\uLog.pas',
-  uDxbxXml in '..\..\src2\uDxbxXml.pas' {DxbxXml: TDataModule},
-  uConsoleClass in '..\..\src2\uConsoleClass.pas',
-  uDxbxUtils in '..\..\src2\uDxbxUtils.pas',
-  uEmuD3D8Types in '..\..\src2\DxbxKrnl\uEmuD3D8Types.pas',
-  uXDVDFS in '..\..\src2\uXDVDFS.pas',
-  uFileSystem in '..\..\src2\uFileSystem.pas';
+  u_About in '..\..\src\Tools\XdkTracker\src\u_About.pas' {frm_About},
+  ufrm_Main in '..\..\src\Tools\XdkTracker\src\ufrm_Main.pas' {frmXdkTracker},
+  uPublisher in '..\..\src\Tools\XdkTracker\src\uPublisher.pas' {frm_Publisher},
+  uImportGames in '..\..\src\Tools\XdkTracker\src\uImportGames.pas' {frm_XBEList},
+  uData in '..\..\src\Tools\XdkTracker\src\uData.pas',
+  uConsts in '..\..\src\uConsts.pas',
+  uXbe in '..\..\src\uXbe.pas',
+  uTypes in '..\..\src\uTypes.pas',
+  uTime in '..\..\src\uTime.pas',
+  uLog in '..\..\src\uLog.pas',
+  uDxbxXml in '..\..\src\uDxbxXml.pas' {DxbxXml: TDataModule},
+  uConsoleClass in '..\..\src\uConsoleClass.pas',
+  uDxbxUtils in '..\..\src\uDxbxUtils.pas',
+  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
+  uXDVDFS in '..\..\src\uXDVDFS.pas',
+  uFileSystem in '..\..\src\uFileSystem.pas';
 
 {$R *.res}
 

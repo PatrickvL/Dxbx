@@ -2,7 +2,7 @@ program SvnBuilder;
 
 uses
   Forms,
-  frmMain in '..\..\src2\Tools\SvnBuilder\frmMain.pas' {Main},
+  frmMain in '..\..\src\Tools\SvnBuilder\frmMain.pas' {Main},
   SvnClient in '..\..\Libraries\DelphiSvn\SvnClient.pas',
   apr in '..\..\Libraries\DelphiSvn\apr.pas',
   svn_client in '..\..\Libraries\DelphiSvn\svn_client.pas';
