@@ -68,8 +68,13 @@ const NV2A                                                        = $00000097;
 
 const NV2A_NOP                                                    = $00000100;
 const NV2A_NOTIFY                                                 = $00000104;
+const NV2A_WAIT_FOR_IDLE                                          = $00000110; // Dxbx
 const NV2A_DMA_NOTIFY                                             = $00000180;
 const NV2A_FLIP_READ                                              = $00000120; // Dxbx
+const NV2A_FLIP_WRITE                                             = $00000124; // Dxbx
+const NV2A_FLIP_MODULO                                            = $00000128; // Dxbx
+const NV2A_FLIP_INCREMENT_WRITE                                   = $0000012c; // Dxbx
+const NV2A_FLIP_STALL                                             = $00000130; // Dxbx
 const NV2A_DMA_TEXTURE0                                           = $00000184;
 const NV2A_DMA_TEXTURE1                                           = $00000188;
 const NV2A_DMA_STATE                                              = $00000190; // Dxbx
@@ -442,6 +447,7 @@ const   NV2A_RC_FINAL1_E_MAPPING_HALF_BIAS_NORMAL                 = $80000000;
 const   NV2A_RC_FINAL1_E_MAPPING_HALF_BIAS_NEGATE                 = $a0000000;
 const   NV2A_RC_FINAL1_E_MAPPING_SIGNED_IDENTITY                  = $c0000000;
 const   NV2A_RC_FINAL1_E_MAPPING_SIGNED_NEGATE                    = $e0000000;
+const NV2A_CONTROL0                                               = $00000290; // Dxbx
 const NV2A_LIGHT_MODEL                                            = $00000294;
 const  NV2A_LIGHT_MODEL_VIEWER_SHIFT                              = 16;
 const  NV2A_LIGHT_MODEL_VIEWER_MASK                               = $00030000;
@@ -527,6 +533,7 @@ const NV2A_POINT_PARAMETERS_ENABLE                                = $00000318;
 const NV2A_POINT_SMOOTH_ENABLE                                    = $0000031c;
 const NV2A_LINE_SMOOTH_ENABLE                                     = $00000320;
 const NV2A_POLYGON_SMOOTH_ENABLE                                  = $00000324;
+const NV2A_SKIN_MODE                                              = $00000328; // Dxbx
 const NV2A_STENCIL_ENABLE                                         = $0000032c;
 const NV2A_POLYGON_OFFSET_POINT_ENABLE                            = $00000330;
 const NV2A_POLYGON_OFFSET_LINE_ENABLE                             = $00000334;
@@ -647,6 +654,7 @@ const  NV2A_SHADE_MODEL_FLAT                                      = $00001d00;
 const  NV2A_SHADE_MODEL_SMOOTH                                    = $00001d01;
 const NV2A_COMPRESS_ZBUFFER_EN                                    = $00001d80; // Dxbx
 const NV2A_SEMAPHORE_OFFSET                                       = $00001d6c; // Dxbx
+const NV2A_WRITE_SEMAPHORE_RELEASE                                = $00001d70; // Dxbx
 const NV2A_LINE_WIDTH                                             = $00000380;
 const NV2A_POLYGON_OFFSET_FACTOR                                  = $00000384;
 const NV2A_POLYGON_OFFSET_UNITS                                   = $00000388;
@@ -818,8 +826,11 @@ const NV2A_TX_GEN_COEFF_Q_D__SIZE                                 = $00000004;
 const NV2A_FOG_EQUATION_CONSTANT                                  = $000009c0;
 const NV2A_FOG_EQUATION_LINEAR                                    = $000009c4;
 const NV2A_FOG_EQUATION_QUADRATIC                                 = $000009c8;
+//const NV2A_FOG_PLANE(x)                                         = ($000009d0+((x)*4));
+const NV2A_FOG_PLANE__SIZE                                        = $00000004; // Dxbx
 //const NV2A_FRONT_MATERIAL_SHININESS(x)                          = ($000009e0+((x)*4));
 const NV2A_FRONT_MATERIAL_SHININESS__SIZE                         = $00000006;
+const NV2A_SWATH_WIDTH                                            = $000009f8; // Dxbx
 const NV2A_FLAT_SHADE_OP                                          = $000009fc; // Dxbx
 const NV2A_LIGHT_MODEL_FRONT_AMBIENT_R                            = $00000a10;
 const NV2A_LIGHT_MODEL_FRONT_AMBIENT_G                            = $00000a14;
@@ -1376,6 +1387,8 @@ const NV2A_VERTEX_DATA                                            = $00001818;
 const NV2A_TX_SHADER_CONST_EYE_X                                  = $0000181c;
 const NV2A_TX_SHADER_CONST_EYE_Y                                  = $00001820;
 const NV2A_TX_SHADER_CONST_EYE_Z                                  = $00001824;
+//const NV2A_VERTEX_DATA4UB(x)                                    = ($00001940+((x)*4));
+const NV2A_VERTEX_DATA4UB__SIZE                                   = $0000000c; // Dxbx
 //const NV2A_VTX_ATTR_4F_X(x)                                     = ($00001a00+((x)*16));
 const NV2A_VTX_ATTR_4F_X__SIZE                                    = $00000010;
 //const NV2A_VTX_ATTR_4F_Y(x)                                     = ($00001a04+((x)*16));
@@ -1706,7 +1719,382 @@ const NV2A_VP_UPLOAD_FROM_ID                                      = $00001e9c;
 const NV2A_VP_START_FROM_ID                                       = $00001ea0;
 const NV2A_VP_UPLOAD_CONST_ID                                     = $00001ea4;
 
+//
+// From here on, it's Dxbx code again :
+//
 
-implementation
+const
+  CompactNV2AInfo: array [0..312] of record
+    Method: Integer;
+    Name: string;
+    Pitch: Integer; // Default 0 means 4
+    Count: Integer; // Default 0 means 1
+  end = (
+  (Method:$00000100; Name:'NV2A_NOP'),
+  (Method:$00000104; Name:'NV2A_NOTIFY'),
+  (Method:$00000110; Name:'NV2A_WAIT_FOR_IDLE'), // Dxbx
+  (Method:$00000120; Name:'NV2A_FLIP_READ'),
+  (Method:$00000124; Name:'NV2A_FLIP_WRITE'),
+  (Method:$00000128; Name:'NV2A_FLIP_MODULO'),
+  (Method:$0000012c; Name:'NV2A_FLIP_INCREMENT_WRITE'),
+  (Method:$00000130; Name:'NV2A_FLIP_STALL'),
+  (Method:$00000180; Name:'NV2A_DMA_NOTIFY'),
+  (Method:$00000184; Name:'NV2A_DMA_TEXTURE0'),
+  (Method:$00000188; Name:'NV2A_DMA_TEXTURE1'),
+  (Method:$00000190; Name:'NV2A_DMA_STATE'),
+  (Method:$00000194; Name:'NV2A_DMA_COLOR'),
+  (Method:$00000198; Name:'NV2A_DMA_ZETA'),
+  (Method:$0000019c; Name:'NV2A_DMA_VTXBUF0'),
+  (Method:$000001a0; Name:'NV2A_DMA_VTXBUF1'),
+  (Method:$000001a4; Name:'NV2A_DMA_FENCE'),
+  (Method:$000001a8; Name:'NV2A_DMA_QUERY'),
+  (Method:$00000200; Name:'NV2A_RT_HORIZ'),
+  (Method:$00000204; Name:'NV2A_RT_VERT'),
+  (Method:$00000208; Name:'NV2A_RT_FORMAT'),
+  (Method:$0000020c; Name:'NV2A_RT_PITCH'),
+  (Method:$00000210; Name:'NV2A_COLOR_OFFSET'),
+  (Method:$00000214; Name:'NV2A_ZETA_OFFSET'),
+  (Method:$00000260; Name:'NV2A_RC_IN_ALPHA(x)'; Pitch:4; Count:8),
+  (Method:$00000288; Name:'NV2A_RC_FINAL0'),
+  (Method:$0000028c; Name:'NV2A_RC_FINAL1'),
+  (Method:$00000290; Name:'NV2A_CONTROL0'),
+  (Method:$00000294; Name:'NV2A_LIGHT_MODEL'),
+  (Method:$00000298; Name:'NV2A_COLOR_MATERIAL'),
+  (Method:$0000029c; Name:'NV2A_FOG_MODE'),
+  (Method:$000002a0; Name:'NV2A_FOG_COORD'),
+  (Method:$000002a4; Name:'NV2A_FOG_ENABLE'),
+  (Method:$000002a8; Name:'NV2A_FOG_COLOR'),
+  (Method:$000002b4; Name:'NV2A_VIEWPORT_CLIP_MODE'),
+  (Method:$000002c0; Name:'NV2A_VIEWPORT_CLIP_HORIZ(x)'; Pitch:4; Count:8),
+  (Method:$000002e0; Name:'NV2A_VIEWPORT_CLIP_VERT(x)'; Pitch:4; Count:8),
+  (Method:$00000300; Name:'NV2A_ALPHA_FUNC_ENABLE'),
+  (Method:$00000304; Name:'NV2A_BLEND_FUNC_ENABLE'),
+  (Method:$00000308; Name:'NV2A_CULL_FACE_ENABLE'),
+  (Method:$0000030c; Name:'NV2A_DEPTH_TEST_ENABLE'),
+  (Method:$00000310; Name:'NV2A_DITHER_ENABLE'),
+  (Method:$00000314; Name:'NV2A_LIGHTING_ENABLE'),
+  (Method:$00000318; Name:'NV2A_POINT_PARAMETERS_ENABLE'),
+  (Method:$0000031c; Name:'NV2A_POINT_SMOOTH_ENABLE'),
+  (Method:$00000320; Name:'NV2A_LINE_SMOOTH_ENABLE'),
+  (Method:$00000324; Name:'NV2A_POLYGON_SMOOTH_ENABLE'),
+  (Method:$00000328; Name:'NV2A_SKIN_MODE'),
+  (Method:$0000032c; Name:'NV2A_STENCIL_ENABLE'),
+  (Method:$00000330; Name:'NV2A_POLYGON_OFFSET_POINT_ENABLE'),
+  (Method:$00000334; Name:'NV2A_POLYGON_OFFSET_LINE_ENABLE'),
+  (Method:$00000338; Name:'NV2A_POLYGON_OFFSET_FILL_ENABLE'),
+  (Method:$0000033c; Name:'NV2A_ALPHA_FUNC_FUNC'),
+  (Method:$00000340; Name:'NV2A_ALPHA_FUNC_REF'),
+  (Method:$00000344; Name:'NV2A_BLEND_FUNC_SRC'),
+  (Method:$00000348; Name:'NV2A_BLEND_FUNC_DST'),
+  (Method:$0000034c; Name:'NV2A_BLEND_COLOR'),
+  (Method:$00000350; Name:'NV2A_BLEND_EQUATION'),
+  (Method:$00000354; Name:'NV2A_DEPTH_FUNC'),
+  (Method:$00000358; Name:'NV2A_COLOR_MASK'),
+  (Method:$0000035c; Name:'NV2A_DEPTH_WRITE_ENABLE'),
+  (Method:$00000360; Name:'NV2A_STENCIL_MASK'),
+  (Method:$00000364; Name:'NV2A_STENCIL_FUNC_FUNC'),
+  (Method:$00000368; Name:'NV2A_STENCIL_FUNC_REF'),
+  (Method:$0000036c; Name:'NV2A_STENCIL_FUNC_MASK'),
+  (Method:$00000370; Name:'NV2A_STENCIL_OP_FAIL'),
+  (Method:$00000374; Name:'NV2A_STENCIL_OP_ZFAIL'),
+  (Method:$00000378; Name:'NV2A_STENCIL_OP_ZPASS'),
+  (Method:$0000037c; Name:'NV2A_SHADE_MODEL'),
+  (Method:$00000380; Name:'NV2A_LINE_WIDTH'),
+  (Method:$00000384; Name:'NV2A_POLYGON_OFFSET_FACTOR'),
+  (Method:$00000388; Name:'NV2A_POLYGON_OFFSET_UNITS'),
+  (Method:$0000038c; Name:'NV2A_POLYGON_MODE_FRONT'),
+  (Method:$00000390; Name:'NV2A_POLYGON_MODE_BACK'),
+  (Method:$00000394; Name:'NV2A_DEPTH_RANGE_NEAR'),
+  (Method:$00000398; Name:'NV2A_DEPTH_RANGE_FAR'),
+  (Method:$0000039c; Name:'NV2A_CULL_FACE'),
+  (Method:$000003a0; Name:'NV2A_FRONT_FACE'),
+  (Method:$000003a4; Name:'NV2A_NORMALIZE_ENABLE'),
+  (Method:$000003a8; Name:'NV2A_MATERIAL_FACTOR_FRONT_R'),
+  (Method:$000003ac; Name:'NV2A_MATERIAL_FACTOR_FRONT_G'),
+  (Method:$000003b0; Name:'NV2A_MATERIAL_FACTOR_FRONT_B'),
+  (Method:$000003b4; Name:'NV2A_MATERIAL_FACTOR_FRONT_A'),
+  (Method:$000003b8; Name:'NV2A_SEPARATE_SPECULAR_ENABLE'),
+  (Method:$000003bc; Name:'NV2A_ENABLED_LIGHTS'),
+  (Method:$000003c0; Name:'NV2A_TX_GEN_MODE_S(x)'; Pitch:16; Count:4),
+  (Method:$000003c4; Name:'NV2A_TX_GEN_MODE_T(x)'; Pitch:16; Count:4),
+  (Method:$000003c8; Name:'NV2A_TX_GEN_MODE_R(x)'; Pitch:16; Count:4),
+  (Method:$000003cc; Name:'NV2A_TX_GEN_MODE_Q(x)'; Pitch:16; Count:4),
+  (Method:$00000420; Name:'NV2A_TX_MATRIX_ENABLE(x)'; Pitch:4; Count:4),
+  (Method:$0000043c; Name:'NV2A_POINT_SIZE'),
+  (Method:$00000480; Name:'NV2A_MODELVIEW0_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$000004c0; Name:'NV2A_MODELVIEW1_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$00000500; Name:'NV2A_MODELVIEW2_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$00000540; Name:'NV2A_MODELVIEW3_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$00000580; Name:'NV2A_INVERSE_MODELVIEW0_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$000005c0; Name:'NV2A_INVERSE_MODELVIEW1_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$00000600; Name:'NV2A_INVERSE_MODELVIEW2_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$00000640; Name:'NV2A_INVERSE_MODELVIEW3_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$00000680; Name:'NV2A_PROJECTION_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$000006c0; Name:'NV2A_TX0_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$00000700; Name:'NV2A_TX1_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$00000740; Name:'NV2A_TX2_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$00000780; Name:'NV2A_TX3_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$00000840; Name:'NV2A_TX_GEN_COEFF_S_A(x)'; Pitch:64; Count:4),
+  (Method:$00000844; Name:'NV2A_TX_GEN_COEFF_S_B(x)'; Pitch:64; Count:4),
+  (Method:$00000848; Name:'NV2A_TX_GEN_COEFF_S_C(x)'; Pitch:64; Count:4),
+  (Method:$0000084c; Name:'NV2A_TX_GEN_COEFF_S_D(x)'; Pitch:64; Count:4),
+  (Method:$00000850; Name:'NV2A_TX_GEN_COEFF_T_A(x)'; Pitch:64; Count:4),
+  (Method:$00000854; Name:'NV2A_TX_GEN_COEFF_T_B(x)'; Pitch:64; Count:4),
+  (Method:$00000858; Name:'NV2A_TX_GEN_COEFF_T_C(x)'; Pitch:64; Count:4),
+  (Method:$0000085c; Name:'NV2A_TX_GEN_COEFF_T_D(x)'; Pitch:64; Count:4),
+  (Method:$00000860; Name:'NV2A_TX_GEN_COEFF_R_A(x)'; Pitch:64; Count:4),
+  (Method:$00000864; Name:'NV2A_TX_GEN_COEFF_R_B(x)'; Pitch:64; Count:4),
+  (Method:$00000868; Name:'NV2A_TX_GEN_COEFF_R_C(x)'; Pitch:64; Count:4),
+  (Method:$0000086c; Name:'NV2A_TX_GEN_COEFF_R_D(x)'; Pitch:64; Count:4),
+  (Method:$00000870; Name:'NV2A_TX_GEN_COEFF_Q_A(x)'; Pitch:64; Count:4),
+  (Method:$00000874; Name:'NV2A_TX_GEN_COEFF_Q_B(x)'; Pitch:64; Count:4),
+  (Method:$00000878; Name:'NV2A_TX_GEN_COEFF_Q_C(x)'; Pitch:64; Count:4),
+  (Method:$0000087c; Name:'NV2A_TX_GEN_COEFF_Q_D(x)'; Pitch:64; Count:4),
+  (Method:$000009c0; Name:'NV2A_FOG_EQUATION_CONSTANT'),
+  (Method:$000009c4; Name:'NV2A_FOG_EQUATION_LINEAR'),
+  (Method:$000009c8; Name:'NV2A_FOG_EQUATION_QUADRATIC'),
+  (Method:$000009d0; Name:'NV2A_FOG_PLANE(x)'; Pitch:4; Count:4),
+  (Method:$000009e0; Name:'NV2A_FRONT_MATERIAL_SHININESS(x)'; Pitch:4; Count:6),
+  (Method:$000009f8; Name:'NV2A_SWATH_WIDTH'),
+  (Method:$000009fc; Name:'NV2A_FLAT_SHADE_OP'),
+  (Method:$00000a10; Name:'NV2A_LIGHT_MODEL_FRONT_AMBIENT_R'),
+  (Method:$00000a14; Name:'NV2A_LIGHT_MODEL_FRONT_AMBIENT_G'),
+  (Method:$00000a18; Name:'NV2A_LIGHT_MODEL_FRONT_AMBIENT_B'),
+  (Method:$00000a20; Name:'NV2A_VIEWPORT_TRANSLATE_X'),
+  (Method:$00000a24; Name:'NV2A_VIEWPORT_TRANSLATE_Y'),
+  (Method:$00000a28; Name:'NV2A_VIEWPORT_TRANSLATE_Z'),
+  (Method:$00000a2c; Name:'NV2A_VIEWPORT_TRANSLATE_W'),
+  (Method:$00000a30; Name:'NV2A_POINT_PARAMETER(x)'; Pitch:4; Count:8),
+  (Method:$00000a50; Name:'NV2A_EYE_POSITION(x)'; Pitch:4; Count:4),
+  (Method:$00000a60; Name:'NV2A_RC_CONSTANT_COLOR0(x)'; Pitch:4; Count:8),
+  (Method:$00000a80; Name:'NV2A_RC_CONSTANT_COLOR1(x)'; Pitch:4; Count:8),
+  (Method:$00000aa0; Name:'NV2A_RC_OUT_ALPHA(x)'; Pitch:4; Count:8),
+  (Method:$00000ac0; Name:'NV2A_RC_IN_RGB(x)'; Pitch:4; Count:8),
+  (Method:$00000af0; Name:'NV2A_VIEWPORT_SCALE_X'),
+  (Method:$00000af4; Name:'NV2A_VIEWPORT_SCALE_Y'),
+  (Method:$00000af8; Name:'NV2A_VIEWPORT_SCALE_Z'),
+  (Method:$00000afc; Name:'NV2A_VIEWPORT_SCALE_W'),
+  (Method:$00000b00; Name:'NV2A_VP_UPLOAD_INST(x)'; Pitch:4; Count:4),
+  (Method:$00000b80; Name:'NV2A_VP_UPLOAD_CONST(x)'; Pitch:4; Count:4),
+  (Method:$00000c00; Name:'NV2A_LIGHT_BACK_AMBIENT_R(x)'; Pitch:64; Count:8),
+  (Method:$00000c04; Name:'NV2A_LIGHT_BACK_AMBIENT_G(x)'; Pitch:64; Count:8),
+  (Method:$00000c08; Name:'NV2A_LIGHT_BACK_AMBIENT_B(x)'; Pitch:64; Count:8),
+  (Method:$00000c0c; Name:'NV2A_LIGHT_BACK_DIFFUSE_R(x)'; Pitch:64; Count:8),
+  (Method:$00000c10; Name:'NV2A_LIGHT_BACK_DIFFUSE_G(x)'; Pitch:64; Count:8),
+  (Method:$00000c14; Name:'NV2A_LIGHT_BACK_DIFFUSE_B(x)'; Pitch:64; Count:8),
+  (Method:$00000c18; Name:'NV2A_LIGHT_BACK_SPECULAR_R(x)'; Pitch:64; Count:8),
+  (Method:$00000c1c; Name:'NV2A_LIGHT_BACK_SPECULAR_G(x)'; Pitch:64; Count:8),
+  (Method:$00000c20; Name:'NV2A_LIGHT_BACK_SPECULAR_B(x)'; Pitch:64; Count:8),
+  (Method:$00001000; Name:'NV2A_LIGHT_FRONT_AMBIENT_R(x)'; Pitch:128; Count:8),
+  (Method:$00001004; Name:'NV2A_LIGHT_FRONT_AMBIENT_G(x)'; Pitch:128; Count:8),
+  (Method:$00001008; Name:'NV2A_LIGHT_FRONT_AMBIENT_B(x)'; Pitch:128; Count:8),
+  (Method:$0000100c; Name:'NV2A_LIGHT_FRONT_DIFFUSE_R(x)'; Pitch:128; Count:8),
+  (Method:$00001010; Name:'NV2A_LIGHT_FRONT_DIFFUSE_G(x)'; Pitch:128; Count:8),
+  (Method:$00001014; Name:'NV2A_LIGHT_FRONT_DIFFUSE_B(x)'; Pitch:128; Count:8),
+  (Method:$00001018; Name:'NV2A_LIGHT_FRONT_SPECULAR_R(x)'; Pitch:128; Count:8),
+  (Method:$0000101c; Name:'NV2A_LIGHT_FRONT_SPECULAR_G(x)'; Pitch:128; Count:8),
+  (Method:$00001020; Name:'NV2A_LIGHT_FRONT_SPECULAR_B(x)'; Pitch:128; Count:8),
+  (Method:$00001028; Name:'NV2A_LIGHT_HALF_VECTOR_X(x)'; Pitch:128; Count:8),
+  (Method:$0000102c; Name:'NV2A_LIGHT_HALF_VECTOR_Y(x)'; Pitch:128; Count:8),
+  (Method:$00001030; Name:'NV2A_LIGHT_HALF_VECTOR_Z(x)'; Pitch:128; Count:8),
+  (Method:$00001034; Name:'NV2A_LIGHT_DIRECTION_X(x)'; Pitch:128; Count:8),
+  (Method:$00001038; Name:'NV2A_LIGHT_DIRECTION_Y(x)'; Pitch:128; Count:8),
+  (Method:$0000103c; Name:'NV2A_LIGHT_DIRECTION_Z(x)'; Pitch:128; Count:8),
+  (Method:$00001040; Name:'NV2A_LIGHT_SPOT_CUTOFF_A(x)'; Pitch:128; Count:8),
+  (Method:$00001044; Name:'NV2A_LIGHT_SPOT_CUTOFF_B(x)'; Pitch:128; Count:8),
+  (Method:$00001048; Name:'NV2A_LIGHT_SPOT_CUTOFF_C(x)'; Pitch:128; Count:8),
+  (Method:$0000104c; Name:'NV2A_LIGHT_SPOT_DIR_X(x)'; Pitch:128; Count:8),
+  (Method:$00001050; Name:'NV2A_LIGHT_SPOT_DIR_Y(x)'; Pitch:128; Count:8),
+  (Method:$00001054; Name:'NV2A_LIGHT_SPOT_DIR_Z(x)'; Pitch:128; Count:8),
+  (Method:$00001058; Name:'NV2A_LIGHT_SPOT_CUTOFF_D(x)'; Pitch:128; Count:8),
+  (Method:$0000105c; Name:'NV2A_LIGHT_POSITION_X(x)'; Pitch:128; Count:8),
+  (Method:$00001060; Name:'NV2A_LIGHT_POSITION_Y(x)'; Pitch:128; Count:8),
+  (Method:$00001064; Name:'NV2A_LIGHT_POSITION_Z(x)'; Pitch:128; Count:8),
+  (Method:$00001068; Name:'NV2A_LIGHT_ATTENUATION_CONSTANT(x)'; Pitch:128; Count:8),
+  (Method:$0000106c; Name:'NV2A_LIGHT_ATTENUATION_LINEAR(x)'; Pitch:128; Count:8),
+  (Method:$00001070; Name:'NV2A_LIGHT_ATTENUATION_QUADRATIC(x)'; Pitch:128; Count:8),
+  (Method:$0000147c; Name:'NV2A_POLYGON_STIPPLE_ENABLE'),
+  (Method:$00001480; Name:'NV2A_POLYGON_STIPPLE_PATTERN(x)'; Pitch:4; Count:32),
+  (Method:$00001500; Name:'NV2A_VERTEX_POS_3F_X'),
+  (Method:$00001504; Name:'NV2A_VERTEX_POS_3F_Y'),
+  (Method:$00001508; Name:'NV2A_VERTEX_POS_3F_Z'),
+  (Method:$00001518; Name:'NV2A_VERTEX_POS_4F_X'),
+  (Method:$0000151c; Name:'NV2A_VERTEX_POS_4F_Y'),
+  (Method:$00001520; Name:'NV2A_VERTEX_POS_4F_Z'),
+  (Method:$00001528; Name:'NV2A_VERTEX_POS_3I_XY'),
+  (Method:$0000152c; Name:'NV2A_VERTEX_POS_3I_Z'),
+  (Method:$00001530; Name:'NV2A_VERTEX_NOR_3F_X'),
+  (Method:$00001534; Name:'NV2A_VERTEX_NOR_3F_Y'),
+  (Method:$00001538; Name:'NV2A_VERTEX_NOR_3F_Z'),
+  (Method:$00001540; Name:'NV2A_VERTEX_NOR_3I_XY'),
+  (Method:$00001544; Name:'NV2A_VERTEX_NOR_3I_Z'),
+  (Method:$00001550; Name:'NV2A_VERTEX_COL_4F_X'),
+  (Method:$00001554; Name:'NV2A_VERTEX_COL_4F_Y'),
+  (Method:$00001558; Name:'NV2A_VERTEX_COL_4F_Z'),
+  (Method:$0000155c; Name:'NV2A_VERTEX_COL_4F_W'),
+  (Method:$00001560; Name:'NV2A_VERTEX_COL_3F_X'),
+  (Method:$00001564; Name:'NV2A_VERTEX_COL_3F_Y'),
+  (Method:$00001568; Name:'NV2A_VERTEX_COL_3F_Z'),
+  (Method:$0000156c; Name:'NV2A_VERTEX_COL_4I'),
+  (Method:$00001580; Name:'NV2A_VERTEX_COL2_3F_X'),
+  (Method:$00001584; Name:'NV2A_VERTEX_COL2_3F_Y'),
+  (Method:$00001588; Name:'NV2A_VERTEX_COL2_3F_Z'),
+  (Method:$0000158c; Name:'NV2A_VERTEX_COL2_4I'),
+  (Method:$00001590; Name:'NV2A_VERTEX_TX0_2F_S'),
+  (Method:$00001594; Name:'NV2A_VERTEX_TX0_2F_T'),
+  (Method:$00001598; Name:'NV2A_VERTEX_TX0_2I'),
+  (Method:$000015a0; Name:'NV2A_VERTEX_TX0_4F_S'),
+  (Method:$000015a4; Name:'NV2A_VERTEX_TX0_4F_T'),
+  (Method:$000015a8; Name:'NV2A_VERTEX_TX0_4F_R'),
+  (Method:$000015ac; Name:'NV2A_VERTEX_TX0_4F_Q'),
+  (Method:$000015b0; Name:'NV2A_VERTEX_TX0_4I_ST'),
+  (Method:$000015b4; Name:'NV2A_VERTEX_TX0_4I_RQ'),
+  (Method:$000015b8; Name:'NV2A_VERTEX_TX1_2F_S'),
+  (Method:$000015bc; Name:'NV2A_VERTEX_TX1_2F_T'),
+  (Method:$000015c0; Name:'NV2A_VERTEX_TX1_2I'),
+  (Method:$000015c8; Name:'NV2A_VERTEX_TX1_4F_S'),
+  (Method:$000015cc; Name:'NV2A_VERTEX_TX1_4F_T'),
+  (Method:$000015d0; Name:'NV2A_VERTEX_TX1_4F_R'),
+  (Method:$000015d4; Name:'NV2A_VERTEX_TX1_4F_Q'),
+  (Method:$000015d8; Name:'NV2A_VERTEX_TX1_4I_ST'),
+  (Method:$000015dc; Name:'NV2A_VERTEX_TX1_4I_RQ'),
+  (Method:$000015e0; Name:'NV2A_VERTEX_TX2_2F_S'),
+  (Method:$000015e4; Name:'NV2A_VERTEX_TX2_2F_T'),
+  (Method:$000015e8; Name:'NV2A_VERTEX_TX2_2I'),
+  (Method:$000015f0; Name:'NV2A_VERTEX_TX2_4F_S'),
+  (Method:$000015f4; Name:'NV2A_VERTEX_TX2_4F_T'),
+  (Method:$000015f8; Name:'NV2A_VERTEX_TX2_4F_R'),
+  (Method:$000015fc; Name:'NV2A_VERTEX_TX2_4F_Q'),
+  (Method:$00001600; Name:'NV2A_VERTEX_TX2_4I_ST'),
+  (Method:$00001604; Name:'NV2A_VERTEX_TX2_4I_RQ'),
+  (Method:$00001608; Name:'NV2A_VERTEX_TX3_2F_S'),
+  (Method:$0000160c; Name:'NV2A_VERTEX_TX3_2F_T'),
+  (Method:$00001610; Name:'NV2A_VERTEX_TX3_2I'),
+  (Method:$00001620; Name:'NV2A_VERTEX_TX3_4F_S'),
+  (Method:$00001624; Name:'NV2A_VERTEX_TX3_4F_T'),
+  (Method:$00001628; Name:'NV2A_VERTEX_TX3_4F_R'),
+  (Method:$0000162c; Name:'NV2A_VERTEX_TX3_4F_Q'),
+  (Method:$00001630; Name:'NV2A_VERTEX_TX3_4I_ST'),
+  (Method:$00001634; Name:'NV2A_VERTEX_TX3_4I_RQ'),
+  (Method:$00001698; Name:'NV2A_VERTEX_FOG_1F'),
+  (Method:$000016bc; Name:'NV2A_EDGEFLAG_ENABLE'),
+  (Method:$00001710; Name:'NV2A_VTX_CACHE_INVALIDATE'),
+  (Method:$00001720; Name:'NV2A_VTXBUF_ADDRESS(x)'; Pitch:4; Count:16),
+  (Method:$00001760; Name:'NV2A_VTXFMT(x)'; Pitch:4; Count:16),
+  (Method:$000017a0; Name:'NV2A_LIGHT_MODEL_BACK_AMBIENT_R'),
+  (Method:$000017a4; Name:'NV2A_LIGHT_MODEL_BACK_AMBIENT_G'),
+  (Method:$000017a8; Name:'NV2A_LIGHT_MODEL_BACK_AMBIENT_B'),
+  (Method:$000017ac; Name:'NV2A_MATERIAL_FACTOR_BACK_A'),
+  (Method:$000017b0; Name:'NV2A_MATERIAL_FACTOR_BACK_R'),
+  (Method:$000017b4; Name:'NV2A_MATERIAL_FACTOR_BACK_G'),
+  (Method:$000017b8; Name:'NV2A_MATERIAL_FACTOR_BACK_B'),
+  (Method:$000017bc; Name:'NV2A_COLOR_LOGIC_OP_ENABLE'),
+  (Method:$000017c0; Name:'NV2A_COLOR_LOGIC_OP_OP'),
+  (Method:$000017c4; Name:'NV2A_LIGHT_MODEL_TWO_SIDE_ENABLE'),
+  (Method:$000017f8; Name:'NV2A_TX_SHADER_CULL_MODE'),
+  (Method:$000017fc; Name:'NV2A_VERTEX_BEGIN_END'),
+  (Method:$00001800; Name:'NV2A_VB_ELEMENT_U16'),
+  (Method:$00001808; Name:'NV2A_VB_ELEMENT_U32'),
+  (Method:$00001810; Name:'NV2A_VB_VERTEX_BATCH'),
+  (Method:$00001818; Name:'NV2A_VERTEX_DATA'),
+  (Method:$0000181c; Name:'NV2A_TX_SHADER_CONST_EYE_X'),
+  (Method:$00001820; Name:'NV2A_TX_SHADER_CONST_EYE_Y'),
+  (Method:$00001824; Name:'NV2A_TX_SHADER_CONST_EYE_Z'),
+  (Method:$00001940; Name:'NV2A_VERTEX_DATA4UB(x)'; Pitch:4; Count:13), // Order:POSITION,WEIGHT,NORMAL,DIFFUSE,SPECULAR,FOG,POINT_SIZE,BACK_DIFFUSE,BACK_SPECULAR,TEXTURE0,-1,-2,-3
+  (Method:$00001a00; Name:'NV2A_VTX_ATTR_4F_X(x)'; Pitch:16; Count:16),
+  (Method:$00001a04; Name:'NV2A_VTX_ATTR_4F_Y(x)'; Pitch:16; Count:16),
+  (Method:$00001a08; Name:'NV2A_VTX_ATTR_4F_Z(x)'; Pitch:16; Count:16),
+  (Method:$00001a0c; Name:'NV2A_VTX_ATTR_4F_W(x)'; Pitch:16; Count:16),
+  (Method:$00001b00; Name:'NV2A_TX_OFFSET(x)'; Pitch:64; Count:4),
+  (Method:$00001b04; Name:'NV2A_TX_FORMAT(x)'; Pitch:64; Count:4),
+  (Method:$00001b08; Name:'NV2A_TX_WRAP(x)'; Pitch:64; Count:4),
+  (Method:$00001b0c; Name:'NV2A_TX_ENABLE(x)'; Pitch:64; Count:4),
+  (Method:$00001b10; Name:'NV2A_TX_NPOT_PITCH(x)'; Pitch:64; Count:4),
+  (Method:$00001b14; Name:'NV2A_TX_FILTER(x)'; Pitch:64; Count:4),
+  (Method:$00001b1c; Name:'NV2A_TX_NPOT_SIZE(x)'; Pitch:64; Count:4),
+  (Method:$00001b20; Name:'NV2A_TX_PALETTE_OFFSET(x)'; Pitch:64; Count:4),
+  (Method:$00001b24; Name:'NV2A_TX_BORDER_COLOR(x)'; Pitch:64; Count:4),
+  (Method:$00001b28; Name:'NV2A_TX_SHADER_OFFSET_MATRIX00(x)'; Pitch:64; Count:4),
+  (Method:$00001b2c; Name:'NV2A_TX_SHADER_OFFSET_MATRIX01(x)'; Pitch:64; Count:4),
+  (Method:$00001b30; Name:'NV2A_TX_SHADER_OFFSET_MATRIX11(x)'; Pitch:64; Count:4),
+  (Method:$00001b34; Name:'NV2A_TX_SHADER_OFFSET_MATRIX10(x)'; Pitch:64; Count:4),
+  (Method:$00001d6c; Name:'NV2A_SEMAPHORE_OFFSET'),
+  (Method:$00001d70; Name:'NV2A_WRITE_SEMAPHORE_RELEASE'),
+  (Method:$00001d78; Name:'NV2A_DEPTHCLIPCONTROL'),
+  (Method:$00001d7c; Name:'NV2A_MULTISAMPLE_CONTROL'),
+  (Method:$00001d80; Name:'NV2A_COMPRESS_ZBUFFER_EN'),
+  (Method:$00001d84; Name:'NV2A_OCCLUDE_ZSTENCIL_EN'),
+  (Method:$00001d8c; Name:'NV2A_CLEAR_DEPTH_VALUE'),
+  (Method:$00001d90; Name:'NV2A_CLEAR_VALUE'),
+  (Method:$00001d94; Name:'NV2A_CLEAR_BUFFERS'),
+  (Method:$00001d98; Name:'NV2A_CLEAR_RECT_HORIZONTAL'),
+  (Method:$00001d9c; Name:'NV2A_CLEAR_RECT_VERTICAL'),
+  (Method:$00001e20; Name:'NV2A_RC_COLOR0'),
+  (Method:$00001e24; Name:'NV2A_RC_COLOR1'),
+  (Method:$00001e28; Name:'NV2A_BACK_MATERIAL_SHININESS(x)'; Pitch:4; Count:6),
+  (Method:$00001e40; Name:'NV2A_RC_OUT_RGB(x)'; Pitch:4; Count:8),
+  (Method:$00001e60; Name:'NV2A_RC_ENABLE'),
+  (Method:$00001e68; Name:'NV2A_SHADOW_ZSLOPE_THRESHOLD'),
+  (Method:$00001e6c; Name:'NV2A_TX_RCOMP'),
+  (Method:$00001e70; Name:'NV2A_TX_SHADER_OP'),
+  (Method:$00001e74; Name:'NV2A_TX_SHADER_DOTMAPPING'),
+  (Method:$00001e78; Name:'NV2A_TX_SHADER_PREVIOUS'),
+  (Method:$00001e94; Name:'NV2A_ENGINE'),
+  (Method:$00001e9c; Name:'NV2A_VP_UPLOAD_FROM_ID'),
+  (Method:$00001ea0; Name:'NV2A_VP_START_FROM_ID'),
+  (Method:$00001ea4; Name:'NV2A_VP_UPLOAD_CONST_ID')
+  );
+
+var
+  NV2AInfo: array of record
+    Method: Integer;
+    Name: string;
+  end;
+
+ implementation
+
+uses
+  // Delphi
+  SysUtils;
+
+procedure InitNV2AInfo;
+// Decode all compacted defines into a direct-lookup table (with correctly expanded names)
+var
+  i, mi, ci: Integer;
+begin
+  i := Length(CompactNV2AInfo);
+  SetLength(NV2AInfo, (CompactNV2AInfo[i-1].Method div 4) + 1);
+
+  while i > 0 do
+  begin
+    Dec(i);
+    ci := CompactNV2AInfo[i].Count;
+    if ci = 0 then
+    begin
+      // Only one value, just determine it's index and put it there :
+      mi := CompactNV2AInfo[i].Method div 4;
+      Assert(NV2AInfo[mi].Method = 0); // Check against overwrite
+
+      NV2AInfo[mi].Method := mi * 4;
+      NV2AInfo[mi].Name := CompactNV2AInfo[i].Name;
+    end
+    else
+      // Handle multiple indexes :
+      while ci > 0 do
+      begin
+        Dec(ci);
+        // Calculate the index, using the supplied pitch :
+        mi := (CompactNV2AInfo[i].Method + (ci * CompactNV2AInfo[i].Pitch)) div 4;
+        Assert(NV2AInfo[mi].Method = 0); // Check against overwrite
+
+        // Put the value there, but replace '(x)' in the name with the correct index :
+        NV2AInfo[mi].Method := mi * 4;
+        NV2AInfo[mi].Name := StringReplace(CompactNV2AInfo[i].Name, '(x)', Format('(%d)', [ci]), []);
+      end;
+  end;
+end;
+
+initialization
+  InitNV2AInfo;
 
 end.
