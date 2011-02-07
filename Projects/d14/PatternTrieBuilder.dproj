@@ -54,6 +54,7 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+						<Parameters Name="RunParams"></Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
@@ -93,11 +94,11 @@
 			<DelphiCompile Include="PatternTrieBuilder.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="..\..\src2\Tools\PatternTrieBuilder\uPatternsToTrie.pas"/>
-			<DCCReference Include="..\..\src2\uDxbxUtils.pas"/>
-			<DCCReference Include="..\..\src2\uStoredTrieTypes.pas"/>
-			<DCCReference Include="..\..\src2\uTypes.pas"/>
-			<DCCReference Include="..\..\src2\uCRC16.pas"/>
+			<DCCReference Include="..\..\src\Tools\PatternTrieBuilder\uPatternsToTrie.pas"/>
+			<DCCReference Include="..\..\src\uDxbxUtils.pas"/>
+			<DCCReference Include="..\..\src\uStoredTrieTypes.pas"/>
+			<DCCReference Include="..\..\src\uTypes.pas"/>
+			<DCCReference Include="..\..\src\uCRC16.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

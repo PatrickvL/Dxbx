@@ -93,33 +93,33 @@
 			<DelphiCompile Include="XdkTracker.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="..\..\src\Tools\XdkTracker\src\u_About.pas">
+			<DCCReference Include="..\..\src2\Tools\XdkTracker\src\u_About.pas">
 				<Form>frm_About</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src\Tools\XdkTracker\src\ufrm_Main.pas">
+			<DCCReference Include="..\..\src2\Tools\XdkTracker\src\ufrm_Main.pas">
 				<Form>frmXdkTracker</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src\Tools\XdkTracker\src\uPublisher.pas">
+			<DCCReference Include="..\..\src2\Tools\XdkTracker\src\uPublisher.pas">
 				<Form>frm_Publisher</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src\Tools\XdkTracker\src\uImportGames.pas">
+			<DCCReference Include="..\..\src2\Tools\XdkTracker\src\uImportGames.pas">
 				<Form>frm_XBEList</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src\Tools\XdkTracker\src\uData.pas"/>
-			<DCCReference Include="..\..\src\uConsts.pas"/>
-			<DCCReference Include="..\..\src\uXbe.pas"/>
-			<DCCReference Include="..\..\src\uTypes.pas"/>
-			<DCCReference Include="..\..\src\uTime.pas"/>
-			<DCCReference Include="..\..\src\uLog.pas"/>
-			<DCCReference Include="..\..\src\uDxbxXml.pas">
+			<DCCReference Include="..\..\src2\Tools\XdkTracker\src\uData.pas"/>
+			<DCCReference Include="..\..\src2\uConsts.pas"/>
+			<DCCReference Include="..\..\src2\uXbe.pas"/>
+			<DCCReference Include="..\..\src2\uTypes.pas"/>
+			<DCCReference Include="..\..\src2\uTime.pas"/>
+			<DCCReference Include="..\..\src2\uLog.pas"/>
+			<DCCReference Include="..\..\src2\uDxbxXml.pas">
 				<Form>DxbxXml</Form>
 				<DesignClass>TDataModule</DesignClass>
 			</DCCReference>
-			<DCCReference Include="..\..\src\uConsoleClass.pas"/>
-			<DCCReference Include="..\..\src\uDxbxUtils.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas"/>
-			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
-			<DCCReference Include="..\..\src\uFileSystem.pas"/>
+			<DCCReference Include="..\..\src2\uConsoleClass.pas"/>
+			<DCCReference Include="..\..\src2\uDxbxUtils.pas"/>
+			<DCCReference Include="..\..\src2\DxbxKrnl\uEmuD3D8Types.pas"/>
+			<DCCReference Include="..\..\src2\uXDVDFS.pas"/>
+			<DCCReference Include="..\..\src2\uFileSystem.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

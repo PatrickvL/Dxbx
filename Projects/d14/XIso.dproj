@@ -93,32 +93,32 @@
 			<DelphiCompile Include="XIso.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\Reinit.pas"/>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\ufrm_Main.pas">
+			<DCCReference Include="..\..\src\Tools\XIso\src\Reinit.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\ufrm_Main.pas">
 				<Form>frm_Main</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\uxiso.pas"/>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\uxisomaker.pas"/>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\TextConsts.pas"/>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\ufrm_Language.pas">
+			<DCCReference Include="..\..\src\Tools\XIso\src\uxiso.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\uxisomaker.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\TextConsts.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\ufrm_Language.pas">
 				<Form>frmLanguage</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\ufrmProgress.pas">
+			<DCCReference Include="..\..\src\Tools\XIso\src\ufrmProgress.pas">
 				<Form>frmProgress</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\GenerateXDFS.pas"/>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\Grabacion.pas">
+			<DCCReference Include="..\..\src\Tools\XIso\src\GenerateXDFS.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\Grabacion.pas">
 				<Form>Form4</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\CreacionISO.pas"/>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\FormCreacionISO.pas">
+			<DCCReference Include="..\..\src\Tools\XIso\src\CreacionISO.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\FormCreacionISO.pas">
 				<Form>frmCreateIso</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\ProgresoCreacionISO.pas"/>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\xisomakerv3.pas"/>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\xisomakerv2.pas"/>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\Win32ASPI.pas"/>
-			<DCCReference Include="..\..\src2\Tools\XIso\src\CDROM.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\ProgresoCreacionISO.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\xisomakerv3.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\xisomakerv2.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\Win32ASPI.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\CDROM.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

@@ -94,8 +94,8 @@
 			<DelphiCompile Include="TranslationChecker.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="..\..\src2\uTypes.pas"/>
-			<DCCReference Include="..\..\src2\Tools\TranslationChecker\uTranslationChecker.pas">
+			<DCCReference Include="..\..\src\uTypes.pas"/>
+			<DCCReference Include="..\..\src\Tools\TranslationChecker\uTranslationChecker.pas">
 				<Form>Form1</Form>
 			</DCCReference>
 			<BuildConfiguration Include="Base">

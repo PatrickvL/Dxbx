@@ -130,34 +130,34 @@
 				<ContainerId>RC</ContainerId>
 				<Form>SvnRevision.res</Form>
 			</RcCompile>
-			<DCCReference Include="..\..\src2\uEmuShared.pas"/>
-			<DCCReference Include="..\..\src2\uError.pas"/>
-			<DCCReference Include="..\..\src2\ufrm_About.pas"/>
-			<DCCReference Include="..\..\src2\ufrm_Main.pas"/>
-			<DCCReference Include="..\..\src2\uLog.pas"/>
-			<DCCReference Include="..\..\src2\uMutex.pas"/>
-			<DCCReference Include="..\..\src2\uTime.pas"/>
-			<DCCReference Include="..\..\src2\uTypes.pas"/>
-			<DCCReference Include="..\..\src2\uWindows.pas"/>
-			<DCCReference Include="..\..\src2\uXBController.pas"/>
-			<DCCReference Include="..\..\src2\uXbe.pas"/>
-			<DCCReference Include="..\..\src2\uXbVideo.pas"/>
-			<DCCReference Include="..\..\src2\uConsoleClass.pas"/>
-			<DCCReference Include="..\..\src2\uConsts.pas"/>
-			<DCCReference Include="..\..\src2\uDxbxXml.pas"/>
-			<DCCReference Include="..\..\src2\uDxbxUtils.pas"/>
-			<DCCReference Include="..\..\src2\DxbxKrnl\uEmuD3D8Types.pas"/>
-			<DCCReference Include="..\..\src2\uXDVDFS.pas"/>
-			<DCCReference Include="..\..\src2\uFileSystem.pas"/>
-			<DCCReference Include="..\..\src2\Tools\XdkTracker\src\uData.pas"/>
-			<DCCReference Include="..\..\src2\VistaIconFix.pas"/>
-			<DCCReference Include="..\..\src2\ufrm_Configuration.pas">
+			<DCCReference Include="..\..\src\uEmuShared.pas"/>
+			<DCCReference Include="..\..\src\uError.pas"/>
+			<DCCReference Include="..\..\src\ufrm_About.pas"/>
+			<DCCReference Include="..\..\src\ufrm_Main.pas"/>
+			<DCCReference Include="..\..\src\uLog.pas"/>
+			<DCCReference Include="..\..\src\uMutex.pas"/>
+			<DCCReference Include="..\..\src\uTime.pas"/>
+			<DCCReference Include="..\..\src\uTypes.pas"/>
+			<DCCReference Include="..\..\src\uWindows.pas"/>
+			<DCCReference Include="..\..\src\uXBController.pas"/>
+			<DCCReference Include="..\..\src\uXbe.pas"/>
+			<DCCReference Include="..\..\src\uXbVideo.pas"/>
+			<DCCReference Include="..\..\src\uConsoleClass.pas"/>
+			<DCCReference Include="..\..\src\uConsts.pas"/>
+			<DCCReference Include="..\..\src\uDxbxXml.pas"/>
+			<DCCReference Include="..\..\src\uDxbxUtils.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas"/>
+			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
+			<DCCReference Include="..\..\src\uFileSystem.pas"/>
+			<DCCReference Include="..\..\src\Tools\XdkTracker\src\uData.pas"/>
+			<DCCReference Include="..\..\src\VistaIconFix.pas"/>
+			<DCCReference Include="..\..\src\ufrm_Configuration.pas">
 				<Form>fmConfiguration</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src2\uImportGames.pas">
+			<DCCReference Include="..\..\src\uImportGames.pas">
 				<Form>frm_XBEList</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src2\uXbSound.pas"/>
+			<DCCReference Include="..\..\src\uXbSound.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

@@ -25,30 +25,30 @@ program Dxbx;
 uses
   SysUtils,
   Forms,
-  uEmuShared in '..\..\src2\uEmuShared.pas',
-  uError in '..\..\src2\uError.pas',
-  ufrm_About in '..\..\src2\ufrm_About.pas',
-  ufrm_Main in '..\..\src2\ufrm_Main.pas',
-  uLog in '..\..\src2\uLog.pas',
-  uMutex in '..\..\src2\uMutex.pas',
-  uTime in '..\..\src2\uTime.pas',
-  uTypes in '..\..\src2\uTypes.pas',
-  uWindows in '..\..\src2\uWindows.pas',
-  uXBController in '..\..\src2\uXBController.pas',
-  uXbe in '..\..\src2\uXbe.pas',
-  uXbVideo in '..\..\src2\uXbVideo.pas',
-  uConsoleClass in '..\..\src2\uConsoleClass.pas',
-  uConsts in '..\..\src2\uConsts.pas',
-  uDxbxXml in '..\..\src2\uDxbxXml.pas',
-  uDxbxUtils in '..\..\src2\uDxbxUtils.pas',
-  uEmuD3D8Types in '..\..\src2\DxbxKrnl\uEmuD3D8Types.pas',
-  uXDVDFS in '..\..\src2\uXDVDFS.pas',
-  uFileSystem in '..\..\src2\uFileSystem.pas',
-  uData in '..\..\src2\Tools\XdkTracker\src\uData.pas',
-  VistaIconFix in '..\..\src2\VistaIconFix.pas',
-  ufrm_Configuration in '..\..\src2\ufrm_Configuration.pas' {fmConfiguration},
-  uImportGames in '..\..\src2\uImportGames.pas' {frm_XBEList},
-  uXbSound in '..\..\src2\uXbSound.pas';
+  uEmuShared in '..\..\src\uEmuShared.pas',
+  uError in '..\..\src\uError.pas',
+  ufrm_About in '..\..\src\ufrm_About.pas',
+  ufrm_Main in '..\..\src\ufrm_Main.pas',
+  uLog in '..\..\src\uLog.pas',
+  uMutex in '..\..\src\uMutex.pas',
+  uTime in '..\..\src\uTime.pas',
+  uTypes in '..\..\src\uTypes.pas',
+  uWindows in '..\..\src\uWindows.pas',
+  uXBController in '..\..\src\uXBController.pas',
+  uXbe in '..\..\src\uXbe.pas',
+  uXbVideo in '..\..\src\uXbVideo.pas',
+  uConsoleClass in '..\..\src\uConsoleClass.pas',
+  uConsts in '..\..\src\uConsts.pas',
+  uDxbxXml in '..\..\src\uDxbxXml.pas',
+  uDxbxUtils in '..\..\src\uDxbxUtils.pas',
+  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
+  uXDVDFS in '..\..\src\uXDVDFS.pas',
+  uFileSystem in '..\..\src\uFileSystem.pas',
+  uData in '..\..\src\Tools\XdkTracker\src\uData.pas',
+  VistaIconFix in '..\..\src\VistaIconFix.pas',
+  ufrm_Configuration in '..\..\src\ufrm_Configuration.pas' {fmConfiguration},
+  uImportGames in '..\..\src\uImportGames.pas' {frm_XBEList},
+  uXbSound in '..\..\src\uXbSound.pas';
 
 {$R *.RES}
 
@@ -57,6 +57,8 @@ uses
 // and thus takes virtually no space in the EXE. This block makes sure that
 // the whole 128MB range of Virtual Memory (from $00010000 up to $0800000)
 // isn't occupied with anything else, and this fully available to our emulator.
+const
+  XBOX_MEMORY_SIZE = 128*1024*1024;
 var
   Data: array [0..XBOX_MEMORY_SIZE-1] of Byte;
 

@@ -99,34 +99,34 @@
 				<ContainerId>RC</ContainerId>
 				<Form>XBEExplorerResources.res</Form>
 			</RcCompile>
-			<DCCReference Include="..\..\src2\XBEExplorer\uXBEExplorerMain.pas">
+			<DCCReference Include="..\..\src\XBEExplorer\uXBEExplorerMain.pas">
 				<Form>FormXBEExplorer</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src2\uXbe.pas"/>
-			<DCCReference Include="..\..\src2\uTypes.pas"/>
-			<DCCReference Include="..\..\src2\uConsts.pas"/>
-			<DCCReference Include="..\..\src2\uDxbxUtils.pas"/>
-			<DCCReference Include="..\..\src2\uLog.pas"/>
-			<DCCReference Include="..\..\src2\uTime.pas"/>
-			<DCCReference Include="..\..\src2\DxbxKrnl\uEmuD3D8Types.pas"/>
-			<DCCReference Include="..\..\src2\uConsoleClass.pas"/>
-			<DCCReference Include="..\..\src2\XBEExplorer\uHexViewer.pas">
+			<DCCReference Include="..\..\src\uXbe.pas"/>
+			<DCCReference Include="..\..\src\uTypes.pas"/>
+			<DCCReference Include="..\..\src\uConsts.pas"/>
+			<DCCReference Include="..\..\src\uDxbxUtils.pas"/>
+			<DCCReference Include="..\..\src\uLog.pas"/>
+			<DCCReference Include="..\..\src\uTime.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas"/>
+			<DCCReference Include="..\..\src\uConsoleClass.pas"/>
+			<DCCReference Include="..\..\src\XBEExplorer\uHexViewer.pas">
 				<Form>HexViewer</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
-			<DCCReference Include="..\..\src2\XBEExplorer\uStringsViewer.pas"/>
-			<DCCReference Include="..\..\src2\uXDVDFS.pas"/>
-			<DCCReference Include="..\..\src2\uFileSystem.pas"/>
-			<DCCReference Include="..\..\src2\XBEExplorer\uExploreFileSystem.pas">
+			<DCCReference Include="..\..\src\XBEExplorer\uStringsViewer.pas"/>
+			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
+			<DCCReference Include="..\..\src\uFileSystem.pas"/>
+			<DCCReference Include="..\..\src\XBEExplorer\uExploreFileSystem.pas">
 				<Form>frmExploreFileSystem</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src2\XBEExplorer\uDisassembleViewer.pas"/>
+			<DCCReference Include="..\..\src\XBEExplorer\uDisassembleViewer.pas"/>
 			<DCCReference Include="..\..\Libraries\BeaEngine\BeaEngine.pas"/>
-			<DCCReference Include="..\..\src2\XBEExplorer\uSectionViewer.pas"/>
-			<DCCReference Include="..\..\src2\XBEExplorer\uViewerUtils.pas"/>
-			<DCCReference Include="..\..\src2\uDisassembleUtils.pas"/>
-			<DCCReference Include="..\..\src2\VistaIconFix.pas"/>
-			<DCCReference Include="..\..\src2\uCRC16.pas"/>
+			<DCCReference Include="..\..\src\XBEExplorer\uSectionViewer.pas"/>
+			<DCCReference Include="..\..\src\XBEExplorer\uViewerUtils.pas"/>
+			<DCCReference Include="..\..\src\uDisassembleUtils.pas"/>
+			<DCCReference Include="..\..\src\VistaIconFix.pas"/>
+			<DCCReference Include="..\..\src\uCRC16.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
