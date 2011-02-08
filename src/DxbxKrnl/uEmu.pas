@@ -169,10 +169,10 @@ begin
   E := ExceptionInfo.ExceptionRecord;
 
 // W7 fix : No logging, to prevent kernel calls (via memory allocation and/or I/O) :
-  DbgPrintf('EmuMain : EmuException() with code 0x%.08x (%s) triggered at address 0x%.08x', [
-    E.ExceptionCode,
-    NTStatusToString(E.ExceptionCode),
-    UIntPtr(C.Eip)]);
+//  DbgPrintf('EmuMain : EmuException() with code 0x%.08x (%s) triggered at address 0x%.08x', [
+//    E.ExceptionCode,
+//    NTStatusToString(E.ExceptionCode),
+//    UIntPtr(C.Eip)]);
 
   case E.ExceptionCode of
     // STATUS_ILLEGAL_INSTRUCTION ?
@@ -244,7 +244,7 @@ begin
 
   // Skip write to $80000000 (as happens in '?Init@CDevice@D3D@@QAEJPAU_D3DPRESENT_PARAMETERS_@@@Z')  :
   if  (E.NumberParameters = 2)
-  and (E.ExceptionInformation[1] = $80000000) then
+  and (E.ExceptionInformation[1] >= $80000000) then
   begin
     // From Wings of War :
     // 0011E20F A3 00000080 mov dword ptr [$80000000],eax
@@ -276,11 +276,7 @@ begin
       Result := True;
       Exit;
     end;
-  end;
 
-  if  (E.NumberParameters = 1)
-  and (E.ExceptionInformation[0] = $80000000) then
-  begin
     // From Vertices :
     // 00011145 F3 A5 rep movsd
     if  (PBytes(E.ExceptionAddress)[0] = $F3)
@@ -291,6 +287,7 @@ begin
       Exit;
     end;
   end;
+
 {$IFDEF GAME_HACKS_ENABLED}
 
   if IsRunning(TITLEID_Halo) then
