@@ -169,10 +169,10 @@ begin
   E := ExceptionInfo.ExceptionRecord;
 
 // W7 fix : No logging, to prevent kernel calls (via memory allocation and/or I/O) :
-//  DbgPrintf('EmuMain : EmuException() with code 0x%.08x (%s) triggered at address 0x%.08x', [
-//    E.ExceptionCode,
-//    NTStatusToString(E.ExceptionCode),
-//    UIntPtr(C.Eip)]);
+  DbgPrintf('EmuMain : EmuException() with code 0x%.08x (%s) triggered at address 0x%.08x', [
+    E.ExceptionCode,
+    NTStatusToString(E.ExceptionCode),
+    UIntPtr(C.Eip)]);
 
   case E.ExceptionCode of
     // STATUS_ILLEGAL_INSTRUCTION ?
@@ -270,7 +270,7 @@ begin
     // From CreateDevice :
     // 0001ADA4 C7 0500000080EFBEADDE mov dword ptr [$80000000],$DEADBEEF
     if  (PBytes(E.ExceptionAddress)[0] = $C7)
-    and (PBytes(E.ExceptionAddress)[1] = $05)then
+    and (PBytes(E.ExceptionAddress)[1] = $05) then
     begin
       Inc(C.Eip, 10);
       Result := True;
@@ -278,6 +278,19 @@ begin
     end;
   end;
 
+  if  (E.NumberParameters = 1)
+  and (E.ExceptionInformation[0] = $80000000) then
+  begin
+    // From Vertices :
+    // 00011145 F3 A5 rep movsd
+    if  (PBytes(E.ExceptionAddress)[0] = $F3)
+    and (PBytes(E.ExceptionAddress)[1] = $A5) then
+    begin
+      C.EDI := C.EDI and $7FFFFFFF; // Remove the high-bit from the destination address
+      Result := True;
+      Exit;
+    end;
+  end;
 {$IFDEF GAME_HACKS_ENABLED}
 
   if IsRunning(TITLEID_Halo) then
