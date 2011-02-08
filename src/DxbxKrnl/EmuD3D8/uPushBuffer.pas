@@ -826,7 +826,7 @@ begin
 
       // Fake a read by the Nv2A, by moving the DMA 'Get' location
       // up to where the pushbuffer is executed, so that the BusyLoop
-      // in CDevice.Init finished cleanly :
+      // in CDevice.Init finishes cleanly :
       g_NV2ADMAChannel.Get := pdwPushData;
       // TODO : We should probably set g_NV2ADMAChannel.Put to the same value first?
 
