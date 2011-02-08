@@ -116,14 +116,14 @@ const  NV2A_RT_PITCH_ZETA_PITCH_MASK                              = $ffff0000;
 const NV2A_COLOR_OFFSET                                           = $00000210;
 const NV2A_ZETA_OFFSET                                            = $00000214;
 //const NV2A_RC_IN_ALPHA(x)                                       = ($00000260+((x)*4));
-const NV2A_RC_IN_ALPHA_0                                          = $00000260;
-const NV2A_RC_IN_ALPHA_1                                          = $00000264;
-const NV2A_RC_IN_ALPHA_2                                          = $00000268;
-const NV2A_RC_IN_ALPHA_3                                          = $0000026C;
-const NV2A_RC_IN_ALPHA_4                                          = $00000270;
-const NV2A_RC_IN_ALPHA_5                                          = $00000274;
-const NV2A_RC_IN_ALPHA_6                                          = $00000278;
-const NV2A_RC_IN_ALPHA_7                                          = $0000027C;
+const NV2A_RC_IN_ALPHA__0                                         = ($00000260+((0)*4)); // Dxbx
+const NV2A_RC_IN_ALPHA__1                                         = ($00000260+((1)*4)); // Dxbx
+const NV2A_RC_IN_ALPHA__2                                         = ($00000260+((2)*4)); // Dxbx
+const NV2A_RC_IN_ALPHA__3                                         = ($00000260+((3)*4)); // Dxbx
+const NV2A_RC_IN_ALPHA__4                                         = ($00000260+((4)*4)); // Dxbx
+const NV2A_RC_IN_ALPHA__5                                         = ($00000260+((5)*4)); // Dxbx
+const NV2A_RC_IN_ALPHA__6                                         = ($00000260+((6)*4)); // Dxbx
+const NV2A_RC_IN_ALPHA__7                                         = ($00000260+((7)*4)); // Dxbx
 const NV2A_RC_IN_ALPHA__SIZE                                      = $00000008;
 const  NV2A_RC_IN_ALPHA_D_INPUT_SHIFT                             = 0;
 const  NV2A_RC_IN_ALPHA_D_INPUT_MASK                              = $0000000f;
@@ -518,9 +518,9 @@ const  NV2A_FOG_COLOR_B_MASK                                      = $00ff0000;
 const  NV2A_FOG_COLOR_A_SHIFT                                     = 24;
 const  NV2A_FOG_COLOR_A_MASK                                      = $ff000000;
 const NV2A_VIEWPORT_CLIP_MODE                                     = $000002b4;
-const NV2A_VIEWPORT_CLIP_HORIZ_0                                  = ($000002c0+((0)*4));
 //const NV2A_VIEWPORT_CLIP_HORIZ(x)                               = ($000002c0+((x)*4));
 const NV2A_VIEWPORT_CLIP_HORIZ__SIZE                              = $00000008;
+const NV2A_VIEWPORT_CLIP_HORIZ__0                                 = ($000002c0+((0)*4)); // Dxbx
 //const NV2A_VIEWPORT_CLIP_VERT(x)                                = ($000002e0+((x)*4));
 const NV2A_VIEWPORT_CLIP_VERT__SIZE                               = $00000008;
 const NV2A_ALPHA_FUNC_ENABLE                                      = $00000300;
@@ -842,8 +842,9 @@ const NV2A_VIEWPORT_TRANSLATE_W                                   = $00000a2c;
 //const NV2A_POINT_PARAMETER(x)                                   = ($00000a30+((x)*4));
 const NV2A_POINT_PARAMETER__SIZE                                  = $00000008;
 const NV2A_EYE_POSITION_0                                         = ($00000a50+((0)*4)); // Dxbx
-const NV2A_RC_CONSTANT_COLOR0_0                                   = ($00000a60+((0)*4)); // Dxbx
 //const NV2A_RC_CONSTANT_COLOR0(x)                                = ($00000a60+((x)*4));
+const NV2A_RC_CONSTANT_COLOR0__0                                  = ($00000a60+((0)*4)); // Dxbx
+const NV2A_RC_CONSTANT_COLOR0__7                                  = ($00000a60+((7)*4)); // Dxbx
 const NV2A_RC_CONSTANT_COLOR0__SIZE                               = $00000008;
 const  NV2A_RC_CONSTANT_COLOR0_B_SHIFT                            = 0;
 const  NV2A_RC_CONSTANT_COLOR0_B_MASK                             = $000000ff;
@@ -1388,7 +1389,9 @@ const NV2A_TX_SHADER_CONST_EYE_X                                  = $0000181c;
 const NV2A_TX_SHADER_CONST_EYE_Y                                  = $00001820;
 const NV2A_TX_SHADER_CONST_EYE_Z                                  = $00001824;
 //const NV2A_VERTEX_DATA4UB(x)                                    = ($00001940+((x)*4));
-const NV2A_VERTEX_DATA4UB__SIZE                                   = $0000000c; // Dxbx
+const NV2A_VERTEX_DATA4UB__SIZE                                   = $00000010; // Dxbx
+const NV2A_VERTEX_DATA4UB__0                                      = ($00001940+((0)*4)); // Dxbx
+const NV2A_VERTEX_DATA4UB__15                                     = ($00001940+((15)*4)); // Dxbx
 //const NV2A_VTX_ATTR_4F_X(x)                                     = ($00001a00+((x)*16));
 const NV2A_VTX_ATTR_4F_X__SIZE                                    = $00000010;
 //const NV2A_VTX_ATTR_4F_Y(x)                                     = ($00001a04+((x)*16));
@@ -1730,7 +1733,7 @@ const
     Pitch: Integer; // Default 0 means 4
     Count: Integer; // Default 0 means 1
   end = (
-  (Method:$00000100; Name:'NV2A_NOP'),
+  (Method:$00000100; Name:'NV2A_NOP'), // Parameter must be zero
   (Method:$00000104; Name:'NV2A_NOTIFY'),
   (Method:$00000110; Name:'NV2A_WAIT_FOR_IDLE'), // Dxbx
   (Method:$00000120; Name:'NV2A_FLIP_READ'),
@@ -1875,7 +1878,7 @@ const
   (Method:$00000af8; Name:'NV2A_VIEWPORT_SCALE_Z'),
   (Method:$00000afc; Name:'NV2A_VIEWPORT_SCALE_W'),
   (Method:$00000b00; Name:'NV2A_VP_UPLOAD_INST(x)'; Pitch:4; Count:4),
-  (Method:$00000b80; Name:'NV2A_VP_UPLOAD_CONST(x)'; Pitch:4; Count:4),
+  (Method:$00000b80; Name:'NV2A_VP_UPLOAD_CONST(x)'; Pitch:4; Count:4), // Can't use NOINCREMENT_FLAG, maximum of 32 writes
   (Method:$00000c00; Name:'NV2A_LIGHT_BACK_AMBIENT_R(x)'; Pitch:64; Count:8),
   (Method:$00000c04; Name:'NV2A_LIGHT_BACK_AMBIENT_G(x)'; Pitch:64; Count:8),
   (Method:$00000c08; Name:'NV2A_LIGHT_BACK_AMBIENT_B(x)'; Pitch:64; Count:8),
@@ -1992,15 +1995,15 @@ const
   (Method:$000017c0; Name:'NV2A_COLOR_LOGIC_OP_OP'),
   (Method:$000017c4; Name:'NV2A_LIGHT_MODEL_TWO_SIDE_ENABLE'),
   (Method:$000017f8; Name:'NV2A_TX_SHADER_CULL_MODE'),
-  (Method:$000017fc; Name:'NV2A_VERTEX_BEGIN_END'),
+  (Method:$000017fc; Name:'NV2A_VERTEX_BEGIN_END'), // Parameter is D3DPRIMITIVETYPE or 0 to end
   (Method:$00001800; Name:'NV2A_VB_ELEMENT_U16'),
   (Method:$00001808; Name:'NV2A_VB_ELEMENT_U32'),
   (Method:$00001810; Name:'NV2A_VB_VERTEX_BATCH'),
-  (Method:$00001818; Name:'NV2A_VERTEX_DATA'),
+  (Method:$00001818; Name:'NV2A_VERTEX_DATA'), // Use NOINCREMENT_FLAG
   (Method:$0000181c; Name:'NV2A_TX_SHADER_CONST_EYE_X'),
   (Method:$00001820; Name:'NV2A_TX_SHADER_CONST_EYE_Y'),
   (Method:$00001824; Name:'NV2A_TX_SHADER_CONST_EYE_Z'),
-  (Method:$00001940; Name:'NV2A_VERTEX_DATA4UB(x)'; Pitch:4; Count:13), // Order:POSITION,WEIGHT,NORMAL,DIFFUSE,SPECULAR,FOG,POINT_SIZE,BACK_DIFFUSE,BACK_SPECULAR,TEXTURE0,-1,-2,-3
+  (Method:$00001940; Name:'NV2A_VERTEX_DATA4UB(x)'; Pitch:4; Count:16), // Order:POSITION,WEIGHT,NORMAL,DIFFUSE,SPECULAR,FOG,POINT_SIZE,BACK_DIFFUSE,BACK_SPECULAR,TEXTURE0,-1,-2,-3,?,?,?
   (Method:$00001a00; Name:'NV2A_VTX_ATTR_4F_X(x)'; Pitch:16; Count:16),
   (Method:$00001a04; Name:'NV2A_VTX_ATTR_4F_Y(x)'; Pitch:16; Count:16),
   (Method:$00001a08; Name:'NV2A_VTX_ATTR_4F_Z(x)'; Pitch:16; Count:16),
@@ -2042,7 +2045,7 @@ const
   (Method:$00001e94; Name:'NV2A_ENGINE'),
   (Method:$00001e9c; Name:'NV2A_VP_UPLOAD_FROM_ID'),
   (Method:$00001ea0; Name:'NV2A_VP_START_FROM_ID'),
-  (Method:$00001ea4; Name:'NV2A_VP_UPLOAD_CONST_ID')
+  (Method:$00001ea4; Name:'NV2A_VP_UPLOAD_CONST_ID') // Add 96 to constant index parameter
   );
 
 var
