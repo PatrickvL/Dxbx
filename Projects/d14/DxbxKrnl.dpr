@@ -102,8 +102,7 @@ uses
   uXbSound in '..\..\src\uXbSound.pas',
   DbgConsole in '..\..\src\DxbxKrnl\DbgConsole.pas',
   uMiniport in '..\..\src\DxbxKrnl\EmuD3D8\uMiniport.pas',
-  uNV2A in '..\..\src\DxbxKrnl\EmuD3D8\uNV2A.pas',
-  CodeHookIntf in '..\..\Libraries\KbAsmCodeHook\CodeHookIntf.pas';
+  uNV2A in '..\..\src\DxbxKrnl\EmuD3D8\uNV2A.pas';
 
 {$IMAGEBASE $10000000}
 
