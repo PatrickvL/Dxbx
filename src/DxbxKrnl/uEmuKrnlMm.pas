@@ -45,8 +45,18 @@ uses
   uEmuFS,
   uEmuKrnl;
 
-var {102}xboxkrnl_MmGlobalData: array [0..8-1] of PVOID = (nil, nil, nil, nil, nil, nil, nil, nil);
-// Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
+var MmAvailablePages: DWORD = XBOX_MEMORY_SIZE div PAGE_SIZE;
+var MmAllocatedPagesByUsage: array [0..11] of DWORD;
+var {102}xboxkrnl_MmGlobalData: array [0..8-1] of PVOID = (
+  nil,
+  nil,
+  @MmAvailablePages,
+  @MmAllocatedPagesByUsage[0],
+  nil,
+  nil,
+  nil,
+  nil);
+// Source:?  Branch:Dxbx  Translator:PatrickvL  Done:30
 
 type
   RDxbxAllocationInfo = record
@@ -770,6 +780,8 @@ begin
 end;
 
 initialization
+
+  ZeroMemory(@MmAllocatedPagesByUsage[0], SizeOf(MmAllocatedPagesByUsage));
 
   ZeroMemory(@MmAllocatedSize[0], SizeOf(MmAllocatedSize));
   ZeroMemory(@MmAllocatedBase[0], SizeOf(MmAllocatedBase));
