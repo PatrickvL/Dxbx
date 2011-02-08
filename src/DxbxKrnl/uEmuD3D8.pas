@@ -75,8 +75,6 @@ uses
   uEmuXapi, // PXINPUT_FEEDBACK
   uEmuXG;
 
-procedure DxbxDebugSwitchQuadIndexWinding;
-
 function DxbxGetDataFromXboxResource(const pThis: PX_D3DResource): Pointer;
 function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0; iFace: int = Ord(D3DCUBEMAP_FACE_POSITIVE_X) - 1): Boolean;
 function DxbxFVF_GetTextureSize(const dwFVF: DWORD; const aTextureIndex: Integer): Integer;
@@ -91,12 +89,12 @@ procedure DxbxSetRenderStateInternal(
   XboxValue: DWORD
   ); {NOPATCH}
 
-function XTL_EmuD3DDevice_EnableOverlay(Enable: BOOL): HRESULT; stdcall;
-procedure XTL_EmuD3DDevice_UpdateOverlay(pSurface: PX_D3DSurface;
-  pSrcRect: PRECT;
-  pDstRect: PRECT;
-  EnableColorKey: BOOL;
-  ColorKey: D3DCOLOR); stdcall;
+//function XTL_EmuD3DDevice_EnableOverlay(Enable: BOOL): HRESULT; stdcall;
+//procedure XTL_EmuD3DDevice_UpdateOverlay(pSurface: PX_D3DSurface;
+//  pSrcRect: PRECT;
+//  pDstRect: PRECT;
+//  EnableColorKey: BOOL;
+//  ColorKey: D3DCOLOR); stdcall;
 
 var
   // Global(s)
@@ -215,7 +213,7 @@ var XTL_Direct3D_GetDeviceCaps: function
 ): HRESULT; stdcall;
 
 var
-  DxbxOnSetRenderTarget: procedure (pRenderTarget: PX_D3DSurface; pNewZStencil: PX_D3DSurface) = nil;
+  DxbxOnSetRenderTarget: procedure (pRenderTarget: PX_D3DSurface; pNewZStencil: PX_D3DSurface) stdcall = nil;
 
 implementation
 
@@ -224,6 +222,9 @@ uses
   uDxbxKrnl
   , uEmuKrnlMm // for xboxkrnl_MmAllocateContiguousMemory and DxbxGetNativeContiguousMemoryAddress
   , uXboxLibraryUtils; // Should not be here, but needed for DxbxKrnlRegisterThread
+
+procedure DxbxDebugSwitchQuadIndexWinding; forward;
+
 
 const lfUnit = lfCxbx or lfGraphics;
 
@@ -1583,6 +1584,9 @@ var
   ddsd2: DDSURFACEDESC2;
   Streams: int;
 begin
+  if MayLog(lfUnit) then
+    DbgPrintf('DxbxCreateDevice()');
+
   if (PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).BufferSurfaces[0] <> NULL) then
     EmuWarning('BufferSurfaces[0]: 0x%.08X', [PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).BufferSurfaces[0]]);
 
@@ -1614,7 +1618,7 @@ begin
       // TODO -oDxbx : Why does BenchMark crash with this?
       //EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat);
 
-      g_EmuCDPD.NativePresentationParameters.FullScreen_RefreshRateInHz := 0; // ??
+      g_EmuCDPD.NativePresentationParameters.FullScreen_RefreshRateInHz := 0; // D3DDisplayMode.RefreshRate ??
     end
     else
     begin
@@ -1736,7 +1740,7 @@ begin
 
   // report error
   if (FAILED(g_EmuCDPD.hRet)) then
-    DxbxD3DError('EmuThreadCreateDeviceProxy', 'IDirect3D8.CreateDevice failed', nil, g_EmuCDPD.hRet);
+    DxbxD3DError('DxbxCreateDevice', 'IDirect3D8.CreateDevice failed', nil, g_EmuCDPD.hRet);
 
   // Update Xbox PresentationParameters :
   g_EmuCDPD.pPresentationParameters.BackBufferWidth := g_EmuCDPD.NativePresentationParameters.BackBufferWidth;
@@ -1760,11 +1764,11 @@ begin
       hRet := DirectDrawCreateEx({lpGUID=}@g_ddguid, {out}IDirectDraw7(g_pDD7), {iid=}IID_IDirectDraw7, {pUnkOuter=}NULL);
 
     if (FAILED(hRet)) then
-      DxbxD3DError('EmuThreadCreateDeviceProxy', 'Could not initialize DirectDraw7', nil, hRet);
+      DxbxD3DError('DxbxCreateDevice', 'Could not initialize DirectDraw7', nil, hRet);
 
     hRet := IDirectDraw7(g_pDD7).SetCooperativeLevel(0, DDSCL_NORMAL);
     if (FAILED(hRet)) then
-      DxbxD3DError('EmuThreadCreateDeviceProxy', 'Could not set cooperative level', nil, hRet);
+      DxbxD3DError('DxbxCreateDevice', 'Could not set cooperative level', nil, hRet);
   end;
 
   // check for YUY2 overlay support
@@ -1828,7 +1832,7 @@ begin
 
     hRet := IDirectDraw7(g_pDD7).CreateSurface(ddsd2, @g_pDDSPrimary7, nil);
     if (FAILED(hRet)) then
-      DxbxD3DError('EmuThreadCreateDeviceProxy', 'Could not create primary surface', nil, hRet);
+      DxbxD3DError('DxbxCreateDevice', 'Could not create primary surface', nil, hRet);
   end;
 
   g_pD3DDevice.CreateVertexBuffer
@@ -1907,6 +1911,8 @@ begin
 
   Result := False;
 end;
+
+{$IFNDEF PUSHBUFFER_ONLY}
 
 (*procedure XTL_EmuXMETAL_StartPush
 (
@@ -3677,9 +3683,6 @@ begin
     // Set new :
     g_EmuD3DActiveDepthStencil := pNewZStencil;
   end;
-
-  // TODO : Return D3DERR_INVALIDCALL if pPCRenderTarget or pPCNewZStencil are assigned but invalid,
-  // or if pPCNewZStencil is smaller than pPCRenderTarget.
 
   EmuSwapFS(fsXbox);
 end;
@@ -6494,6 +6497,8 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+{$ENDIF !PUSHBUFFER_ONLY}
+
 function QuadToTriangleVertexCount(NrOfQuadVertices: UINT): UINT;
 begin
   Result := (NrOfQuadVertices * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD) div VERTICES_PER_QUAD;
@@ -6611,6 +6616,8 @@ begin
   if (FAILED(hRet)) then
     DxbxKrnlCleanup('DxbxAssureQuadListD3DIndexBuffer : SetIndices Failed!'#13#10 + DxbxD3DErrorString(hRet));
 end;
+
+{$IFNDEF PUSHBUFFER_ONLY}
 
 procedure XTL_EmuD3DDevice_DrawVertices
 (
@@ -6757,6 +6764,8 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+{$ENDIF !PUSHBUFFER_ONLY}
+
 var
   DxbxClosingLineVertices: array[0..256-1] of Byte;
 
@@ -6824,6 +6833,8 @@ begin
     end;
   end;
 end; // DxbxDrawPrimitiveUP
+
+{$IFNDEF PUSHBUFFER_ONLY}
 
 //D3DMINLINE HRESULT WINAPI::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT MinIndex, UINT NumIndices, UINT StartIndex, UINT PrimitiveCount)
 // { D3DDevice_DrawIndexedVertices(PrimitiveType, D3DVERTEXCOUNT(PrimitiveType, PrimitiveCount), D3D__IndexData + StartIndex); return S_OK; }
@@ -9052,7 +9063,6 @@ function XTL_EmuD3DPushBuffer_CopyRects
 *)
 
 exports
-
   // XTL_EmuD3DDevice_FindFence // Not yet implemented
   // XTL_EmuD3DDevice_GetColorMaterial // Not yet implemented
   // XTL_EmuD3DDevice_GetPersistedSurface2, // Dxbx: not implemented yet
@@ -9122,7 +9132,7 @@ exports
   XTL_EmuD3D_BlockOnNonSurfaceResource,
   XTL_EmuD3D_CleanPrivateData,
   XTL_EmuD3D_GetDataFromResource,
-  XTL_EmuD3D_KickOffAndWaitForIdle,
+  XTL_EmuD3D_KickOffAndWaitForIdle, {nopatch:CreateDevice}
 
   XTL_EmuD3D_PixelJar_FindSurfaceWithinTexture,
   XTL_EmuD3D_PixelJar_Get2DSurfaceDesc,
@@ -9154,7 +9164,7 @@ exports
 //  XTL_EmuD3DDevice_BlockUntilIdle, // Dxbx note : Disabled, too high level.
   XTL_EmuD3DDevice_BlockUntilVerticalBlank,
   XTL_EmuD3DDevice_CaptureStateBlock,
-  XTL_EmuD3DDevice_Clear,
+  XTL_EmuD3DDevice_Clear, {nopatch:CreateDevice}
   XTL_EmuD3DDevice_CopyRects,
 //  XTL_EmuD3DDevice_CreateCubeTexture,
 //  XTL_EmuD3DDevice_CreateDepthStencilSurface,
@@ -9176,12 +9186,12 @@ exports
 //  XTL_EmuD3DDevice_DeletePixelShader, // Dxbx note : Disabled, too high level.
   XTL_EmuD3DDevice_DeleteStateBlock,
   XTL_EmuD3DDevice_DeleteVertexShader,
-  XTL_EmuD3DDevice_DrawIndexedVertices,
-  XTL_EmuD3DDevice_DrawIndexedVerticesUP,
-  XTL_EmuD3DDevice_DrawRectPatch,
-  XTL_EmuD3DDevice_DrawTriPatch,
-  XTL_EmuD3DDevice_DrawVertices,
-  XTL_EmuD3DDevice_DrawVerticesUP,
+  XTL_EmuD3DDevice_DrawIndexedVertices, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_DrawIndexedVerticesUP, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_DrawRectPatch, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_DrawTriPatch, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_DrawVertices, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_DrawVerticesUP, {nopatch:CreateDevice}
   XTL_EmuD3DDevice_EnableOverlay,
   XTL_EmuD3DDevice_End,
 //  XTL_EmuD3DDevice_EndPush,
@@ -9217,8 +9227,8 @@ exports
 //  XTL_EmuD3DDevice_GetPushDistance,
   XTL_EmuD3DDevice_GetRasterStatus,
 //  XTL_EmuD3DDevice_GetRenderState,
-  XTL_EmuD3DDevice_GetRenderTarget,
-  XTL_EmuD3DDevice_GetRenderTarget2,
+  XTL_EmuD3DDevice_GetRenderTarget, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_GetRenderTarget2, {nopatch:CreateDevice}
   XTL_EmuD3DDevice_GetShaderConstantMode,
   XTL_EmuD3DDevice_GetStreamSource,
   XTL_EmuD3DDevice_GetStreamSource2,
@@ -9252,8 +9262,8 @@ exports
   XTL_EmuD3DDevice_Present, // Dxbx note : Present only occurs in 3911, sometime before 4361 it was changed into Swap
   XTL_EmuD3DDevice_PrimeVertexCache,
 //  XTL_EmuD3DDevice_Release,
-  XTL_EmuD3DDevice_Reset,
-  XTL_EmuD3DDevice_Resume,
+  XTL_EmuD3DDevice_Reset, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_Resume, {nopatch:CreateDevice}
 //  XTL_EmuD3DDevice_RunPushBuffer,
   XTL_EmuD3DDevice_RunVertexStateShader,
   XTL_EmuD3DDevice_SelectVertexShader,
@@ -9261,7 +9271,7 @@ exports
   XTL_EmuD3DDevice_SetBackBufferScale,
   XTL_EmuD3DDevice_SetBackMaterial, // ??
   XTL_EmuD3DDevice_SetCopyRectsState,
-  XTL_EmuD3DDevice_SetFlickerFilter,
+  XTL_EmuD3DDevice_SetFlickerFilter, {nopatch:CreateDevice}
   XTL_EmuD3DDevice_SetGammaRamp,
 //  XTL_EmuD3DDevice_SetIndices,
   XTL_EmuD3DDevice_SetLight,
@@ -9272,60 +9282,60 @@ exports
   XTL_EmuD3DDevice_SetPixelShader,
   XTL_EmuD3DDevice_SetPixelShaderConstant,
   XTL_EmuD3DDevice_SetPixelShaderProgram,
-  XTL_EmuD3DDevice_SetRenderState_BackFillMode,
-  XTL_EmuD3DDevice_SetRenderState_CullMode,
+  XTL_EmuD3DDevice_SetRenderState_BackFillMode, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_CullMode, {nopatch:CreateDevice}
 //  XTL_EmuD3DDevice_SetRenderState_Deferred, Dxbx note : Disabled, as we DO have EmuD3DDeferredRenderState pin-pointed correctly
-  XTL_EmuD3DDevice_SetRenderState_DoNotCullUncompressed,
-  XTL_EmuD3DDevice_SetRenderState_Dxt1NoiseEnable,
-  XTL_EmuD3DDevice_SetRenderState_EdgeAntiAlias,
-  XTL_EmuD3DDevice_SetRenderState_FillMode, // Method: 0x0000038C
-  XTL_EmuD3DDevice_SetRenderState_FogColor, // Method: 0x000002A8
-  XTL_EmuD3DDevice_SetRenderState_FrontFace,
-  XTL_EmuD3DDevice_SetRenderState_LineWidth,
-  XTL_EmuD3DDevice_SetRenderState_LogicOp,
-  XTL_EmuD3DDevice_SetRenderState_MultiSampleAntiAlias,
-  XTL_EmuD3DDevice_SetRenderState_MultiSampleMask,
-  XTL_EmuD3DDevice_SetRenderState_MultiSampleMode,
-  XTL_EmuD3DDevice_SetRenderState_MultiSampleRenderTargetMode,
-  XTL_EmuD3DDevice_SetRenderState_NormalizeNormals,
-  XTL_EmuD3DDevice_SetRenderState_OcclusionCullEnable,
-  XTL_EmuD3DDevice_SetRenderState_PSTextureModes, // Method: 0x0000033C
-  XTL_EmuD3DDevice_SetRenderState_RopZCmpAlwaysRead,
-  XTL_EmuD3DDevice_SetRenderState_RopZRead,
-  XTL_EmuD3DDevice_SetRenderState_SampleAlpha,
-  XTL_EmuD3DDevice_SetRenderState_ShadowFunc,
-  XTL_EmuD3DDevice_SetRenderState_Simple, // Disabling this patch, makes Turok crash in MakeRequestedSpace; Why?
-  XTL_EmuD3DDevice_SetRenderState_StencilCullEnable,
-  XTL_EmuD3DDevice_SetRenderState_StencilEnable,
-  XTL_EmuD3DDevice_SetRenderState_StencilFail,
-  XTL_EmuD3DDevice_SetRenderState_TextureFactor,
-  XTL_EmuD3DDevice_SetRenderState_TwoSidedLighting,
-  XTL_EmuD3DDevice_SetRenderState_VertexBlend, // Method: 0x00000304
-  XTL_EmuD3DDevice_SetRenderState_YuvEnable,
-  XTL_EmuD3DDevice_SetRenderState_ZBias,
-  XTL_EmuD3DDevice_SetRenderState_ZEnable,
-  XTL_EmuD3DDevice_SetRenderStateNotInline,
-  XTL_EmuD3DDevice_SetRenderTarget,
-  XTL_EmuD3DDevice_SetScissors,
-  XTL_EmuD3DDevice_SetScreenSpaceOffset,
-  XTL_EmuD3DDevice_SetShaderConstantMode,
-  XTL_EmuD3DDevice_SetSoftDisplayFilter,
+  XTL_EmuD3DDevice_SetRenderState_DoNotCullUncompressed, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_Dxt1NoiseEnable, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_EdgeAntiAlias, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_FillMode,  {nopatch:CreateDevice}// Method: 0x0000038C
+  XTL_EmuD3DDevice_SetRenderState_FogColor,  {nopatch:CreateDevice}// Method: 0x000002A8
+  XTL_EmuD3DDevice_SetRenderState_FrontFace, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_LineWidth, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_LogicOp, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_MultiSampleAntiAlias, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_MultiSampleMask, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_MultiSampleMode, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_MultiSampleRenderTargetMode, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_NormalizeNormals, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_OcclusionCullEnable, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_PSTextureModes, {nopatch:CreateDevice} // Method: 0x0000033C
+  XTL_EmuD3DDevice_SetRenderState_RopZCmpAlwaysRead, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_RopZRead, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_SampleAlpha, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_ShadowFunc, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_Simple, {nopatch:CreateDevice} // Disabling this patch, makes Turok crash in MakeRequestedSpace; Why?
+  XTL_EmuD3DDevice_SetRenderState_StencilCullEnable, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_StencilEnable, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_StencilFail, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_TextureFactor, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_TwoSidedLighting, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_VertexBlend, {nopatch:CreateDevice} // Method: 0x00000304
+  XTL_EmuD3DDevice_SetRenderState_YuvEnable, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_ZBias, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderState_ZEnable, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderStateNotInline, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetRenderTarget, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetScissors, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetScreenSpaceOffset, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetShaderConstantMode, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetSoftDisplayFilter, {nopatch:CreateDevice}
   XTL_EmuD3DDevice_SetStateUP,
   XTL_EmuD3DDevice_SetStateVB,
   XTL_EmuD3DDevice_SetStipple,
   XTL_EmuD3DDevice_SetStreamSource,
   XTL_EmuD3DDevice_SetSwapCallback,
   XTL_EmuD3DDevice_SetTexture,
-  XTL_EmuD3DDevice_SetTextureStageStateNotInline,
-  XTL_EmuD3DDevice_SetTextureState_BorderColor,
-  XTL_EmuD3DDevice_SetTextureState_BumpEnv,
-  XTL_EmuD3DDevice_SetTextureState_ColorKeyColor,
+  XTL_EmuD3DDevice_SetTextureStageStateNotInline, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetTextureState_BorderColor, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetTextureState_BumpEnv, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetTextureState_ColorKeyColor, {nopatch:CreateDevice}
 //  XTL_EmuD3DDevice_SetTextureState_ParameterCheck, // Not yet implemented
-  XTL_EmuD3DDevice_SetTextureState_TexCoordIndex,
-  XTL_EmuD3DDevice_SetTile,
-  XTL_EmuD3DDevice_SetTile name PatchPrefix + '?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z', // Dxbx note : SetTile is applied to SetTileNoWait in Cxbx 4361 OOPVA's!
+  XTL_EmuD3DDevice_SetTextureState_TexCoordIndex, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetTile, {nopatch:CreateDevice}
+  XTL_EmuD3DDevice_SetTile name PatchPrefix + '?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z', {nopatch:CreateDevice} // Dxbx note : SetTile is applied to SetTileNoWait in Cxbx 4361 OOPVA's!
   XTL_EmuD3DDevice_SetTileCompressionTagBits,
-  XTL_EmuD3DDevice_SetTransform,
+  XTL_EmuD3DDevice_SetTransform, {nopatch:CreateDevice}
   XTL_EmuD3DDevice_SetVertexBlendModelView, // ??
   XTL_EmuD3DDevice_SetVertexData2f,
   XTL_EmuD3DDevice_SetVertexData2s,
@@ -9333,7 +9343,7 @@ exports
   XTL_EmuD3DDevice_SetVertexData4s,
   XTL_EmuD3DDevice_SetVertexData4ub,
   XTL_EmuD3DDevice_SetVertexDataColor,
-  XTL_EmuD3DDevice_SetVertexShader,
+  XTL_EmuD3DDevice_SetVertexShader, {nopatch:CreateDevice}
   XTL_EmuD3DDevice_SetVertexShaderConstant,
   XTL_EmuD3DDevice_SetVertexShaderConstant1,
   XTL_EmuD3DDevice_SetVertexShaderConstant4,
@@ -9341,9 +9351,9 @@ exports
   XTL_EmuD3DDevice_SetVertexShaderInput,
   XTL_EmuD3DDevice_SetVertexShaderInputDirect,
   XTL_EmuD3DDevice_SetVerticalBlankCallback,
-  XTL_EmuD3DDevice_SetViewport,
+  XTL_EmuD3DDevice_SetViewport, {nopatch:CreateDevice}
   XTL_EmuD3DDevice_Suspend,
-  XTL_EmuD3DDevice_Swap,
+  XTL_EmuD3DDevice_Swap, {nopatch:CreateDevice}
   XTL_EmuD3DDevice_SwitchTexture,
   XTL_EmuD3DDevice_UpdateOverlay,
 
@@ -9392,7 +9402,7 @@ exports
 //  XTL_EmuD3DVolumeTexture_GetVolumeLevel2,
 //  XTL_EmuD3DVolumeTexture_LockBox,
 
-  XTL_EmuD3D_CDevice_KickOff,
+  XTL_EmuD3D_CDevice_KickOff, {nopatch:CreateDevice}
 
 //  XTL_EmuDirect3D_AllocContiguousMemory name PatchPrefix + '_D3D_AllocContiguousMemory@8', // No need to patch, as our kernel implements MmAllocateContiguousMemory(Ex) already
 //  XTL_EmuDirect3D_CheckDeviceFormat, // Dxbx note : Disabled, too high level.
@@ -9403,7 +9413,7 @@ exports
   XTL_EmuDirect3D_GetAdapterModeCount;
 //  XTL_EmuDirect3D_GetDeviceCaps, // Dxbx note : Disabled, too high level.
 //  XTL_EmuDirect3D_SetPushBufferSize;
-
+{$ENDIF !PUSHBUFFER_ONLY}
 
 initialization
 
