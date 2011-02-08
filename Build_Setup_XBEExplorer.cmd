@@ -1,1 +1,0 @@
-Tools\InnoSetup\compil32.exe /cc setup\setup_XBEExplorer.iss
