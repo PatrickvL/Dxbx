@@ -38,11 +38,13 @@ uses
   , D3DX8 // PD3DXVECTOR4
 {$ENDIF}
   // Dxbx
+  , uConsts
   , uTypes
   , uLog
   , uTime // DxbxTimer
   , uDxbxUtils // sscanf
   , uDxbxKrnl // g_CPUXbox
+  , uDxbxKrnlUtils // DxbxKrnlCleanup
   , uEmuD3D8Types
   , uEmuD3D8Utils // iif
   , uConvert // EmuXB2PC_D3DMULTISAMPLE_TYPE
@@ -53,6 +55,37 @@ uses
   , uEmuFS
   , uEmuAlloc
   ;
+
+type
+  OBJECTINFO = record
+    Handle: ULONG;
+    SubChannel: USHORT;
+    Engine: USHORT;
+    ClassNum: ULONG;
+    Instance: ULONG;
+  end;
+  POBJECTINFO = ^OBJECTINFO;
+
+  Nv2AControlDma = record
+    Ignored: array [0..$10-1] of DWORD;
+    Put: PDWord; // On Xbox1, this field is only written to by the CPU (the GPU uses this as a trigger to start executing from the given address)
+    Get: PDWord; // On Xbox1, this field is only read from by the CPU (the GPU reflects in here where it is/stopped executing)
+    Reference: UInt32;
+    Ignored2: array [0..$7ED-1] of DWORD;
+  end;
+  PNv2AControlDma = ^Nv2AControlDma;
+  PPNv2AControlDma = ^PNv2AControlDma;
+
+const
+  NV2A_PFB_WC_CACHE = $00100410; // pbKit
+  NV2A_PFB_WC_CACHE_FLUSH_TRIGGER = $00010000; // pbKit
+
+var
+  g_NV2ADMAChannel: PNv2AControlDma = nil;
+  m_pCPUTime: PDWORD = nil;
+  m_pGPUTime: PDWORD = nil;
+
+procedure DxbxLogPushBufferPointers(heading:string);
 
 implementation
 
@@ -80,14 +113,15 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+var
+  GPURegisterBase: PByte;
+
 function XTL_EmuD3D_CMiniport_InitHardware(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}This: Pvoid
   ): _bool; register; // thiscall simulation - See Translation guide
 // Branch:Dxbx  Translator:PatrickvL  Done:0
-var
-  GPURegisterBase: Pointer;
 begin
   EmuSwapFS(fsWindows);
 
@@ -99,10 +133,9 @@ begin
     LogEnd();
   end;
 
-  GPURegisterBase := DxbxCalloc(64*1024, 1);
+  GPURegisterBase := DxbxCalloc(2*1024*1024, 1); // PatrickvL : I've seen RegisterBase offsets up to $00100410 so 2 MB should suffice
   PPointer(This)^ := GPURegisterBase;
-  DbgPrintf('Allocated a block of 64 KB to serve as the GPUs RegisterBase at 0x%.08x', [GPURegisterBase]);
-
+  DbgPrintf('Allocated a block of 2 MB to serve as the GPUs RegisterBase at 0x%.08x', [GPURegisterBase]);
 
   Result := True;
 
@@ -136,7 +169,15 @@ begin
     LogEnd();
   end;
 
-  Unimplemented('D3D_CMiniport_CreateCtxDmaObject');
+  case a2 of
+    8:  // = notification of semaphore address
+      // Remember where the semaphore (starting with a GPU Time DWORD) was allocated
+      // (we could have trapped MmAllocateContiguousMemoryEx too, but this is simpler) :
+      m_pGPUTime := PDWORD(a4);
+  else
+    Unimplemented('D3D_CMiniport_CreateCtxDmaObject');
+  end;
+
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
@@ -167,73 +208,72 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-type
-  OBJECTINFO = record
-    Handle: ULONG;
-    SubChannel: USHORT;
-    Engine: USHORT;
-    ClassNum: ULONG;
-    Instance: ULONG;
-  end;
-  POBJECTINFO = ^OBJECTINFO;
-
-  Nv2AControlDma = record
-    Ignored: array [0..$10-1] of DWORD;
-    Put: PDWord;
-    Get: PDWord;
-    Reference: UInt32;
-    Ignored2: array [0..$7ED-1] of DWORD;
-  end;
-  PNv2AControlDma = ^Nv2AControlDma;
-  PPNv2AControlDma = ^PNv2AControlDma;
-
+procedure DxbxLogPushBufferPointers(heading:string);
 var
-  g_Nv2ADMAChannel: PNv2AControlDma = nil;
+  Pusher: PPusher;
+  NV2ADMAChannel: PNv2AControlDma;
+begin
+  Pusher := PPusher(PPointer(XTL_D3D__Device)^);
+  NV2ADMAChannel := g_NV2ADMAChannel;
+  LogBegin(heading).
+    _(NV2ADMAChannel, 'NV2ADMAChannel').
+    _(NV2ADMAChannel.Put, 'NV2ADMAChannel.Put').
+    _(NV2ADMAChannel.Get, 'NV2ADMAChannel.Get').
+    _(NV2ADMAChannel.Reference, 'NV2ADMAChannel.Reference').
+    _(Pusher, 'Pusher').
+    _(Pusher.m_pPut, 'Pusher.m_pPut').
+    _(Pusher.m_pThreshold, 'Pusher.m_pThreshold').
+  LogEnd();
+end;
 
 // timing thread procedure
 function EmuThreadHandleNv2ADMA(lpVoid: LPVOID): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   UpdateTimer: DxbxTimer;
-  Nv2ADMAChannel: PNv2AControlDma;
+  NV2ADMAChannel: PNv2AControlDma;
+  pNV2AWorkTrigger: PDWORD;
   Pusher: PPusher;
-  pdwPushData: PDWord;
+  GPUStart, GPUEnd: PDWord;
 begin
   if MayLog(lfUnit) then
     DbgPrintf('EmuD3D8 : Nv2A DMA thread is running.');
 
+  DxbxLogPushBufferPointers('NV2AThread');
+
   UpdateTimer.InitFPS(100); // 100 updates per second should be enough
 
   Pusher := PPusher(PPointer(XTL_D3D__Device)^);
-  Nv2ADMAChannel := g_Nv2ADMAChannel;
+  NV2ADMAChannel := g_NV2ADMAChannel;
+  pNV2AWorkTrigger := PDWORD(GPURegisterBase + NV2A_PFB_WC_CACHE);
 
-  LogBegin('NV2AThread').
-    _(Nv2ADMAChannel, 'Nv2ADMAChannel').
-    _(Nv2ADMAChannel.Put, 'Nv2ADMAChannel.Put').
-    _(Nv2ADMAChannel.Get, 'Nv2ADMAChannel.Get').
-    _(Nv2ADMAChannel.Reference, 'Nv2ADMAChannel.Reference').
-    _(Pusher, 'Pusher').
-    _(Pusher.m_pPut, 'Pusher.m_pPut').
-    _(Pusher.m_pThreshold, 'Pusher.m_pThreshold').
-  LogEnd();
-
+  // Emulate the GPU engine here, by running the pushbuffer on the correct addresses :
   while true do // TODO -oDxbx: When do we break out of this while loop ?
   begin
-    // TODO : Emulate the pushbuffer here!
+    UpdateTimer.Wait;
 
-    pdwPushData := Nv2ADMAChannel.Get;
-    if Assigned(pdwPushData) then
-    try
-      XTL_EmuExecutePushBufferRaw({From=}pdwPushData, {To=}Pusher.m_pPut);
-    except
-      DbgPrintf('PUSHBUFFER EXCEPTION!');
+    // Check that KickOff() signaled a work flush :
+    begin
+      if (pNV2AWorkTrigger^ and NV2A_PFB_WC_CACHE_FLUSH_TRIGGER) > 0 then
+      begin
+        // Reset the flush trigger, so that KickOff() continues :
+        pNV2AWorkTrigger^ := pNV2AWorkTrigger^ and (not NV2A_PFB_WC_CACHE_FLUSH_TRIGGER);
+        DxbxLogPushBufferPointers('NV2AThread work trigger');
+      end;
     end;
 
-    // Fake a read by the Nv2A, by moving the DMA 'Get' location
-    // up to where the pushbuffer is currently filled, so that
-    // the BusyLoop in CDevice.Init finished cleanly :
-    Nv2ADMAChannel.Get := Pusher.m_pPut;
-    UpdateTimer.Wait;
+    // Start at the DMA's 'Put' address, and assume we'll run
+    // up to the end of the pushbuffer (as filled by software) :
+    GPUStart := NV2ADMAChannel.Get;
+    if GPUStart = nil then
+      GPUStart := NV2ADMAChannel.Put;
+
+    GPUEnd := Pusher.m_pPut;
+
+    // See if there's a valid work pointer :
+    if Assigned(GPUStart) then
+      // Execute the instructions, this returns the address where execution stopped :
+      XTL_EmuExecutePushBufferRaw(GPUStart, GPUEnd);
   end; // while
 end;
 
@@ -250,6 +290,7 @@ function XTL_EmuD3D_CMiniport_InitDMAChannel(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 var
   dwThreadId: DWORD;
+  i: Integer;
 begin
   EmuSwapFS(fsWindows);
 
@@ -267,7 +308,7 @@ begin
   end;
 
   // Allocate a fake DMA channel :
-  g_Nv2ADMAChannel := PNv2AControlDma(DxbxCalloc(SizeOf(Nv2AControlDma), 1));
+  g_NV2ADMAChannel := PNv2AControlDma(DxbxCalloc(SizeOf(Nv2AControlDma), 1));
 
   // Create our DMA pushbuffer 'handling' thread :
   begin
@@ -280,7 +321,29 @@ begin
   end;
 
   // Return the channel :
-  ppChannel^ := g_Nv2ADMAChannel;
+  ppChannel^ := g_NV2ADMAChannel;
+
+  // Also, find the address of the CPU Time variable (this is a temporary solution, until we have
+  // a technique to read members from all g_pDevice (D3DDevice) versions in a generic way);
+  begin
+    // Walk through a few members of the D3D device struct :
+    m_pCPUTime := PPointer(XTL_D3D__Device)^;
+    for i := 0 to 32 do
+    begin
+      if i = 32 then
+        DxbxKrnlCleanup('m_pCPUTime not found!');
+
+      // Look for the offset of the GPUTime pointer inside the D3D g_pDevice struct :
+      if m_pCPUTime^ = DWORD(m_pGPUTime) then
+      begin
+        // The CPU time variable is located right before the GPUTime pointer :
+        Dec(m_pCPUTime);
+        Break;
+      end;
+
+      Inc(m_pCPUTime);
+    end;
+  end;
 
   Result := S_OK;
 
@@ -580,7 +643,7 @@ begin
   end;
 
   Unimplemented('D3D_CMiniport_SetDmaRange');
-  Result := S_OK;
+  Result := 0; // This must be 0, as it's used as a correction over RenderTarget and ZBuffer Data pointers!
 
   EmuSwapFS(fsXbox);
 end;
@@ -1329,17 +1392,50 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure DxbxPostponedCreateDeviceViaSetRenderTarget(pRenderTarget: PX_D3DSurface; pNewZStencil: PX_D3DSurface);
+type
+  TD3DDevice_SetRenderTarget = procedure(
+    pRenderTarget: PX_D3DSurface;
+    pNewZStencil: PX_D3DSurface
+  ); stdcall;
+
+{$IFDEF PUSHBUFFER_ONLY}
+var
+  Original_SetRenderTarget_mem: array [0..4] of Byte;
+{$ENDIF}
+
+procedure DxbxPostponedCreateDeviceViaSetRenderTarget
+(
+  pRenderTarget: PX_D3DSurface;
+  pNewZStencil: PX_D3DSurface
+); stdcall;
+{$IFNDEF PUSHBUFFER_ONLY}
 var
   hRet: HRESULT;
+{$ENDIF}
 begin
+{$IFDEF PUSHBUFFER_ONLY}
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+  begin
+    LogBegin('DxbxPostponedCreateDeviceViaSetRenderTarget').
+       _(pRenderTarget, 'pRenderTarget'). // If NULL, the existing color buffer is retained
+       _(pNewZStencil, 'pNewZStencil').
+    LogEnd();
+  end;
+{$ENDIF PUSHBUFFER_ONLY}
+
   // Since InitializeFrameBuffers is already done when we get here,
   // we can examine the resulting buffers to determine BackBufferCount,
   // EnableAutoDepthStencil and AutoDepthStencilFormat. For now use hardcoded values :
   if Assigned(pNewZStencil) then
   begin
     g_EmuCDPD.pPresentationParameters.EnableAutoDepthStencil := BOOL_TRUE;
+{$IFDEF PUSHBUFFER_ONLY}
+    g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := X_D3DFMT_D24S8; // TODO : Fix this
+{$ELSE}
     g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := GetD3DFormat(pNewZStencil);
+{$ENDIF !PUSHBUFFER_ONLY}
   end;
 
   DxbxCreateDevice();
@@ -1349,10 +1445,15 @@ begin
   // native backbuffer to this buffer :
   if Assigned(pRenderTarget) then
   begin
+{$IFDEF PUSHBUFFER_ONLY}
+    g_EmuD3DActiveRenderTarget := pRenderTarget;
+    // TODO : Fix this
+{$ELSE}
     hRet := IDirect3DDevice_GetRenderTarget(g_pD3DDevice, @(pRenderTarget.Emu.Surface));
     if FAILED(hRet) then
       DxbxD3DError('XTL_EmuD3DDevice_SetRenderTarget', 'Initial IDirect3DDevice_GetRenderTarget failed!', pRenderTarget, hRet);
     IDirect3DSurface(pRenderTarget.Emu.Surface)._Release;
+{$ENDIF !PUSHBUFFER_ONLY}
 
     // Until we can read the Xbox device frame buffers, fake them here :
     g_EmuD3DFrameBuffers[0] := pRenderTarget;
@@ -1362,12 +1463,43 @@ begin
 
   if Assigned(pNewZStencil) then
   begin
+{$IFDEF PUSHBUFFER_ONLY}
+    g_EmuD3DActiveDepthStencil := pNewZStencil;
+    // TODO : Fix this
+{$ELSE}
     hRet := IDirect3DDevice_GetDepthStencilSurface(g_pD3DDevice, @(pNewZStencil.Emu.Surface));
     if FAILED(hRet) then
       DxbxD3DError('XTL_EmuD3DDevice_SetRenderTarget', 'Initial IDirect3DDevice_GetDepthStencilSurface failed!', pNewZStencil, hRet);
     IDirect3DSurface(pNewZStencil.Emu.Surface)._Release;
+{$ENDIF !PUSHBUFFER_ONLY}
   end;
+
+{$IFDEF PUSHBUFFER_ONLY}
+  // Now that we have handled this first call to SetRenderTarget,
+  // Restore the original version :
+  memcpy(XTL_D3DDevice_SetRenderTarget, @Original_SetRenderTarget_mem[0], 5);
+
+  EmuSwapFS(fsXbox);
+
+  // Call the original version :
+  TD3DDevice_SetRenderTarget(XTL_D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
+{$ENDIF PUSHBUFFER_ONLY}
 end;
+
+{$IFDEF PUSHBUFFER_ONLY}
+procedure TemporarilyPatchSetRenderTarget;
+begin
+  // Backup original 5 bytes of (currently unpatched) SetRenderTarget:
+  memcpy(@Original_SetRenderTarget_mem[0], XTL_D3DDevice_SetRenderTarget, 5);
+
+  // Overwrite that with a jump to DxbxPostponedCreateDeviceViaSetRenderTarget :
+  XTL_D3DDevice_SetRenderTarget^ := OPCODE_JMP;
+  PDWORD(XTL_D3DDevice_SetRenderTarget+1)^ :=
+    DWORD(@DxbxPostponedCreateDeviceViaSetRenderTarget)
+    - UIntPtr(XTL_D3DDevice_SetRenderTarget)
+    - 5;
+end;
+{$ENDIF PUSHBUFFER_ONLY}
 
 procedure XTL_EmuD3D_CMiniport_SetVideoMode(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
@@ -1419,7 +1551,11 @@ begin
 
   // Instead of creating the device here, postpone it to the first call to SetRenderTarget,
   // so that we can intercept the (already created) Xbox backbuffer and depthbuffer formats :
+{$IFDEF PUSHBUFFER_ONLY}
+  TemporarilyPatchSetRenderTarget;
+{$ELSE}
   DxbxOnSetRenderTarget := DxbxPostponedCreateDeviceViaSetRenderTarget;
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;

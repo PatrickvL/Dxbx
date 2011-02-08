@@ -126,6 +126,7 @@ const
 implementation
 
 uses
+  uMiniport, // g_NV2ADMAChannel
   uEmuKrnlMM;
 
 // print out a warning message to the kernel debug log file
@@ -222,16 +223,6 @@ begin
     Exit;
   end;
 
-//  // Dxbx addition : Generic insb skip :
-//  if  (PBytes(E.ExceptionAddress)[0] = $6C) then
-//  begin
-//    // Skip it, and continue :
-//    Inc(C.Eip, 1);
-//
-//    Result := True;
-//    Exit;
-//  end;
-
   // TODO : Add other illegal opcodes here
 
   DbgPrintf('EmuMain : Unhandled opcode!?!');
@@ -269,6 +260,8 @@ begin
     if  (PBytes(E.ExceptionAddress)[0] = $89)
     and (PBytes(E.ExceptionAddress)[1] = $15) then
     begin
+      // Trap the initial GPU jump (and mask off the jump-indicator) :
+      g_NV2ADMAChannel.Put := PDWORD(DWORD(C.Edx) and (not 3));
       Inc(C.Eip, 6);
       Result := True;
       Exit;

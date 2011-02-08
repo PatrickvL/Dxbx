@@ -104,8 +104,7 @@ var XTL_D3D__Device: PDWORDs = nil;
 
 var XTL_D3D__RenderState: PDWORDs = nil;
 
-type D3D_InitializeD3dState = function(): int; cdecl;
-var XTL_D3D_InitializeD3dState: D3D_InitializeD3dState;
+var XTL_D3DDevice_SetRenderTarget: PByte;
 
 const DEFAULT_XDK_VERSION = 4627; // TODO -oDxbx : Make this configurable
 var g_BuildVersion: WORD = DEFAULT_XDK_VERSION;

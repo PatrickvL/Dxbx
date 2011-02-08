@@ -50,8 +50,10 @@ uses
 
 type
   Pusher = record
-    m_pPut: PDWord;
-    m_pThreshold: PDWord;
+    m_pPut: PDWord; // This is the address to where the CPU will write it's next GPU instruction
+    m_pThreshold: PDWord; // This is the upper limit for m_pPut (when it's reached, MakeSpace() is called,
+    // which just forwards the call to MakeRequestedSpace, passing it m_PushSegmentSize/2 as 'minimum space',
+    // and m_PushSegmentSize (without division) as 'requested space')
   end;
   PPusher = ^Pusher;
 
@@ -88,7 +90,7 @@ var g_bPBSkipPusher: _bool = false;
 procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD); {NOPATCH}
 {$ENDIF}
 
-procedure D3DPUSH_DECODE(const dwPushData: DWORD; out dwCount, dwMethod: DWORD; out bInc: BOOL_);
+procedure D3DPUSH_DECODE(const dwPushData: DWORD; out dwCount, dwMethod: DWORD; out bNoInc: BOOL_);
 
 implementation
 
@@ -98,11 +100,12 @@ uses
   , uLog
   , uConvert
   , uNV2A
+  , uMiniport
   , uEmuD3D8 // DxbxPresent
   , uState
   , uVertexShader;
 
-const NV2A_METHOD_MASK = $3FFFF; // 18 bits
+const NV2A_METHOD_MASK = $FFFF; // 16 bits
 const NV2A_COUNT_SHIFT = 18;
 const NV2A_COUNT_MASK = $FFF; // 12 bits
 const NV2A_NOINCREMENT_FLAG = $40000000;
@@ -120,11 +123,11 @@ const NV2A_MAX_COUNT = 2047;
 
 const lfUnit = lfCxbx or lfPushBuffer;
 
-procedure D3DPUSH_DECODE(const dwPushData: DWORD; out dwCount, dwMethod: DWORD; out bInc: BOOL_);
+procedure D3DPUSH_DECODE(const dwPushData: DWORD; out dwCount, dwMethod: DWORD; out bNoInc: BOOL_);
 begin
   dwCount  := (dwPushData shr NV2A_COUNT_SHIFT) and NV2A_COUNT_MASK;
   dwMethod := (dwPushData and NV2A_METHOD_MASK);
-  bInc     := (dwPushData and NV2A_NOINCREMENT_FLAG) > 0;
+  bNoInc     := (dwPushData and NV2A_NOINCREMENT_FLAG) > 0;
 end;
 
 // From PushBuffer.cpp :
@@ -189,53 +192,104 @@ end;
 type
   PDxbxPushBufferState = ^TDxbxPushBufferState;
   TDxbxPushBufferState = record
+  public // SetRenderTarget related
+    ActiveRenderTargetData: UIntPtr;
+    ActiveRenderTargetWidth: DWORD;
+    ActiveRenderTargetHeight: DWORD;
+    ActiveDepthStencilData: UIntPtr;
+  public // Clear related
+    ClearRect: RECT;
+    ClearDepthValue: DWORD;
+    ClearColor: DWORD;
+    procedure ClearBuffers(pdwPushArguments: PDWORD);
   public
     pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8; // = XTL_PIDirect3DIndexBuffer8
     // pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
     maxIBSize: uint;
     procedure _RenderIndexedVertices(dwCount: DWORD);
-  public
+  public // Draw[Indexed]Vertices[UP] related :
     XBPrimitiveType: X_D3DPRIMITIVETYPE;
-    procedure SetBeginEnd(pdwPushArguments: PDWORD; dwCount: DWORD);
+    procedure SetBeginEnd(pdwPushArguments: PDWORD);
   public
     pVertexData: PVOID;
     dwVertexShader: DWord;
     dwStride: DWord;
-    procedure InlineArray(pdwPushArguments: PDWORD; dwCount: DWORD);
+    function InlineArray(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
   public
     NrCachedIndices: int;
     pIBMem: array [0..2-1] of WORD;
-    procedure FixLoop(pdwPushArguments: PDWORD; dwCount: DWORD);
+    function FixLoop(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
   public
     StartIndex: UINT;
-    procedure InlineIndexArray(pdwPushArguments: PDWORD; dwCount: DWORD; bInc: BOOL_);
+    function InlineIndexArray(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
   public
     function TrySetRenderState(dwMethod: DWORD; pdwPushArguments: PDWORD; dwCount: DWORD): Boolean;
   end;
 
-procedure TDxbxPushBufferState.SetBeginEnd(pdwPushArguments: PDWORD; dwCount: DWORD);
+procedure DWORDSplit2(const aValue: DWORD; w1: Integer; out v1: Integer; w2: Integer; out v2: Integer);
 begin
-  XBPrimitiveType := X_D3DPRIMITIVETYPE(pdwPushArguments^);
-
-  if (XBPrimitiveType = X_D3DPT_NONE) then
-  begin
-    DbgPrintf('  NV2A_SetBeginEnd(DONE)');
-  end
-  else
-  begin
-    DbgPrintf('  NV2A_SetBeginEnd(PrimitiveType = 0x%.03x %s)', [Ord(XBPrimitiveType), X_D3DPRIMITIVETYPE2String(XBPrimitiveType)]);
-  end;
-
-  if (dwCount <> 1) then
-    EmuWarning('NV2A : Unexpected input for NV2A_VERTEX_BEGIN_END');
+  {out}v1 := (aValue       ) and ((1 shl w1) - 1);
+  {out}v2 := (aValue shr w1) and ((1 shl w2) - 1);
 end;
 
-procedure TDxbxPushBufferState.InlineArray(pdwPushArguments: PDWORD; dwCount: DWORD);
+procedure TDxbxPushBufferState.ClearBuffers(pdwPushArguments: PDWORD);
+var
+  PCFlags: DWORD;
+  ClearZ: Single;
+  ClearStencil: DWORD;
+begin
+  // make adjustments to parameters to make sense with windows d3d
+  begin
+    // First, convert from Xbox to PC, after which we'll remove the invalid flags :
+    PCFlags := EmuXB2PC_D3DCLEAR_FLAGS({XClearFlags=}pdwPushArguments^);
+(*
+    // Only clear ZBuffer if we actually have one :
+    if Assigned(g_EmuD3DActiveDepthStencil)
+    and EmuXBFormatIsDepthBuffer(GetD3DFormat(g_EmuD3DActiveDepthStencil)) then
+      // Allow depth to be cleared (if requested)
+    else
+      PCFlags := PCFlags and (not D3DCLEAR_ZBUFFER);
+
+    // Only clear Stencil buffer if there actually is one :
+    // if not g_EmuCDPD.NativePresentationParameters.EnableAutoDepthStencil then
+    // TODO -oDxbx: The above check should work (but doesn't!) so for now look at the Xbox PresParam instead :
+    if Assigned(g_EmuD3DActiveDepthStencil)
+    and EmuXBFormatHasChannel(GetD3DFormat(g_EmuD3DActiveDepthStencil), S) then
+      // Allow stencil to be cleared (if requested)
+    else
+      PCFlags := PCFlags and (not D3DCLEAR_STENCIL);
+*)
+  end;
+
+  // Since we filter the flags, make sure there are some left (else, clear isn't necessary) :
+  if PCFlags > 0 then
+  begin
+    // Before clearing, make sure we have the correct render target :
+//    DxbxUpdateActiveRenderTarget(); // TODO : Or should we have to call DxbxUpdateNativeD3DResources ?
+
+    ClearZ := ClearDepthValue shr 8; // TODO : Convert this to the right value for all depth-buffer formats
+    ClearStencil := ClearDepthValue and $FF;
+
+    g_pD3DDevice.Clear(1, @ClearRect, PCFlags, ClearColor, ClearZ, ClearStencil);
+  end;
+end;
+
+procedure TDxbxPushBufferState.SetBeginEnd(pdwPushArguments: PDWORD);
+begin
+  XBPrimitiveType := X_D3DPRIMITIVETYPE(pdwPushArguments^);
+  if (XBPrimitiveType = X_D3DPT_NONE) then
+    DbgPrintf('  NV2A_SetBeginEnd(DONE)')
+  else
+    DbgPrintf('  NV2A_SetBeginEnd(PrimitiveType = 0x%.03x %s)', [Ord(XBPrimitiveType), X_D3DPRIMITIVETYPE2String(XBPrimitiveType)]);
+end;
+
+function TDxbxPushBufferState.InlineArray(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
 var
   VPDesc: VertexPatchDesc;
   VertPatch: VertexPatcher;
   VertexCount: UINT;
 begin
+  Result := dwCount;
   pVertexData := pdwPushArguments;
 
   if Assigned(g_pD3DDevice) then
@@ -375,7 +429,7 @@ begin
   g_pD3DDevice.SetIndices(nil{$IFNDEF DXBX_USE_D3D9}, 0{$ENDIF});
 end;
 
-procedure TDxbxPushBufferState.FixLoop(pdwPushArguments: PDWORD; dwCount: DWORD);
+function TDxbxPushBufferState.FixLoop(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
 
   procedure _AssureIndexBuffer;
   var
@@ -407,6 +461,7 @@ var
   pwVal: PWORDs;
   pData: PWORDArray;
 begin
+  Result := dwCount;
   pwVal := PWORDs(pdwPushArguments);
 
 {$ifdef _DEBUG_TRACK_PB}
@@ -465,13 +520,13 @@ begin
   end;
 end;
 
-procedure TDxbxPushBufferState.InlineIndexArray(pdwPushArguments: PDWORD; dwCount: DWORD; bInc: BOOL_);
+function TDxbxPushBufferState.InlineIndexArray(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
 var
   pIndexData: PWORD;
 begin
+  Result := dwCount;
   pIndexData := PWORD(pdwPushArguments);
-  if bInc then
-    dwCount := dwCount * 2; // Convert DWORD count to WORD count
+  dwCount := dwCount * 2; // Convert DWORD count to WORD count
 
 {$ifdef _DEBUG_TRACK_PB}
   if (bShowPB) then
@@ -566,16 +621,7 @@ begin
   XRenderState := DxbxXboxMethodToRenderState(dwMethod);
   Result := XRenderState in [X_D3DRS_FIRST..X_D3DRS_LAST];
   if Result then
-  begin
-    while dwCount > 0 do
-    begin
-      DxbxSetRenderStateInternal('  NV2A SetRenderState', XRenderState, pdwPushArguments^);
-      Inc(XRenderState);
-      Inc(pdwPushArguments);
-
-      Dec(dwCount);
-    end;
-  end;
+    DxbxSetRenderStateInternal('  NV2A SetRenderState', XRenderState, pdwPushArguments^);
 end;
 
 var
@@ -590,8 +636,12 @@ procedure XTL_EmuExecutePushBufferRaw
 var
   dwCount: DWord;
   dwMethod: DWord;
-  bInc: BOOL_;
+  bNoInc: BOOL_;
   pdwPushArguments: PDWord;
+  HandledCount: DWord;
+  HandledBy: string;
+  Combined: Integer;
+  LogStr: string;
 begin
   if DxbxPushBufferState = nil then
   begin
@@ -611,43 +661,187 @@ begin
     DxbxPushBufferState.XBPrimitiveType := X_D3DPT_INVALID;
   end;
 
-  while UIntPtr(pdwPushData) < UIntPtr(pdwPushDataEnd) do
-  begin
+  if MayLog(lfUnit) then
+    if UIntPtr(pdwPushData) <> UIntPtr(pdwPushDataEnd) then
+      DbgPrintf('  NV2A run from 0x%.08X to 0x%.08X', [UIntPtr(pdwPushData), UIntPtr(pdwPushDataEnd)]);
+
+  while pdwPushData <> pdwPushDataEnd do
+  try
+    LogStr := Format('  NV2A pPush=0x%.08X (0x%.08X)', [UIntPtr(pdwPushData), pdwPushData^]);
+
     // Decode push buffer contents (inverse of D3DPUSH_ENCODE) :
-    D3DPUSH_DECODE(pdwPushData^, {out}dwCount, {out}dwMethod, {out}bInc);
-    if MayLog(lfUnit) then
-      DbgPrintf('  NV2A PushData: 0x%.08X  DWORD: 0x%.08X   Method: 0x%.08X   Count: 0x%.08X  %s', [
-         UIntPtr(pdwPushData), pdwPushData^, dwMethod, dwCount, DxbxXboxMethodToString(dwMethod)]);
+    D3DPUSH_DECODE(pdwPushData^, {out}dwCount, {out}dwMethod, {out}bNoInc);
+
+    // Handle jumps and/or calls :
+    if (dwMethod and 3) in [1,2] then
+    begin
+      // Both 'jump' and 'call' just direct execution to the indicated address :
+      pdwPushData := PDWORD(pdwPushData^ and (not 3));
+      if MayLog(lfUnit) then
+        DbgPrintf('%s Jump:0x%.08X', [LogStr, UIntPtr(pdwPushData)]);
+
+      Continue;
+    end;
+
+    // Append a counter (variable part via %d, count already formatted) :
+    LogStr := LogStr + ' [%2d/' + Format('%2d',[dwCount]) + ']';
+    if bNoInc then
+      LogStr := LogStr + ' [NoInc]';
+
 
     // Skip method DWORD, remember the address of the arguments and skip over the arguments already :
     Inc(pdwPushData);
     pdwPushArguments := pdwPushData;
     Inc(pdwPushData, dwCount);
 
-    // Interpret GPU Instruction :
-    case dwMethod of
-      0:
-        ; // Note : Previously we quit on zero, but now that we have pdwPushDataEnd we ignore this
-      NV2A_NOP:
-        ; // TODO -oDxbx: Is this correct, or should we skip only one DWORD?
+    HandledCount := 1; // This prevents a warning about an uninitialized variable
 
-      NV2A_VERTEX_BEGIN_END:
-        DxbxPushBufferState.SetBeginEnd(pdwPushArguments, dwCount);
+    // Interpret GPU Instruction(s) :
+    Combined := 0;
+    while dwCount > 0 do
+    try
+      Inc(Combined);
 
-      NV2A_VERTEX_DATA:
-        DxbxPushBufferState.InlineArray(pdwPushArguments, dwCount);
+      HandledCount := 1;
+      HandledBy := '?';
+      case dwMethod of
+        0:
+          HandledCount := dwCount;
 
-      NV2A_VB_ELEMENT_U32:
-        DxbxPushBufferState.FixLoop(pdwPushArguments, dwCount);
+        NV2A_NOP:
+        begin
+          HandledCount := dwCount; // Note : This case also prevents a hit in DxbxXboxMethodToRenderState.
+          HandledBy := 'Nop';
+        end;
 
-      NV2A_VB_ELEMENT_U16:
-        DxbxPushBufferState.InlineIndexArray(pdwPushArguments, dwCount, bInc);
+        // D3DDevice.Clear sends these :
+        {00001d98}NV2A_CLEAR_RECT_HORIZONTAL:
+        begin
+          DWORDSplit2(pdwPushArguments^, 16, {out}DxbxPushBufferState.ClearRect.Left, 16, {out}DxbxPushBufferState.ClearRect.Right);
+          HandledBy := 'Clear';
+        end;
+        {00001d9c}NV2A_CLEAR_RECT_VERTICAL:
+        begin
+          DWORDSplit2(pdwPushArguments^, 16, {out}DxbxPushBufferState.ClearRect.Top, 16, {out}DxbxPushBufferState.ClearRect.Bottom);
+          HandledBy := 'Clear';
+        end;
+        {00001d8c}NV2A_CLEAR_DEPTH_VALUE:
+        begin
+          DxbxPushBufferState.ClearDepthValue := pdwPushArguments^;
+          HandledBy := 'Clear';
+        end;
+        {00001d90}NV2A_CLEAR_VALUE:
+        begin
+          DxbxPushBufferState.ClearColor := pdwPushArguments^;
+          HandledBy := 'Clear';
+        end;
+        {00001d94}NV2A_CLEAR_BUFFERS: // Gives clear flags, should trigger the clear
+        begin
+          DxbxPushBufferState.ClearBuffers(pdwPushArguments);
+          HandledBy := 'Clear';
+        end;
 
-    else
-      if not DxbxPushBufferState.TrySetRenderState(dwMethod, pdwPushArguments, dwCount) then
-        ; // something else?
-    end; // case
-  end; // while
+        // D3DDevice.Swap :
+        NV2A_FLIP_INCREMENT_WRITE:
+        begin
+          // No emulation needed?
+          HandledBy := 'Swap';
+        end;
+        NV2A_FLIP_STALL:
+        begin
+          DxbxPresent(nil, nil, 0, nil);
+          HandledBy := 'Swap';
+        end;
+
+        // D3DDevice.SetRenderTarget :
+        NV2A_COLOR_OFFSET:
+        begin
+          DxbxPushBufferState.ActiveRenderTargetData := pdwPushArguments^;
+          HandledBy := 'SetRenderTarget';
+        end;
+        NV2A_ZETA_OFFSET:
+        begin
+          DxbxPushBufferState.ActiveDepthStencilData := pdwPushArguments^;
+          HandledBy := 'SetRenderTarget';
+        end;
+        NV2A_RT_HORIZ:
+        begin
+          DxbxPushBufferState.ActiveRenderTargetWidth := pdwPushArguments^ shr 16;
+          HandledBy := 'SetRenderTarget';
+        end;
+        NV2A_RT_VERT:
+        begin
+          DxbxPushBufferState.ActiveRenderTargetHeight := pdwPushArguments^ shr 16;
+          HandledBy := 'SetRenderTarget';
+        end;
+
+//        {00000208}NV2A_RT_FORMAT: // Set surface format
+//          ; // TODO ??
+
+        // D3DDevice.Draw[Indexed]Vertices[UP] :
+        NV2A_VERTEX_BEGIN_END:
+        begin
+          DxbxPushBufferState.SetBeginEnd(pdwPushArguments);
+          HandledBy := 'Draw';
+        end;
+
+        NV2A_VERTEX_DATA:
+        begin
+          HandledCount := DxbxPushBufferState.InlineArray(pdwPushArguments, dwCount);
+          HandledBy := 'DrawVertices';
+        end;
+
+        NV2A_VB_ELEMENT_U32:
+        begin
+          HandledCount := DxbxPushBufferState.FixLoop(pdwPushArguments, dwCount);
+          HandledBy := 'DrawIndexedVertices';
+        end;
+
+        NV2A_VB_ELEMENT_U16:
+        begin
+          HandledCount := DxbxPushBufferState.InlineIndexArray(pdwPushArguments, dwCount);
+          HandledBy := 'DrawIndexedVertices';
+        end;
+
+      else
+        // D3DDevice.SetRenderState :
+        if DxbxPushBufferState.TrySetRenderState(dwMethod, pdwPushArguments, dwCount) then
+          HandledBy := 'SetRenderState'
+        else
+          // TODO : Add other generic states here, like texture stage states.
+      end; // case
+
+    finally
+      if MayLog(lfUnit) then
+        DbgPrintf(LogStr + ' Method=%.08X Data=%.08X %s (%s)', [Combined, dwMethod, pdwPushArguments^, DxbxXboxMethodToString(dwMethod), HandledBy]);
+
+      // Since some instructions use less arguments, we repeat this loop
+      // for the next instruction so any leftover values are handled there :
+      Inc(pdwPushArguments, HandledCount);
+      Dec(dwCount, HandledCount);
+
+      // The no-increment flag applies to method only :
+      if not bNoInc then
+        Inc(dwMethod, 4); // 1 method further
+
+      // Fake a read by the Nv2A, by moving the DMA 'Get' location
+      // up to where the pushbuffer is executed, so that the BusyLoop
+      // in CDevice.Init finished cleanly :
+      g_NV2ADMAChannel.Get := pdwPushData;
+      // TODO : We should probably set g_NV2ADMAChannel.Put to the same value first?
+
+      // We trigger the DMA semaphore by setting GPU time to CPU time - 2 :
+      {D3DDevice.}m_pGpuTime^ := {D3DDevice.}m_pCpuTime^ - 2;
+
+      // TODO : We should register vblank counts somewhere?
+    end; // while dwCount > 0
+
+  except
+    DbgPrintf('PUSHBUFFER EXCEPTION!');
+  end; // while pdwPushData <> pdwPushDataEnd do try
+
+  // This line is to reset the GPU 'Get' pointer, so that busyloops will terminate :
+  g_NV2ADMAChannel.Get := pdwPushData;
 end;
 
 
