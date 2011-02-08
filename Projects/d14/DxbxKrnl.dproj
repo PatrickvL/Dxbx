@@ -186,7 +186,6 @@
 			<DCCReference Include="..\..\src\DxbxKrnl\DbgConsole.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uMiniport.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uNV2A.pas"/>
-			<DCCReference Include="..\..\Libraries\KbAsmCodeHook\CodeHookIntf.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
