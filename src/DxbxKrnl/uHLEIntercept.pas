@@ -89,15 +89,15 @@ var
   DetectedSymbol: TSymbolInformation;
   OrgCode: TCodePointer;
   NewCode: TCodePointer;
-  NrPatches: Integer;
   XboxLibraryPatch: TXboxLibraryPatch;
 {$IFDEF DXBX_DEBUG}
+  NrPatches: Integer;
   UsedPatches: TBits;
 {$ENDIF}
 begin
-  NrPatches := 0;
 
 {$IFDEF DXBX_DEBUG}
+  NrPatches := 0;
   DbgPrintf('DxbxHLE : Installing registered patches :');
   UsedPatches := TBits.Create;
   try
@@ -146,7 +146,9 @@ begin
         end;
       end;
 
+      {$IFDEF DXBX_DEBUG}
       Inc(NrPatches);
+      {$ENDIF}
     end;
 
 {$IFDEF DXBX_DEBUG}
