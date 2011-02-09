@@ -209,14 +209,16 @@ type
     pVertexData: PVOID;
     dwVertexShader: DWord;
     dwStride: DWord;
-    function InlineArray(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+    procedure HandleVertexFormat(Slot: UINT; pdwPushArguments: PDWORD);
+    procedure HandleVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
+    function HandleVertexData(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
   public
     NrCachedIndices: int;
     pIBMem: array [0..2-1] of WORD;
-    function FixLoop(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+    function HandleIndex32(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
   public
     StartIndex: UINT;
-    function InlineIndexArray(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+    function HandleIndex16_16(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
   public
     VertexCount: UINT;
     VertexIndex: INT;
@@ -283,7 +285,7 @@ begin
   if (NewPrimitiveType = X_D3DPT_NONE) then
   begin
     DbgPrintf('  NV2A_SetBeginEnd(DONE)');
-    // TODO Trigger the draw here, instead of in InlineArray, FixLoop and/or InlineIndexArray
+    // TODO Trigger the draw here, instead of in HandleVertexData, HandleIndex32 and/or HandleIndex16_16
     case DrawMode of
       dmDrawIndexedVertices:
         ;
@@ -312,7 +314,7 @@ begin
     end;
   end
   else
-    DbgPrintf('  NV2A_SetBeginEnd(PrimitiveType = 0x%.03x %s)', [Ord(XBPrimitiveType), X_D3DPRIMITIVETYPE2String(XBPrimitiveType)]);
+    DbgPrintf('  NV2A_SetBeginEnd(PrimitiveType = 0x%.03x %s)', [Ord(NewPrimitiveType), X_D3DPRIMITIVETYPE2String(NewPrimitiveType)]);
 
   VertexCount := 0;
   VertexIndex := -1;
@@ -320,7 +322,19 @@ begin
   XBPrimitiveType := NewPrimitiveType;
 end;
 
-function TDxbxPushBufferState.InlineArray(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+procedure TDxbxPushBufferState.HandleVertexFormat(Slot: UINT; pdwPushArguments: PDWORD);
+begin
+  // TODO : Register vertex format (bits:31-8=Stride,7-4=Size,3-0=Type)
+  // Size:1..4=1..4,7=3w?
+  // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
+end;
+
+procedure TDxbxPushBufferState.HandleVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
+begin
+  // TODO : Handle vertex buffer address (this address is a combination of all levels of offsets & indexes)
+end;
+
+function TDxbxPushBufferState.HandleVertexData(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
 var
   VPDesc: VertexPatchDesc;
   VertPatch: VertexPatcher;
@@ -467,7 +481,7 @@ begin
   g_pD3DDevice.SetIndices(nil{$IFNDEF DXBX_USE_D3D9}, 0{$ENDIF});
 end;
 
-function TDxbxPushBufferState.FixLoop(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+function TDxbxPushBufferState.HandleIndex32(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
 
   procedure _AssureIndexBuffer;
   var
@@ -558,11 +572,12 @@ begin
   end;
 end;
 
-function TDxbxPushBufferState.InlineIndexArray(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+function TDxbxPushBufferState.HandleIndex16_16(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
 var
   pIndexData: PWORD;
 begin
   Result := dwCount;
+
   pIndexData := PWORD(pdwPushArguments);
   dwCount := dwCount * 2; // Convert DWORD count to WORD count
 
@@ -637,7 +652,7 @@ begin
   begin
     DxbxUpdateActiveIndexBuffer(pIndexData, dwCount, {out}StartIndex);
 
-    // remember last 2 indices (will be used in FixLoop) :
+    // remember last 2 indices (will be used in HandleIndex32) :
     if (dwCount >= 2) then // TODO : Is 2 indices enough for all primitive types?
     begin
       pIBMem[0] := pIndexData[dwCount - 2];
@@ -656,11 +671,11 @@ var
   BatchCount: Integer;
   BatchIndex: Integer;
 begin
-  // Decode the arguments :
+  // Decode the arguments (index is an incrementing number, count is cumulative per batch) :
   DWORDSplit2(pdwPushArguments^, 24, {out}BatchIndex, 8, {out}BatchCount);
   Inc(BatchCount);
 
-  // Register them for later usage :
+  // Accumulate them for the draw that will follow :
   Inc(VertexCount, BatchCount);
   if VertexIndex < 0 then
     VertexIndex := BatchIndex;
@@ -786,13 +801,6 @@ begin
           HandledBy := 'D3DDevice_SetVertexData';
         end;
 
-        // D3DDevice_DrawVertices :
-        NV2A_VB_VERTEX_BATCH:
-        begin
-          DxbxPushBufferState.HandleVertexBatch(pdwPushArguments);
-          HandledBy := 'D3DDevice_DrawVertices';
-        end;
-
         // D3DDevice.Clear sends these :
         {00001d98}NV2A_CLEAR_RECT_HORIZONTAL:
         begin
@@ -864,21 +872,41 @@ begin
           HandledBy := 'Draw';
         end;
 
-        NV2A_VERTEX_DATA:
+        // Data originating from SetStreamSource :
+        NV2A_VTXFMT__0..NV2A_VTXFMT__15:
         begin
-          HandledCount := DxbxPushBufferState.InlineArray(pdwPushArguments, dwCount);
+          DxbxPushBufferState.HandleVertexFormat({Slot=}(dwMethod - NV2A_VTXFMT__0) div 4, pdwPushArguments);
+          HandledBy := 'VertexFormat';
+        end;
+
+        NV2A_VTXBUF_ADDRESS__0..NV2A_VTXBUF_ADDRESS__3:
+        begin
+          DxbxPushBufferState.HandleVertexAddress({Stage=}(dwMethod - NV2A_VTXBUF_ADDRESS__0) div 4, pdwPushArguments);
+          HandledBy := 'VertexAddress';
+        end;
+
+        // D3DDevice_DrawVertices :
+        NV2A_VB_VERTEX_BATCH:
+        begin
+          DxbxPushBufferState.HandleVertexBatch(pdwPushArguments);
           HandledBy := 'DrawVertices';
         end;
 
-        NV2A_VB_ELEMENT_U32:
+        NV2A_VERTEX_DATA:
         begin
-          HandledCount := DxbxPushBufferState.FixLoop(pdwPushArguments, dwCount);
-          HandledBy := 'DrawIndexedVertices';
+          HandledCount := DxbxPushBufferState.HandleVertexData(pdwPushArguments, dwCount);
+          HandledBy := 'DrawVertices';
         end;
 
         NV2A_VB_ELEMENT_U16:
         begin
-          HandledCount := DxbxPushBufferState.InlineIndexArray(pdwPushArguments, dwCount);
+          HandledCount := DxbxPushBufferState.HandleIndex16_16(pdwPushArguments, dwCount);
+          HandledBy := 'DrawIndexedVertices';
+        end;
+
+        NV2A_VB_ELEMENT_U32:
+        begin
+          HandledCount := DxbxPushBufferState.HandleIndex32(pdwPushArguments, dwCount);
           HandledBy := 'DrawIndexedVertices';
         end;
 
