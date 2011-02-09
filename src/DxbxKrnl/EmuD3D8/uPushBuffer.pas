@@ -182,49 +182,61 @@ end;
 *)
 
 type
-  TDrawMode = (dmUndetermined, dmDrawIndexedVertices, dmDrawVertices, dmDrawPrimitiveUP);
+  TPostponedDrawType = (pdUndetermined, pdDrawVertices, pdDrawIndexedVertices, pdDrawVerticesUP, pdDrawIndexedVerticesUP);
 
   PDxbxPushBufferState = ^TDxbxPushBufferState;
   TDxbxPushBufferState = record
-  public // SetRenderTarget related
+  // SetRenderTarget related
+  public
     ActiveRenderTargetData: UIntPtr;
     ActiveRenderTargetWidth: DWORD;
     ActiveRenderTargetHeight: DWORD;
     ActiveDepthStencilData: UIntPtr;
-  public // Clear related
+
+  // Clear related
+  public
     ClearRect: RECT;
     ClearDepthValue: DWORD;
     ClearColor: DWORD;
     procedure ClearBuffers(pdwPushArguments: PDWORD);
+
+  // Draw[Indexed]Vertices[UP] related :
   public
-    pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8; // = XTL_PIDirect3DIndexBuffer8
-    // pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
-    maxIBSize: uint;
-    procedure _RenderIndexedVertices(dwCount: DWORD);
-  public // Draw[Indexed]Vertices[UP] related :
+    VertexFormat: array [0..15] of record Stride, Size, Type_: int; end;
+    procedure RegisterVertexFormat(Slot: UINT; pdwPushArguments: PDWORD);
+  public
+    VertexAddress: array [0..3] of Pointer;
+    procedure RegisterVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
+  public
+    VertexIndex: INT;
+    VertexCount: UINT;
+    procedure RegisterVertexBatch(pdwPushArguments: PDWORD);
+  public
     XBPrimitiveType: X_D3DPRIMITIVETYPE;
-    DrawMode: TDrawMode;
-    procedure SetBeginEnd(pdwPushArguments: PDWORD);
+    PostponedDrawType: TPostponedDrawType;
+    procedure PostponedDrawVertices;
+    procedure PostponedDrawIndexedVertices;
+    procedure PostponedDrawVerticesUP;
+    procedure PostponedDrawIndexedVerticesUP;
+    procedure HandleDrawBeginEnd(pdwPushArguments: PDWORD);
+  public
+    function TrySetRenderState(dwMethod: DWORD; pdwPushArguments: PDWORD; dwCount: DWORD): Boolean;
+
+  // TODO : All below must be re-implemented :
   public
     pVertexData: PVOID;
     dwVertexShader: DWord;
     dwStride: DWord;
-    procedure HandleVertexFormat(Slot: UINT; pdwPushArguments: PDWORD);
-    procedure HandleVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
-    function HandleVertexData(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
-  public
     NrCachedIndices: int;
-    pIBMem: array [0..2-1] of WORD;
-    function HandleIndex32(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
-  public
     StartIndex: UINT;
+    pIBMem: array [0..2-1] of WORD;
+    pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8; // = XTL_PIDirect3DIndexBuffer8
+    // pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
+    maxIBSize: uint;
+    procedure _RenderIndexedVertices(dwCount: DWORD);
+    function HandleVertexData(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+    function HandleIndex32(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
     function HandleIndex16_16(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
-  public
-    VertexCount: UINT;
-    VertexIndex: INT;
-    procedure HandleVertexBatch(pdwPushArguments: PDWORD);
-  public
-    function TrySetRenderState(dwMethod: DWORD; pdwPushArguments: PDWORD; dwCount: DWORD): Boolean;
   end;
 
 procedure DWORDSplit2(const aValue: DWORD; w1: Integer; out v1: Integer; w2: Integer; out v2: Integer);
@@ -232,6 +244,10 @@ begin
   {out}v1 := (aValue       ) and ((1 shl w1) - 1);
   {out}v2 := (aValue shr w1) and ((1 shl w2) - 1);
 end;
+
+//
+// Clear
+//
 
 procedure TDxbxPushBufferState.ClearBuffers(pdwPushArguments: PDWORD);
 var
@@ -275,40 +291,65 @@ begin
   end;
 end;
 
-procedure TDxbxPushBufferState.SetBeginEnd(pdwPushArguments: PDWORD);
+//
+// Draw[Indexed]Vertices[UP]
+//
+
+procedure TDxbxPushBufferState.PostponedDrawVertices;
 var
-  NewPrimitiveType: X_D3DPRIMITIVETYPE;
   VPDesc: VertexPatchDesc;
   VertPatch: VertexPatcher;
+begin
+  VPDesc.VertexPatchDesc();
+
+  VPDesc.PrimitiveType := XBPrimitiveType;
+  VPDesc.dwVertexCount := VertexCount;
+//   VPDesc.pVertexStreamZeroData := pVertexData;
+//   VPDesc.uiVertexStreamZeroStride := dwStride;
+//   VPDesc.hVertexShader := dwVertexShader;
+
+  VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
+
+  {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
+
+  DbgPrintf('  DrawPrimitive VertexIndex=%d, VertexCount=%d', [VertexIndex, VertexCount]);
+
+//   DxbxDrawPrimitiveUP(VPDesc);
+
+  VertPatch.Restore();
+end;
+
+procedure TDxbxPushBufferState.PostponedDrawIndexedVertices;
+begin
+end;
+
+procedure TDxbxPushBufferState.PostponedDrawVerticesUP;
+begin
+end;
+
+procedure TDxbxPushBufferState.PostponedDrawIndexedVerticesUP;
+begin
+end;
+
+procedure TDxbxPushBufferState.HandleDrawBeginEnd(pdwPushArguments: PDWORD);
+var
+  NewPrimitiveType: X_D3DPRIMITIVETYPE;
 begin
   NewPrimitiveType := X_D3DPRIMITIVETYPE(pdwPushArguments^);
   if (NewPrimitiveType = X_D3DPT_NONE) then
   begin
-    DbgPrintf('  NV2A_SetBeginEnd(DONE)');
-    // TODO Trigger the draw here, instead of in HandleVertexData, HandleIndex32 and/or HandleIndex16_16
-    case DrawMode of
-      dmDrawIndexedVertices:
-        ;
-      dmDrawVertices:
-      begin
-        VPDesc.VertexPatchDesc();
+    DbgPrintf('  NV2A_SetBeginEnd(DONE) -> Drawing');
 
-        VPDesc.PrimitiveType := XBPrimitiveType;
-        VPDesc.dwVertexCount := VertexCount;
-//        VPDesc.pVertexStreamZeroData := pVertexData;
-//        VPDesc.uiVertexStreamZeroStride := dwStride;
-//        VPDesc.hVertexShader := dwVertexShader;
-
-        VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
-
-        {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
-
-        DbgPrintf('  DrawPrimitive VertexIndex=%d, VertexCount=%d', [VertexIndex, VertexCount]);
-
-//        DxbxDrawPrimitiveUP(VPDesc);
-
-        VertPatch.Restore();
-      end;
+    // Trigger the draw here (instead of in HandleVertexData, HandleIndex32 and/or HandleIndex16_16) :
+    case PostponedDrawType of
+      pdDrawVertices:
+        PostponedDrawVertices;
+      pdDrawIndexedVertices:
+        PostponedDrawIndexedVertices;
+      pdDrawVerticesUP:
+        PostponedDrawVerticesUP;
+      pdDrawIndexedVerticesUP:
+        PostponedDrawIndexedVerticesUP;
     else
       DxbxKrnlCleanup('NV2A_SetBeginEnd encountered unknown draw mode!');
     end;
@@ -316,36 +357,40 @@ begin
   else
     DbgPrintf('  NV2A_SetBeginEnd(PrimitiveType = 0x%.03x %s)', [Ord(NewPrimitiveType), X_D3DPRIMITIVETYPE2String(NewPrimitiveType)]);
 
+  // Reset variables related to a single draw (others like VertexFormat and VertexAddress are persistent) :
   VertexCount := 0;
   VertexIndex := -1;
-  DrawMode := dmUndetermined;
+  PostponedDrawType := pdUndetermined;
   XBPrimitiveType := NewPrimitiveType;
 end;
 
-procedure TDxbxPushBufferState.HandleVertexFormat(Slot: UINT; pdwPushArguments: PDWORD);
+procedure TDxbxPushBufferState.RegisterVertexFormat(Slot: UINT; pdwPushArguments: PDWORD);
 begin
-  // TODO : Register vertex format (bits:31-8=Stride,7-4=Size,3-0=Type)
-  // Size:1..4=1..4,7=3w?
-  // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
+  // Register vertex format (bits:31-8=Stride,7-4=Size,3-0=Type) per slot :
+  VertexFormat[Slot].Stride := pdwPushArguments^ shr 8;
+  VertexFormat[Slot].Size := (pdwPushArguments^ shr 4) and $f; // Size:1..4=1..4,7=3w?
+  VertexFormat[Slot].Type_ := pdwPushArguments^ and $f; // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
 end;
 
-procedure TDxbxPushBufferState.HandleVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
+procedure TDxbxPushBufferState.RegisterVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
 begin
-  // TODO : Handle vertex buffer address (this address is a combination of all levels of offsets & indexes)
+  // Register vertex buffer address (this address is a combination of all levels of offsets & indexes) per stage :
+  VertexAddress[Stage] := Pointer(pdwPushArguments^);
 end;
 
 function TDxbxPushBufferState.HandleVertexData(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+// TODO : Postpone the draw in here to HandleDrawBeginEnd, instead collect all vertices first.
 var
   VPDesc: VertexPatchDesc;
   VertPatch: VertexPatcher;
   VertexCount: UINT;
 begin
   Result := dwCount;
-  DrawMode := dmDrawPrimitiveUP;
+  PostponedDrawType := pdDrawVerticesUP;
   pVertexData := pdwPushArguments;
 
-  if Assigned(g_pD3DDevice) then
-    DxbxUpdateNativeD3DResources();
+//  if Assigned(g_pD3DDevice) then
+//    DxbxUpdateNativeD3DResources();
 
   // retrieve vertex shader
 {$IFDEF DXBX_USE_D3D9}
@@ -482,6 +527,8 @@ begin
 end;
 
 function TDxbxPushBufferState.HandleIndex32(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+// This command is (normally) used to end an index buffer with one last index.
+// TODO : Collect this index together with the previous batch(es) and wait for the postponed draw.
 
   procedure _AssureIndexBuffer;
   var
@@ -573,6 +620,7 @@ begin
 end;
 
 function TDxbxPushBufferState.HandleIndex16_16(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+// TODO : Change this into collecting indexes and wait for the postponed Draw.
 var
   pIndexData: PWORD;
 begin
@@ -666,7 +714,8 @@ begin
   end;
 end;
 
-procedure TDxbxPushBufferState.HandleVertexBatch(pdwPushArguments: PDWORD);
+procedure TDxbxPushBufferState.RegisterVertexBatch(pdwPushArguments: PDWORD);
+// This command just registers the number of vertices are to be used in D3DDevice_DrawVertices.
 var
   BatchCount: Integer;
   BatchIndex: Integer;
@@ -675,13 +724,17 @@ begin
   DWORDSplit2(pdwPushArguments^, 24, {out}BatchIndex, 8, {out}BatchCount);
   Inc(BatchCount);
 
-  // Accumulate them for the draw that will follow :
+  // Accumulate the vertices for the draw that will follow :
   Inc(VertexCount, BatchCount);
-  if VertexIndex < 0 then
-    VertexIndex := BatchIndex;
+  // Register the index only once :
+  if VertexIndex >= 0 then
+    Exit;
 
-  // Instruct how the final draw should be made :
-  DrawMode := dmDrawVertices;
+  // Note : Additional commands will mention an index right next to the previous batch
+  VertexIndex := BatchIndex;
+
+  // Register that the postponed draw will be a DrawVertices() :
+  PostponedDrawType := pdDrawVertices;
 end;
 
 function TDxbxPushBufferState.TrySetRenderState(dwMethod: DWORD; pdwPushArguments: PDWORD; dwCount: DWORD): Boolean;
@@ -789,18 +842,6 @@ begin
         NV2A_VTX_CACHE_INVALIDATE: HandledBy := 'D3DVertexBuffer_Lock';
         // TODO : Place more to-be-ignored methods here.
 
-        // D3DDevice_SetVertexData :
-        NV2A_VERTEX_DATA4UB__0..NV2A_VERTEX_DATA4UB__15:
-        begin
-          DxbxSetVertexData({Register=}(dwMethod - NV2A_VERTEX_DATA4UB__0) div 4,
-            ( pdwPushArguments^         and $ff) / High(Byte),
-            ((pdwPushArguments^ shr  8) and $ff) / High(Byte),
-            ((pdwPushArguments^ shr 16) and $ff) / High(Byte),
-            ((pdwPushArguments^ shr 24) and $ff) / High(Byte));
-          // TODO : When should we call XTL_EmuFlushIVB()?
-          HandledBy := 'D3DDevice_SetVertexData';
-        end;
-
         // D3DDevice.Clear sends these :
         {00001d98}NV2A_CLEAR_RECT_HORIZONTAL:
         begin
@@ -865,30 +906,42 @@ begin
 //        {00000208}NV2A_RT_FORMAT: // Set surface format
 //          ; // TODO ??
 
+        // D3DDevice_SetVertexData :
+        NV2A_VERTEX_DATA4UB__0..NV2A_VERTEX_DATA4UB__15:
+        begin
+          DxbxSetVertexData({Register=}(dwMethod - NV2A_VERTEX_DATA4UB__0) div 4,
+            ( pdwPushArguments^         and $ff) / High(Byte),
+            ((pdwPushArguments^ shr  8) and $ff) / High(Byte),
+            ((pdwPushArguments^ shr 16) and $ff) / High(Byte),
+            ((pdwPushArguments^ shr 24) and $ff) / High(Byte));
+          // TODO : When should we call XTL_EmuFlushIVB()?
+          HandledBy := 'D3DDevice_SetVertexData';
+        end;
+
         // D3DDevice.Draw[Indexed]Vertices[UP] :
         NV2A_VERTEX_BEGIN_END:
         begin
-          DxbxPushBufferState.SetBeginEnd(pdwPushArguments);
+          DxbxPushBufferState.HandleDrawBeginEnd(pdwPushArguments);
           HandledBy := 'Draw';
         end;
 
-        // Data originating from SetStreamSource :
+        // Data ultimately originating from SetVertexShader / SetStreamSource :
         NV2A_VTXFMT__0..NV2A_VTXFMT__15:
         begin
-          DxbxPushBufferState.HandleVertexFormat({Slot=}(dwMethod - NV2A_VTXFMT__0) div 4, pdwPushArguments);
+          DxbxPushBufferState.RegisterVertexFormat({Slot=}(dwMethod - NV2A_VTXFMT__0) div 4, pdwPushArguments);
           HandledBy := 'VertexFormat';
         end;
 
         NV2A_VTXBUF_ADDRESS__0..NV2A_VTXBUF_ADDRESS__3:
         begin
-          DxbxPushBufferState.HandleVertexAddress({Stage=}(dwMethod - NV2A_VTXBUF_ADDRESS__0) div 4, pdwPushArguments);
+          DxbxPushBufferState.RegisterVertexAddress({Stage=}(dwMethod - NV2A_VTXBUF_ADDRESS__0) div 4, pdwPushArguments);
           HandledBy := 'VertexAddress';
         end;
 
         // D3DDevice_DrawVertices :
         NV2A_VB_VERTEX_BATCH:
         begin
-          DxbxPushBufferState.HandleVertexBatch(pdwPushArguments);
+          DxbxPushBufferState.RegisterVertexBatch(pdwPushArguments);
           HandledBy := 'DrawVertices';
         end;
 
