@@ -193,12 +193,21 @@ type
     ActiveRenderTargetHeight: DWORD;
     ActiveDepthStencilData: UIntPtr;
 
-  // Clear related
+  // Clear related :
   public
     ClearRect: RECT;
     ClearDepthValue: DWORD;
     ClearColor: DWORD;
     procedure ClearBuffers(pdwPushArguments: PDWORD);
+
+  // SetViewport related :
+  public
+    Viewport: TD3DViewport8;
+    ViewportTranslateZ: FLOAT;
+    ViewportScaleX: FLOAT;
+    ViewportScaleY: FLOAT;
+    ViewportScaleZ: FLOAT;
+    procedure HandleSetViewport(pdwPushArguments: PDWORD);
 
   // Draw[Indexed]Vertices[UP] related :
   public
@@ -291,6 +300,16 @@ begin
   end;
 end;
 
+procedure TDxbxPushBufferState.HandleSetViewport(pdwPushArguments: PDWORD);
+begin
+  // TODO : Deterine real ViewPort.Width and ViewPort.Height :
+  ViewPort.Width := 640;
+  ViewPort.Height := 480;
+  // TODO : Use ViewportTranslateZ, ViewportScaleX, ViewportScaleY and ViewportScaleZ.
+  ViewPort.MaxZ := DW2F(pdwPushArguments^);
+  g_pD3DDevice.SetViewport(ViewPort);
+end;
+
 //
 // Draw[Indexed]Vertices[UP]
 //
@@ -338,7 +357,7 @@ begin
   NewPrimitiveType := X_D3DPRIMITIVETYPE(pdwPushArguments^);
   if (NewPrimitiveType = X_D3DPT_NONE) then
   begin
-    DbgPrintf('  NV2A_SetBeginEnd(DONE) -> Drawing');
+    DbgPrintf('  NV2A_VERTEX_BEGIN_END(DONE) -> Drawing');
 
     // Trigger the draw here (instead of in HandleVertexData, HandleIndex32 and/or HandleIndex16_16) :
     case PostponedDrawType of
@@ -351,11 +370,11 @@ begin
       pdDrawIndexedVerticesUP:
         PostponedDrawIndexedVerticesUP;
     else
-      DxbxKrnlCleanup('NV2A_SetBeginEnd encountered unknown draw mode!');
+      DxbxKrnlCleanup('HandleDrawBeginEnd encountered unknown draw mode!');
     end;
   end
   else
-    DbgPrintf('  NV2A_SetBeginEnd(PrimitiveType = 0x%.03x %s)', [Ord(NewPrimitiveType), X_D3DPRIMITIVETYPE2String(NewPrimitiveType)]);
+    DbgPrintf('  NV2A_VERTEX_BEGIN_END(PrimitiveType = 0x%.03x %s)', [Ord(NewPrimitiveType), X_D3DPRIMITIVETYPE2String(NewPrimitiveType)]);
 
   // Reset variables related to a single draw (others like VertexFormat and VertexAddress are persistent) :
   VertexCount := 0;
@@ -766,6 +785,19 @@ var
   HandledBy: string;
   Combined: Integer;
   LogStr: string;
+
+  procedure _ReadDWORD(var aValue: DWORD; const aLabel: string);
+  begin
+    {var}aValue := pdwPushArguments^;
+    HandledBy := aLabel;
+  end;
+
+  procedure _ReadFLOAT(var aValue: FLOAT; const aLabel: string);
+  begin
+    {var}aValue := DW2F(pdwPushArguments^);
+    HandledBy := aLabel;
+  end;
+
 begin
   if DxbxPushBufferState = nil then
   begin
@@ -842,7 +874,7 @@ begin
         NV2A_VTX_CACHE_INVALIDATE: HandledBy := 'D3DVertexBuffer_Lock';
         // TODO : Place more to-be-ignored methods here.
 
-        // D3DDevice.Clear sends these :
+        // Clear sends these :
         {00001d98}NV2A_CLEAR_RECT_HORIZONTAL:
         begin
           DWORDSplit2(pdwPushArguments^, 16, {out}DxbxPushBufferState.ClearRect.Left, 16, {out}DxbxPushBufferState.ClearRect.Right);
@@ -853,45 +885,25 @@ begin
           DWORDSplit2(pdwPushArguments^, 16, {out}DxbxPushBufferState.ClearRect.Top, 16, {out}DxbxPushBufferState.ClearRect.Bottom);
           HandledBy := 'Clear';
         end;
-        {00001d8c}NV2A_CLEAR_DEPTH_VALUE:
-        begin
-          DxbxPushBufferState.ClearDepthValue := pdwPushArguments^;
-          HandledBy := 'Clear';
-        end;
-        {00001d90}NV2A_CLEAR_VALUE:
-        begin
-          DxbxPushBufferState.ClearColor := pdwPushArguments^;
-          HandledBy := 'Clear';
-        end;
+        {00001d8c}NV2A_CLEAR_DEPTH_VALUE: _ReadDWORD({var}DxbxPushBufferState.ClearDepthValue, 'Clear');
+        {00001d90}NV2A_CLEAR_VALUE: _ReadDWORD({var}DxbxPushBufferState.ClearColor, 'Clear');
         {00001d94}NV2A_CLEAR_BUFFERS: // Gives clear flags, should trigger the clear
         begin
           DxbxPushBufferState.ClearBuffers(pdwPushArguments);
           HandledBy := 'Clear';
         end;
 
-        // D3DDevice.Swap :
-        NV2A_FLIP_INCREMENT_WRITE:
-        begin
-          // No emulation needed?
-          HandledBy := 'Swap';
-        end;
+        // Swap :
+        NV2A_FLIP_INCREMENT_WRITE: HandledBy := 'Swap'; // No emulation needed?
         NV2A_FLIP_STALL:
         begin
           DxbxPresent(nil, nil, 0, nil);
           HandledBy := 'Swap';
         end;
 
-        // D3DDevice.SetRenderTarget :
-        NV2A_COLOR_OFFSET:
-        begin
-          DxbxPushBufferState.ActiveRenderTargetData := pdwPushArguments^;
-          HandledBy := 'SetRenderTarget';
-        end;
-        NV2A_ZETA_OFFSET:
-        begin
-          DxbxPushBufferState.ActiveDepthStencilData := pdwPushArguments^;
-          HandledBy := 'SetRenderTarget';
-        end;
+        // SetRenderTarget :
+        NV2A_COLOR_OFFSET: _ReadDWORD({var}DxbxPushBufferState.ActiveRenderTargetData, 'SetRenderTarget');
+        NV2A_ZETA_OFFSET: _ReadDWORD({var}DxbxPushBufferState.ActiveDepthStencilData, 'SetRenderTarget');
         NV2A_RT_HORIZ:
         begin
           DxbxPushBufferState.ActiveRenderTargetWidth := pdwPushArguments^ shr 16;
@@ -906,7 +918,34 @@ begin
 //        {00000208}NV2A_RT_FORMAT: // Set surface format
 //          ; // TODO ??
 
-        // D3DDevice_SetVertexData :
+        // SetViewport :
+        NV2A_VIEWPORT_TRANSLATE_X: _ReadDWORD({var}DxbxPushBufferState.ViewPort.X, 'SetViewport');
+        NV2A_VIEWPORT_TRANSLATE_Y: _ReadDWORD({var}DxbxPushBufferState.ViewPort.Y, 'SetViewport');
+        NV2A_VIEWPORT_TRANSLATE_Z: _ReadFLOAT({var}DxbxPushBufferState.ViewportTranslateZ, 'SetViewport');
+        NV2A_VIEWPORT_TRANSLATE_W: HandledBy := 'SetViewport'; // No read. Should always be 0
+        NV2A_VIEWPORT_SCALE_X: _ReadFLOAT({var}DxbxPushBufferState.ViewportScaleX, 'SetViewport');
+        NV2A_VIEWPORT_SCALE_Y: _ReadFLOAT({var}DxbxPushBufferState.ViewportScaleY, 'SetViewport');
+        NV2A_VIEWPORT_SCALE_Z: _ReadFLOAT({var}DxbxPushBufferState.ViewportScaleZ, 'SetViewport');
+        NV2A_VIEWPORT_SCALE_W: HandledBy := 'SetViewport'; // No read. Should always be 0
+        NV2A_DEPTH_RANGE_NEAR: _ReadFLOAT({var}DxbxPushBufferState.ViewPort.MinZ, 'SetViewport');
+        NV2A_DEPTH_RANGE_FAR:
+        begin
+          // Note : This is always the last method for SetViewport, so we use it as a trigger :
+          DxbxPushBufferState.HandleSetViewport(pdwPushArguments);
+          HandledBy := 'SetViewport';
+        end;
+
+        // SetTexture :
+        NV2A_TX_OFFSET__0, NV2A_TX_OFFSET__1, NV2A_TX_OFFSET__2, NV2A_TX_OFFSET__3:
+          ; // TODO : Handle this
+
+        NV2A_TX_FORMAT__0, NV2A_TX_FORMAT__1, NV2A_TX_FORMAT__2, NV2A_TX_FORMAT__3:
+          ; // TODO : Handle this
+
+        NV2A_TX_ENABLE__0, NV2A_TX_ENABLE__1, NV2A_TX_ENABLE__2, NV2A_TX_ENABLE__3:
+          ; // TODO : Handle this
+
+        // SetVertexData :
         NV2A_VERTEX_DATA4UB__0..NV2A_VERTEX_DATA4UB__15:
         begin
           DxbxSetVertexData({Register=}(dwMethod - NV2A_VERTEX_DATA4UB__0) div 4,
@@ -918,7 +957,7 @@ begin
           HandledBy := 'D3DDevice_SetVertexData';
         end;
 
-        // D3DDevice.Draw[Indexed]Vertices[UP] :
+        // Draw[Indexed]Vertices[UP] :
         NV2A_VERTEX_BEGIN_END:
         begin
           DxbxPushBufferState.HandleDrawBeginEnd(pdwPushArguments);
@@ -938,7 +977,7 @@ begin
           HandledBy := 'VertexAddress';
         end;
 
-        // D3DDevice_DrawVertices :
+        // DrawVertices :
         NV2A_VB_VERTEX_BATCH:
         begin
           DxbxPushBufferState.RegisterVertexBatch(pdwPushArguments);
@@ -964,7 +1003,7 @@ begin
         end;
 
       else
-        // D3DDevice.SetRenderState :
+        // SetRenderState :
         if DxbxPushBufferState.TrySetRenderState(dwMethod, pdwPushArguments, dwCount) then
           HandledBy := 'SetRenderState'
         else
