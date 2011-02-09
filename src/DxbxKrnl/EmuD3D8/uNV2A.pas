@@ -1271,11 +1271,15 @@ const NV2A_VERTEX_FOG_1F                                          = $00001698;
 const NV2A_EDGEFLAG_ENABLE                                        = $000016bc;
 const NV2A_VTX_CACHE_INVALIDATE                                   = $00001710;
 //const NV2A_VTXBUF_ADDRESS(x)                                    = ($00001720+((x)*4));
+const NV2A_VTXBUF_ADDRESS__0                                      = ($00001720+((0)*4));
+const NV2A_VTXBUF_ADDRESS__3                                      = ($00001720+((3)*4));
 const NV2A_VTXBUF_ADDRESS__SIZE                                   = $00000010;
 const  NV2A_VTXBUF_ADDRESS_DMA1                                   = (1 shl 31);
 const  NV2A_VTXBUF_ADDRESS_OFFSET_SHIFT                           = 0;
 const  NV2A_VTXBUF_ADDRESS_OFFSET_MASK                            = $0fffffff;
 //const NV2A_VTXFMT(x)                                            = ($00001760+((x)*4));
+const NV2A_VTXFMT__0                                              = ($00001760+((0)*4));
+const NV2A_VTXFMT__15                                             = ($00001760+((15)*4));
 const NV2A_VTXFMT__SIZE                                           = $00000010;
 const  NV2A_VTXFMT_TYPE_SHIFT                                     = 0;
 const  NV2A_VTXFMT_TYPE_MASK                                      = $0000000f;
@@ -1718,6 +1722,7 @@ const  NV2A_TX_SHADER_PREVIOUS_TX3_MASK                           = $00300000;
 const NV2A_ENGINE                                                 = $00001e94;
 const  NV2A_ENGINE_VP                                             = (1 shl  1);
 const  NV2A_ENGINE_FIXED                                          = (1 shl  2);
+const NV2A_TRANSFORM_PROGRAM_CXT_WRITE_EN                         = $00001e98;
 const NV2A_VP_UPLOAD_FROM_ID                                      = $00001e9c;
 const NV2A_VP_START_FROM_ID                                       = $00001ea0;
 const NV2A_VP_UPLOAD_CONST_ID                                     = $00001ea4;
@@ -1727,7 +1732,7 @@ const NV2A_VP_UPLOAD_CONST_ID                                     = $00001ea4;
 //
 
 const
-  CompactNV2AInfo: array [0..312] of record
+  CompactNV2AInfo: array [0..313] of record
     Method: Integer;
     Name: string;
     Pitch: Integer; // Default 0 means 4
@@ -1877,8 +1882,8 @@ const
   (Method:$00000af4; Name:'NV2A_VIEWPORT_SCALE_Y'),
   (Method:$00000af8; Name:'NV2A_VIEWPORT_SCALE_Z'),
   (Method:$00000afc; Name:'NV2A_VIEWPORT_SCALE_W'),
-  (Method:$00000b00; Name:'NV2A_VP_UPLOAD_INST(x)'; Pitch:4; Count:4),
-  (Method:$00000b80; Name:'NV2A_VP_UPLOAD_CONST(x)'; Pitch:4; Count:4), // Can't use NOINCREMENT_FLAG, maximum of 32 writes
+  (Method:$00000b00; Name:'NV2A_VP_UPLOAD_INST(x)'; Pitch:4; Count:32),
+  (Method:$00000b80; Name:'NV2A_VP_UPLOAD_CONST(x)'; Pitch:4; Count:32), // Can't use NOINCREMENT_FLAG, maximum of 32 writes
   (Method:$00000c00; Name:'NV2A_LIGHT_BACK_AMBIENT_R(x)'; Pitch:64; Count:8),
   (Method:$00000c04; Name:'NV2A_LIGHT_BACK_AMBIENT_G(x)'; Pitch:64; Count:8),
   (Method:$00000c08; Name:'NV2A_LIGHT_BACK_AMBIENT_B(x)'; Pitch:64; Count:8),
@@ -2043,6 +2048,7 @@ const
   (Method:$00001e74; Name:'NV2A_TX_SHADER_DOTMAPPING'),
   (Method:$00001e78; Name:'NV2A_TX_SHADER_PREVIOUS'),
   (Method:$00001e94; Name:'NV2A_ENGINE'),
+  (Method:$00001e98; Name:'NV2A_TRANSFORM_PROGRAM_CXT_WRITE_EN'),
   (Method:$00001e9c; Name:'NV2A_VP_UPLOAD_FROM_ID'),
   (Method:$00001ea0; Name:'NV2A_VP_START_FROM_ID'),
   (Method:$00001ea4; Name:'NV2A_VP_UPLOAD_CONST_ID') // Add 96 to constant index parameter
