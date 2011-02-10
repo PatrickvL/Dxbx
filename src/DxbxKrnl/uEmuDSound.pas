@@ -2786,12 +2786,15 @@ function TIDirectSoundBuffer.SetAllParameters
     pds3db: LPCDS3DBUFFER;
     dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:Shadow_tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('TIDirectSoundBuffer.SetAllParameters');
-  Result := DS_OK;
+  // Todo: Implement this
+(*  if Assigned(EmuListener) then
+    Result := IDirectSound3DListener8(Self.EmuListener).SetAllParameters(pds3db, dwApply)
+  else *)
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2802,7 +2805,7 @@ function TIDirectSoundBuffer.SetConeAngles
     dwOutsideConeAngle: DWORD;
     dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -2814,9 +2817,10 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-// TODO -oDxbx : Make this work & test it!
-//  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply);
-  Result := DS_OK;
+  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSound3DBuffer(Self.EmuDirectSoundBuffer8).SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2828,7 +2832,7 @@ function TIDirectSoundBuffer.SetConeOrientation
     z: FLOAT;
     dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -2841,9 +2845,10 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-// TODO -oDxbx : Make this work & test it!
-//  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeOrientation(x, y, z, dwApply);
-  Result := DS_OK;
+  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSound3DBuffer(Self.EmuDirectSoundBuffer8).SetConeOrientation(x, y, z, dwApply)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2853,7 +2858,7 @@ function TIDirectSoundBuffer.SetConeOutsideVolume
     lConeOutsideVolume: LONG;
     dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -2864,9 +2869,10 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-// TODO -oDxbx : Make this work & test it!
-//  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeOutsideVolume(lConeOutsideVolume, dwApply);
-  Result := DS_OK;
+  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSound3DBuffer(Self.EmuDirectSoundBuffer8).SetConeOutsideVolume(lConeOutsideVolume, dwApply)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2876,7 +2882,7 @@ function TIDirectSoundBuffer.SetMaxDistance
     flMaxDistance: FLOAT;
     dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -2887,9 +2893,10 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-// TODO -oDxbx : Make this work & test it!
-//  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetMaxDistance(flMaxDistance, dwApply);
-  Result := DS_OK;
+  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSound3DBuffer(Self.EmuDirectSoundBuffer8).SetMaxDistance(flMaxDistance, dwApply)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2910,9 +2917,10 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-// TODO -oDxbx : Make this work & test it!
-//  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetMinDistance(flMinDistance, dwApply);
-  Result := DS_OK;
+  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSound3DBuffer(Self.EmuDirectSoundBuffer8).SetMinDistance(flMinDistance, dwApply)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2922,7 +2930,7 @@ function TIDirectSoundBuffer.SetMode
     dwMode: DWORD;
     dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -2933,9 +2941,10 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-// TODO -oDxbx : Make this work & test it!
-//  Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetMode(dwMode, dwApply);
-  Result := DS_OK;
+  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSound3DBuffer(Self.EmuDirectSoundBuffer8).SetMode(dwMode, dwApply)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -3094,7 +3103,6 @@ begin
     LogEnd();
 
   // TODO -oCXBX: Implement
-
   EmuSwapFS(fsXbox);
 
   Result := DS_OK;
@@ -4333,7 +4341,7 @@ function TIDirectSoundStream.SetAllParameters
   pds3db: LPCDS3DBUFFER;
   dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -4344,10 +4352,13 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-  // TODO -oCXBX: Actually implement this
-  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetAllParameters(pds3db, dwApply);
+    // Todo: Implement this
+(*  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSound3DBuffer(Self.EmuDirectSoundBuffer8).SetAllParameters(pds3db, dwApply)
+  else *)
+    Result := DS_OK;
+
   EmuSwapFS(fsXbox);
-  Result := DS_OK;
 end;
 
 function TIDirectSoundStream.SetConeAngles
@@ -4356,7 +4367,7 @@ function TIDirectSoundStream.SetConeAngles
   dwOutsideConeAngle,
   dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -4368,10 +4379,12 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-  // TODO -oCXBX: Actually implement this
-  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply);
+  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSound3DBuffer(Self.EmuDirectSoundBuffer8).SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply)
+  else
+    Result := DS_OK;
+
   EmuSwapFS(fsXbox);
-  Result := DS_OK;
 end;
 
 function TIDirectSoundStream.SetConeOrientation
@@ -4381,7 +4394,7 @@ function TIDirectSoundStream.SetConeOrientation
   z: FLOAT;
   dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -4394,10 +4407,12 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-  // TODO -oCXBX: Actually implement this
-  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeOrientation(x, y, z, dwApply);
+  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSound3DBuffer(Self.EmuDirectSoundBuffer8).SetConeOrientation(x, y, z, dwApply)
+  else
+    Result := DS_OK;
+
   EmuSwapFS(fsXbox);
-  Result := DS_OK;
 end;
 
 function TIDirectSoundStream.SetConeOutsideVolume
@@ -4405,7 +4420,7 @@ function TIDirectSoundStream.SetConeOutsideVolume
   lConeOutsideVolume: LONG;
   dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -4416,10 +4431,12 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-  // TODO -oCXBX: Actually implement this
-  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeOutsideVolume(lConeOutsideVolume, dwApply);
+  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSound3DBuffer(Self.EmuDirectSoundBuffer8).SetConeOutsideVolume(lConeOutsideVolume, dwApply)
+  else
+    Result := DS_OK;
+
   EmuSwapFS(fsXbox);
-  Result := DS_OK;
 end;
 
 function TIDirectSoundStream.SetMaxDistance
@@ -4427,7 +4444,7 @@ function TIDirectSoundStream.SetMaxDistance
   flMaxDistance: FLOAT;
   dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -4438,10 +4455,12 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-  // TODO -oCXBX: Actually implement this
-  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetMaxDistance(flMaxDistance, dwApply);
+  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSound3DBuffer(Self.EmuDirectSoundBuffer8).SetMaxDistance(flMaxDistance, dwApply)
+  else
+    Result := DS_OK;
+
   EmuSwapFS(fsXbox);
-  Result := DS_OK;
 end;
 
 function TIDirectSoundStream.SetMinDistance
@@ -4449,7 +4468,7 @@ function TIDirectSoundStream.SetMinDistance
   flMinDistance: FLOAT;
   dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -4460,10 +4479,12 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-  // TODO -oCXBX: Actually implement this
-  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetMinDistance(flMinDistance, dwApply);
+  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSound3DBuffer(Self.EmuDirectSoundBuffer8).SetMinDistance(flMinDistance, dwApply)
+  else
+    Result := DS_OK;
+
   EmuSwapFS(fsXbox);
-  Result := DS_OK;
 end;
 
 function TIDirectSoundStream.SetMode
@@ -4471,7 +4492,7 @@ function TIDirectSoundStream.SetMode
   dwMode,
   dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -4482,9 +4503,10 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-  Result := DS_OK;
-
-  EmuWarning('EmuCDirectSoundStream_SetFormat ignored');
+  if Assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSound3DBuffer(Self.EmuDirectSoundBuffer8).SetMode(dwMode, dwApply)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4496,7 +4518,7 @@ function TIDirectSoundStream.SetPosition
   z: FLOAT;
   dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -4509,10 +4531,12 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-  // TODO -oCXBX: Actually implement this
-  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetPosition(x, y, z, dwApply);
+  if Assigned(Self.EmuListener) then
+    Result := IDirectSound3DListener(Self.EmuListener).SetPosition(X, Y, Z, dwApply)
+  else
+    Result := DS_OK;
+
   EmuSwapFS(fsXbox);
-  Result := DS_OK;
 end;
 
 function TIDirectSoundStream.SetVelocity
@@ -4522,7 +4546,7 @@ function TIDirectSoundStream.SetVelocity
   z: FLOAT;
   dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -4535,20 +4559,34 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-  // TODO -oCXBX: Actually implement this
-  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetVelocity(x, y, z, dwApply);
+  if Assigned(Self.EmuListener) then
+    Result := IDirectSound3DListener(Self.EmuListener).SetVelocity(X, Y, Z, dwApply)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
-  Result := DS_OK;
 end;
 
-function TIDirectSoundStream.SetDistanceFactor(flDistanceFactor: FLOAT; dwApply: DWORD): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+function TIDirectSoundStream.SetDistanceFactor
+(
+  flDistanceFactor: FLOAT;
+  dwApply: DWORD
+): HRESULT; stdcall; // virtual;
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('TIDirectSoundStream.SetDistanceFactor');
-  Result := DS_OK;
+  if MayLog(lfUnit) then
+    LogBegin('EmuDSound : TIDirectSoundStream.SetDistanceFactor').
+      _(Self, 'pStream').
+      _(flDistanceFactor, 'flDistanceFactor').
+      _(dwApply, 'dwApply').
+    LogEnd();
+
+  if Assigned(Self.EmuListener) then
+    Result := IDirectSound3DListener(Self.EmuListener).SetDistanceFactor(flDistanceFactor, dwApply)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4558,12 +4596,21 @@ function TIDirectSoundStream.SetDopplerFactor
   flDopplerFactor: FLOAT;
   dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('TIDirectSoundStream.SetDopplerFactor');
-  Result := DS_OK;
+  if MayLog(lfUnit) then
+    LogBegin('EmuDSound : TIDirectSoundStream.SetDopplerFactor').
+      _(Self, 'pStream').
+      _(flDopplerFactor, 'flDopplerFactor').
+      _(dwApply, 'dwApply').
+    LogEnd();
+
+  if Assigned(Self.EmuListener) then
+    Result := IDirectSound3DListener(Self.EmuListener).SetDopplerFactor(flDopplerFactor, dwApply)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4573,7 +4620,7 @@ function TIDirectSoundStream.SetRolloffFactor
   flRolloffFactor: FLOAT;
   dwApply: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -4584,9 +4631,12 @@ begin
       _(dwApply, 'dwApply').
     LogEnd();
 
-  // TODO -oCXBX: Actually SetRolloffFactor
+  if Assigned(Self.EmuListener) then
+    Result := IDirectSound3DListener(Self.EmuListener).SetRolloffFactor(flRolloffFactor, dwApply)
+  else
+    Result := DS_OK;
+
   EmuSwapFS(fsXbox);
-  Result := DS_OK;
 end;
 
 function TIDirectSoundStream.SetRolloffCurve
