@@ -655,9 +655,6 @@ const  NV2A_STENCIL_OP_ZPASS_DECR_WRAP                            = $00008508;
 const NV2A_SHADE_MODEL                                            = $0000037c;
 const  NV2A_SHADE_MODEL_FLAT                                      = $00001d00;
 const  NV2A_SHADE_MODEL_SMOOTH                                    = $00001d01;
-const NV2A_COMPRESS_ZBUFFER_EN                                    = $00001d80; // Dxbx
-const NV2A_SEMAPHORE_OFFSET                                       = $00001d6c; // Dxbx
-const NV2A_WRITE_SEMAPHORE_RELEASE                                = $00001d70; // Dxbx
 const NV2A_LINE_WIDTH                                             = $00000380;
 const NV2A_POLYGON_OFFSET_FACTOR                                  = $00000384;
 const NV2A_POLYGON_OFFSET_UNITS                                   = $00000388;
@@ -1056,6 +1053,8 @@ const   NV2A_RC_IN_RGB_A_MAPPING_HALF_BIAS_NORMAL                 = $80000000;
 const   NV2A_RC_IN_RGB_A_MAPPING_HALF_BIAS_NEGATE                 = $a0000000;
 const   NV2A_RC_IN_RGB_A_MAPPING_SIGNED_IDENTITY                  = $c0000000;
 const   NV2A_RC_IN_RGB_A_MAPPING_SIGNED_NEGATE                    = $e0000000;
+//const NV2A_COLOR_KEY_COLOR(x)                                   = ($00000ae0+((x)*4)); // Dxbx
+const NV2A_COLOR_KEY_COLOR__SIZE                                  = $00000004; // Dxbx
 const NV2A_VIEWPORT_SCALE_X                                       = $00000af0;
 const NV2A_VIEWPORT_SCALE_Y                                       = $00000af4;
 const NV2A_VIEWPORT_SCALE_Z                                       = $00000af8;
@@ -1568,10 +1567,17 @@ const NV2A_TX_SHADER_OFFSET_MATRIX01__SIZE                        = $00000004;
 const NV2A_TX_SHADER_OFFSET_MATRIX11__SIZE                        = $00000004;
 //const NV2A_TX_SHADER_OFFSET_MATRIX10(x)                         = ($00001b34+((x)*64));
 const NV2A_TX_SHADER_OFFSET_MATRIX10__SIZE                        = $00000004;
+//const NV2A_TX_SHADER_OFFSET_SCALE(x)                            = ($00001b38+((x)*64)); // Dxbx
+const NV2A_TX_SHADER_OFFSET_SCALE__SIZE                           = $00000004; // Dxbx
+//const NV2A_TX_SHADER_OFFSET_OFFSET(x)                           = ($00001b3c+((x)*64)); // Dxbx
+const NV2A_TX_SHADER_OFFSET_OFFSET__SIZE                          = $00000004; // Dxbx
+const NV2A_SEMAPHORE_OFFSET                                       = $00001d6c; // Dxbx
+const NV2A_WRITE_SEMAPHORE_RELEASE                                = $00001d70; // Dxbx
 const NV2A_DEPTHCLIPCONTROL                                       = $00001d78; // Dxbx
 const  NV2A_DEPTHCLIPCONTROL_CLAMP_SHIFT                          = 4;         // Dxbx
 const  NV2A_DEPTHCLIPCONTROL_CLAMP_MASK                           = $000000f0; // Dxbx
 const NV2A_MULTISAMPLE_CONTROL                                    = $00001d7c;
+const NV2A_COMPRESS_ZBUFFER_EN                                    = $00001d80; // Dxbx
 const NV2A_OCCLUDE_ZSTENCIL_EN                                    = $00001d84; // Dxbx
 const NV2A_CLEAR_DEPTH_VALUE                                      = $00001d8c;
 const NV2A_CLEAR_VALUE                                            = $00001d90;
@@ -1763,7 +1769,7 @@ const NV2A_Max = NV2A_VP_UPLOAD_CONST_ID;
 const
   // This declaration contains the above constants, but in a more compact form.
   // It's is decoded by InitNV2AInfo into a lookup-table for string-conversions.
-  CompactNV2AInfo: array [0..314] of record
+  CompactNV2AInfo: array [0..317] of record
     Method: Integer;
     Name: string;
     Pitch: Integer; // Default 0 means 4
@@ -1910,6 +1916,7 @@ const
   (Method:$00000a80; Name:'NV2A_RC_CONSTANT_COLOR1(x)'; Count:NV2A_RC_CONSTANT_COLOR1__SIZE),
   (Method:$00000aa0; Name:'NV2A_RC_OUT_ALPHA(x)'; Count:NV2A_RC_OUT_ALPHA__SIZE),
   (Method:$00000ac0; Name:'NV2A_RC_IN_RGB(x)'; Count:NV2A_RC_IN_RGB__SIZE),
+  (Method:$00000ae0; Name:'NV2A_COLOR_KEY_COLOR(x)'; Count:NV2A_COLOR_KEY_COLOR__SIZE),
   (Method:$00000af0; Name:'NV2A_VIEWPORT_SCALE_X'),
   (Method:$00000af4; Name:'NV2A_VIEWPORT_SCALE_Y'),
   (Method:$00000af8; Name:'NV2A_VIEWPORT_SCALE_Z'),
@@ -2041,23 +2048,25 @@ const
   (Method:$00001820; Name:'NV2A_TX_SHADER_CONST_EYE_Y'),
   (Method:$00001824; Name:'NV2A_TX_SHADER_CONST_EYE_Z'),
   (Method:$00001940; Name:'NV2A_VERTEX_DATA4UB(x)'; Count:NV2A_VERTEX_DATA4UB__SIZE), // Order:POSITION,WEIGHT,NORMAL,DIFFUSE,SPECULAR,FOG,POINT_SIZE,BACK_DIFFUSE,BACK_SPECULAR,TEXTURE0,-1,-2,-3,?,?,?
-  (Method:$00001a00; Name:'NV2A_VTX_ATTR_4F_X(x)'; Pitch:16; Count:16),
-  (Method:$00001a04; Name:'NV2A_VTX_ATTR_4F_Y(x)'; Pitch:16; Count:16),
-  (Method:$00001a08; Name:'NV2A_VTX_ATTR_4F_Z(x)'; Pitch:16; Count:16),
-  (Method:$00001a0c; Name:'NV2A_VTX_ATTR_4F_W(x)'; Pitch:16; Count:16),
-  (Method:$00001b00; Name:'NV2A_TX_OFFSET(x)'; Pitch:64; Count:4),
-  (Method:$00001b04; Name:'NV2A_TX_FORMAT(x)'; Pitch:64; Count:4),
-  (Method:$00001b08; Name:'NV2A_TX_WRAP(x)'; Pitch:64; Count:4),
-  (Method:$00001b0c; Name:'NV2A_TX_ENABLE(x)'; Pitch:64; Count:4),
-  (Method:$00001b10; Name:'NV2A_TX_NPOT_PITCH(x)'; Pitch:64; Count:4),
-  (Method:$00001b14; Name:'NV2A_TX_FILTER(x)'; Pitch:64; Count:4),
-  (Method:$00001b1c; Name:'NV2A_TX_NPOT_SIZE(x)'; Pitch:64; Count:4),
-  (Method:$00001b20; Name:'NV2A_TX_PALETTE_OFFSET(x)'; Pitch:64; Count:4),
-  (Method:$00001b24; Name:'NV2A_TX_BORDER_COLOR(x)'; Pitch:64; Count:4),
-  (Method:$00001b28; Name:'NV2A_TX_SHADER_OFFSET_MATRIX00(x)'; Pitch:64; Count:4),
-  (Method:$00001b2c; Name:'NV2A_TX_SHADER_OFFSET_MATRIX01(x)'; Pitch:64; Count:4),
-  (Method:$00001b30; Name:'NV2A_TX_SHADER_OFFSET_MATRIX11(x)'; Pitch:64; Count:4),
-  (Method:$00001b34; Name:'NV2A_TX_SHADER_OFFSET_MATRIX10(x)'; Pitch:64; Count:4),
+  (Method:$00001a00; Name:'NV2A_VTX_ATTR_4F_X(x)'; Pitch:16; Count:NV2A_VTX_ATTR_4F_X__SIZE),
+  (Method:$00001a04; Name:'NV2A_VTX_ATTR_4F_Y(x)'; Pitch:16; Count:NV2A_VTX_ATTR_4F_Y__SIZE),
+  (Method:$00001a08; Name:'NV2A_VTX_ATTR_4F_Z(x)'; Pitch:16; Count:NV2A_VTX_ATTR_4F_Z__SIZE),
+  (Method:$00001a0c; Name:'NV2A_VTX_ATTR_4F_W(x)'; Pitch:16; Count:NV2A_VTX_ATTR_4F_W__SIZE),
+  (Method:$00001b00; Name:'NV2A_TX_OFFSET(x)'; Pitch:64; Count:NV2A_TX_OFFSET__SIZE),
+  (Method:$00001b04; Name:'NV2A_TX_FORMAT(x)'; Pitch:64; Count:NV2A_TX_FORMAT__SIZE),
+  (Method:$00001b08; Name:'NV2A_TX_WRAP(x)'; Pitch:64; Count:NV2A_TX_WRAP__SIZE),
+  (Method:$00001b0c; Name:'NV2A_TX_ENABLE(x)'; Pitch:64; Count:NV2A_TX_ENABLE__SIZE),
+  (Method:$00001b10; Name:'NV2A_TX_NPOT_PITCH(x)'; Pitch:64; Count:NV2A_TX_NPOT_PITCH__SIZE),
+  (Method:$00001b14; Name:'NV2A_TX_FILTER(x)'; Pitch:64; Count:NV2A_TX_FILTER__SIZE),
+  (Method:$00001b1c; Name:'NV2A_TX_NPOT_SIZE(x)'; Pitch:64; Count:NV2A_TX_NPOT_SIZE__SIZE),
+  (Method:$00001b20; Name:'NV2A_TX_PALETTE_OFFSET(x)'; Pitch:64; Count:NV2A_TX_PALETTE_OFFSET__SIZE),
+  (Method:$00001b24; Name:'NV2A_TX_BORDER_COLOR(x)'; Pitch:64; Count:NV2A_TX_BORDER_COLOR__SIZE),
+  (Method:$00001b28; Name:'NV2A_TX_SHADER_OFFSET_MATRIX00(x)'; Pitch:64; Count:NV2A_TX_SHADER_OFFSET_MATRIX00__SIZE),
+  (Method:$00001b2c; Name:'NV2A_TX_SHADER_OFFSET_MATRIX01(x)'; Pitch:64; Count:NV2A_TX_SHADER_OFFSET_MATRIX01__SIZE),
+  (Method:$00001b30; Name:'NV2A_TX_SHADER_OFFSET_MATRIX11(x)'; Pitch:64; Count:NV2A_TX_SHADER_OFFSET_MATRIX11__SIZE),
+  (Method:$00001b34; Name:'NV2A_TX_SHADER_OFFSET_MATRIX10(x)'; Pitch:64; Count:NV2A_TX_SHADER_OFFSET_MATRIX10__SIZE),
+  (Method:$00001b38; Name:'NV2A_TX_SHADER_OFFSET_SCALE(x)'; Pitch:64; Count:NV2A_TX_SHADER_OFFSET_SCALE__SIZE),
+  (Method:$00001b3c; Name:'NV2A_TX_SHADER_OFFSET_OFFSET(x)'; Pitch:64; Count:NV2A_TX_SHADER_OFFSET_OFFSET__SIZE),
   (Method:$00001d6c; Name:'NV2A_SEMAPHORE_OFFSET'),
   (Method:$00001d70; Name:'NV2A_WRITE_SEMAPHORE_RELEASE'),
   (Method:$00001d78; Name:'NV2A_DEPTHCLIPCONTROL'),
@@ -2255,7 +2264,7 @@ type
       {00000a80}RC_CONSTANT_COLOR1: array [0..NV2A_RC_CONSTANT_COLOR1__SIZE-1] of DWORD; // D3DCOLOR
       {00000aa0}RC_OUT_ALPHA: array [0..NV2A_RC_OUT_ALPHA__SIZE-1] of DWORD;
       {00000ac0}RC_IN_RGB: array [0..NV2A_RC_IN_RGB__SIZE-1] of DWORD;
-      _00000ae0_Unknown: array [$0ae0..NV2A_VIEWPORT_SCALE_X-1] of BYTE;
+      {00000ae0}COLOR_KEY_COLOR: array [0..NV2A_COLOR_KEY_COLOR__SIZE-1] of DWORD;
       {00000af0}VIEWPORT_SCALE_X: FLOAT;
       {00000af4}VIEWPORT_SCALE_Y: FLOAT;
       {00000af8}VIEWPORT_SCALE_Z: FLOAT;
@@ -2436,7 +2445,8 @@ type
         {00001b2c}TX_SHADER_OFFSET_MATRIX01: DWORD;
         {00001b30}TX_SHADER_OFFSET_MATRIX11: DWORD;
         {00001b34}TX_SHADER_OFFSET_MATRIX10: DWORD;
-        _00001b38_Unknown: array [$1b38..NV2A_TX_OFFSET__1-1] of BYTE;
+        {00001b38}TX_SHADER_OFFSET_SCALE: DWORD;
+        {00001b3c}TX_SHADER_OFFSET_OFFSET: DWORD;
         end;
       _00001c00_Unknown: array [$1c00..NV2A_SEMAPHORE_OFFSET-1] of BYTE;
       {00001d6c}SEMAPHORE_OFFSET: DWORD;
