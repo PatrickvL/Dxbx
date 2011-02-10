@@ -195,6 +195,7 @@ type
   public
     VertexAddress: array [0..3] of Pointer;
     procedure RegisterVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
+    function RegisterVertexShaderConstant(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
   public
     VertexIndex: INT;
     VertexCount: UINT;
@@ -252,6 +253,7 @@ end;
 { TDxbxPushBufferState }
 
 procedure TDxbxPushBufferState.RegisterVertexFormat(Slot: UINT; pdwPushArguments: PDWORD);
+// TODO : Do this in PostponedDraw
 begin
   // Register vertex format (bits:31-8=Stride,7-4=Size,3-0=Type) per slot :
   VertexFormat[Slot].Stride := pdwPushArguments^ shr 8;
@@ -263,6 +265,18 @@ procedure TDxbxPushBufferState.RegisterVertexAddress(Stage: UINT; pdwPushArgumen
 begin
   // Register vertex buffer address (this address is a combination of all levels of offsets & indexes) per stage :
   VertexAddress[Stage] := Pointer(pdwPushArguments^);
+end;
+
+function TDxbxPushBufferState.RegisterVertexShaderConstant(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
+begin
+  Result := dwCount;
+
+  g_pD3DDevice.SetVertexShaderConstant
+  (
+      NV2AInstance.VP_UPLOAD_FROM_ID,
+      pdwPushArguments,
+      dwCount
+  );
 end;
 
 procedure TDxbxPushBufferState.RegisterVertexBatch(pdwPushArguments: PDWORD);
@@ -473,6 +487,13 @@ begin
   if (NewPrimitiveType = X_D3DPT_NONE) then
   begin
     DbgPrintf('  NV2A_VERTEX_BEGIN_END(DONE) -> Drawing');
+
+    // D3DDevice_SetRenderTarget        : NV2A_RT_PITCH, NV2A_COLOR_OFFSET and NV2A_ZETA_OFFSET
+    // D3DDevice_SetStreamSource (lazy) : NV2A_VTXFMT and NV2A_VTXBUF_ADDRESS
+    // D3DDevice_DrawVertices           : NV2A_VB_VERTEX_BATCH (the batch is indicated by an Index and a Count in the active vertex buffer - as set by SetStreamSource)
+    // D3DDevice_DrawIndexedVertices    : NV2A_VB_ELEMENT_U16 (and an optional closing NV2A_VB_ELEMENT_U32)  (the index is added into SetStreamSource)
+    // D3DDevice_DrawVerticesUP         : NV2A_VERTEX_DATA
+    // D3DDevice_DrawIndexedVerticesUP  : NV2A_VERTEX_DATA
 
     // Trigger the draw here (instead of in HandleVertexData, HandleIndex32 and/or HandleIndex16_16) :
     case PostponedDrawType of
@@ -984,7 +1005,13 @@ begin
               ((pdwPushArguments^ shr 16) and $ff) / High(Byte),
               ((pdwPushArguments^ shr 24) and $ff) / High(Byte));
             // TODO : When should we call XTL_EmuFlushIVB()?
-            HandledBy := 'D3DDevice_SetVertexData';
+            HandledBy := 'SetVertexData';
+          end;
+
+          NV2A_VP_UPLOAD_CONST__0:
+          begin
+            HandledCount := RegisterVertexShaderConstant(pdwPushArguments, dwCount);
+            HandledBy := 'SetVertexShaderConstant';
           end;
 
           // Draw[Indexed]Vertices[UP] :
@@ -1098,16 +1125,8 @@ begin
     New(DxbxPushBufferState);
     ZeroMemory(DxbxPushBufferState, SizeOf(DxbxPushBufferState));
 
-    DxbxPushBufferState.pIndexBuffer := nil;
-    DxbxPushBufferState.maxIBSize := 0;
-    DxbxPushBufferState.StartIndex := 0;
-
     DxbxPushBufferState.dwVertexShader := DWORD(-1);
     DxbxPushBufferState.dwStride := DWORD(-1);
-
-    // cache of last 4 indices
-    DxbxPushBufferState.NrCachedIndices := 0;
-
     DxbxPushBufferState.XBPrimitiveType := X_D3DPT_INVALID;
   end;
 

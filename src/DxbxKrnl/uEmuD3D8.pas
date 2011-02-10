@@ -117,6 +117,7 @@ function EmuThreadPollInput(lpVoid: LPVOID): DWORD; stdcall;
 function EmuThreadHandleVBlank(lpVoid: LPVOID): DWORD; stdcall;
 
 procedure DxbxCreateDevice();
+procedure DumpPresentationParameters(pPresentationParameters: PX_D3DPRESENT_PARAMETERS);
 
 const
   RESOURCE_CACHE_SIZE = 16;
@@ -921,6 +922,96 @@ begin
   until Result = UINT(D3D_OK);
 end;
 
+type
+  RPatch = record
+    Symbol: PByte;
+    Target: Pointer;
+    OriginalHeader: array [0..4] of Byte;
+    procedure Init(Symbol: PByte; Target: Pointer);
+    procedure Unpatch;
+    procedure Repatch;
+  end;
+
+procedure RPatch.Init(Symbol: PByte; Target: Pointer);
+begin
+  Self.Symbol := Symbol;
+  Self.Target := Target;
+  Repatch;
+end;
+
+procedure RPatch.Repatch;
+begin
+  if Symbol^ <> OPCODE_JMP then
+  begin
+    // Backup original 5 bytes of (currently unpatched) symbol :
+    memcpy(@OriginalHeader[0], Symbol, 5);
+
+    // Overwrite that with a jump to the interceptor :
+    Symbol^ := OPCODE_JMP;
+    PDWORD(Symbol+1)^ := DWORD(Target) - UIntPtr(Symbol) - 5;
+  end;
+end;
+
+procedure RPatch.Unpatch;
+begin
+  // Restore the original code :
+  memcpy(Symbol, @OriginalHeader[0], 5);
+end;
+
+var
+  CDevice_Init_Patch: RPatch;
+
+type
+  TD3D_CDevice_Init = function
+  (
+    {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+    {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+    {1 ECX}This: Pvoid;
+    {2 stack}pPresentationParameters: PX_D3DPRESENT_PARAMETERS
+  ): HRESULT; register; // thiscall simulation - See Translation guide
+
+function Dxbx_CDevice_Init
+(
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {0 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}This: Pvoid;
+  {2 stack}pPresentationParameters: PX_D3DPRESENT_PARAMETERS
+): HRESULT; register; // thiscall simulation - See Translation guide
+begin
+  EmuSwapFS(fsWindows);
+
+  if MayLog(lfUnit) then
+  begin
+    LogBegin('Dxbx_CDevice_Init').
+       _(This, 'This').
+       _(pPresentationParameters, 'pPresentationParameters').
+    LogEnd();
+
+    DumpPresentationParameters(pPresentationParameters);
+  end;
+
+  g_EmuCDPD.pPresentationParameters := pPresentationParameters;
+  DxbxCreateDevice();
+
+  // Call the original version :
+  begin
+    CDevice_Init_Patch.Unpatch;
+
+    EmuSwapFS(fsXbox);
+    Result := TD3D_CDevice_Init(CDevice_Init_Patch.Symbol)(0, 0, This, pPresentationParameters);
+    EmuSwapFS(fsWindows);
+
+    CDevice_Init_Patch.Repatch;
+  end;
+
+  EmuSwapFS(fsXbox);
+end;
+
+procedure TemporarilyPatch_CDevice_Init;
+begin
+  CDevice_Init_Patch.Init(XTL_D3D_CDevice_Init, @Dxbx_CDevice_Init);
+end;
+
 // Direct3D initialization (called before emulation begins)
 procedure DxbxD3DInit(XbeHeader: PXBEIMAGE_HEADER; XbeHeaderSize: uint32); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -1050,6 +1141,8 @@ begin
 
     // TODO : Dump supported D3DFormats using GetAdapterModeCount, EnumAdapterModes, CheckDeviceFormat and CheckDeviceType!
   end;
+
+  TemporarilyPatch_CDevice_Init;
 
   SetFocus(g_hEmuWindow);
 end; // DxbxD3DInit

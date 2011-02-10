@@ -171,9 +171,12 @@ begin
 
   case a2 of
     8:  // = notification of semaphore address
+    begin
       // Remember where the semaphore (starting with a GPU Time DWORD) was allocated
       // (we could have trapped MmAllocateContiguousMemoryEx too, but this is simpler) :
       m_pGPUTime := PDWORD(a4);
+      DbgPrintf('Registered m_pGPUTime at 0x%0.8x', [UIntPtr(m_pGPUTime)]);
+    end;
   else
     Unimplemented('D3D_CMiniport_CreateCtxDmaObject');
   end;
@@ -227,7 +230,7 @@ begin
 end;
 
 // timing thread procedure
-function EmuThreadHandleNv2ADMA(lpVoid: LPVOID): DWORD; stdcall;
+function EmuThreadHandleNV2ADMA(lpVoid: LPVOID): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   UpdateTimer: DxbxTimer;
@@ -237,7 +240,7 @@ var
   GPUStart, GPUEnd: PDWord;
 begin
   if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : Nv2A DMA thread is running.');
+    DbgPrintf('EmuD3D8 : NV2A DMA thread is running.');
 
   DxbxLogPushBufferPointers('NV2AThread');
 
@@ -271,11 +274,11 @@ begin
     GPUEnd := Pusher.m_pPut;
 
     // See if there's a valid work pointer :
-    if Assigned(GPUStart) then
+    if Assigned(GPUStart) and Assigned(GPUEnd) then
       // Execute the instructions, this returns the address where execution stopped :
       XTL_EmuExecutePushBufferRaw(GPUStart, GPUEnd);
   end; // while
-end;
+end; // EmuThreadHandleNV2ADMA
 
 function XTL_EmuD3D_CMiniport_InitDMAChannel(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
@@ -313,7 +316,7 @@ begin
   // Create our DMA pushbuffer 'handling' thread :
   begin
     dwThreadId := 0;
-    {hThread :=} CreateThread(nil, 0, @EmuThreadHandleNv2ADMA, nil, 0, {var}dwThreadId);
+    {hThread :=} CreateThread(nil, 0, @EmuThreadHandleNV2ADMA, nil, 0, {var}dwThreadId);
 //    // Make sure callbacks run on the same core as the one that runs Xbox1 code :
     SetThreadAffinityMask(dwThreadId, g_CPUXbox);
     // If possible, assign this thread to another core than the one that runs Xbox1 code :
@@ -328,6 +331,8 @@ begin
   begin
     // Walk through a few members of the D3D device struct :
     m_pCPUTime := PPointer(XTL_D3D__Device)^;
+    DbgPrintf('Searching for m_pCPUTime from 0x%0.8x (m_pGPUTime is at 0x%0.8x)', [UIntPtr(m_pCPUTime), UIntPtr(m_pGPUTime)]);
+
     for i := 0 to 32 do
     begin
       if i = 32 then
@@ -1392,68 +1397,23 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-type
-  TD3DDevice_SetRenderTarget = procedure(
-    pRenderTarget: PX_D3DSurface;
-    pNewZStencil: PX_D3DSurface
-  ); stdcall;
-
-{$IFDEF PUSHBUFFER_ONLY}
-var
-  Original_SetRenderTarget_mem: array [0..4] of Byte;
-{$ENDIF}
-
 procedure DxbxPostponedCreateDeviceViaSetRenderTarget
 (
   pRenderTarget: PX_D3DSurface;
   pNewZStencil: PX_D3DSurface
 ); stdcall;
-{$IFNDEF PUSHBUFFER_ONLY}
 var
   hRet: HRESULT;
-{$ENDIF}
 begin
-{$IFDEF PUSHBUFFER_ONLY}
-  EmuSwapFS(fsWindows);
-
-  if MayLog(lfUnit) then
-  begin
-    LogBegin('DxbxPostponedCreateDeviceViaSetRenderTarget').
-       _(pRenderTarget, 'pRenderTarget'). // If NULL, the existing color buffer is retained
-       _(pNewZStencil, 'pNewZStencil').
-    LogEnd();
-  end;
-{$ENDIF PUSHBUFFER_ONLY}
-
-  // Since InitializeFrameBuffers is already done when we get here,
-  // we can examine the resulting buffers to determine BackBufferCount,
-  // EnableAutoDepthStencil and AutoDepthStencilFormat. For now use hardcoded values :
-  if Assigned(pNewZStencil) then
-  begin
-    g_EmuCDPD.pPresentationParameters.EnableAutoDepthStencil := BOOL_TRUE;
-{$IFDEF PUSHBUFFER_ONLY}
-    g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := X_D3DFMT_D24S8; // TODO : Fix this
-{$ELSE}
-    g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := GetD3DFormat(pNewZStencil);
-{$ENDIF !PUSHBUFFER_ONLY}
-  end;
-
-  DxbxCreateDevice();
-
   // If the g_EmuD3DActiveRenderTarget is not yet assigned, we're probably dealing with
   // the first call, right after creating the D3D device. Check this and couple the
   // native backbuffer to this buffer :
   if Assigned(pRenderTarget) then
   begin
-{$IFDEF PUSHBUFFER_ONLY}
-    g_EmuD3DActiveRenderTarget := pRenderTarget;
-    // TODO : Fix this
-{$ELSE}
     hRet := IDirect3DDevice_GetRenderTarget(g_pD3DDevice, @(pRenderTarget.Emu.Surface));
     if FAILED(hRet) then
       DxbxD3DError('XTL_EmuD3DDevice_SetRenderTarget', 'Initial IDirect3DDevice_GetRenderTarget failed!', pRenderTarget, hRet);
     IDirect3DSurface(pRenderTarget.Emu.Surface)._Release;
-{$ENDIF !PUSHBUFFER_ONLY}
 
     // Until we can read the Xbox device frame buffers, fake them here :
     g_EmuD3DFrameBuffers[0] := pRenderTarget;
@@ -1463,43 +1423,12 @@ begin
 
   if Assigned(pNewZStencil) then
   begin
-{$IFDEF PUSHBUFFER_ONLY}
-    g_EmuD3DActiveDepthStencil := pNewZStencil;
-    // TODO : Fix this
-{$ELSE}
     hRet := IDirect3DDevice_GetDepthStencilSurface(g_pD3DDevice, @(pNewZStencil.Emu.Surface));
     if FAILED(hRet) then
       DxbxD3DError('XTL_EmuD3DDevice_SetRenderTarget', 'Initial IDirect3DDevice_GetDepthStencilSurface failed!', pNewZStencil, hRet);
     IDirect3DSurface(pNewZStencil.Emu.Surface)._Release;
-{$ENDIF !PUSHBUFFER_ONLY}
   end;
-
-{$IFDEF PUSHBUFFER_ONLY}
-  // Now that we have handled this first call to SetRenderTarget,
-  // Restore the original version :
-  memcpy(XTL_D3DDevice_SetRenderTarget, @Original_SetRenderTarget_mem[0], 5);
-
-  EmuSwapFS(fsXbox);
-
-  // Call the original version :
-  TD3DDevice_SetRenderTarget(XTL_D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
-{$ENDIF PUSHBUFFER_ONLY}
 end;
-
-{$IFDEF PUSHBUFFER_ONLY}
-procedure TemporarilyPatchSetRenderTarget;
-begin
-  // Backup original 5 bytes of (currently unpatched) SetRenderTarget:
-  memcpy(@Original_SetRenderTarget_mem[0], XTL_D3DDevice_SetRenderTarget, 5);
-
-  // Overwrite that with a jump to DxbxPostponedCreateDeviceViaSetRenderTarget :
-  XTL_D3DDevice_SetRenderTarget^ := OPCODE_JMP;
-  PDWORD(XTL_D3DDevice_SetRenderTarget+1)^ :=
-    DWORD(@DxbxPostponedCreateDeviceViaSetRenderTarget)
-    - UIntPtr(XTL_D3DDevice_SetRenderTarget)
-    - 5;
-end;
-{$ENDIF PUSHBUFFER_ONLY}
 
 procedure XTL_EmuD3D_CMiniport_SetVideoMode(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
@@ -1531,29 +1460,10 @@ begin
     LogEnd();
   end;
 
-  // Since we have no access to the Xbox presentation parameters, allocate one ourselves here :
-  g_EmuCDPD.pPresentationParameters := DxbxCalloc(SizeOf(X_D3DPRESENT_PARAMETERS), 1);
-  g_EmuCDPD.pPresentationParameters.BackBufferWidth := BackBufferWidth;
-  g_EmuCDPD.pPresentationParameters.BackBufferHeight := BackBufferHeight;
-  g_EmuCDPD.pPresentationParameters.BackBufferFormat := BackBufferFormat;
-  g_EmuCDPD.pPresentationParameters.BackBufferCount := 1; // ??
-//  g_EmuCDPD.pPresentationParameters.MultiSampleType := X_D3DMULTISAMPLE_NONE; // ??
-  g_EmuCDPD.pPresentationParameters.SwapEffect := D3DSWAPEFFECT_DISCARD; // ??
-//  g_EmuCDPD.pPresentationParameters.hDeviceWindow := 0; // ??
-//  g_EmuCDPD.pPresentationParameters.Windowed := BOOL_FALSE; // ??
-//  g_EmuCDPD.pPresentationParameters.EnableAutoDepthStencil := BOOL_TRUE; // ??
-//  g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := X_D3DFMT_D24S8; // ??
-  g_EmuCDPD.pPresentationParameters.Flags := Flags;
-  g_EmuCDPD.pPresentationParameters.FullScreen_RefreshRateInHz := FullScreen_RefreshRateInHz;
-  g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := FullScreen_PresentationInterval;
-//  g_EmuCDPD.pPresentationParameters.BufferSurfaces[0..2] := nil; // ??
-//  g_EmuCDPD.pPresentationParameters.DepthStencilSurface := nil; // ??
+  Unimplemented('D3D_CMiniport_SetVideoMode');
 
-  // Instead of creating the device here, postpone it to the first call to SetRenderTarget,
-  // so that we can intercept the (already created) Xbox backbuffer and depthbuffer formats :
-{$IFDEF PUSHBUFFER_ONLY}
-  TemporarilyPatchSetRenderTarget;
-{$ELSE}
+{$IFNDEF PUSHBUFFER_ONLY}
+  // Intercept the (already created) Xbox backbuffer and depthbuffer formats via the first call to SetRenderTarget:
   DxbxOnSetRenderTarget := DxbxPostponedCreateDeviceViaSetRenderTarget;
 {$ENDIF}
 
@@ -1564,7 +1474,7 @@ end;
 //
 // D3D__CDevice__Init calls these methods, that should still be patched (if not already) :
 //
-//      D3D__BusyLoop(); // Waits until the current pushbuffer contents are handled (we have EmuThreadHandleNv2ADMA for that)
+//      D3D__BusyLoop(); // Waits until the current pushbuffer contents are handled (we have EmuThreadHandleNV2ADMA for that)
 //    D3D__InitializeHardware(); // Just send a few commands to the pushbuffer (no need to patch that)
 //    result = D3D__CDevice__InitializeFrameBuffers(v8, a2); // Creates the backbuffer(s) and (optionally) a depthbuffer
 //      v7 = D3D__PixelJar__GetPitch(v8 + 8552);
