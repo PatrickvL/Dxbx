@@ -61,6 +61,9 @@ interface
 // - Changed NV20TCL_ into NV2A_
 // - Added specific NV2A constants
 // TODO : Add more (especially when they conflict with NV20)
+uses
+  // Dxbx
+  uTypes;
 
 const NV2A_SWIZZLED_SURFACE                                       = $0000009e;
 
@@ -763,9 +766,14 @@ const  NV2A_TX_GEN_MODE_Q_SPHERE_MAP                              = $00002402;
 const  NV2A_TX_GEN_MODE_Q_NORMAL_MAP                              = $00008511;
 const  NV2A_TX_GEN_MODE_Q_REFLECTION_MAP                          = $00008512;
 //const NV2A_TX_MATRIX_ENABLE(x)                                  = ($00000420+((x)*4));
+const NV2A_TX_MATRIX_ENABLE__0                                    = ($00000420+((0)*4)); // Dxbx
 const NV2A_TX_MATRIX_ENABLE__SIZE                                 = $00000004;
 const NV2A_POINT_SIZE                                             = $0000043c;
+//const NV2A_PROJECTION_MATRIX(x)                                 = ($00000440+((x)*4)); // Dxbx
+const NV2A_PROJECTION_MATRIX__0                                   = ($00000440+((0)*4)); // Dxbx
+const NV2A_PROJECTION_MATRIX__SIZE                                = $00000010; // Dxbx
 //const NV2A_MODELVIEW0_MATRIX(x)                                 = ($00000480+((x)*4));
+const NV2A_MODELVIEW0_MATRIX__0                                   = ($00000480+((0)*4));
 const NV2A_MODELVIEW0_MATRIX__SIZE                                = $00000010;
 //const NV2A_MODELVIEW1_MATRIX(x)                                 = ($000004c0+((x)*4));
 const NV2A_MODELVIEW1_MATRIX__SIZE                                = $00000010;
@@ -781,8 +789,8 @@ const NV2A_INVERSE_MODELVIEW1_MATRIX__SIZE                        = $00000010;
 const NV2A_INVERSE_MODELVIEW2_MATRIX__SIZE                        = $00000010;
 //const NV2A_INVERSE_MODELVIEW3_MATRIX(x)                         = ($00000640+((x)*4));
 const NV2A_INVERSE_MODELVIEW3_MATRIX__SIZE                        = $00000010;
-//const NV2A_PROJECTION_MATRIX(x)                                 = ($00000680+((x)*4));
-const NV2A_PROJECTION_MATRIX__SIZE                                = $00000010;
+//const NV2A_COMPOSITE_MATRIX(x)                                  = ($00000680+((x)*4)); // Dxbx
+const NV2A_COMPOSITE_MATRIX__SIZE                                 = $00000010; // Dxbx
 //const NV2A_TX0_MATRIX(x)                                        = ($000006c0+((x)*4));
 const NV2A_TX0_MATRIX__SIZE                                       = $00000010;
 //const NV2A_TX1_MATRIX(x)                                        = ($00000700+((x)*4));
@@ -792,6 +800,7 @@ const NV2A_TX2_MATRIX__SIZE                                       = $00000010;
 //const NV2A_TX3_MATRIX(x)                                        = ($00000780+((x)*4));
 const NV2A_TX3_MATRIX__SIZE                                       = $00000010;
 //const NV2A_TX_GEN_COEFF_S_A(x)                                  = ($00000840+((x)*64));
+const NV2A_TX_GEN_COEFF_S_A__0                                    = ($00000840+((0)*64)); // Dxbx
 const NV2A_TX_GEN_COEFF_S_A__SIZE                                 = $00000004;
 //const NV2A_TX_GEN_COEFF_S_B(x)                                  = ($00000844+((x)*64));
 const NV2A_TX_GEN_COEFF_S_B__SIZE                                 = $00000004;
@@ -827,6 +836,7 @@ const NV2A_FOG_EQUATION_CONSTANT                                  = $000009c0;
 const NV2A_FOG_EQUATION_LINEAR                                    = $000009c4;
 const NV2A_FOG_EQUATION_QUADRATIC                                 = $000009c8;
 //const NV2A_FOG_PLANE(x)                                         = ($000009d0+((x)*4));
+const NV2A_FOG_PLANE__0                                           = ($000009d0+((0)*4)); // Dxbx
 const NV2A_FOG_PLANE__SIZE                                        = $00000004; // Dxbx
 //const NV2A_FRONT_MATERIAL_SHININESS(x)                          = ($000009e0+((x)*4));
 const NV2A_FRONT_MATERIAL_SHININESS__SIZE                         = $00000006;
@@ -841,7 +851,9 @@ const NV2A_VIEWPORT_TRANSLATE_Z                                   = $00000a28;
 const NV2A_VIEWPORT_TRANSLATE_W                                   = $00000a2c;
 //const NV2A_POINT_PARAMETER(x)                                   = ($00000a30+((x)*4));
 const NV2A_POINT_PARAMETER__SIZE                                  = $00000008;
-const NV2A_EYE_POSITION_0                                         = ($00000a50+((0)*4)); // Dxbx
+//const NV2A_EYE_POSITION(x)                                      = ($00000a50+((x)*4)); // Dxbx
+const NV2A_EYE_POSITION__0                                        = ($00000a50+((0)*4)); // Dxbx
+const NV2A_EYE_POSITION__SIZE                                     = $00000004; // Dxbx
 //const NV2A_RC_CONSTANT_COLOR0(x)                                = ($00000a60+((x)*4));
 const NV2A_RC_CONSTANT_COLOR0__0                                  = ($00000a60+((0)*4)); // Dxbx
 const NV2A_RC_CONSTANT_COLOR0__7                                  = ($00000a60+((7)*4)); // Dxbx
@@ -1049,10 +1061,10 @@ const NV2A_VIEWPORT_SCALE_Y                                       = $00000af4;
 const NV2A_VIEWPORT_SCALE_Z                                       = $00000af8;
 const NV2A_VIEWPORT_SCALE_W                                       = $00000afc;
 //const NV2A_VP_UPLOAD_INST(x)                                    = ($00000b00+((x)*4));
-const NV2A_VP_UPLOAD_INST__SIZE                                   = $00000004;
+const NV2A_VP_UPLOAD_INST__SIZE                                   = $00000020; // Dxbx
 const NV2A_VP_UPLOAD_CONST                                        = $00000b80;
 //const NV2A_VP_UPLOAD_CONST(x)                                   = ($00000b80+((x)*4));
-const NV2A_VP_UPLOAD_CONST__SIZE                                  = $00000004;
+const NV2A_VP_UPLOAD_CONST__SIZE                                  = $00000020;
 //const NV2A_LIGHT_BACK_AMBIENT_R(x)                              = ($00000c00+((x)*64));
 const NV2A_LIGHT_BACK_AMBIENT_R__SIZE                             = $00000008;
 //const NV2A_LIGHT_BACK_AMBIENT_G(x)                              = ($00000c04+((x)*64));
@@ -1072,6 +1084,7 @@ const NV2A_LIGHT_BACK_SPECULAR_G__SIZE                            = $00000008;
 //const NV2A_LIGHT_BACK_SPECULAR_B(x)                             = ($00000c20+((x)*64));
 const NV2A_LIGHT_BACK_SPECULAR_B__SIZE                            = $00000008;
 //const NV2A_LIGHT_FRONT_AMBIENT_R(x)                             = ($00001000+((x)*128));
+const NV2A_LIGHT_FRONT_AMBIENT_R__0                               = ($00001000+((0)*128)); // Dxbx
 const NV2A_LIGHT_FRONT_AMBIENT_R__SIZE                            = $00000008;
 //const NV2A_LIGHT_FRONT_AMBIENT_G(x)                             = ($00001004+((x)*128));
 const NV2A_LIGHT_FRONT_AMBIENT_G__SIZE                            = $00000008;
@@ -1397,6 +1410,7 @@ const NV2A_VERTEX_DATA4UB__0                                      = ($00001940+(
 const NV2A_VERTEX_DATA4UB__15                                     = ($00001940+((15)*4)); // Dxbx
 const NV2A_VERTEX_DATA4UB__SIZE                                   = $00000010; // Dxbx
 //const NV2A_VTX_ATTR_4F_X(x)                                     = ($00001a00+((x)*16));
+const NV2A_VTX_ATTR_4F_X__0                                       = ($00001a00+((0)*16)); // Dxbx
 const NV2A_VTX_ATTR_4F_X__SIZE                                    = $00000010;
 //const NV2A_VTX_ATTR_4F_Y(x)                                     = ($00001a04+((x)*16));
 const NV2A_VTX_ATTR_4F_Y__SIZE                                    = $00000010;
@@ -1528,6 +1542,7 @@ const  NV2A_TX_FILTER_MAGNIFY_MASK                                = $0f000000;
 const   NV2A_TX_FILTER_MAGNIFY_NEAREST                            = $01000000;
 const   NV2A_TX_FILTER_MAGNIFY_LINEAR                             = $02000000;
 //const NV2A_TX_NPOT_SIZE(x)                                      = ($00001b1c+((x)*64));
+const NV2A_TX_NPOT_SIZE__0                                        = ($00001b1c+((0)*64)); // Dxbx
 const NV2A_TX_NPOT_SIZE__SIZE                                     = $00000004;
 const  NV2A_TX_NPOT_SIZE_H_SHIFT                                  = 0;
 const  NV2A_TX_NPOT_SIZE_H_MASK                                   = $0000ffff;
@@ -1739,12 +1754,16 @@ const NV2A_VP_UPLOAD_FROM_ID                                      = $00001e9c;
 const NV2A_VP_START_FROM_ID                                       = $00001ea0;
 const NV2A_VP_UPLOAD_CONST_ID                                     = $00001ea4;
 
+const NV2A_Max = NV2A_VP_UPLOAD_CONST_ID;
+
 //
 // From here on, it's Dxbx code again :
 //
 
 const
-  CompactNV2AInfo: array [0..313] of record
+  // This declaration contains the above constants, but in a more compact form.
+  // It's is decoded by InitNV2AInfo into a lookup-table for string-conversions.
+  CompactNV2AInfo: array [0..314] of record
     Method: Integer;
     Name: string;
     Pitch: Integer; // Default 0 means 4
@@ -1774,7 +1793,7 @@ const
   (Method:$0000020c; Name:'NV2A_RT_PITCH'),
   (Method:$00000210; Name:'NV2A_COLOR_OFFSET'),
   (Method:$00000214; Name:'NV2A_ZETA_OFFSET'),
-  (Method:$00000260; Name:'NV2A_RC_IN_ALPHA(x)'; Pitch:4; Count:8),
+  (Method:$00000260; Name:'NV2A_RC_IN_ALPHA(x)'; Count:NV2A_RC_IN_ALPHA__SIZE),
   (Method:$00000288; Name:'NV2A_RC_FINAL0'),
   (Method:$0000028c; Name:'NV2A_RC_FINAL1'),
   (Method:$00000290; Name:'NV2A_CONTROL0'),
@@ -1785,8 +1804,8 @@ const
   (Method:$000002a4; Name:'NV2A_FOG_ENABLE'),
   (Method:$000002a8; Name:'NV2A_FOG_COLOR'),
   (Method:$000002b4; Name:'NV2A_VIEWPORT_CLIP_MODE'),
-  (Method:$000002c0; Name:'NV2A_VIEWPORT_CLIP_HORIZ(x)'; Pitch:4; Count:8),
-  (Method:$000002e0; Name:'NV2A_VIEWPORT_CLIP_VERT(x)'; Pitch:4; Count:8),
+  (Method:$000002c0; Name:'NV2A_VIEWPORT_CLIP_HORIZ(x)'; Count:NV2A_VIEWPORT_CLIP_HORIZ__SIZE),
+  (Method:$000002e0; Name:'NV2A_VIEWPORT_CLIP_VERT(x)'; Count:NV2A_VIEWPORT_CLIP_VERT__SIZE),
   (Method:$00000300; Name:'NV2A_ALPHA_FUNC_ENABLE'),
   (Method:$00000304; Name:'NV2A_BLEND_FUNC_ENABLE'),
   (Method:$00000308; Name:'NV2A_CULL_FACE_ENABLE'),
@@ -1835,25 +1854,26 @@ const
   (Method:$000003b4; Name:'NV2A_MATERIAL_FACTOR_FRONT_A'),
   (Method:$000003b8; Name:'NV2A_SEPARATE_SPECULAR_ENABLE'),
   (Method:$000003bc; Name:'NV2A_ENABLED_LIGHTS'),
-  (Method:$000003c0; Name:'NV2A_TX_GEN_MODE_S(x)'; Pitch:16; Count:4),
-  (Method:$000003c4; Name:'NV2A_TX_GEN_MODE_T(x)'; Pitch:16; Count:4),
-  (Method:$000003c8; Name:'NV2A_TX_GEN_MODE_R(x)'; Pitch:16; Count:4),
-  (Method:$000003cc; Name:'NV2A_TX_GEN_MODE_Q(x)'; Pitch:16; Count:4),
-  (Method:$00000420; Name:'NV2A_TX_MATRIX_ENABLE(x)'; Pitch:4; Count:4),
+  (Method:$000003c0; Name:'NV2A_TX_GEN_MODE_S(x)'; Pitch:16; Count:NV2A_TX_GEN_MODE_S__SIZE),
+  (Method:$000003c4; Name:'NV2A_TX_GEN_MODE_T(x)'; Pitch:16; Count:NV2A_TX_GEN_MODE_T__SIZE),
+  (Method:$000003c8; Name:'NV2A_TX_GEN_MODE_R(x)'; Pitch:16; Count:NV2A_TX_GEN_MODE_R__SIZE),
+  (Method:$000003cc; Name:'NV2A_TX_GEN_MODE_Q(x)'; Pitch:16; Count:NV2A_TX_GEN_MODE_Q__SIZE),
+  (Method:$00000420; Name:'NV2A_TX_MATRIX_ENABLE(x)'; Count:NV2A_TX_MATRIX_ENABLE__SIZE),
   (Method:$0000043c; Name:'NV2A_POINT_SIZE'),
-  (Method:$00000480; Name:'NV2A_MODELVIEW0_MATRIX(x)'; Pitch:4; Count:16),
-  (Method:$000004c0; Name:'NV2A_MODELVIEW1_MATRIX(x)'; Pitch:4; Count:16),
-  (Method:$00000500; Name:'NV2A_MODELVIEW2_MATRIX(x)'; Pitch:4; Count:16),
-  (Method:$00000540; Name:'NV2A_MODELVIEW3_MATRIX(x)'; Pitch:4; Count:16),
-  (Method:$00000580; Name:'NV2A_INVERSE_MODELVIEW0_MATRIX(x)'; Pitch:4; Count:16),
-  (Method:$000005c0; Name:'NV2A_INVERSE_MODELVIEW1_MATRIX(x)'; Pitch:4; Count:16),
-  (Method:$00000600; Name:'NV2A_INVERSE_MODELVIEW2_MATRIX(x)'; Pitch:4; Count:16),
-  (Method:$00000640; Name:'NV2A_INVERSE_MODELVIEW3_MATRIX(x)'; Pitch:4; Count:16),
-  (Method:$00000680; Name:'NV2A_PROJECTION_MATRIX(x)'; Pitch:4; Count:16),
-  (Method:$000006c0; Name:'NV2A_TX0_MATRIX(x)'; Pitch:4; Count:16),
-  (Method:$00000700; Name:'NV2A_TX1_MATRIX(x)'; Pitch:4; Count:16),
-  (Method:$00000740; Name:'NV2A_TX2_MATRIX(x)'; Pitch:4; Count:16),
-  (Method:$00000780; Name:'NV2A_TX3_MATRIX(x)'; Pitch:4; Count:16),
+  (Method:$00000440; Name:'NV2A_PROJECTION_MATRIX(x)'; Count:NV2A_PROJECTION_MATRIX__SIZE),
+  (Method:$00000480; Name:'NV2A_MODELVIEW0_MATRIX(x)'; Count:NV2A_MODELVIEW0_MATRIX__SIZE),
+  (Method:$000004c0; Name:'NV2A_MODELVIEW1_MATRIX(x)'; Count:NV2A_MODELVIEW1_MATRIX__SIZE),
+  (Method:$00000500; Name:'NV2A_MODELVIEW2_MATRIX(x)'; Count:NV2A_MODELVIEW2_MATRIX__SIZE),
+  (Method:$00000540; Name:'NV2A_MODELVIEW3_MATRIX(x)'; Count:NV2A_MODELVIEW3_MATRIX__SIZE),
+  (Method:$00000580; Name:'NV2A_INVERSE_MODELVIEW0_MATRIX(x)'; Count:NV2A_INVERSE_MODELVIEW0_MATRIX__SIZE),
+  (Method:$000005c0; Name:'NV2A_INVERSE_MODELVIEW1_MATRIX(x)'; Count:NV2A_INVERSE_MODELVIEW1_MATRIX__SIZE),
+  (Method:$00000600; Name:'NV2A_INVERSE_MODELVIEW2_MATRIX(x)'; Count:NV2A_INVERSE_MODELVIEW2_MATRIX__SIZE),
+  (Method:$00000640; Name:'NV2A_INVERSE_MODELVIEW3_MATRIX(x)'; Count:NV2A_INVERSE_MODELVIEW3_MATRIX__SIZE),
+  (Method:$00000680; Name:'NV2A_COMPOSITE_MATRIX(x)'; Count:NV2A_COMPOSITE_MATRIX__SIZE),
+  (Method:$000006c0; Name:'NV2A_TX0_MATRIX(x)'; Count:NV2A_TX0_MATRIX__SIZE),
+  (Method:$00000700; Name:'NV2A_TX1_MATRIX(x)'; Count:NV2A_TX1_MATRIX__SIZE),
+  (Method:$00000740; Name:'NV2A_TX2_MATRIX(x)'; Count:NV2A_TX2_MATRIX__SIZE),
+  (Method:$00000780; Name:'NV2A_TX3_MATRIX(x)'; Count:NV2A_TX3_MATRIX__SIZE),
   (Method:$00000840; Name:'NV2A_TX_GEN_COEFF_S_A(x)'; Pitch:64; Count:4),
   (Method:$00000844; Name:'NV2A_TX_GEN_COEFF_S_B(x)'; Pitch:64; Count:4),
   (Method:$00000848; Name:'NV2A_TX_GEN_COEFF_S_C(x)'; Pitch:64; Count:4),
@@ -1873,8 +1893,8 @@ const
   (Method:$000009c0; Name:'NV2A_FOG_EQUATION_CONSTANT'),
   (Method:$000009c4; Name:'NV2A_FOG_EQUATION_LINEAR'),
   (Method:$000009c8; Name:'NV2A_FOG_EQUATION_QUADRATIC'),
-  (Method:$000009d0; Name:'NV2A_FOG_PLANE(x)'; Pitch:4; Count:4),
-  (Method:$000009e0; Name:'NV2A_FRONT_MATERIAL_SHININESS(x)'; Pitch:4; Count:6),
+  (Method:$000009d0; Name:'NV2A_FOG_PLANE(x)'; Count:NV2A_FOG_PLANE__SIZE),
+  (Method:$000009e0; Name:'NV2A_FRONT_MATERIAL_SHININESS(x)'; Count:NV2A_FRONT_MATERIAL_SHININESS__SIZE),
   (Method:$000009f8; Name:'NV2A_SWATH_WIDTH'),
   (Method:$000009fc; Name:'NV2A_FLAT_SHADE_OP'),
   (Method:$00000a10; Name:'NV2A_LIGHT_MODEL_FRONT_AMBIENT_R'),
@@ -1884,18 +1904,18 @@ const
   (Method:$00000a24; Name:'NV2A_VIEWPORT_TRANSLATE_Y'),
   (Method:$00000a28; Name:'NV2A_VIEWPORT_TRANSLATE_Z'),
   (Method:$00000a2c; Name:'NV2A_VIEWPORT_TRANSLATE_W'),
-  (Method:$00000a30; Name:'NV2A_POINT_PARAMETER(x)'; Pitch:4; Count:8),
-  (Method:$00000a50; Name:'NV2A_EYE_POSITION(x)'; Pitch:4; Count:4),
-  (Method:$00000a60; Name:'NV2A_RC_CONSTANT_COLOR0(x)'; Pitch:4; Count:8),
-  (Method:$00000a80; Name:'NV2A_RC_CONSTANT_COLOR1(x)'; Pitch:4; Count:8),
-  (Method:$00000aa0; Name:'NV2A_RC_OUT_ALPHA(x)'; Pitch:4; Count:8),
-  (Method:$00000ac0; Name:'NV2A_RC_IN_RGB(x)'; Pitch:4; Count:8),
+  (Method:$00000a30; Name:'NV2A_POINT_PARAMETER(x)'; Count:NV2A_POINT_PARAMETER__SIZE),
+  (Method:$00000a50; Name:'NV2A_EYE_POSITION(x)'; Count:NV2A_EYE_POSITION__SIZE),
+  (Method:$00000a60; Name:'NV2A_RC_CONSTANT_COLOR0(x)'; Count:NV2A_RC_CONSTANT_COLOR0__SIZE),
+  (Method:$00000a80; Name:'NV2A_RC_CONSTANT_COLOR1(x)'; Count:NV2A_RC_CONSTANT_COLOR1__SIZE),
+  (Method:$00000aa0; Name:'NV2A_RC_OUT_ALPHA(x)'; Count:NV2A_RC_OUT_ALPHA__SIZE),
+  (Method:$00000ac0; Name:'NV2A_RC_IN_RGB(x)'; Count:NV2A_RC_IN_RGB__SIZE),
   (Method:$00000af0; Name:'NV2A_VIEWPORT_SCALE_X'),
   (Method:$00000af4; Name:'NV2A_VIEWPORT_SCALE_Y'),
   (Method:$00000af8; Name:'NV2A_VIEWPORT_SCALE_Z'),
   (Method:$00000afc; Name:'NV2A_VIEWPORT_SCALE_W'),
-  (Method:$00000b00; Name:'NV2A_VP_UPLOAD_INST(x)'; Pitch:4; Count:32),
-  (Method:$00000b80; Name:'NV2A_VP_UPLOAD_CONST(x)'; Pitch:4; Count:32), // Can't use NOINCREMENT_FLAG, maximum of 32 writes
+  (Method:$00000b00; Name:'NV2A_VP_UPLOAD_INST(x)'; Count:NV2A_VP_UPLOAD_INST__SIZE),
+  (Method:$00000b80; Name:'NV2A_VP_UPLOAD_CONST(x)'; Count:NV2A_VP_UPLOAD_CONST__SIZE), // Can't use NOINCREMENT_FLAG, maximum of 32 writes
   (Method:$00000c00; Name:'NV2A_LIGHT_BACK_AMBIENT_R(x)'; Pitch:64; Count:8),
   (Method:$00000c04; Name:'NV2A_LIGHT_BACK_AMBIENT_G(x)'; Pitch:64; Count:8),
   (Method:$00000c08; Name:'NV2A_LIGHT_BACK_AMBIENT_B(x)'; Pitch:64; Count:8),
@@ -1934,7 +1954,7 @@ const
   (Method:$0000106c; Name:'NV2A_LIGHT_ATTENUATION_LINEAR(x)'; Pitch:128; Count:8),
   (Method:$00001070; Name:'NV2A_LIGHT_ATTENUATION_QUADRATIC(x)'; Pitch:128; Count:8),
   (Method:$0000147c; Name:'NV2A_POLYGON_STIPPLE_ENABLE'),
-  (Method:$00001480; Name:'NV2A_POLYGON_STIPPLE_PATTERN(x)'; Pitch:4; Count:32),
+  (Method:$00001480; Name:'NV2A_POLYGON_STIPPLE_PATTERN(x)'; Count:NV2A_POLYGON_STIPPLE_PATTERN__SIZE),
   (Method:$00001500; Name:'NV2A_VERTEX_POS_3F_X'),
   (Method:$00001504; Name:'NV2A_VERTEX_POS_3F_Y'),
   (Method:$00001508; Name:'NV2A_VERTEX_POS_3F_Z'),
@@ -1999,8 +2019,8 @@ const
   (Method:$00001698; Name:'NV2A_VERTEX_FOG_1F'),
   (Method:$000016bc; Name:'NV2A_EDGEFLAG_ENABLE'),
   (Method:$00001710; Name:'NV2A_VTX_CACHE_INVALIDATE'),
-  (Method:$00001720; Name:'NV2A_VTXBUF_ADDRESS(x)'; Pitch:4; Count:16),
-  (Method:$00001760; Name:'NV2A_VTXFMT(x)'; Pitch:4; Count:16),
+  (Method:$00001720; Name:'NV2A_VTXBUF_ADDRESS(x)'; Count:NV2A_VTXBUF_ADDRESS__SIZE),
+  (Method:$00001760; Name:'NV2A_VTXFMT(x)'; Count:NV2A_VTXFMT__SIZE),
   (Method:$000017a0; Name:'NV2A_LIGHT_MODEL_BACK_AMBIENT_R'),
   (Method:$000017a4; Name:'NV2A_LIGHT_MODEL_BACK_AMBIENT_G'),
   (Method:$000017a8; Name:'NV2A_LIGHT_MODEL_BACK_AMBIENT_B'),
@@ -2020,7 +2040,7 @@ const
   (Method:$0000181c; Name:'NV2A_TX_SHADER_CONST_EYE_X'),
   (Method:$00001820; Name:'NV2A_TX_SHADER_CONST_EYE_Y'),
   (Method:$00001824; Name:'NV2A_TX_SHADER_CONST_EYE_Z'),
-  (Method:$00001940; Name:'NV2A_VERTEX_DATA4UB(x)'; Pitch:4; Count:16), // Order:POSITION,WEIGHT,NORMAL,DIFFUSE,SPECULAR,FOG,POINT_SIZE,BACK_DIFFUSE,BACK_SPECULAR,TEXTURE0,-1,-2,-3,?,?,?
+  (Method:$00001940; Name:'NV2A_VERTEX_DATA4UB(x)'; Count:NV2A_VERTEX_DATA4UB__SIZE), // Order:POSITION,WEIGHT,NORMAL,DIFFUSE,SPECULAR,FOG,POINT_SIZE,BACK_DIFFUSE,BACK_SPECULAR,TEXTURE0,-1,-2,-3,?,?,?
   (Method:$00001a00; Name:'NV2A_VTX_ATTR_4F_X(x)'; Pitch:16; Count:16),
   (Method:$00001a04; Name:'NV2A_VTX_ATTR_4F_Y(x)'; Pitch:16; Count:16),
   (Method:$00001a08; Name:'NV2A_VTX_ATTR_4F_Z(x)'; Pitch:16; Count:16),
@@ -2051,8 +2071,8 @@ const
   (Method:$00001d9c; Name:'NV2A_CLEAR_RECT_VERTICAL'),
   (Method:$00001e20; Name:'NV2A_RC_COLOR0'),
   (Method:$00001e24; Name:'NV2A_RC_COLOR1'),
-  (Method:$00001e28; Name:'NV2A_BACK_MATERIAL_SHININESS(x)'; Pitch:4; Count:6),
-  (Method:$00001e40; Name:'NV2A_RC_OUT_RGB(x)'; Pitch:4; Count:8),
+  (Method:$00001e28; Name:'NV2A_BACK_MATERIAL_SHININESS(x)'; Count:NV2A_BACK_MATERIAL_SHININESS__SIZE),
+  (Method:$00001e40; Name:'NV2A_RC_OUT_RGB(x)'; Count:NV2A_RC_OUT_RGB__SIZE),
   (Method:$00001e60; Name:'NV2A_RC_ENABLE'),
   (Method:$00001e68; Name:'NV2A_SHADOW_ZSLOPE_THRESHOLD'),
   (Method:$00001e6c; Name:'NV2A_TX_RCOMP'),
@@ -2065,6 +2085,396 @@ const
   (Method:$00001ea0; Name:'NV2A_VP_START_FROM_ID'),
   (Method:$00001ea4; Name:'NV2A_VP_UPLOAD_CONST_ID') // Add 96 to constant index parameter
   );
+
+
+type
+  PNV2AInstance = ^RNV2AInstance;
+  RNV2AInstance = record case Integer of
+    // First definition : a complete record definition of the NV2A registers, based on CompactNV2AInfo :
+    0: (
+    // TODO : Change DWORDs to FLOAT or other appropriate types
+      _00000000_Unknown: array [$0000..NV2A_NOP-1] of BYTE;
+      {00000100}NOP: DWORD;
+      {00000104}NOTIFY: DWORD;
+      _00000108_Unknown: array [$0108..NV2A_WAIT_FOR_IDLE-1] of BYTE;
+      {00000110}WAIT_FOR_IDLE: DWORD; // Dxbx
+      _00000114_Unknown: array [$0114..NV2A_FLIP_READ-1] of BYTE;
+      {00000120}FLIP_READ: DWORD;
+      {00000124}FLIP_WRITE: DWORD;
+      {00000128}FLIP_MODULO: DWORD;
+      {0000012c}FLIP_INCREMENT_WRITE: DWORD;
+      {00000130}FLIP_STALL: DWORD;
+      _00000134_Unknown: array [$0134..NV2A_DMA_NOTIFY-1] of BYTE;
+      {00000180}DMA_NOTIFY: DWORD;
+      {00000184}DMA_TEXTURE0: DWORD;
+      {00000188}DMA_TEXTURE1: DWORD;
+      _0000018c_Unknown: array [$018c..NV2A_DMA_STATE-1] of BYTE;
+      {00000190}DMA_STATE: DWORD;
+      {00000194}DMA_COLOR: DWORD;
+      {00000198}DMA_ZETA: DWORD;
+      {0000019c}DMA_VTXBUF0: DWORD;
+      {000001a0}DMA_VTXBUF1: DWORD;
+      {000001a4}DMA_FENCE: DWORD;
+      {000001a8}DMA_QUERY: DWORD;
+      _000001ac_Unknown: array [$01ac..NV2A_RT_HORIZ-1] of BYTE;
+      {00000200}RT_HORIZ: DWORD;
+      {00000204}RT_VERT: DWORD;
+      {00000208}RT_FORMAT: DWORD;
+      {0000020c}RT_PITCH: DWORD;
+      {00000210}COLOR_OFFSET: DWORD;
+      {00000214}ZETA_OFFSET: DWORD;
+      _00000218_Unknown: array [$0218..NV2A_RC_IN_ALPHA__0-1] of BYTE;
+      {00000260}RC_IN_ALPHA: array [0..NV2A_RC_IN_ALPHA__SIZE-1] of DWORD;
+      _00000280_Unknown: array [$0280..NV2A_RC_FINAL0-1] of BYTE;
+      {00000288}RC_FINAL0: DWORD;
+      {0000028c}RC_FINAL1: DWORD;
+      {00000290}CONTROL0: DWORD;
+      {00000294}LIGHT_MODEL: DWORD;
+      {00000298}COLOR_MATERIAL: DWORD;
+      {0000029c}FOG_MODE: DWORD;
+      {000002a0}FOG_COORD: DWORD;
+      {000002a4}FOG_ENABLE: DWORD;
+      {000002a8}FOG_COLOR: DWORD;
+      _000002ac_Unknown: array [$02ac..NV2A_VIEWPORT_CLIP_MODE-1] of BYTE;
+      {000002b4}VIEWPORT_CLIP_MODE: DWORD;
+      _000002b8_Unknown: array [$02b8..NV2A_VIEWPORT_CLIP_HORIZ__0-1] of BYTE;
+      {000002c0}VIEWPORT_CLIP_HORIZ: array [0..NV2A_VIEWPORT_CLIP_HORIZ__SIZE-1] of DWORD;
+      {000002e0}VIEWPORT_CLIP_VERT: array [0..NV2A_VIEWPORT_CLIP_VERT__SIZE-1] of DWORD;
+      {00000300}ALPHA_FUNC_ENABLE: DWORD;
+      {00000304}BLEND_FUNC_ENABLE: DWORD;
+      {00000308}CULL_FACE_ENABLE: DWORD;
+      {0000030c}DEPTH_TEST_ENABLE: DWORD;
+      {00000310}DITHER_ENABLE: DWORD;
+      {00000314}LIGHTING_ENABLE: DWORD;
+      {00000318}POINT_PARAMETERS_ENABLE: DWORD;
+      {0000031c}POINT_SMOOTH_ENABLE: DWORD;
+      {00000320}LINE_SMOOTH_ENABLE: DWORD;
+      {00000324}POLYGON_SMOOTH_ENABLE: DWORD;
+      {00000328}SKIN_MODE: DWORD;
+      {0000032c}STENCIL_ENABLE: DWORD;
+      {00000330}POLYGON_OFFSET_POINT_ENABLE: DWORD;
+      {00000334}POLYGON_OFFSET_LINE_ENABLE: DWORD;
+      {00000338}POLYGON_OFFSET_FILL_ENABLE: DWORD;
+      {0000033c}ALPHA_FUNC_FUNC: DWORD;
+      {00000340}ALPHA_FUNC_REF: DWORD;
+      {00000344}BLEND_FUNC_SRC: DWORD;
+      {00000348}BLEND_FUNC_DST: DWORD;
+      {0000034c}BLEND_COLOR: DWORD;
+      {00000350}BLEND_EQUATION: DWORD;
+      {00000354}DEPTH_FUNC: DWORD;
+      {00000358}COLOR_MASK: DWORD;
+      {0000035c}DEPTH_WRITE_ENABLE: DWORD;
+      {00000360}STENCIL_MASK: DWORD;
+      {00000364}STENCIL_FUNC_FUNC: DWORD;
+      {00000368}STENCIL_FUNC_REF: DWORD;
+      {0000036c}STENCIL_FUNC_MASK: DWORD;
+      {00000370}STENCIL_OP_FAIL: DWORD;
+      {00000374}STENCIL_OP_ZFAIL: DWORD;
+      {00000378}STENCIL_OP_ZPASS: DWORD;
+      {0000037c}SHADE_MODEL: DWORD;
+      {00000380}LINE_WIDTH: DWORD;
+      {00000384}POLYGON_OFFSET_FACTOR: FLOAT;
+      {00000388}POLYGON_OFFSET_UNITS: FLOAT;
+      {0000038c}POLYGON_MODE_FRONT: DWORD;
+      {00000390}POLYGON_MODE_BACK: DWORD;
+      {00000394}DEPTH_RANGE_NEAR: FLOAT;
+      {00000398}DEPTH_RANGE_FAR: FLOAT;
+      {0000039c}CULL_FACE: DWORD;
+      {000003a0}FRONT_FACE: DWORD;
+      {000003a4}NORMALIZE_ENABLE: DWORD;
+      {000003a8}MATERIAL_FACTOR_FRONT_R: FLOAT;
+      {000003ac}MATERIAL_FACTOR_FRONT_G: FLOAT;
+      {000003b0}MATERIAL_FACTOR_FRONT_B: FLOAT;
+      {000003b4}MATERIAL_FACTOR_FRONT_A: FLOAT;
+      {000003b8}SEPARATE_SPECULAR_ENABLE: DWORD;
+      {000003bc}ENABLED_LIGHTS: DWORD;
+      {000003c0}TX_GEN_MODE: array [0..NV2A_TX_GEN_MODE_S__SIZE-1] of record
+        {000003c0}TX_GEN_MODE_S: DWORD;
+        {000003c4}TX_GEN_MODE_T: DWORD;
+        {000003c8}TX_GEN_MODE_R: DWORD;
+        {000003cc}TX_GEN_MODE_Q: DWORD;
+        end;
+      _00000400_Unknown: array [$0400..NV2A_TX_MATRIX_ENABLE__0-1] of BYTE;
+      {00000420}TX_MATRIX_ENABLE: array [0..NV2A_TX_MATRIX_ENABLE__SIZE-1] of DWORD;
+      _00000430_Unknown: array [$0430..NV2A_POINT_SIZE-1] of BYTE;
+      {0000043c}POINT_SIZE: DWORD;
+      {00000440}PROJECTION_MATRIX: array [0..NV2A_PROJECTION_MATRIX__SIZE-1] of FLOAT;
+      {00000480}MODELVIEW0_MATRIX: array [0..NV2A_MODELVIEW0_MATRIX__SIZE-1] of FLOAT;
+      {000004c0}MODELVIEW1_MATRIX: array [0..NV2A_MODELVIEW1_MATRIX__SIZE-1] of FLOAT;
+      {00000500}MODELVIEW2_MATRIX: array [0..NV2A_MODELVIEW2_MATRIX__SIZE-1] of FLOAT;
+      {00000540}MODELVIEW3_MATRIX: array [0..NV2A_MODELVIEW3_MATRIX__SIZE-1] of FLOAT;
+      {00000580}INVERSE_MODELVIEW0_MATRIX: array [0..NV2A_INVERSE_MODELVIEW0_MATRIX__SIZE-1] of FLOAT;
+      {000005c0}INVERSE_MODELVIEW1_MATRIX: array [0..NV2A_INVERSE_MODELVIEW1_MATRIX__SIZE-1] of FLOAT;
+      {00000600}INVERSE_MODELVIEW2_MATRIX: array [0..NV2A_INVERSE_MODELVIEW2_MATRIX__SIZE-1] of FLOAT;
+      {00000640}INVERSE_MODELVIEW3_MATRIX: array [0..NV2A_INVERSE_MODELVIEW3_MATRIX__SIZE-1] of FLOAT;
+      {00000680}COMPOSITE_MATRIX: array [0..NV2A_COMPOSITE_MATRIX__SIZE-1] of FLOAT;
+      {000006c0}TX0_MATRIX: array [0..NV2A_TX0_MATRIX__SIZE-1] of FLOAT;
+      {00000700}TX1_MATRIX: array [0..NV2A_TX1_MATRIX__SIZE-1] of FLOAT;
+      {00000740}TX2_MATRIX: array [0..NV2A_TX2_MATRIX__SIZE-1] of FLOAT;
+      {00000780}TX3_MATRIX: array [0..NV2A_TX3_MATRIX__SIZE-1] of FLOAT;
+      _000007c0_Unknown: array [$07c0..NV2A_TX_GEN_COEFF_S_A__0-1] of BYTE;
+      {00000840}TX_GEN_COEFF: array [0..NV2A_TX_GEN_COEFF_S_A__SIZE-1] of record
+        {00000840}TX_GEN_COEFF_S_A: FLOAT;
+        {00000844}TX_GEN_COEFF_S_B: FLOAT;
+        {00000848}TX_GEN_COEFF_S_C: FLOAT;
+        {0000084c}TX_GEN_COEFF_S_D: FLOAT;
+        {00000850}TX_GEN_COEFF_T_A: FLOAT;
+        {00000854}TX_GEN_COEFF_T_B: FLOAT;
+        {00000858}TX_GEN_COEFF_T_C: FLOAT;
+        {0000085c}TX_GEN_COEFF_T_D: FLOAT;
+        {00000860}TX_GEN_COEFF_R_A: FLOAT;
+        {00000864}TX_GEN_COEFF_R_B: FLOAT;
+        {00000868}TX_GEN_COEFF_R_C: FLOAT;
+        {0000086c}TX_GEN_COEFF_R_D: FLOAT;
+        {00000870}TX_GEN_COEFF_Q_A: FLOAT;
+        {00000874}TX_GEN_COEFF_Q_B: FLOAT;
+        {00000878}TX_GEN_COEFF_Q_C: FLOAT;
+        {0000087c}TX_GEN_COEFF_Q_D: FLOAT;
+        end;
+      _00000940_Unknown: array [$0940..NV2A_FOG_EQUATION_CONSTANT-1] of BYTE;
+      {000009c0}FOG_EQUATION_CONSTANT: DWORD;
+      {000009c4}FOG_EQUATION_LINEAR: DWORD;
+      {000009c8}FOG_EQUATION_QUADRATIC: DWORD;
+      _000009cc_Unknown: array [$09cc..NV2A_FOG_PLANE__0-1] of BYTE;
+      {000009d0}FOG_PLANE: array [0..NV2A_FOG_PLANE__SIZE-1] of FLOAT;
+      {000009e0}FRONT_MATERIAL_SHININESS: array [0..NV2A_FRONT_MATERIAL_SHININESS__SIZE-1] of FLOAT;
+      {000009f8}SWATH_WIDTH: DWORD;
+      {000009fc}FLAT_SHADE_OP: DWORD;
+      _00000a00_Unknown: array [$0a00..NV2A_LIGHT_MODEL_FRONT_AMBIENT_R-1] of BYTE;
+      {00000a10}LIGHT_MODEL_FRONT_AMBIENT_R: FLOAT;
+      {00000a14}LIGHT_MODEL_FRONT_AMBIENT_G: FLOAT;
+      {00000a18}LIGHT_MODEL_FRONT_AMBIENT_B: FLOAT;
+      _00000a1c_Unknown: array [$0a1c..NV2A_VIEWPORT_TRANSLATE_X-1] of BYTE;
+      {00000a20}VIEWPORT_TRANSLATE_X: FLOAT;
+      {00000a24}VIEWPORT_TRANSLATE_Y: FLOAT;
+      {00000a28}VIEWPORT_TRANSLATE_Z: FLOAT;
+      {00000a2c}VIEWPORT_TRANSLATE_W: FLOAT;
+      {00000a30}POINT_PARAMETER: array [0..NV2A_POINT_PARAMETER__SIZE-1] of FLOAT;
+      {00000a50}EYE_POSITION: array [0..NV2A_EYE_POSITION__SIZE-1] of FLOAT;
+      {00000a60}RC_CONSTANT_COLOR0: array [0..NV2A_RC_CONSTANT_COLOR0__SIZE-1] of DWORD; // D3DCOLOR
+      {00000a80}RC_CONSTANT_COLOR1: array [0..NV2A_RC_CONSTANT_COLOR1__SIZE-1] of DWORD; // D3DCOLOR
+      {00000aa0}RC_OUT_ALPHA: array [0..NV2A_RC_OUT_ALPHA__SIZE-1] of DWORD;
+      {00000ac0}RC_IN_RGB: array [0..NV2A_RC_IN_RGB__SIZE-1] of DWORD;
+      _00000ae0_Unknown: array [$0ae0..NV2A_VIEWPORT_SCALE_X-1] of BYTE;
+      {00000af0}VIEWPORT_SCALE_X: FLOAT;
+      {00000af4}VIEWPORT_SCALE_Y: FLOAT;
+      {00000af8}VIEWPORT_SCALE_Z: FLOAT;
+      {00000afc}VIEWPORT_SCALE_W: FLOAT;
+      {00000b00}VP_UPLOAD_INST: array [0..NV2A_VP_UPLOAD_INST__SIZE-1] of DWORD;
+      {00000b80}VP_UPLOAD_CONST: array [0..NV2A_VP_UPLOAD_CONST__SIZE-1] of FLOAT; // Can't use NOINCREMENT_FLAG, maximum of 32 writes
+      {00000c00}LIGHT_BACK_AMBIENT: array [0..NV2A_LIGHT_BACK_AMBIENT_R__SIZE-1] of record
+        {00000c00}LIGHT_BACK_AMBIENT_R: FLOAT;
+        {00000c04}LIGHT_BACK_AMBIENT_G: FLOAT;
+        {00000c08}LIGHT_BACK_AMBIENT_B: FLOAT;
+        {00000c0c}LIGHT_BACK_DIFFUSE_R: FLOAT;
+        {00000c10}LIGHT_BACK_DIFFUSE_G: FLOAT;
+        {00000c14}LIGHT_BACK_DIFFUSE_B: FLOAT;
+        {00000c18}LIGHT_BACK_SPECULAR_R: FLOAT;
+        {00000c1c}LIGHT_BACK_SPECULAR_G: FLOAT;
+        {00000c20}LIGHT_BACK_SPECULAR_B: FLOAT;
+        _00000c24_Unknown: array [0..$1c-1] of BYTE;
+        end;
+      _00000e00_Unknown: array [$0e00..NV2A_LIGHT_FRONT_AMBIENT_R__0-1] of BYTE;
+      {00001000}LIGHT_FRONT_AMBIENT: array[0..NV2A_LIGHT_FRONT_AMBIENT_R__SIZE-1] of record
+        {00001000}LIGHT_FRONT_AMBIENT_R: FLOAT;
+        {00001004}LIGHT_FRONT_AMBIENT_G: FLOAT;
+        {00001008}LIGHT_FRONT_AMBIENT_B: FLOAT;
+        {0000100c}LIGHT_FRONT_DIFFUSE_R: FLOAT;
+        {00001010}LIGHT_FRONT_DIFFUSE_G: FLOAT;
+        {00001014}LIGHT_FRONT_DIFFUSE_B: FLOAT;
+        {00001018}LIGHT_FRONT_SPECULAR_R: FLOAT;
+        {0000101c}LIGHT_FRONT_SPECULAR_G: FLOAT;
+        {00001020}LIGHT_FRONT_SPECULAR_B: FLOAT;
+        _00001024_Unknown: array [0..4-1] of BYTE;
+        {00001028}LIGHT_HALF_VECTOR_X: FLOAT;
+        {0000102c}LIGHT_HALF_VECTOR_Y: FLOAT;
+        {00001030}LIGHT_HALF_VECTOR_Z: FLOAT;
+        {00001034}LIGHT_DIRECTION_X: FLOAT;
+        {00001038}LIGHT_DIRECTION_Y: FLOAT;
+        {0000103c}LIGHT_DIRECTION_Z: FLOAT;
+        {00001040}LIGHT_SPOT_CUTOFF_A: FLOAT;
+        {00001044}LIGHT_SPOT_CUTOFF_B: FLOAT;
+        {00001048}LIGHT_SPOT_CUTOFF_C: FLOAT;
+        {0000104c}LIGHT_SPOT_DIR_X: FLOAT;
+        {00001050}LIGHT_SPOT_DIR_Y: FLOAT;
+        {00001054}LIGHT_SPOT_DIR_Z: FLOAT;
+        {00001058}LIGHT_SPOT_CUTOFF_D: FLOAT;
+        {0000105c}LIGHT_POSITION_X: FLOAT;
+        {00001060}LIGHT_POSITION_Y: FLOAT;
+        {00001064}LIGHT_POSITION_Z: FLOAT;
+        {00001068}LIGHT_ATTENUATION_CONSTANT: FLOAT;
+        {0000106c}LIGHT_ATTENUATION_LINEAR: FLOAT;
+        {00001070}LIGHT_ATTENUATION_QUADRATIC: FLOAT;
+        _00001074_Unknown: array [0..$c-1] of BYTE;
+        end;
+      _00001400_Unknown: array [$1400..NV2A_POLYGON_STIPPLE_ENABLE-1] of BYTE;
+      {0000147c}POLYGON_STIPPLE_ENABLE: DWORD;
+      {00001480}POLYGON_STIPPLE_PATTERN: array [0..NV2A_POLYGON_STIPPLE_PATTERN__SIZE-1] of DWORD;
+      {00001500}VERTEX_POS_3F_X: FLOAT;
+      {00001504}VERTEX_POS_3F_Y: FLOAT;
+      {00001508}VERTEX_POS_3F_Z: FLOAT;
+      _0000150c_Unknown: array [$150c..NV2A_VERTEX_POS_4F_X-1] of BYTE;
+      {00001518}VERTEX_POS_4F_X: FLOAT;
+      {0000151c}VERTEX_POS_4F_Y: FLOAT;
+      {00001520}VERTEX_POS_4F_Z: FLOAT;
+      _00001524_Unknown: array [$1524..NV2A_VERTEX_POS_3I_XY-1] of BYTE;
+      {00001528}VERTEX_POS_3I_XY: DWORD;
+      {0000152c}VERTEX_POS_3I_Z: DWORD;
+      {00001530}VERTEX_NOR_3F_X: FLOAT;
+      {00001534}VERTEX_NOR_3F_Y: FLOAT;
+      {00001538}VERTEX_NOR_3F_Z: FLOAT;
+      _0000153c_Unknown: array [$153c..NV2A_VERTEX_NOR_3I_XY-1] of BYTE;
+      {00001540}VERTEX_NOR_3I_XY: DWORD;
+      {00001544}VERTEX_NOR_3I_Z: DWORD;
+      _00001548_Unknown: array [$1548..NV2A_VERTEX_COL_4F_X-1] of BYTE;
+      {00001550}VERTEX_COL_4F_X: FLOAT;
+      {00001554}VERTEX_COL_4F_Y: FLOAT;
+      {00001558}VERTEX_COL_4F_Z: FLOAT;
+      {0000155c}VERTEX_COL_4F_W: FLOAT;
+      {00001560}VERTEX_COL_3F_X: FLOAT;
+      {00001564}VERTEX_COL_3F_Y: FLOAT;
+      {00001568}VERTEX_COL_3F_Z: FLOAT;
+      {0000156c}VERTEX_COL_4I: DWORD;
+      _00001570_Unknown: array [$1570..NV2A_VERTEX_COL2_3F_X-1] of BYTE;
+      {00001580}VERTEX_COL2_3F_X: FLOAT;
+      {00001584}VERTEX_COL2_3F_Y: FLOAT;
+      {00001588}VERTEX_COL2_3F_Z: FLOAT;
+      {0000158c}VERTEX_COL2_4I: FLOAT;
+      {00001590}VERTEX_TX0_2F_S: FLOAT;
+      {00001594}VERTEX_TX0_2F_T: FLOAT;
+      {00001598}VERTEX_TX0_2I: DWORD;
+      _0000159c_Unknown: array [$159c..NV2A_VERTEX_TX0_4F_S-1] of BYTE;
+      {000015a0}VERTEX_TX0_4F_S: FLOAT;
+      {000015a4}VERTEX_TX0_4F_T: FLOAT;
+      {000015a8}VERTEX_TX0_4F_R: FLOAT;
+      {000015ac}VERTEX_TX0_4F_Q: FLOAT;
+      {000015b0}VERTEX_TX0_4I_ST: DWORD;
+      {000015b4}VERTEX_TX0_4I_RQ: DWORD;
+      {000015b8}VERTEX_TX1_2F_S: FLOAT;
+      {000015bc}VERTEX_TX1_2F_T: FLOAT;
+      {000015c0}VERTEX_TX1_2I: DWORD;
+      _000015c4_Unknown: array [$15c4..NV2A_VERTEX_TX1_4F_S-1] of BYTE;
+      {000015c8}VERTEX_TX1_4F_S: FLOAT;
+      {000015cc}VERTEX_TX1_4F_T: FLOAT;
+      {000015d0}VERTEX_TX1_4F_R: FLOAT;
+      {000015d4}VERTEX_TX1_4F_Q: FLOAT;
+      {000015d8}VERTEX_TX1_4I_ST: DWORD;
+      {000015dc}VERTEX_TX1_4I_RQ: DWORD;
+      {000015e0}VERTEX_TX2_2F_S: FLOAT;
+      {000015e4}VERTEX_TX2_2F_T: FLOAT;
+      {000015e8}VERTEX_TX2_2I: DWORD;
+      _000015ec_Unknown: array [$15ec..NV2A_VERTEX_TX2_4F_S-1] of BYTE;
+      {000015f0}VERTEX_TX2_4F_S: FLOAT;
+      {000015f4}VERTEX_TX2_4F_T: FLOAT;
+      {000015f8}VERTEX_TX2_4F_R: FLOAT;
+      {000015fc}VERTEX_TX2_4F_Q: FLOAT;
+      {00001600}VERTEX_TX2_4I_ST: DWORD;
+      {00001604}VERTEX_TX2_4I_RQ: DWORD;
+      {00001608}VERTEX_TX3_2F_S: FLOAT;
+      {0000160c}VERTEX_TX3_2F_T: FLOAT;
+      {00001610}VERTEX_TX3_2I: DWORD;
+      _00001614_Unknown: array [$1614..NV2A_VERTEX_TX3_4F_S-1] of BYTE;
+      {00001620}VERTEX_TX3_4F_S: FLOAT;
+      {00001624}VERTEX_TX3_4F_T: FLOAT;
+      {00001628}VERTEX_TX3_4F_R: FLOAT;
+      {0000162c}VERTEX_TX3_4F_Q: FLOAT;
+      {00001630}VERTEX_TX3_4I_ST: DWORD;
+      {00001634}VERTEX_TX3_4I_RQ: DWORD;
+      _00001638_Unknown: array [$1638..NV2A_VERTEX_FOG_1F-1] of BYTE;
+      {00001698}VERTEX_FOG_1F: FLOAT;
+      _0000169c_Unknown: array [$169c..NV2A_EDGEFLAG_ENABLE-1] of BYTE;
+      {000016bc}EDGEFLAG_ENABLE: DWORD;
+      _000016c0_Unknown: array [$16c0..NV2A_VTX_CACHE_INVALIDATE-1] of BYTE;
+      {00001710}VTX_CACHE_INVALIDATE: DWORD;
+      _00001714_Unknown: array [$1714..NV2A_VTXBUF_ADDRESS__0-1] of BYTE;
+      {00001720}VTXBUF_ADDRESS: array [0..NV2A_VTXBUF_ADDRESS__SIZE-1] of DWORD;
+      {00001760}VTXFMT: array [0..NV2A_VTXFMT__SIZE-1] of DWORD;
+      {000017a0}LIGHT_MODEL_BACK_AMBIENT_R: FLOAT;
+      {000017a4}LIGHT_MODEL_BACK_AMBIENT_G: FLOAT;
+      {000017a8}LIGHT_MODEL_BACK_AMBIENT_B: FLOAT;
+      {000017ac}MATERIAL_FACTOR_BACK_A: FLOAT;
+      {000017b0}MATERIAL_FACTOR_BACK_R: FLOAT;
+      {000017b4}MATERIAL_FACTOR_BACK_G: FLOAT;
+      {000017b8}MATERIAL_FACTOR_BACK_B: FLOAT;
+      {000017bc}COLOR_LOGIC_OP_ENABLE: DWORD;
+      {000017c0}COLOR_LOGIC_OP_OP: DWORD;
+      {000017c4}LIGHT_MODEL_TWO_SIDE_ENABLE: DWORD;
+      _000017c8_Unknown: array [$17c8..NV2A_TX_SHADER_CULL_MODE-1] of BYTE;
+      {000017f8}TX_SHADER_CULL_MODE: DWORD;
+      {000017fc}VERTEX_BEGIN_END: DWORD; // Parameter is D3DPRIMITIVETYPE or 0 to end
+      {00001800}VB_ELEMENT_U16: DWORD;
+      _00001804_Unknown: array [$1804..NV2A_VB_ELEMENT_U32-1] of BYTE;
+      {00001808}VB_ELEMENT_U32: DWORD;
+      _0000180c_Unknown: array [$180c..NV2A_VB_VERTEX_BATCH-1] of BYTE;
+      {00001810}VB_VERTEX_BATCH: DWORD;
+      _00001814_Unknown: array [$1814..NV2A_VERTEX_DATA-1] of BYTE;
+      {00001818}VERTEX_DATA: DWORD; // Use NOINCREMENT_FLAG
+      {0000181c}TX_SHADER_CONST_EYE_X: DWORD;
+      {00001820}TX_SHADER_CONST_EYE_Y: DWORD;
+      {00001824}TX_SHADER_CONST_EYE_Z: DWORD;
+      _00001828_Unknown: array [$1828..NV2A_VERTEX_DATA4UB__0-1] of BYTE;
+      {00001940}VERTEX_DATA4UB: array [0..NV2A_VERTEX_DATA4UB__SIZE-1] of DWORD; // Order:POSITION,WEIGHT,NORMAL,DIFFUSE,SPECULAR,FOG,POINT_SIZE,BACK_DIFFUSE,BACK_SPECULAR,TEXTURE0,-1,-2,-3,?,?,?
+      _00001980_Unknown: array [$1980..NV2A_VTX_ATTR_4F_X__0-1] of BYTE;
+      {00001a00}VTX_ATTR_4F_X: array [0..NV2A_VTX_ATTR_4F_X__SIZE-1] of record
+        {00001a00}VTX_ATTR_4F_X: FLOAT;
+        {00001a04}VTX_ATTR_4F_Y: FLOAT;
+        {00001a08}VTX_ATTR_4F_Z: FLOAT;
+        {00001a0c}VTX_ATTR_4F_W: FLOAT;
+      end;
+      {00001b00}TX_OFFSET: array [0..NV2A_TX_OFFSET__SIZE-1] of record
+        {00001b00}TX_OFFSET: DWORD;
+        {00001b04}TX_FORMAT: DWORD;
+        {00001b08}TX_WRAP: DWORD;
+        {00001b0c}TX_ENABLE: DWORD;
+        {00001b10}TX_NPOT_PITCH: DWORD;
+        {00001b14}TX_FILTER: DWORD;
+        _00001b18_Unknown: array [$1b18..NV2A_TX_NPOT_SIZE__0-1] of BYTE;
+        {00001b1c}TX_NPOT_SIZE: DWORD;
+        {00001b20}TX_PALETTE_OFFSET: DWORD;
+        {00001b24}TX_BORDER_COLOR: DWORD;
+        {00001b28}TX_SHADER_OFFSET_MATRIX00: DWORD;
+        {00001b2c}TX_SHADER_OFFSET_MATRIX01: DWORD;
+        {00001b30}TX_SHADER_OFFSET_MATRIX11: DWORD;
+        {00001b34}TX_SHADER_OFFSET_MATRIX10: DWORD;
+        _00001b38_Unknown: array [$1b38..NV2A_TX_OFFSET__1-1] of BYTE;
+        end;
+      _00001c00_Unknown: array [$1c00..NV2A_SEMAPHORE_OFFSET-1] of BYTE;
+      {00001d6c}SEMAPHORE_OFFSET: DWORD;
+      {00001d70}WRITE_SEMAPHORE_RELEASE: DWORD;
+      _00001d74_Unknown: array [$1d74..NV2A_DEPTHCLIPCONTROL-1] of BYTE;
+      {00001d78}DEPTHCLIPCONTROL: DWORD;
+      {00001d7c}MULTISAMPLE_CONTROL: DWORD;
+      {00001d80}COMPRESS_ZBUFFER_EN: DWORD;
+      {00001d84}OCCLUDE_ZSTENCIL_EN: DWORD;
+      _00001d88_Unknown: array [$1d88..NV2A_CLEAR_DEPTH_VALUE-1] of BYTE;
+      {00001d8c}CLEAR_DEPTH_VALUE: DWORD;
+      {00001d90}CLEAR_VALUE: DWORD;
+      {00001d94}CLEAR_BUFFERS: DWORD;
+      {00001d98}CLEAR_RECT_HORIZONTAL: DWORD;
+      {00001d9c}CLEAR_RECT_VERTICAL: DWORD;
+      _00001da0_Unknown: array [$1da0..NV2A_RC_COLOR0-1] of BYTE;
+      {00001e20}RC_COLOR0: DWORD;
+      {00001e24}RC_COLOR1: DWORD;
+      {00001e28}BACK_MATERIAL_SHININESS: array [0..NV2A_BACK_MATERIAL_SHININESS__SIZE-1] of DWORD;
+      {00001e40}RC_OUT_RGB: array [0..NV2A_RC_OUT_RGB__SIZE-1] of DWORD;
+      {00001e60}RC_ENABLE: DWORD;
+      _00001e64_Unknown: array [$1e64..NV2A_SHADOW_ZSLOPE_THRESHOLD-1] of BYTE;
+      {00001e68}SHADOW_ZSLOPE_THRESHOLD: DWORD;
+      {00001e6c}TX_RCOMP: DWORD;
+      {00001e70}TX_SHADER_OP: DWORD;
+      {00001e74}TX_SHADER_DOTMAPPING: DWORD;
+      {00001e78}TX_SHADER_PREVIOUS: DWORD;
+      _00001e7c_Unknown: array [$1e7c..NV2A_ENGINE-1] of BYTE;
+      {00001e94}ENGINE: DWORD;
+      {00001e98}TRANSFORM_PROGRAM_CXT_WRITE_EN: DWORD;
+      {00001e9c}VP_UPLOAD_FROM_ID: DWORD;
+      {00001ea0}VP_START_FROM_ID: DWORD;
+      {00001ea4}VP_UPLOAD_CONST_ID: DWORD; // Add 96 to constant index parameter
+      _00001ea8_Unknown: array [$1ea8..$2000-1] of BYTE;
+    );
+    // Overlay this with an array of DWORDs, so that we can access them in a generic way too :
+    1: (Registers: array [0..NV2A_Max div 4] of DWORD);
+  end;
 
 var
   NV2AInfo: array of record
@@ -2105,7 +2515,8 @@ begin
       begin
         Dec(ci);
         // Calculate the index, using the supplied pitch :
-        mi := (CompactNV2AInfo[i].Method + (ci * CompactNV2AInfo[i].Pitch)) div 4;
+        mi := CompactNV2AInfo[i].Pitch; if mi = 0 then mi := 4;
+        mi := (CompactNV2AInfo[i].Method + (ci * mi)) div 4;
         Assert(NV2AInfo[mi].Method = 0); // Check against overwrite
 
         // Put the value there, but replace '(x)' in the name with the correct index :
@@ -2116,6 +2527,9 @@ begin
 end;
 
 initialization
+
+  Assert(@(PNV2AInstance(nil)._00001ea8_Unknown) = Pointer($00001ea8), 'RNV2AInstance declaration incorrect!');
+
   InitNV2AInfo;
 
 end.
