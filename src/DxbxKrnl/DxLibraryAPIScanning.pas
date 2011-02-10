@@ -1920,6 +1920,7 @@ begin
 
   XTL_D3D__RenderState := _Find('_D3D__RenderState');
   XTL_EmuD3DDeferredTextureState := _Find('_D3D__TextureState');
+  XTL_D3D_CDevice_Init := _Find('?Init@CDevice@D3D@@QAEJPAU_D3DPRESENT_PARAMETERS_@@@Z'); // a function
   XTL_D3DDevice_SetRenderTarget := _Find('_D3DDevice_SetRenderTarget@8'); // a function
   XTL_Direct3D_GetDeviceCaps := _Find('_D3DDevice_GetDeviceCaps@4'); // a function
   XTL_LocalAlloc := _Find('_LocalAlloc@8'); // a function
