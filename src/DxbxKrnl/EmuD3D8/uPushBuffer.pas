@@ -188,6 +188,7 @@ type
   TDxbxPushBufferState = record
   public
     NV2AInstance: RNV2AInstance;
+
   // Draw[Indexed]Vertices[UP] related :
   public
     VertexFormat: array [0..15] of record Stride, Size, Type_: int; end;
@@ -195,7 +196,6 @@ type
   public
     VertexAddress: array [0..3] of Pointer;
     procedure RegisterVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
-    function RegisterVertexShaderConstant(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
   public
     VertexIndex: INT;
     VertexCount: UINT;
@@ -217,6 +217,7 @@ type
     procedure TriggerClearBuffers();
     procedure TriggerSetRenderTarget();
     procedure TriggerSetViewport();
+    function TriggerSetVertexShaderConstant(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
     procedure TriggerDrawBeginEnd();
 
   // Globals and controller :
@@ -250,6 +251,13 @@ begin
   {out}v2 := (aValue shr w1) and ((1 shl w2) - 1);
 end;
 
+function SwapRgb(color: D3DCOLOR): DWORD;
+begin
+  Result :=  (color and $ff00ff00)
+         or ((color and $00ff0000) shr 16)
+         or ((color and $000000ff) shl 16);
+end;
+
 { TDxbxPushBufferState }
 
 procedure TDxbxPushBufferState.RegisterVertexFormat(Slot: UINT; pdwPushArguments: PDWORD);
@@ -265,18 +273,6 @@ procedure TDxbxPushBufferState.RegisterVertexAddress(Stage: UINT; pdwPushArgumen
 begin
   // Register vertex buffer address (this address is a combination of all levels of offsets & indexes) per stage :
   VertexAddress[Stage] := Pointer(pdwPushArguments^);
-end;
-
-function TDxbxPushBufferState.RegisterVertexShaderConstant(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
-begin
-  Result := dwCount;
-
-  g_pD3DDevice.SetVertexShaderConstant
-  (
-      NV2AInstance.VP_UPLOAD_FROM_ID,
-      pdwPushArguments,
-      dwCount
-  );
 end;
 
 procedure TDxbxPushBufferState.RegisterVertexBatch(pdwPushArguments: PDWORD);
@@ -429,6 +425,9 @@ begin
 //  ActiveRenderTargetWidth := NV2AInstance.RT_HORIZ shr 16;
 //  ActiveRenderTargetHeight := NV2AInstance.RT_VERT shr 16;
 
+  // NV2AInstance.CONTROL0 could tell us more, like if the render target is a YUV format,
+  // if the depth buffer uses 'w' perspective, and if the depth-buffer is a floating point format.
+
   // TODO : Emulate SetRenderTarget
 end;
 
@@ -473,6 +472,27 @@ begin
 
   // Place the native call :
   g_pD3DDevice.SetViewport(ViewPort);
+end;
+
+//
+// SetVertexShaderConstant
+//
+
+function TDxbxPushBufferState.TriggerSetVertexShaderConstant(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
+begin
+  // Since we always start at NV2A_VP_UPLOAD_CONST__0, never handle more than allowed :
+  Assert(dwCount <= NV2A_VP_UPLOAD_CONST__SIZE);
+
+  Result := dwCount;
+
+  // Just set the constants right from the pushbuffer, as they come in batches and won't exceed the native bounds :
+  g_pD3DDevice.SetVertexShaderConstant
+  (
+      // The VP_UPLOAD_FROM_ID GPU register is always pushed before the actual values, and contains the base Register for this batch :
+      {Register=}NV2AInstance.VP_UPLOAD_FROM_ID,
+      {pConstantData=}pdwPushArguments,
+      {ConstantCount=}Result
+  );
 end;
 
 //
@@ -871,19 +891,6 @@ var
   HandledBy: string;
   StepNr: Integer;
   LogStr: string;
-
-  procedure _ReadDWORD(var aValue: DWORD; const aLabel: string);
-  begin
-    {var}aValue := pdwPushArguments^;
-    HandledBy := aLabel;
-  end;
-
-  procedure _ReadFLOAT(var aValue: FLOAT; const aLabel: string);
-  begin
-    {var}aValue := DW2F(pdwPushArguments^);
-    HandledBy := aLabel;
-  end;
-
 begin
   if MayLog(lfUnit) then
     if UIntPtr(pdwPushData) <> UIntPtr(pdwPushDataEnd) then
@@ -1010,7 +1017,7 @@ begin
 
           NV2A_VP_UPLOAD_CONST__0:
           begin
-            HandledCount := RegisterVertexShaderConstant(pdwPushArguments, dwCount);
+            HandledCount := TriggerSetVertexShaderConstant(pdwPushArguments, dwCount);
             HandledBy := 'SetVertexShaderConstant';
           end;
 
@@ -1058,8 +1065,30 @@ begin
             HandledBy := 'DrawIndexedVertices';
           end;
 
+          // SetRenderState special cases (value conversions) :
+          NV2A_FOG_COLOR:
+          begin
+            g_pD3DDevice.SetRenderState(D3DRS_FOGCOLOR, SwapRGB(pdwPushArguments^));
+            HandledBy := 'SetRenderState';
+          end;
+
+          NV2A_CULL_FACE_ENABLE:
+          begin
+            if pdwPushArguments^ = DWORD(BOOL_FALSE) then
+              g_pD3DDevice.SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+
+            HandledBy := 'SetRenderState';
+          end;
+
+          NV2A_CULL_FACE:
+          begin
+            g_pD3DDevice.SetRenderState(D3DRS_CULLMODE, D3DCULL_CW); // TODO : Use D3DCULL_CCW if D3DRS_FRONTFACE=D3DCULL_CW
+
+            HandledBy := 'SetRenderState';
+          end;
+
         else
-          // SetRenderState :
+          // SetRenderState, normal cases (direct value copy) :
           if TrySetRenderState(dwMethod, pdwPushArguments, dwCount) then
             HandledBy := 'SetRenderState'
           else
