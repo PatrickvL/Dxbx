@@ -229,175 +229,103 @@ begin
 end;
 
 function HandleAccessViolation(E: PEXCEPTION_RECORD; C: PCONTEXT): Boolean;
-{$IFDEF GAME_HACKS_ENABLED}
-var
-  fix: UInt32;
-  dwESI: DWORD;
-  dwSize: DWORD;
-  v: DWORD;
-  dwCur: DWORD;
-  dwValue: DWORD;
-  dwPtr: DWORD;
-{$ENDIF}
 begin
-  Result := False;
+  Result := True; // assume we can fix this exception
 
-  // Skip write to $80000000 (as happens in '?Init@CDevice@D3D@@QAEJPAU_D3DPRESENT_PARAMETERS_@@@Z')  :
-  if  (E.NumberParameters = 2)
-  and (E.ExceptionInformation[1] >= $80000000) then
+  // Fix writes to $80000000 and above (as happens in '?Init@CDevice@D3D@@QAEJPAU_D3DPRESENT_PARAMETERS_@@@Z')  :
+  if  (E.ExceptionInformation[1] >= $80000000)
+  and (E.NumberParameters = 2) then
   begin
-    // From Wings of War :
-    // 0011E20F A3 00000080 mov dword ptr [$80000000],eax
-    if (PBytes(E.ExceptionAddress)[0] = $A3) then
-    begin
-      Inc(C.Eip, 5);
-      Result := True;
-      Exit;
-    end;
+    // Decode the opcode to see if we can fix it :
+    case PBytes(E.ExceptionAddress)[0] of
+      $89: begin
+        case PBytes(E.ExceptionAddress)[1] of
+          $11: begin
+            // From AlphaFog :
+            // 00011F87 89 11 mov dword ptr [ecx],edx
+            C.ECX := C.ECX and $7FFFFFFF; // Remove the high-bit from the destination address
+            Exit;
+          end;
 
-    // From CreateDevice :
-    // 0001AD5C 89 1500000080 mov dword ptr [$80000000],edx
-    if  (PBytes(E.ExceptionAddress)[0] = $89)
-    and (PBytes(E.ExceptionAddress)[1] = $15) then
-    begin
-      // Trap the initial GPU jump (and mask off the jump-indicator) :
-      g_NV2ADMAChannel.Put := PDWORD(DWORD(C.Edx) and (not 3));
-      Inc(C.Eip, 6);
-      Result := True;
-      Exit;
-    end;
+          $15: begin
+            if (E.ExceptionInformation[1] = $80000000) then
+            begin
+              // From CreateDevice :
+              // 0001AD5C 89 1500000080 mov dword ptr [$80000000],edx
+              g_NV2ADMAChannel.Put := PDWORD(DWORD(C.Edx) and (not 3)); // Trap the initial GPU jump (and mask off the jump-indicator)
+              Inc(C.Eip, 6);
+              Exit;
+            end;
+          end;
 
-    // From CreateDevice :
-    // 0001ADA4 C7 0500000080EFBEADDE mov dword ptr [$80000000],$DEADBEEF
-    if  (PBytes(E.ExceptionAddress)[0] = $C7)
-    and (PBytes(E.ExceptionAddress)[1] = $05) then
-    begin
-      Inc(C.Eip, 10);
-      Result := True;
-      Exit;
-    end;
+          $2B: begin
+            // From Lights :
+            // 00011136 89 2B mov dword ptr [ebx],ebp
+            C.EBX := C.EBX and $7FFFFFFF; // Remove the high-bit from the destination address
+            Exit;
+          end;
 
-    // From Vertices :
-    // 00011145 F3 A5 rep movsd
-    if  (PBytes(E.ExceptionAddress)[0] = $F3)
-    and (PBytes(E.ExceptionAddress)[1] = $A5) then
-    begin
-      C.EDI := C.EDI and $7FFFFFFF; // Remove the high-bit from the destination address
-      Result := True;
-      Exit;
+          $32: begin
+            // From AlphaFog :
+            // 00012003 89 32 mov dword ptr [edx],esi
+            C.EDX := C.EDX and $7FFFFFFF; // Remove the high-bit from the destination address
+            Exit;
+          end;
+
+          $48, $68: begin
+            // From AlphaFog :
+            // 00012066 89 4828 mov dword ptr [eax+$28],ecx
+            // 00013340 89 6804 mov dword ptr [eax+$04],ebp
+            C.EAX := C.EAX and $7FFFFFFF; // Remove the high-bit from the destination address
+            Exit;
+          end;
+
+        end;
+      end;
+
+      $A3: begin
+        begin
+          // From Wings of War :
+          // 0011E20F A3 00000080 mov dword ptr [$80000000],eax
+          Inc(C.Eip, 5);
+          Exit;
+        end;
+      end;
+
+      $C7: begin
+        case PBytes(E.ExceptionAddress)[1] of
+          $05: begin
+            // From CreateDevice :
+            // 0001ADA4 C7 0500000080EFBEADDE mov dword ptr [$80000000],$DEADBEEF
+            Inc(C.Eip, 10);
+            Exit;
+          end;
+
+          $40: begin
+            if (PBytes(E.ExceptionAddress)[2] = $FC) then
+            begin
+              // From Textures :
+              // 000112AB C740FC FFFFFFFF mov dword ptr [eax-$04],$FFFFFFFF
+              C.EAX := C.EAX and $7FFFFFFF; // Remove the high-bit from the destination address
+              Exit;
+            end;
+          end;
+        end;
+      end;
+
+      $F3: begin
+        // From Vertices :
+        // 00011145 F3 A5 rep movsd
+        if (PBytes(E.ExceptionAddress)[1] = $A5) then
+        begin
+          C.EDI := C.EDI and $7FFFFFFF; // Remove the high-bit from the destination address
+          Exit;
+        end;
+      end;
     end;
   end;
 
-{$IFDEF GAME_HACKS_ENABLED}
-
-  if IsRunning(TITLEID_Halo) then
-  begin
-    // Halo Access Adjust 1
-    if  (C.Eip = $0003394C)
-    and (C.Ecx = $803BD800) then
-    begin
-      // Halo BINK skip
-      begin
-        // nop sled over bink calls
-        (* Cxbx marked this out :
-        memset(Pvoid($2CBA4), $90, $2CBAF - $2CBA4); // OPCODE_NOP
-        memset(Pvoid($2CBBD), $90, $2CBD5 - $2CBBD); // OPCODE_NOP
-        *)
-        memset(Pvoid($2CAE0), $90, $2CE1E - $2CAE0); // OPCODE_NOP
-      end;
-
-      fix := g_HaloHack[1] + (C.Eax - $803A6000);
-
-      C.Eax := fix; C.Ecx := fix;
-      Puint32(C.Esp)^ := fix;
-
-      PX_D3DResource(fix).Data := g_HaloHack[1] + (PX_D3DResource(fix).Data - $803A6000);
-
-      // go through and fix any other pointers in the ESI allocation chunk
-      begin
-        dwESI := C.Esi;
-        dwSize := EmuCheckAllocationSize(PVOID(dwESI), false);
-
-        // dword aligned
-        Dec(dwSize, 4 - (dwSize mod 4));
-
-        v := 0; while v < dwSize do
-        begin
-          dwCur := PDWORD(dwESI+v)^;
-
-          if (dwCur >= $803A6000) and (dwCur < $819A6000) then
-              PDWORD(dwESI+v)^ := g_HaloHack[1] + (dwCur - $803A6000);
-
-          Inc(v, 4);
-        end;
-      end;
-
-      // fix this global pointer
-      begin
-        dwValue := PDWORD($39CE24)^;
-
-        PDWORD($39CE24)^ := g_HaloHack[1] + (dwValue - $803A6000);
-      end;
-
-      DbgPrintf('EmuMain : Halo Access Adjust 1 was applied!');
-
-      Result := True;
-    end;
-
-    // Halo Access Adjust 2
-    if C.Eip = $00058D8C then
-    begin
-      if C.Eax = $819A5818 then
-      begin
-        fix := g_HaloHack[1] + (C.Eax - $803A6000);
-
-        PDWORD($0039BE58)^ := fix; C.Eax := fix;
-
-        // go through and fix any other pointers in the $2DF1C8 allocation chunk
-        begin
-          dwPtr := PDWORD($2DF1C8)^;
-          dwSize := EmuCheckAllocationSize(PVOID(dwPtr), false);
-
-          // dword aligned
-          Dec(dwSize, 4 - dwSize mod 4);
-
-          v := 0; while v < dwSize do
-          begin
-            dwCur := (dwPtr+v);
-
-            if (dwCur >= $803A6000) and (dwCur < $819A6000) then
-              PDWORD(dwPtr+v)^ := g_HaloHack[1] + (dwCur - $803A6000);
-
-            Inc(v, 4);
-          end;
-        end;
-
-        DbgPrintf('EmuMain : Halo Access Adjust 2 was applied!');
-        g_bEmuException := false;
-
-        Result := EXCEPTION_CONTINUE_EXECUTION;
-        Exit;
-      end;
-    end;
-
-    Exit;
-  end; // Halo 1
-
-  if IsRunning(TITLEID_RaymanArena_NTSC) then
-  begin
-    if(C.Eip = $18B40C) then
-    begin
-      // call dword ptr [ecx+4]
-      Inc(C.Eip, 3);
-
-      DbgPrintf('Rayman Arena Hack 1 was applied!');
-
-      Result := True;
-    end;
-
-    Exit;
-  end; // Rayman Arena NTSC
-{$ENDIF GAME_HACKS_ENABLED}
+  Result := False; // Alas, no fix
 end;
 
 procedure DumpException(E: PEXCEPTION_RECORD; C: PCONTEXT);
