@@ -594,7 +594,7 @@ begin
         DxbxRenderStateInfo[XboxRenderState].S,
         XboxValue,
         DxbxTypedValueToString(DxbxRenderStateInfo[XboxRenderState].T, XboxValue),
-        XboxExtStr[DxbxRenderStateInfo[XboxRenderState].X]
+        XboxExtStr[DxbxRenderStateInfo[XboxRenderState].PC = D3DRS_UNSUPPORTED] // Xbox extensions have no PC state
         ]);
     end;
   end;
