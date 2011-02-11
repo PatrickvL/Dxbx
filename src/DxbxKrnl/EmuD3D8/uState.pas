@@ -139,6 +139,8 @@ end;
 // Convert a 'method' DWORD into it's associated 'pixel-shader' or 'simple' render state.
 function DxbxXboxMethodToRenderState(const aMethod: X_NV2AMETHOD): X_D3DRenderStateType; {NOPATCH}
 begin
+  // TODO : The list below is incomplete - use DxbxRenderStateInfo to complete this.
+
   // Dxbx note : Let the compiler sort this out, should be much quicker :
   case (aMethod and $00001ffc) of
     {00000100}NV2A_NOP: Result := X_D3DRS_PS_RESERVED; // XDK 3424 uses $00000100 (NOP), while 3911 onwards uses $00001d90 (SET_COLOR_CLEAR_VALUE)
@@ -156,7 +158,10 @@ begin
     {00000304}NV2A_BLEND_FUNC_ENABLE: Result := X_D3DRS_ALPHABLENDENABLE;
     {0000030C}NV2A_DEPTH_TEST_ENABLE: Result := X_D3DRS_ZENABLE;
     {00000310}NV2A_DITHER_ENABLE: Result := X_D3DRS_DITHERENABLE;
+    {00000318}NV2A_POINT_PARAMETERS_ENABLE: Result := X_D3DRS_POINTSCALEENABLE;
+    {0000031C}NV2A_POINT_SMOOTH_ENABLE: Result := X_D3DRS_POINTSPRITEENABLE;
     {00000328}NV2A_SKIN_MODE: Result := X_D3DRS_VERTEXBLEND;
+    {0000032C}NV2A_STENCIL_ENABLE: Result := X_D3DRS_STENCILENABLE;
     {00000330}NV2A_POLYGON_OFFSET_POINT_ENABLE: Result := X_D3DRS_POINTOFFSETENABLE;
     {00000334}NV2A_POLYGON_OFFSET_LINE_ENABLE: Result := X_D3DRS_WIREFRAMEOFFSETENABLE;
     {00000338}NV2A_POLYGON_OFFSET_FILL_ENABLE: Result := X_D3DRS_SOLIDOFFSETENABLE;
@@ -176,6 +181,7 @@ begin
     {00000374}NV2A_STENCIL_OP_ZFAIL: Result := X_D3DRS_STENCILZFAIL;
     {00000378}NV2A_STENCIL_OP_ZPASS: Result := X_D3DRS_STENCILPASS;
     {0000037c}NV2A_SHADE_MODEL: Result := X_D3DRS_SHADEMODE;
+    {00000380}NV2A_LINE_WIDTH: Result := X_D3DRS_LINEWIDTH;
     {00000384}NV2A_POLYGON_OFFSET_FACTOR: Result := X_D3DRS_POLYGONOFFSETZSLOPESCALE;
     {00000388}NV2A_POLYGON_OFFSET_UNITS: Result := X_D3DRS_POLYGONOFFSETZOFFSET;
     {0000038c}NV2A_POLYGON_MODE_FRONT: Result := X_D3DRS_FILLMODE;
@@ -371,7 +377,7 @@ begin
   XTL_EmuMappedD3DRenderState[XboxRenderState]^ := XboxValue;
 
   // Skip Xbox extensions :
-  if DxbxRenderStateInfo[XboxRenderState].X then
+  if DxbxRenderStateInfo[XboxRenderState].PC = D3DRS_UNSUPPORTED then
     Exit;
 
 // Disabled, as it messes up Nvidia rendering too much :
