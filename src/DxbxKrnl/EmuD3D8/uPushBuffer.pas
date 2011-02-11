@@ -208,6 +208,11 @@ type
     procedure PostponedDrawVerticesUP;
     procedure PostponedDrawIndexedVerticesUP;
 
+  // SetVertesShader :
+  public
+    VertexShaderSlots: array [0..D3DVS_XBOX_NR_ADDRESS_SLOTS-1] of DWORD;
+    function HandleSetVertexShaderBatch(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+
   // SetRenderState :
   public
     function TrySetRenderState(dwMethod: DWORD; pdwPushArguments: PDWORD; dwCount: DWORD): Boolean;
@@ -488,8 +493,8 @@ begin
   // Just set the constants right from the pushbuffer, as they come in batches and won't exceed the native bounds :
   g_pD3DDevice.SetVertexShaderConstant
   (
-      // The VP_UPLOAD_FROM_ID GPU register is always pushed before the actual values, and contains the base Register for this batch :
-      {Register=}NV2AInstance.VP_UPLOAD_FROM_ID,
+      // The VP_UPLOAD_CONST_ID GPU register is always pushed before the actual values, and contains the base Register for this batch :
+      {Register=}NV2AInstance.VP_UPLOAD_CONST_ID,
       {pConstantData=}pdwPushArguments,
       {ConstantCount=}Result
   );
@@ -537,6 +542,17 @@ begin
   VertexIndex := -1;
   PostponedDrawType := pdUndetermined;
   XBPrimitiveType := NewPrimitiveType;
+end;
+
+function TDxbxPushBufferState.HandleSetVertexShaderBatch(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+begin
+  Result := dwCount;
+  // Collect all slots in a separate array (as only part of it is present in the GPU registers) :
+  memcpy(@VertexShaderSlots[NV2AInstance.VP_UPLOAD_FROM_ID], pdwPushArguments, dwCount * SizeOf(DWORD));
+  // Batches are max 32 DWORDs, so just increase VP_UPLOAD_FROM_ID (the current slot index, max 136) :
+  Inc(NV2AInstance.VP_UPLOAD_FROM_ID, Result);
+
+  // TODO : When do we compile the shader?
 end;
 
 function TDxbxPushBufferState.HandleVertexData(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
@@ -1039,6 +1055,12 @@ begin
           begin
             RegisterVertexAddress({Stage=}(dwMethod - NV2A_VTXBUF_ADDRESS__0) div 4, pdwPushArguments);
             HandledBy := 'VertexAddress';
+          end;
+
+          NV2A_VP_UPLOAD_INST__0:
+          begin
+            HandledCount := HandleSetVertexShaderBatch(pdwPushArguments, dwCount);
+            HandledBy := 'SetVertexShader';
           end;
 
           NV2A_VB_VERTEX_BATCH:
