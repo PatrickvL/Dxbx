@@ -5588,7 +5588,7 @@ begin
     State_VersionIndependent := DxbxVersionAdjust_D3DRS(State);
 
     // Check if this is an Xbox extension  :
-    if DxbxRenderStateInfo[State_VersionIndependent].X then
+    if DxbxRenderStateInfo[State_VersionIndependent].PC = D3DRS_UNSUPPORTED then // Xbox extensions have no PC state
       PValue^ := XTL_EmuMappedD3DRenderState[State_VersionIndependent]^
     else
       g_pD3DDevice.GetRenderState(DxbxRenderStateInfo[State_VersionIndependent].PC, {out}PValue^);
