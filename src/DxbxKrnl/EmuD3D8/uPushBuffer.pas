@@ -219,9 +219,12 @@ type
 
   // Triggers :
   public
+    Viewport: D3DVIEWPORT;
     procedure TriggerClearBuffers();
     procedure TriggerSetRenderTarget();
     procedure TriggerSetViewport();
+    function TriggerModelViewMatrix(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
+    function TriggerCompositeMatrix(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
     function TriggerSetVertexShaderConstant(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
     procedure TriggerDrawBeginEnd();
 
@@ -441,14 +444,13 @@ end;
 //
 
 procedure TDxbxPushBufferState.TriggerSetViewport();
-var
+//var
 //  ViewportTranslateX: FLOAT;
 //  ViewportTranslateY: FLOAT;
 //  ViewportTranslateZ: FLOAT;
 //  ViewportScaleX: FLOAT;
 //  ViewportScaleY: FLOAT;
 //  ViewportScaleZ: FLOAT;
-  Viewport: D3DVIEWPORT;
 begin
 //  // Interpret all related NV2A registers :
 //  begin
@@ -477,6 +479,60 @@ begin
 
   // Place the native call :
   g_pD3DDevice.SetViewport(ViewPort);
+end;
+
+//
+// SetTransform
+//
+
+function TDxbxPushBufferState.TriggerModelViewMatrix(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
+begin
+  Assert(dwCount >= 16);
+  Result := 16; // We handle only one matrix
+
+  // The ModelView = D3DTS_WORLD * D3DTS_VIEW.
+  // We cannot decompose these two matrixes, but if we keep the World view as a static Identity view,
+  // we should be able to use the ModelView as native View matrix. [If we did it the other way around
+  // (set View to identity and apply ModelView to World), many fog, lighting and other aspects wouldn't
+  // be influenced on our native D3D device.]
+  // TODO : Is this reasoning sound?
+  g_pD3DDevice.SetTransform(D3DTS_VIEW, PD3DMatrix(pdwPushArguments));
+end;
+
+function TDxbxPushBufferState.TriggerCompositeMatrix(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
+begin
+  Assert(dwCount >= 16);
+  Result := 16; // We handle only one matrix
+
+  // The ultimate goal is to recover D3DTS_PROJECTION here.
+  //
+  // if NV2AInstance.SKIN_MODE > 0 then
+  //   CompositeView = ModelViewMatrix * ViewPortAdjustedProjectionViewMatrix
+  //   TODO : Can we really infer the AdjustedProjectionViewMatrix by calculating CompositeView / ModelViewMatrix ?
+  // else
+  //   CompositeView = ViewPortAdjustedProjectionViewMatrix;
+  //
+  // Where
+  //   ViewportAdjustedProjectionViewMatrix = D3DTS_PROJECTION * ViewportTransformMatrix
+  //
+  // Where (see http://msdn.microsoft.com/en-us/library/ee418867(v=VS.85).aspx)
+  //   ViewportTransformMatrix =
+  //     _11 0.0 0.0 0.0
+  //     0.0 _22 0.0 0.0
+  //     0.0 0.0 _33 0.0
+  //     _41 _42 _43 _44
+  //   (TODO : Is the '4' column a row instead?
+  //
+  //   _11 =    0.5 * SuperSampleScaleX * Viewport.Width
+  //   _22 =   -0.5 * SuperSampleScaleY * Viewport.Height
+  //   _33 = ZScale * (Viewport.MaxZ - Viewport.MinZ)
+  //   _41 =    _11
+  //   _42 =  - _22
+  //   _43 = ZScale * Viewport.MinZ
+  //   _44 =    1.0
+  //
+  // TODO : How on earth are we going to recover all this?!?!
+  // g_pD3DDevice.SetTransform(D3DTS_PROJECTION, PD3DMatrix(pdwPushArguments));
 end;
 
 //
@@ -1008,6 +1064,22 @@ begin
             TriggerSetViewport();
             HandledBy := 'SetViewport';
           end;
+
+          // SetTransform :
+          NV2A_MODELVIEW0_MATRIX__0:
+          begin
+            HandledCount := // Note : Disable this assignment-line to get more pushbuffer debug output
+              TriggerModelViewMatrix(pdwPushArguments, dwCount);
+            HandledBy := 'SetTransform';
+          end;
+
+          NV2A_COMPOSITE_MATRIX__0:
+          begin
+            HandledCount := // Note : Disable this assignment-line to get more pushbuffer debug output
+              TriggerCompositeMatrix(pdwPushArguments, dwCount);
+            HandledBy := 'SetTransform';
+          end;
+
 
           // SetTexture / SwitchTexture :
           NV2A_TX_OFFSET__0, NV2A_TX_OFFSET__1, NV2A_TX_OFFSET__2, NV2A_TX_OFFSET__3:

@@ -787,6 +787,7 @@ const NV2A_INVERSE_MODELVIEW2_MATRIX__SIZE                        = $00000010;
 //const NV2A_INVERSE_MODELVIEW3_MATRIX(x)                         = ($00000640+((x)*4));
 const NV2A_INVERSE_MODELVIEW3_MATRIX__SIZE                        = $00000010;
 //const NV2A_COMPOSITE_MATRIX(x)                                  = ($00000680+((x)*4)); // Dxbx
+const NV2A_COMPOSITE_MATRIX__0                                    = ($00000680+((0)*4)); // Dxbx
 const NV2A_COMPOSITE_MATRIX__SIZE                                 = $00000010; // Dxbx
 //const NV2A_TX0_MATRIX(x)                                        = ($000006c0+((x)*4));
 const NV2A_TX0_MATRIX__SIZE                                       = $00000010;
