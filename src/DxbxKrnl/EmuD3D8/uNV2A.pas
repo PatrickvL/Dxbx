@@ -1060,6 +1060,7 @@ const NV2A_VIEWPORT_SCALE_Y                                       = $00000af4;
 const NV2A_VIEWPORT_SCALE_Z                                       = $00000af8;
 const NV2A_VIEWPORT_SCALE_W                                       = $00000afc;
 //const NV2A_VP_UPLOAD_INST(x)                                    = ($00000b00+((x)*4));
+const NV2A_VP_UPLOAD_INST__0                                      = ($00000b00+((0)*4)); // Dxbx
 const NV2A_VP_UPLOAD_INST__SIZE                                   = $00000020; // Dxbx
 //const NV2A_VP_UPLOAD_CONST(x)                                   = ($00000b80+((x)*4));
 const NV2A_VP_UPLOAD_CONST__0                                     = ($00000b80+((0)*4)); // Dxbx
