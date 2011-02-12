@@ -302,7 +302,7 @@ begin
   Inc(BatchCount);
 
   // Accumulate the vertices for the draw that will follow :
-  Inc(VertexCount, BatchCount);
+  Inc(VertexCount, BatchCount + 1);
   // Register the index only once :
   if VertexIndex >= 0 then
     Exit;
@@ -1164,7 +1164,7 @@ begin
           NV2A_VTXFMT__0..NV2A_VTXFMT__15:
           begin
             RegisterVertexFormat({Slot=}(dwMethod - NV2A_VTXFMT__0) div 4, pdwPushArguments);
-            HandledBy := 'VertexFormat';
+            HandledBy := 'VertexFormat ' + X_D3DVSDE2String((dwMethod - NV2A_VTXFMT__0) div 4);
           end;
 
           NV2A_VTXBUF_ADDRESS__0..NV2A_VTXBUF_ADDRESS__3:
