@@ -1407,10 +1407,26 @@ const NV2A_VERTEX_DATA                                            = $00001818;
 const NV2A_TX_SHADER_CONST_EYE_X                                  = $0000181c;
 const NV2A_TX_SHADER_CONST_EYE_Y                                  = $00001820;
 const NV2A_TX_SHADER_CONST_EYE_Z                                  = $00001824;
-//const NV2A_VERTEX_DATA4UB(x)                                    = ($00001940+((x)*4));
+//const NV2A_VERTEX_DATA2F(x)                                     = ($00001880+((x)*8)); // Dxbx
+const NV2A_VERTEX_DATA2F__0                                       = ($00001880+((0)*8)); // Dxbx
+const NV2A_VERTEX_DATA2F__15                                      = ($00001880+((15)*8)); // Dxbx
+const NV2A_VERTEX_DATA2F__SIZE                                    = $00000010; // Dxbx
+//const NV2A_VERTEX_DATA2S(x)                                     = ($00001900+((x)*4)); // Dxbx
+const NV2A_VERTEX_DATA2S__0                                       = ($00001900+((0)*4)); // Dxbx
+const NV2A_VERTEX_DATA2S__15                                      = ($00001900+((15)*4)); // Dxbx
+const NV2A_VERTEX_DATA2S__SIZE                                    = $00000010; // Dxbx
+//const NV2A_VERTEX_DATA4UB(x)                                    = ($00001940+((x)*4)); // Dxbx
 const NV2A_VERTEX_DATA4UB__0                                      = ($00001940+((0)*4)); // Dxbx
 const NV2A_VERTEX_DATA4UB__15                                     = ($00001940+((15)*4)); // Dxbx
 const NV2A_VERTEX_DATA4UB__SIZE                                   = $00000010; // Dxbx
+//const NV2A_VERTEX_DATA4S(x)                                     = ($00001980+((x)*8)); // Dxbx
+const NV2A_VERTEX_DATA4S__0                                       = ($00001980+((0)*8)); // Dxbx
+const NV2A_VERTEX_DATA4S__15                                      = ($00001980+((15)*8)); // Dxbx
+const NV2A_VERTEX_DATA4S__SIZE                                    = $00000010; // Dxbx
+//const NV2A_VERTEX_DATA4F(x)                                     = ($00001a00+((x)*16)); // Dxbx
+const NV2A_VERTEX_DATA4F__0                                       = ($00001a00+((0)*16)); // Dxbx
+const NV2A_VERTEX_DATA4F__15                                      = ($00001a00+((15)*16)); // Dxbx
+const NV2A_VERTEX_DATA4F__SIZE                                    = $00000010; // Dxbx
 //const NV2A_VTX_ATTR_4F_X(x)                                     = ($00001a00+((x)*16));
 const NV2A_VTX_ATTR_4F_X__0                                       = ($00001a00+((0)*16)); // Dxbx
 const NV2A_VTX_ATTR_4F_X__SIZE                                    = $00000010;
@@ -2054,11 +2070,11 @@ const
   (Method:$0000181c; Name:'NV2A_TX_SHADER_CONST_EYE_X'),
   (Method:$00001820; Name:'NV2A_TX_SHADER_CONST_EYE_Y'),
   (Method:$00001824; Name:'NV2A_TX_SHADER_CONST_EYE_Z'),
+  (Method:$00001880; Name:'NV2A_VERTEX_DATA2F(x)'; Pitch:8; Count:NV2A_VERTEX_DATA2F__SIZE), // Order:POSITION,WEIGHT,NORMAL,DIFFUSE,SPECULAR,FOG,POINT_SIZE,BACK_DIFFUSE,BACK_SPECULAR,TEXTURE0,-1,-2,-3,?,?,?
+  (Method:$00001900; Name:'NV2A_VERTEX_DATA2S(x)'; Count:NV2A_VERTEX_DATA2S__SIZE), // Order:POSITION,WEIGHT,NORMAL,DIFFUSE,SPECULAR,FOG,POINT_SIZE,BACK_DIFFUSE,BACK_SPECULAR,TEXTURE0,-1,-2,-3,?,?,?
   (Method:$00001940; Name:'NV2A_VERTEX_DATA4UB(x)'; Count:NV2A_VERTEX_DATA4UB__SIZE), // Order:POSITION,WEIGHT,NORMAL,DIFFUSE,SPECULAR,FOG,POINT_SIZE,BACK_DIFFUSE,BACK_SPECULAR,TEXTURE0,-1,-2,-3,?,?,?
-  (Method:$00001a00; Name:'NV2A_VTX_ATTR_4F_X(x)'; Pitch:16; Count:NV2A_VTX_ATTR_4F_X__SIZE),
-  (Method:$00001a04; Name:'NV2A_VTX_ATTR_4F_Y(x)'; Pitch:16; Count:NV2A_VTX_ATTR_4F_Y__SIZE),
-  (Method:$00001a08; Name:'NV2A_VTX_ATTR_4F_Z(x)'; Pitch:16; Count:NV2A_VTX_ATTR_4F_Z__SIZE),
-  (Method:$00001a0c; Name:'NV2A_VTX_ATTR_4F_W(x)'; Pitch:16; Count:NV2A_VTX_ATTR_4F_W__SIZE),
+  (Method:$00001980; Name:'NV2A_VERTEX_DATA4S(x)'; Pitch:8; Count:NV2A_VERTEX_DATA4S__SIZE), // Order:POSITION,WEIGHT,NORMAL,DIFFUSE,SPECULAR,FOG,POINT_SIZE,BACK_DIFFUSE,BACK_SPECULAR,TEXTURE0,-1,-2,-3,?,?,?
+  (Method:$00001a00; Name:'NV2A_VERTEX_DATA4F(x)'; Pitch:16; Count:NV2A_VERTEX_DATA4F__SIZE), // Order:POSITION,WEIGHT,NORMAL,DIFFUSE,SPECULAR,FOG,POINT_SIZE,BACK_DIFFUSE,BACK_SPECULAR,TEXTURE0,-1,-2,-3,?,?,?
   (Method:$00001b00; Name:'NV2A_TX_OFFSET(x)'; Pitch:64; Count:NV2A_TX_OFFSET__SIZE),
   (Method:$00001b04; Name:'NV2A_TX_FORMAT(x)'; Pitch:64; Count:NV2A_TX_FORMAT__SIZE),
   (Method:$00001b08; Name:'NV2A_TX_WRAP(x)'; Pitch:64; Count:NV2A_TX_WRAP__SIZE),
@@ -2428,15 +2444,13 @@ type
       {0000181c}TX_SHADER_CONST_EYE_X: DWORD;
       {00001820}TX_SHADER_CONST_EYE_Y: DWORD;
       {00001824}TX_SHADER_CONST_EYE_Z: DWORD;
-      _00001828_Unknown: array [$1828..NV2A_VERTEX_DATA4UB__0-1] of BYTE;
+      _00001828_Unknown: array [$1828..NV2A_VERTEX_DATA2F__0-1] of BYTE;
+      {00001880}VERTEX_DATA2F: array [0..NV2A_VERTEX_DATA2F__SIZE-1] of record X, Y: FLOAT; end;
+      {00001900}VERTEX_DATA2S: array [0..NV2A_VERTEX_DATA2S__SIZE-1] of record X, Y: USHORT; end;
+//      {00001940}VERTEX_DATA4UB: array [0..NV2A_VERTEX_DATA4UB__SIZE-1] of record X, Y, Z, W: BYTE; end;
       {00001940}VERTEX_DATA4UB: array [0..NV2A_VERTEX_DATA4UB__SIZE-1] of DWORD; // Order:POSITION,WEIGHT,NORMAL,DIFFUSE,SPECULAR,FOG,POINT_SIZE,BACK_DIFFUSE,BACK_SPECULAR,TEXTURE0,-1,-2,-3,?,?,?
-      _00001980_Unknown: array [$1980..NV2A_VTX_ATTR_4F_X__0-1] of BYTE;
-      {00001a00}VTX_ATTR_4F_X: array [0..NV2A_VTX_ATTR_4F_X__SIZE-1] of record
-        {00001a00}VTX_ATTR_4F_X: FLOAT;
-        {00001a04}VTX_ATTR_4F_Y: FLOAT;
-        {00001a08}VTX_ATTR_4F_Z: FLOAT;
-        {00001a0c}VTX_ATTR_4F_W: FLOAT;
-      end;
+      {00001980}VERTEX_DATA4S: array [0..NV2A_VERTEX_DATA4S__SIZE-1] of record X, Y, Z, W: USHORT; end;
+      {00001a00}VERTEX_DATA4F: array [0..NV2A_VERTEX_DATA4F__SIZE-1] of record X, Y, Z, W: FLOAT; end;
       {00001b00}TX_OFFSET: array [0..NV2A_TX_OFFSET__SIZE-1] of record
         {00001b00}TX_OFFSET: DWORD;
         {00001b04}TX_FORMAT: DWORD;
