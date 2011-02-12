@@ -57,6 +57,7 @@ type
   FLOAT = JwaWinType.FLOAT;
   // Note : These types are aliasses to WIndows, so we don't have to include that unit :
   DWORD = Windows.DWORD;
+  USHORT = Word;
 
   GUID = TGUID;
 

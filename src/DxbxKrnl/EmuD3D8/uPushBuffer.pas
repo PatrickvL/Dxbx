@@ -90,8 +90,6 @@ var g_bPBSkipPusher: _bool = false;
 procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD); {NOPATCH}
 {$ENDIF}
 
-procedure D3DPUSH_DECODE(const dwPushData: DWORD; out dwCount, dwMethod: DWORD; out bNoInc: BOOL_);
-
 implementation
 
 uses
@@ -105,21 +103,31 @@ uses
   , uState
   , uVertexShader;
 
-const NV2A_METHOD_MASK = $FFFF; // 16 bits
-const NV2A_COUNT_SHIFT = 18;
-const NV2A_COUNT_MASK = $FFF; // 12 bits
-const NV2A_NOINCREMENT_FLAG = $40000000;
-// Dxbx note : What does the last bit (mask $80000000) mean?
 
-const NV2A_MAX_COUNT = 2047;
+const NV2A_JMP_FLAG         = $00000001;
+const NV2A_CALL_FLAG        = $00000002; // TODO : Should JMP & CALL be switched?
+const NV2A_ADDR_MASK        = $FFFFFFFC;
+const NV2A_METHOD_MASK      = $00001FFC;
+const NV2A_SUBCH_MASK       = $0000E000;
+const NV2A_COUNT_MASK       = $0FFF0000; // 12 bits
+const NV2A_NOINCREMENT_FLAG = $40000000;
+// Dxbx note : What do the other bits mean (mask $B0000000) ?
+
+const NV2A_METHOD_SHIFT = 0; // Dxbx note : Not 2, because methods are actually DWORD offsets (and thus defined with increments of 4)
+const NV2A_SUBCH_SHIFT = 12;
+const NV2A_COUNT_SHIFT = 18;
+
+const NV2A_METHOD_MAX = (NV2A_METHOD_MASK or 3) shr NV2A_METHOD_SHIFT; // = 8191
+const NV2A_COUNT_MAX = NV2A_COUNT_MASK shr NV2A_COUNT_SHIFT; // = 2047
 
 const lfUnit = lfCxbx or lfPushBuffer;
 
-procedure D3DPUSH_DECODE(const dwPushData: DWORD; out dwCount, dwMethod: DWORD; out bNoInc: BOOL_);
+procedure D3DPUSH_DECODE(const dwPushCommand: DWORD; out dwMethod, dwSubCh, dwCount: DWORD; out bNoInc: BOOL_);
 begin
-  dwCount  := (dwPushData shr NV2A_COUNT_SHIFT) and NV2A_COUNT_MASK;
-  dwMethod := (dwPushData and NV2A_METHOD_MASK);
-  bNoInc     := (dwPushData and NV2A_NOINCREMENT_FLAG) > 0;
+  {out}dwMethod := (dwPushCommand and NV2A_METHOD_MASK) {shr NV2A_METHOD_SHIFT};
+  {out}dwSubCh  := (dwPushCommand and NV2A_SUBCH_MASK) shr NV2A_SUBCH_SHIFT;
+  {out}dwCount  := (dwPushCommand and NV2A_COUNT_MASK) shr NV2A_COUNT_SHIFT;
+  {out}bNoInc   := (dwPushCommand and NV2A_NOINCREMENT_FLAG) > 0;
 end;
 
 // From PushBuffer.cpp :
@@ -233,7 +241,7 @@ type
     OldRegisterValue: DWORD;
     PrevMethod: array [0..2-1] of DWORD;
     ZScale: FLOAT;
-    function HadMethod(Method: DWORD): Boolean;
+    function SeenRecentMethod(Method: DWORD): Boolean;
     procedure ExecutePushBufferRaw(pdwPushData, pdwPushDataEnd: PDWord);
 
   // TODO : All below must be re-implemented :
@@ -307,10 +315,15 @@ begin
 end;
 
 procedure TDxbxPushBufferState.PostponedDrawVertices;
-var
-  VPDesc: VertexPatchDesc;
-  VertPatch: VertexPatcher;
+//var
+//  VPDesc: VertexPatchDesc;
+//  VertPatch: VertexPatcher;
 begin
+  // TODO : Parse all NV2A_VTXBUF_ADDRESS and NV2A_VTXFMT data here, so that we know how where the vertex data is, and what format it has.
+  // Effectively, we do RegisterVertexFormat and RegisterVertexAddress here.
+
+  DbgPrintf('  DrawPrimitive VertexIndex=%d, VertexCount=%d', [VertexIndex, VertexCount]);
+(*
   VPDesc.VertexPatchDesc();
 
   VPDesc.PrimitiveType := XBPrimitiveType;
@@ -323,11 +336,10 @@ begin
 
   {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
-  DbgPrintf('  DrawPrimitive VertexIndex=%d, VertexCount=%d', [VertexIndex, VertexCount]);
-
 //   DxbxDrawPrimitiveUP(VPDesc);
 
   VertPatch.Restore();
+*)
 end;
 
 procedure TDxbxPushBufferState.PostponedDrawIndexedVertices;
@@ -423,7 +435,7 @@ begin
 //    ZScale := 1.0;
 
   // Check if we just seen a StencilEnable method, which means we're really handling SetRenderTarget here.
-  if not HadMethod(NV2A_STENCIL_ENABLE) then
+  if not SeenRecentMethod(NV2A_STENCIL_ENABLE) then
     // If not, we're dealing with a temporary switch of NV2A_RT_FORMAT,
     // which seems to be done by D3DDevice_Clear to support swizzled surface clears.
     Exit;
@@ -947,7 +959,7 @@ begin
   end;
 end;
 
-function TDxbxPushBufferState.HadMethod(Method: DWORD): Boolean;
+function TDxbxPushBufferState.SeenRecentMethod(Method: DWORD): Boolean;
 // Checks if a method was recently handled.
 begin
   Result := (PrevMethod[0] = Method) or (PrevMethod[1] = Method);
@@ -955,8 +967,10 @@ end;
 
 procedure TDxbxPushBufferState.ExecutePushBufferRaw(pdwPushData, pdwPushDataEnd: PDWord);
 var
-  dwCount: DWord;
+  dwPushCommand: DWord;
   dwMethod: DWord;
+  dwSubCh: DWord;
+  dwCount: DWord;
   bNoInc: BOOL_;
   pdwPushArguments: PDWord;
   HandledCount: DWord;
@@ -972,32 +986,47 @@ begin
   try
     LogStr := Format('  NV2A Get=$%.08X', [UIntPtr(pdwPushData)]);
 
-    // Decode push buffer contents (inverse of D3DPUSH_ENCODE) :
-    D3DPUSH_DECODE(pdwPushData^, {out}dwCount, {out}dwMethod, {out}bNoInc);
+    dwPushCommand := pdwPushData^;
 
     // Handle jumps and/or calls :
-    if (dwMethod and 3) in [1,2] then
+    if ((dwPushCommand and NV2A_JMP_FLAG) > 0)
+    or ((dwPushCommand and NV2A_CALL_FLAG) > 0) then
     begin
       // Both 'jump' and 'call' just direct execution to the indicated address :
-      pdwPushData := PDWORD(pdwPushData^ and (not 3));
+      pdwPushData := PDWORD(dwPushCommand and NV2A_ADDR_MASK);
       if MayLog(lfUnit) then
         DbgPrintf('%s Jump:0x%.08X', [LogStr, UIntPtr(pdwPushData)]);
 
       Continue;
     end;
 
+    // Decode push buffer contents (inverse of D3DPUSH_ENCODE) :
+    D3DPUSH_DECODE(dwPushCommand, {out}dwMethod, {out}dwSubCh, {out}dwCount, {out}bNoInc);
+
     // Append a counter (variable part via %d, count already formatted) :
     LogStr := LogStr + ' %2d/' + Format('%2d',[dwCount]) + ':';
+    if dwSubCh > 0 then
+      LogStr := LogStr + ' [SubCh:' + IntToStr(dwSubCh) + ']';
+
     if bNoInc then
       LogStr := LogStr + ' [NoInc]';
-
 
     // Skip method DWORD, remember the address of the arguments and skip over the arguments already :
     Inc(pdwPushData);
     pdwPushArguments := pdwPushData;
     Inc(pdwPushData, dwCount);
 
-    HandledCount := 1; // This prevents a warning about an uninitialized variable
+    // Initialize handled count & name to their default :
+    HandledCount := 1;
+    HandledBy := '';
+
+    // Skip all commands not intended for channel 0 :
+    if dwSubCh > 0 then
+    begin
+      HandledCount := dwCount;
+      HandledBy := '*CHANNEL IGNORED*';
+      dwMethod := dwMethod or $80000000; // Add a 'Channel-Ignore-bit' so that the following code doesn't do anything when we're not handling channel 0
+    end;
 
     // Interpret GPU Instruction(s) :
     StepNr := 0;
@@ -1017,14 +1046,11 @@ begin
       // with an overlay definition - which uses correct types where possible to reduce
       // the number of type-casts we need to do in here.
 
-      HandledCount := 1;
-
       if (g_pD3DDevice = nil) then
-        HandledBy := '*NO DEVICE*'
+        HandledBy := '*NO DEVICE*' // Don't do anything if we have no device yet (should not occur anymore, but this helps spotting errors)
         // Note : A Delphi bug prevents us from using 'Continue' here, which costs us an indent level...
       else
       begin
-        HandledBy := '';
         case dwMethod of
           0:
             HandledCount := dwCount;
@@ -1035,6 +1061,13 @@ begin
           // These can safely be ignored :
           NV2A_VTX_CACHE_INVALIDATE: HandledBy := 'D3DVertexBuffer_Lock';
           // TODO : Place more to-be-ignored methods here.
+
+          NV2A_WRITE_SEMAPHORE_RELEASE:
+          begin
+            // TODO : What should we do with this data? Most probably it should go into a semaphore somewhere;
+            // Perhaps this semaphore is in the 96 bytes that was first allocated with MmAllocateContiguousMemoryEx
+            // (as we've seen the m_pGPUTime variable resides there too). Also telling : this command is pushed by SetFence!
+          end;
 
           // Clear :
           NV2A_CLEAR_BUFFERS: // Gives clear flags, should trigger the clear
@@ -1092,6 +1125,10 @@ begin
             ; // TODO : Handle this
 
           // SetVertexData :
+          NV2A_VERTEX_DATA2F__0..NV2A_VERTEX_DATA2F__15:
+            ;
+          NV2A_VERTEX_DATA2S__0..NV2A_VERTEX_DATA2S__15:
+            ;
           NV2A_VERTEX_DATA4UB__0..NV2A_VERTEX_DATA4UB__15:
           begin
             DxbxSetVertexData({Register=}(dwMethod - NV2A_VERTEX_DATA4UB__0) div 4,
@@ -1102,6 +1139,13 @@ begin
             // TODO : When should we call XTL_EmuFlushIVB()?
             HandledBy := 'SetVertexData';
           end;
+
+          NV2A_VERTEX_DATA4S__0..NV2A_VERTEX_DATA4S__15:
+            ;
+          NV2A_VERTEX_DATA4F__0..NV2A_VERTEX_DATA4F__15:
+            ;
+          NV2A_VERTEX_POS_4F_X: // (if Register = D3DVSDE_VERTEX)
+            ;
 
           NV2A_VP_UPLOAD_CONST__0:
           begin
@@ -1194,6 +1238,7 @@ begin
       if MayLog(lfUnit) then
       begin
         if HandledBy <> '' then HandledBy := '> ' + HandledBy;
+        dwMethod := dwMethod and NV2A_METHOD_MASK; // Remove 'Channel-Ignore-bit'
         DbgPrintf(LogStr + ' Method=%.04X Data=%.08X %s %s', [StepNr, dwMethod, pdwPushArguments^, DxbxXboxMethodToString(dwMethod), HandledBy]);
       end;
 
@@ -1202,12 +1247,16 @@ begin
       Inc(pdwPushArguments, HandledCount);
       Dec(dwCount, HandledCount);
 
+      // Re-initialize handled count & name to their default, for the next command :
+      HandledCount := 1;
+      HandledBy := '';
+
       // The no-increment flag applies to method only :
       if not bNoInc then
       begin
         Inc(dwMethod, 4); // 1 method further
 
-        // Remember the last two methods, in case we need to differentiate contexts :
+        // Remember the last two methods, in case we need to differentiate contexts (using SeenRecentMethod):
         PrevMethod[1] := PrevMethod[0];
         PrevMethod[0] := dwMethod;
       end;
