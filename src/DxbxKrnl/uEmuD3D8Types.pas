@@ -1689,6 +1689,7 @@ const // vertex shader input registers for fixed function vertex shader
   X_D3DVSDE_DIFFUSE      = 3; // Corresponds to D3DFVF_DIFFUSE
   X_D3DVSDE_SPECULAR     = 4; // Corresponds to D3DFVF_SPECULAR
   X_D3DVSDE_FOG          = 5; // Xbox extension
+  X_D3DVSDE_POINTSIZE    = 6; // Dxbx addition
   X_D3DVSDE_BACKDIFFUSE  = 7; // Xbox extension
   X_D3DVSDE_BACKSPECULAR = 8; // Xbox extension
   X_D3DVSDE_TEXCOORD0    = 9; // "Corresponds to D3DFVF_TEX0" says the docs, but 0 means no textures, so probably D3DFVF_TEX1!
