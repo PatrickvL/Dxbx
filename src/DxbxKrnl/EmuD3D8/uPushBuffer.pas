@@ -200,7 +200,7 @@ type
   // Draw[Indexed]Vertices[UP] related :
   public
     VertexFormat: array [0..15] of record Stride, Size, Type_: int; end;
-    procedure RegisterVertexFormat(Slot: UINT; pdwPushArguments: PDWORD);
+    function RegisterVertexFormat(Slot: UINT; pdwPushArguments: PDWORD): string;
   public
     VertexAddress: array [0..3] of Pointer;
     procedure RegisterVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
@@ -241,6 +241,7 @@ type
     OldRegisterValue: DWORD;
     PrevMethod: array [0..2-1] of DWORD;
     ZScale: FLOAT;
+    IsFixedVertexShader: Boolean; // True=FVF, False=custom vertex shader
     function SeenRecentMethod(Method: DWORD): Boolean;
     procedure ExecutePushBufferRaw(pdwPushData, pdwPushDataEnd: PDWord);
 
@@ -253,8 +254,9 @@ type
     StartIndex: UINT;
     pIBMem: array [0..2-1] of WORD;
     pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8; // = XTL_PIDirect3DIndexBuffer8
-    // pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
+    pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
     maxIBSize: uint;
+    VertexOffset: uint;
     procedure _RenderIndexedVertices(dwCount: DWORD);
     function HandleVertexData(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
     function HandleIndex32(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
@@ -276,13 +278,15 @@ end;
 
 { TDxbxPushBufferState }
 
-procedure TDxbxPushBufferState.RegisterVertexFormat(Slot: UINT; pdwPushArguments: PDWORD);
+function TDxbxPushBufferState.RegisterVertexFormat(Slot: UINT; pdwPushArguments: PDWORD): string;
 // TODO : Do this in PostponedDraw
 begin
+  Result := '';
   // Register vertex format (bits:31-8=Stride,7-4=Size,3-0=Type) per slot :
-  VertexFormat[Slot].Stride := pdwPushArguments^ shr 8;
-  VertexFormat[Slot].Size := (pdwPushArguments^ shr 4) and $f; // Size:1..4=1..4,7=3w?
-  VertexFormat[Slot].Type_ := pdwPushArguments^ and $f; // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
+  VertexFormat[Slot].Stride := (pdwPushArguments^ and NV2A_VTXFMT_STRIDE_MASK) shr NV2A_VTXFMT_STRIDE_SHIFT;
+  VertexFormat[Slot].Size   := (pdwPushArguments^ and NV2A_VTXFMT_SIZE_MASK  ) shr NV2A_VTXFMT_SIZE_SHIFT; // Size:1..4=1..4,7=3w?
+  VertexFormat[Slot].Type_  := (pdwPushArguments^ and NV2A_VTXFMT_TYPE_MASK  ); // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
+  Result := Format('Stride=%d Size=%d Type=%d', [VertexFormat[Slot].Stride, VertexFormat[Slot].Size, VertexFormat[Slot].Type_]);
 end;
 
 procedure TDxbxPushBufferState.RegisterVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
@@ -322,7 +326,18 @@ begin
   // TODO : Parse all NV2A_VTXBUF_ADDRESS and NV2A_VTXFMT data here, so that we know how where the vertex data is, and what format it has.
   // Effectively, we do RegisterVertexFormat and RegisterVertexAddress here.
 
+//  VertexCount := VertexOffset div 16;
   DbgPrintf('  DrawPrimitive VertexIndex=%d, VertexCount=%d', [VertexIndex, VertexCount]);
+
+// test code :
+//  // DxbxDrawPrimitiveUP ?
+//  g_pD3DDevice.DrawPrimitive
+//  (
+//      EmuXB2PC_D3DPrimitiveType(XBPrimitiveType),
+//      {StartVertex=}0, // VertexIndex ?
+//      EmuD3DVertex2PrimitiveCount(XBPrimitiveType, VertexCount)
+//  );
+
 (*
   VPDesc.VertexPatchDesc();
 
@@ -348,6 +363,15 @@ end;
 
 procedure TDxbxPushBufferState.PostponedDrawVerticesUP;
 begin
+// test code :
+//  // DxbxDrawPrimitiveUP ?
+//  g_pD3DDevice.DrawPrimitiveUP
+//  (
+//      EmuXB2PC_D3DPrimitiveType(XBPrimitiveType),
+//      EmuD3DVertex2PrimitiveCount(XBPrimitiveType, VertexCount),
+//      Pointer(NV2AInstance.VTXBUF_ADDRESS[0]),
+//      20
+//  );
 end;
 
 procedure TDxbxPushBufferState.PostponedDrawIndexedVerticesUP;
@@ -419,8 +443,8 @@ begin
 end;
 
 procedure TDxbxPushBufferState.TriggerSetRenderTarget();
-var
-  SurfaceFormat: X_D3DFORMAT;
+//var
+//  SurfaceFormat: X_D3DFORMAT;
 //  ActiveRenderTargetData: UIntPtr;
 //  ActiveRenderTargetWidth: DWORD;
 //  ActiveRenderTargetHeight: DWORD;
@@ -610,6 +634,7 @@ begin
   VertexIndex := -1;
   PostponedDrawType := pdUndetermined;
   XBPrimitiveType := NewPrimitiveType;
+  VertexOffset := 0;
 end;
 
 function TDxbxPushBufferState.HandleSetVertexShaderBatch(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
@@ -623,17 +648,71 @@ begin
   // TODO : When do we compile the shader?
 end;
 
+
 function TDxbxPushBufferState.HandleVertexData(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
 // TODO : Postpone the draw in here to TriggerDrawBeginEnd, instead collect all vertices first.
 var
   VPDesc: VertexPatchDesc;
   VertPatch: VertexPatcher;
   VertexCount: UINT;
+  hRet: HRESULT;
+  pData: PByte;
 begin
   Result := dwCount;
-  PostponedDrawType := pdDrawVerticesUP;
+//  PostponedDrawType := pdDrawVerticesUP;
+  PostponedDrawType := pdDrawVertices;
   pVertexData := pdwPushArguments;
 
+  dwVertexShader := 0;
+  if IsFixedVertexShader then
+  begin
+    // Determine the FVF flags :
+    case (NV2AInstance.VTXFMT[X_D3DVSDE_POSITION] and NV2A_VTXFMT_SIZE_MASK) shr NV2A_VTXFMT_SIZE_SHIFT of
+      3:
+        dwVertexShader := D3DFVF_XYZ;
+      4:
+        dwVertexShader := D3DFVF_XYZRHW;
+    else
+      DxbxKrnlCleanup('Cannot determine FVF type!');
+    end;
+
+    if ((NV2AInstance.VTXFMT[X_D3DVSDE_DIFFUSE] and NV2A_VTXFMT_SIZE_MASK) shr NV2A_VTXFMT_SIZE_SHIFT) > 0 then
+      dwVertexShader := dwVertexShader or D3DFVF_DIFFUSE;
+
+    // TODO : Support all flags here
+  end
+  else
+  begin
+    // At some point we have to create the vertex shader locally - for this we need at least :
+    // - the original declaration, ex. D3DVSD_STREAM(0), D3DVSD_REG({Position}0,D3DVSDT_FLOAT3),D3DVSD_REG({Diffuse}1,D3DVSDT_D3DCOLOR),D3DVSD_END()
+    // - the original shader (this one we've collected in the VertexShaderSlots array)
+    // Also, it would be nice if we didn't create the shader every time it appears in the pushbuffer,
+    // so a CRC based lookup would be good to have too.
+    //
+    // The following line doesn't work, as the declaration is in the wrong format (we should decode the VTXFMT array for that) :
+    // g_pD3DDevice.CreateVertexShader(@NV2AInstance.VTXFMT[0], @VertexShaderSlots[0], {out}dwVertexShader, 0);
+
+    // Make sure we have a large enough vertex buffer :
+    if (pVertexBuffer = nil) then
+    begin
+      hRet := g_pD3DDevice.CreateVertexBuffer(2047*SizeOf(DWORD), D3DUSAGE_WRITEONLY, {FVF=}0, D3DPOOL_MANAGED, @pVertexBuffer);
+      if (FAILED(hRet)) then
+        DxbxKrnlCleanup('Unable to create vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', [dwCount]);
+    end;
+
+    // Copy vertex data into it :
+    begin
+      hRet := IDirect3DVertexBuffer(pVertexBuffer).Lock(VertexOffset, dwCount*4, {out}pData, 0);
+      if (FAILED(hRet)) then
+      begin
+        memcpy({dest}pData, {src=}pdwPushArguments, dwCount*4);
+        IDirect3DVertexBuffer(pVertexBuffer).Unlock();
+        Inc(VertexOffset, dwCount*4);
+      end;
+    end;
+
+    Exit;
+  end;
 //  if Assigned(g_pD3DDevice) then
 //    DxbxUpdateNativeD3DResources();
 
@@ -1060,6 +1139,24 @@ begin
 
           // These can safely be ignored :
           NV2A_VTX_CACHE_INVALIDATE: HandledBy := 'D3DVertexBuffer_Lock';
+
+          NV2A_DMA_NOTIFY,
+          NV2A_DMA_TEXTURE0,
+          NV2A_DMA_TEXTURE1,
+          NV2A_DMA_STATE,
+          NV2A_DMA_COLOR,
+          NV2A_DMA_ZETA,
+          NV2A_DMA_VTXBUF0,
+          NV2A_DMA_VTXBUF1,
+          NV2A_DMA_FENCE,
+          NV2A_DMA_QUERY,
+          NV2A_SEMAPHORE_OFFSET,
+          NV2A_FLAT_SHADE_OP,
+          NV2A_EYE_POSITION__0..NV2A_EYE_POSITION__3,
+          NV2A_EDGEFLAG_ENABLE,
+          NV2A_COMPRESS_ZBUFFER_EN,
+          NV2A_SHADOW_ZSLOPE_THRESHOLD: HandledBy := '_CDevice_Init';
+
           // TODO : Place more to-be-ignored methods here.
 
           NV2A_WRITE_SEMAPHORE_RELEASE:
@@ -1126,9 +1223,9 @@ begin
 
           // SetVertexData :
           NV2A_VERTEX_DATA2F__0..NV2A_VERTEX_DATA2F__15:
-            ;
+            HandledBy := 'SetVertexData2F ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA2F__0) div 4);
           NV2A_VERTEX_DATA2S__0..NV2A_VERTEX_DATA2S__15:
-            ;
+            HandledBy := 'SetVertexData2S ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA2S__0) div 4);
           NV2A_VERTEX_DATA4UB__0..NV2A_VERTEX_DATA4UB__15:
           begin
             DxbxSetVertexData({Register=}(dwMethod - NV2A_VERTEX_DATA4UB__0) div 4,
@@ -1137,20 +1234,26 @@ begin
               ((pdwPushArguments^ shr 16) and $ff) / High(Byte),
               ((pdwPushArguments^ shr 24) and $ff) / High(Byte));
             // TODO : When should we call XTL_EmuFlushIVB()?
-            HandledBy := 'SetVertexData';
+            HandledBy := 'SetVertexData4UB ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA4UB__0) div 4);
           end;
 
           NV2A_VERTEX_DATA4S__0..NV2A_VERTEX_DATA4S__15:
-            ;
+            HandledBy := 'SetVertexData4S ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA4S__0) div 4);
           NV2A_VERTEX_DATA4F__0..NV2A_VERTEX_DATA4F__15:
-            ;
+            HandledBy := 'SetVertexData4F ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA4F__0) div 4);
           NV2A_VERTEX_POS_4F_X: // (if Register = D3DVSDE_VERTEX)
-            ;
+            HandledBy := 'SetVertexData4F D3DVSDE_VERTEX';
 
           NV2A_VP_UPLOAD_CONST__0:
           begin
             HandledCount := TriggerSetVertexShaderConstant(pdwPushArguments, dwCount);
             HandledBy := 'SetVertexShaderConstant';
+          end;
+
+          NV2A_ENGINE:
+          begin
+            IsFixedVertexShader := (pdwPushArguments^ and NV2A_ENGINE_VP) = 0; // No vertex program means FVF
+            HandledBy := 'TransformEngine';
           end;
 
           // Draw[Indexed]Vertices[UP] :
@@ -1163,8 +1266,8 @@ begin
           // Data ultimately originating from SetVertexShader / SetStreamSource :
           NV2A_VTXFMT__0..NV2A_VTXFMT__15:
           begin
-            RegisterVertexFormat({Slot=}(dwMethod - NV2A_VTXFMT__0) div 4, pdwPushArguments);
-            HandledBy := 'VertexFormat ' + X_D3DVSDE2String((dwMethod - NV2A_VTXFMT__0) div 4);
+            HandledBy := 'VertexFormat ' + X_D3DVSDE2String((dwMethod - NV2A_VTXFMT__0) div 4) + ' ' +
+              RegisterVertexFormat({Slot=}(dwMethod - NV2A_VTXFMT__0) div 4, pdwPushArguments);
           end;
 
           NV2A_VTXBUF_ADDRESS__0..NV2A_VTXBUF_ADDRESS__3:

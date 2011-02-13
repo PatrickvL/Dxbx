@@ -852,6 +852,7 @@ const NV2A_POINT_PARAMETER__0                                     = ($00000a30+(
 const NV2A_POINT_PARAMETER__SIZE                                  = $00000008;
 //const NV2A_EYE_POSITION(x)                                      = ($00000a50+((x)*4)); // Dxbx
 const NV2A_EYE_POSITION__0                                        = ($00000a50+((0)*4)); // Dxbx
+const NV2A_EYE_POSITION__3                                        = ($00000a50+((3)*4)); // Dxbx
 const NV2A_EYE_POSITION__SIZE                                     = $00000004; // Dxbx
 //const NV2A_RC_CONSTANT_COLOR0(x)                                = ($00000a60+((x)*4));
 const NV2A_RC_CONSTANT_COLOR0__0                                  = ($00000a60+((0)*4)); // Dxbx
