@@ -31,6 +31,9 @@ uses
   SysUtils, // strlen
   Classes, // TStringList
   Math,
+{$IFDEF DXBX_USE_OPENGL}
+  OpenGL,
+{$ENDIF}
   // Jedi Win32API
   JwaWinType,
   JwaNative,
@@ -98,6 +101,9 @@ procedure DxbxSetRenderStateInternal(
 
 var
   // Global(s)
+{$IFDEF DXBX_USE_OPENGL}
+  g_EmuWindowsDC: HDC = 0;
+{$ENDIF}
   g_pD3DDevice: IDirect3DDevice = NULL;
   g_pDDSPrimary7: XTL_LPDIRECTDRAWSURFACE7 = NULL;  // DirectDraw7 Primary Surface
   g_pDDSOverlay7: XTL_LPDIRECTDRAWSURFACE7 = NULL; // DirectDraw7 Overlay Surface
@@ -1662,6 +1668,44 @@ begin
   end; // while True
 end; // EmuThreadHandleVBlank
 
+
+procedure SetupPixelFormat(DC: HDC);
+const
+   pfd: PIXELFORMATDESCRIPTOR = (
+    nSize: SizeOf(PIXELFORMATDESCRIPTOR); // size
+    nVersion: 1;   // version
+    dwFlags: PFD_SUPPORT_OPENGL or PFD_DRAW_TO_WINDOW or PFD_DOUBLEBUFFER; // support double-buffering
+    iPixelType: PFD_TYPE_RGBA; // color type
+    cColorBits: 32;   // preferred color depth
+    cRedBits: 0; cRedShift: 0; // color bits (ignored)
+    cGreenBits: 0;  cGreenShift: 0;
+    cBlueBits: 0; cBlueShift: 0;
+    cAlphaBits: 0;  cAlphaShift: 0;   // no alpha buffer
+    cAccumBits: 0;
+    cAccumRedBits: 0;    // no accumulation buffer,
+    cAccumGreenBits: 0;      // accum bits (ignored)
+    cAccumBlueBits: 0;
+    cAccumAlphaBits: 0;
+    cDepthBits: 16;   // depth buffer
+    cStencilBits: 0;   // no stencil buffer
+    cAuxBuffers: 0;   // no auxiliary buffers
+    iLayerType: PFD_MAIN_PLANE;   // main layer
+    bReserved: 0;
+    dwLayerMask: 0;
+    dwVisibleMask: 0;
+    dwDamageMask: 0;                    // no layer, visible, damage masks
+    );
+var
+  PixelFormat: Integer;
+begin
+   pixelFormat := ChoosePixelFormat(DC, @pfd);
+   if (PixelFormat = 0) then
+     Exit;
+
+   if (SetPixelFormat(DC, PixelFormat, @pfd) <> True) then
+     Exit;
+end;
+
 var
   ddcaps: DDCAPS_DX6;
 
@@ -1676,6 +1720,9 @@ var
   v: DWORD;
   ddsd2: DDSURFACEDESC2;
   Streams: int;
+{$IFDEF DXBX_USE_OPENGL}
+  RC: HGLRC;
+{$ENDIF}
 begin
   if MayLog(lfUnit) then
     DbgPrintf('DxbxCreateDevice()');
@@ -1802,6 +1849,28 @@ begin
     while g_pD3DDevice._Release > 0 do
       ;
   end;
+
+{$IFDEF DXBX_USE_OPENGL}
+  begin
+    g_EmuWindowsDC := GetDC(g_hEmuWindow); // Actually, you can use any windowed control here
+    SetupPixelFormat(g_EmuWindowsDC);
+
+    RC := wglCreateContext(g_EmuWindowsDC); // makes OpenGL window out of DC
+    wglMakeCurrent(g_EmuWindowsDC, RC);   // makes OpenGL window active
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    // TODO : GL_TEXTURE too?
+
+    glViewport(0, 0,
+      g_EmuCDPD.pPresentationParameters.BackBufferWidth,
+      g_EmuCDPD.pPresentationParameters.BackBufferHeight);
+  end;
+
+  Exit; // Test to see if CreateDevice tutorial works (don't create D3DDevice)
+{$ENDIF}
 
   // redirect to windows Direct3D
   g_EmuCDPD.hRet := g_pD3D.CreateDevice
