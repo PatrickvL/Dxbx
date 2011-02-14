@@ -44,8 +44,15 @@
 
 {$IFDEF DXBX_DLL}
   {$DEFINE DXBX_USE_JCLDEBUG}
+  {$DEFINE DXBX_USE_OPENGL} // Enable this define to use OpenGL
+  {$DEFINE DXBX_USE_D3D8} // Enable this define to use DirectX 8
   {.$DEFINE DXBX_USE_D3D9} // Enable this define to use DirectX 9
   {.$DEFINE PUSHBUFFER_ONLY} // Enable this to render purely via GPU emulation
+
+  {$IF DEFINED(DXBX_USE_D3D8) OR DEFINED(DXBX_USE_D3D9)}
+    {$DEFINE DXBX_USE_D3D}
+  {$IFEND}
+
 {$ENDIF}
 
 {.$DEFINE DXBX_RECTYPE} // Include RecType info in PatternTrie
