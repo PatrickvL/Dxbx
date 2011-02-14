@@ -436,6 +436,9 @@ begin
     Exit;
   end;
 
+  if g_pD3DDevice = nil then
+    Exit;
+
   // Convert the value from Xbox format into PC format, and set it locally :
   {PCValue=}Result := DxbxRenderStateXB2PCCallback[XboxRenderState](XboxValue);
 
@@ -455,10 +458,11 @@ begin
       g_pD3DDevice.SetRenderState(D3DRS_DEPTHBIAS, Result);
     end;
   else
-{$ELSE}
-  begin
 {$ENDIF}
+{$IFDEF DXBX_USE_D3D}
+  begin
     g_pD3DDevice.SetRenderState(PCRenderState, {PCValue=}Result);
+{$ENDIF}
   end;
 end; // Dxbx_SetRenderState
 

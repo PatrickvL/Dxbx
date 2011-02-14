@@ -20,6 +20,12 @@ unit uPushBuffer;
 
 {$INCLUDE Dxbx.inc}
 
+{$IFDEF DXBX_USE_OPENGL}
+  {$UNDEF DXBX_USE_D3D}
+  {$UNDEF DXBX_USE_D3D8}
+  {$UNDEF DXBX_USE_D3D9}
+{$ENDIF}
+
 {.$define _DEBUG_TRACK_PB}
 
 interface
@@ -35,10 +41,11 @@ uses
   // Jedi Win32API
   , JwaWinType
   // DirectX
+{$IFDEF DXBX_USE_D3D8}
+  , Direct3D8
+{$ENDIF}
 {$IFDEF DXBX_USE_D3D9}
   , Direct3D9
-{$ELSE}
-  , Direct3D8
 {$ENDIF}
   , D3DX8 // TD3DXColor
   // Dxbx
@@ -274,12 +281,14 @@ begin
   {out}v2 := (aValue shr w1) and ((1 shl w2) - 1);
 end;
 
+{$IFDEF DXBX_USE_D3D}
 function SwapRgb(color: D3DCOLOR): DWORD;
 begin
   Result :=  (color and $ff00ff00)
          or ((color and $00ff0000) shr 16)
          or ((color and $000000ff) shl 16);
 end;
+{$ENDIF}
 
 { TDxbxPushBufferState }
 
@@ -490,7 +499,7 @@ begin
   DxbxPresent(nil, nil, 0, nil);
 {$ENDIF}
 {$IFDEF DXBX_USE_OPENGL}
-  SwapBuffers(wglGetCurrentDC);
+  SwapBuffers(g_EmuWindowsDC); // TODO : Use glFlush() when single-buffered?
 {$ENDIF}
 end;
 
@@ -564,9 +573,10 @@ begin
   // TODO : The following should behave differently under fixed-function when D3DRS_ZENABLE=D3DZB_USEW :
   ViewPort.MinZ := NV2AInstance.DEPTH_RANGE_NEAR / ZScale;
   ViewPort.MaxZ := NV2AInstance.DEPTH_RANGE_FAR / ZScale;
-
+{$IFDEF DXBX_USE_D3D}
   // Place the native call :
   g_pD3DDevice.SetViewport(ViewPort);
+{$ENDIF}
 end;
 
 //
@@ -577,7 +587,7 @@ function TDxbxPushBufferState.TriggerModelViewMatrix(pdwPushArguments: PDWORD; d
 begin
   Assert(dwCount >= 16);
   Result := 16; // We handle only one matrix
-
+{$IFDEF DXBX_USE_D3D}
   // The ModelView = D3DTS_WORLD * D3DTS_VIEW.
   // We cannot decompose these two matrixes, but if we keep the World view as a static Identity view,
   // we should be able to use the ModelView as native View matrix. [If we did it the other way around
@@ -585,7 +595,7 @@ begin
   // be influenced on our native D3D device.]
   // TODO : Is this reasoning sound?
   g_pD3DDevice.SetTransform(D3DTS_VIEW, PD3DMatrix(pdwPushArguments));
-
+{$ENDIF}
 {$IFDEF DXBX_USE_OPENGL}
   glMatrixMode(GL_MODELVIEW_MATRIX);
   glLoadMatrixf(PGLfloat(pdwPushArguments));
@@ -644,6 +654,7 @@ begin
 
   Result := dwCount;
 
+{$IFDEF DXBX_USE_D3D}
   // Just set the constants right from the pushbuffer, as they come in batches and won't exceed the native bounds :
   g_pD3DDevice.SetVertexShaderConstant
   (
@@ -652,6 +663,7 @@ begin
       {pConstantData=}pdwPushArguments,
       {ConstantCount=}Result
   );
+{$ENDIF}
 end;
 
 //
@@ -713,14 +725,17 @@ end;
 
 function TDxbxPushBufferState.HandleVertexData(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
 // TODO : Postpone the draw in here to TriggerDrawBeginEnd, instead collect all vertices first.
+{$IFDEF DXBX_USE_D3D}
 var
   VPDesc: VertexPatchDesc;
   VertPatch: VertexPatcher;
   VertexCount: UINT;
   hRet: HRESULT;
   pData: PByte;
+{$ENDIF}
 begin
   Result := dwCount;
+{$IFDEF DXBX_USE_D3D}
 //  PostponedDrawType := pdDrawVerticesUP;
   PostponedDrawType := pdDrawVertices;
   pVertexData := pdwPushArguments;
@@ -786,7 +801,8 @@ begin
   // If that didn't work, get the active FVF :
   if dwVertexShader = 0 then
     g_pD3DDevice.GetFVF({out}dwVertexShader);
-{$ELSE}
+{$ENDIF}
+{$IFDEF DXBX_USE_D3D8}
   g_pD3DDevice.GetVertexShader({out}dwVertexShader);
 {$ENDIF}
 
@@ -865,13 +881,17 @@ begin
 
     VertPatch.Restore();
   end;
+{$ENDIF}
 end;
 
 procedure TDxbxPushBufferState._RenderIndexedVertices(dwCount: DWORD);
+{$IFDEF DXBX_USE_D3D}
 var
   VPDesc: VertexPatchDesc;
   VertPatch: VertexPatcher;
+{$ENDIF}
 begin
+{$IFDEF DXBX_USE_D3D}
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
   VPDesc.PrimitiveType := XBPrimitiveType;
@@ -910,12 +930,14 @@ begin
   VertPatch.Restore();
 
   g_pD3DDevice.SetIndices(nil{$IFNDEF DXBX_USE_D3D9}, 0{$ENDIF});
+{$ENDIF}
 end;
 
 function TDxbxPushBufferState.HandleIndex32(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
 // This command is (normally) used to end an index buffer with one last index.
 // TODO : Collect this index together with the previous batch(es) and wait for the postponed draw.
 
+{$IFDEF DXBX_USE_D3D}
   procedure _AssureIndexBuffer;
   var
     hRet: HRESULT;
@@ -945,8 +967,10 @@ function TDxbxPushBufferState.HandleIndex32(pdwPushArguments: PDWORD; dwCount: D
 var
   pwVal: PWORDs;
   pData: PWORDArray;
+{$ENDIF}
 begin
   Result := dwCount;
+{$IFDEF DXBX_USE_D3D}
   pwVal := PWORDs(pdwPushArguments);
 
 {$ifdef _DEBUG_TRACK_PB}
@@ -1003,15 +1027,18 @@ begin
 
     _RenderIndexedVertices(dwCount);
   end;
+{$ENDIF}
 end;
 
 function TDxbxPushBufferState.HandleIndex16_16(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
 // TODO : Change this into collecting indexes and wait for the postponed Draw.
+{$IFDEF DXBX_USE_D3D}
 var
   pIndexData: PWORD;
+{$ENDIF}
 begin
   Result := dwCount;
-
+{$IFDEF DXBX_USE_D3D}
   pIndexData := PWORD(pdwPushArguments);
   dwCount := dwCount * 2; // Convert DWORD count to WORD count
 
@@ -1098,6 +1125,7 @@ begin
 
     _RenderIndexedVertices(dwCount);
   end;
+{$ENDIF}
 end;
 
 function TDxbxPushBufferState.SeenRecentMethod(Method: DWORD): Boolean;
@@ -1187,10 +1215,18 @@ begin
       // with an overlay definition - which uses correct types where possible to reduce
       // the number of type-casts we need to do in here.
 
+{$IFDEF DXBX_USE_D3D}
       if (g_pD3DDevice = nil) then
         HandledBy := '*NO DEVICE*' // Don't do anything if we have no device yet (should not occur anymore, but this helps spotting errors)
         // Note : A Delphi bug prevents us from using 'Continue' here, which costs us an indent level...
       else
+{$ENDIF}
+{$IFDEF DXBX_USE_OPENGL}
+      if (g_EmuWindowsDC = 0) then
+        HandledBy := '*NO OGL DC*' // Don't do anything if we have no device yet (should not occur anymore, but this helps spotting errors)
+        // Note : A Delphi bug prevents us from using 'Continue' here, which costs us an indent level...
+      else
+{$ENDIF}
       begin
         case dwMethod of
           0:
@@ -1371,22 +1407,26 @@ begin
           // SetRenderState special cases (value conversions) :
           NV2A_FOG_COLOR:
           begin
+{$IFDEF DXBX_USE_D3D}
             g_pD3DDevice.SetRenderState(D3DRS_FOGCOLOR, SwapRGB(pdwPushArguments^));
+{$ENDIF}
             HandledBy := 'SetRenderState';
           end;
 
           NV2A_CULL_FACE_ENABLE:
           begin
+{$IFDEF DXBX_USE_D3D}
             if pdwPushArguments^ = DWORD(BOOL_FALSE) then
               g_pD3DDevice.SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-
+{$ENDIF}
             HandledBy := 'SetRenderState';
           end;
 
           NV2A_CULL_FACE:
           begin
+{$IFDEF DXBX_USE_D3D}
             g_pD3DDevice.SetRenderState(D3DRS_CULLMODE, D3DCULL_CW); // TODO : Use D3DCULL_CCW if D3DRS_FRONTFACE=D3DCULL_CW
-
+{$ENDIF}
             HandledBy := 'SetRenderState';
           end;
 
