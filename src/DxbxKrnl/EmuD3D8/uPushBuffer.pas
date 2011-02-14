@@ -29,6 +29,9 @@ uses
   Windows
   , SysUtils
   , Classes
+{$IFDEF DXBX_USE_OPENGL}
+  , OpenGL
+{$ENDIF}
   // Jedi Win32API
   , JwaWinType
   // DirectX
@@ -37,6 +40,7 @@ uses
 {$ELSE}
   , Direct3D8
 {$ENDIF}
+  , D3DX8 // TD3DXColor
   // Dxbx
   , uTypes
   , uDxbxUtils // iif
@@ -229,6 +233,7 @@ type
   public
     Viewport: D3DVIEWPORT;
     procedure TriggerClearBuffers();
+    procedure TriggerFlipStall();
     procedure TriggerSetRenderTarget();
     procedure TriggerSetViewport();
     function TriggerModelViewMatrix(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
@@ -398,36 +403,45 @@ var
   ClearRect: RECT;
   ClearDepthValue: DWORD;
   PCFlags: DWORD;
-  ClearZ: Single;
+  ClearZ: DWORD;
   ClearStencil: DWORD;
+{$IFDEF DXBX_USE_OPENGL}
+  XColor: TD3DXColor;
+const
+  NV2A_CLEAR_BUFFERS_COLOR_ALL = NV2A_CLEAR_BUFFERS_COLOR_A or NV2A_CLEAR_BUFFERS_COLOR_B or NV2A_CLEAR_BUFFERS_COLOR_G or NV2A_CLEAR_BUFFERS_COLOR_R ;
+{$ENDIF}
 begin
-  // make adjustments to parameters to make sense with windows d3d
+  // Parse the GPU registers that are associated with this clear :
   begin
+    // Reconstruct the clear rectangle :
     DWORDSplit2(NV2AInstance.CLEAR_RECT_HORIZONTAL, 16, {out}ClearRect.Left, 16, {out}ClearRect.Right);
     DWORDSplit2(NV2AInstance.CLEAR_RECT_VERTICAL, 16, {out}ClearRect.Top, 16, {out}ClearRect.Bottom);
-
+    // Decode the Z and Stencil values :
     ClearDepthValue := NV2AInstance.CLEAR_DEPTH_VALUE;
-
-    // First, convert from Xbox to PC, after which we'll remove the invalid flags :
-    PCFlags := EmuXB2PC_D3DCLEAR_FLAGS({XClearFlags=}NV2AInstance.CLEAR_BUFFERS);
-(*
-    // Only clear ZBuffer if we actually have one :
-    if Assigned(g_EmuD3DActiveDepthStencil)
-    and EmuXBFormatIsDepthBuffer(GetD3DFormat(g_EmuD3DActiveDepthStencil)) then
-      // Allow depth to be cleared (if requested)
-    else
-      PCFlags := PCFlags and (not D3DCLEAR_ZBUFFER);
-
-    // Only clear Stencil buffer if there actually is one :
-    // if not g_EmuCDPD.NativePresentationParameters.EnableAutoDepthStencil then
-    // TODO -oDxbx: The above check should work (but doesn't!) so for now look at the Xbox PresParam instead :
-    if Assigned(g_EmuD3DActiveDepthStencil)
-    and EmuXBFormatHasChannel(GetD3DFormat(g_EmuD3DActiveDepthStencil), S) then
-      // Allow stencil to be cleared (if requested)
-    else
-      PCFlags := PCFlags and (not D3DCLEAR_STENCIL);
-*)
+    ClearZ := ClearDepthValue shr 8; // TODO : Convert this to the right value for all depth-buffer formats
+    ClearStencil := ClearDepthValue and $FF;
   end;
+
+{$IFDEF DXBX_USE_D3D}
+  // Convert the clear-flags from Xbox to PC, after which we'll remove the invalid flags :
+  PCFlags := EmuXB2PC_D3DCLEAR_FLAGS({XClearFlags=}NV2AInstance.CLEAR_BUFFERS);
+(*
+  // Only clear ZBuffer if we actually have one :
+  if Assigned(g_EmuD3DActiveDepthStencil)
+  and EmuXBFormatIsDepthBuffer(GetD3DFormat(g_EmuD3DActiveDepthStencil)) then
+    // Allow depth to be cleared (if requested)
+  else
+    PCFlags := PCFlags and (not D3DCLEAR_ZBUFFER);
+
+  // Only clear Stencil buffer if there actually is one :
+  // if not g_EmuCDPD.NativePresentationParameters.EnableAutoDepthStencil then
+  // TODO -oDxbx: The above check should work (but doesn't!) so for now look at the Xbox PresParam instead :
+  if Assigned(g_EmuD3DActiveDepthStencil)
+  and EmuXBFormatHasChannel(GetD3DFormat(g_EmuD3DActiveDepthStencil), S) then
+    // Allow stencil to be cleared (if requested)
+  else
+    PCFlags := PCFlags and (not D3DCLEAR_STENCIL);
+*)
 
   // Since we filter the flags, make sure there are some left (else, clear isn't necessary) :
   if PCFlags > 0 then
@@ -435,11 +449,49 @@ begin
     // Before clearing, make sure we have the correct render target :
 //    DxbxUpdateActiveRenderTarget(); // TODO : Or should we have to call DxbxUpdateNativeD3DResources ?
 
-    ClearZ := ClearDepthValue shr 8; // TODO : Convert this to the right value for all depth-buffer formats
-    ClearStencil := ClearDepthValue and $FF;
-
-    g_pD3DDevice.Clear(1, @ClearRect, PCFlags, NV2AInstance.CLEAR_VALUE, ClearZ, ClearStencil);
+    g_pD3DDevice.Clear(1, @ClearRect, PCFlags, NV2AInstance.CLEAR_VALUE, {Single}(ClearZ), ClearStencil);
   end;
+{$ENDIF}
+
+{$IFDEF DXBX_USE_OPENGL}
+  glPushAttrib(GL_SCISSOR_BIT or GL_COLOR_BUFFER_BIT); // TODO : Do we need to push and GL_DEPTH_BUFFER_BIT and GL_STENCIL_BUFFER_BIT too?
+    // Tell OpenGL the rectangle that must be cleared :
+    glScissor(ClearRect.Left, ClearRect.Top, ClearRect.Right - ClearRect.Left, ClearRect.Bottom - ClearRect.Top);
+    // Make sure only the selected color component are cleared :
+    glColorMask(
+      (NV2AInstance.CLEAR_BUFFERS and NV2A_CLEAR_BUFFERS_COLOR_R) > 0,
+      (NV2AInstance.CLEAR_BUFFERS and NV2A_CLEAR_BUFFERS_COLOR_G) > 0,
+      (NV2AInstance.CLEAR_BUFFERS and NV2A_CLEAR_BUFFERS_COLOR_B) > 0,
+      (NV2AInstance.CLEAR_BUFFERS and NV2A_CLEAR_BUFFERS_COLOR_A) > 0);
+    // Set the Color, Depth and Stencil values to be used by the clear :
+    XColor := D3DXColorFromDWord(NV2AInstance.CLEAR_VALUE);
+    glClearColor(XColor.r, XColor.g, XColor.b, XColor.a);
+    glClearDepth(DW2F(ClearZ));
+    glClearStencil(ClearStencil);
+    // Determine the OpenGL clear flags :
+    PCFlags := 0;
+    if (NV2AInstance.CLEAR_BUFFERS and NV2A_CLEAR_BUFFERS_COLOR_ALL) > 0 then PCFlags := PCFlags or GL_COLOR_BUFFER_BIT;
+    if (NV2AInstance.CLEAR_BUFFERS and NV2A_CLEAR_BUFFERS_STENCIL) > 0 then PCFlags := PCFlags or GL_STENCIL_BUFFER_BIT;
+    if (NV2AInstance.CLEAR_BUFFERS and NV2A_CLEAR_BUFFERS_DEPTH) > 0 then PCFlags := PCFlags or GL_DEPTH_BUFFER_BIT;
+    // Enque the clear :
+    glClear(PCFlags);
+    // TODO : What happens if a component (like stencil) is not available ?
+  glPopAttrib();
+{$ENDIF}
+end;
+
+//
+// Swap
+//
+
+procedure TDxbxPushBufferState.TriggerFlipStall();
+begin
+{$IFDEF DXBX_USE_D3D}
+  DxbxPresent(nil, nil, 0, nil);
+{$ENDIF}
+{$IFDEF DXBX_USE_OPENGL}
+  SwapBuffers(wglGetCurrentDC);
+{$ENDIF}
 end;
 
 procedure TDxbxPushBufferState.TriggerSetRenderTarget();
@@ -533,6 +585,11 @@ begin
   // be influenced on our native D3D device.]
   // TODO : Is this reasoning sound?
   g_pD3DDevice.SetTransform(D3DTS_VIEW, PD3DMatrix(pdwPushArguments));
+
+{$IFDEF DXBX_USE_OPENGL}
+  glMatrixMode(GL_MODELVIEW_MATRIX);
+  glLoadMatrixf(PGLfloat(pdwPushArguments));
+{$ENDIF}
 end;
 
 function TDxbxPushBufferState.TriggerCompositeMatrix(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
@@ -569,6 +626,11 @@ begin
   //
   // TODO : How on earth are we going to recover all this?!?!
   // g_pD3DDevice.SetTransform(D3DTS_PROJECTION, PD3DMatrix(pdwPushArguments));
+
+{$IFDEF DXBX_USE_OPENGL}
+//  glMatrixMode(??);
+//  glLoadMatrixf(PGLfloat(pdwPushArguments));
+{$ENDIF}
 end;
 
 //
@@ -1176,7 +1238,7 @@ begin
           // Swap :
           NV2A_FLIP_STALL: // TODO : Should we trigger at NV2A_FLIP_INCREMENT_WRITE instead?
           begin
-            DxbxPresent(nil, nil, 0, nil);
+            TriggerFlipStall();
             HandledBy := 'Swap';
           end;
 
