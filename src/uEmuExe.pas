@@ -179,6 +179,14 @@ begin
     Result := aXbeHeader.dwEntryAddr xor XOR_EP_DEBUG;
 end;
 
+procedure DxbxKrnlSetup();
+begin
+  DecimalSeparator := '.'; // Dxbx addition, to log floats with dots
+  CreateLogs(KernelDebugMode, string(KernelDebugFileName)); // Initialize logging interface
+  WriteLog('Dxbx was started using the commandline:');
+  WriteLog(CommandLine);
+end;
+
 // Load XBE sections in Virtual Memory, and call DxbxKrnlInit (TODO : from a new thread?)
 function MapAndRunXBE(const aFilePath: string; const aHandle: THandle): Boolean;
 var
@@ -392,6 +400,8 @@ begin
     // Get KernelDebugFileName :
     KernelDebugFileName := WideString(Params^);
     Inc(Params);
+
+    DxbxKrnlSetup();
 
     // Now we got the arguments, start by initializing the Xbox memory map :
     PrepareXBoxMemoryMap;

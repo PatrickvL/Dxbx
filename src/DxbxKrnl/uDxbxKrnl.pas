@@ -133,11 +133,6 @@ var
   hDupHandle: Handle;
 //  HandlerHandle: PVOID;
 begin
-  DecimalSeparator := '.'; // Dxbx addition, to log floats with dots
-
-  // debug console allocation (if configured)
-  CreateLogs(DbgMode, string(szDebugFileName)); // Initialize logging interface
-
   // update caches
   DxbxKrnl_TLS := pTLS;
   DxbxKrnl_TLSData := pTLSData;
