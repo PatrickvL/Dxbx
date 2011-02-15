@@ -85,7 +85,7 @@ var
   m_pCPUTime: PDWORD = nil;
   m_pGPUTime: PDWORD = nil;
 
-procedure DxbxLogPushBufferPointers(heading:string);
+procedure DxbxLogPushBufferPointers(heading: string);
 
 implementation
 
@@ -112,9 +112,6 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
-
-var
-  GPURegisterBase: PByte;
 
 function XTL_EmuD3D_CMiniport_InitHardware(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
@@ -211,7 +208,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure DxbxLogPushBufferPointers(heading:string);
+procedure DxbxLogPushBufferPointers(heading: string);
 var
   Pusher: PPusher;
   NV2ADMAChannel: PNv2AControlDma;
@@ -228,57 +225,6 @@ begin
     _(Pusher.m_pThreshold, 'Pusher.m_pThreshold').
   LogEnd();
 end;
-
-// timing thread procedure
-function EmuThreadHandleNV2ADMA(lpVoid: LPVOID): DWORD; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  UpdateTimer: DxbxTimer;
-  NV2ADMAChannel: PNv2AControlDma;
-  pNV2AWorkTrigger: PDWORD;
-  Pusher: PPusher;
-  GPUStart, GPUEnd: PDWord;
-begin
-  if MayLog(lfUnit) then
-    DbgPrintf('EmuD3D8 : NV2A DMA thread is running.');
-
-  DxbxLogPushBufferPointers('NV2AThread');
-
-  UpdateTimer.InitFPS(100); // 100 updates per second should be enough
-
-  Pusher := PPusher(PPointer(XTL_D3D__Device)^);
-  NV2ADMAChannel := g_NV2ADMAChannel;
-  pNV2AWorkTrigger := PDWORD(GPURegisterBase + NV2A_PFB_WC_CACHE);
-
-  // Emulate the GPU engine here, by running the pushbuffer on the correct addresses :
-  while true do // TODO -oDxbx: When do we break out of this while loop ?
-  begin
-    UpdateTimer.Wait;
-
-    // Check that KickOff() signaled a work flush :
-    begin
-      if (pNV2AWorkTrigger^ and NV2A_PFB_WC_CACHE_FLUSH_TRIGGER) > 0 then
-      begin
-        // Reset the flush trigger, so that KickOff() continues :
-        pNV2AWorkTrigger^ := pNV2AWorkTrigger^ and (not NV2A_PFB_WC_CACHE_FLUSH_TRIGGER);
-        DxbxLogPushBufferPointers('NV2AThread work trigger');
-      end;
-    end;
-
-    // Start at the DMA's 'Put' address, and assume we'll run
-    // up to the end of the pushbuffer (as filled by software) :
-    GPUStart := NV2ADMAChannel.Get;
-    if GPUStart = nil then
-      GPUStart := NV2ADMAChannel.Put;
-
-    GPUEnd := Pusher.m_pPut;
-
-    // See if there's a valid work pointer :
-    if Assigned(GPUStart) and Assigned(GPUEnd) then
-      // Execute the instructions, this returns the address where execution stopped :
-      XTL_EmuExecutePushBufferRaw(GPUStart, GPUEnd);
-  end; // while
-end; // EmuThreadHandleNV2ADMA
 
 function XTL_EmuD3D_CMiniport_InitDMAChannel(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;

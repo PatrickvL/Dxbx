@@ -36,7 +36,8 @@ uses
   , SysUtils
   , Classes
 {$IFDEF DXBX_USE_OPENGL}
-  , OpenGL
+  , OpenGL1x
+  , OpenGLTokens
 {$ENDIF}
   // Jedi Win32API
   , JwaWinType
@@ -50,6 +51,7 @@ uses
   , D3DX8 // TD3DXColor
   // Dxbx
   , uTypes
+  , uTime // DxbxTimer
   , uDxbxUtils // iif
   , uEmuAlloc
   , uResourceTracker
@@ -97,9 +99,13 @@ var g_pPrimaryPB: PDWORD = nil; // Dxbx note : Cxbx uses Puint32 for this
 // push buffer debugging
 var g_bPBSkipPusher: _bool = false;
 
+var GPURegisterBase: PByte;
+
 {$IFDEF _DEBUG_TRACK_PB}
 procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD); {NOPATCH}
 {$ENDIF}
+
+function EmuThreadHandleNV2ADMA(lpVoid: LPVOID): DWORD; stdcall;
 
 implementation
 
@@ -203,77 +209,51 @@ end;
 type
   TPostponedDrawType = (pdUndetermined, pdDrawVertices, pdDrawIndexedVertices, pdDrawVerticesUP, pdDrawIndexedVerticesUP);
 
-  PDxbxPushBufferState = ^TDxbxPushBufferState;
-  TDxbxPushBufferState = record
-  public
-    NV2AInstance: RNV2AInstance;
-
-  // Draw[Indexed]Vertices[UP] related :
-  public
-    VertexFormat: array [0..15] of record Stride, Size, Type_: int; end;
-    function RegisterVertexFormat(Slot: UINT; pdwPushArguments: PDWORD): string;
-  public
-    VertexAddress: array [0..3] of Pointer;
-    procedure RegisterVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
-  public
-    VertexIndex: INT;
-    VertexCount: UINT;
-    procedure RegisterVertexBatch(pdwPushArguments: PDWORD);
-  public
-    XBPrimitiveType: X_D3DPRIMITIVETYPE;
-    PostponedDrawType: TPostponedDrawType;
-    procedure PostponedDrawVertices;
-    procedure PostponedDrawIndexedVertices;
-    procedure PostponedDrawVerticesUP;
-    procedure PostponedDrawIndexedVerticesUP;
-
-  // SetVertesShader :
-  public
-    VertexShaderSlots: array [0..D3DVS_XBOX_NR_ADDRESS_SLOTS-1] of DWORD;
-    function HandleSetVertexShaderBatch(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
-
-  // SetRenderState :
-  public
-    function TrySetRenderState(dwMethod: DWORD; pdwPushArguments: PDWORD; dwCount: DWORD): Boolean;
-
-  // Triggers :
-  public
-    Viewport: D3DVIEWPORT;
-    procedure TriggerClearBuffers();
-    procedure TriggerFlipStall();
-    procedure TriggerSetRenderTarget();
-    procedure TriggerSetViewport();
-    function TriggerModelViewMatrix(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
-    function TriggerCompositeMatrix(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
-    function TriggerSetVertexShaderConstant(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
-    procedure TriggerDrawBeginEnd();
+var
+  NV2AInstance: RNV2AInstance;
+  dwMethod: DWord = 0;
+  dwCount: DWord = 0;
+  pdwPushArguments: PDWord = nil;
+  HandledCount: DWord = 0;
+  HandledBy: string = '';
+  VertexFormat: array [0..15] of record Stride, Size, Type_: int; end;
+  VertexAddress: array [0..3] of Pointer;
+  VertexIndex: INT = -1;
+  VertexCount: UINT = 0;
+  XBPrimitiveType: X_D3DPRIMITIVETYPE;
+  PostponedDrawType: TPostponedDrawType = pdUndetermined;
+  VertexShaderSlots: array [0..D3DVS_XBOX_NR_ADDRESS_SLOTS-1] of DWORD;
+  Viewport: D3DVIEWPORT;
 
   // Globals and controller :
-  public
-    OldRegisterValue: DWORD;
-    PrevMethod: array [0..2-1] of DWORD;
-    ZScale: FLOAT;
-    IsFixedVertexShader: Boolean; // True=FVF, False=custom vertex shader
-    function SeenRecentMethod(Method: DWORD): Boolean;
-    procedure ExecutePushBufferRaw(pdwPushData, pdwPushDataEnd: PDWord);
+  OldRegisterValue: DWORD = 0;
+  PrevMethod: array [0..2-1] of DWORD = (0, 0);
+  ZScale: FLOAT = 0.0;
+  IsFixedVertexShader: Boolean = True; // True=FVF, False=custom vertex shader
+//  function SeenRecentMethod(Method: DWORD): Boolean;
+//  procedure ExecutePushBufferRaw(pdwPushData, pdwPushDataEnd: PDWord);
 
   // TODO : All below must be re-implemented :
-  public
-    pVertexData: PVOID;
-    dwVertexShader: DWord;
-    dwStride: DWord;
-    NrCachedIndices: int;
-    StartIndex: UINT;
-    pIBMem: array [0..2-1] of WORD;
-    pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8; // = XTL_PIDirect3DIndexBuffer8
-    pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
-    maxIBSize: uint;
-    VertexOffset: uint;
-    procedure _RenderIndexedVertices(dwCount: DWORD);
-    function HandleVertexData(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
-    function HandleIndex32(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
-    function HandleIndex16_16(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
-  end;
+  pVertexData: PVOID = nil;
+  dwVertexShader: DWord = DWORD(-1);
+  dwStride: DWord = DWORD(-1);
+  NrCachedIndices: int = 0;
+  StartIndex: UINT = 0;
+  pIBMem: array [0..2-1] of WORD = (0, 0);
+{$IFDEF DXBX_USE_D3D}
+  pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8; // = XTL_PIDirect3DIndexBuffer8
+  pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
+{$ENDIF}
+  maxIBSize: uint = 0;
+  VertexOffset: uint = 0;
+{$IFDEF DXBX_USE_OPENGL}
+  VertexPrograms: array [0..4-1] of GLuint = (0, 0, 0, 0);
+{$ENDIF}
+
+//  procedure _RenderIndexedVertices(dwCount: DWORD);
+//  function HandleVertexData(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+//  function HandleIndex32(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+//  function HandleIndex16_16(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
 
 procedure DWORDSplit2(const aValue: DWORD; w1: Integer; out v1: Integer; w2: Integer; out v2: Integer);
 begin
@@ -290,31 +270,48 @@ begin
 end;
 {$ENDIF}
 
+function SeenRecentMethod(Method: DWORD): Boolean;
+// Checks if a method was recently handled.
+begin
+  Result := (PrevMethod[0] = Method) or (PrevMethod[1] = Method);
+end;
+
 { TDxbxPushBufferState }
 
-function TDxbxPushBufferState.RegisterVertexFormat(Slot: UINT; pdwPushArguments: PDWORD): string;
-// TODO : Do this in PostponedDraw
+procedure ClearVariables;
 begin
-  Result := '';
-  // Register vertex format (bits:31-8=Stride,7-4=Size,3-0=Type) per slot :
-  VertexFormat[Slot].Stride := (pdwPushArguments^ and NV2A_VTXFMT_STRIDE_MASK) shr NV2A_VTXFMT_STRIDE_SHIFT;
-  VertexFormat[Slot].Size   := (pdwPushArguments^ and NV2A_VTXFMT_SIZE_MASK  ) shr NV2A_VTXFMT_SIZE_SHIFT; // Size:1..4=1..4,7=3w?
-  VertexFormat[Slot].Type_  := (pdwPushArguments^ and NV2A_VTXFMT_TYPE_MASK  ); // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
-  Result := Format('Stride=%d Size=%d Type=%d', [VertexFormat[Slot].Stride, VertexFormat[Slot].Size, VertexFormat[Slot].Type_]);
+  ZeroMemory(@NV2AInstance, SizeOf(NV2AInstance));
+  ZeroMemory(@VertexFormat, SizeOf(VertexFormat));
+  ZeroMemory(@VertexAddress, SizeOf(VertexAddress));
+  ZeroMemory(@VertexShaderSlots, SizeOf(VertexShaderSlots));
+  dwVertexShader := DWORD(-1);
+  dwStride := DWORD(-1);
+  XBPrimitiveType := X_D3DPT_INVALID;
 end;
 
-procedure TDxbxPushBufferState.RegisterVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
+function DxbxGetVertexFormatStride(Slot: Integer): uint;
 begin
-  // Register vertex buffer address (this address is a combination of all levels of offsets & indexes) per stage :
-  VertexAddress[Stage] := Pointer(pdwPushArguments^);
+  Result := (NV2AInstance.VTXFMT[Slot] and NV2A_VTXFMT_STRIDE_MASK) shr NV2A_VTXFMT_STRIDE_SHIFT;
 end;
 
-procedure TDxbxPushBufferState.RegisterVertexBatch(pdwPushArguments: PDWORD);
+function DxbxGetVertexFormatSize(Slot: Integer): uint;
+begin
+  Result := (NV2AInstance.VTXFMT[Slot] and NV2A_VTXFMT_SIZE_MASK  ) shr NV2A_VTXFMT_SIZE_SHIFT; // Size:1..4=1..4,7=3w?
+end;
+
+function DxbxGetVertexFormatType(Slot: Integer): uint;
+begin
+  Result := (NV2AInstance.VTXFMT[Slot] and NV2A_VTXFMT_TYPE_MASK  ); // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
+end;
+
+procedure EmuNV2A_RegisterVertexBatch();
 // This command just registers the number of vertices are to be used in D3DDevice_DrawVertices.
 var
   BatchCount: Integer;
   BatchIndex: Integer;
 begin
+  HandledBy := 'DrawVertices';
+
   // Decode the arguments (index is an incrementing number, count is cumulative per batch) :
   DWORDSplit2(pdwPushArguments^, 24, {out}BatchIndex, 8, {out}BatchCount);
   Inc(BatchCount);
@@ -332,16 +329,66 @@ begin
   PostponedDrawType := pdDrawVertices;
 end;
 
-procedure TDxbxPushBufferState.PostponedDrawVertices;
-//var
+procedure PostponedDrawVertices;
+{$IFDEF DXBX_USE_OPENGL}
+var
+  i: Integer;
+{$ENDIF}
 //  VPDesc: VertexPatchDesc;
 //  VertPatch: VertexPatcher;
 begin
   // TODO : Parse all NV2A_VTXBUF_ADDRESS and NV2A_VTXFMT data here, so that we know how where the vertex data is, and what format it has.
   // Effectively, we do RegisterVertexFormat and RegisterVertexAddress here.
+//          // Data ultimately originating from SetVertexShader / SetStreamSource :
+//          NV2A_VTXFMT__0..NV2A_VTXFMT__15:
+//          begin
+//            HandledBy := 'VertexFormat ' + X_D3DVSDE2String((dwMethod - NV2A_VTXFMT__0) div 4) + ' ' +
+//              RegisterVertexFormat({Slot=}(dwMethod - NV2A_VTXFMT__0) div 4, pdwPushArguments);
+//          end;
+//
+//function RegisterVertexFormat(Slot: UINT): string;
+//// TODO : Do this in PostponedDraw
+//begin
+//  Result := '';
+//  // Register vertex format (bits:31-8=Stride,7-4=Size,3-0=Type) per slot :
+//  VertexFormat[Slot].Stride := (pdwPushArguments^ and NV2A_VTXFMT_STRIDE_MASK) shr NV2A_VTXFMT_STRIDE_SHIFT;
+//  VertexFormat[Slot].Size   := (pdwPushArguments^ and NV2A_VTXFMT_SIZE_MASK  ) shr NV2A_VTXFMT_SIZE_SHIFT; // Size:1..4=1..4,7=3w?
+//  VertexFormat[Slot].Type_  := (pdwPushArguments^ and NV2A_VTXFMT_TYPE_MASK  ); // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
+//  Result := Format('Stride=%d Size=%d Type=%d', [VertexFormat[Slot].Stride, VertexFormat[Slot].Size, VertexFormat[Slot].Type_]);
+//end;
+//
+//          NV2A_VTXBUF_ADDRESS__0..NV2A_VTXBUF_ADDRESS__3:
+//          begin
+//            RegisterVertexAddress({Stage=}(dwMethod - NV2A_VTXBUF_ADDRESS__0) div 4, pdwPushArguments);
+//          end;
+//procedure RegisterVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
+//begin
+//  HandledBy := 'VertexAddress';
+//  // Register vertex buffer address (this address is a combination of all levels of offsets & indexes) per stage :
+//  VertexAddress[Stage] := Pointer(pdwPushArguments^);
+//end;
 
 //  VertexCount := VertexOffset div 16;
   DbgPrintf('  DrawPrimitive VertexIndex=%d, VertexCount=%d', [VertexIndex, VertexCount]);
+
+{$IFDEF DXBX_USE_OPENGL}
+  for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
+  begin
+    if DxbxGetVertexFormatSize(i) > 0 then
+    begin
+      glEnableClientState(GL_VERTEX_ATTRIB_ARRAY0_NV + i);
+      glVertexAttribPointerNV(i,
+        DxbxGetVertexFormatSize(i),
+        DxbxGetVertexFormatType(i),
+        DxbxGetVertexFormatStride(i),
+        NV2AInstance.VTXBUF_ADDRESS[i]);
+    end;
+  end;
+
+//  glBindProgramNV(GL_VERTEX_PROGRAM_NV, VertexPrograms[1]);
+
+  glDrawArrays(Ord(XBPrimitiveType)-1, VertexIndex, VertexCount);
+{$ENDIF}
 
 // test code :
 //  // DxbxDrawPrimitiveUP ?
@@ -371,11 +418,11 @@ begin
 *)
 end;
 
-procedure TDxbxPushBufferState.PostponedDrawIndexedVertices;
+procedure PostponedDrawIndexedVertices;
 begin
 end;
 
-procedure TDxbxPushBufferState.PostponedDrawVerticesUP;
+procedure PostponedDrawVerticesUP;
 begin
 // test code :
 //  // DxbxDrawPrimitiveUP ?
@@ -388,11 +435,11 @@ begin
 //  );
 end;
 
-procedure TDxbxPushBufferState.PostponedDrawIndexedVerticesUP;
+procedure PostponedDrawIndexedVerticesUP;
 begin
 end;
 
-function TDxbxPushBufferState.TrySetRenderState(dwMethod: DWORD; pdwPushArguments: PDWORD; dwCount: DWORD): Boolean;
+function TrySetRenderState: Boolean;
 var
   XRenderState: X_D3DRenderStateType;
 begin
@@ -403,11 +450,21 @@ begin
     DxbxSetRenderStateInternal('  NV2A SetRenderState', XRenderState, pdwPushArguments^);
 end;
 
+procedure EmuNV2A_NOP(); begin HandledBy := 'nop'; HandledCount := dwCount; end;
+procedure EmuNV2A_CDevice_Init(); begin HandledBy := '_CDevice_Init'; end;
+procedure EmuNV2A_VertexCacheInvalidate(); begin HandledBy := 'D3DVertexBuffer_Lock'; end;
+
+procedure EmuNV2A_Engine();
+begin
+  HandledBy := 'TransformEngine';
+  IsFixedVertexShader := (pdwPushArguments^ and NV2A_ENGINE_VP) = 0; // No vertex program means FVF
+end;
+
 //
 // Clear
 //
 
-procedure TDxbxPushBufferState.TriggerClearBuffers();
+procedure EmuNV2A_ClearBuffers();
 var
   ClearRect: RECT;
   ClearDepthValue: DWORD;
@@ -416,10 +473,10 @@ var
   ClearStencil: DWORD;
 {$IFDEF DXBX_USE_OPENGL}
   XColor: TD3DXColor;
-const
-  NV2A_CLEAR_BUFFERS_COLOR_ALL = NV2A_CLEAR_BUFFERS_COLOR_A or NV2A_CLEAR_BUFFERS_COLOR_B or NV2A_CLEAR_BUFFERS_COLOR_G or NV2A_CLEAR_BUFFERS_COLOR_R ;
 {$ENDIF}
 begin
+  HandledBy := 'Clear';
+
   // Parse the GPU registers that are associated with this clear :
   begin
     // Reconstruct the clear rectangle :
@@ -465,7 +522,8 @@ begin
 {$IFDEF DXBX_USE_OPENGL}
   glPushAttrib(GL_SCISSOR_BIT or GL_COLOR_BUFFER_BIT); // TODO : Do we need to push and GL_DEPTH_BUFFER_BIT and GL_STENCIL_BUFFER_BIT too?
     // Tell OpenGL the rectangle that must be cleared :
-    glScissor(ClearRect.Left, ClearRect.Top, ClearRect.Right - ClearRect.Left, ClearRect.Bottom - ClearRect.Top);
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(ClearRect.Left, ClearRect.Top, ClearRect.Right - ClearRect.Left + 1, ClearRect.Bottom - ClearRect.Top + 1);
     // Make sure only the selected color component are cleared :
     glColorMask(
       (NV2AInstance.CLEAR_BUFFERS and NV2A_CLEAR_BUFFERS_COLOR_R) > 0,
@@ -493,8 +551,9 @@ end;
 // Swap
 //
 
-procedure TDxbxPushBufferState.TriggerFlipStall();
+procedure EmuNV2A_FlipStall();
 begin
+  HandledBy := 'Swap';
 {$IFDEF DXBX_USE_D3D}
   DxbxPresent(nil, nil, 0, nil);
 {$ENDIF}
@@ -503,7 +562,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TDxbxPushBufferState.TriggerSetRenderTarget();
+procedure EmuNV2A_SetRenderTarget();
 //var
 //  SurfaceFormat: X_D3DFORMAT;
 //  ActiveRenderTargetData: UIntPtr;
@@ -511,6 +570,8 @@ procedure TDxbxPushBufferState.TriggerSetRenderTarget();
 //  ActiveRenderTargetHeight: DWORD;
 //  ActiveDepthStencilData: UIntPtr;
 begin
+  HandledBy := 'SetRenderTarget';
+
   // Always calculate ZScale and other factors like SuperSampleScaleX,
   // based on NV2AInstance.RT_FORMAT (our trigger) :
 
@@ -540,7 +601,7 @@ end;
 // SetViewport
 //
 
-procedure TDxbxPushBufferState.TriggerSetViewport();
+procedure EmuNV2A_SetViewport();
 //var
 //  ViewportTranslateX: FLOAT;
 //  ViewportTranslateY: FLOAT;
@@ -549,6 +610,7 @@ procedure TDxbxPushBufferState.TriggerSetViewport();
 //  ViewportScaleY: FLOAT;
 //  ViewportScaleZ: FLOAT;
 begin
+  HandledBy := 'SetViewport';
 //  // Interpret all related NV2A registers :
 //  begin
 //    ViewportTranslateX := NV2AInstance.VIEWPORT_TRANSLATE_X; // = Viewport.X * SuperSampleScaleX + ScreenSpaceOffsetX
@@ -583,10 +645,14 @@ end;
 // SetTransform
 //
 
-function TDxbxPushBufferState.TriggerModelViewMatrix(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
+procedure EmuNV2A_ModelViewMatrix();
 begin
   Assert(dwCount >= 16);
-  Result := 16; // We handle only one matrix
+  // Note : Disable this assignment-line to get more pushbuffer debug output :
+  HandledCount := 16; // We handle only one matrix
+
+  HandledBy := 'SetTransform';
+
 {$IFDEF DXBX_USE_D3D}
   // The ModelView = D3DTS_WORLD * D3DTS_VIEW.
   // We cannot decompose these two matrixes, but if we keep the World view as a static Identity view,
@@ -602,10 +668,14 @@ begin
 {$ENDIF}
 end;
 
-function TDxbxPushBufferState.TriggerCompositeMatrix(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
+procedure EmuNV2A_CompositeMatrix();
 begin
   Assert(dwCount >= 16);
-  Result := 16; // We handle only one matrix
+
+  // Note : Disable this assignment-line to get more pushbuffer debug output :
+  HandledCount := 16; // We handle only one matrix
+
+  HandledBy := 'SetTransform';
 
   // The ultimate goal is to recover D3DTS_PROJECTION here.
   //
@@ -647,12 +717,13 @@ end;
 // SetVertexShaderConstant
 //
 
-function TDxbxPushBufferState.TriggerSetVertexShaderConstant(pdwPushArguments: PDWORD; dwCount: DWORD): DWORD;
+procedure EmuNV2A_SetVertexShaderConstant();
 begin
   // Since we always start at NV2A_VP_UPLOAD_CONST__0, never handle more than allowed :
   Assert(dwCount <= NV2A_VP_UPLOAD_CONST__SIZE);
 
-  Result := dwCount;
+  HandledCount := dwCount;
+  HandledBy := 'SetVertexShaderConstant';
 
 {$IFDEF DXBX_USE_D3D}
   // Just set the constants right from the pushbuffer, as they come in batches and won't exceed the native bounds :
@@ -661,7 +732,7 @@ begin
       // The VP_UPLOAD_CONST_ID GPU register is always pushed before the actual values, and contains the base Register for this batch :
       {Register=}NV2AInstance.VP_UPLOAD_CONST_ID,
       {pConstantData=}pdwPushArguments,
-      {ConstantCount=}Result
+      {ConstantCount=}dwCount
   );
 {$ENDIF}
 end;
@@ -670,21 +741,15 @@ end;
 // Draw[Indexed]Vertices[UP]
 //
 
-procedure TDxbxPushBufferState.TriggerDrawBeginEnd();
+procedure EmuNV2A_DrawBeginEnd;
 var
   NewPrimitiveType: X_D3DPRIMITIVETYPE;
 begin
+  HandledBy := 'Draw';
   NewPrimitiveType := X_D3DPRIMITIVETYPE(NV2AInstance.VERTEX_BEGIN_END);
   if (NewPrimitiveType = X_D3DPT_NONE) then
   begin
     DbgPrintf('  NV2A_VERTEX_BEGIN_END(DONE) -> Drawing');
-
-    // D3DDevice_SetRenderTarget        : NV2A_RT_PITCH, NV2A_COLOR_OFFSET and NV2A_ZETA_OFFSET
-    // D3DDevice_SetStreamSource (lazy) : NV2A_VTXFMT and NV2A_VTXBUF_ADDRESS
-    // D3DDevice_DrawVertices           : NV2A_VB_VERTEX_BATCH (the batch is indicated by an Index and a Count in the active vertex buffer - as set by SetStreamSource)
-    // D3DDevice_DrawIndexedVertices    : NV2A_VB_ELEMENT_U16 (and an optional closing NV2A_VB_ELEMENT_U32)  (the index is added into SetStreamSource)
-    // D3DDevice_DrawVerticesUP         : NV2A_VERTEX_DATA
-    // D3DDevice_DrawIndexedVerticesUP  : NV2A_VERTEX_DATA
 
     // Trigger the draw here (instead of in HandleVertexData, HandleIndex32 and/or HandleIndex16_16) :
     case PostponedDrawType of
@@ -699,9 +764,17 @@ begin
     else
       DxbxKrnlCleanup('TriggerDrawBeginEnd encountered unknown draw mode!');
     end;
+{$IFDEF DXBX_USE_OPENGL}
+    glEnd();
+{$ENDIF}
   end
   else
+  begin
     DbgPrintf('  NV2A_VERTEX_BEGIN_END(PrimitiveType = 0x%.03x %s)', [Ord(NewPrimitiveType), X_D3DPRIMITIVETYPE2String(NewPrimitiveType)]);
+{$IFDEF DXBX_USE_OPENGL}
+    glBegin(Ord(NewPrimitiveType)-1);
+{$ENDIF}
+  end;
 
   // Reset variables related to a single draw (others like VertexFormat and VertexAddress are persistent) :
   VertexCount := 0;
@@ -711,19 +784,20 @@ begin
   VertexOffset := 0;
 end;
 
-function TDxbxPushBufferState.HandleSetVertexShaderBatch(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+procedure EmuNV2A_SetVertexShaderBatch();
 begin
-  Result := dwCount;
+  HandledBy := 'SetVertexShader';
+  HandledCount := dwCount;
   // Collect all slots in a separate array (as only part of it is present in the GPU registers) :
   memcpy(@VertexShaderSlots[NV2AInstance.VP_UPLOAD_FROM_ID], pdwPushArguments, dwCount * SizeOf(DWORD));
   // Batches are max 32 DWORDs, so just increase VP_UPLOAD_FROM_ID (the current slot index, max 136) :
-  Inc(NV2AInstance.VP_UPLOAD_FROM_ID, Result);
+  Inc(NV2AInstance.VP_UPLOAD_FROM_ID, dwCount);
 
   // TODO : When do we compile the shader?
 end;
 
 
-function TDxbxPushBufferState.HandleVertexData(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+procedure EmuNV2A_VertexData();
 // TODO : Postpone the draw in here to TriggerDrawBeginEnd, instead collect all vertices first.
 {$IFDEF DXBX_USE_D3D}
 var
@@ -734,7 +808,8 @@ var
   pData: PByte;
 {$ENDIF}
 begin
-  Result := dwCount;
+  HandledBy := 'DrawVertices';
+  HandledCount := dwCount;
 {$IFDEF DXBX_USE_D3D}
 //  PostponedDrawType := pdDrawVerticesUP;
   PostponedDrawType := pdDrawVertices;
@@ -884,7 +959,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TDxbxPushBufferState._RenderIndexedVertices(dwCount: DWORD);
+procedure _RenderIndexedVertices(dwCount: DWORD);
 {$IFDEF DXBX_USE_D3D}
 var
   VPDesc: VertexPatchDesc;
@@ -933,7 +1008,7 @@ begin
 {$ENDIF}
 end;
 
-function TDxbxPushBufferState.HandleIndex32(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+procedure EmuNV2A_Index32();
 // This command is (normally) used to end an index buffer with one last index.
 // TODO : Collect this index together with the previous batch(es) and wait for the postponed draw.
 
@@ -969,7 +1044,8 @@ var
   pData: PWORDArray;
 {$ENDIF}
 begin
-  Result := dwCount;
+  HandledBy := 'DrawIndexedVertices';
+  HandledCount := dwCount;
 {$IFDEF DXBX_USE_D3D}
   pwVal := PWORDs(pdwPushArguments);
 
@@ -1030,14 +1106,16 @@ begin
 {$ENDIF}
 end;
 
-function TDxbxPushBufferState.HandleIndex16_16(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
+procedure EmuNV2A_Index16_16();
 // TODO : Change this into collecting indexes and wait for the postponed Draw.
 {$IFDEF DXBX_USE_D3D}
 var
   pIndexData: PWORD;
 {$ENDIF}
 begin
-  Result := dwCount;
+  HandledBy := 'DrawIndexedVertices';
+  HandledCount := dwCount;
+
 {$IFDEF DXBX_USE_D3D}
   pIndexData := PWORD(pdwPushArguments);
   dwCount := dwCount * 2; // Convert DWORD count to WORD count
@@ -1128,24 +1206,289 @@ begin
 {$ENDIF}
 end;
 
-function TDxbxPushBufferState.SeenRecentMethod(Method: DWORD): Boolean;
-// Checks if a method was recently handled.
-begin
-  Result := (PrevMethod[0] = Method) or (PrevMethod[1] = Method);
-end;
+const
+  NV2ACallbacks: array [0..($2000 div Sizeof(DWORD)) -1] of procedure = (
+  {0000}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0040}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0080}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {00C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0100 NV2A_NOP}EmuNV2A_NOP,
+             nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0130 NV2A_FLIP_STALL}EmuNV2A_FlipStall, // TODO : Should we trigger at NV2A_FLIP_INCREMENT_WRITE instead?
+                                                                         nil, nil, nil,
+  {0140}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0180}
+  // These can safely be ignored :
+  {0180 NV2A_DMA_NOTIFY}EmuNV2A_CDevice_Init,
+  {0184 NV2A_DMA_TEXTURE0}EmuNV2A_CDevice_Init,
+  {0188 NV2A_DMA_TEXTURE1}EmuNV2A_CDevice_Init,
+                       nil,
+  {0190 NV2A_DMA_STATE}EmuNV2A_CDevice_Init,
+  {0194 NV2A_DMA_COLOR}EmuNV2A_CDevice_Init,
+  {0198 NV2A_DMA_ZETA}EmuNV2A_CDevice_Init,
+  {019C NV2A_DMA_VTXBUF0}EmuNV2A_CDevice_Init,
+  {01A0 NV2A_DMA_VTXBUF1}EmuNV2A_CDevice_Init,
+  {01A4 NV2A_DMA_FENCE}EmuNV2A_CDevice_Init,
+  {01A8 NV2A_DMA_QUERY}EmuNV2A_CDevice_Init,
+                                                               nil, nil, nil, nil, nil,
+  {01C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0200}nil, nil,
+  {0208 NV2A_RT_FORMAT}EmuNV2A_SetRenderTarget, // Set surface format
+                       nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0240}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0280}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {02C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0300}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0340}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0380}nil, nil, nil, nil, nil, nil,
+  {0398 NV2A_DEPTH_RANGE_FAR}EmuNV2A_SetViewport, // Always the last method for SetViewport, so we use it as a trigger
+                                           nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {03C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0400}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0440}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0480 NV2A_MODELVIEW0_MATRIX__0}EmuNV2A_ModelViewMatrix,
+             nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {04C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0500}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0540}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0580}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {05C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0600}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0640}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0680 NV2A_COMPOSITE_MATRIX__0}EmuNV2A_CompositeMatrix, // SetTransform
+             nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {06C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0700}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0740}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0780}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {07C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0800}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0840}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0880}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {08C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0900}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0940}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0980}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {09C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {09FC NV2A_FLAT_SHADE_OP}EmuNV2A_CDevice_Init,
+  {0A00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0A40}nil, nil, nil, nil,
+  {0A50 NV2A_EYE_POSITION__0}EmuNV2A_CDevice_Init,
+  {0A54 NV2A_EYE_POSITION__1}EmuNV2A_CDevice_Init,
+  {0A58 NV2A_EYE_POSITION__2}EmuNV2A_CDevice_Init,
+  {0A5C NV2A_EYE_POSITION__3}EmuNV2A_CDevice_Init,
+                                                nil, nil, nil, nil, nil, nil, nil, nil,
+  {0A80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0AC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0B00 NV2A_VP_UPLOAD_INST__0}EmuNV2A_SetVertexShaderBatch,
+             nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0B40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0B80 NV2A_VP_UPLOAD_CONST__0}EmuNV2A_SetVertexShaderConstant,
+             nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0BC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0C00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0C40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0C80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0CC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0D00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0D40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0D80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0DC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0E00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0E40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0E80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0EC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0F00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0F40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0F80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0FC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1000}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1040}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1080}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {10C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1100}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1140}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1180}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {11C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1200}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1240}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1280}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {12C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1300}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1340}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1380}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {13C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1400}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1440}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1480}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {14C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1500}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1540}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1580}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {15C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1600}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1640}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1680}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {16BC NV2A_EDGEFLAG_ENABLE}EmuNV2A_CDevice_Init,
+  {16C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1700}nil, nil, nil, nil,
+  {1710 NV2A_VTX_CACHE_INVALIDATE}EmuNV2A_VertexCacheInvalidate,
+                                 nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1740}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1780}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {17C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {17FC NV2A_VERTEX_BEGIN_END}EmuNV2A_DrawBeginEnd,
+  {1800 NV2A_VB_ELEMENT_U16}EmuNV2A_Index16_16,
+             nil,
+  {1808 NV2A_VB_ELEMENT_U32}EmuNV2A_Index32,
+                       nil,
+  {1810 NV2A_VB_VERTEX_BATCH}EmuNV2A_RegisterVertexBatch,
+                                 nil,
+  {1818 NV2A_VERTEX_DATA}EmuNV2A_VertexData,
+                                           nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1840}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1880}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {18C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1900}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1940}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1980}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {19C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1A00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1A40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1A80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1AC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1B00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1B40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1B80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1BC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1C00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1C40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1C80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1CC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1D00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1D40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1D6C NV2A_SEMAPHORE_OFFSET}EmuNV2A_CDevice_Init,
+                                                                    nil, nil, nil, nil,
+  {1D80 NV2A_COMPRESS_ZBUFFER_EN}EmuNV2A_CDevice_Init,
+             nil, nil, nil, nil,
+  {1D94 NV2A_CLEAR_BUFFERS}EmuNV2A_ClearBuffers, // Gives clear flags, should trigger the clear
+                                      nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1DC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1E00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1E40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1E68 NV2A_SHADOW_ZSLOPE_THRESHOLD}EmuNV2A_CDevice_Init,
+                                                               nil, nil, nil, nil, nil,
+  {1E80}nil, nil, nil, nil, nil,
+  {1E94 NV2A_ENGINE}EmuNV2A_Engine,
+                                      nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1EC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1F00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1F40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1F80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1FC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
+  );
 
-procedure TDxbxPushBufferState.ExecutePushBufferRaw(pdwPushData, pdwPushDataEnd: PDWord);
+(*
+        case dwMethod of
+          0:
+            HandledCount := dwCount;
+
+          NV2A_WRITE_SEMAPHORE_RELEASE:
+          begin
+            // TODO : What should we do with this data? Most probably it should go into a semaphore somewhere;
+            // Perhaps this semaphore is in the 96 bytes that was first allocated with MmAllocateContiguousMemoryEx
+            // (as we've seen the m_pGPUTime variable resides there too). Also telling : this command is pushed by SetFence!
+          end;
+
+          // SetTexture / SwitchTexture :
+          NV2A_TX_OFFSET__0, NV2A_TX_OFFSET__1, NV2A_TX_OFFSET__2, NV2A_TX_OFFSET__3:
+            ; // TODO : Handle this
+
+          NV2A_TX_FORMAT__0, NV2A_TX_FORMAT__1, NV2A_TX_FORMAT__2, NV2A_TX_FORMAT__3:
+            ; // TODO : Handle this
+
+          NV2A_TX_ENABLE__0, NV2A_TX_ENABLE__1, NV2A_TX_ENABLE__2, NV2A_TX_ENABLE__3:
+            ; // TODO : Handle this
+
+          // SetVertexData :
+          NV2A_VERTEX_DATA2F__0..NV2A_VERTEX_DATA2F__15:
+            HandledBy := 'SetVertexData2F ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA2F__0) div 4);
+          NV2A_VERTEX_DATA2S__0..NV2A_VERTEX_DATA2S__15:
+            HandledBy := 'SetVertexData2S ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA2S__0) div 4);
+          NV2A_VERTEX_DATA4UB__0..NV2A_VERTEX_DATA4UB__15:
+          begin
+            DxbxSetVertexData({Register=}(dwMethod - NV2A_VERTEX_DATA4UB__0) div 4,
+              ( pdwPushArguments^         and $ff) / High(Byte),
+              ((pdwPushArguments^ shr  8) and $ff) / High(Byte),
+              ((pdwPushArguments^ shr 16) and $ff) / High(Byte),
+              ((pdwPushArguments^ shr 24) and $ff) / High(Byte));
+            // TODO : When should we call XTL_EmuFlushIVB()?
+            HandledBy := 'SetVertexData4UB ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA4UB__0) div 4);
+          end;
+
+          NV2A_VERTEX_DATA4S__0..NV2A_VERTEX_DATA4S__15:
+            HandledBy := 'SetVertexData4S ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA4S__0) div 4);
+          NV2A_VERTEX_DATA4F__0..NV2A_VERTEX_DATA4F__15:
+            HandledBy := 'SetVertexData4F ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA4F__0) div 4);
+          NV2A_VERTEX_POS_4F_X: // (if Register = D3DVSDE_VERTEX)
+            HandledBy := 'SetVertexData4F D3DVSDE_VERTEX';
+
+          // Draw[Indexed]Vertices[UP] :
+
+          // SetRenderState special cases (value conversions) :
+          NV2A_FOG_COLOR:
+          begin
+{$IFDEF DXBX_USE_D3D}
+            g_pD3DDevice.SetRenderState(D3DRS_FOGCOLOR, SwapRGB(pdwPushArguments^));
+{$ENDIF}
+            HandledBy := 'SetRenderState';
+          end;
+
+          NV2A_CULL_FACE_ENABLE:
+          begin
+{$IFDEF DXBX_USE_D3D}
+            if pdwPushArguments^ = DWORD(BOOL_FALSE) then
+              g_pD3DDevice.SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+{$ENDIF}
+            HandledBy := 'SetRenderState';
+          end;
+
+          NV2A_CULL_FACE:
+          begin
+{$IFDEF DXBX_USE_D3D}
+            g_pD3DDevice.SetRenderState(D3DRS_CULLMODE, D3DCULL_CW); // TODO : Use D3DCULL_CCW if D3DRS_FRONTFACE=D3DCULL_CW
+{$ENDIF}
+            HandledBy := 'SetRenderState';
+          end;
+
+        else
+          // SetRenderState, normal cases (direct value copy) :
+          if TrySetRenderState(dwMethod, pdwPushArguments, dwCount) then
+            HandledBy := 'SetRenderState'
+          else
+            // TODO : Add other generic states here, like texture stage states.
+        end; // case
+*)
+  // D3DDevice_SetRenderTarget        : NV2A_RT_PITCH, NV2A_COLOR_OFFSET and NV2A_ZETA_OFFSET
+  // D3DDevice_SetStreamSource (lazy) : NV2A_VTXFMT and NV2A_VTXBUF_ADDRESS
+  // D3DDevice_DrawVertices           : NV2A_VB_VERTEX_BATCH (the batch is indicated by an Index and a Count in the active vertex buffer - as set by SetStreamSource)
+  // D3DDevice_DrawIndexedVertices    : NV2A_VB_ELEMENT_U16 (and an optional closing NV2A_VB_ELEMENT_U32)  (the index is added into SetStreamSource)
+  // D3DDevice_DrawVerticesUP         : NV2A_VERTEX_DATA
+  // D3DDevice_DrawIndexedVerticesUP  : NV2A_VERTEX_DATA
+
+procedure XTL_EmuExecutePushBufferRaw
+(
+    pdwPushData: PDWord;
+    pdwPushDataEnd: PDWord
+); {NOPATCH}
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   dwPushCommand: DWord;
-  dwMethod: DWord;
   dwSubCh: DWord;
-  dwCount: DWord;
   bNoInc: BOOL_;
-  pdwPushArguments: PDWord;
-  HandledCount: DWord;
-  HandledBy: string;
   StepNr: Integer;
   LogStr: string;
+  NV2ACallback: procedure;
 begin
   if MayLog(lfUnit) then
     if UIntPtr(pdwPushData) <> UIntPtr(pdwPushDataEnd) then
@@ -1208,7 +1551,10 @@ begin
       begin
         OldRegisterValue := NV2AInstance.Registers[dwMethod div 4]; // Remember previous value
         NV2AInstance.Registers[dwMethod div 4] := pdwPushArguments^; // Write new value
-      end;
+        NV2ACallback := NV2ACallbacks[dwMethod div 4];
+      end
+      else
+        NV2ACallback := nil;
 
       // Note : The above statement covers all non-triggering data transfers (yeah!)
       // and makes them available as named variables too, since NV2AInstance is declared
@@ -1227,217 +1573,8 @@ begin
         // Note : A Delphi bug prevents us from using 'Continue' here, which costs us an indent level...
       else
 {$ENDIF}
-      begin
-        case dwMethod of
-          0:
-            HandledCount := dwCount;
-
-          NV2A_NOP:
-            HandledCount := dwCount; // Note : This case prevents a hit in DxbxXboxMethodToRenderState.
-
-          // These can safely be ignored :
-          NV2A_VTX_CACHE_INVALIDATE: HandledBy := 'D3DVertexBuffer_Lock';
-
-          NV2A_DMA_NOTIFY,
-          NV2A_DMA_TEXTURE0,
-          NV2A_DMA_TEXTURE1,
-          NV2A_DMA_STATE,
-          NV2A_DMA_COLOR,
-          NV2A_DMA_ZETA,
-          NV2A_DMA_VTXBUF0,
-          NV2A_DMA_VTXBUF1,
-          NV2A_DMA_FENCE,
-          NV2A_DMA_QUERY,
-          NV2A_SEMAPHORE_OFFSET,
-          NV2A_FLAT_SHADE_OP,
-          NV2A_EYE_POSITION__0..NV2A_EYE_POSITION__3,
-          NV2A_EDGEFLAG_ENABLE,
-          NV2A_COMPRESS_ZBUFFER_EN,
-          NV2A_SHADOW_ZSLOPE_THRESHOLD: HandledBy := '_CDevice_Init';
-
-          // TODO : Place more to-be-ignored methods here.
-
-          NV2A_WRITE_SEMAPHORE_RELEASE:
-          begin
-            // TODO : What should we do with this data? Most probably it should go into a semaphore somewhere;
-            // Perhaps this semaphore is in the 96 bytes that was first allocated with MmAllocateContiguousMemoryEx
-            // (as we've seen the m_pGPUTime variable resides there too). Also telling : this command is pushed by SetFence!
-          end;
-
-          // Clear :
-          NV2A_CLEAR_BUFFERS: // Gives clear flags, should trigger the clear
-          begin
-            TriggerClearBuffers();
-            HandledBy := 'Clear';
-          end;
-
-          // Swap :
-          NV2A_FLIP_STALL: // TODO : Should we trigger at NV2A_FLIP_INCREMENT_WRITE instead?
-          begin
-            TriggerFlipStall();
-            HandledBy := 'Swap';
-          end;
-
-          // SetRenderTarget :
-          NV2A_RT_FORMAT: // Set surface format
-          begin
-            TriggerSetRenderTarget();
-            HandledBy := 'SetRenderTarget';
-          end;
-
-          // SetViewport :
-          NV2A_DEPTH_RANGE_FAR:
-          begin
-            // Note : This is always the last method for SetViewport, so we use it as a trigger :
-            TriggerSetViewport();
-            HandledBy := 'SetViewport';
-          end;
-
-          // SetTransform :
-          NV2A_MODELVIEW0_MATRIX__0:
-          begin
-            HandledCount := // Note : Disable this assignment-line to get more pushbuffer debug output
-              TriggerModelViewMatrix(pdwPushArguments, dwCount);
-            HandledBy := 'SetTransform';
-          end;
-
-          NV2A_COMPOSITE_MATRIX__0:
-          begin
-            HandledCount := // Note : Disable this assignment-line to get more pushbuffer debug output
-              TriggerCompositeMatrix(pdwPushArguments, dwCount);
-            HandledBy := 'SetTransform';
-          end;
-
-
-          // SetTexture / SwitchTexture :
-          NV2A_TX_OFFSET__0, NV2A_TX_OFFSET__1, NV2A_TX_OFFSET__2, NV2A_TX_OFFSET__3:
-            ; // TODO : Handle this
-
-          NV2A_TX_FORMAT__0, NV2A_TX_FORMAT__1, NV2A_TX_FORMAT__2, NV2A_TX_FORMAT__3:
-            ; // TODO : Handle this
-
-          NV2A_TX_ENABLE__0, NV2A_TX_ENABLE__1, NV2A_TX_ENABLE__2, NV2A_TX_ENABLE__3:
-            ; // TODO : Handle this
-
-          // SetVertexData :
-          NV2A_VERTEX_DATA2F__0..NV2A_VERTEX_DATA2F__15:
-            HandledBy := 'SetVertexData2F ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA2F__0) div 4);
-          NV2A_VERTEX_DATA2S__0..NV2A_VERTEX_DATA2S__15:
-            HandledBy := 'SetVertexData2S ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA2S__0) div 4);
-          NV2A_VERTEX_DATA4UB__0..NV2A_VERTEX_DATA4UB__15:
-          begin
-            DxbxSetVertexData({Register=}(dwMethod - NV2A_VERTEX_DATA4UB__0) div 4,
-              ( pdwPushArguments^         and $ff) / High(Byte),
-              ((pdwPushArguments^ shr  8) and $ff) / High(Byte),
-              ((pdwPushArguments^ shr 16) and $ff) / High(Byte),
-              ((pdwPushArguments^ shr 24) and $ff) / High(Byte));
-            // TODO : When should we call XTL_EmuFlushIVB()?
-            HandledBy := 'SetVertexData4UB ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA4UB__0) div 4);
-          end;
-
-          NV2A_VERTEX_DATA4S__0..NV2A_VERTEX_DATA4S__15:
-            HandledBy := 'SetVertexData4S ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA4S__0) div 4);
-          NV2A_VERTEX_DATA4F__0..NV2A_VERTEX_DATA4F__15:
-            HandledBy := 'SetVertexData4F ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA4F__0) div 4);
-          NV2A_VERTEX_POS_4F_X: // (if Register = D3DVSDE_VERTEX)
-            HandledBy := 'SetVertexData4F D3DVSDE_VERTEX';
-
-          NV2A_VP_UPLOAD_CONST__0:
-          begin
-            HandledCount := TriggerSetVertexShaderConstant(pdwPushArguments, dwCount);
-            HandledBy := 'SetVertexShaderConstant';
-          end;
-
-          NV2A_ENGINE:
-          begin
-            IsFixedVertexShader := (pdwPushArguments^ and NV2A_ENGINE_VP) = 0; // No vertex program means FVF
-            HandledBy := 'TransformEngine';
-          end;
-
-          // Draw[Indexed]Vertices[UP] :
-          NV2A_VERTEX_BEGIN_END:
-          begin
-            TriggerDrawBeginEnd();
-            HandledBy := 'Draw';
-          end;
-
-          // Data ultimately originating from SetVertexShader / SetStreamSource :
-          NV2A_VTXFMT__0..NV2A_VTXFMT__15:
-          begin
-            HandledBy := 'VertexFormat ' + X_D3DVSDE2String((dwMethod - NV2A_VTXFMT__0) div 4) + ' ' +
-              RegisterVertexFormat({Slot=}(dwMethod - NV2A_VTXFMT__0) div 4, pdwPushArguments);
-          end;
-
-          NV2A_VTXBUF_ADDRESS__0..NV2A_VTXBUF_ADDRESS__3:
-          begin
-            RegisterVertexAddress({Stage=}(dwMethod - NV2A_VTXBUF_ADDRESS__0) div 4, pdwPushArguments);
-            HandledBy := 'VertexAddress';
-          end;
-
-          NV2A_VP_UPLOAD_INST__0:
-          begin
-            HandledCount := HandleSetVertexShaderBatch(pdwPushArguments, dwCount);
-            HandledBy := 'SetVertexShader';
-          end;
-
-          NV2A_VB_VERTEX_BATCH:
-          begin
-            RegisterVertexBatch(pdwPushArguments);
-            HandledBy := 'DrawVertices';
-          end;
-
-          NV2A_VERTEX_DATA:
-          begin
-            HandledCount := HandleVertexData(pdwPushArguments, dwCount);
-            HandledBy := 'DrawVertices';
-          end;
-
-          NV2A_VB_ELEMENT_U16:
-          begin
-            HandledCount := HandleIndex16_16(pdwPushArguments, dwCount);
-            HandledBy := 'DrawIndexedVertices';
-          end;
-
-          NV2A_VB_ELEMENT_U32:
-          begin
-            HandledCount := HandleIndex32(pdwPushArguments, dwCount);
-            HandledBy := 'DrawIndexedVertices';
-          end;
-
-          // SetRenderState special cases (value conversions) :
-          NV2A_FOG_COLOR:
-          begin
-{$IFDEF DXBX_USE_D3D}
-            g_pD3DDevice.SetRenderState(D3DRS_FOGCOLOR, SwapRGB(pdwPushArguments^));
-{$ENDIF}
-            HandledBy := 'SetRenderState';
-          end;
-
-          NV2A_CULL_FACE_ENABLE:
-          begin
-{$IFDEF DXBX_USE_D3D}
-            if pdwPushArguments^ = DWORD(BOOL_FALSE) then
-              g_pD3DDevice.SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-{$ENDIF}
-            HandledBy := 'SetRenderState';
-          end;
-
-          NV2A_CULL_FACE:
-          begin
-{$IFDEF DXBX_USE_D3D}
-            g_pD3DDevice.SetRenderState(D3DRS_CULLMODE, D3DCULL_CW); // TODO : Use D3DCULL_CCW if D3DRS_FRONTFACE=D3DCULL_CW
-{$ENDIF}
-            HandledBy := 'SetRenderState';
-          end;
-
-        else
-          // SetRenderState, normal cases (direct value copy) :
-          if TrySetRenderState(dwMethod, pdwPushArguments, dwCount) then
-            HandledBy := 'SetRenderState'
-          else
-            // TODO : Add other generic states here, like texture stage states.
-        end; // case
-      end;
+      if Assigned(NV2ACallback) then
+        NV2ACallback();
 
     finally
       if MayLog(lfUnit) then
@@ -1485,31 +1622,6 @@ begin
   // This line is to reset the GPU 'Get' pointer, so that busyloops will terminate :
   g_NV2ADMAChannel.Get := pdwPushData;
 end;
-
-var
-  DxbxPushBufferState: PDxbxPushBufferState = nil;
-
-procedure XTL_EmuExecutePushBufferRaw
-(
-    pdwPushData: PDWord;
-    pdwPushDataEnd: PDWord
-); {NOPATCH}
-// Branch:Dxbx  Translator:PatrickvL  Done:100
-begin
-  if DxbxPushBufferState = nil then
-  begin
-    // Initialize pushbuffer state only once :
-    New(DxbxPushBufferState);
-    ZeroMemory(DxbxPushBufferState, SizeOf(DxbxPushBufferState));
-
-    DxbxPushBufferState.dwVertexShader := DWORD(-1);
-    DxbxPushBufferState.dwStride := DWORD(-1);
-    DxbxPushBufferState.XBPrimitiveType := X_D3DPT_INVALID;
-  end;
-
-  DxbxPushBufferState.ExecutePushBufferRaw(pdwPushData, pdwPushDataEnd)
-end;
-
 
 {$IFDEF _DEBUG_TRACK_PB}
 
@@ -1667,6 +1779,161 @@ begin
   IDirect3DVertexBuffer(pActiveVB).Unlock();
 end;
 {$ENDIF}
+
+{$IFDEF DXBX_USE_OPENGL}
+procedure SetupPixelFormat(DC: HDC);
+const
+   pfd: PIXELFORMATDESCRIPTOR = (
+    nSize: SizeOf(PIXELFORMATDESCRIPTOR); // size
+    nVersion: 1;   // version
+    dwFlags: PFD_SUPPORT_OPENGL or PFD_DRAW_TO_WINDOW or PFD_DOUBLEBUFFER; // support double-buffering
+    iPixelType: PFD_TYPE_RGBA; // color type
+    cColorBits: 32;   // preferred color depth
+    cRedBits: 0; cRedShift: 0; // color bits (ignored)
+    cGreenBits: 0;  cGreenShift: 0;
+    cBlueBits: 0; cBlueShift: 0;
+    cAlphaBits: 0;  cAlphaShift: 0;   // no alpha buffer
+    cAccumBits: 0;
+    cAccumRedBits: 0;    // no accumulation buffer,
+    cAccumGreenBits: 0;      // accum bits (ignored)
+    cAccumBlueBits: 0;
+    cAccumAlphaBits: 0;
+    cDepthBits: 16;   // depth buffer
+    cStencilBits: 0;   // no stencil buffer
+    cAuxBuffers: 0;   // no auxiliary buffers
+    iLayerType: PFD_MAIN_PLANE;   // main layer
+    bReserved: 0;
+    dwLayerMask: 0;
+    dwVisibleMask: 0;
+    dwDamageMask: 0;                    // no layer, visible, damage masks
+    );
+var
+  PixelFormat: Integer;
+begin
+   pixelFormat := ChoosePixelFormat(DC, @pfd);
+   if (PixelFormat = 0) then
+     Exit;
+
+   if (SetPixelFormat(DC, PixelFormat, @pfd) <> True) then
+     Exit;
+end;
+
+procedure InitOpenGLContext();
+var
+  RC: HGLRC;
+  szCode: AnsiString;
+  GLErrorPos: int;
+begin
+  g_EmuWindowsDC := GetDC(g_hEmuWindow); // Actually, you can use any windowed control here
+  SetupPixelFormat(g_EmuWindowsDC);
+
+  RC := wglCreateContext(g_EmuWindowsDC); // makes OpenGL window out of DC
+  wglMakeCurrent(g_EmuWindowsDC, RC);   // makes OpenGL window active
+  ReadExtensions;
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  //  glFrustum(-0.1, 0.1, -0.1, 0.1, 0.3, 25.0); ?
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  // TODO : GL_TEXTURE too?
+
+  // glEnable(GL_DEPTH_TEST);
+
+  glViewport(0, 0,
+    g_EmuCDPD.pPresentationParameters.BackBufferWidth,
+    g_EmuCDPD.pPresentationParameters.BackBufferHeight);
+
+  // TODO : The following code only works on cards that support the
+  // vertex program extensions (NVidia cards mainly); So for ATI we
+  // have to come up with another solution !!!
+  glGenProgramsNV(4, @VertexPrograms[0]);
+
+  // enable shading
+  glEnable(GL_VERTEX_PROGRAM_NV);
+
+  // precompile shader for the fixed function pipeline
+  szCode :=
+    '!!VP2.0 '#13#10 +
+    'MOV o[HPOS], v[0];' +
+    'MOV o[COL0], v[3];' +
+    'MOV o[COL1], v[4];' +
+    'MOV o[FOGC], v[5];' +
+    'MOV o[BFC0], v[7];' +
+    'MOV o[BFC1], v[8];' +
+    'MOV o[TEX0], v[9];' +
+    'MOV o[TEX1], v[10];' +
+    'MOV o[TEX2], v[11];' +
+    'MOV o[TEX3], v[12];' +
+    'END';
+  glLoadProgramNV(GL_VERTEX_PROGRAM_NV, VertexPrograms[1], Length(szCode), Pointer(szCode));
+
+  // errors are catched
+  glGetIntegerv(GL_PROGRAM_ERROR_POSITION_NV, @GLErrorPos);
+
+  if(GLErrorPos >= 0) then
+    EmuWarning('Program error at position %d:'#13#10'%s', [GLErrorPos, szCode[GLErrorPos]]);
+end;
+{$ENDIF}
+
+// timing thread procedure
+function EmuThreadHandleNV2ADMA(lpVoid: LPVOID): DWORD; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  UpdateTimer: DxbxTimer;
+  NV2ADMAChannel: PNv2AControlDma;
+  pNV2AWorkTrigger: PDWORD;
+  Pusher: PPusher;
+  GPUStart, GPUEnd: PDWord;
+begin
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuD3D8 : NV2A DMA thread is running.');
+
+  DxbxLogPushBufferPointers('NV2AThread');
+
+{$IFDEF DXBX_USE_OPENGL}
+  InitOpenGLContext();
+{$ENDIF}
+
+  UpdateTimer.InitFPS(100); // 100 updates per second should be enough
+
+  Pusher := PPusher(PPointer(XTL_D3D__Device)^);
+  NV2ADMAChannel := g_NV2ADMAChannel;
+  pNV2AWorkTrigger := PDWORD(GPURegisterBase + NV2A_PFB_WC_CACHE);
+
+  // Emulate the GPU engine here, by running the pushbuffer on the correct addresses :
+  while true do // TODO -oDxbx: When do we break out of this while loop ?
+  begin
+    UpdateTimer.Wait;
+
+    // Check that KickOff() signaled a work flush :
+    begin
+      if (pNV2AWorkTrigger^ and NV2A_PFB_WC_CACHE_FLUSH_TRIGGER) > 0 then
+      begin
+        // Reset the flush trigger, so that KickOff() continues :
+        pNV2AWorkTrigger^ := pNV2AWorkTrigger^ and (not NV2A_PFB_WC_CACHE_FLUSH_TRIGGER);
+        DxbxLogPushBufferPointers('NV2AThread work trigger');
+      end;
+    end;
+
+    // Start at the DMA's 'Put' address, and assume we'll run
+    // up to the end of the pushbuffer (as filled by software) :
+    GPUStart := NV2ADMAChannel.Get;
+    if GPUStart = nil then
+      GPUStart := NV2ADMAChannel.Put;
+
+    GPUEnd := Pusher.m_pPut;
+
+    // See if there's a valid work pointer :
+    if Assigned(GPUStart) and Assigned(GPUEnd) then
+      // Execute the instructions, this returns the address where execution stopped :
+      XTL_EmuExecutePushBufferRaw(GPUStart, GPUEnd);
+  end; // while
+end; // EmuThreadHandleNV2ADMA
+
+initialization
+  ClearVariables; // TODO : Delay this
 
 end.
 
