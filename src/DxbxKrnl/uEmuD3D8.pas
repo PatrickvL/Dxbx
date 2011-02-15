@@ -98,9 +98,6 @@ procedure DxbxSetRenderStateInternal(
 
 var
   // Global(s)
-{$IFDEF DXBX_USE_OPENGL}
-  g_EmuWindowsDC: HDC = 0;
-{$ENDIF}
   g_pD3DDevice: IDirect3DDevice = NULL;
   g_pDDSPrimary7: XTL_LPDIRECTDRAWSURFACE7 = NULL;  // DirectDraw7 Primary Surface
   g_pDDSOverlay7: XTL_LPDIRECTDRAWSURFACE7 = NULL; // DirectDraw7 Overlay Surface

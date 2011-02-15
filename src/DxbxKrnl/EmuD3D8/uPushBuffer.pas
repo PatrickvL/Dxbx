@@ -210,6 +210,7 @@ type
   TPostponedDrawType = (pdUndetermined, pdDrawVertices, pdDrawIndexedVertices, pdDrawVerticesUP, pdDrawIndexedVerticesUP);
 
 var
+  // Global(s)
   NV2AInstance: RNV2AInstance;
   dwMethod: DWord = 0;
   dwCount: DWord = 0;
@@ -240,13 +241,14 @@ var
   NrCachedIndices: int = 0;
   StartIndex: UINT = 0;
   pIBMem: array [0..2-1] of WORD = (0, 0);
+  maxIBSize: uint = 0;
+  VertexOffset: uint = 0;
 {$IFDEF DXBX_USE_D3D}
   pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8; // = XTL_PIDirect3DIndexBuffer8
   pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
 {$ENDIF}
-  maxIBSize: uint = 0;
-  VertexOffset: uint = 0;
 {$IFDEF DXBX_USE_OPENGL}
+  g_EmuWindowsDC: HDC = 0;
   VertexProgramIDs: array [0..4-1] of GLuint = (0, 0, 0, 0);
 {$ENDIF}
 
@@ -719,19 +721,23 @@ end;
 //
 
 procedure EmuNV2A_SetVertexShaderConstant();
+var
+  Slot: uint;
 begin
-  // Since we always start at NV2A_VP_UPLOAD_CONST__0, never handle more than allowed :
-  Assert(dwCount <= NV2A_VP_UPLOAD_CONST__SIZE);
-
-  HandledCount := dwCount;
   HandledBy := 'SetVertexShaderConstant';
+  HandledCount := dwCount;
+
+  // Make sure we use the correct index if we enter at an offset other than 0 :
+  Slot := (dwMethod - NV2A_VP_UPLOAD_CONST__0) div 4;
+  // Since we always start at NV2A_VP_UPLOAD_CONST__0, never handle more than allowed :
+  Assert(Slot + dwCount <= NV2A_VP_UPLOAD_CONST__SIZE);
 
 {$IFDEF DXBX_USE_D3D}
   // Just set the constants right from the pushbuffer, as they come in batches and won't exceed the native bounds :
   g_pD3DDevice.SetVertexShaderConstant
   (
       // The VP_UPLOAD_CONST_ID GPU register is always pushed before the actual values, and contains the base Register for this batch :
-      {Register=}NV2AInstance.VP_UPLOAD_CONST_ID,
+      {Register=}NV2AInstance.VP_UPLOAD_CONST_ID + Slot,
       {pConstantData=}pdwPushArguments,
       {ConstantCount=}dwCount
   );
@@ -786,9 +792,18 @@ begin
 end;
 
 procedure EmuNV2A_SetVertexShaderBatch();
+var
+  Slot: uint;
 begin
   HandledBy := 'SetVertexShader';
   HandledCount := dwCount;
+
+  // Make sure we use the correct index if we enter at an offset other than 0 :
+  Slot := (dwMethod - NV2A_VP_UPLOAD_INST__0) div 4;
+  Assert(Slot + dwCount <= NV2A_VP_UPLOAD_INST__SIZE);
+
+  Inc(NV2AInstance.VP_UPLOAD_FROM_ID, Slot);
+
   // Collect all slots in a separate array (as only part of it is present in the GPU registers) :
   memcpy(@VertexShaderSlots[NV2AInstance.VP_UPLOAD_FROM_ID], pdwPushArguments, dwCount * SizeOf(DWORD));
   // Batches are max 32 DWORDs, so just increase VP_UPLOAD_FROM_ID (the current slot index, max 136) :
@@ -1282,11 +1297,69 @@ const
   {0A80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0AC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0B00 NV2A_VP_UPLOAD_INST__0}EmuNV2A_SetVertexShaderBatch,
-             nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0B40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0B04 NV2A_VP_UPLOAD_INST__1}EmuNV2A_SetVertexShaderBatch,
+  {0B08 NV2A_VP_UPLOAD_INST__2}EmuNV2A_SetVertexShaderBatch,
+  {0B0C NV2A_VP_UPLOAD_INST__3}EmuNV2A_SetVertexShaderBatch,
+  {0B10 NV2A_VP_UPLOAD_INST__4}EmuNV2A_SetVertexShaderBatch,
+  {0B14 NV2A_VP_UPLOAD_INST__5}EmuNV2A_SetVertexShaderBatch,
+  {0B18 NV2A_VP_UPLOAD_INST__6}EmuNV2A_SetVertexShaderBatch,
+  {0B1C NV2A_VP_UPLOAD_INST__7}EmuNV2A_SetVertexShaderBatch,
+  {0B20 NV2A_VP_UPLOAD_INST__8}EmuNV2A_SetVertexShaderBatch,
+  {0B24 NV2A_VP_UPLOAD_INST__9}EmuNV2A_SetVertexShaderBatch,
+  {0B28 NV2A_VP_UPLOAD_INST__10}EmuNV2A_SetVertexShaderBatch,
+  {0B2C NV2A_VP_UPLOAD_INST__11}EmuNV2A_SetVertexShaderBatch,
+  {0B30 NV2A_VP_UPLOAD_INST__12}EmuNV2A_SetVertexShaderBatch,
+  {0B34 NV2A_VP_UPLOAD_INST__13}EmuNV2A_SetVertexShaderBatch,
+  {0B38 NV2A_VP_UPLOAD_INST__14}EmuNV2A_SetVertexShaderBatch,
+  {0B3C NV2A_VP_UPLOAD_INST__15}EmuNV2A_SetVertexShaderBatch,
+  {0B40 NV2A_VP_UPLOAD_INST__16}EmuNV2A_SetVertexShaderBatch,
+  {0B44 NV2A_VP_UPLOAD_INST__17}EmuNV2A_SetVertexShaderBatch,
+  {0B48 NV2A_VP_UPLOAD_INST__18}EmuNV2A_SetVertexShaderBatch,
+  {0B4C NV2A_VP_UPLOAD_INST__19}EmuNV2A_SetVertexShaderBatch,
+  {0B50 NV2A_VP_UPLOAD_INST__20}EmuNV2A_SetVertexShaderBatch,
+  {0B54 NV2A_VP_UPLOAD_INST__21}EmuNV2A_SetVertexShaderBatch,
+  {0B58 NV2A_VP_UPLOAD_INST__22}EmuNV2A_SetVertexShaderBatch,
+  {0B5C NV2A_VP_UPLOAD_INST__23}EmuNV2A_SetVertexShaderBatch,
+  {0B60 NV2A_VP_UPLOAD_INST__24}EmuNV2A_SetVertexShaderBatch,
+  {0B64 NV2A_VP_UPLOAD_INST__25}EmuNV2A_SetVertexShaderBatch,
+  {0B68 NV2A_VP_UPLOAD_INST__26}EmuNV2A_SetVertexShaderBatch,
+  {0B6C NV2A_VP_UPLOAD_INST__27}EmuNV2A_SetVertexShaderBatch,
+  {0B70 NV2A_VP_UPLOAD_INST__28}EmuNV2A_SetVertexShaderBatch,
+  {0B74 NV2A_VP_UPLOAD_INST__29}EmuNV2A_SetVertexShaderBatch,
+  {0B78 NV2A_VP_UPLOAD_INST__30}EmuNV2A_SetVertexShaderBatch,
+  {0B7C NV2A_VP_UPLOAD_INST__31}EmuNV2A_SetVertexShaderBatch,
   {0B80 NV2A_VP_UPLOAD_CONST__0}EmuNV2A_SetVertexShaderConstant,
-             nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0BC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0B84 NV2A_VP_UPLOAD_CONST__1}EmuNV2A_SetVertexShaderConstant,
+  {0B88 NV2A_VP_UPLOAD_CONST__2}EmuNV2A_SetVertexShaderConstant,
+  {0B8C NV2A_VP_UPLOAD_CONST__3}EmuNV2A_SetVertexShaderConstant,
+  {0B90 NV2A_VP_UPLOAD_CONST__4}EmuNV2A_SetVertexShaderConstant,
+  {0B94 NV2A_VP_UPLOAD_CONST__5}EmuNV2A_SetVertexShaderConstant,
+  {0B98 NV2A_VP_UPLOAD_CONST__6}EmuNV2A_SetVertexShaderConstant,
+  {0B9C NV2A_VP_UPLOAD_CONST__7}EmuNV2A_SetVertexShaderConstant,
+  {0BA0 NV2A_VP_UPLOAD_CONST__8}EmuNV2A_SetVertexShaderConstant,
+  {0BA4 NV2A_VP_UPLOAD_CONST__9}EmuNV2A_SetVertexShaderConstant,
+  {0BA8 NV2A_VP_UPLOAD_CONST__10}EmuNV2A_SetVertexShaderConstant,
+  {0BAC NV2A_VP_UPLOAD_CONST__11}EmuNV2A_SetVertexShaderConstant,
+  {0BB0 NV2A_VP_UPLOAD_CONST__12}EmuNV2A_SetVertexShaderConstant,
+  {0BB4 NV2A_VP_UPLOAD_CONST__13}EmuNV2A_SetVertexShaderConstant,
+  {0BB8 NV2A_VP_UPLOAD_CONST__14}EmuNV2A_SetVertexShaderConstant,
+  {0BBC NV2A_VP_UPLOAD_CONST__15}EmuNV2A_SetVertexShaderConstant,
+  {0BC0 NV2A_VP_UPLOAD_CONST__16}EmuNV2A_SetVertexShaderConstant,
+  {0BC4 NV2A_VP_UPLOAD_CONST__17}EmuNV2A_SetVertexShaderConstant,
+  {0BC8 NV2A_VP_UPLOAD_CONST__18}EmuNV2A_SetVertexShaderConstant,
+  {0BCC NV2A_VP_UPLOAD_CONST__19}EmuNV2A_SetVertexShaderConstant,
+  {0BD0 NV2A_VP_UPLOAD_CONST__20}EmuNV2A_SetVertexShaderConstant,
+  {0BD4 NV2A_VP_UPLOAD_CONST__21}EmuNV2A_SetVertexShaderConstant,
+  {0BD8 NV2A_VP_UPLOAD_CONST__22}EmuNV2A_SetVertexShaderConstant,
+  {0BDC NV2A_VP_UPLOAD_CONST__23}EmuNV2A_SetVertexShaderConstant,
+  {0BE0 NV2A_VP_UPLOAD_CONST__24}EmuNV2A_SetVertexShaderConstant,
+  {0BE4 NV2A_VP_UPLOAD_CONST__25}EmuNV2A_SetVertexShaderConstant,
+  {0BE8 NV2A_VP_UPLOAD_CONST__26}EmuNV2A_SetVertexShaderConstant,
+  {0BEC NV2A_VP_UPLOAD_CONST__27}EmuNV2A_SetVertexShaderConstant,
+  {0BF0 NV2A_VP_UPLOAD_CONST__28}EmuNV2A_SetVertexShaderConstant,
+  {0BF4 NV2A_VP_UPLOAD_CONST__29}EmuNV2A_SetVertexShaderConstant,
+  {0BF8 NV2A_VP_UPLOAD_CONST__30}EmuNV2A_SetVertexShaderConstant,
+  {0BFC NV2A_VP_UPLOAD_CONST__31}EmuNV2A_SetVertexShaderConstant,
   {0C00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0C40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0C80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
