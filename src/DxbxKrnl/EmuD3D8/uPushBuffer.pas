@@ -247,7 +247,7 @@ var
   maxIBSize: uint = 0;
   VertexOffset: uint = 0;
 {$IFDEF DXBX_USE_OPENGL}
-  VertexPrograms: array [0..4-1] of GLuint = (0, 0, 0, 0);
+  VertexProgramIDs: array [0..4-1] of GLuint = (0, 0, 0, 0);
 {$ENDIF}
 
 //  procedure _RenderIndexedVertices(dwCount: DWORD);
@@ -376,16 +376,17 @@ begin
   begin
     if DxbxGetVertexFormatSize(i) > 0 then
     begin
-      glEnableClientState(GL_VERTEX_ATTRIB_ARRAY0_NV + i);
-      glVertexAttribPointerNV(i,
+      glEnableClientState(GL_VERTEX_ATTRIB_ARRAY0_NV + i); // TODO : How should we update this to ARB ?
+      glVertexAttribPointerARB(i,
         DxbxGetVertexFormatSize(i),
         DxbxGetVertexFormatType(i),
+        {Normalized=}(i < X_D3DVSDE_TEXCOORD0), // Note : Texture coordinates are not normalized, but what about others?
         DxbxGetVertexFormatStride(i),
         NV2AInstance.VTXBUF_ADDRESS[i]);
     end;
   end;
 
-//  glBindProgramNV(GL_VERTEX_PROGRAM_NV, VertexPrograms[1]);
+  glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
 
   glDrawArrays(Ord(XBPrimitiveType)-1, VertexIndex, VertexCount);
 {$ENDIF}
@@ -1848,14 +1849,15 @@ begin
   // TODO : The following code only works on cards that support the
   // vertex program extensions (NVidia cards mainly); So for ATI we
   // have to come up with another solution !!!
-  glGenProgramsNV(4, @VertexPrograms[0]);
+  glGenProgramsARB(4, @VertexProgramIDs[0]);
 
   // enable shading
-  glEnable(GL_VERTEX_PROGRAM_NV);
+  glEnable(GL_VERTEX_PROGRAM_ARB);
 
   // precompile shader for the fixed function pipeline
   szCode :=
-    '!!VP2.0 '#13#10 +
+//    '!!VP2.0 '#13#10 +
+    '!!ARBvp1.0 '#13#10 +
     'MOV o[HPOS], v[0];' +
     'MOV o[COL0], v[3];' +
     'MOV o[COL1], v[4];' +
@@ -1867,10 +1869,11 @@ begin
     'MOV o[TEX2], v[11];' +
     'MOV o[TEX3], v[12];' +
     'END';
-  glLoadProgramNV(GL_VERTEX_PROGRAM_NV, VertexPrograms[1], Length(szCode), Pointer(szCode));
+  glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
+  glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, Length(szCode), Pointer(szCode));
 
   // errors are catched
-  glGetIntegerv(GL_PROGRAM_ERROR_POSITION_NV, @GLErrorPos);
+  glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, @GLErrorPos);
 
   if(GLErrorPos >= 0) then
     EmuWarning('Program error at position %d:'#13#10'%s', [GLErrorPos, szCode[GLErrorPos]]);
