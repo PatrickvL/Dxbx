@@ -72,12 +72,12 @@ const NV2A                                                        = $00000097;
 const NV2A_NOP                                                    = $00000100;
 const NV2A_NOTIFY                                                 = $00000104;
 const NV2A_WAIT_FOR_IDLE                                          = $00000110; // Dxbx
-const NV2A_DMA_NOTIFY                                             = $00000180;
 const NV2A_FLIP_READ                                              = $00000120; // Dxbx
 const NV2A_FLIP_WRITE                                             = $00000124; // Dxbx
 const NV2A_FLIP_MODULO                                            = $00000128; // Dxbx
 const NV2A_FLIP_INCREMENT_WRITE                                   = $0000012c; // Dxbx
 const NV2A_FLIP_STALL                                             = $00000130; // Dxbx
+const NV2A_DMA_NOTIFY                                             = $00000180;
 const NV2A_DMA_TEXTURE0                                           = $00000184;
 const NV2A_DMA_TEXTURE1                                           = $00000188;
 const NV2A_DMA_STATE                                              = $00000190; // Dxbx
@@ -1610,6 +1610,7 @@ const  NV2A_CLEAR_BUFFERS_COLOR_A                                 = (1 shl  7);
 const  NV2A_CLEAR_BUFFERS_COLOR_B                                 = (1 shl  6);
 const  NV2A_CLEAR_BUFFERS_COLOR_G                                 = (1 shl  5);
 const  NV2A_CLEAR_BUFFERS_COLOR_R                                 = (1 shl  4);
+const  NV2A_CLEAR_BUFFERS_COLOR_ALL                               = NV2A_CLEAR_BUFFERS_COLOR_A or NV2A_CLEAR_BUFFERS_COLOR_B or NV2A_CLEAR_BUFFERS_COLOR_G or NV2A_CLEAR_BUFFERS_COLOR_R; // Dxbx
 const  NV2A_CLEAR_BUFFERS_STENCIL                                 = (1 shl  1);
 const  NV2A_CLEAR_BUFFERS_DEPTH                                   = (1 shl  0);
 const NV2A_CLEAR_RECT_HORIZONTAL                                  = $00001d98; // Dxbx
@@ -2423,7 +2424,7 @@ type
       _000016c0_Unknown: array [$16c0..NV2A_VTX_CACHE_INVALIDATE-1] of BYTE;
       {00001710}VTX_CACHE_INVALIDATE: DWORD;
       _00001714_Unknown: array [$1714..NV2A_VTXBUF_ADDRESS__0-1] of BYTE;
-      {00001720}VTXBUF_ADDRESS: array [0..NV2A_VTXBUF_ADDRESS__SIZE-1] of DWORD;
+      {00001720}VTXBUF_ADDRESS: array [0..NV2A_VTXBUF_ADDRESS__SIZE-1] of PVOID;
       {00001760}VTXFMT: array [0..NV2A_VTXFMT__SIZE-1] of DWORD;
       {000017a0}LIGHT_MODEL_BACK_AMBIENT_R: FLOAT;
       {000017a4}LIGHT_MODEL_BACK_AMBIENT_G: FLOAT;

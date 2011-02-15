@@ -102,7 +102,10 @@ uses
   uXbSound in '..\..\src\uXbSound.pas',
   DbgConsole in '..\..\src\DxbxKrnl\DbgConsole.pas',
   uMiniport in '..\..\src\DxbxKrnl\EmuD3D8\uMiniport.pas',
-  uNV2A in '..\..\src\DxbxKrnl\EmuD3D8\uNV2A.pas';
+  uNV2A in '..\..\src\DxbxKrnl\EmuD3D8\uNV2A.pas',
+  OpenGL1x in '..\..\Libraries\GLScene\OpenGL1x.pas',
+  VectorTypes in '..\..\Libraries\GLScene\VectorTypes.pas',
+  OpenGLTokens in '..\..\Libraries\GLScene\OpenGLTokens.pas';
 
 {$IMAGEBASE $10000000}
 
