@@ -306,6 +306,25 @@ begin
   Result := (NV2AInstance.VTXFMT[Slot] and NV2A_VTXFMT_TYPE_MASK  ); // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
 end;
 
+function NV2AVertexFormatTypeToGL(Value: DWORD): DWORD;
+begin
+  case VALUE of
+    {0}NV2A_VTXFMT_TYPE_COLORBYTE: Result := GL_UNSIGNED_BYTE; // Used for D3DCOLOR
+    {1}NV2A_VTXFMT_TYPE_SHORT: Result := GL_SHORT;
+    {2}NV2A_VTXFMT_TYPE_FLOAT: Result := GL_FLOAT;
+    {4}NV2A_VTXFMT_TYPE_UBYTE: Result := GL_UNSIGNED_BYTE;
+    {5}NV2A_VTXFMT_TYPE_USHORT: Result := GL_UNSIGNED_SHORT;
+//    6: ??
+//  GL_BYTE = $1400;
+//  GL_INT = $1404;
+//  GL_UNSIGNED_INT = $1405;
+//  GL_DOUBLE = $140A;
+  else
+    DxbxKrnlCleanup('Unsupported Vertex format!');
+  end;
+end;
+
+
 procedure EmuNV2A_RegisterVertexBatch();
 // This command just registers the number of vertices are to be used in D3DDevice_DrawVertices.
 var
@@ -379,12 +398,13 @@ begin
     if DxbxGetVertexFormatSize(i) > 0 then
     begin
       glEnableClientState(GL_VERTEX_ATTRIB_ARRAY0_NV + i); // TODO : How should we update this to ARB ?
-      glVertexAttribPointerARB(i,
-        DxbxGetVertexFormatSize(i),
-        DxbxGetVertexFormatType(i),
+      glVertexAttribPointerARB(
+        {Index=}i,
+        {Size=}DxbxGetVertexFormatSize(i),
+        {Type=}NV2AVertexFormatTypeToGL(DxbxGetVertexFormatType(i)),
         {Normalized=}(i < X_D3DVSDE_TEXCOORD0), // Note : Texture coordinates are not normalized, but what about others?
-        DxbxGetVertexFormatStride(i),
-        NV2AInstance.VTXBUF_ADDRESS[i]);
+        {Stride=}DxbxGetVertexFormatStride(i),
+        {Pointer=}NV2AInstance.VTXBUF_ADDRESS[i]);
     end;
   end;
 
