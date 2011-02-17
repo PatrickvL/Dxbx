@@ -547,7 +547,7 @@ var
   ClearRect: RECT;
   ClearDepthValue: DWORD;
   PCFlags: DWORD;
-  ClearZ: DWORD;
+  ClearZ: FLOAT;
   ClearStencil: DWORD;
 {$IFDEF DXBX_USE_OPENGL}
   XColor: TD3DXColor;
@@ -562,7 +562,7 @@ begin
     DWORDSplit2(NV2AInstance.CLEAR_RECT_VERTICAL, 16, {out}ClearRect.Top, 16, {out}ClearRect.Bottom);
     // Decode the Z and Stencil values :
     ClearDepthValue := NV2AInstance.CLEAR_DEPTH_VALUE;
-    ClearZ := ClearDepthValue shr 8; // TODO : Convert this to the right value for all depth-buffer formats
+    ClearZ := (ClearDepthValue shr 8) / $00FFFFFF; // TODO : Convert this to the right value for all depth-buffer formats
     ClearStencil := ClearDepthValue and $FF;
   end;
 
@@ -611,7 +611,7 @@ begin
     // Set the Color, Depth and Stencil values to be used by the clear :
     XColor := D3DXColorFromDWord(NV2AInstance.CLEAR_VALUE);
     glClearColor(XColor.r, XColor.g, XColor.b, XColor.a);
-    glClearDepth(DW2F(ClearZ));
+    glClearDepth(ClearZ);
     glClearStencil(ClearStencil);
     // Determine the OpenGL clear flags :
     PCFlags := 0;
@@ -905,14 +905,14 @@ begin
 //      DxbxKrnlCleanup('TriggerDrawBeginEnd encountered unknown draw mode!');
     end;
 {$IFDEF DXBX_USE_OPENGL}
-    glEnd();
+//    glEnd();
 {$ENDIF}
   end
   else
   begin
     DbgPrintf('  NV2A_VERTEX_BEGIN_END(PrimitiveType = 0x%.03x %s)', [Ord(NewPrimitiveType), X_D3DPRIMITIVETYPE2String(NewPrimitiveType)]);
 {$IFDEF DXBX_USE_OPENGL}
-    glBegin(Ord(NewPrimitiveType)-1);
+//    glBegin(Ord(NewPrimitiveType)-1);
 {$ENDIF}
   end;
 
