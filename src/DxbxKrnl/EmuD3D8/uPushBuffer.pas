@@ -139,6 +139,45 @@ const NV2A_COUNT_MAX = NV2A_COUNT_MASK shr NV2A_COUNT_SHIFT; // = 2047
 
 const lfUnit = lfCxbx or lfPushBuffer;
 
+const
+  // Vertex shader header, mapping Xbox1 registers to the ARB syntax (original version by KingOfC) :
+  DxbxVertexShaderHeader: AnsiString =
+    '!!ARBvp1.0'#13#10 +
+    'TEMP R0,R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12;'#13#10 +
+    'ADDRESS A0;'#13#10 +
+    'ATTRIB v0 = vertex.attrib[0];'#13#10 +
+    'ATTRIB v1 = vertex.attrib[1];'#13#10 +
+    'ATTRIB v2 = vertex.attrib[2];'#13#10 +
+    'ATTRIB v3 = vertex.attrib[3];'#13#10 +
+    'ATTRIB v4 = vertex.attrib[4];'#13#10 +
+    'ATTRIB v5 = vertex.attrib[5];'#13#10 +
+    'ATTRIB v6 = vertex.attrib[6];'#13#10 +
+    'ATTRIB v7 = vertex.attrib[7];'#13#10 +
+    'ATTRIB v8 = vertex.attrib[8];'#13#10 +
+    'ATTRIB v9 = vertex.attrib[9];'#13#10 +
+    'ATTRIB v10 = vertex.attrib[10];'#13#10 +
+    'ATTRIB v11 = vertex.attrib[11];'#13#10 +
+    'ATTRIB v12 = vertex.attrib[12];'#13#10 +
+    'ATTRIB v13 = vertex.attrib[13];'#13#10 +
+    'ATTRIB v14 = vertex.attrib[14];'#13#10 +
+    'ATTRIB v15 = vertex.attrib[15];'#13#10 +
+    'OUTPUT oPos = result.position;'#13#10 +
+    'OUTPUT oD0 = result.color.front.primary;'#13#10 +
+    'OUTPUT oD1 = result.color.front.secondary;'#13#10 +
+    'OUTPUT oB0 = result.color.back.primary;'#13#10 +
+    'OUTPUT oB1 = result.color.back.secondary;'#13#10 +
+    'OUTPUT oPts = result.pointsize;'#13#10 +
+    'OUTPUT oFog = result.fogcoord;'#13#10 +
+    'OUTPUT oT0 = result.texcoord[0];'#13#10 +
+    'OUTPUT oT1 = result.texcoord[1];'#13#10 +
+    'OUTPUT oT2 = result.texcoord[2];'#13#10 +
+    'OUTPUT oT3 = result.texcoord[3];'#13#10 +
+    // PatrickvL addition :
+    'PARAM c0 = program.env[0];'#13#10 +
+    'PARAM c1 = program.env[97];'#13#10 +
+    // TODO : Add PARAM declarations for all c[0-191]
+    'PARAM c191 = program.env[191];'#13#10;
+
 procedure D3DPUSH_DECODE(const dwPushCommand: DWORD; out dwMethod, dwSubCh, dwCount: DWORD; out bNoInc: BOOL_);
 begin
   {out}dwMethod := (dwPushCommand and NV2A_METHOD_MASK) {shr NV2A_METHOD_SHIFT};
@@ -321,6 +360,7 @@ begin
 //  GL_DOUBLE = $140A;
   else
     DxbxKrnlCleanup('Unsupported Vertex format!');
+    Result := GL_FALSE;
   end;
 end;
 
@@ -393,24 +433,39 @@ begin
   DbgPrintf('  DrawPrimitive VertexIndex=%d, VertexCount=%d', [VertexIndex, VertexCount]);
 
 {$IFDEF DXBX_USE_OPENGL}
-  for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
-  begin
-    if DxbxGetVertexFormatSize(i) > 0 then
+  // Make sure we have no VBO active :
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+  glEnable(GL_VERTEX_PROGRAM_ARB);
+  try
+    glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
     begin
-      glEnableClientState(GL_VERTEX_ATTRIB_ARRAY0_NV + i); // TODO : How should we update this to ARB ?
-      glVertexAttribPointerARB(
-        {Index=}i,
-        {Size=}DxbxGetVertexFormatSize(i),
-        {Type=}NV2AVertexFormatTypeToGL(DxbxGetVertexFormatType(i)),
-        {Normalized=}(i < X_D3DVSDE_TEXCOORD0), // Note : Texture coordinates are not normalized, but what about others?
-        {Stride=}DxbxGetVertexFormatStride(i),
-        {Pointer=}NV2AInstance.VTXBUF_ADDRESS[i]);
+      if DxbxGetVertexFormatSize(i) > 0 then
+      begin
+        glEnableVertexAttribArray(i);
+        glVertexAttribPointer(
+          {Index=}i,
+          {Size=}DxbxGetVertexFormatSize(i),
+          {Type=}NV2AVertexFormatTypeToGL(DxbxGetVertexFormatType(i)),
+          {Normalized=}(i >= X_D3DVSDE_TEXCOORD0), // Note : Texture coordinates are not normalized, but what about others?
+          {Stride=}DxbxGetVertexFormatStride(i),
+          {Pointer=}NV2AInstance.VTXBUF_ADDRESS[i]);
+      end
+      else
+        glDisableVertexAttribArray(i);
     end;
+
+    glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
+
+    glDrawArrays(Ord(XBPrimitiveType)-1, VertexIndex, VertexCount);
+  finally
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisable(GL_VERTEX_PROGRAM_ARB);
   end;
-
-  glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
-
-  glDrawArrays(Ord(XBPrimitiveType)-1, VertexIndex, VertexCount);
 {$ENDIF}
 
 // test code :
@@ -621,6 +676,54 @@ begin
 end;
 
 //
+// ViewportOffset
+//
+
+procedure EmuNV2A_ViewportOffset();
+var
+  OffsetRcp: array [0..4-1] of FLOAT;
+begin
+  HandledBy := 'ViewportOffset';
+  HandledCount := 4;
+{$IFDEF DXBX_USE_OPENGL}
+  OffsetRcp[0] := -320.53125;
+  OffsetRcp[1] := -240.53125;
+  OffsetRcp[2] := 0.0;
+  OffsetRcp[3] := 0.0;
+
+  glProgramEnvParameter4fvARB(
+    {target=}GL_VERTEX_PROGRAM_ARB,
+    {index=}133,
+    {params=}@OffsetRcp[0]
+  );
+{$ENDIF}
+end;
+
+//
+// ViewportScale
+//
+
+procedure EmuNV2A_ViewportScale();
+var
+  ScaleRcp: array [0..4-1] of FLOAT;
+begin
+  HandledBy := 'ViewportScale';
+  HandledCount := 4;
+{$IFDEF DXBX_USE_OPENGL}
+  ScaleRcp[0] := 1.0 / 320.0;
+  ScaleRcp[1] := 1.0 / -240.0;
+  ScaleRcp[2] := 0.0;
+  ScaleRcp[3] := 0.0;
+
+  glProgramEnvParameter4fvARB(
+    {target=}GL_VERTEX_PROGRAM_ARB,
+    {index=}134,
+    {params=}@ScaleRcp[0]
+  );
+{$ENDIF}
+end;
+
+//
 // SetViewport
 //
 
@@ -745,7 +848,6 @@ var
   Slot: uint;
 begin
   HandledBy := 'SetVertexShaderConstant';
-  HandledCount := dwCount;
 
   // Make sure we use the correct index if we enter at an offset other than 0 :
   Slot := (dwMethod - NV2A_VP_UPLOAD_CONST__0) div 4;
@@ -753,6 +855,7 @@ begin
   Assert(Slot + dwCount <= NV2A_VP_UPLOAD_CONST__SIZE);
 
 {$IFDEF DXBX_USE_D3D}
+  HandledCount := dwCount;
   // Just set the constants right from the pushbuffer, as they come in batches and won't exceed the native bounds :
   g_pD3DDevice.SetVertexShaderConstant
   (
@@ -760,6 +863,16 @@ begin
       {Register=}NV2AInstance.VP_UPLOAD_CONST_ID + Slot,
       {pConstantData=}pdwPushArguments,
       {ConstantCount=}dwCount
+  );
+{$ENDIF}
+{$IFDEF DXBX_USE_OPENGL}
+  // Just set the constant right from the pushbuffer, as they come in batches and won't exceed the native bounds :
+  HandledCount := 4;
+  glProgramEnvParameter4fvARB
+  (
+    {target=}GL_VERTEX_PROGRAM_ARB,
+    {index=}NV2AInstance.VP_UPLOAD_CONST_ID + Slot,
+    {params=}PGLfloat(pdwPushArguments) // We cannot use NV2AInstance.VP_UPLOAD_CONST, as only 1 DWORD is written there
   );
 {$ENDIF}
 end;
@@ -789,7 +902,7 @@ begin
       pdDrawIndexedVerticesUP:
         PostponedDrawIndexedVerticesUP;
     else
-      DxbxKrnlCleanup('TriggerDrawBeginEnd encountered unknown draw mode!');
+//      DxbxKrnlCleanup('TriggerDrawBeginEnd encountered unknown draw mode!');
     end;
 {$IFDEF DXBX_USE_OPENGL}
     glEnd();
@@ -832,6 +945,17 @@ begin
   // TODO : When do we compile the shader?
 end;
 
+procedure EmuNV2A_VertexData4F();
+var
+  Slot: uint;
+begin
+  HandledBy := 'SetVertexData4F';
+  HandledCount := 4;
+  Slot := (dwMethod - NV2A_VERTEX_DATA4F__0) div 4;
+{$IFDEF DXBX_USE_OPENGL}
+  glVertexAttrib4fv(Slot, PGLfloat(pdwPushArguments));
+{$ENDIF}
+end;
 
 procedure EmuNV2A_VertexData();
 // TODO : Postpone the draw in here to TriggerDrawBeginEnd, instead collect all vertices first.
@@ -992,6 +1116,9 @@ begin
 
     VertPatch.Restore();
   end;
+{$ENDIF}
+{$IFDEF DXBX_USE_OPENGL}
+  glVertex4fv(PGLfloat(pdwPushArguments));
 {$ENDIF}
 end;
 
@@ -1307,7 +1434,9 @@ const
   {0980}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {09C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {09FC NV2A_FLAT_SHADE_OP}EmuNV2A_CDevice_Init,
-  {0A00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0A00}nil, nil, nil, nil, nil, nil, nil, nil,
+  {0A20}EmuNV2A_ViewportOffset, EmuNV2A_ViewportOffset, EmuNV2A_ViewportOffset, EmuNV2A_ViewportOffset,
+                                                                    nil, nil, nil, nil,
   {0A40}nil, nil, nil, nil,
   {0A50 NV2A_EYE_POSITION__0}EmuNV2A_CDevice_Init,
   {0A54 NV2A_EYE_POSITION__1}EmuNV2A_CDevice_Init,
@@ -1315,7 +1444,8 @@ const
   {0A5C NV2A_EYE_POSITION__3}EmuNV2A_CDevice_Init,
                                                 nil, nil, nil, nil, nil, nil, nil, nil,
   {0A80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0AC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0AC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0AF0}EmuNV2A_ViewportScale, EmuNV2A_ViewportScale, EmuNV2A_ViewportScale, EmuNV2A_ViewportScale,
   {0B00 NV2A_VP_UPLOAD_INST__0}EmuNV2A_SetVertexShaderBatch,
   {0B04 NV2A_VP_UPLOAD_INST__1}EmuNV2A_SetVertexShaderBatch,
   {0B08 NV2A_VP_UPLOAD_INST__2}EmuNV2A_SetVertexShaderBatch,
@@ -1447,10 +1577,22 @@ const
   {1940}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1980}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {19C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1A00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1A40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1A80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1AC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1A00}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1A10}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1A20}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1A30}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1A40}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1A50}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1A60}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1A70}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1A80}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1A90}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1AA0}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1AB0}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1AC0}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1AD0}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1AE0}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1AF0}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
   {1B00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1B40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1B80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
@@ -1635,14 +1777,13 @@ begin
     end;
 
     // Interpret GPU Instruction(s) :
-    StepNr := 0;
+    StepNr := 1;
     while dwCount > 0 do
     try
-      Inc(StepNr);
-
       // Simulate writes to the NV2A instance registers :
       if dwMethod < SizeOf(NV2AInstance) then
       begin
+        // TODO : Perhaps we should write all DWORDs before executing them? (See EmuNV2A_SetVertexShaderConstant)
         OldRegisterValue := NV2AInstance.Registers[dwMethod div 4]; // Remember previous value
         NV2AInstance.Registers[dwMethod div 4] := pdwPushArguments^; // Write new value
         NV2ACallback := NV2ACallbacks[dwMethod div 4];
@@ -1682,6 +1823,7 @@ begin
       // for the next instruction so any leftover values are handled there :
       Inc(pdwPushArguments, HandledCount);
       Dec(dwCount, HandledCount);
+      Inc(StepNr, HandledCount);
 
       // Re-initialize handled count & name to their default, for the next command :
       HandledCount := 1;
@@ -1925,44 +2067,48 @@ begin
   wglMakeCurrent(g_EmuWindowsDC, RC);   // makes OpenGL window active
   ReadExtensions;
 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  //  glFrustum(-0.1, 0.1, -0.1, 0.1, 0.3, 25.0); ?
-
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   // TODO : GL_TEXTURE too?
 
-  // glEnable(GL_DEPTH_TEST);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  //  glFrustum(-0.1, 0.1, -0.1, 0.1, 0.3, 25.0); ?
+
+  glEnable(GL_DEPTH_TEST);
 
   glViewport(0, 0,
     g_EmuCDPD.pPresentationParameters.BackBufferWidth,
     g_EmuCDPD.pPresentationParameters.BackBufferHeight);
+
+  // Enable vertex shading
+  glEnable(GL_VERTEX_PROGRAM_ARB);
 
   // TODO : The following code only works on cards that support the
   // vertex program extensions (NVidia cards mainly); So for ATI we
   // have to come up with another solution !!!
   glGenProgramsARB(4, @VertexProgramIDs[0]);
 
-  // enable shading
-  glEnable(GL_VERTEX_PROGRAM_ARB);
-
-  // precompile shader for the fixed function pipeline
-  szCode :=
-//    '!!VP2.0 '#13#10 +
-    '!!ARBvp1.0 '#13#10 +
-    'MOV o[HPOS], v[0];' +
-    'MOV o[COL0], v[3];' +
-    'MOV o[COL1], v[4];' +
-    'MOV o[FOGC], v[5];' +
-    'MOV o[BFC0], v[7];' +
-    'MOV o[BFC1], v[8];' +
-    'MOV o[TEX0], v[9];' +
-    'MOV o[TEX1], v[10];' +
-    'MOV o[TEX2], v[11];' +
-    'MOV o[TEX3], v[12];' +
+  // Precompiled shader for the fixed function pipeline :
+  szCode := {AnsiString}DxbxVertexShaderHeader +
+    'MOV R0, v0;' +
+    'RCP R0.w, R0.w;' +
+    'MUL R0, R0, c0;' + // c[-96] in D3D speak
+    'ADD oPos, R0, c1;' + // c[-95] in D3D speak
+    'MOV oD0, v3;' +
+    'MOV oD1, v4;' +
+    'RCP oFog, v0.w;' + // w fog
+    'MOV oPts, v1.x;' +
+    'MOV oB0, v7;' +
+    'MOV oB1, v8;' +
+    'MOV oT0, v9;' +
+    'MOV oT1, v10;' +
+    'MOV oT2, v11;' +
+    'MOV oT3, v12;' +
     'END';
+
   glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
+
   glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, Length(szCode), Pointer(szCode));
 
   // errors are catched
@@ -1970,6 +2116,8 @@ begin
 
   if(GLErrorPos >= 0) then
     EmuWarning('Program error at position %d:'#13#10'%s', [GLErrorPos, szCode[GLErrorPos]]);
+
+  glDisable(GL_VERTEX_PROGRAM_ARB);
 end;
 {$ENDIF}
 
@@ -1989,6 +2137,8 @@ begin
   DxbxLogPushBufferPointers('NV2AThread');
 
 {$IFDEF DXBX_USE_OPENGL}
+  // The OpenGL context must be created in the same thread that's going to do all drawing
+  // (in this case it's the NV2A push buffer emulator thread doing all the drawing) :
   InitOpenGLContext();
 {$ENDIF}
 
