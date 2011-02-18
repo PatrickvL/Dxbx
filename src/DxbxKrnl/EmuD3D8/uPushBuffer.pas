@@ -348,6 +348,8 @@ begin
   Result := (NV2AInstance.VTXFMT[Slot] and NV2A_VTXFMT_TYPE_MASK  ); // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
 end;
 
+{$IFDEF DXBX_USE_OPENGL}
+
 function NV2APrimitiveTypeToGL(Value: X_D3DPRIMITIVETYPE): DWORD;
 begin
   Result := Ord(Value) - 1;
@@ -372,6 +374,7 @@ begin
   end;
 end;
 
+{$ENDIF}
 
 function BooleanToString(Value: Boolean): string;
 begin
@@ -985,13 +988,15 @@ begin
 end;
 
 procedure EmuNV2A_VertexData4F();
+{$IFDEF DXBX_USE_OPENGL}
 var
   Slot: uint;
+{$ENDIF}
 begin
   HandledBy := 'SetVertexData4F';
   HandledCount := 4;
-  Slot := (dwMethod - NV2A_VERTEX_DATA4F__0) div 4;
 {$IFDEF DXBX_USE_OPENGL}
+  Slot := (dwMethod - NV2A_VERTEX_DATA4F__0) div 4;
   glVertexAttrib4fv(Slot, PGLfloat(pdwPushArguments));
 {$ENDIF}
 end;
