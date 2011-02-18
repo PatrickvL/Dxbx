@@ -339,12 +339,12 @@ end;
 
 function DxbxGetVertexFormatSize(Slot: Integer): uint;
 begin
-  Result := (NV2AInstance.VTXFMT[Slot] and NV2A_VTXFMT_SIZE_MASK  ) shr NV2A_VTXFMT_SIZE_SHIFT; // Size:1..4=1..4,7=3w?
+  Result := (NV2AInstance.VTXFMT[Slot] and NV2A_VTXFMT_SIZE_MASK) shr NV2A_VTXFMT_SIZE_SHIFT; // Size:1..4=1..4,7=3w?
 end;
 
 function DxbxGetVertexFormatType(Slot: Integer): uint;
 begin
-  Result := (NV2AInstance.VTXFMT[Slot] and NV2A_VTXFMT_TYPE_MASK  ); // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
+  Result := (NV2AInstance.VTXFMT[Slot] and NV2A_VTXFMT_TYPE_MASK); // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
 end;
 
 {$IFDEF DXBX_USE_OPENGL}
@@ -352,6 +352,19 @@ end;
 function NV2APrimitiveTypeToGL(Value: X_D3DPRIMITIVETYPE): DWORD;
 begin
   Result := Ord(Value) - 1;
+  (* The above is a faster version of this mapping :
+  case Value of
+     {1}X_D3DPT_POINTLIST     : Result := {0}GL_POINTS;
+     {2}X_D3DPT_LINELIST      : Result := {1}GL_LINES;
+     {3}X_D3DPT_LINELOOP      : Result := {2}GL_LINE_LOOP;
+     {4}X_D3DPT_LINESTRIP     : Result := {3}GL_LINE_STRIP;
+     {5}X_D3DPT_TRIANGLELIST  : Result := {4}GL_TRIANGLES;
+     {6}X_D3DPT_TRIANGLESTRIP : Result := {5}GL_TRIANGLE_STRIP;
+     {7}X_D3DPT_TRIANGLEFAN   : Result := {6}GL_TRIANGLE_FAN;
+     {8}X_D3DPT_QUADLIST      : Result := {7}GL_QUADS;
+     {9}X_D3DPT_QUADSTRIP     : Result := {8}GL_QUAD_STRIP;
+    {10}X_D3DPT_POLYGON       : Result := {9}GL_POLYGON;
+  end; *)
 end;
 
 function NV2AVertexFormatTypeToGL(Value: DWORD): DWORD;
@@ -383,6 +396,48 @@ begin
     Result := 'False';
 end;
 
+function ColorBytesToString(Ptr: Pointer; Count: Integer = 1; NrPerGroup: Integer = 4): string;
+var
+  i: Integer;
+begin
+  Result := '{';
+  i := 0;
+  while i < Count do
+  begin
+    Result := Result + Format('%d', [PBYTE(Ptr)^]);
+    Inc(PBYTE(Ptr));
+    Inc(i);
+    if i < Count then
+      if (i mod NrPerGroup) > 0 then
+        Result := Result + ', '
+      else
+        Result := Result + '}{';
+  end;
+
+  Result := Result + '}';
+end;
+
+function ShortsToString(Ptr: Pointer; Count: Integer = 1; NrPerGroup: Integer = 4): string;
+var
+  i: Integer;
+begin
+  Result := '{';
+  i := 0;
+  while i < Count do
+  begin
+    Result := Result + Format('%d', [PSHORT(Ptr)^]);
+    Inc(PSHORT(Ptr));
+    Inc(i);
+    if i < Count then
+      if (i mod NrPerGroup) > 0 then
+        Result := Result + ', '
+      else
+        Result := Result + '}{';
+  end;
+
+  Result := Result + '}';
+end;
+
 function FloatsToString(Ptr: Pointer; Count: Integer = 1; NrPerGroup: Integer = 4): string;
 var
   i: Integer;
@@ -391,16 +446,56 @@ begin
   i := 0;
   while i < Count do
   begin
-    Inc(i);
-//    Result := Result + Format('%f', [PFLOAT(Ptr)^]);
     Result := Result + FloatToStr(PFLOAT(Ptr)^);
-    if (i mod NrPerGroup) > 0 then
-      Result := Result + ', '
-    else
-      if i < Count then
-        Result := Result + '}{';
-
     Inc(PFLOAT(Ptr));
+    Inc(i);
+    if i < Count then
+      if (i mod NrPerGroup) > 0 then
+        Result := Result + ', '
+      else
+        Result := Result + '}{';
+  end;
+
+  Result := Result + '}';
+end;
+
+function UBytesToString(Ptr: Pointer; Count: Integer = 1; NrPerGroup: Integer = 4): string;
+var
+  i: Integer;
+begin
+  Result := '{';
+  i := 0;
+  while i < Count do
+  begin
+    Result := Result + Format('%d', [PBYTE(Ptr)^]);
+    Inc(PBYTE(Ptr));
+    Inc(i);
+    if i < Count then
+      if (i mod NrPerGroup) > 0 then
+        Result := Result + ', '
+      else
+        Result := Result + '}{';
+  end;
+
+  Result := Result + '}';
+end;
+
+function UShortsToString(Ptr: Pointer; Count: Integer = 1; NrPerGroup: Integer = 4): string;
+var
+  i: Integer;
+begin
+  Result := '{';
+  i := 0;
+  while i < Count do
+  begin
+    Result := Result + Format('%d', [PUSHORT(Ptr)^]);
+    Inc(PUSHORT(Ptr));
+    Inc(i);
+    if i < Count then
+      if (i mod NrPerGroup) > 0 then
+        Result := Result + ', '
+      else
+        Result := Result + '}{';
   end;
 
   Result := Result + '}';
@@ -472,7 +567,8 @@ begin
 //end;
 
 //  VertexCount := VertexOffset div 16;
-  DbgPrintf('  DrawPrimitive(VertexIndex=%d, VertexCount=%d)', [VertexIndex, VertexCount]);
+  HandledBy := HandledBy + Format(' DrawPrimitive(VertexIndex=%d, VertexCount=%d)', [VertexIndex, VertexCount]);
+
 
 {$IFDEF DXBX_USE_OPENGL}
   // Since DrawBeginEnd has no choice but to start a glBegin() block,
@@ -501,6 +597,22 @@ begin
           {Normalized=}(i >= X_D3DVSDE_TEXCOORD0), // Note : Texture coordinates are not normalized, but what about others?
           {Stride=}DxbxGetVertexFormatStride(i),
           {Pointer=}NV2AInstance.VTXBUF_ADDRESS[i]);
+
+        if VertexCount <= 4 then
+        begin
+          case DxbxGetVertexFormatType(i) of
+            NV2A_VTXFMT_TYPE_COLORBYTE:
+              HandledBy := HandledBy + ' ' + ColorBytesToString(NV2AInstance.VTXBUF_ADDRESS[i], VertexCount);
+            NV2A_VTXFMT_TYPE_SHORT:
+              HandledBy := HandledBy + ' ' + ShortsToString(NV2AInstance.VTXBUF_ADDRESS[i], VertexCount);
+            NV2A_VTXFMT_TYPE_FLOAT:
+              HandledBy := HandledBy + ' ' + FloatsToString(NV2AInstance.VTXBUF_ADDRESS[i], VertexCount);
+            NV2A_VTXFMT_TYPE_UBYTE:
+              HandledBy := HandledBy + ' ' + UBytesToString(NV2AInstance.VTXBUF_ADDRESS[i], VertexCount);
+            NV2A_VTXFMT_TYPE_USHORT:
+              HandledBy := HandledBy + ' ' + UShortsToString(NV2AInstance.VTXBUF_ADDRESS[i], VertexCount);
+          end;
+        end;
       end
       else
       begin
