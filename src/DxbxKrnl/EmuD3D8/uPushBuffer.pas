@@ -272,7 +272,6 @@ var
   OldRegisterValue: DWORD = 0;
   PrevMethod: array [0..2-1] of DWORD = (0, 0);
   ZScale: FLOAT = 0.0;
-  IsFixedVertexShader: Boolean = True; // True=FVF, False=custom vertex shader
 //  function SeenRecentMethod(Method: DWORD): Boolean;
 //  procedure ExecutePushBufferRaw(pdwPushData, pdwPushDataEnd: PDWord);
 
@@ -578,18 +577,22 @@ begin
     DxbxSetRenderStateInternal('  NV2A SetRenderState', XRenderState, pdwPushArguments^);
 end;
 
+function IsEngineFixedFunctionPipeline(): Boolean;
+// True=FVF, False=custom vertex shader
+begin
+  // Fixed function happens when there's no user-supplied vertex-program active :
+  Result := (NV2AInstance.ENGINE and NV2A_ENGINE_VP) = 0;
+end;
+
+function IsEngineVertexProgram(): Boolean;
+// True=User defined vertex shader program is active
+begin
+  Result := (NV2AInstance.ENGINE and NV2A_ENGINE_VP) > 0;
+end;
+
 procedure EmuNV2A_NOP(); begin {HandledBy := 'nop'; }HandledCount := dwCount; end;
 procedure EmuNV2A_CDevice_Init(); begin HandledBy := '_CDevice_Init'; end;
 procedure EmuNV2A_VertexCacheInvalidate(); begin HandledBy := 'D3DVertexBuffer_Lock'; end;
-
-procedure EmuNV2A_Engine();
-begin
-  HandledBy := 'TransformEngine :' +
-    ' VP=' + BooleanToString((pdwPushArguments^ and NV2A_ENGINE_VP) = 0) + // No vertex program means FVF
-    ' FIXED=' + BooleanToString((pdwPushArguments^ and NV2A_ENGINE_FIXED) = 0);
-
-  IsFixedVertexShader := (pdwPushArguments^ and NV2A_ENGINE_VP) = 0; // No vertex program means FVF
-end;
 
 //
 // Clear
@@ -999,72 +1002,63 @@ begin
   // TODO : When do we compile the shader?
 end;
 
+
 procedure EmuNV2A_VertexData2F();
-{$IFDEF DXBX_USE_OPENGL}
 var
   Slot: uint;
-{$ENDIF}
 begin
+  Slot := (dwMethod - NV2A_VERTEX_DATA2F__0) div 8;
   HandledCount := 2;
-  HandledBy := 'SetVertexData2F(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
+  HandledBy := 'SetVertexData2F(' + X_D3DVSDE2String(Slot) + ', ' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 {$IFDEF DXBX_USE_OPENGL}
-  Slot := (dwMethod - NV2A_VERTEX_DATA2F__0) div 2;
   glVertexAttrib2fv(Slot, PGLfloat(pdwPushArguments));
 {$ENDIF}
 end;
 
 procedure EmuNV2A_VertexData2S();
-{$IFDEF DXBX_USE_OPENGL}
 var
   Slot: uint;
-{$ENDIF}
 begin
+  Slot := (dwMethod - NV2A_VERTEX_DATA2S__0) div 4;
   // Default HandledCount := 1;
-  HandledBy := 'SetVertexData2S';
+  HandledBy := 'SetVertexData2S(' + X_D3DVSDE2String(Slot) + ')';
 {$IFDEF DXBX_USE_OPENGL}
-  Slot := (dwMethod - NV2A_VERTEX_DATA2S__0) div 1;
   glVertexAttrib2sv(Slot, PGLshort(pdwPushArguments));
 {$ENDIF}
 end;
 
 procedure EmuNV2A_VertexData4UB();
-{$IFDEF DXBX_USE_OPENGL}
 var
   Slot: uint;
-{$ENDIF}
 begin
+  Slot := (dwMethod - NV2A_VERTEX_DATA4UB__0) div 4;
   // Default HandledCount := 1;
-  HandledBy := 'SetVertexData4UB';
+  HandledBy := 'SetVertexData4UB(' + X_D3DVSDE2String(Slot) + ')';
 {$IFDEF DXBX_USE_OPENGL}
-  Slot := (dwMethod - NV2A_VERTEX_DATA4UB__0) div 1;
   glVertexAttrib4ubv(Slot, PGLubyte(pdwPushArguments));
 {$ENDIF}
 end;
 
 procedure EmuNV2A_VertexData4S();
-{$IFDEF DXBX_USE_OPENGL}
 var
   Slot: uint;
-{$ENDIF}
 begin
+  Slot := (dwMethod - NV2A_VERTEX_DATA4S__0) div 8;
   HandledCount := 2;
-  HandledBy := 'SetVertexData4S';
+  HandledBy := 'SetVertexData4S(' + X_D3DVSDE2String(Slot) + ')';
 {$IFDEF DXBX_USE_OPENGL}
-  Slot := (dwMethod - NV2A_VERTEX_DATA4S__0) div 2;
   glVertexAttrib4sv(Slot, PGLshort(pdwPushArguments));
 {$ENDIF}
 end;
 
 procedure EmuNV2A_VertexData4F();
-{$IFDEF DXBX_USE_OPENGL}
 var
   Slot: uint;
-{$ENDIF}
 begin
+  Slot := (dwMethod - NV2A_VERTEX_DATA4F__0) div 16;
   HandledCount := 4;
-  HandledBy := 'SetVertexData4F(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
+  HandledBy := 'SetVertexData4F(' + X_D3DVSDE2String(Slot) + ', ' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 {$IFDEF DXBX_USE_OPENGL}
-  Slot := (dwMethod - NV2A_VERTEX_DATA4F__0) div 4;
   glVertexAttrib4fv(Slot, PGLfloat(pdwPushArguments));
 {$ENDIF}
 end;
@@ -1078,6 +1072,10 @@ var
   hRet: HRESULT;
   pData: PByte;
 {$ENDIF}
+{$IFDEF DXBX_USE_OPENGL}
+var
+  LocalCount: DWord;
+{$ENDIF}
 begin
   HandledCount := dwCount;
   HandledBy := 'DrawVertices';
@@ -1087,7 +1085,7 @@ begin
   pVertexData := pdwPushArguments;
 
   dwVertexShader := 0;
-  if IsFixedVertexShader then
+  if IsEngineFixedFunctionPipeline() then
   begin
     // Determine the FVF flags :
     case (NV2AInstance.VTXFMT[X_D3DVSDE_POSITION] and NV2A_VTXFMT_SIZE_MASK) shr NV2A_VTXFMT_SIZE_SHIFT of
@@ -1231,11 +1229,13 @@ begin
 {$IFDEF DXBX_USE_OPENGL}
   HandledBy := 'Vertex4f(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
   PostponedDrawType := pdDrawVerticesUP;
-  while dwCount > 0 do
+  LocalCount := 0;
+  while LocalCount < HandledCount do
   begin
+//    case (NV2AInstance.VTXFMT[X_D3DVSDE_POSITION] and NV2A_VTXFMT_SIZE_MASK) shr NV2A_VTXFMT_SIZE_SHIFT of
     glVertex4fv(PGLfloat(pdwPushArguments));
     Inc(PGLfloat(pdwPushArguments), 4);
-    Dec(dwCount, 4);
+    Inc(LocalCount, 4);
   end;
 {$ENDIF}
 end;
@@ -1753,7 +1753,7 @@ const
   {1E68 NV2A_SHADOW_ZSLOPE_THRESHOLD}EmuNV2A_CDevice_Init,
                                                                nil, nil, nil, nil, nil,
   {1E80}nil, nil, nil, nil, nil,
-  {1E94 NV2A_ENGINE}EmuNV2A_Engine,
+  {1E94 NV2A_ENGINE}nil,
                                       nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1EC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1F00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
