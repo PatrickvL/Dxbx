@@ -606,8 +606,6 @@ var
   XColor: TD3DXColor;
 {$ENDIF}
 begin
-  HandledBy := 'Clear';
-
   // Parse the GPU registers that are associated with this clear :
   begin
     // Reconstruct the clear rectangle :
@@ -618,6 +616,9 @@ begin
     ClearZ := (ClearDepthValue shr 8) / $00FFFFFF; // TODO : Convert this to the right value for all depth-buffer formats
     ClearStencil := ClearDepthValue and $FF;
   end;
+
+  HandledBy := Format('Clear(%d, %d, %d, %d)', [ClearRect.Left, ClearRect.Top, ClearRect.Right, ClearRect.Bottom]);
+
 
 {$IFDEF DXBX_USE_D3D}
   // Convert the clear-flags from Xbox to PC, after which we'll remove the invalid flags :
@@ -759,6 +760,17 @@ begin
     {index=}134, // = C[38]
     {params=}PGLfloat(pdwPushArguments)
   );
+{$ENDIF}
+end;
+
+procedure EmuNV2A_DepthTest();
+begin
+  HandledBy := 'DepthTest := ' + BooleanToString(pdwPushArguments^ <> 0);
+{$IFDEF DXBX_USE_OPENGL}
+  if pdwPushArguments^ <> 0 then
+    glDisable(GL_DEPTH_TEST)
+  else
+    glDisable(GL_DEPTH_TEST);
 {$ENDIF}
 end;
 
@@ -1451,7 +1463,9 @@ const
   {0240}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0280}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {02C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0300}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0300}nil, nil, nil,
+  {030C}EmuNV2A_DepthTest,
+                            nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0340}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0380}nil, nil, nil, nil, nil, nil,
   {0398 NV2A_DEPTH_RANGE_FAR}EmuNV2A_SetViewport, // Always the last method for SetViewport, so we use it as a trigger
