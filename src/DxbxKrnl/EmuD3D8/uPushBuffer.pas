@@ -173,6 +173,7 @@ const
     'OUTPUT oT2 = result.texcoord[2];'#13#10 +
     'OUTPUT oT3 = result.texcoord[3];'#13#10 +
     // PatrickvL addition :
+//    'PARAM c[] = { program.env[0..191] };'#13#10 // All constants in 1 array declaration, requires NV_gpu_program4
     'PARAM c0 = program.env[0];'#13#10 +
     'PARAM c1 = program.env[1];'#13#10 +
     // TODO : Add PARAM declarations for all c[0-191]
@@ -472,6 +473,8 @@ begin
   DbgPrintf('  DrawPrimitive(VertexIndex=%d, VertexCount=%d)', [VertexIndex, VertexCount]);
 
 {$IFDEF DXBX_USE_OPENGL}
+  // Since DrawBeginEnd has no choice but to start a glBegin() block,
+  // we must first leave that here, as we're not going to draw immediate :
   glEnd();
 
   // Make sure we have no VBO active :
@@ -866,8 +869,8 @@ begin
   // g_pD3DDevice.SetTransform(D3DTS_PROJECTION, PD3DMatrix(pdwPushArguments));
 
 {$IFDEF DXBX_USE_OPENGL}
-  glMatrixMode(GL_PROJECTION);
-  glLoadMatrixf(PGLfloat(pdwPushArguments));
+//  glMatrixMode(GL_PROJECTION);
+//  glLoadMatrixf(PGLfloat(pdwPushArguments));
 {$ENDIF}
 end;
 
@@ -2127,13 +2130,13 @@ begin
   wglMakeCurrent(g_EmuWindowsDC, RC);   // makes OpenGL window active
   ReadExtensions;
 
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  // TODO : GL_TEXTURE too?
-
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   //  glFrustum(-0.1, 0.1, -0.1, 0.1, 0.3, 25.0); ?
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  // TODO : GL_TEXTURE too?
 
   glEnable(GL_DEPTH_TEST);
 
@@ -2156,7 +2159,7 @@ begin
     'RCP R0.w, R0.w;'#13#10 +
     'MUL R0, R0, c0;'#13#10 + // c[-96] in D3D speak - applies SuperSampleScale
     // Note : Use R12 instead of oPos because this is not yet the final assignment :
-    'ADD R12, R0, c1;'#13#10 + // c[-95] in D3D speak - applies ScreenSpaceOffset
+    'ADD R12, R0, c1;'#13#10 + // c[-95] in D3D speak - applies SuperSampleOffset
     // This part just reads all other components and passes them to the output :
     'MOV oD0, v3;'#13#10 +
     'MOV oD1, v4;'#13#10 +
