@@ -982,8 +982,8 @@ procedure EmuNV2A_SetVertexShaderBatch();
 var
   Slot: uint;
 begin
-  HandledBy := 'SetVertexShader';
   HandledCount := dwCount;
+  HandledBy := 'SetVertexShader';
 
   // Make sure we use the correct index if we enter at an offset other than 0 :
   Slot := (dwMethod - NV2A_VP_UPLOAD_INST__0) div 4;
@@ -999,14 +999,70 @@ begin
   // TODO : When do we compile the shader?
 end;
 
+procedure EmuNV2A_VertexData2F();
+{$IFDEF DXBX_USE_OPENGL}
+var
+  Slot: uint;
+{$ENDIF}
+begin
+  HandledCount := 2;
+  HandledBy := 'SetVertexData2F(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  Slot := (dwMethod - NV2A_VERTEX_DATA2F__0) div 2;
+  glVertexAttrib2fv(Slot, PGLfloat(pdwPushArguments));
+{$ENDIF}
+end;
+
+procedure EmuNV2A_VertexData2S();
+{$IFDEF DXBX_USE_OPENGL}
+var
+  Slot: uint;
+{$ENDIF}
+begin
+  // Default HandledCount := 1;
+  HandledBy := 'SetVertexData2S';
+{$IFDEF DXBX_USE_OPENGL}
+  Slot := (dwMethod - NV2A_VERTEX_DATA2S__0) div 1;
+  glVertexAttrib2sv(Slot, PGLshort(pdwPushArguments));
+{$ENDIF}
+end;
+
+procedure EmuNV2A_VertexData4UB();
+{$IFDEF DXBX_USE_OPENGL}
+var
+  Slot: uint;
+{$ENDIF}
+begin
+  // Default HandledCount := 1;
+  HandledBy := 'SetVertexData4UB';
+{$IFDEF DXBX_USE_OPENGL}
+  Slot := (dwMethod - NV2A_VERTEX_DATA4UB__0) div 1;
+  glVertexAttrib4ubv(Slot, PGLubyte(pdwPushArguments));
+{$ENDIF}
+end;
+
+procedure EmuNV2A_VertexData4S();
+{$IFDEF DXBX_USE_OPENGL}
+var
+  Slot: uint;
+{$ENDIF}
+begin
+  HandledCount := 2;
+  HandledBy := 'SetVertexData4S';
+{$IFDEF DXBX_USE_OPENGL}
+  Slot := (dwMethod - NV2A_VERTEX_DATA4S__0) div 2;
+  glVertexAttrib4sv(Slot, PGLshort(pdwPushArguments));
+{$ENDIF}
+end;
+
 procedure EmuNV2A_VertexData4F();
 {$IFDEF DXBX_USE_OPENGL}
 var
   Slot: uint;
 {$ENDIF}
 begin
-  HandledBy := 'SetVertexData4F';
   HandledCount := 4;
+  HandledBy := 'SetVertexData4F(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 {$IFDEF DXBX_USE_OPENGL}
   Slot := (dwMethod - NV2A_VERTEX_DATA4F__0) div 4;
   glVertexAttrib4fv(Slot, PGLfloat(pdwPushArguments));
@@ -1023,8 +1079,8 @@ var
   pData: PByte;
 {$ENDIF}
 begin
-  HandledBy := 'DrawVertices';
   HandledCount := dwCount;
+  HandledBy := 'DrawVertices';
 {$IFDEF DXBX_USE_D3D}
   // TODO : Postpone the draw in here to TriggerDrawBeginEnd, instead collect all vertices first.
   PostponedDrawType := pdDrawVertices;
@@ -1635,12 +1691,30 @@ const
   {1818 NV2A_VERTEX_DATA}EmuNV2A_VertexData,
                                            nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1840}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1880}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {18C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1900}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1940}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1980}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {19C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1880}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
+  {1890}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
+  {18A0}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
+  {18B0}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
+  {18C0}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
+  {18D0}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
+  {18E0}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
+  {18F0}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
+  {1900}EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S,
+  {1910}EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S,
+  {1920}EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S,
+  {1930}EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S,
+  {1940}EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB,
+  {1950}EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB,
+  {1960}EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB,
+  {1970}EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB,
+  {1980}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
+  {1990}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
+  {19A0}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
+  {19B0}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
+  {19C0}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
+  {19D0}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
+  {19E0}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
+  {19F0}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
   {1A00}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
   {1A10}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
   {1A20}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
@@ -1898,7 +1972,7 @@ begin
       begin
         // If there are more details, print them now :
         if HandledBy <> '' then
-          DbgPrintf('  > ' + HandledBy);
+          DbgPrintf('  NV2A > ' + HandledBy);
       end;
 
       // Since some instructions use less arguments, we repeat this loop
