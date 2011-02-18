@@ -174,8 +174,10 @@ const
     'OUTPUT oT3 = result.texcoord[3];'#13#10 +
     // PatrickvL addition :
     'PARAM c0 = program.env[0];'#13#10 +
-    'PARAM c1 = program.env[97];'#13#10 +
+    'PARAM c1 = program.env[1];'#13#10 +
     // TODO : Add PARAM declarations for all c[0-191]
+    'PARAM c133 = program.env[133];'#13#10 +
+    'PARAM c134 = program.env[134];'#13#10 +
     'PARAM c191 = program.env[191];'#13#10;
 
 procedure D3DPUSH_DECODE(const dwPushCommand: DWORD; out dwMethod, dwSubCh, dwCount: DWORD; out bNoInc: BOOL_);
@@ -345,6 +347,11 @@ begin
   Result := (NV2AInstance.VTXFMT[Slot] and NV2A_VTXFMT_TYPE_MASK  ); // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
 end;
 
+function NV2APrimitiveTypeToGL(Value: X_D3DPRIMITIVETYPE): DWORD;
+begin
+  Result := Ord(Value) - 1;
+end;
+
 function NV2AVertexFormatTypeToGL(Value: DWORD): DWORD;
 begin
   case VALUE of
@@ -365,29 +372,61 @@ begin
 end;
 
 
+function BooleanToString(Value: Boolean): string;
+begin
+  if Value then
+    Result := 'True'
+  else
+    Result := 'False';
+end;
+
+function FloatsToString(Ptr: Pointer; Count: Integer = 1; NrPerGroup: Integer = 4): string;
+var
+  i: Integer;
+begin
+  Result := '{';
+  i := 0;
+  while i < Count do
+  begin
+    Inc(i);
+//    Result := Result + Format('%f', [PFLOAT(Ptr)^]);
+    Result := Result + FloatToStr(PFLOAT(Ptr)^);
+    if (i mod NrPerGroup) > 0 then
+      Result := Result + ', '
+    else
+      if i < Count then
+        Result := Result + '}{';
+
+    Inc(PFLOAT(Ptr));
+  end;
+
+  Result := Result + '}';
+end;
+
 procedure EmuNV2A_RegisterVertexBatch();
 // This command just registers the number of vertices are to be used in D3DDevice_DrawVertices.
 var
   BatchCount: Integer;
   BatchIndex: Integer;
 begin
-  HandledBy := 'DrawVertices';
-
   // Decode the arguments (index is an incrementing number, count is cumulative per batch) :
   DWORDSplit2(pdwPushArguments^, 24, {out}BatchIndex, 8, {out}BatchCount);
   Inc(BatchCount);
 
   // Accumulate the vertices for the draw that will follow :
-  Inc(VertexCount, BatchCount + 1);
+  Inc(VertexCount, BatchCount);
   // Register the index only once :
-  if VertexIndex >= 0 then
-    Exit;
+  if VertexIndex < 0 then
+  begin
+    // Note : Additional commands will mention an index right next to the previous batch
+    VertexIndex := BatchIndex;
 
-  // Note : Additional commands will mention an index right next to the previous batch
-  VertexIndex := BatchIndex;
+    // Register that the postponed draw will be a DrawVertices() :
+    PostponedDrawType := pdDrawVertices;
+  end;
 
-  // Register that the postponed draw will be a DrawVertices() :
-  PostponedDrawType := pdDrawVertices;
+  HandledBy := Format('VertexBatch(BatchIndex=%d, BatchCount=%d) > VertexIndex=%d VertexCount=%d',
+    [BatchIndex, BatchCount, VertexIndex, VertexCount]);
 end;
 
 procedure PostponedDrawVertices;
@@ -430,14 +469,18 @@ begin
 //end;
 
 //  VertexCount := VertexOffset div 16;
-  DbgPrintf('  DrawPrimitive VertexIndex=%d, VertexCount=%d', [VertexIndex, VertexCount]);
+  DbgPrintf('  DrawPrimitive(VertexIndex=%d, VertexCount=%d)', [VertexIndex, VertexCount]);
 
 {$IFDEF DXBX_USE_OPENGL}
+  glEnd();
+
   // Make sure we have no VBO active :
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   glEnable(GL_VERTEX_PROGRAM_ARB);
   try
+    // TODO : Implement an alternative route for the following code,
+    // if the current OpenGL context doesn't support this :
     glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
 
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -455,10 +498,11 @@ begin
           {Pointer=}NV2AInstance.VTXBUF_ADDRESS[i]);
       end
       else
+      begin
         glDisableVertexAttribArray(i);
+        //glVertexAttrib4fv(i, @NV2AInstance.VERTEX_DATA4F[0]);
+      end;
     end;
-
-    glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
 
     glDrawArrays(Ord(XBPrimitiveType)-1, VertexIndex, VertexCount);
   finally
@@ -528,13 +572,16 @@ begin
     DxbxSetRenderStateInternal('  NV2A SetRenderState', XRenderState, pdwPushArguments^);
 end;
 
-procedure EmuNV2A_NOP(); begin HandledBy := 'nop'; HandledCount := dwCount; end;
+procedure EmuNV2A_NOP(); begin {HandledBy := 'nop'; }HandledCount := dwCount; end;
 procedure EmuNV2A_CDevice_Init(); begin HandledBy := '_CDevice_Init'; end;
 procedure EmuNV2A_VertexCacheInvalidate(); begin HandledBy := 'D3DVertexBuffer_Lock'; end;
 
 procedure EmuNV2A_Engine();
 begin
-  HandledBy := 'TransformEngine';
+  HandledBy := 'TransformEngine :' +
+    ' VP=' + BooleanToString((pdwPushArguments^ and NV2A_ENGINE_VP) = 0) + // No vertex program means FVF
+    ' FIXED=' + BooleanToString((pdwPushArguments^ and NV2A_ENGINE_FIXED) = 0);
+
   IsFixedVertexShader := (pdwPushArguments^ and NV2A_ENGINE_VP) = 0; // No vertex program means FVF
 end;
 
@@ -680,21 +727,14 @@ end;
 //
 
 procedure EmuNV2A_ViewportOffset();
-var
-  OffsetRcp: array [0..4-1] of FLOAT;
 begin
-  HandledBy := 'ViewportOffset';
   HandledCount := 4;
+  HandledBy := 'ViewportOffset(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 {$IFDEF DXBX_USE_OPENGL}
-  OffsetRcp[0] := -320.53125;
-  OffsetRcp[1] := -240.53125;
-  OffsetRcp[2] := 0.0;
-  OffsetRcp[3] := 0.0;
-
   glProgramEnvParameter4fvARB(
     {target=}GL_VERTEX_PROGRAM_ARB,
-    {index=}133,
-    {params=}@OffsetRcp[0]
+    {index=}133, // = C[37]
+    {params=}PGLfloat(pdwPushArguments)
   );
 {$ENDIF}
 end;
@@ -704,21 +744,14 @@ end;
 //
 
 procedure EmuNV2A_ViewportScale();
-var
-  ScaleRcp: array [0..4-1] of FLOAT;
 begin
-  HandledBy := 'ViewportScale';
   HandledCount := 4;
+  HandledBy := 'ViewportScale(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 {$IFDEF DXBX_USE_OPENGL}
-  ScaleRcp[0] := 1.0 / 320.0;
-  ScaleRcp[1] := 1.0 / -240.0;
-  ScaleRcp[2] := 0.0;
-  ScaleRcp[3] := 0.0;
-
   glProgramEnvParameter4fvARB(
     {target=}GL_VERTEX_PROGRAM_ARB,
-    {index=}134,
-    {params=}@ScaleRcp[0]
+    {index=}134, // = C[38]
+    {params=}PGLfloat(pdwPushArguments)
   );
 {$ENDIF}
 end;
@@ -777,8 +810,7 @@ begin
   // Note : Disable this assignment-line to get more pushbuffer debug output :
   HandledCount := 16; // We handle only one matrix
 
-  HandledBy := 'SetTransform';
-
+  HandledBy := 'SetTransform(ModelView, ' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 {$IFDEF DXBX_USE_D3D}
   // The ModelView = D3DTS_WORLD * D3DTS_VIEW.
   // We cannot decompose these two matrixes, but if we keep the World view as a static Identity view,
@@ -801,7 +833,7 @@ begin
   // Note : Disable this assignment-line to get more pushbuffer debug output :
   HandledCount := 16; // We handle only one matrix
 
-  HandledBy := 'SetTransform';
+  HandledBy := 'SetTransform(Projection, ' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 
   // The ultimate goal is to recover D3DTS_PROJECTION here.
   //
@@ -834,8 +866,8 @@ begin
   // g_pD3DDevice.SetTransform(D3DTS_PROJECTION, PD3DMatrix(pdwPushArguments));
 
 {$IFDEF DXBX_USE_OPENGL}
-//  glMatrixMode(??);
-//  glLoadMatrixf(PGLfloat(pdwPushArguments));
+  glMatrixMode(GL_PROJECTION);
+  glLoadMatrixf(PGLfloat(pdwPushArguments));
 {$ENDIF}
 end;
 
@@ -868,6 +900,7 @@ begin
 {$IFDEF DXBX_USE_OPENGL}
   // Just set the constant right from the pushbuffer, as they come in batches and won't exceed the native bounds :
   HandledCount := 4;
+  HandledBy := HandledBy + Format('(%d, %s)', [NV2AInstance.VP_UPLOAD_CONST_ID + Slot, FloatsToString(pdwPushArguments, HandledCount)]);
   glProgramEnvParameter4fvARB
   (
     {target=}GL_VERTEX_PROGRAM_ARB,
@@ -885,11 +918,10 @@ procedure EmuNV2A_DrawBeginEnd;
 var
   NewPrimitiveType: X_D3DPRIMITIVETYPE;
 begin
-  HandledBy := 'Draw';
   NewPrimitiveType := X_D3DPRIMITIVETYPE(NV2AInstance.VERTEX_BEGIN_END);
   if (NewPrimitiveType = X_D3DPT_NONE) then
   begin
-    DbgPrintf('  NV2A_VERTEX_BEGIN_END(DONE) -> Drawing');
+    HandledBy := 'DrawEnd()';
 
     // Trigger the draw here (instead of in HandleVertexData, HandleIndex32 and/or HandleIndex16_16) :
     case PostponedDrawType of
@@ -898,21 +930,25 @@ begin
       pdDrawIndexedVertices:
         PostponedDrawIndexedVertices;
       pdDrawVerticesUP:
+      begin
+{$IFNDEF DXBX_USE_OPENGL} // OpenGL needs no post-processing (all vertices are already pushed using glVertex4fv)
         PostponedDrawVerticesUP;
+{$ENDIF}
+      end;
       pdDrawIndexedVerticesUP:
         PostponedDrawIndexedVerticesUP;
     else
 //      DxbxKrnlCleanup('TriggerDrawBeginEnd encountered unknown draw mode!');
     end;
 {$IFDEF DXBX_USE_OPENGL}
-//    glEnd();
+    glEnd();
 {$ENDIF}
   end
   else
   begin
-    DbgPrintf('  NV2A_VERTEX_BEGIN_END(PrimitiveType = 0x%.03x %s)', [Ord(NewPrimitiveType), X_D3DPRIMITIVETYPE2String(NewPrimitiveType)]);
+    HandledBy := Format('DrawBegin(PrimitiveType=%d{=%s})', [Ord(NewPrimitiveType), X_D3DPRIMITIVETYPE2String(NewPrimitiveType)]);
 {$IFDEF DXBX_USE_OPENGL}
-//    glBegin(Ord(NewPrimitiveType)-1);
+    glBegin(NV2APrimitiveTypeToGL(NewPrimitiveType));
 {$ENDIF}
   end;
 
@@ -958,7 +994,6 @@ begin
 end;
 
 procedure EmuNV2A_VertexData();
-// TODO : Postpone the draw in here to TriggerDrawBeginEnd, instead collect all vertices first.
 {$IFDEF DXBX_USE_D3D}
 var
   VPDesc: VertexPatchDesc;
@@ -971,7 +1006,7 @@ begin
   HandledBy := 'DrawVertices';
   HandledCount := dwCount;
 {$IFDEF DXBX_USE_D3D}
-//  PostponedDrawType := pdDrawVerticesUP;
+  // TODO : Postpone the draw in here to TriggerDrawBeginEnd, instead collect all vertices first.
   PostponedDrawType := pdDrawVertices;
   pVertexData := pdwPushArguments;
 
@@ -1118,7 +1153,14 @@ begin
   end;
 {$ENDIF}
 {$IFDEF DXBX_USE_OPENGL}
-  glVertex4fv(PGLfloat(pdwPushArguments));
+  HandledBy := 'Vertex4f(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
+  PostponedDrawType := pdDrawVerticesUP;
+  while dwCount > 0 do
+  begin
+    glVertex4fv(PGLfloat(pdwPushArguments));
+    Inc(PGLfloat(pdwPushArguments), 4);
+    Dec(dwCount, 4);
+  end;
 {$ENDIF}
 end;
 
@@ -1723,16 +1765,18 @@ var
   dwSubCh: DWord;
   bNoInc: BOOL_;
   StepNr: Integer;
-  LogStr: string;
+  LogPrefixStr: string;
   NV2ACallback: procedure;
 begin
   if MayLog(lfUnit) then
     if UIntPtr(pdwPushData) <> UIntPtr(pdwPushDataEnd) then
       DbgPrintf('  NV2A run from 0x%.08X to 0x%.08X', [UIntPtr(pdwPushData), UIntPtr(pdwPushDataEnd)]);
 
+  LogPrefixStr := '';
   while pdwPushData <> pdwPushDataEnd do
   try
-    LogStr := Format('  NV2A Get=$%.08X', [UIntPtr(pdwPushData)]);
+    if MayLog(lfUnit) then
+      LogPrefixStr := Format('  NV2A Get=$%.08X', [UIntPtr(pdwPushData)]);
 
     dwPushCommand := pdwPushData^;
 
@@ -1743,7 +1787,7 @@ begin
       // Both 'jump' and 'call' just direct execution to the indicated address :
       pdwPushData := PDWORD(dwPushCommand and NV2A_ADDR_MASK);
       if MayLog(lfUnit) then
-        DbgPrintf('%s Jump:0x%.08X', [LogStr, UIntPtr(pdwPushData)]);
+        DbgPrintf('%s Jump:0x%.08X', [LogPrefixStr, UIntPtr(pdwPushData)]);
 
       Continue;
     end;
@@ -1752,12 +1796,15 @@ begin
     D3DPUSH_DECODE(dwPushCommand, {out}dwMethod, {out}dwSubCh, {out}dwCount, {out}bNoInc);
 
     // Append a counter (variable part via %d, count already formatted) :
-    LogStr := LogStr + ' %2d/' + Format('%2d',[dwCount]) + ':';
-    if dwSubCh > 0 then
-      LogStr := LogStr + ' [SubCh:' + IntToStr(dwSubCh) + ']';
+    if MayLog(lfUnit) then
+    begin
+      LogPrefixStr := LogPrefixStr + ' %2d/' + Format('%2d',[dwCount]) + ':';
+      if dwSubCh > 0 then
+        LogPrefixStr := LogPrefixStr + ' [SubCh:' + IntToStr(dwSubCh) + ']';
 
-    if bNoInc then
-      LogStr := LogStr + ' [NoInc]';
+      if bNoInc then
+        LogPrefixStr := LogPrefixStr + ' [NoInc]';
+    end;
 
     // Skip method DWORD, remember the address of the arguments and skip over the arguments already :
     Inc(pdwPushData);
@@ -1768,28 +1815,29 @@ begin
     HandledCount := 1;
     HandledBy := '';
 
-    // Skip all commands not intended for channel 0 :
-    if dwSubCh > 0 then
-    begin
-      HandledCount := dwCount;
-      HandledBy := '*CHANNEL IGNORED*';
-      dwMethod := dwMethod or $80000000; // Add a 'Channel-Ignore-bit' so that the following code doesn't do anything when we're not handling channel 0
-    end;
-
     // Interpret GPU Instruction(s) :
     StepNr := 1;
     while dwCount > 0 do
     try
-      // Simulate writes to the NV2A instance registers :
-      if dwMethod < SizeOf(NV2AInstance) then
+      NV2ACallback := nil;
+
+      // Skip all commands not intended for channel 0 :
+      if dwSubCh > 0 then
       begin
-        // TODO : Perhaps we should write all DWORDs before executing them? (See EmuNV2A_SetVertexShaderConstant)
-        OldRegisterValue := NV2AInstance.Registers[dwMethod div 4]; // Remember previous value
-        NV2AInstance.Registers[dwMethod div 4] := pdwPushArguments^; // Write new value
-        NV2ACallback := NV2ACallbacks[dwMethod div 4];
+        HandledCount := dwCount;
+        HandledBy := '*CHANNEL IGNORED*';
       end
       else
-        NV2ACallback := nil;
+      begin
+        // Simulate writes to the NV2A instance registers :
+        if dwMethod < SizeOf(NV2AInstance) then
+        begin
+          // TODO : Perhaps we should write all DWORDs before executing them? (See EmuNV2A_SetVertexShaderConstant)
+          OldRegisterValue := NV2AInstance.Registers[dwMethod div 4]; // Remember previous value
+          NV2AInstance.Registers[dwMethod div 4] := pdwPushArguments^; // Write new value
+          NV2ACallback := NV2ACallbacks[dwMethod div 4];
+        end;
+      end;
 
       // Note : The above statement covers all non-triggering data transfers (yeah!)
       // and makes them available as named variables too, since NV2AInstance is declared
@@ -1798,25 +1846,37 @@ begin
 
 {$IFDEF DXBX_USE_D3D}
       if (g_pD3DDevice = nil) then
-        HandledBy := '*NO DEVICE*' // Don't do anything if we have no device yet (should not occur anymore, but this helps spotting errors)
+      begin
+        HandledBy := '*NO DEVICE*'; // Don't do anything if we have no device yet (should not occur anymore, but this helps spotting errors)
         // Note : A Delphi bug prevents us from using 'Continue' here, which costs us an indent level...
-      else
+        NV2ACallback := nil;
+      end;
 {$ENDIF}
 {$IFDEF DXBX_USE_OPENGL}
       if (g_EmuWindowsDC = 0) then
-        HandledBy := '*NO OGL DC*' // Don't do anything if we have no device yet (should not occur anymore, but this helps spotting errors)
+      begin
+        HandledBy := '*NO OGL DC*'; // Don't do anything if we have no device yet (should not occur anymore, but this helps spotting errors)
         // Note : A Delphi bug prevents us from using 'Continue' here, which costs us an indent level...
-      else
+        NV2ACallback := nil;
+      end;
 {$ENDIF}
+
+      if MayLog(lfUnit) then
+      begin
+        // Before handling the method, display it's details :
+        DbgPrintf(LogPrefixStr + ' Method=%.04X Data=%.08X %s %s', [StepNr, dwMethod, pdwPushArguments^, DxbxXboxMethodToString(dwMethod), HandledBy]);
+        HandledBy := '';
+      end;
+
       if Assigned(NV2ACallback) then
         NV2ACallback();
 
     finally
       if MayLog(lfUnit) then
       begin
-        if HandledBy <> '' then HandledBy := '> ' + HandledBy;
-        dwMethod := dwMethod and NV2A_METHOD_MASK; // Remove 'Channel-Ignore-bit'
-        DbgPrintf(LogStr + ' Method=%.04X Data=%.08X %s %s', [StepNr, dwMethod, pdwPushArguments^, DxbxXboxMethodToString(dwMethod), HandledBy]);
+        // If there are more details, print them now :
+        if HandledBy <> '' then
+          DbgPrintf('  > ' + HandledBy);
       end;
 
       // Since some instructions use less arguments, we repeat this loop
@@ -2091,20 +2151,31 @@ begin
 
   // Precompiled shader for the fixed function pipeline :
   szCode := {AnsiString}DxbxVertexShaderHeader +
-    'MOV R0, v0;' +
-    'RCP R0.w, R0.w;' +
-    'MUL R0, R0, c0;' + // c[-96] in D3D speak
-    'ADD oPos, R0, c1;' + // c[-95] in D3D speak
-    'MOV oD0, v3;' +
-    'MOV oD1, v4;' +
-    'RCP oFog, v0.w;' + // w fog
-    'MOV oPts, v1.x;' +
-    'MOV oB0, v7;' +
-    'MOV oB1, v8;' +
-    'MOV oT0, v9;' +
-    'MOV oT1, v10;' +
-    'MOV oT2, v11;' +
-    'MOV oT3, v12;' +
+    // This part adjusts the vertex position by the super-sampling scale & offset :
+    'MOV R0, v0;'#13#10 +
+    'RCP R0.w, R0.w;'#13#10 +
+    'MUL R0, R0, c0;'#13#10 + // c[-96] in D3D speak - applies SuperSampleScale
+    // Note : Use R12 instead of oPos because this is not yet the final assignment :
+    'ADD R12, R0, c1;'#13#10 + // c[-95] in D3D speak - applies ScreenSpaceOffset
+    // This part just reads all other components and passes them to the output :
+    'MOV oD0, v3;'#13#10 +
+    'MOV oD1, v4;'#13#10 +
+    'RCP oFog, v4.w;'#13#10 + // specular fog
+//    'RCP oFog, v0.z;'#13#10 + // z fog
+//    'RCP oFog, v0.w;'#13#10 + // w fog
+    'MOV oPts, v1.x;'#13#10 +
+    'MOV oB0, v7;'#13#10 +
+    'MOV oB1, v8;'#13#10 +
+    'MOV oT0, v9;'#13#10 +
+    'MOV oT1, v10;'#13#10 +
+    'MOV oT2, v11;'#13#10 +
+    'MOV oT3, v12;'#13#10 +
+    // This part applies the screen-space transform :
+    'MUL R12.xyz, R12, c134;'#13#10 + // c[38] in D3D speak - see EmuNV2A_ViewportScale,
+    'RCP R1.x, R12.w;'#13#10 + // Originally RCC, but that's not supported in ARBvp1.0
+    // Note : Here's the final assignment to oPos :
+    'MAD oPos.xyz, R12, R1.x, c133;'#13#10 + // c[37] in D3D speak - see EmuNV2A_ViewportOffset
+
     'END';
 
   glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
@@ -2114,8 +2185,13 @@ begin
   // errors are catched
   glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, @GLErrorPos);
 
-  if(GLErrorPos >= 0) then
-    EmuWarning('Program error at position %d:'#13#10'%s', [GLErrorPos, szCode[GLErrorPos]]);
+  if(GLErrorPos > 0) then
+  begin
+    Insert('{ERROR}', {var}szCode, GLErrorPos);
+    EmuWarning('Program error at position %d:', [GLErrorPos]);
+    EmuWarning(string(glGetString(GL_PROGRAM_ERROR_STRING_ARB)));
+    EmuWarning(string(szCode));
+  end;
 
   glDisable(GL_VERTEX_PROGRAM_ARB);
 end;
