@@ -367,6 +367,24 @@ begin
   end; *)
 end;
 
+function NV2AVertexFormatTypeToString(Value: DWORD): string;
+begin
+  case VALUE of
+    {0}NV2A_VTXFMT_TYPE_COLORBYTE: Result := 'ColorByte';
+    {1}NV2A_VTXFMT_TYPE_SHORT: Result := 'Short';
+    {2}NV2A_VTXFMT_TYPE_FLOAT: Result := 'Float';
+    {4}NV2A_VTXFMT_TYPE_UBYTE: Result := 'UByte';
+    {5}NV2A_VTXFMT_TYPE_USHORT: Result := 'UShort';
+//    6: ??
+//  GL_BYTE = $1400;
+//  GL_INT = $1404;
+//  GL_UNSIGNED_INT = $1405;
+//  GL_DOUBLE = $140A;
+  else
+    Result := '';
+  end;
+end;
+
 function NV2AVertexFormatTypeToGL(Value: DWORD): DWORD;
 begin
   case VALUE of
@@ -396,106 +414,135 @@ begin
     Result := 'False';
 end;
 
-function ColorBytesToString(Ptr: Pointer; Count: Integer = 1; NrPerGroup: Integer = 4): string;
+function ColorBytesToString(Ptr: PBYTE; Count: uint = 1; NrPerGroup: uint = 4; Stride: uint = 0): string;
 var
-  i: Integer;
+  i: uint;
 begin
   Result := '{';
   i := 0;
+  if Stride > 0 then Dec(Stride, NrPerGroup * SizeOf(Ptr^));
   while i < Count do
   begin
-    Result := Result + Format('%d', [PBYTE(Ptr)^]);
-    Inc(PBYTE(Ptr));
+    Result := Result + Format('%d', [Ptr^]);
+    Inc(Ptr);
     Inc(i);
     if i < Count then
       if (i mod NrPerGroup) > 0 then
         Result := Result + ', '
       else
+      begin
         Result := Result + '}{';
+        Inc(UIntPtr(Ptr), Stride);
+      end;
   end;
 
   Result := Result + '}';
 end;
 
-function ShortsToString(Ptr: Pointer; Count: Integer = 1; NrPerGroup: Integer = 4): string;
+function ShortsToString(Ptr: PSHORT; Count: uint = 1; NrPerGroup: uint = 4; Stride: uint = 0): string;
 var
-  i: Integer;
+  i: uint;
 begin
   Result := '{';
   i := 0;
+  if Stride > 0 then Dec(Stride, NrPerGroup * SizeOf(Ptr^));
   while i < Count do
   begin
-    Result := Result + Format('%d', [PSHORT(Ptr)^]);
-    Inc(PSHORT(Ptr));
+    Result := Result + Format('%d', [Ptr^]);
+    Inc(Ptr);
     Inc(i);
     if i < Count then
       if (i mod NrPerGroup) > 0 then
         Result := Result + ', '
       else
+      begin
         Result := Result + '}{';
+        Inc(UIntPtr(Ptr), Stride);
+      end;
   end;
 
   Result := Result + '}';
 end;
 
-function FloatsToString(Ptr: Pointer; Count: Integer = 1; NrPerGroup: Integer = 4): string;
+function FloatsToString(Ptr: PFLOAT; Count: uint = 1; NrPerGroup: uint = 4; Stride: uint = 0): string; overload;
 var
-  i: Integer;
+  i: uint;
 begin
   Result := '{';
   i := 0;
+  if Stride > 0 then Dec(Stride, NrPerGroup * SizeOf(Ptr^));
   while i < Count do
   begin
-    Result := Result + FloatToStr(PFLOAT(Ptr)^);
-    Inc(PFLOAT(Ptr));
+    Result := Result + FloatToStr(Ptr^);
+    Inc(Ptr);
     Inc(i);
     if i < Count then
       if (i mod NrPerGroup) > 0 then
         Result := Result + ', '
       else
+      begin
         Result := Result + '}{';
+        Inc(UIntPtr(Ptr), Stride);
+      end;
   end;
 
   Result := Result + '}';
 end;
 
-function UBytesToString(Ptr: Pointer; Count: Integer = 1; NrPerGroup: Integer = 4): string;
+function FloatsToString(Ptr: Pointer; Count: uint = 1; NrPerGroup: uint = 4; Stride: uint = 0): string; overload;
+begin
+  Result := FloatsToString(PFLOAT(Ptr), Count, NrPerGroup, Stride);
+end;
+
+type
+  UBYTE = ShortInt;
+  PUBYTE = ^UBYTE;
+
+function UBytesToString(Ptr: PUBYTE; Count: uint = 1; NrPerGroup: uint = 4; Stride: uint = 0): string;
 var
-  i: Integer;
+  i: uint;
 begin
   Result := '{';
   i := 0;
+  if Stride > 0 then Dec(Stride, NrPerGroup * SizeOf(Ptr^));
   while i < Count do
   begin
-    Result := Result + Format('%d', [PBYTE(Ptr)^]);
-    Inc(PBYTE(Ptr));
+    Result := Result + Format('%d', [Ptr^]);
+    Inc(Ptr);
     Inc(i);
     if i < Count then
       if (i mod NrPerGroup) > 0 then
         Result := Result + ', '
       else
+      begin
         Result := Result + '}{';
+        Inc(UIntPtr(Ptr), Stride);
+      end;
   end;
 
   Result := Result + '}';
 end;
 
-function UShortsToString(Ptr: Pointer; Count: Integer = 1; NrPerGroup: Integer = 4): string;
+function UShortsToString(Ptr: PUSHORT; Count: uint = 1; NrPerGroup: uint = 4; Stride: uint = 0): string;
 var
-  i: Integer;
+  i: uint;
 begin
   Result := '{';
   i := 0;
+  if Stride > 0 then Dec(Stride, NrPerGroup * SizeOf(Ptr^));
   while i < Count do
   begin
-    Result := Result + Format('%d', [PUSHORT(Ptr)^]);
-    Inc(PUSHORT(Ptr));
+    Result := Result + Format('%d', [Ptr^]);
+    Inc(Ptr);
     Inc(i);
     if i < Count then
       if (i mod NrPerGroup) > 0 then
         Result := Result + ', '
       else
+      begin
         Result := Result + '}{';
+        Inc(UIntPtr(Ptr), Stride);
+      end;
   end;
 
   Result := Result + '}';
@@ -530,7 +577,9 @@ end;
 procedure PostponedDrawVertices;
 {$IFDEF DXBX_USE_OPENGL}
 var
-  i: Integer;
+  i: uint;
+  Size: uint;
+  Stride: uint;
 {$ENDIF}
 //  VPDesc: VertexPatchDesc;
 //  VertPatch: VertexPatcher;
@@ -587,30 +636,33 @@ begin
     glEnableClientState(GL_VERTEX_ARRAY);
     for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
     begin
-      if DxbxGetVertexFormatSize(i) > 0 then
+      Size := DxbxGetVertexFormatSize(i);
+      if Size > 0 then
       begin
         glEnableVertexAttribArray(i);
+        Stride := DxbxGetVertexFormatStride(i);
         glVertexAttribPointer(
           {Index=}i,
-          {Size=}DxbxGetVertexFormatSize(i),
+          Size,
           {Type=}NV2AVertexFormatTypeToGL(DxbxGetVertexFormatType(i)),
           {Normalized=}(i >= X_D3DVSDE_TEXCOORD0), // Note : Texture coordinates are not normalized, but what about others?
-          {Stride=}DxbxGetVertexFormatStride(i),
+          Stride,
           {Pointer=}NV2AInstance.VTXBUF_ADDRESS[i]);
 
         if VertexCount <= 4 then
         begin
+          HandledBy := HandledBy + ' ' + NV2AVertexFormatTypeToString(DxbxGetVertexFormatType(i)) + ':';
           case DxbxGetVertexFormatType(i) of
             NV2A_VTXFMT_TYPE_COLORBYTE:
-              HandledBy := HandledBy + ' ' + ColorBytesToString(NV2AInstance.VTXBUF_ADDRESS[i], VertexCount);
+              HandledBy := HandledBy + ColorBytesToString(NV2AInstance.VTXBUF_ADDRESS[i], Size*VertexCount, Size, Stride);
             NV2A_VTXFMT_TYPE_SHORT:
-              HandledBy := HandledBy + ' ' + ShortsToString(NV2AInstance.VTXBUF_ADDRESS[i], VertexCount);
+              HandledBy := HandledBy + ShortsToString(PSHORT(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
             NV2A_VTXFMT_TYPE_FLOAT:
-              HandledBy := HandledBy + ' ' + FloatsToString(NV2AInstance.VTXBUF_ADDRESS[i], VertexCount);
+              HandledBy := HandledBy + FloatsToString(PFLOAT(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
             NV2A_VTXFMT_TYPE_UBYTE:
-              HandledBy := HandledBy + ' ' + UBytesToString(NV2AInstance.VTXBUF_ADDRESS[i], VertexCount);
+              HandledBy := HandledBy + UBytesToString(PUBYTE(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
             NV2A_VTXFMT_TYPE_USHORT:
-              HandledBy := HandledBy + ' ' + UShortsToString(NV2AInstance.VTXBUF_ADDRESS[i], VertexCount);
+              HandledBy := HandledBy + UShortsToString(PUSHORT(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
           end;
         end;
       end
@@ -844,6 +896,10 @@ begin
   // TODO : Emulate SetRenderTarget
 end;
 
+procedure NV2A_SetRenderTargetSurface();
+begin
+  HandledBy := 'SetRenderTarget(Surface)';
+end;
 //
 // ViewportOffset
 //
@@ -878,14 +934,48 @@ begin
 {$ENDIF}
 end;
 
+procedure EmuNV2A_SetRenderState();
+// Temporary function for generic logging. Each render-state needs specific emulation.
+var
+  XboxRenderState: X_D3DRenderStateType;
+begin
+  XboxRenderState := DxbxXboxMethodToRenderState(dwMethod);
+  HandledBy := Format('SetRenderState(%-33s, 0x%.08X {=%s})', [
+    DxbxRenderStateInfo[XboxRenderState].S,
+    pdwPushArguments^,
+    DxbxTypedValueToString(DxbxRenderStateInfo[XboxRenderState].T, pdwPushArguments^)]);
+end;
+
 procedure EmuNV2A_DepthTest();
 begin
   HandledBy := 'DepthTest := ' + BooleanToString(pdwPushArguments^ <> 0);
 {$IFDEF DXBX_USE_OPENGL}
   if pdwPushArguments^ <> 0 then
-    glDisable(GL_DEPTH_TEST)
+    glEnable(GL_DEPTH_TEST)
   else
     glDisable(GL_DEPTH_TEST);
+{$ENDIF}
+end;
+
+procedure EmuNV2A_Dither();
+begin
+  HandledBy := 'Dither := ' + BooleanToString(pdwPushArguments^ <> 0);
+{$IFDEF DXBX_USE_OPENGL}
+  if pdwPushArguments^ <> 0 then
+    glEnable(GL_DITHER)
+  else
+    glDisable(GL_DITHER);
+{$ENDIF}
+end;
+
+procedure EmuNV2A_StencilTest();
+begin
+  HandledBy := 'StencilTest := ' + BooleanToString(pdwPushArguments^ <> 0);
+{$IFDEF DXBX_USE_OPENGL}
+  if pdwPushArguments^ <> 0 then
+    glEnable(GL_STENCIL_TEST)
+  else
+    glDisable(GL_STENCIL_TEST);
 {$ENDIF}
 end;
 
@@ -1344,6 +1434,7 @@ begin
   LocalCount := 0;
   while LocalCount < HandledCount do
   begin
+  // TODO : This data is interleaved, so decode it all (and make sure vertex position is written to last, to trigger immediate draw)
 //    case (NV2AInstance.VTXFMT[X_D3DVSDE_POSITION] and NV2A_VTXFMT_SIZE_MASK) shr NV2A_VTXFMT_SIZE_SHIFT of
     glVertex4fv(PGLfloat(pdwPushArguments));
     Inc(PGLfloat(pdwPushArguments), 4);
@@ -1615,7 +1706,7 @@ const
   {0180 NV2A_DMA_NOTIFY}EmuNV2A_CDevice_Init,
   {0184 NV2A_DMA_TEXTURE0}EmuNV2A_CDevice_Init,
   {0188 NV2A_DMA_TEXTURE1}EmuNV2A_CDevice_Init,
-                       nil,
+  {018C}nil,
   {0190 NV2A_DMA_STATE}EmuNV2A_CDevice_Init,
   {0194 NV2A_DMA_COLOR}EmuNV2A_CDevice_Init,
   {0198 NV2A_DMA_ZETA}EmuNV2A_CDevice_Init,
@@ -1623,21 +1714,59 @@ const
   {01A0 NV2A_DMA_VTXBUF1}EmuNV2A_CDevice_Init,
   {01A4 NV2A_DMA_FENCE}EmuNV2A_CDevice_Init,
   {01A8 NV2A_DMA_QUERY}EmuNV2A_CDevice_Init,
-                                                               nil, nil, nil, nil, nil,
+  {01AC}                                                       nil, nil, nil, nil, nil,
   {01C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0200}nil, nil,
   {0208 NV2A_RT_FORMAT}EmuNV2A_SetRenderTarget, // Set surface format
-                       nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {020C}nil,
+  {0210 NV2A_COLOR_OFFSET}NV2A_SetRenderTargetSurface,
+  {0214}                         nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0240}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0280}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {02C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0300}nil, nil, nil,
-  {030C}EmuNV2A_DepthTest,
-                            nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0340}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0380}nil, nil, nil, nil, nil, nil,
+  {0300 NV2A_ALPHA_FUNC_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_ALPHATESTENABLE
+  {0304 NV2A_BLEND_FUNC_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_ALPHABLENDENABLE
+  {0308}nil,
+  {030C NV2A_DEPTH_TEST_ENABLE}EmuNV2A_DepthTest, // X_D3DRS_ZENABLE
+  {0310 NV2A_DITHER_ENABLE}EmuNV2A_Dither, // X_D3DRS_DITHERENABLE
+  {0314}nil,
+  {0318 NV2A_POINT_PARAMETERS_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_POINTSCALEENABLE
+  {031C NV2A_POINT_SMOOTH_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_POINTSPRITEENABLE
+  {0320}nil,
+  {0324}nil,
+  {0328 NV2A_SKIN_MODE}EmuNV2A_SetRenderState, // = X_D3DRS_VERTEXBLEND
+  {032C NV2A_STENCIL_ENABLE}EmuNV2A_StencilTest, // = X_D3DRS_STENCILENABLE
+  {0330 NV2A_POLYGON_OFFSET_POINT_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_POINTOFFSETENABLE
+  {0334 NV2A_POLYGON_OFFSET_LINE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_WIREFRAMEOFFSETENABLE
+  {0338 NV2A_POLYGON_OFFSET_FILL_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_SOLIDOFFSETENABLE
+  {033C NV2A_ALPHA_FUNC_FUNC}EmuNV2A_SetRenderState, // = X_D3DRS_ALPHAFUNC
+  {0340 NV2A_ALPHA_FUNC_REF}EmuNV2A_SetRenderState, // = X_D3DRS_ALPHAREF
+  {0344 NV2A_BLEND_FUNC_SRC}EmuNV2A_SetRenderState, // = X_D3DRS_SRCBLEND
+  {0348 NV2A_BLEND_FUNC_DST}EmuNV2A_SetRenderState, // = X_D3DRS_DESTBLEND
+  {034C NV2A_BLEND_COLOR}EmuNV2A_SetRenderState, // = X_D3DRS_BLENDCOLOR
+  {0350 NV2A_BLEND_EQUATION}EmuNV2A_SetRenderState, // = X_D3DRS_BLENDOP
+  {0354 NV2A_DEPTH_FUNC}EmuNV2A_SetRenderState, // = X_D3DRS_ZFUNC
+  {0358 NV2A_COLOR_MASK}EmuNV2A_SetRenderState, // = X_D3DRS_COLORWRITEENABLE
+  {035C NV2A_DEPTH_WRITE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_ZWRITEENABLE
+  {0360 NV2A_STENCIL_MASK}EmuNV2A_SetRenderState, // = X_D3DRS_STENCILWRITEMASK
+  {0364 NV2A_STENCIL_FUNC_FUNC}EmuNV2A_SetRenderState, // = X_D3DRS_STENCILFUNC
+  {0368 NV2A_STENCIL_FUNC_REF}EmuNV2A_SetRenderState, // = X_D3DRS_STENCILREF
+  {036C NV2A_STENCIL_FUNC_MASK}EmuNV2A_SetRenderState, // = X_D3DRS_STENCILMASK
+  {0370}nil,
+  {0374 NV2A_STENCIL_OP_ZFAIL}EmuNV2A_SetRenderState, // = X_D3DRS_STENCILZFAIL
+  {0378 NV2A_STENCIL_OP_ZPASS}EmuNV2A_SetRenderState, // = X_D3DRS_STENCILPASS
+  {037c NV2A_SHADE_MODEL}EmuNV2A_SetRenderState, // = X_D3DRS_SHADEMODE
+  {0380 NV2A_LINE_WIDTH}EmuNV2A_SetRenderState, // = X_D3DRS_LINEWIDTH
+  {0384 NV2A_POLYGON_OFFSET_FACTOR}EmuNV2A_SetRenderState, // = X_D3DRS_POLYGONOFFSETZSLOPESCALE
+  {0388 NV2A_POLYGON_OFFSET_UNITS}EmuNV2A_SetRenderState, // = X_D3DRS_POLYGONOFFSETZOFFSET
+  {038c NV2A_POLYGON_MODE_FRONT}EmuNV2A_SetRenderState, // = X_D3DRS_FILLMODE
+  {0390}nil,
+  {0394}nil,
   {0398 NV2A_DEPTH_RANGE_FAR}EmuNV2A_SetViewport, // Always the last method for SetViewport, so we use it as a trigger
-                                           nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {039C}nil,
+  {03A0 NV2A_FRONT_FACE}EmuNV2A_SetRenderState, // = X_D3DRS_FRONTFACE
+  {03A4 NV2A_NORMALIZE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_NORMALIZENORMALS
+  {03A8}                                                  nil, nil, nil, nil, nil, nil,
   {03C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0400}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0440}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
@@ -1664,7 +1793,8 @@ const
   {0900}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0940}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0980}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {09C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {09C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {09F8 NV2A_SWATH_WIDTH}EmuNV2A_SetRenderState, // = X_D3DRS_SWATHWIDTH
   {09FC NV2A_FLAT_SHADE_OP}EmuNV2A_CDevice_Init,
   {0A00}nil, nil, nil, nil, nil, nil, nil, nil,
   {0A20}EmuNV2A_ViewportOffset, EmuNV2A_ViewportOffset, EmuNV2A_ViewportOffset, EmuNV2A_ViewportOffset,
@@ -1775,7 +1905,8 @@ const
   {1380}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {13C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1400}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1440}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1440}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {147C NV2A_POLYGON_STIPPLE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_STIPPLEENABLE
   {1480}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {14C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1500}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
@@ -1854,16 +1985,23 @@ const
   {1D00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1D40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1D6C NV2A_SEMAPHORE_OFFSET}EmuNV2A_CDevice_Init,
-                                                                    nil, nil, nil, nil,
+  {1D70 NV2A_WRITE_SEMAPHORE_RELEASE}nil,
+  {1D74}nil,
+  {1D78 NV2A_DEPTHCLIPCONTROL}EmuNV2A_SetRenderState, // = X_D3DRS_DEPTHCLIPCONTROL
+  {1D7C NV2A_MULTISAMPLE_CONTROL}EmuNV2A_SetRenderState, // = X_D3DRS_MULTISAMPLEANTIALIAS // Also send by D3DRS_MULTISAMPLEMASK (both values in 1 command)
   {1D80 NV2A_COMPRESS_ZBUFFER_EN}EmuNV2A_CDevice_Init,
-             nil, nil, nil, nil,
+  {1D84 NV2A_OCCLUDE_ZSTENCIL_EN}EmuNV2A_SetRenderState, // = X_D3DRS_OCCLUSIONCULLENABLE
+  {1D88}nil,
+  {1D8C NV2A_CLEAR_DEPTH_VALUE}nil,
+  {1D90 NV2A_CLEAR_VALUE}nil,
   {1D94 NV2A_CLEAR_BUFFERS}EmuNV2A_ClearBuffers, // Gives clear flags, should trigger the clear
                                       nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1DC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1E00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1E40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1E68 NV2A_SHADOW_ZSLOPE_THRESHOLD}EmuNV2A_CDevice_Init,
-                                                               nil, nil, nil, nil, nil,
+  {1E6C NV2A_TX_RCOMP}EmuNV2A_SetRenderState, // = X_D3DRS_SHADOWFUNC
+                                                                   nil, nil, nil, nil,
   {1E80}nil, nil, nil, nil, nil,
   {1E94 NV2A_ENGINE}nil,
                                       nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
