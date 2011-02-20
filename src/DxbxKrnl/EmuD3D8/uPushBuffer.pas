@@ -548,7 +548,7 @@ begin
   Result := Result + '}';
 end;
 
-procedure EmuNV2A_RegisterVertexBatch();
+procedure EmuNV2A_RegisterBatchOfVertices();
 // This command just registers the number of vertices are to be used in D3DDevice_DrawVertices.
 var
   BatchCount: Integer;
@@ -574,13 +574,81 @@ begin
     [BatchIndex, BatchCount, VertexIndex, VertexCount]);
 end;
 
-procedure PostponedDrawVertices;
+procedure DxbxSetupVertexPointers();
 {$IFDEF DXBX_USE_OPENGL}
 var
   i: uint;
   Size: uint;
   Stride: uint;
+  GLType: DWORD;
 {$ENDIF}
+begin
+  // Since DrawBeginEnd has no choice but to start a glBegin() block,
+  // we must first leave that here, as we're not going to draw immediate :
+  glEnd();
+
+  // Make sure we have no VBO active :
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+  glEnable(GL_VERTEX_PROGRAM_ARB);
+
+  // TODO : Implement an alternative route for the following code,
+  // if the current OpenGL context doesn't support this :
+  glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
+
+  glEnableClientState(GL_VERTEX_ARRAY);
+  for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
+  begin
+    Size := DxbxGetVertexFormatSize(i);
+    if Size > 0 then
+    begin
+      glEnableVertexAttribArray(i);
+      Stride := DxbxGetVertexFormatStride(i);
+      GLType := NV2AVertexFormatTypeToGL(DxbxGetVertexFormatType(i));
+      glVertexAttribPointer(
+        {Index=}i,
+        Size,
+        {Type=}GLType,
+        {Normalized=}(GLType <> GL_FLOAT) or (i >= X_D3DVSDE_TEXCOORD0), // Note : Texture coordinates are not normalized, but what about others?
+        Stride,
+        {Pointer=}NV2AInstance.VTXBUF_ADDRESS[i]);
+
+      if VertexCount <= 4 then
+      begin
+        HandledBy := HandledBy + ' ' + NV2AVertexFormatTypeToString(DxbxGetVertexFormatType(i)) + ':';
+        case DxbxGetVertexFormatType(i) of
+          NV2A_VTXFMT_TYPE_COLORBYTE:
+            HandledBy := HandledBy + ColorBytesToString(NV2AInstance.VTXBUF_ADDRESS[i], Size*VertexCount, Size, Stride);
+          NV2A_VTXFMT_TYPE_SHORT:
+            HandledBy := HandledBy + ShortsToString(PSHORT(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
+          NV2A_VTXFMT_TYPE_FLOAT:
+            HandledBy := HandledBy + FloatsToString(PFLOAT(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
+          NV2A_VTXFMT_TYPE_UBYTE:
+            HandledBy := HandledBy + UBytesToString(PUBYTE(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
+          NV2A_VTXFMT_TYPE_USHORT:
+            HandledBy := HandledBy + UShortsToString(PUSHORT(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
+        end;
+      end;
+    end
+    else
+    begin
+      glDisableVertexAttribArray(i);
+      // Some shaders use vertex attributes without an input stream
+      // (like the "Compressed Vertices" tutorial which uses v9);
+      // So arrange for default input here :
+      //glVertexAttrib4fv(i, @NV2AInstance.VERTEX_DATA4F[0]);
+    end;
+  end;
+end;
+
+procedure DxbxFinishVertexPointers();
+begin
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_COLOR_ARRAY);
+  glDisable(GL_VERTEX_PROGRAM_ARB);
+end;
+
+procedure PostponedDrawVertices;
 //  VPDesc: VertexPatchDesc;
 //  VertPatch: VertexPatcher;
 begin
@@ -620,64 +688,11 @@ begin
 
 
 {$IFDEF DXBX_USE_OPENGL}
-  // Since DrawBeginEnd has no choice but to start a glBegin() block,
-  // we must first leave that here, as we're not going to draw immediate :
-  glEnd();
-
-  // Make sure we have no VBO active :
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-  glEnable(GL_VERTEX_PROGRAM_ARB);
+  DxbxSetupVertexPointers();
   try
-    // TODO : Implement an alternative route for the following code,
-    // if the current OpenGL context doesn't support this :
-    glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
-    begin
-      Size := DxbxGetVertexFormatSize(i);
-      if Size > 0 then
-      begin
-        glEnableVertexAttribArray(i);
-        Stride := DxbxGetVertexFormatStride(i);
-        glVertexAttribPointer(
-          {Index=}i,
-          Size,
-          {Type=}NV2AVertexFormatTypeToGL(DxbxGetVertexFormatType(i)),
-          {Normalized=}(i >= X_D3DVSDE_TEXCOORD0), // Note : Texture coordinates are not normalized, but what about others?
-          Stride,
-          {Pointer=}NV2AInstance.VTXBUF_ADDRESS[i]);
-
-        if VertexCount <= 4 then
-        begin
-          HandledBy := HandledBy + ' ' + NV2AVertexFormatTypeToString(DxbxGetVertexFormatType(i)) + ':';
-          case DxbxGetVertexFormatType(i) of
-            NV2A_VTXFMT_TYPE_COLORBYTE:
-              HandledBy := HandledBy + ColorBytesToString(NV2AInstance.VTXBUF_ADDRESS[i], Size*VertexCount, Size, Stride);
-            NV2A_VTXFMT_TYPE_SHORT:
-              HandledBy := HandledBy + ShortsToString(PSHORT(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
-            NV2A_VTXFMT_TYPE_FLOAT:
-              HandledBy := HandledBy + FloatsToString(PFLOAT(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
-            NV2A_VTXFMT_TYPE_UBYTE:
-              HandledBy := HandledBy + UBytesToString(PUBYTE(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
-            NV2A_VTXFMT_TYPE_USHORT:
-              HandledBy := HandledBy + UShortsToString(PUSHORT(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
-          end;
-        end;
-      end
-      else
-      begin
-        glDisableVertexAttribArray(i);
-        //glVertexAttrib4fv(i, @NV2AInstance.VERTEX_DATA4F[0]);
-      end;
-    end;
-
-    glDrawArrays(Ord(XBPrimitiveType)-1, VertexIndex, VertexCount);
+    glDrawArrays(NV2APrimitiveTypeToGL(XBPrimitiveType), VertexIndex, VertexCount);
   finally
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
-    glDisable(GL_VERTEX_PROGRAM_ARB);
+    DxbxFinishVertexPointers();
   end;
 {$ENDIF}
 
@@ -709,8 +724,35 @@ begin
 *)
 end;
 
+var
+  // Since we'll never recieve just one index, our "doubling" method of index-memory
+  // allocation won't need a special case for the initial (nil) state if we start at 1 :
+  DxbxIndicesMaxWordCount: uint = 1;
+  DxbxIndices: array of Word = nil;
+
+procedure DxbxMakeIndexSpace(const NewWordCount: uint);
+begin
+  if NewWordCount < DxbxIndicesMaxWordCount then
+    Exit;
+
+  repeat
+    DxbxIndicesMaxWordCount := DxbxIndicesMaxWordCount * 2;
+  until DxbxIndicesMaxWordCount >= NewWordCount;
+
+  // Reserve that space (keeping the old data intact) :
+  ReallocMem(Pointer(DxbxIndices), DxbxIndicesMaxWordCount);
+end;
+
 procedure PostponedDrawIndexedVertices;
 begin
+{$IFDEF DXBX_USE_OPENGL}
+  DxbxSetupVertexPointers();
+  try
+    glDrawElements(NV2APrimitiveTypeToGL(XBPrimitiveType), VertexCount, GL_UNSIGNED_SHORT, @DxbxIndices[0]);
+  finally
+    DxbxFinishVertexPointers();
+  end;
+{$ENDIF}
 end;
 
 procedure PostponedDrawVerticesUP;
@@ -1492,7 +1534,7 @@ begin
 {$ENDIF}
 end;
 
-procedure EmuNV2A_Index32();
+procedure EmuNV2A_RegisterBatchOfDWordIndices();
 // This command is (normally) used to end an index buffer with one last index.
 // TODO : Collect this index together with the previous batch(es) and wait for the postponed draw.
 
@@ -1530,6 +1572,16 @@ var
 begin
   HandledBy := 'DrawIndexedVertices';
   HandledCount := dwCount;
+
+{$IFDEF DXBX_USE_OPENGL}
+  Assert(dwCount = 1); // In practice this command recieves only one index, if there is an off nr of indices to draw.
+  Assert(PostponedDrawType = pdDrawIndexedVertices); // The previous indices where already handled
+
+  DxbxMakeIndexSpace(VertexCount + 1); // Make sure we have space for this index
+  DxbxIndices[VertexCount] := Word(pdwPushArguments^); // Put it in place
+  Inc(VertexCount); // Count it.
+{$ENDIF}
+
 {$IFDEF DXBX_USE_D3D}
   pwVal := PWORDs(pdwPushArguments);
 
@@ -1590,8 +1642,12 @@ begin
 {$ENDIF}
 end;
 
-procedure EmuNV2A_Index16_16();
-// TODO : Change this into collecting indexes and wait for the postponed Draw.
+procedure EmuNV2A_RegisterBatchOfWordIndices();
+// Collects indexes for the postponed Draw.
+{$IFDEF DXBX_USE_OPENGL}
+var
+  NewCount: uint;
+{$ENDIF}
 {$IFDEF DXBX_USE_D3D}
 var
   pIndexData: PWORD;
@@ -1599,6 +1655,16 @@ var
 begin
   HandledBy := 'DrawIndexedVertices';
   HandledCount := dwCount;
+
+{$IFDEF DXBX_USE_OPENGL}
+  NewCount := VertexCount + (dwCount * 2); // Each DWORD data in the pushbuffer carries 2 words
+  DxbxMakeIndexSpace(NewCount);
+  // Collect all indexes; we'll call glDrawElements() when the indices are finished in DrawBeginEnd :
+  memcpy(@DxbxIndices[VertexCount], pdwPushArguments, dwCount * SizeOf(DWORD));
+  VertexCount := NewCount;
+
+  PostponedDrawType := pdDrawIndexedVertices;
+{$ENDIF}
 
 {$IFDEF DXBX_USE_D3D}
   pIndexData := PWORD(pdwPushArguments);
@@ -1925,11 +1991,11 @@ const
   {1780}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {17C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {17FC NV2A_VERTEX_BEGIN_END}EmuNV2A_DrawBeginEnd,
-  {1800 NV2A_VB_ELEMENT_U16}EmuNV2A_Index16_16,
+  {1800 NV2A_VB_ELEMENT_U16}EmuNV2A_RegisterBatchOfWordIndices,
              nil,
-  {1808 NV2A_VB_ELEMENT_U32}EmuNV2A_Index32,
+  {1808 NV2A_VB_ELEMENT_U32}EmuNV2A_RegisterBatchOfDWordIndices,
                        nil,
-  {1810 NV2A_VB_VERTEX_BATCH}EmuNV2A_RegisterVertexBatch,
+  {1810 NV2A_VB_VERTEX_BATCH}EmuNV2A_RegisterBatchOfVertices,
                                  nil,
   {1818 NV2A_VERTEX_DATA}EmuNV2A_VertexData,
                                            nil, nil, nil, nil, nil, nil, nil, nil, nil,
@@ -2033,29 +2099,6 @@ const
 
           NV2A_TX_ENABLE__0, NV2A_TX_ENABLE__1, NV2A_TX_ENABLE__2, NV2A_TX_ENABLE__3:
             ; // TODO : Handle this
-
-          // SetVertexData :
-          NV2A_VERTEX_DATA2F__0..NV2A_VERTEX_DATA2F__15:
-            HandledBy := 'SetVertexData2F ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA2F__0) div 4);
-          NV2A_VERTEX_DATA2S__0..NV2A_VERTEX_DATA2S__15:
-            HandledBy := 'SetVertexData2S ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA2S__0) div 4);
-          NV2A_VERTEX_DATA4UB__0..NV2A_VERTEX_DATA4UB__15:
-          begin
-            DxbxSetVertexData({Register=}(dwMethod - NV2A_VERTEX_DATA4UB__0) div 4,
-              ( pdwPushArguments^         and $ff) / High(Byte),
-              ((pdwPushArguments^ shr  8) and $ff) / High(Byte),
-              ((pdwPushArguments^ shr 16) and $ff) / High(Byte),
-              ((pdwPushArguments^ shr 24) and $ff) / High(Byte));
-            // TODO : When should we call XTL_EmuFlushIVB()?
-            HandledBy := 'SetVertexData4UB ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA4UB__0) div 4);
-          end;
-
-          NV2A_VERTEX_DATA4S__0..NV2A_VERTEX_DATA4S__15:
-            HandledBy := 'SetVertexData4S ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA4S__0) div 4);
-          NV2A_VERTEX_DATA4F__0..NV2A_VERTEX_DATA4F__15:
-            HandledBy := 'SetVertexData4F ' + X_D3DVSDE2String((dwMethod - NV2A_VERTEX_DATA4F__0) div 4);
-          NV2A_VERTEX_POS_4F_X: // (if Register = D3DVSDE_VERTEX)
-            HandledBy := 'SetVertexData4F D3DVSDE_VERTEX';
 
           // Draw[Indexed]Vertices[UP] :
 
@@ -2475,6 +2518,7 @@ begin
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
+  glOrtho({Left=}0, {Right=}640, {Bottom=}480, {Top}0, {ZNear=}-1.0, {ZFar=}500);
   //  glFrustum(-0.1, 0.1, -0.1, 0.1, 0.3, 25.0); ?
 
   glMatrixMode(GL_MODELVIEW);
