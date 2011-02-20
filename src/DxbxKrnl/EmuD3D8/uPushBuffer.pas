@@ -249,7 +249,7 @@ end;
 *)
 
 type
-  TPostponedDrawType = (pdUndetermined, pdDrawVertices, pdDrawIndexedVertices, pdDrawVerticesUP, pdDrawIndexedVerticesUP);
+  TPostponedDrawType = (pdUndetermined, pdAlreadyDone, pdDrawVertices, pdDrawIndexedVertices, pdDrawVerticesUP);
 
 var
   // Global(s)
@@ -259,8 +259,6 @@ var
   pdwPushArguments: PDWord = nil;
   HandledCount: DWord = 0;
   HandledBy: string = '';
-  VertexFormat: array [0..15] of record Stride, Size, Type_: int; end;
-  VertexAddress: array [0..3] of Pointer;
   VertexIndex: INT = -1;
   VertexCount: UINT = 0;
   XBPrimitiveType: X_D3DPRIMITIVETYPE;
@@ -324,8 +322,6 @@ end;
 procedure ClearVariables;
 begin
   ZeroMemory(@NV2AInstance, SizeOf(NV2AInstance));
-  ZeroMemory(@VertexFormat, SizeOf(VertexFormat));
-  ZeroMemory(@VertexAddress, SizeOf(VertexAddress));
   ZeroMemory(@VertexShaderSlots, SizeOf(VertexShaderSlots));
   dwVertexShader := DWORD(-1);
   dwStride := DWORD(-1);
@@ -574,14 +570,19 @@ begin
     [BatchIndex, BatchCount, VertexIndex, VertexCount]);
 end;
 
-procedure DxbxSetupVertexPointers();
 {$IFDEF DXBX_USE_OPENGL}
 var
+  VertexAttribSize: array[0..15] of uint;
+
+function DxbxSetupVertexPointers(InlinePointer: PBYTE = nil): uint;
+// Parse all NV2A_VTXBUF_ADDRESS and NV2A_VTXFMT data here, so that we know how where the vertex data is, and what format it has.
+// (If InlinePointer is given, NV2A_VTXBUF_ADDRESS is bypassed, since the vertex data is tightly packed in the pushbuffer itself.)
+var
   i: uint;
-  Size: uint;
+  NrElements: uint;
   Stride: uint;
-  GLType: DWORD;
-{$ENDIF}
+  VType: DWORD;
+  VertexAttribPointer: PBYTE;
 begin
   // Since DrawBeginEnd has no choice but to start a glBegin() block,
   // we must first leave that here, as we're not going to draw immediate :
@@ -596,39 +597,83 @@ begin
   // if the current OpenGL context doesn't support this :
   glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
 
+  // If we point directly into the pushbuffer,
+  Stride := 0;
+  // we already know the address first attribute :
+  VertexAttribPointer := InlinePointer;
+  if InlinePointer <> nil then
+  begin
+
+    // Also, we have to calculate the stride beforehand :
+    Stride := 0;
+    for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
+    begin
+      NrElements := DxbxGetVertexFormatSize(i);
+      if NrElements > 0 then
+      begin
+        VType := DxbxGetVertexFormatType(i);
+        case VType of
+          NV2A_VTXFMT_TYPE_COLORBYTE: VertexAttribSize[i] := NrElements * SizeOf(BYTE);
+          NV2A_VTXFMT_TYPE_SHORT:     VertexAttribSize[i] := NrElements * SizeOf(SHORT);
+          NV2A_VTXFMT_TYPE_FLOAT:     VertexAttribSize[i] := NrElements * SizeOf(FLOAT);
+          NV2A_VTXFMT_TYPE_UBYTE:     VertexAttribSize[i] := NrElements * SizeOf(UBYTE);
+          NV2A_VTXFMT_TYPE_USHORT:    VertexAttribSize[i] := NrElements * SizeOf(USHORT);
+        else
+          // ?
+        end;
+
+        Inc(Stride, VertexAttribSize[i]);
+      end;
+    end;
+  end;
+
   glEnableClientState(GL_VERTEX_ARRAY);
   for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
   begin
-    Size := DxbxGetVertexFormatSize(i);
-    if Size > 0 then
+    NrElements := DxbxGetVertexFormatSize(i);
+    if NrElements > 0 then
     begin
       glEnableVertexAttribArray(i);
-      Stride := DxbxGetVertexFormatStride(i);
-      GLType := NV2AVertexFormatTypeToGL(DxbxGetVertexFormatType(i));
+      VType := DxbxGetVertexFormatType(i);
+
+      // If we don't point directly into the pushbuffer
+      if InlinePointer = nil then
+      begin
+        // read the address of this attribute's data from the corresponding NV2A register :
+        VertexAttribPointer := NV2AInstance.VTXBUF_ADDRESS[i];
+        // Because of reading from somewhere else, the stride has to come from a register too :
+        Stride := DxbxGetVertexFormatStride(i);
+      end;
+
       glVertexAttribPointer(
         {Index=}i,
-        Size,
-        {Type=}GLType,
-        {Normalized=}(GLType <> GL_FLOAT) or (i >= X_D3DVSDE_TEXCOORD0), // Note : Texture coordinates are not normalized, but what about others?
+        NrElements,
+        {Type=}NV2AVertexFormatTypeToGL(VType),
+        {Normalized=}(VType <> NV2A_VTXFMT_TYPE_FLOAT) or (i >= X_D3DVSDE_TEXCOORD0), // Note : Texture coordinates are not normalized, but what about others?
         Stride,
-        {Pointer=}NV2AInstance.VTXBUF_ADDRESS[i]);
+        VertexAttribPointer);
 
       if VertexCount <= 4 then
       begin
+        // TODO : Prepend slot-string here too
         HandledBy := HandledBy + ' ' + NV2AVertexFormatTypeToString(DxbxGetVertexFormatType(i)) + ':';
         case DxbxGetVertexFormatType(i) of
           NV2A_VTXFMT_TYPE_COLORBYTE:
-            HandledBy := HandledBy + ColorBytesToString(NV2AInstance.VTXBUF_ADDRESS[i], Size*VertexCount, Size, Stride);
+            HandledBy := HandledBy + ColorBytesToString(VertexAttribPointer, NrElements*VertexCount, NrElements, Stride);
           NV2A_VTXFMT_TYPE_SHORT:
-            HandledBy := HandledBy + ShortsToString(PSHORT(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
+            HandledBy := HandledBy + ShortsToString(PSHORT(VertexAttribPointer), NrElements*VertexCount, NrElements, Stride);
           NV2A_VTXFMT_TYPE_FLOAT:
-            HandledBy := HandledBy + FloatsToString(PFLOAT(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
+            HandledBy := HandledBy + FloatsToString(PFLOAT(VertexAttribPointer), NrElements*VertexCount, NrElements, Stride);
           NV2A_VTXFMT_TYPE_UBYTE:
-            HandledBy := HandledBy + UBytesToString(PUBYTE(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
+            HandledBy := HandledBy + UBytesToString(PUBYTE(VertexAttribPointer), NrElements*VertexCount, NrElements, Stride);
           NV2A_VTXFMT_TYPE_USHORT:
-            HandledBy := HandledBy + UShortsToString(PUSHORT(NV2AInstance.VTXBUF_ADDRESS[i]), Size*VertexCount, Size, Stride);
+            HandledBy := HandledBy + UShortsToString(PUSHORT(VertexAttribPointer), NrElements*VertexCount, NrElements, Stride);
         end;
       end;
+
+      // If we point directly into the pushbuffer, step to the next address (so the following attribute will be there) :
+      if InlinePointer <> nil then
+        Inc(VertexAttribPointer, VertexAttribSize[i]);
     end
     else
     begin
@@ -639,6 +684,13 @@ begin
       //glVertexAttrib4fv(i, @NV2AInstance.VERTEX_DATA4F[0]);
     end;
   end;
+
+  // If we point directly in the pushbuffer,
+  if InlinePointer <> nil then
+    // return how many bytes each vertex takes :
+    Result := Stride
+  else
+    Result := 0;
 end;
 
 procedure DxbxFinishVertexPointers();
@@ -647,45 +699,13 @@ begin
   glDisableClientState(GL_COLOR_ARRAY);
   glDisable(GL_VERTEX_PROGRAM_ARB);
 end;
+{$ENDIF}
 
 procedure PostponedDrawVertices;
 //  VPDesc: VertexPatchDesc;
 //  VertPatch: VertexPatcher;
 begin
-  // TODO : Parse all NV2A_VTXBUF_ADDRESS and NV2A_VTXFMT data here, so that we know how where the vertex data is, and what format it has.
-  // Effectively, we do RegisterVertexFormat and RegisterVertexAddress here.
-//          // Data ultimately originating from SetVertexShader / SetStreamSource :
-//          NV2A_VTXFMT__0..NV2A_VTXFMT__15:
-//          begin
-//            HandledBy := 'VertexFormat ' + X_D3DVSDE2String((dwMethod - NV2A_VTXFMT__0) div 4) + ' ' +
-//              RegisterVertexFormat({Slot=}(dwMethod - NV2A_VTXFMT__0) div 4, pdwPushArguments);
-//          end;
-//
-//function RegisterVertexFormat(Slot: UINT): string;
-//// TODO : Do this in PostponedDraw
-//begin
-//  Result := '';
-//  // Register vertex format (bits:31-8=Stride,7-4=Size,3-0=Type) per slot :
-//  VertexFormat[Slot].Stride := (pdwPushArguments^ and NV2A_VTXFMT_STRIDE_MASK) shr NV2A_VTXFMT_STRIDE_SHIFT;
-//  VertexFormat[Slot].Size   := (pdwPushArguments^ and NV2A_VTXFMT_SIZE_MASK  ) shr NV2A_VTXFMT_SIZE_SHIFT; // Size:1..4=1..4,7=3w?
-//  VertexFormat[Slot].Type_  := (pdwPushArguments^ and NV2A_VTXFMT_TYPE_MASK  ); // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
-//  Result := Format('Stride=%d Size=%d Type=%d', [VertexFormat[Slot].Stride, VertexFormat[Slot].Size, VertexFormat[Slot].Type_]);
-//end;
-//
-//          NV2A_VTXBUF_ADDRESS__0..NV2A_VTXBUF_ADDRESS__3:
-//          begin
-//            RegisterVertexAddress({Stage=}(dwMethod - NV2A_VTXBUF_ADDRESS__0) div 4, pdwPushArguments);
-//          end;
-//procedure RegisterVertexAddress(Stage: UINT; pdwPushArguments: PDWORD);
-//begin
-//  HandledBy := 'VertexAddress';
-//  // Register vertex buffer address (this address is a combination of all levels of offsets & indexes) per stage :
-//  VertexAddress[Stage] := Pointer(pdwPushArguments^);
-//end;
-
-//  VertexCount := VertexOffset div 16;
   HandledBy := HandledBy + Format(' DrawPrimitive(VertexIndex=%d, VertexCount=%d)', [VertexIndex, VertexCount]);
-
 
 {$IFDEF DXBX_USE_OPENGL}
   DxbxSetupVertexPointers();
@@ -1190,6 +1210,7 @@ begin
 
     // Trigger the draw here (instead of in HandleVertexData, HandleIndex32 and/or HandleIndex16_16) :
     case PostponedDrawType of
+      pdAlreadyDone: ; // No error, drawing is already done
       pdDrawVertices:
         PostponedDrawVertices;
       pdDrawIndexedVertices:
@@ -1200,8 +1221,6 @@ begin
         PostponedDrawVerticesUP;
 {$ENDIF}
       end;
-      pdDrawIndexedVerticesUP:
-        PostponedDrawIndexedVerticesUP;
     else
 //      DxbxKrnlCleanup('TriggerDrawBeginEnd encountered unknown draw mode!');
     end;
@@ -1246,8 +1265,37 @@ begin
   // TODO : When do we compile the shader?
 end;
 
+procedure EmuNV2A_SetVertexPos3f();
+begin
+  Assert(dwCount = 3);
+  HandledCount := 3;
+  HandledBy := 'SetVertexPos3f(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  glVertex3fv(PGLfloat(pdwPushArguments));
+{$ENDIF}
+end;
 
-procedure EmuNV2A_VertexData2F();
+procedure EmuNV2A_SetVertexPos4f();
+begin
+  Assert(dwCount = 4);
+  HandledCount := 4;
+  HandledBy := 'SetVertexPos4f(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  glVertex4fv(PGLfloat(pdwPushArguments));
+{$ENDIF}
+end;
+
+procedure EmuNV2A_SetVertexPos4s();
+begin
+  Assert(dwCount = 2);
+  HandledCount := 2;
+  HandledBy := 'SetVertexPos4s(' + ShortsToString(PSHORT(pdwPushArguments), 4) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  glVertex4sv(PGLshort(pdwPushArguments));
+{$ENDIF}
+end;
+
+procedure EmuNV2A_SetVertexData2F();
 var
   Slot: uint;
 begin
@@ -1259,43 +1307,43 @@ begin
 {$ENDIF}
 end;
 
-procedure EmuNV2A_VertexData2S();
+procedure EmuNV2A_SetVertexData2S();
 var
   Slot: uint;
 begin
   Slot := (dwMethod - NV2A_VERTEX_DATA2S__0) div 4;
   // Default HandledCount := 1;
-  HandledBy := 'SetVertexData2S(' + X_D3DVSDE2String(Slot) + ')';
+  HandledBy := 'SetVertexData2S(' + X_D3DVSDE2String(Slot) + ', ' + ShortsToString(PSHORT(pdwPushArguments), 2) + ')';
 {$IFDEF DXBX_USE_OPENGL}
-  glVertexAttrib2sv(Slot, PGLshort(pdwPushArguments));
+  glVertexAttrib2svARB(Slot, PGLshort(pdwPushArguments));
 {$ENDIF}
 end;
 
-procedure EmuNV2A_VertexData4UB();
+procedure EmuNV2A_SetVertexData4UB();
 var
   Slot: uint;
 begin
   Slot := (dwMethod - NV2A_VERTEX_DATA4UB__0) div 4;
   // Default HandledCount := 1;
-  HandledBy := 'SetVertexData4UB(' + X_D3DVSDE2String(Slot) + ')';
+  HandledBy := 'SetVertexData4UB(' + X_D3DVSDE2String(Slot) + ', ' + ColorBytesToString(PBYTE(pdwPushArguments), 4) + ')';
 {$IFDEF DXBX_USE_OPENGL}
   glVertexAttrib4ubv(Slot, PGLubyte(pdwPushArguments));
 {$ENDIF}
 end;
 
-procedure EmuNV2A_VertexData4S();
+procedure EmuNV2A_SetVertexData4S();
 var
   Slot: uint;
 begin
   Slot := (dwMethod - NV2A_VERTEX_DATA4S__0) div 8;
   HandledCount := 2;
-  HandledBy := 'SetVertexData4S(' + X_D3DVSDE2String(Slot) + ')';
+  HandledBy := 'SetVertexData4S(' + X_D3DVSDE2String(Slot) + ', ' + ShortsToString(PSHORT(pdwPushArguments), 4) + ')';
 {$IFDEF DXBX_USE_OPENGL}
   glVertexAttrib4sv(Slot, PGLshort(pdwPushArguments));
 {$ENDIF}
 end;
 
-procedure EmuNV2A_VertexData4F();
+procedure EmuNV2A_SetVertexData4F();
 var
   Slot: uint;
 begin
@@ -1308,6 +1356,15 @@ begin
 end;
 
 procedure EmuNV2A_VertexData();
+// The data for this command constists of all vertex attributes packed together.
+// So in order to emulate it correctly, we have to find out which vertex attributes
+// are active and how they are laid out in the pushbuffer (at max. 2047 DWORD per batch).
+// (In OpenGL, we do this by calling DxbxSetupVertexPointers with the push-buffer address).
+// Here, we draw each batch separately, to avoid intermediary copies at the cost
+// of more drawing calls (time will tell if this is fast enough it in practise.)
+//
+// Alternatively, we could copy all bactches to a buffer and trigger drawing that
+// when the vertex data is closed off in DrawBeginEnd, but that's for later.
 {$IFDEF DXBX_USE_D3D}
 var
   VPDesc: VertexPatchDesc;
@@ -1316,14 +1373,10 @@ var
   hRet: HRESULT;
   pData: PByte;
 {$ENDIF}
-{$IFDEF DXBX_USE_OPENGL}
-var
-  LocalCount: DWord;
-{$ENDIF}
 begin
+{$IFDEF DXBX_USE_D3D}
   HandledCount := dwCount;
   HandledBy := 'DrawVertices';
-{$IFDEF DXBX_USE_D3D}
   // TODO : Postpone the draw in here to TriggerDrawBeginEnd, instead collect all vertices first.
   PostponedDrawType := pdDrawVertices;
   pVertexData := pdwPushArguments;
@@ -1471,16 +1524,19 @@ begin
   end;
 {$ENDIF}
 {$IFDEF DXBX_USE_OPENGL}
-  HandledBy := 'Vertex4f(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
-  PostponedDrawType := pdDrawVerticesUP;
-  LocalCount := 0;
-  while LocalCount < HandledCount do
-  begin
-  // TODO : This data is interleaved, so decode it all (and make sure vertex position is written to last, to trigger immediate draw)
-//    case (NV2AInstance.VTXFMT[X_D3DVSDE_POSITION] and NV2A_VTXFMT_SIZE_MASK) shr NV2A_VTXFMT_SIZE_SHIFT of
-    glVertex4fv(PGLfloat(pdwPushArguments));
-    Inc(PGLfloat(pdwPushArguments), 4);
-    Inc(LocalCount, 4);
+  HandledCount := dwCount;
+  HandledBy := 'VertexData';
+  PostponedDrawType := pdAlreadyDone;
+
+  // Since DxbxSetupVertexPointers does some logging, assume a single vertex :
+  VertexCount := 1;
+  // Setup OpenGL to have vertex attributes point directly into the pushbuffer,
+  // and calculate how many vertices can be rendered thusly :
+  VertexCount := (dwCount * SizeOf(DWORD)) div DxbxSetupVertexPointers(PBYTE(pdwPushArguments));
+  try
+    glDrawArrays(NV2APrimitiveTypeToGL(XBPrimitiveType), {VertexIndex=}0, VertexCount);
+  finally
+    DxbxFinishVertexPointers();
   end;
 {$ENDIF}
 end;
@@ -1975,7 +2031,12 @@ const
   {147C NV2A_POLYGON_STIPPLE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_STIPPLEENABLE
   {1480}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {14C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1500}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1500 NV2A_VERTEX_POS_3F_X}EmuNV2A_SetVertexPos3f,
+             nil, nil, nil, nil, nil,
+  {1518 NV2A_VERTEX_POS_4F_X}EmuNV2A_SetVertexPos4f,
+                                           nil, nil, nil,
+  {1528 NV2A_VERTEX_POS_3I_XY}EmuNV2A_SetVertexPos4s,
+                                                               nil, nil, nil, nil, nil,
   {1540}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1580}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {15C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
@@ -2000,46 +2061,46 @@ const
   {1818 NV2A_VERTEX_DATA}EmuNV2A_VertexData,
                                            nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1840}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1880}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
-  {1890}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
-  {18A0}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
-  {18B0}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
-  {18C0}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
-  {18D0}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
-  {18E0}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
-  {18F0}EmuNV2A_VertexData2F, nil, EmuNV2A_VertexData2F, nil,
-  {1900}EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S,
-  {1910}EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S,
-  {1920}EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S,
-  {1930}EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S, EmuNV2A_VertexData2S,
-  {1940}EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB,
-  {1950}EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB,
-  {1960}EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB,
-  {1970}EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB, EmuNV2A_VertexData4UB,
-  {1980}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
-  {1990}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
-  {19A0}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
-  {19B0}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
-  {19C0}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
-  {19D0}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
-  {19E0}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
-  {19F0}EmuNV2A_VertexData4S, nil, EmuNV2A_VertexData4S, nil,
-  {1A00}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1A10}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1A20}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1A30}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1A40}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1A50}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1A60}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1A70}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1A80}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1A90}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1AA0}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1AB0}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1AC0}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1AD0}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1AE0}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
-  {1AF0}EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F, EmuNV2A_VertexData4F,
+  {1880}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
+  {1890}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
+  {18A0}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
+  {18B0}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
+  {18C0}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
+  {18D0}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
+  {18E0}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
+  {18F0}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
+  {1900}EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S,
+  {1910}EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S,
+  {1920}EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S,
+  {1930}EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S,
+  {1940}EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB,
+  {1950}EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB,
+  {1960}EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB,
+  {1970}EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB,
+  {1980}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
+  {1990}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
+  {19A0}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
+  {19B0}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
+  {19C0}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
+  {19D0}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
+  {19E0}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
+  {19F0}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
+  {1A00}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1A10}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1A20}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1A30}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1A40}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1A50}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1A60}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1A70}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1A80}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1A90}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1AA0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1AB0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1AC0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1AD0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1AE0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  {1AF0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
   {1B00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1B40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1B80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
