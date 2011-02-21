@@ -135,7 +135,7 @@ const NV2A_SUBCH_SHIFT = 12;
 const NV2A_COUNT_SHIFT = 18;
 
 const NV2A_METHOD_MAX = (NV2A_METHOD_MASK or 3) shr NV2A_METHOD_SHIFT; // = 8191
-const NV2A_COUNT_MAX = NV2A_COUNT_MASK shr NV2A_COUNT_SHIFT; // = 2047
+const NV2A_COUNT_MAX = (NV2A_COUNT_MASK shr NV2A_COUNT_SHIFT) - 1; // = 2047
 
 const lfUnit = lfCxbx or lfPushBuffer;
 
@@ -249,7 +249,7 @@ end;
 *)
 
 type
-  TPostponedDrawType = (pdUndetermined, pdAlreadyDone, pdDrawVertices, pdDrawIndexedVertices, pdDrawVerticesUP);
+  TPostponedDrawType = (pdUndetermined, pdAlreadyDone, pdDrawVertices, pdDrawIndexedVertices);
 
 var
   // Global(s)
@@ -259,8 +259,9 @@ var
   pdwPushArguments: PDWord = nil;
   HandledCount: DWord = 0;
   HandledBy: string = '';
-  VertexIndex: INT = -1;
+  VertexIndex: INT = 0;
   VertexCount: UINT = 0;
+  DxbxCurrentVertexStride: UINT = 0;
   XBPrimitiveType: X_D3DPRIMITIVETYPE;
   PostponedDrawType: TPostponedDrawType = pdUndetermined;
   VertexShaderSlots: array [0..D3DVS_XBOX_NR_ADDRESS_SLOTS-1] of DWORD;
@@ -290,11 +291,6 @@ var
   g_EmuWindowsDC: HDC = 0;
   VertexProgramIDs: array [0..4-1] of GLuint = (0, 0, 0, 0);
 {$ENDIF}
-
-//  procedure _RenderIndexedVertices(dwCount: DWORD);
-//  function HandleVertexData(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
-//  function HandleIndex32(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
-//  function HandleIndex16_16(pdwPushArguments: PDWORD; dwCount: DWORD): Integer;
 
 procedure DWORDSplit2(const aValue: DWORD; w1: Integer; out v1: Integer; w2: Integer; out v2: Integer);
 begin
@@ -544,39 +540,82 @@ begin
   Result := Result + '}';
 end;
 
-procedure EmuNV2A_RegisterBatchOfVertices();
-// This command just registers the number of vertices are to be used in D3DDevice_DrawVertices.
+{$IFDEF DXBX_USE_OPENGL}
 var
-  BatchCount: Integer;
-  BatchIndex: Integer;
+  // Since we'll never recieve just one index, our "doubling" method of index-memory
+  // allocation won't need a special case for the initial (nil) state if we start at 1 :
+  DxbxIndicesMaxWordCount: uint = 1;
+  DxbxIndices: PWORD = nil;
+
+procedure DxbxMakeIndexSpace(const NewWordCount: uint);
 begin
-  // Decode the arguments (index is an incrementing number, count is cumulative per batch) :
-  DWORDSplit2(pdwPushArguments^, 24, {out}BatchIndex, 8, {out}BatchCount);
-  Inc(BatchCount);
+  if NewWordCount < DxbxIndicesMaxWordCount then
+    Exit;
 
-  // Accumulate the vertices for the draw that will follow :
-  Inc(VertexCount, BatchCount);
-  // Register the index only once :
-  if VertexIndex < 0 then
-  begin
-    // Note : Additional commands will mention an index right next to the previous batch
-    VertexIndex := BatchIndex;
+  repeat
+    DxbxIndicesMaxWordCount := DxbxIndicesMaxWordCount * 2;
+  until DxbxIndicesMaxWordCount >= NewWordCount;
 
-    // Register that the postponed draw will be a DrawVertices() :
-    PostponedDrawType := pdDrawVertices;
-  end;
-
-  HandledBy := Format('VertexBatch(BatchIndex=%d, BatchCount=%d) > VertexIndex=%d VertexCount=%d',
-    [BatchIndex, BatchCount, VertexIndex, VertexCount]);
+  // Reserve that space (keeping the old data intact) :
+  ReallocMem(Pointer(DxbxIndices), DxbxIndicesMaxWordCount);
 end;
 
-{$IFDEF DXBX_USE_OPENGL}
+var
+  // Since we'll never recieve just one index, our "doubling" method of index-memory
+  // allocation won't need a special case for the initial (nil) state if we start at 1 :
+  DxbxVerticesSize: uint = 1;
+  DxbxVertices: PBYTE = nil;
+  DxbxCurrentVertices: PBYTE = nil; // Either nil, DxbxVertices or pdwPushArguments
+
+procedure DxbxMakeVertexSpace(const NewSize: uint);
+begin
+  if NewSize < DxbxVerticesSize then
+    Exit;
+
+  repeat
+    DxbxVerticesSize := DxbxVerticesSize * 2;
+  until DxbxVerticesSize >= NewSize;
+
+  // Reserve that space (keeping the old data intact) :
+  ReallocMem(Pointer(DxbxIndices), NewSize);
+end;
+
 var
   VertexAttribSize: array[0..15] of uint;
 
-function DxbxSetupVertexPointers(InlinePointer: PBYTE = nil): uint;
+function DxbxCalculateVertexStride(): uint;
+var
+  i: uint;
+  NrElements: uint;
+  VType: DWORD;
+begin
+  // Calculate the stride :
+  Result := 0;
+  for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
+  begin
+    NrElements := DxbxGetVertexFormatSize(i);
+    if NrElements > 0 then
+    begin
+      VType := DxbxGetVertexFormatType(i);
+      case VType of
+        NV2A_VTXFMT_TYPE_COLORBYTE: VertexAttribSize[i] := NrElements * SizeOf(BYTE);
+        NV2A_VTXFMT_TYPE_SHORT:     VertexAttribSize[i] := NrElements * SizeOf(SHORT);
+        NV2A_VTXFMT_TYPE_FLOAT:     VertexAttribSize[i] := NrElements * SizeOf(FLOAT);
+        NV2A_VTXFMT_TYPE_UBYTE:     VertexAttribSize[i] := NrElements * SizeOf(UBYTE);
+        NV2A_VTXFMT_TYPE_USHORT:    VertexAttribSize[i] := NrElements * SizeOf(USHORT);
+      else
+        // ?
+      end;
+
+      Inc(Result, VertexAttribSize[i]);
+    end;
+  end;
+end;
+
+procedure DxbxSetupVertexPointers(InlinePointer: PBYTE = nil);
 // Parse all NV2A_VTXBUF_ADDRESS and NV2A_VTXFMT data here, so that we know how where the vertex data is, and what format it has.
-// (If InlinePointer is given, NV2A_VTXBUF_ADDRESS is bypassed, since the vertex data is tightly packed in the pushbuffer itself.)
+// (If InlinePointer is given, NV2A_VTXBUF_ADDRESS is bypassed, since the vertex data is either tightly packed in the pushbuffer
+// itself, or copied to a buffer of ourselves.)
 var
   i: uint;
   NrElements: uint;
@@ -597,35 +636,10 @@ begin
   // if the current OpenGL context doesn't support this :
   glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
 
-  // If we point directly into the pushbuffer,
-  Stride := 0;
-  // we already know the address first attribute :
+  // If we point directly into a buffer buffer, we already calculated
+  // the address of the first attribute and the accompanying stride :
   VertexAttribPointer := InlinePointer;
-  if InlinePointer <> nil then
-  begin
-
-    // Also, we have to calculate the stride beforehand :
-    Stride := 0;
-    for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
-    begin
-      NrElements := DxbxGetVertexFormatSize(i);
-      if NrElements > 0 then
-      begin
-        VType := DxbxGetVertexFormatType(i);
-        case VType of
-          NV2A_VTXFMT_TYPE_COLORBYTE: VertexAttribSize[i] := NrElements * SizeOf(BYTE);
-          NV2A_VTXFMT_TYPE_SHORT:     VertexAttribSize[i] := NrElements * SizeOf(SHORT);
-          NV2A_VTXFMT_TYPE_FLOAT:     VertexAttribSize[i] := NrElements * SizeOf(FLOAT);
-          NV2A_VTXFMT_TYPE_UBYTE:     VertexAttribSize[i] := NrElements * SizeOf(UBYTE);
-          NV2A_VTXFMT_TYPE_USHORT:    VertexAttribSize[i] := NrElements * SizeOf(USHORT);
-        else
-          // ?
-        end;
-
-        Inc(Stride, VertexAttribSize[i]);
-      end;
-    end;
-  end;
+  Stride := DxbxCurrentVertexStride;
 
   glEnableClientState(GL_VERTEX_ARRAY);
   for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
@@ -684,13 +698,6 @@ begin
       //glVertexAttrib4fv(i, @NV2AInstance.VERTEX_DATA4F[0]);
     end;
   end;
-
-  // If we point directly in the pushbuffer,
-  if InlinePointer <> nil then
-    // return how many bytes each vertex takes :
-    Result := Stride
-  else
-    Result := 0;
 end;
 
 procedure DxbxFinishVertexPointers();
@@ -708,10 +715,12 @@ begin
   HandledBy := HandledBy + Format(' DrawPrimitive(VertexIndex=%d, VertexCount=%d)', [VertexIndex, VertexCount]);
 
 {$IFDEF DXBX_USE_OPENGL}
-  DxbxSetupVertexPointers();
+  DxbxSetupVertexPointers(DxbxCurrentVertices);
   try
     glDrawArrays(NV2APrimitiveTypeToGL(XBPrimitiveType), VertexIndex, VertexCount);
   finally
+    DxbxCurrentVertices := nil;
+    DxbxCurrentVertexStride := 0;
     DxbxFinishVertexPointers();
   end;
 {$ENDIF}
@@ -744,52 +753,16 @@ begin
 *)
 end;
 
-var
-  // Since we'll never recieve just one index, our "doubling" method of index-memory
-  // allocation won't need a special case for the initial (nil) state if we start at 1 :
-  DxbxIndicesMaxWordCount: uint = 1;
-  DxbxIndices: array of Word = nil;
-
-procedure DxbxMakeIndexSpace(const NewWordCount: uint);
-begin
-  if NewWordCount < DxbxIndicesMaxWordCount then
-    Exit;
-
-  repeat
-    DxbxIndicesMaxWordCount := DxbxIndicesMaxWordCount * 2;
-  until DxbxIndicesMaxWordCount >= NewWordCount;
-
-  // Reserve that space (keeping the old data intact) :
-  ReallocMem(Pointer(DxbxIndices), DxbxIndicesMaxWordCount);
-end;
-
 procedure PostponedDrawIndexedVertices;
 begin
 {$IFDEF DXBX_USE_OPENGL}
   DxbxSetupVertexPointers();
   try
-    glDrawElements(NV2APrimitiveTypeToGL(XBPrimitiveType), VertexCount, GL_UNSIGNED_SHORT, @DxbxIndices[0]);
+    glDrawElements(NV2APrimitiveTypeToGL(XBPrimitiveType), VertexCount, GL_UNSIGNED_SHORT, DxbxIndices);
   finally
     DxbxFinishVertexPointers();
   end;
 {$ENDIF}
-end;
-
-procedure PostponedDrawVerticesUP;
-begin
-// test code :
-//  // DxbxDrawPrimitiveUP ?
-//  g_pD3DDevice.DrawPrimitiveUP
-//  (
-//      EmuXB2PC_D3DPrimitiveType(XBPrimitiveType),
-//      EmuD3DVertex2PrimitiveCount(XBPrimitiveType, VertexCount),
-//      Pointer(NV2AInstance.VTXBUF_ADDRESS[0]),
-//      20
-//  );
-end;
-
-procedure PostponedDrawIndexedVerticesUP;
-begin
 end;
 
 function TrySetRenderState: Boolean;
@@ -814,6 +787,13 @@ function IsEngineVertexProgram(): Boolean;
 // True=User defined vertex shader program is active
 begin
   Result := (NV2AInstance.ENGINE and NV2A_ENGINE_VP) > 0;
+end;
+
+function NextGPUCommand(): DWORD;
+begin
+  // Read the DWORD after the current argument data, and mask out the GPU method,
+  // so that when necessary we can peek at the next command (hopefully always present) :
+  Result := ((pdwPushArguments + dwCount)^ and NV2A_METHOD_MASK) {shr NV2A_METHOD_SHIFT};
 end;
 
 procedure EmuNV2A_NOP(); begin {HandledBy := 'nop'; }HandledCount := dwCount; end;
@@ -958,10 +938,11 @@ begin
   // TODO : Emulate SetRenderTarget
 end;
 
-procedure NV2A_SetRenderTargetSurface();
+procedure EmuNV2A_SetRenderTargetSurface();
 begin
   HandledBy := 'SetRenderTarget(Surface)';
 end;
+
 //
 // ViewportOffset
 //
@@ -1208,19 +1189,13 @@ begin
   begin
     HandledBy := 'DrawEnd()';
 
-    // Trigger the draw here (instead of in HandleVertexData, HandleIndex32 and/or HandleIndex16_16) :
+    // Trigger the draw :
     case PostponedDrawType of
       pdAlreadyDone: ; // No error, drawing is already done
       pdDrawVertices:
         PostponedDrawVertices;
       pdDrawIndexedVertices:
         PostponedDrawIndexedVertices;
-      pdDrawVerticesUP:
-      begin
-{$IFNDEF DXBX_USE_OPENGL} // OpenGL needs no post-processing (all vertices are already pushed using glVertex4fv)
-        PostponedDrawVerticesUP;
-{$ENDIF}
-      end;
     else
 //      DxbxKrnlCleanup('TriggerDrawBeginEnd encountered unknown draw mode!');
     end;
@@ -1238,7 +1213,7 @@ begin
 
   // Reset variables related to a single draw (others like VertexFormat and VertexAddress are persistent) :
   VertexCount := 0;
-  VertexIndex := -1;
+  VertexIndex := 0;
   PostponedDrawType := pdUndetermined;
   XBPrimitiveType := NewPrimitiveType;
   VertexOffset := 0;
@@ -1372,6 +1347,10 @@ var
   VertexCount: UINT;
   hRet: HRESULT;
   pData: PByte;
+{$ENDIF}
+{$IFDEF DXBX_USE_OPENGL}
+var
+  BatchSize: uint;
 {$ENDIF}
 begin
 {$IFDEF DXBX_USE_D3D}
@@ -1526,18 +1505,39 @@ begin
 {$IFDEF DXBX_USE_OPENGL}
   HandledCount := dwCount;
   HandledBy := 'VertexData';
-  PostponedDrawType := pdAlreadyDone;
 
-  // Since DxbxSetupVertexPointers does some logging, assume a single vertex :
-  VertexCount := 1;
-  // Setup OpenGL to have vertex attributes point directly into the pushbuffer,
-  // and calculate how many vertices can be rendered thusly :
-  VertexCount := (dwCount * SizeOf(DWORD)) div DxbxSetupVertexPointers(PBYTE(pdwPushArguments));
-  try
-    glDrawArrays(NV2APrimitiveTypeToGL(XBPrimitiveType), {VertexIndex=}0, VertexCount);
-  finally
-    DxbxFinishVertexPointers();
+  // For the first vertex batch, do some preprocessing :
+  BatchSize := dwCount * SizeOf(DWORD);
+  if (VertexCount = 0) then
+  begin
+    PostponedDrawType := pdDrawVertices;
+
+    // Determine stride :
+    DxbxCurrentVertexStride := DxbxCalculateVertexStride();
+
+    // See if we're about to handle just one batch :
+    if (NextGPUCommand() <> NV2A_VERTEX_DATA) then
+    begin
+      // We're handling just a single batch, this can be emulated in-place.
+      // Just use the pushbuffer argument data location as vertex pointer :
+      DxbxCurrentVertices := PBYTE(pdwPushArguments);
+
+      // Also calculate the number of vertices we're about to draw :
+      VertexCount := BatchSize div DxbxCurrentVertexStride;
+
+      Exit;
+    end;
   end;
+
+  // Here we have to handle multiple vertex batches;
+  // Collect all vertices in a buffer of ourselves :
+  DxbxMakeVertexSpace((VertexCount * DxbxCurrentVertexStride) + BatchSize);
+  memcpy(@DxbxVertices[VertexCount * DxbxCurrentVertexStride], pdwPushArguments, BatchSize);
+  Inc(VertexCount, BatchSize div DxbxCurrentVertexStride);
+
+  // Make sure we're going to render from our own copy :
+  DxbxCurrentVertices := DxbxVertices;
+
 {$ENDIF}
 end;
 
@@ -1587,6 +1587,129 @@ begin
   VertPatch.Restore();
 
   g_pD3DDevice.SetIndices(nil{$IFNDEF DXBX_USE_D3D9}, 0{$ENDIF});
+{$ENDIF}
+end;
+
+procedure EmuNV2A_RegisterBatchOfWordIndices();
+// Collects indexes for the postponed Draw.
+{$IFDEF DXBX_USE_OPENGL}
+var
+  NewCount: uint;
+{$ENDIF}
+{$IFDEF DXBX_USE_D3D}
+var
+  pIndexData: PWORD;
+{$ENDIF}
+begin
+  HandledBy := 'DrawIndexedVertices';
+  HandledCount := dwCount;
+
+{$IFDEF DXBX_USE_OPENGL}
+  // The following code always creates a copy of the indices in the pushbuffer.
+  // We could improve upon that by preventing a copy just like is done in EmuNV2A_VertexData.
+  // Indices do have a special case though : When the vertices to be drawn are an uneven number,
+  // the pushbuffer contains a separate command for the last index. Instead of falling back to
+  // copying all indices to a buffer of ourselves, we could alternatively hack the pushbuffer
+  // so that the last index is put 1 DWORD to the left (and then skip the 2 DWORDs of this
+  // 32-bit index command). If we do it like that, we can render all small index-batches
+  // right from the pushbuffer itself, avoiding a slow copy. (This is still TODO.)
+
+  NewCount := VertexCount + (dwCount * 2); // Each DWORD data in the pushbuffer carries 2 words
+  DxbxMakeIndexSpace(NewCount);
+  // Collect all indexes; we'll call glDrawElements() when the indices are finished in DrawBeginEnd :
+  memcpy(@DxbxIndices[VertexCount], pdwPushArguments, dwCount * SizeOf(DWORD));
+  VertexCount := NewCount;
+
+  PostponedDrawType := pdDrawIndexedVertices;
+{$ENDIF}
+
+{$IFDEF DXBX_USE_D3D}
+  pIndexData := PWORD(pdwPushArguments);
+  dwCount := dwCount * 2; // Convert DWORD count to WORD count
+
+{$ifdef _DEBUG_TRACK_PB}
+  if (bShowPB) then
+  begin
+    DbgPrintf('  NV2A_VB_ELEMENT_U16(0x%.08X, %d)...', [pIndexData, dwCount]);
+    DbgPrintf('');
+    DbgPrintf('  Index Array Data...');
+
+    pwVal := PWORDs(pIndexData);
+
+    if dwCount > 0 then // Dxbx addition, to prevent underflow
+    for s := 0 to dwCount - 1 do
+    begin
+      if ((s mod 8) = 0) then printf(#13#10'  ');
+
+      printf('  %.04X', [pwVal[s]]);
+    end;
+
+    printf(#13#10);
+
+    if Assigned(g_pD3DDevice) then
+      DxbxUpdateNativeD3DResources();
+
+    pActiveVB := nil;
+
+    pVBData := nil;
+
+    DxbxUpdateActiveVertexBufferStreams();
+
+    // retrieve stream data
+    g_pD3DDevice.GetStreamSource(
+      0,
+      @pActiveVB,
+{$IFDEF DXBX_USE_D3D9}
+      {out}uiOffsetInBytes,
+{$ENDIF}
+      {out}uiStride);
+
+    // retrieve stream desc
+    IDirect3DVertexBuffer(pActiveVB).GetDesc({out}VBDesc);
+
+    // unlock just in case
+    IDirect3DVertexBuffer(pActiveVB).Unlock();
+
+    // grab ptr
+    IDirect3DVertexBuffer(pActiveVB).Lock(0, 0, {out}TLockData(pVBData), D3DLOCK_READONLY);
+
+    // print out stream data
+    begin
+      if MayLog(lfUnit) then
+      begin
+        DbgPrintf('');
+        DbgPrintf('  Vertex Stream Data (0x%.08X)...', [pActiveVB]);
+        DbgPrintf('');
+        DbgPrintf('  Format : %d', [Ord(VBDesc.Format)]);
+        DbgPrintf('  Size   : %d bytes', [VBDesc.Size]);
+        DbgPrintf('  FVF    : 0x%.08X', [VBDesc.FVF]);
+        DbgPrintf('');
+      end;
+    end;
+
+    // release ptr
+    IDirect3DVertexBuffer(pActiveVB).Unlock();
+
+    DbgDumpMesh(pIndexData, dwCount);
+  end;
+{$endif}
+
+  // perform rendering
+  begin
+    DxbxUpdateActiveIndexBuffer(pIndexData, dwCount, {out}StartIndex);
+
+    // remember last 2 indices (will be used in HandleIndex32) :
+    if (dwCount >= 2) then // TODO : Is 2 indices enough for all primitive types?
+    begin
+      pIBMem[0] := pIndexData[dwCount - 2];
+      pIBMem[1] := pIndexData[dwCount - 1];
+      NrCachedIndices := 2;
+    end
+    else
+      NrCachedIndices := 0;
+
+    _RenderIndexedVertices(dwCount);
+  end;
 {$ENDIF}
 end;
 
@@ -1698,118 +1821,31 @@ begin
 {$ENDIF}
 end;
 
-procedure EmuNV2A_RegisterBatchOfWordIndices();
-// Collects indexes for the postponed Draw.
-{$IFDEF DXBX_USE_OPENGL}
+procedure EmuNV2A_RegisterBatchOfVertices();
+// This command just registers the number of vertices are to be used in D3DDevice_DrawVertices.
 var
-  NewCount: uint;
-{$ENDIF}
-{$IFDEF DXBX_USE_D3D}
-var
-  pIndexData: PWORD;
-{$ENDIF}
+  BatchCount: Integer;
+  BatchIndex: Integer;
 begin
-  HandledBy := 'DrawIndexedVertices';
-  HandledCount := dwCount;
+  // Decode the arguments (index is an incrementing number, count is cumulative per batch) :
+  DWORDSplit2(pdwPushArguments^, 24, {out}BatchIndex, 8, {out}BatchCount);
+  Inc(BatchCount);
 
-{$IFDEF DXBX_USE_OPENGL}
-  NewCount := VertexCount + (dwCount * 2); // Each DWORD data in the pushbuffer carries 2 words
-  DxbxMakeIndexSpace(NewCount);
-  // Collect all indexes; we'll call glDrawElements() when the indices are finished in DrawBeginEnd :
-  memcpy(@DxbxIndices[VertexCount], pdwPushArguments, dwCount * SizeOf(DWORD));
-  VertexCount := NewCount;
-
-  PostponedDrawType := pdDrawIndexedVertices;
-{$ENDIF}
-
-{$IFDEF DXBX_USE_D3D}
-  pIndexData := PWORD(pdwPushArguments);
-  dwCount := dwCount * 2; // Convert DWORD count to WORD count
-
-{$ifdef _DEBUG_TRACK_PB}
-  if (bShowPB) then
+  // Register the index only once :
+  if VertexCount = 0 then
   begin
-    DbgPrintf('  NV2A_VB_ELEMENT_U16(0x%.08X, %d)...', [pIndexData, dwCount]);
-    DbgPrintf('');
-    DbgPrintf('  Index Array Data...');
+    // Note : Additional commands will mention an index right next to the previous batch
+    VertexIndex := BatchIndex;
 
-    pwVal := PWORDs(pIndexData);
-
-    if dwCount > 0 then // Dxbx addition, to prevent underflow
-    for s := 0 to dwCount - 1 do
-    begin
-      if ((s mod 8) = 0) then printf(#13#10'  ');
-
-      printf('  %.04X', [pwVal[s]]);
-    end;
-
-    printf(#13#10);
-
-    if Assigned(g_pD3DDevice) then
-      DxbxUpdateNativeD3DResources();
-
-    pActiveVB := nil;
-
-    pVBData := nil;
-
-    DxbxUpdateActiveVertexBufferStreams();
-
-    // retrieve stream data
-    g_pD3DDevice.GetStreamSource(
-      0,
-      @pActiveVB,
-{$IFDEF DXBX_USE_D3D9}
-      {out}uiOffsetInBytes,
-{$ENDIF}
-      {out}uiStride);
-
-    // retrieve stream desc
-    IDirect3DVertexBuffer(pActiveVB).GetDesc({out}VBDesc);
-
-    // unlock just in case
-    IDirect3DVertexBuffer(pActiveVB).Unlock();
-
-    // grab ptr
-    IDirect3DVertexBuffer(pActiveVB).Lock(0, 0, {out}TLockData(pVBData), D3DLOCK_READONLY);
-
-    // print out stream data
-    begin
-      if MayLog(lfUnit) then
-      begin
-        DbgPrintf('');
-        DbgPrintf('  Vertex Stream Data (0x%.08X)...', [pActiveVB]);
-        DbgPrintf('');
-        DbgPrintf('  Format : %d', [Ord(VBDesc.Format)]);
-        DbgPrintf('  Size   : %d bytes', [VBDesc.Size]);
-        DbgPrintf('  FVF    : 0x%.08X', [VBDesc.FVF]);
-        DbgPrintf('');
-      end;
-    end;
-
-    // release ptr
-    IDirect3DVertexBuffer(pActiveVB).Unlock();
-
-    DbgDumpMesh(pIndexData, dwCount);
+    // Register that the postponed draw will be a DrawVertices() :
+    PostponedDrawType := pdDrawVertices;
   end;
-{$endif}
 
-  // perform rendering
-  begin
-    DxbxUpdateActiveIndexBuffer(pIndexData, dwCount, {out}StartIndex);
+  // Accumulate the vertices for the draw that will follow :
+  Inc(VertexCount, BatchCount);
 
-    // remember last 2 indices (will be used in HandleIndex32) :
-    if (dwCount >= 2) then // TODO : Is 2 indices enough for all primitive types?
-    begin
-      pIBMem[0] := pIndexData[dwCount - 2];
-      pIBMem[1] := pIndexData[dwCount - 1];
-      NrCachedIndices := 2;
-    end
-    else
-      NrCachedIndices := 0;
-
-    _RenderIndexedVertices(dwCount);
-  end;
-{$ENDIF}
+  HandledBy := Format('VertexBatch(BatchIndex=%d, BatchCount=%d) > VertexIndex=%d VertexCount=%d',
+    [BatchIndex, BatchCount, VertexIndex, VertexCount]);
 end;
 
 const
@@ -1841,7 +1877,7 @@ const
   {0200}nil, nil,
   {0208 NV2A_RT_FORMAT}EmuNV2A_SetRenderTarget, // Set surface format
   {020C}nil,
-  {0210 NV2A_COLOR_OFFSET}NV2A_SetRenderTargetSurface,
+  {0210 NV2A_COLOR_OFFSET}EmuNV2A_SetRenderTargetSurface,
   {0214}                         nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0240}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0280}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
