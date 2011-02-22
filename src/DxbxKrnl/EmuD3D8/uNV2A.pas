@@ -2459,7 +2459,7 @@ type
       {00001980}VERTEX_DATA4S: array [0..NV2A_VERTEX_DATA4S__SIZE-1] of record X, Y, Z, W: USHORT; end;
       {00001a00}VERTEX_DATA4F: array [0..NV2A_VERTEX_DATA4F__SIZE-1] of record X, Y, Z, W: FLOAT; end;
       {00001b00}TX_OFFSET: array [0..NV2A_TX_OFFSET__SIZE-1] of record
-        {00001b00}TX_OFFSET: DWORD;
+        {00001b00}TX_OFFSET: PBYTE;
         {00001b04}TX_FORMAT: DWORD;
         {00001b08}TX_WRAP: DWORD;
         {00001b0c}TX_ENABLE: DWORD;

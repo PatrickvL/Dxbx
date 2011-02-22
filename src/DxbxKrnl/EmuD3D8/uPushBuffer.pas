@@ -290,6 +290,7 @@ var
 {$IFDEF DXBX_USE_OPENGL}
   g_EmuWindowsDC: HDC = 0;
   VertexProgramIDs: array [0..4-1] of GLuint = (0, 0, 0, 0);
+  TextureIDs: array [0..X_D3DTS_STAGECOUNT-1] of GLuint = (0, 0, 0, 0);
 {$ENDIF}
 
 procedure DWORDSplit2(const aValue: DWORD; w1: Integer; out v1: Integer; w2: Integer; out v2: Integer);
@@ -324,17 +325,17 @@ begin
   XBPrimitiveType := X_D3DPT_INVALID;
 end;
 
-function DxbxGetVertexFormatStride(Slot: Integer): uint;
+function DxbxGetNV2AVertexFormatStride(Slot: Integer): uint;
 begin
   Result := (NV2AInstance.VTXFMT[Slot] and NV2A_VTXFMT_STRIDE_MASK) shr NV2A_VTXFMT_STRIDE_SHIFT;
 end;
 
-function DxbxGetVertexFormatSize(Slot: Integer): uint;
+function DxbxGetNV2AVertexFormatSize(Slot: Integer): uint;
 begin
   Result := (NV2AInstance.VTXFMT[Slot] and NV2A_VTXFMT_SIZE_MASK) shr NV2A_VTXFMT_SIZE_SHIFT; // Size:1..4=1..4,7=3w?
 end;
 
-function DxbxGetVertexFormatType(Slot: Integer): uint;
+function DxbxGetNV2AVertexFormatType(Slot: Integer): uint;
 begin
   Result := (NV2AInstance.VTXFMT[Slot] and NV2A_VTXFMT_TYPE_MASK); // Type:1=S1,2=F,4=UB_OGL,5=S32K,6=CMP?
 end;
@@ -596,10 +597,10 @@ begin
   Result := 0;
   for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
   begin
-    NrElements := DxbxGetVertexFormatSize(i);
+    NrElements := DxbxGetNV2AVertexFormatSize(i);
     if NrElements > 0 then
     begin
-      VType := DxbxGetVertexFormatType(i);
+      VType := DxbxGetNV2AVertexFormatType(i);
       case VType of
         NV2A_VTXFMT_TYPE_COLORBYTE: VertexAttribSize[i] := NrElements * SizeOf(BYTE);
         NV2A_VTXFMT_TYPE_SHORT:     VertexAttribSize[i] := NrElements * SizeOf(SHORT);
@@ -647,11 +648,11 @@ begin
   // glEnableClientState(GL_VERTEX_ARRAY); // This would be needed for the older glVertexPointer API
   for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
   begin
-    NrElements := DxbxGetVertexFormatSize(i);
+    NrElements := DxbxGetNV2AVertexFormatSize(i);
     if NrElements > 0 then
     begin
       glEnableVertexAttribArray(i);
-      VType := DxbxGetVertexFormatType(i);
+      VType := DxbxGetNV2AVertexFormatType(i);
 
       // If we don't point directly into the pushbuffer
       if InlinePointer = nil then
@@ -659,7 +660,7 @@ begin
         // read the address of this attribute's data from the corresponding NV2A register :
         VertexAttribPointer := NV2AInstance.VTXBUF_ADDRESS[i];
         // Because of reading from somewhere else, the stride has to come from a register too :
-        Stride := DxbxGetVertexFormatStride(i);
+        Stride := DxbxGetNV2AVertexFormatStride(i);
       end;
 
       glVertexAttribPointer(
@@ -670,11 +671,12 @@ begin
         Stride,
         VertexAttribPointer);
 
+      // Only log coordinates when there are just a few vertices to draw :
       if VertexCount <= 4 then
       begin
         // TODO : Prepend slot-string here too
-        HandledBy := HandledBy + ' ' + NV2AVertexFormatTypeToString(DxbxGetVertexFormatType(i)) + ':';
-        case DxbxGetVertexFormatType(i) of
+        HandledBy := HandledBy + ' ' + NV2AVertexFormatTypeToString(DxbxGetNV2AVertexFormatType(i)) + ':';
+        case DxbxGetNV2AVertexFormatType(i) of
           NV2A_VTXFMT_TYPE_COLORBYTE:
             HandledBy := HandledBy + ColorBytesToString(VertexAttribPointer, NrElements*VertexCount, NrElements, Stride);
           NV2A_VTXFMT_TYPE_SHORT:
@@ -703,11 +705,192 @@ begin
   end;
 end;
 
+
 procedure DxbxFinishVertexPointers();
 begin
-  glDisableClientState(GL_VERTEX_ARRAY);
-  glDisableClientState(GL_COLOR_ARRAY);
+//  glDisableClientState(GL_VERTEX_ARRAY);
+//  glDisableClientState(GL_COLOR_ARRAY);
   glDisable(GL_VERTEX_PROGRAM_ARB);
+end;
+
+const
+  NV2AMagnificationFilter: array [1..2] of GLenum =
+  (
+    {NV2A_TX_FILTER_MAGNIFY_NEAREST:} GL_NEAREST,
+    {NV2A_TX_FILTER_MAGNIFY_LINEAR:}  GL_LINEAR
+  );
+
+  NV2AMinificationFilter: array [1..6] of GLenum =
+  (
+    {NV2A_TX_FILTER_MINIFY_NEAREST:}                GL_NEAREST,
+    {NV2A_TX_FILTER_MINIFY_LINEAR:}                 GL_LINEAR,
+    {NV2A_TX_FILTER_MINIFY_NEAREST_MIPMAP_NEAREST:} GL_NEAREST_MIPMAP_NEAREST,
+    {NV2A_TX_FILTER_MINIFY_LINEAR_MIPMAP_NEAREST:}  GL_LINEAR_MIPMAP_NEAREST,
+    {NV2A_TX_FILTER_MINIFY_NEAREST_MIPMAP_LINEAR:}  GL_NEAREST_MIPMAP_LINEAR,
+    {NV2A_TX_FILTER_MINIFY_LINEAR_MIPMAP_LINEAR:}   GL_LINEAR_MIPMAP_LINEAR
+  );
+
+  NV2ATexCoordWrapToGL: array [NV2A_TX_WRAP_S_REPEAT..NV2A_TX_WRAP_S_CLAMP] of GLenum =
+  (
+    {NV2A_TX_WRAP_S_REPEAT:}          GL_REPEAT,          // = X_D3DTADDRESS_WRAP
+    {NV2A_TX_WRAP_S_MIRRORED_REPEAT:} GL_MIRRORED_REPEAT, // = X_D3DTADDRESS_MIRROR
+    {NV2A_TX_WRAP_S_CLAMP_TO_EDGE:}   GL_CLAMP_TO_EDGE,   // = X_D3DTADDRESS_CLAMPTOEDGE
+    {NV2A_TX_WRAP_S_CLAMP_TO_BORDER:} GL_CLAMP_TO_BORDER, // = X_D3DTADDRESS_BORDER
+    {NV2A_TX_WRAP_S_CLAMP:}           GL_CLAMP            // = X_D3DTADDRESS_CLAMP
+  );
+
+
+procedure DxbxUpdateTextures();
+var
+  Stage: int;
+  DxbxPixelJar: RDxbxDecodedPixelContainer;
+  GLTextureTarget: GLenum;
+  GLInternalFormat, GLFormat, GLType: DWORD;
+  Pixels: PBYTE;
+  Tmp: DWORD;
+  NrFaces, Face, Level, NrSlices, Slice: DWORD;
+  dwMipWidth, dwMipHeight, dwMipPitch: DWORD;
+begin
+  glDisable(GL_TEXTURE_1D);
+  glDisable(GL_TEXTURE_2D);
+  glDisable(GL_TEXTURE_3D);
+  glDisable(GL_TEXTURE_CUBE_MAP);
+
+  for Stage := 0 to X_D3DTS_STAGECOUNT - 1 do
+  begin
+    // Skip textures that aren't enabled :
+    if (NV2AInstance.TX_OFFSET[Stage].TX_ENABLE and NV2A_TX_ENABLE_ENABLE) = 0 then
+      Continue;
+
+    glShadeModel(GL_SMOOTH); // TODO : Where to put this?
+    glActiveTexture(GL_TEXTURE0 + Stage);
+
+    DxbxGetFormatRelatedVariables(NV2AInstance.TX_OFFSET[Stage].TX_FORMAT, NV2AInstance.TX_OFFSET[Stage].TX_NPOT_SIZE,
+      {out}DxbxPixelJar);
+
+    if DxbxPixelJar.bIsCubeMap then GLTextureTarget := GL_TEXTURE_CUBE_MAP
+    else if DxbxPixelJar.bIs3D then GLTextureTarget := GL_TEXTURE_3D
+    else                            GLTextureTarget := GL_TEXTURE_2D;
+
+    // TODO : The following generation of a TextureID should only be done for
+    // new textures (indicated by changes in attributes and/or contents).
+    // (Older textures should also be evited...)
+    glGenTextures(1, @TextureIDs[Stage]);
+    glBindTexture(GLTextureTarget, TextureIDs[Stage]);
+
+    // Set magnification filter :
+    Tmp := ((NV2AInstance.TX_OFFSET[Stage].TX_FILTER and NV2A_TX_FILTER_MAGNIFY_MASK) shr NV2A_TX_FILTER_MAGNIFY_SHIFT);
+    if Tmp in [1..2] then
+      glTexParameteri(GLTextureTarget, GL_TEXTURE_MAG_FILTER, NV2AMagnificationFilter[Tmp]);
+
+    // Set minification filter :
+    Tmp := ((NV2AInstance.TX_OFFSET[Stage].TX_FILTER and NV2A_TX_FILTER_MINIFY_MASK) shr NV2A_TX_FILTER_MINIFY_SHIFT);
+    if Tmp in [1..6] then
+      // TODO : Do any of the _MIPMAP_ values indicate mipmapping? What if there's only one level?
+      glTexParameteri(GLTextureTarget, GL_TEXTURE_MIN_FILTER, NV2AMinificationFilter[Tmp]);
+
+    // Set texture coordinate wrapping :
+    Tmp := (NV2AInstance.TX_OFFSET[Stage].TX_WRAP and NV2A_TX_WRAP_S_MASK) shr NV2A_TX_WRAP_S_SHIFT;
+    if Tmp in [NV2A_TX_WRAP_S_REPEAT..NV2A_TX_WRAP_S_CLAMP] then
+      glTexParameteri(GLTextureTarget, GL_TEXTURE_WRAP_S, NV2ATexCoordWrapToGL[Tmp]);
+
+    Tmp := (NV2AInstance.TX_OFFSET[Stage].TX_WRAP and NV2A_TX_WRAP_T_MASK) shr NV2A_TX_WRAP_T_SHIFT;
+    if Tmp in [NV2A_TX_WRAP_S_REPEAT..NV2A_TX_WRAP_S_CLAMP] then
+      glTexParameteri(GLTextureTarget, GL_TEXTURE_WRAP_T, NV2ATexCoordWrapToGL[Tmp]);
+
+    Tmp := (NV2AInstance.TX_OFFSET[Stage].TX_WRAP and NV2A_TX_WRAP_R_MASK) shr NV2A_TX_WRAP_R_SHIFT;
+    if Tmp in [NV2A_TX_WRAP_S_REPEAT..NV2A_TX_WRAP_S_CLAMP] then
+      glTexParameteri(GLTextureTarget, GL_TEXTURE_WRAP_R, NV2ATexCoordWrapToGL[Tmp]);
+
+    // TODO : Determine the following variables, based on DxbxPixelJar.X_Format (probably use a lookup table like WineD3D) :
+    GLInternalFormat := 0; { Specifies the number of color components in the texture. Must be 1, 2, 3, or 4,
+      or one of the following symbolic constants: GL_ALPHA, GL_ALPHA4, GL_ALPHA8, GL_ALPHA12, GL_ALPHA16,
+      GL_COMPRESSED_ALPHA, GL_COMPRESSED_LUMINANCE, GL_COMPRESSED_LUMINANCE_ALPHA, GL_COMPRESSED_INTENSITY,
+      GL_COMPRESSED_RGB, GL_COMPRESSED_RGBA, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT24,
+      GL_DEPTH_COMPONENT32, GL_LUMINANCE, GL_LUMINANCE4, GL_LUMINANCE8, GL_LUMINANCE12, GL_LUMINANCE16,
+      GL_LUMINANCE_ALPHA, GL_LUMINANCE4_ALPHA4, GL_LUMINANCE6_ALPHA2, GL_LUMINANCE8_ALPHA8, GL_LUMINANCE12_ALPHA4,
+      GL_LUMINANCE12_ALPHA12, GL_LUMINANCE16_ALPHA16, GL_INTENSITY, GL_INTENSITY4, GL_INTENSITY8, GL_INTENSITY12,
+      GL_INTENSITY16, GL_R3_G3_B2, GL_RGB, GL_RGB4, GL_RGB5, GL_RGB8, GL_RGB10, GL_RGB12, GL_RGB16, GL_RGBA, GL_RGBA2,
+      GL_RGBA4, GL_RGB5_A1, GL_RGBA8, GL_RGB10_A2, GL_RGBA12, GL_RGBA16, GL_SLUMINANCE, GL_SLUMINANCE8, GL_SLUMINANCE_ALPHA,
+      GL_SLUMINANCE8_ALPHA8, GL_SRGB, GL_SRGB8, GL_SRGB_ALPHA, or GL_SRGB8_ALPHA8. }
+
+    // TODO : Convert unsupported texture formats
+
+    GLFormat := 0; { Specifies the format of the pixel data. The following symbolic values are accepted:
+      GL_COLOR_INDEX, GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA, GL_RGB, GL_BGR, GL_RGBA, GL_BGRA, GL_LUMINANCE, and GL_LUMINANCE_ALPHA. }
+
+    GLType := 0; { Specifies the data type of the pixel data. The following symbolic values are accepted:
+      GL_UNSIGNED_BYTE, GL_BYTE, GL_BITMAP, GL_UNSIGNED_SHORT, GL_SHORT, GL_UNSIGNED_INT, GL_INT, GL_FLOAT,
+      GL_UNSIGNED_BYTE_3_3_2, GL_UNSIGNED_BYTE_2_3_3_REV, GL_UNSIGNED_SHORT_5_6_5, GL_UNSIGNED_SHORT_5_6_5_REV,
+      GL_UNSIGNED_SHORT_4_4_4_4, GL_UNSIGNED_SHORT_4_4_4_4_REV, GL_UNSIGNED_SHORT_5_5_5_1, GL_UNSIGNED_SHORT_1_5_5_5_REV,
+      GL_UNSIGNED_INT_8_8_8_8, GL_UNSIGNED_INT_8_8_8_8_REV, GL_UNSIGNED_INT_10_10_10_2, and GL_UNSIGNED_INT_2_10_10_10_REV }
+
+    glEnable(GLTextureTarget); // TODO : Where to put this?
+
+    if DxbxPixelJar.bIsCubeMap then
+    begin
+      NrFaces := 6;
+      // For cubemaps, we have to call glTexImage2D with GL_TEXTURE_CUBE_MAP_POSITIVE_X and up :
+      GLTextureTarget := GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+    end
+    else
+      NrFaces := 1;
+
+    // This outer loop walks over all faces (6 for CubeMaps, just 1 for anything else) :
+    for Face := 0 to NrFaces - 1 do
+    begin
+      dwMipWidth := DxbxPixelJar.dwWidth;
+      dwMipHeight := DxbxPixelJar.dwHeight;
+      dwMipPitch := DxbxPixelJar.dwRowPitch;
+
+      // This 2nd loop iterates through all mipmap levels :
+      for Level := 0 to DxbxPixelJar.dwMipMapLevels - 1 do
+      begin
+
+        // This inner loop walks over all slices (1 for anything but 3D textures - those
+        // use the correct amount for the current mipmap level, but never go below 1) :
+        NrSlices := DxbxPixelJar.MipMapSlices[Level];
+        for Slice := 0 to NrSlices - 1 do
+        begin
+          // Determine the Xbox data pointer and step it to the correct mipmap, face and/or slice :
+          Pixels := NV2AInstance.TX_OFFSET[Stage].TX_OFFSET; // TODO : Remove write-combined memory-mask where needed
+          Inc(Pixels, DxbxPixelJar.MipMapOffsets[Level]);
+          if DxbxPixelJar.bIsCubeMap then
+            Inc(Pixels, DxbxPixelJar.dwFacePitch * Face)
+          else
+            if DxbxPixelJar.bIs3D then
+              // Use the Xbox slice pitch (from the current level) to step to each slice in src :
+              Inc(Pixels, DxbxPixelJar.SlicePitches[Level] * Slice);
+
+          // TODO : Deswizzle, just like in DxbxUpdateNativePixelContainer (from where most of this code was taken)
+          // Maybe even pallete>rgb conversion. In both cases, dwMipPitch will be needed.
+
+          // Set the texture in OpenGL :
+          if DxbxPixelJar.bIs3D then
+            glTexImage3D(GLTextureTarget, {MipMap=}Level, GLInternalFormat,
+              dwMipWidth, dwMipHeight, {Depth=}Slice, Ord(DxbxPixelJar.bIsBorderSource),
+              GLFormat, GLType, Pixels)
+          else
+            glTexImage2D(GLTextureTarget + Face, {MipMap=}Level, GLInternalFormat,
+              dwMipWidth, dwMipHeight, Ord(DxbxPixelJar.bIsBorderSource),
+              GLFormat, GLType, Pixels);
+
+        end; // for slices
+
+        // Step to next mipmap level (but never go below minimum) :
+        if dwMipWidth > DxbxPixelJar.dwMinXYValue then
+        begin
+          dwMipWidth := dwMipWidth div 2;
+          dwMipPitch := dwMipPitch div 2;
+        end;
+
+        if dwMipHeight > DxbxPixelJar.dwMinXYValue then
+          dwMipHeight := dwMipHeight div 2;
+      end; // for mipmap levels
+    end; // for faces
+
+//    glClientActiveTexture(GL_TEXTURE0 + Stage);
+  end;
 end;
 {$ENDIF}
 
@@ -1248,6 +1431,7 @@ begin
   begin
     HandledBy := Format('DrawBegin(PrimitiveType=%d{=%s})', [Ord(NewPrimitiveType), X_D3DPRIMITIVETYPE2String(NewPrimitiveType)]);
 {$IFDEF DXBX_USE_OPENGL}
+    DxbxUpdateTextures();
     glBegin(NV2APrimitiveTypeToGL(NewPrimitiveType));
 {$ENDIF}
   end;
@@ -1889,6 +2073,11 @@ begin
     [BatchIndex, BatchCount, VertexIndex, VertexCount]);
 end;
 
+procedure EmuNV2A_TextureFormat();
+begin
+  HandledBy := ResourceFormatToStr(pdwPushArguments^);
+end;
+
 const
   NV2ACallbacks: array [0..($2000 div Sizeof(DWORD)) -1] of procedure = (
   {0000}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
@@ -2178,10 +2367,18 @@ const
   {1AD0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
   {1AE0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
   {1AF0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1B00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1B40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1B80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1BC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1B00}nil,
+  {1B04 NV2A_TX_FORMAT(0)}EmuNV2A_TextureFormat,
+                  nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1B40}nil,
+  {1B44 NV2A_TX_FORMAT(1)}EmuNV2A_TextureFormat,
+                  nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1B80}nil,
+  {1B84 NV2A_TX_FORMAT(2)}EmuNV2A_TextureFormat,
+                  nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1BC0}nil,
+  {1BC4 NV2A_TX_FORMAT(3)}EmuNV2A_TextureFormat,
+                  nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1C00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1C40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1C80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
