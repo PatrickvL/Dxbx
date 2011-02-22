@@ -140,6 +140,7 @@ function DxbxGetResourceType(const pResource: PX_D3DResource): X_D3DRESOURCETYPE
 function IsResourcePixelContainer(const aResource: PX_D3DResource): Boolean;
 
 function CommonToStr(const Common: DWORD): string;
+function ResourceFormatToStr(const ResourceFormat: DWORD): string;
 function ResourceToString(const aValue: PX_D3DResource): string;
 
 function DxbxD3DErrorString(hResult: HRESULT): string;
@@ -170,12 +171,16 @@ type
     bIsSwizzled: BOOL_;
     bIsCompressed: BOOL_;
     bIsCubeMap: BOOL_;
+    bIsBorderSource: BOOL_;
     bIs3D: BOOL_;
   end;
 
 procedure DxbxGetFormatRelatedVariables(
   const pPixelContainer: PX_D3DPixelContainer;
-  out DecodedInfo: RDxbxDecodedPixelContainer);
+  out DecodedInfo: RDxbxDecodedPixelContainer); overload;
+procedure DxbxGetFormatRelatedVariables(
+  LocalFormat, LocalSize: DWORD;
+  out DecodedInfo: RDxbxDecodedPixelContainer); overload;
 
 const
   // X_D3D_FORMAT flags :
@@ -924,22 +929,22 @@ begin
   if (ResourceFormat and X_D3DFORMAT_BORDERSOURCE_COLOR) > 0 then Result := Result + ' BORDER';
 
   Value := (ResourceFormat and X_D3DFORMAT_DIMENSION_MASK) shr X_D3DFORMAT_DIMENSION_SHIFT;
-  if Value > 2 then Result := Result + Format(' %dD', [Value]);
+  {$IFNDEF DXBX_USE_OPENGL}if Value > 2 then{$ENDIF} Result := Result + Format(' %dD', [Value]);
 
   Value := (ResourceFormat and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
   Result := Result + Format(' FORMAT=%s', [X_D3DFORMAT2String(Value)]);
 
   Value := (ResourceFormat and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
-  if Value > 1 then Result := Result + Format(' MIPMAP=%d', [Value]);
+  {$IFNDEF DXBX_USE_OPENGL}if Value > 1 then{$ENDIF} Result := Result + Format(' MIPMAP=%d', [Value]);
 
   Value := (ResourceFormat and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT;
-  if Value > 0 then Result := Result + Format(' USIZE=%d', [Value]);
+  {$IFNDEF DXBX_USE_OPENGL}if Value > 0 then{$ENDIF} Result := Result + Format(' USIZE=%d', [Value]);
 
   Value := (ResourceFormat and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT;
-  if Value > 0 then Result := Result + Format(' VSIZE=%d', [Value]);
+  {$IFNDEF DXBX_USE_OPENGL}if Value > 0 then{$ENDIF} Result := Result + Format(' VSIZE=%d', [Value]);
 
   Value := (ResourceFormat and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT;
-  if Value > 0 then Result := Result + Format(' PSIZE=%d', [Value]);
+  {$IFNDEF DXBX_USE_OPENGL}if Value > 0 then{$ENDIF} Result := Result + Format(' PSIZE=%d', [Value]);
 end;
 
 function ResourceSizeToStr(const ResourceSize: DWORD): string;
@@ -1034,29 +1039,53 @@ procedure DxbxGetFormatRelatedVariables(
   out DecodedInfo: RDxbxDecodedPixelContainer); {NOPATCH}
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
+  x: uint;
+begin
+  DxbxGetFormatRelatedVariables(
+    pPixelContainer.Format, pPixelContainer.Size,
+    {out}DecodedInfo);
+  {out}DecodedInfo.pPixelContainer := pPixelContainer;
+
+  // Check that the maximum mipmap level is not exceeded :
+  if pPixelContainer.Size = 0 then
+  begin
+    if DecodedInfo.bIs3D then
+      x := X_MAX_MIPMAPS_VOLUME
+    else
+      x := X_MAX_MIPMAPS;
+    if DecodedInfo.dwMipMapLevels > x then
+      DxbxD3DError('DxbxGetFormatRelatedVariables', 'MipMapLevel exceeded!', pPixelContainer);
+  end;
+end;
+
+procedure DxbxGetFormatRelatedVariables(
+  LocalFormat, LocalSize: DWORD;
+  out DecodedInfo: RDxbxDecodedPixelContainer); {NOPATCH}
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
   v: uint32;
   x,y,d,minsize: uint;
-  LocalFormat: DWORD;
 begin
   ZeroMemory(@DecodedInfo, SizeOf(DecodedInfo));
-  {out}DecodedInfo.pPixelContainer := pPixelContainer;
   with {out}DecodedInfo do
   begin
-    X_Format := GetD3DFormat(pPixelContainer);
+    X_Format := X_D3DFORMAT((LocalFormat and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
     dwBPP := EmuXBFormatBPP(X_Format);
 
-    LocalFormat := pPixelContainer.Format;
     // Cubemap textures have the X_D3DFORMAT_CUBEMAP bit set (also, their size is 6 times a normal texture)
     bIsCubeMap := (LocalFormat and X_D3DFORMAT_CUBEMAP) > 0;
+
+    bIsBorderSource := (LocalFormat and X_D3DFORMAT_BORDERSOURCE_COLOR) > 0;
+
     // Volumes have 3 dimensions, the rest have 2.
     bIs3D := ((LocalFormat and X_D3DFORMAT_DIMENSION_MASK) shr X_D3DFORMAT_DIMENSION_SHIFT) = 3;
     bIsSwizzled := EmuXBFormatIsSwizzled(X_Format);
     bIsCompressed := EmuXBFormatIsCompressed(X_Format);
 
-    if pPixelContainer.Size > 0 then
+    if LocalSize > 0 then
     begin
       // This case cannot be reached for Cube maps or Volumes, as those use the 'power of two' "format" :
-      DxbxDecodeSizeIntoDimensions(pPixelContainer.Size, @dwWidth, @dwHeight, @dwRowPitch);
+      DxbxDecodeSizeIntoDimensions(LocalSize, @dwWidth, @dwHeight, @dwRowPitch);
       dwDepth := 1;
       dwMipMapLevels := 1;
     end
@@ -1069,17 +1098,6 @@ begin
       dwDepth  := 1 shl ((LocalFormat and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT);
       dwMipMapLevels := (LocalFormat and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
       dwRowPitch := dwWidth * dwBPP div 8;
-
-      // Check that the maximum mipmap level is not exceeded :
-      begin
-        if bIs3D then
-          x := X_MAX_MIPMAPS_VOLUME
-        else
-          x := X_MAX_MIPMAPS;
-
-        if dwMipMapLevels > x then
-          DxbxD3DError('DxbxGetFormatRelatedVariables', 'MipMapLevel exceeded!', pPixelContainer);
-      end;
     end;
 
     // Calculate a few variables for the first mipmap level (even when this is not a mipmapped texture):
@@ -1095,9 +1113,9 @@ begin
     MinSize := 0;
     if dwMipMapLevels > 1 then
     begin
-      x := (pPixelContainer.Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT;
-      y := (pPixelContainer.Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT;
-      d := (pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT;
+      x := (LocalFormat and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT;
+      y := (LocalFormat and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT;
+      d := (LocalFormat and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT;
       if bIsCompressed then
         MinSize := 2;
       if x < MinSize then x := MinSize;
