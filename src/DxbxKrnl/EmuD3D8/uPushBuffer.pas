@@ -176,7 +176,7 @@ const
 //    'PARAM c[] = { program.env[0..191] };'#13#10 // All constants in 1 array declaration, requires NV_gpu_program4
     'PARAM c0 = program.env[0];'#13#10 +
     'PARAM c1 = program.env[1];'#13#10 +
-    // TODO : Add PARAM declarations for all c[0-191]
+//    // TODO : Add PARAM declarations for all c[0-191]
     'PARAM c133 = program.env[133];'#13#10 +
     'PARAM c134 = program.env[134];'#13#10 +
     'PARAM c191 = program.env[191];'#13#10;
@@ -265,7 +265,6 @@ var
   XBPrimitiveType: X_D3DPRIMITIVETYPE;
   PostponedDrawType: TPostponedDrawType = pdUndetermined;
   VertexShaderSlots: array [0..D3DVS_XBOX_NR_ADDRESS_SLOTS-1] of DWORD;
-  Viewport: D3DVIEWPORT;
 
   // Globals and controller :
   OldRegisterValue: DWORD = 0;
@@ -284,6 +283,7 @@ var
   maxIBSize: uint = 0;
   VertexOffset: uint = 0;
 {$IFDEF DXBX_USE_D3D}
+  Viewport: D3DVIEWPORT;
   pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8; // = XTL_PIDirect3DIndexBuffer8
   pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
 {$ENDIF}
@@ -407,15 +407,18 @@ begin
 end;
 
 function ColorBytesToString(Ptr: PBYTE; Count: uint = 1; NrPerGroup: uint = 4; Stride: uint = 0): string;
+const
+  ChannelPrefix: array [0..3] of string = ('B:', 'G:', 'R:', 'A:');
 var
   i: uint;
 begin
+  Assert(NrPerGroup <= 4);
   Result := '{';
   i := 0;
   if Stride > 0 then Dec(Stride, NrPerGroup * SizeOf(Ptr^));
   while i < Count do
   begin
-    Result := Result + Format('%d', [Ptr^]);
+    Result := Result + ChannelPrefix[i mod NrPerGroup] + Format('%d', [Ptr^]);
     Inc(Ptr);
     Inc(i);
     if i < Count then
@@ -641,7 +644,7 @@ begin
   VertexAttribPointer := InlinePointer;
   Stride := DxbxCurrentVertexStride;
 
-  glEnableClientState(GL_VERTEX_ARRAY);
+  // glEnableClientState(GL_VERTEX_ARRAY); // This would be needed for the older glVertexPointer API
   for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
   begin
     NrElements := DxbxGetVertexFormatSize(i);
@@ -822,11 +825,14 @@ begin
     DWORDSplit2(NV2AInstance.CLEAR_RECT_VERTICAL, 16, {out}ClearRect.Top, 16, {out}ClearRect.Bottom);
     // Decode the Z and Stencil values :
     ClearDepthValue := NV2AInstance.CLEAR_DEPTH_VALUE;
-    ClearZ := (ClearDepthValue shr 8) / $00FFFFFF; // TODO : Convert this to the right value for all depth-buffer formats
+    ClearZ := (ClearDepthValue shr 8) / ZScale;
     ClearStencil := ClearDepthValue and $FF;
   end;
 
-  HandledBy := Format('Clear(%d, %d, %d, %d)', [ClearRect.Left, ClearRect.Top, ClearRect.Right, ClearRect.Bottom]);
+  HandledBy := Format('ClearRect(%d, %d, %d, %d) ClearColor=%s ClearZ=%f ClearStencil=%d',
+    [ClearRect.Left, ClearRect.Top, ClearRect.Right, ClearRect.Bottom,
+    ColorBytesToString(@NV2AInstance.CLEAR_VALUE, 4),
+    ClearZ, ClearStencil]);
 
 
 {$IFDEF DXBX_USE_D3D}
@@ -916,7 +922,7 @@ begin
   // Always calculate ZScale and other factors like SuperSampleScaleX,
   // based on NV2AInstance.RT_FORMAT (our trigger) :
 
-  ZScale := (2 shl 24) - 1.0; // TODO : Calculate real Z scale based on active depth buffer format (D24S8, D16, etc)
+  ZScale := (1 shl 24) - 1; // TODO : Calculate real Z scale based on active depth buffer format (D24S8, D16, etc)
 //  SurfaceFormat := X_D3DFORMAT((NV2AInstance.RT_FORMAT and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
 //  if EmuXBFormatIsDepthBuffer(SurfaceFormat) then
 //    ZScale := 1.0;
@@ -949,6 +955,7 @@ end;
 
 procedure EmuNV2A_ViewportOffset();
 begin
+  Assert(dwCount = 4);
   HandledCount := 4;
   HandledBy := 'ViewportOffset(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 {$IFDEF DXBX_USE_OPENGL}
@@ -966,6 +973,7 @@ end;
 
 procedure EmuNV2A_ViewportScale();
 begin
+  Assert(dwCount = 4);
   HandledCount := 4;
   HandledBy := 'ViewportScale(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 {$IFDEF DXBX_USE_OPENGL}
@@ -1026,8 +1034,10 @@ end;
 // SetViewport
 //
 
-procedure EmuNV2A_SetViewport();
-//var
+procedure EmuNV2A_DepthRange();
+var
+  ZNear: FLOAT;
+  ZFar: FLOAT;
 //  ViewportTranslateX: FLOAT;
 //  ViewportTranslateY: FLOAT;
 //  ViewportTranslateZ: FLOAT;
@@ -1035,13 +1045,16 @@ procedure EmuNV2A_SetViewport();
 //  ViewportScaleY: FLOAT;
 //  ViewportScaleZ: FLOAT;
 begin
-  HandledBy := 'SetViewport';
+  Assert(dwCount = 2);
+  HandledCount := 2;
+  HandledBy := 'DepthRange(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
+
 //  // Interpret all related NV2A registers :
 //  begin
 //    ViewportTranslateX := NV2AInstance.VIEWPORT_TRANSLATE_X; // = Viewport.X * SuperSampleScaleX + ScreenSpaceOffsetX
 //    ViewportTranslateY := NV2AInstance.VIEWPORT_TRANSLATE_Y; // = Viewport.Y * SuperSampleScaleY + ScreenSpaceOffsetY
 //
-//    // The following variables are 0.0 when fixed-function pipeline is active, otherwise they are calculated as :
+//    // The following variables are pushed when a shader is active :
 //    begin
 //      ViewportTranslateZ := NV2AInstance.VIEWPORT_TRANSLATE_Z; // = ZScale * Viewport.MinZ
 //      // NV2AInstance.VIEWPORT_TRANSLATE_W ignored. Should always be 0.
@@ -1052,17 +1065,35 @@ begin
 //    end;
 //  end;
 
+  ZNear := NV2AInstance.DEPTH_RANGE_NEAR / ZScale;
+  ZFar := NV2AInstance.DEPTH_RANGE_FAR / ZScale;
+
+{$IFDEF DXBX_USE_D3D}
   // TODO : Calculate the correct ViewPort values using the above determined variables :
   ViewPort.X := 0;
   ViewPort.Y := 0;
   ViewPort.Width := 640;
   ViewPort.Height := 480;
   // TODO : The following should behave differently under fixed-function when D3DRS_ZENABLE=D3DZB_USEW :
-  ViewPort.MinZ := NV2AInstance.DEPTH_RANGE_NEAR / ZScale;
-  ViewPort.MaxZ := NV2AInstance.DEPTH_RANGE_FAR / ZScale;
-{$IFDEF DXBX_USE_D3D}
+  ViewPort.MinZ := ZNear;
+  ViewPort.MaxZ := ZFar;
   // Place the native call :
   g_pD3DDevice.SetViewport(ViewPort);
+{$ENDIF}
+{$IFDEF DXBX_USE_OPENGL}
+  // Output from Vertices sample :
+  //
+  //  NV2A_VIEWPORT_TRANSLATE_X({320.53125, 240.53125, 0, 0}) > goes into c[133] (see EmuNV2A_ViewportOffset)
+  //  NV2A_VIEWPORT_SCALE_X({320, -240, 16777215, 0}) > goes into c[134] (see EmuNV2A_ViewportScale)
+  //  NV2A_DEPTH_RANGE_NEAR({0, 16777215}) > handled here
+  //
+  // (The presense of NV2A_VIEWPORT_SCALE_X indicates a shader is active.)
+  //
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glFrustum({Left=}-1.0, {Right=}1.0, {Bottom=}-1.0, {Top=}1.0, ZNear, ZFar);
+
+//  glFrustum(-320, 320, -240, 240, NV2AInstance.DEPTH_RANGE_NEAR, NV2AInstance.DEPTH_RANGE_FAR);
 {$ENDIF}
 end;
 
@@ -1075,6 +1106,7 @@ begin
   Assert(dwCount >= 16);
   // Note : Disable this assignment-line to get more pushbuffer debug output :
   HandledCount := 16; // We handle only one matrix
+  // TODO : Support multiple ModelView matrices (used for blending)
 
   HandledBy := 'SetTransform(ModelView, ' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 {$IFDEF DXBX_USE_D3D}
@@ -1086,9 +1118,18 @@ begin
   // TODO : Is this reasoning sound?
   g_pD3DDevice.SetTransform(D3DTS_VIEW, PD3DMatrix(pdwPushArguments));
 {$ENDIF}
+
 {$IFDEF DXBX_USE_OPENGL}
-  glMatrixMode(GL_MODELVIEW_MATRIX);
+  glMatrixMode(GL_MODELVIEW);
+
+  // glLoadIdentity(); // Note : We assume this is not necessary here, as we set a complete matrix;
+  // Note : OpenGL needs column-major format - it seems the pushbuffer matrix layout is indeed in that format.
   glLoadMatrixf(PGLfloat(pdwPushArguments));
+
+  // D3D uses a left-handed coordinate space (z positive into screen), while OpenGL uses the right-handed system.
+  // So, switch to left-handed coordinate space (as per http://www.opengl.org/resources/faq/technical/transformations.htm) :
+  // TODO : Is this indeed necessary?
+  glScalef(1.0, 1.0, -1.0);
 {$ENDIF}
 end;
 
@@ -1919,8 +1960,8 @@ const
   {0388 NV2A_POLYGON_OFFSET_UNITS}EmuNV2A_SetRenderState, // = X_D3DRS_POLYGONOFFSETZOFFSET
   {038c NV2A_POLYGON_MODE_FRONT}EmuNV2A_SetRenderState, // = X_D3DRS_FILLMODE
   {0390}nil,
-  {0394}nil,
-  {0398 NV2A_DEPTH_RANGE_FAR}EmuNV2A_SetViewport, // Always the last method for SetViewport, so we use it as a trigger
+  {0394 NV2A_DEPTH_RANGE_FAR}EmuNV2A_DepthRange, // Always the last method for SetViewport, so we use it as a trigger
+  {0398}nil,
   {039C}nil,
   {03A0 NV2A_FRONT_FACE}EmuNV2A_SetRenderState, // = X_D3DRS_FRONTFACE
   {03A4 NV2A_NORMALIZE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_NORMALIZENORMALS
@@ -2615,14 +2656,17 @@ begin
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrtho({Left=}0, {Right=}640, {Bottom=}480, {Top}0, {ZNear=}-1.0, {ZFar=}500);
-  //  glFrustum(-0.1, 0.1, -0.1, 0.1, 0.3, 25.0); ?
+//  glOrtho({Left=}0, {Right=}640, {Bottom=}480, {Top}0, {ZNear=}-1.0, {ZFar=}500);
+//  //  glFrustum(-0.1, 0.1, -0.1, 0.1, 0.3, 25.0); ?
+  glFrustum({Left=}-1.0, {Right=}1.0, {Bottom=}-1.0, {Top=}1.0, {ZNear=}0.0, {ZFar=}1.0);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  // TODO : GL_TEXTURE too?
+  // Switch to left-handed coordinate space (as per http://www.opengl.org/resources/faq/technical/transformations.htm) :
+  glScalef(1.0, 1.0, -1.0);
 
   glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LEQUAL); // Nearer Z coordinates cover further Z
 
   glViewport(0, 0,
     g_EmuCDPD.pPresentationParameters.BackBufferWidth,
