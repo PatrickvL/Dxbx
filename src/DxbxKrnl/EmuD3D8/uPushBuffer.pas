@@ -269,7 +269,6 @@ var
   VertexShaderSlots: array [0..D3DVS_XBOX_NR_ADDRESS_SLOTS-1] of DWORD;
 
   // Globals and controller :
-  OldRegisterValue: DWORD = 0;
   PrevMethod: array [0..2-1] of DWORD = (0, 0);
   ZScale: FLOAT = 0.0;
 //  function SeenRecentMethod(Method: DWORD): Boolean;
@@ -757,6 +756,7 @@ begin
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_TEXTURE_3D);
   glDisable(GL_TEXTURE_CUBE_MAP);
+  glDisable(GL_GENERATE_MIPMAP); // Make sure OpenGL is not going to generate our mipmaps!
 
   for Stage := 0 to X_D3DTS_STAGECOUNT - 1 do
   begin
@@ -1416,7 +1416,6 @@ begin
       {index=}NV2AInstance.VP_UPLOAD_CONST_ID + Slot,
       {params=}PGLfloat(pdwPushArguments)
     );
-    // Note : We cannot read from NV2AInstance.VP_UPLOAD_CONST[Slot], as only 1 DWORD is written there.
   end;
 
   HandledBy := HandledBy + Format('(%d, %s)', [NV2AInstance.VP_UPLOAD_CONST_ID + Slot, FloatsToString(pdwPushArguments, HandledCount)]);
@@ -2172,7 +2171,7 @@ const
   {0388 NV2A_POLYGON_OFFSET_UNITS}EmuNV2A_SetRenderState, // = X_D3DRS_POLYGONOFFSETZOFFSET
   {038c NV2A_POLYGON_MODE_FRONT}EmuNV2A_SetRenderState, // = X_D3DRS_FILLMODE
   {0390}nil,
-  {0394 NV2A_DEPTH_RANGE_FAR}EmuNV2A_DepthRange, // Always the last method for SetViewport, so we use it as a trigger
+  {0394 NV2A_DEPTH_RANGE_NEAR}EmuNV2A_DepthRange, // Always the last method for SetViewport, so we use it as a trigger
   {0398}nil,
   {039C}nil,
   {03A0 NV2A_FRONT_FACE}EmuNV2A_SetRenderState, // = X_D3DRS_FRONTFACE
@@ -2208,7 +2207,7 @@ const
   {09F8 NV2A_SWATH_WIDTH}EmuNV2A_SetRenderState, // = X_D3DRS_SWATHWIDTH
   {09FC NV2A_FLAT_SHADE_OP}EmuNV2A_CDevice_Init,
   {0A00}nil, nil, nil, nil, nil, nil, nil, nil,
-  {0A20}EmuNV2A_ViewportOffset, EmuNV2A_ViewportOffset, EmuNV2A_ViewportOffset, EmuNV2A_ViewportOffset,
+  {0A20 NV2A_VIEWPORT_TRANSLATE_X}EmuNV2A_ViewportOffset, nil, nil, nil,
                                                                     nil, nil, nil, nil,
   {0A40}nil, nil, nil, nil,
   {0A50 NV2A_EYE_POSITION__0}EmuNV2A_CDevice_Init,
@@ -2218,7 +2217,7 @@ const
                                                 nil, nil, nil, nil, nil, nil, nil, nil,
   {0A80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0AC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0AF0}EmuNV2A_ViewportScale, EmuNV2A_ViewportScale, EmuNV2A_ViewportScale, EmuNV2A_ViewportScale,
+  {0AF0 NV2A_VIEWPORT_SCALE_X}EmuNV2A_ViewportScale, nil, nil, nil,
   {0B00 NV2A_VP_UPLOAD_INST__0}EmuNV2A_SetVertexShaderBatch,
   {0B04 NV2A_VP_UPLOAD_INST__1}EmuNV2A_SetVertexShaderBatch,
   {0B08 NV2A_VP_UPLOAD_INST__2}EmuNV2A_SetVertexShaderBatch,
@@ -2562,6 +2561,17 @@ begin
     HandledCount := 1;
     HandledBy := '';
 
+    // Simulate writes to the NV2A instance registers; We write all DWORDs before
+    // executing them so that the callbacks can read this data via the named
+    // NV2AInstance fields (see for example EmuNV2A_SetVertexShaderConstant) :
+    // Note this only applies to 'inc' methods (no-inc methods read all data in-place).
+    if (dwSubCh = 0) and (not bNoInc) then
+    begin
+      Assert((dwMethod + (dwCount * SizeOf(DWORD))) <= SizeOf(NV2AInstance));
+
+      memcpy(@NV2AInstance.Registers[dwMethod div 4], pdwPushArguments, dwCount * SizeOf(DWORD));
+    end;
+
     // Interpret GPU Instruction(s) :
     StepNr := 1;
     while dwCount > 0 do
@@ -2576,14 +2586,14 @@ begin
       end
       else
       begin
-        // Simulate writes to the NV2A instance registers :
-        if dwMethod < SizeOf(NV2AInstance) then
-        begin
-          // TODO : Perhaps we should write all DWORDs before executing them? (See EmuNV2A_SetVertexShaderConstant)
-          OldRegisterValue := NV2AInstance.Registers[dwMethod div 4]; // Remember previous value
-          NV2AInstance.Registers[dwMethod div 4] := pdwPushArguments^; // Write new value
-          NV2ACallback := NV2ACallbacks[dwMethod div 4];
-        end;
+        Assert(dwMethod < SizeOf(NV2AInstance));
+
+        // For 'no inc' methods, write only the first register (in case it's referenced somewhere) :
+        if bNoInc then
+          NV2AInstance.Registers[dwMethod div 4] := pdwPushArguments^;
+
+        // Retrieve the handler callback for this method (if any) :
+        NV2ACallback := NV2ACallbacks[dwMethod div 4];
       end;
 
       // Note : The above statement covers all non-triggering data transfers (yeah!)
