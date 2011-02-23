@@ -177,6 +177,8 @@ const
     'PARAM c0 = program.env[0];'#13#10 +
     'PARAM c1 = program.env[1];'#13#10 +
 //    // TODO : Add PARAM declarations for all c[0-191]
+    'PARAM c58 = program.env[58];'#13#10 + // X_D3DSCM_RESERVED_CONSTANT1 + X_D3DSCM_CORRECTION
+    'PARAM c59 = program.env[59];'#13#10 + // X_D3DSCM_RESERVED_CONSTANT2 + X_D3DSCM_CORRECTION
     'PARAM c133 = program.env[133];'#13#10 +
     'PARAM c134 = program.env[134];'#13#10 +
     'PARAM c191 = program.env[191];'#13#10;
@@ -1144,7 +1146,7 @@ begin
 {$IFDEF DXBX_USE_OPENGL}
   glProgramEnvParameter4fvARB(
     {target=}GL_VERTEX_PROGRAM_ARB,
-    {index=}133, // = C[37]
+    {index=}X_D3DSCM_RESERVED_CONSTANT2 + X_D3DSCM_CORRECTION, // C[-37] > c59
     {params=}PGLfloat(pdwPushArguments)
   );
 {$ENDIF}
@@ -1162,7 +1164,7 @@ begin
 {$IFDEF DXBX_USE_OPENGL}
   glProgramEnvParameter4fvARB(
     {target=}GL_VERTEX_PROGRAM_ARB,
-    {index=}134, // = C[38]
+    {index=}X_D3DSCM_RESERVED_CONSTANT1 + X_D3DSCM_CORRECTION, // C[-38] > c58
     {params=}PGLfloat(pdwPushArguments)
   );
 {$ENDIF}
@@ -1388,15 +1390,36 @@ begin
   );
 {$ENDIF}
 {$IFDEF DXBX_USE_OPENGL}
-  // Just set the constant right from the pushbuffer, as they come in batches and won't exceed the native bounds :
-  HandledCount := 4;
+  Assert(dwCount and 3 = 0); // Input must be a multiple of 4
+
+  // Just set the constant right from the pushbuffer, as they come in batches and won't exceed the native bounds;
+  // Can we set them in 1 go?
+  if GL_EXT_gpu_program_parameters then
+  begin
+    // Handle all constants in 1 call :
+    HandledCount := dwCount;
+    glProgramEnvParameters4fvEXT
+    (
+      {target=}GL_VERTEX_PROGRAM_ARB,
+      {index=}NV2AInstance.VP_UPLOAD_CONST_ID + Slot,
+      {count=}HandledCount div 4,
+      {params=}PGLfloat(pdwPushArguments)
+    );
+  end
+  else
+  begin
+    // Handle 1 constant (other constants will be handled in the next GPU method callback, arriving here again) :
+    HandledCount := 4;
+    glProgramEnvParameter4fvARB
+    (
+      {target=}GL_VERTEX_PROGRAM_ARB,
+      {index=}NV2AInstance.VP_UPLOAD_CONST_ID + Slot,
+      {params=}PGLfloat(pdwPushArguments)
+    );
+    // Note : We cannot read from NV2AInstance.VP_UPLOAD_CONST[Slot], as only 1 DWORD is written there.
+  end;
+
   HandledBy := HandledBy + Format('(%d, %s)', [NV2AInstance.VP_UPLOAD_CONST_ID + Slot, FloatsToString(pdwPushArguments, HandledCount)]);
-  glProgramEnvParameter4fvARB
-  (
-    {target=}GL_VERTEX_PROGRAM_ARB,
-    {index=}NV2AInstance.VP_UPLOAD_CONST_ID + Slot,
-    {params=}PGLfloat(pdwPushArguments) // We cannot use NV2AInstance.VP_UPLOAD_CONST, as only 1 DWORD is written there
-  );
 {$ENDIF}
 end;
 
@@ -2849,7 +2872,8 @@ begin
 
   RC := wglCreateContext(g_EmuWindowsDC); // makes OpenGL window out of DC
   wglMakeCurrent(g_EmuWindowsDC, RC);   // makes OpenGL window active
-  ReadExtensions;
+  ReadImplementationProperties; // Determine a set of booleans indicating which OpenGL extensions are available
+  ReadExtensions; // Assign all OpenGL extension API's (DON'T call them if the extension is not available!)
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -2899,10 +2923,10 @@ begin
     'MOV oT2, v11;'#13#10 +
     'MOV oT3, v12;'#13#10 +
     // This part applies the screen-space transform :
-    'MUL R12.xyz, R12, c134;'#13#10 + // c[38] in D3D speak - see EmuNV2A_ViewportScale,
+    'MUL R12.xyz, R12, c58;'#13#10 + // c[-38] in D3D speak - see EmuNV2A_ViewportScale,
     'RCP R1.x, R12.w;'#13#10 + // Originally RCC, but that's not supported in ARBvp1.0
     // Note : Here's the final assignment to oPos :
-    'MAD oPos.xyz, R12, R1.x, c133;'#13#10 + // c[37] in D3D speak - see EmuNV2A_ViewportOffset
+    'MAD oPos.xyz, R12, R1.x, c59;'#13#10 + // c[-37] in D3D speak - see EmuNV2A_ViewportOffset
 
     'END';
 
