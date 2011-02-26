@@ -589,6 +589,8 @@ procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER); // forward
 function IsValidCurrentShader(): boolean; // forward
 function VshHandleIsValidShader(aHandle: DWORD): boolean; // forward
 function VshGetVertexDynamicPatch(Handle: DWORD): PVERTEX_DYNAMIC_PATCH; // forward
+function VshGetField(pShaderToken: Puint32;
+                     FieldName: VSH_FIELD_NAME): uint08;
 
 implementation
 

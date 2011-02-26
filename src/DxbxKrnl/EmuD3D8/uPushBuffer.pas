@@ -173,15 +173,17 @@ const
     'OUTPUT oT2 = result.texcoord[2];'#13#10 +
     'OUTPUT oT3 = result.texcoord[3];'#13#10 +
     // PatrickvL addition :
-//    'PARAM c[] = { program.env[0..191] };'#13#10 // All constants in 1 array declaration, requires NV_gpu_program4
-    'PARAM c0 = program.env[0];'#13#10 +
-    'PARAM c1 = program.env[1];'#13#10 +
+    'PARAM c[] = { program.env[0..191] };'#13#10; // All constants in 1 array declaration (requires NV_gpu_program4?)
+    'PARAM mvp[4] = { state.matrix.mvp };'#13#10 +
+
+//    'PARAM c0 = program.env[0];'#13#10 +
+//    'PARAM c1 = program.env[1];'#13#10 +
 //    // TODO : Add PARAM declarations for all c[0-191]
-    'PARAM c58 = program.env[58];'#13#10 + // X_D3DSCM_RESERVED_CONSTANT1 + X_D3DSCM_CORRECTION
-    'PARAM c59 = program.env[59];'#13#10 + // X_D3DSCM_RESERVED_CONSTANT2 + X_D3DSCM_CORRECTION
-    'PARAM c133 = program.env[133];'#13#10 +
-    'PARAM c134 = program.env[134];'#13#10 +
-    'PARAM c191 = program.env[191];'#13#10;
+//    'PARAM c58 = program.env[58];'#13#10 + // X_D3DSCM_RESERVED_CONSTANT1 + X_D3DSCM_CORRECTION
+//    'PARAM c59 = program.env[59];'#13#10 + // X_D3DSCM_RESERVED_CONSTANT2 + X_D3DSCM_CORRECTION
+//    'PARAM c133 = program.env[133];'#13#10 +
+//    'PARAM c134 = program.env[134];'#13#10 +
+//    'PARAM c191 = program.env[191];'#13#10;
 
 procedure D3DPUSH_DECODE(const dwPushCommand: DWORD; out dwMethod, dwSubCh, dwCount: DWORD; out bNoInc: BOOL_);
 begin
@@ -251,7 +253,7 @@ end;
 *)
 
 type
-  TPostponedDrawType = (pdUndetermined, pdAlreadyDone, pdDrawVertices, pdDrawIndexedVertices);
+  TPostponedDrawType = (pdUndetermined, pdDrawVertices, pdDrawIndexedVertices);
 
 var
   // Global(s)
@@ -461,6 +463,31 @@ begin
   Result := Result + '}';
 end;
 
+function DWordsToString(Ptr: PDWORD; Count: uint = 1; NrPerGroup: uint = 4; Stride: uint = 0): string;
+var
+  i: uint;
+begin
+  Result := '';
+  i := 0;
+  if Stride > 0 then Dec(Stride, NrPerGroup * SizeOf(Ptr^));
+  while i < Count do
+  begin
+    Result := Result + IntToHex(Ptr^, 8);
+    Inc(Ptr);
+    Inc(i);
+    if i < Count then
+      if (i mod NrPerGroup) > 0 then
+        Result := Result + ', '
+      else
+      begin
+        Result := Result + ','#13#10;
+        Inc(UIntPtr(Ptr), Stride);
+      end;
+  end;
+
+//  Result := Result + '}';
+end;
+
 function FloatsToString(Ptr: PFLOAT; Count: uint = 1; NrPerGroup: uint = 4; Stride: uint = 0): string; overload;
 var
   i: uint;
@@ -543,6 +570,26 @@ begin
   end;
 
   Result := Result + '}';
+end;
+
+function IsEngineFixedFunctionPipeline(): Boolean;
+// True=FVF, False=custom vertex shader
+begin
+  // Fixed function happens when there's no user-supplied vertex-program active :
+  Result := (NV2AInstance.ENGINE and NV2A_ENGINE_VP) = 0;
+end;
+
+function IsEngineVertexProgram(): Boolean;
+// True=User defined vertex shader program is active
+begin
+  Result := (NV2AInstance.ENGINE and NV2A_ENGINE_VP) > 0;
+end;
+
+function NextGPUCommand(): DWORD;
+begin
+  // Read the DWORD after the current argument data, and mask out the GPU method,
+  // so that when necessary we can peek at the next command (hopefully always present) :
+  Result := ((pdwPushArguments + dwCount)^ and NV2A_METHOD_MASK) {shr NV2A_METHOD_SHIFT};
 end;
 
 {$IFDEF DXBX_USE_OPENGL}
@@ -628,10 +675,6 @@ var
   VType: DWORD;
   VertexAttribPointer: PBYTE;
 begin
-  // Since DrawBeginEnd has no choice but to start a glBegin() block,
-  // we must first leave that here, as we're not going to draw immediate :
-  glEnd();
-
   // Make sure we have no VBO active :
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -894,6 +937,272 @@ begin
 //    glClientActiveTexture(GL_TEXTURE0 + Stage);
   end;
 end;
+
+//
+// Vertex shader decoding :
+//
+
+// TODO : Remove dependacy on uVertexShader, move this code to a separate unit
+// TODO : If OpenGL lacks the rcc opcode, replace it with rcp (only doesn't clamp)
+// TODO : Emulate writeable const registers (seldomly used, but tricky feature)
+
+type
+  // We use this record to read the various bit-fields in binary vertex shader instructions by name :
+  PVSH_ENTRY_Bits = ^VSH_ENTRY_Bits;
+  VSH_ENTRY_Bits = packed record
+  private
+    Data: array[0..3] of DWORD;
+    function GetBits(const aIndex: Integer): DWORD;
+  public
+    property ILU                 : DWORD index ((((1* 32) + 25) shl 8) + 3) read GetBits; // VSH_ILU
+    property MAC                 : DWORD index ((((1* 32) + 21) shl 8) + 4) read GetBits; // VSH_MAC
+    property ConstantAddress     : DWORD index ((((1* 32) + 13) shl 8) + 8) read GetBits;
+    property VRegAddress         : DWORD index ((((1* 32) +  9) shl 8) + 4) read GetBits;
+    // INPUT A
+    property A_NEG               : DWORD index ((((1* 32) +  8) shl 8) + 1) read GetBits; // Boolean
+    property A_SWZ_X             : DWORD index ((((1* 32) +  6) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property A_SWZ_Y             : DWORD index ((((1* 32) +  4) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property A_SWZ_Z             : DWORD index ((((1* 32) +  2) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property A_SWZ_W             : DWORD index ((((1* 32) +  0) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property A_R                 : DWORD index ((((2* 32) + 28) shl 8) + 4) read GetBits;
+    property A_MUX               : DWORD index ((((2* 32) + 26) shl 8) + 2) read GetBits; // VSH_PARAMETER_TYPE
+    // INPUT B
+    property B_NEG               : DWORD index ((((2* 32) + 25) shl 8) + 1) read GetBits;
+    property B_SWZ_X             : DWORD index ((((2* 32) + 23) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property B_SWZ_Y             : DWORD index ((((2* 32) + 21) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property B_SWZ_Z             : DWORD index ((((2* 32) + 19) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property B_SWZ_W             : DWORD index ((((2* 32) + 17) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property B_R                 : DWORD index ((((2* 32) + 13) shl 8) + 4) read GetBits;
+    property B_MUX               : DWORD index ((((2* 32) + 11) shl 8) + 2) read GetBits; // VSH_PARAMETER_TYPE
+    // INPUT C
+    property C_NEG               : DWORD index ((((2* 32) + 10) shl 8) + 1) read GetBits;
+    property C_SWZ_X             : DWORD index ((((2* 32) +  8) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property C_SWZ_Y             : DWORD index ((((2* 32) +  6) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property C_SWZ_Z             : DWORD index ((((2* 32) +  4) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property C_SWZ_W             : DWORD index ((((2* 32) +  2) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property C_R_HIGH            : DWORD index ((((2* 32) +  0) shl 8) + 2) read GetBits; // Forms C_R together with
+    property C_R_LOW             : DWORD index ((((3* 32) + 30) shl 8) + 2) read GetBits; // this (to bridge a DWord). c0..c15
+    property C_MUX               : DWORD index ((((3* 32) + 28) shl 8) + 2) read GetBits; // VSH_PARAMETER_TYPE
+    // Output
+    property OutputMACWriteMask  : DWORD index ((((3* 32) + 24) shl 8) + 4) read GetBits;
+    property OutputRegister      : DWORD index ((((3* 32) + 20) shl 8) + 4) read GetBits; // Dxbx note : 4 bits to select r0..r15
+    property OutputILUWriteMask  : DWORD index ((((3* 32) + 16) shl 8) + 4) read GetBits;
+    property OutputWriteMask     : DWORD index ((((3* 32) + 12) shl 8) + 4) read GetBits;
+    property OutputWriteType     : DWORD index ((((3* 32) + 11) shl 8) + 1) read GetBits; // VSH_OUTPUT_TYPE
+    property OutputWriteAddress  : DWORD index ((((3* 32) +  3) shl 8) + 8) read GetBits;
+    property OutputMultiplexer   : DWORD index ((((3* 32) +  2) shl 8) + 1) read GetBits; // VSH_OUTPUT_MUX
+    // Other
+    property A0X                 : DWORD index ((((3* 32) +  1) shl 8) + 1) read GetBits; // Boolean
+    property EndOfShader         : DWORD index ((((3* 32) +  0) shl 8) + 1) read GetBits; // Boolean
+  end;
+
+function VSH_ENTRY_Bits.GetBits(const aIndex: Integer): DWORD;
+const DWORD_MASK_BITS = 8 + 5;
+begin
+  Result := aIndex and ((1 shl DWORD_MASK_BITS) - 1);
+  Result := GetDWordBits(Data[aIndex shr DWORD_MASK_BITS], Result);
+end;
+
+const
+  VertexShaderMask: array [0..15] of AnsiString =  (
+            // xyzw xyzw
+    '',     // 0000 ____
+    '.w',   // 0001 ___w
+    '.z',   // 0010 __z_
+    '.zw',  // 0011 __zw
+    '.y',   // 0100 _y__
+    '.yw',  // 0101 _y_w
+    '.yz',  // 0110 _yz_
+    '.yzw', // 0111 _yzw
+    '.x',   // 1000 x___
+    '.xw',  // 1001 x__w
+    '.xz',  // 1010 x_z_
+    '.xzw', // 1011 x_zw
+    '.xy',  // 1100 xy__
+    '.xyw', // 1101 xy_w
+    '.xyz', // 1110 xyz_
+    ''//.xyzw  1111 xyzw
+    );
+
+  OReg_Name: array [VSH_OREG_NAME] of AnsiString = (
+    'R12', // 'oPos',
+    '???',
+    '???',
+    'oD0',
+    'oD1',
+    'oFog',
+    'oPts',
+    'oB0',
+    'oB1',
+    'oT0',
+    'oT1',
+    'oT2',
+    'oT3',
+    '???',
+    '???',
+    'A0.x'
+    );
+
+function ConvertCRegister(const CReg: int16): int16; inline;
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+begin
+  Result := ((((CReg shr 5) and 7) - 3) * 32) + (CReg and 31);
+  Inc(Result, X_D3DSCM_CORRECTION); // to map -96..95 to 0..191
+end;
+
+function DxbxDecodeSwizzle(pShaderToken: Puint32; SWZ: VSH_FIELD_NAME): AnsiString;
+const SwizzleStr: array [0..3] of AnsiChar = 'xyzw';
+var x, y, z, w: VSH_SWIZZLE;
+begin
+  x := VSH_SWIZZLE(VshGetField(pShaderToken, SWZ)); Inc(SWZ);
+  y := VSH_SWIZZLE(VshGetField(pShaderToken, SWZ)); Inc(SWZ);
+  z := VSH_SWIZZLE(VshGetField(pShaderToken, SWZ)); Inc(SWZ);
+  w := VSH_SWIZZLE(VshGetField(pShaderToken, SWZ)); // Inc(SWZ);
+  if (x = y) and (y = z) and (z = w) then
+    Result := '.' + SwizzleStr[Ord(x)]
+  else
+    if (x <> SWIZZLE_X) or (y <> SWIZZLE_Y) or (z <> SWIZZLE_Z) or (w <> SWIZZLE_W) then
+      Result := '.' + SwizzleStr[Ord(x)] + SwizzleStr[Ord(y)] + SwizzleStr[Ord(z)] + SwizzleStr[Ord(w)]
+    else
+      Result := '';
+end;
+
+function DxbxDecodeVertexShaderOpcodeInput(pShaderToken: PVSH_ENTRY_Bits; Param: VSH_PARAMETER_TYPE; NEG: VSH_FIELD_NAME; RegNr: int): AnsiString;
+// This function decodes a vertex shader opcode parameter into a string.
+// Input A, B or C is controlled via the Param and NEG fieldnames,
+// the R-register address for each input is already given by caller.
+const ParamFmt: array [VSH_PARAMETER_TYPE] of string = ('', '%sR%d', '%sv%d', 'c[%s%d]', '');
+begin
+  Result := '';
+  case Param of // PARAM_R uses the supplied RegNr, but the other two need to be determined here :
+    PARAM_V: begin RegNr := pShaderToken.VRegAddress; end;
+    PARAM_C: begin RegNr := ConvertCRegister(pShaderToken.ConstantAddress);
+      if (pShaderToken.A0X > 0) then Result := 'A0+'; end;
+  end;
+  Result := Format(ParamFmt[Param], [Result, RegNr]) + DxbxDecodeSwizzle(Puint32(pShaderToken), Succ(NEG)); // R Swizzle bits are next to the Neg bit
+  if VshGetField(Puint32(pShaderToken), NEG) > 0 then Result := '-' + Result;
+end;
+
+function DxbxDecodeVertexShaderOutput(pShaderToken: PVSH_ENTRY_Bits; OMUX: VSH_OUTPUT_MUX; Mask: DWORD; Opcode, Inputs: AnsiString): AnsiString;
+var
+  RegNr: int;
+begin
+  Result := '';
+  RegNr := pShaderToken.OutputRegister;
+  Opcode := UpperCase(Opcode); // OpenGL seems to be case-sensitive, and requires upper-case opcodes!
+  if (RegNr = 1) and (OMUX = OMUX_MAC) and (VSH_ILU(pShaderToken.ILU) <> ILU_NOP) then Mask := 0; // Ignore paired MAC opcodes that write to R1
+  if (Mask > 0) then
+    Result := Opcode + ' R' + IntToStr(RegNr) + VertexShaderMask[Mask] + Inputs + ';'#13#10;
+
+  // See if we must add a muxed opcode too :
+  if VSH_OUTPUT_MUX(pShaderToken.OutputMultiplexer) <> OMUX then Exit;
+  // Only if it's not masked away :
+  if pShaderToken.OutputWriteMask = 0 then Exit;
+
+  Result := Result + Opcode;
+  if VSH_OUTPUT_TYPE(pShaderToken.OutputWriteType) = OUTPUT_C then
+    Result := Result + ' c' + IntToStr(ConvertCRegister(pShaderToken.OutputWriteAddress)) // TODO : Emulate writeable const registers
+  else
+    Result := Result + ' ' + OReg_Name[VSH_OREG_NAME(pShaderToken.OutputWriteAddress and $F)];
+  Result := Result + VertexShaderMask[pShaderToken.OutputWriteMask] + Inputs + ';'#13#10;
+end;
+
+function DxbxDecodeVertexToken(pShaderToken: PVSH_ENTRY_Bits): AnsiString;
+var
+  MAC: VSH_MAC;
+  ILU: VSH_ILU;
+  InputCStr: AnsiString;
+begin
+  Result := '';
+  // Since it's potentially used twice, decode input C once :
+  InputCStr := ', ' + DxbxDecodeVertexShaderOpcodeInput(pShaderToken, VSH_PARAMETER_TYPE(pShaderToken.C_MUX),
+    FLD_C_NEG, (pShaderToken.C_R_HIGH shl 2) or pShaderToken.C_R_LOW);
+  // See what MAC opcode is written to (if not masked away) :
+  MAC := VSH_MAC(pShaderToken.MAC);
+  if (MAC <> MAC_NOP) then
+  begin
+    // First, concatenate all inputs in use by this MAC opcode :
+    if g_OpCodeParams_MAC[MAC].A then
+      Result := Result + ', ' + DxbxDecodeVertexShaderOpcodeInput(pShaderToken, VSH_PARAMETER_TYPE(pShaderToken.A_MUX),
+        FLD_A_NEG, pShaderToken.A_R);
+    if g_OpCodeParams_MAC[MAC].B then
+      Result := Result + ', ' + DxbxDecodeVertexShaderOpcodeInput(pShaderToken, VSH_PARAMETER_TYPE(pShaderToken.B_MUX),
+        FLD_B_NEG, pShaderToken.B_R);
+    if g_OpCodeParams_MAC[MAC].C then
+      Result := Result + InputCStr;
+    // Then prepend these inputs with the actual opcode, mask, and input :
+    if MAC = MAC_ARL then Result := 'ARL A0.x' + Result + ';'#13#10 // TODO : No paired opcodes?
+    else Result := DxbxDecodeVertexShaderOutput(pShaderToken, OMUX_MAC, pShaderToken.OutputMACWriteMask, MAC_OpCode[MAC], {Inputs=}Result);
+  end;
+
+  // See what ILU opcode is used (if not masked away) :
+  ILU := VSH_ILU(pShaderToken.ILU);
+  if (ILU = ILU_NOP) or (pShaderToken.OutputILUWriteMask = 0) then Exit;
+  // Append the ILU opcode, mask and (the already determined) input C :
+  Result := Result + DxbxDecodeVertexShaderOutput(pShaderToken, OMUX_ILU, pShaderToken.OutputILUWriteMask, ILU_OpCode[ILU], {Inputs=}InputCStr);
+end;
+
+function DxbxDecodeVertexProgram(pVertexShader: PVSH_ENTRY_Bits; Count: DWORD): AnsiString;
+begin
+  Result := '';
+  while Count >= 4 do
+  begin
+    if MayLog(lfUnit) then
+      Result := Result + '# ' + DWordsToString(PDWord(pVertexShader), 4) + ':'#13#10;
+
+    Result := Result + DxbxDecodeVertexToken(pVertexShader);
+    if pVertexShader.EndOfShader > 0 then Break;
+    Inc(pVertexShader);
+    Dec(Count, 4);
+  end;
+  // Note : Since we replaced oPos with r12, we have to append a "mov oPos, r12" at the end :
+  Result := DxbxVertexShaderHeader + Result +
+    'MOV oPos, R12;'#13#10 +
+//    // Transform the vertex to clip coordinates :
+//    'DP4 oPos.x, mvp[0], R12;'#13#10 +
+//    'DP4 oPos.y, mvp[1], R12;'#13#10 +
+//    'DP4 oPos.z, mvp[2], R12;'#13#10 +
+//    'DP4 oPos.w, mvp[3], R12;'#13#10 +
+    'END';
+end;
+
+procedure DxbxCompileShader(Shader: AnsiString);
+var
+  GLErrorPos: int;
+begin
+  glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[0]);
+  glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, Length(Shader), Pointer(Shader));
+
+  // errors are catched
+  glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, @GLErrorPos);
+
+  if(GLErrorPos > 0) then
+  begin
+    Insert('{ERROR}', {var}Shader, GLErrorPos);
+    EmuWarning('Program error at position %d:', [GLErrorPos]);
+    EmuWarning(string(glGetString(GL_PROGRAM_ERROR_STRING_ARB)));
+    EmuWarning(string(Shader));
+  end;
+end;
+
+procedure DxbxUpdateVertexShader();
+var
+  Shader: AnsiString;
+begin
+  if IsEngineFixedFunctionPipeline() then
+    glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1])
+  else
+  begin
+    // TODO : Cache shaders, to prevent recompiling them continuously.
+
+    Shader := DxbxDecodeVertexProgram(@VertexShaderSlots[0], NV2AInstance.VP_UPLOAD_FROM_ID);
+    if MayLog(lfUnit) then
+      DbgPrintf('  NV2A: New vertex shader decoded:'#13#10 + Shader);
+
+    glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[0]);
+    DxbxCompileShader(Shader);
+  end;
+end;
 {$ENDIF}
 
 procedure PostponedDrawVertices;
@@ -962,26 +1271,6 @@ begin
   Result := XRenderState in [X_D3DRS_FIRST..X_D3DRS_LAST];
   if Result then
     DxbxSetRenderStateInternal('  NV2A SetRenderState', XRenderState, pdwPushArguments^);
-end;
-
-function IsEngineFixedFunctionPipeline(): Boolean;
-// True=FVF, False=custom vertex shader
-begin
-  // Fixed function happens when there's no user-supplied vertex-program active :
-  Result := (NV2AInstance.ENGINE and NV2A_ENGINE_VP) = 0;
-end;
-
-function IsEngineVertexProgram(): Boolean;
-// True=User defined vertex shader program is active
-begin
-  Result := (NV2AInstance.ENGINE and NV2A_ENGINE_VP) > 0;
-end;
-
-function NextGPUCommand(): DWORD;
-begin
-  // Read the DWORD after the current argument data, and mask out the GPU method,
-  // so that when necessary we can peek at the next command (hopefully always present) :
-  Result := ((pdwPushArguments + dwCount)^ and NV2A_METHOD_MASK) {shr NV2A_METHOD_SHIFT};
 end;
 
 procedure EmuNV2A_NOP(); begin {HandledBy := 'nop'; }HandledCount := dwCount; end;
@@ -1277,6 +1566,8 @@ begin
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glFrustum({Left=}-1.0, {Right=}1.0, {Bottom=}-1.0, {Top=}1.0, ZNear, ZFar);
+  //  gluPerspective(90, cWidth/cHeight, cZNear, cZFar);
+//  glScalef(1.0, 1.0, -1.0);
 
 //  glFrustum(-320, 320, -240, 240, NV2AInstance.DEPTH_RANGE_NEAR, NV2AInstance.DEPTH_RANGE_FAR);
 {$ENDIF}
@@ -1435,25 +1726,30 @@ begin
   begin
     HandledBy := 'DrawEnd()';
 
-    // Trigger the draw :
-    case PostponedDrawType of
-      pdAlreadyDone: ; // No error, drawing is already done
-      pdDrawVertices:
-        PostponedDrawVertices;
-      pdDrawIndexedVertices:
-        PostponedDrawIndexedVertices;
-    else
-//      DxbxKrnlCleanup('TriggerDrawBeginEnd encountered unknown draw mode!');
-    end;
 {$IFDEF DXBX_USE_OPENGL}
+    // Since DrawBeginEnd has no choice but to start a glBegin() block,
+    // we must leave that here, as in immediate-mode drawing we're finished now :
     glEnd();
 {$ENDIF}
+    if PostponedDrawType <> pdUndetermined then
+    begin
+      DxbxUpdateVertexShader();
+
+      // Trigger the draw :
+      case PostponedDrawType of
+        pdDrawVertices:
+          PostponedDrawVertices;
+        pdDrawIndexedVertices:
+          PostponedDrawIndexedVertices;
+      end;
+    end;
   end
   else
   begin
     HandledBy := Format('DrawBegin(PrimitiveType=%d{=%s})', [Ord(NewPrimitiveType), X_D3DPRIMITIVETYPE2String(NewPrimitiveType)]);
 {$IFDEF DXBX_USE_OPENGL}
     DxbxUpdateTextures();
+//    DxbxUpdatePixelShader();
     glBegin(NV2APrimitiveTypeToGL(NewPrimitiveType));
 {$ENDIF}
   end;
@@ -2889,7 +3185,8 @@ begin
   glLoadIdentity();
 //  glOrtho({Left=}0, {Right=}640, {Bottom=}480, {Top}0, {ZNear=}-1.0, {ZFar=}500);
 //  //  glFrustum(-0.1, 0.1, -0.1, 0.1, 0.3, 25.0); ?
-  glFrustum({Left=}-1.0, {Right=}1.0, {Bottom=}-1.0, {Top=}1.0, {ZNear=}0.0, {ZFar=}1.0);
+  glFrustum({Left=}-1.0, {Right=}1.0, {Bottom=}-1.0, {Top=}1.0, {ZNear=}0.1, {ZFar=}1000.0);
+//  glScalef(1.0, 1.0, -1.0);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -2916,9 +3213,9 @@ begin
     // This part adjusts the vertex position by the super-sampling scale & offset :
     'MOV R0, v0;'#13#10 +
     'RCP R0.w, R0.w;'#13#10 +
-    'MUL R0, R0, c0;'#13#10 + // c[-96] in D3D speak - applies SuperSampleScale
+    'MUL R0, R0, c[0];'#13#10 + // c[-96] in D3D speak - applies SuperSampleScale
     // Note : Use R12 instead of oPos because this is not yet the final assignment :
-    'ADD R12, R0, c1;'#13#10 + // c[-95] in D3D speak - applies SuperSampleOffset
+    'ADD R12, R0, c[1];'#13#10 + // c[-95] in D3D speak - applies SuperSampleOffset
     // This part just reads all other components and passes them to the output :
     'MOV oD0, v3;'#13#10 +
     'MOV oD1, v4;'#13#10 +
@@ -2932,28 +3229,18 @@ begin
     'MOV oT1, v10;'#13#10 +
     'MOV oT2, v11;'#13#10 +
     'MOV oT3, v12;'#13#10 +
-    // This part applies the screen-space transform :
-    'MUL R12.xyz, R12, c58;'#13#10 + // c[-38] in D3D speak - see EmuNV2A_ViewportScale,
-    'RCP R1.x, R12.w;'#13#10 + // Originally RCC, but that's not supported in ARBvp1.0
-    // Note : Here's the final assignment to oPos :
-    'MAD oPos.xyz, R12, R1.x, c59;'#13#10 + // c[-37] in D3D speak - see EmuNV2A_ViewportOffset
+//    // This part applies the screen-space transform (not present when "#pragma screenspace" was used) :
+//    'MUL R12.xyz, R12, c58;'#13#10 + // c[-38] in D3D speak - see EmuNV2A_ViewportScale,
+//    'RCP R1.x, R12.w;'#13#10 + // Originally RCC, but that's not supported in ARBvp1.0
+//    'MAD R12.xyz, R12, R1.x, c59;'#13#10 + // c[-37] in D3D speak - see EmuNV2A_ViewportOffset
+    // Here's the final assignment to oPos :
+    'MOV oPos, R12;'#13#10 +
 
     'END';
 
   glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[1]);
 
-  glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, Length(szCode), Pointer(szCode));
-
-  // errors are catched
-  glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, @GLErrorPos);
-
-  if(GLErrorPos > 0) then
-  begin
-    Insert('{ERROR}', {var}szCode, GLErrorPos);
-    EmuWarning('Program error at position %d:', [GLErrorPos]);
-    EmuWarning(string(glGetString(GL_PROGRAM_ERROR_STRING_ARB)));
-    EmuWarning(string(szCode));
-  end;
+  DxbxCompileShader(szCode);
 
   glDisable(GL_VERTEX_PROGRAM_ARB);
 end;
