@@ -871,7 +871,7 @@ type _X_D3DVertexShader = record
 
 const
   D3DVS_XBOX_RESERVEDXYZRHWSLOTS = 12;
-  D3DVS_XBOX_NR_ADDRESS_SLOTS = 136;
+  D3DVS_XBOX_NR_ADDRESS_SLOTS = 136; // Each slot is 4 DWORD's in size (see VSH_ENTRY_Bits)
 
 type _X_D3DPIXELSHADERDEF = record // <- blueshogun 10/1/07
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100

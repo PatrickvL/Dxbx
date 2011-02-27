@@ -554,6 +554,125 @@ const OReg_Name: array [VSH_OREG_NAME] of P_char =
     'a0.x'
 );
 
+type
+  // We use this record to read the various bit-fields in binary vertex shader instructions by name :
+  PVSH_ENTRY_Bits = ^VSH_ENTRY_Bits;
+  VSH_ENTRY_Bits = packed record
+  private
+    Data: array[0..3] of DWORD;
+    function GetBits(const aIndex: Integer): DWORD;
+  public
+    property ILU                 : DWORD index ((((1* 32) + 25) shl 8) + 3) read GetBits; // VSH_ILU
+    property MAC                 : DWORD index ((((1* 32) + 21) shl 8) + 4) read GetBits; // VSH_MAC
+    property ConstantAddress     : DWORD index ((((1* 32) + 13) shl 8) + 8) read GetBits;
+    property VRegAddress         : DWORD index ((((1* 32) +  9) shl 8) + 4) read GetBits;
+    // INPUT A
+    property A_NEG               : DWORD index ((((1* 32) +  8) shl 8) + 1) read GetBits; // Boolean
+    property A_SWZ_X             : DWORD index ((((1* 32) +  6) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property A_SWZ_Y             : DWORD index ((((1* 32) +  4) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property A_SWZ_Z             : DWORD index ((((1* 32) +  2) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property A_SWZ_W             : DWORD index ((((1* 32) +  0) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property A_R                 : DWORD index ((((2* 32) + 28) shl 8) + 4) read GetBits;
+    property A_MUX               : DWORD index ((((2* 32) + 26) shl 8) + 2) read GetBits; // VSH_PARAMETER_TYPE
+    // INPUT B
+    property B_NEG               : DWORD index ((((2* 32) + 25) shl 8) + 1) read GetBits;
+    property B_SWZ_X             : DWORD index ((((2* 32) + 23) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property B_SWZ_Y             : DWORD index ((((2* 32) + 21) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property B_SWZ_Z             : DWORD index ((((2* 32) + 19) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property B_SWZ_W             : DWORD index ((((2* 32) + 17) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property B_R                 : DWORD index ((((2* 32) + 13) shl 8) + 4) read GetBits;
+    property B_MUX               : DWORD index ((((2* 32) + 11) shl 8) + 2) read GetBits; // VSH_PARAMETER_TYPE
+    // INPUT C
+    property C_NEG               : DWORD index ((((2* 32) + 10) shl 8) + 1) read GetBits;
+    property C_SWZ_X             : DWORD index ((((2* 32) +  8) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property C_SWZ_Y             : DWORD index ((((2* 32) +  6) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property C_SWZ_Z             : DWORD index ((((2* 32) +  4) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property C_SWZ_W             : DWORD index ((((2* 32) +  2) shl 8) + 2) read GetBits; // VSH_SWIZZLE
+    property C_R_HIGH            : DWORD index ((((2* 32) +  0) shl 8) + 2) read GetBits; // Forms C_R together with
+    property C_R_LOW             : DWORD index ((((3* 32) + 30) shl 8) + 2) read GetBits; // this (to bridge a DWord). c0..c15
+    property C_MUX               : DWORD index ((((3* 32) + 28) shl 8) + 2) read GetBits; // VSH_PARAMETER_TYPE
+    // Output
+    property OutputMACWriteMask  : DWORD index ((((3* 32) + 24) shl 8) + 4) read GetBits;
+    property OutputRegister      : DWORD index ((((3* 32) + 20) shl 8) + 4) read GetBits; // Dxbx note : 4 bits to select r0..r15
+    property OutputILUWriteMask  : DWORD index ((((3* 32) + 16) shl 8) + 4) read GetBits;
+    property OutputWriteMask     : DWORD index ((((3* 32) + 12) shl 8) + 4) read GetBits;
+    property OutputWriteType     : DWORD index ((((3* 32) + 11) shl 8) + 1) read GetBits; // VSH_OUTPUT_TYPE
+    property OutputWriteAddress  : DWORD index ((((3* 32) +  3) shl 8) + 8) read GetBits;
+    property OutputMultiplexer   : DWORD index ((((3* 32) +  2) shl 8) + 1) read GetBits; // VSH_OUTPUT_MUX
+    // Other
+    property A0X                 : DWORD index ((((3* 32) +  1) shl 8) + 1) read GetBits; // Boolean
+    property EndOfShader         : DWORD index ((((3* 32) +  0) shl 8) + 1) read GetBits; // Boolean
+  end;
+
+const
+  NV2A_VertexShaderMaskStr: array [0..15] of string =  (
+            // xyzw xyzw
+    '',     // 0000 ____
+    '.w',   // 0001 ___w
+    '.z',   // 0010 __z_
+    '.zw',  // 0011 __zw
+    '.y',   // 0100 _y__
+    '.yw',  // 0101 _y_w
+    '.yz',  // 0110 _yz_
+    '.yzw', // 0111 _yzw
+    '.x',   // 1000 x___
+    '.xw',  // 1001 x__w
+    '.xz',  // 1010 x_z_
+    '.xzw', // 1011 x_zw
+    '.xy',  // 1100 xy__
+    '.xyw', // 1101 xy_w
+    '.xyz', // 1110 xyz_
+    ''//.xyzw  1111 xyzw
+    );
+
+  // Note : OpenGL seems to be case-sensitive, and requires upper-case opcodes!
+  NV2A_MAC_OpCode: array [VSH_MAC] of string = (
+    'NOP',
+    'MOV',
+    'MUL',
+    'ADD',
+    'MAD',
+    'DP3',
+    'DPH',
+    'DP4',
+    'DST',
+    'MIN',
+    'MAX',
+    'SLT',
+    'SGE',
+    'MOV' // Cxbx says : really 'arl' - Dxbx note : Alias for 'mov a0.x'
+  );
+
+  NV2A_ILU_OpCode: array [VSH_ILU] of string = (
+    'NOP',
+    'MOV',
+    'RCP',
+    'RCP', // Was RCC
+    'RSQ',
+    'EXP',
+    'LOG',
+    'LIT'
+  );
+
+  NV2A_OReg_Name: array [VSH_OREG_NAME] of string = (
+    'R12', // 'oPos',
+    '???',
+    '???',
+    'oD0',
+    'oD1',
+    'oFog',
+    'oPts',
+    'oB0',
+    'oB1',
+    'oT0',
+    'oT1',
+    'oT2',
+    'oT3',
+    '???',
+    '???',
+    'A0.x'
+    );
+
 // Dxbx forward declarations :
 
 function VshHandleIsFVF(aHandle: DWORD): boolean; // inline
@@ -603,6 +722,15 @@ uses
 {$DEFINE _DEBUG_TRACK_VS}
 
 const lfUnit = lfCxbx or lfDxbx or lfVertexShader;
+
+// VSH_ENTRY_Bits :
+
+function VSH_ENTRY_Bits.GetBits(const aIndex: Integer): DWORD;
+const DWORD_MASK_BITS = 8 + 5;
+begin
+  Result := aIndex and ((1 shl DWORD_MASK_BITS) - 1);
+  Result := GetDWordBits(Data[aIndex shr DWORD_MASK_BITS], Result);
+end;
 
 // VertexShader.h
 
