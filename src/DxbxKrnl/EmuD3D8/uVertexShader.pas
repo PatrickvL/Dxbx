@@ -564,8 +564,8 @@ type
   public
     property ILU                 : DWORD index ((((1* 32) + 25) shl 8) + 3) read GetBits; // VSH_ILU
     property MAC                 : DWORD index ((((1* 32) + 21) shl 8) + 4) read GetBits; // VSH_MAC
-    property ConstantAddress     : DWORD index ((((1* 32) + 13) shl 8) + 8) read GetBits;
-    property VRegAddress         : DWORD index ((((1* 32) +  9) shl 8) + 4) read GetBits;
+    property ConstantAddress     : DWORD index ((((1* 32) + 13) shl 8) + 8) read GetBits; // C0..C191
+    property VRegAddress         : DWORD index ((((1* 32) +  9) shl 8) + 4) read GetBits; // V0..V15
     // INPUT A
     property A_NEG               : DWORD index ((((1* 32) +  8) shl 8) + 1) read GetBits; // Boolean
     property A_SWZ_X             : DWORD index ((((1* 32) +  6) shl 8) + 2) read GetBits; // VSH_SWIZZLE
@@ -726,7 +726,7 @@ const lfUnit = lfCxbx or lfDxbx or lfVertexShader;
 // VSH_ENTRY_Bits :
 
 function VSH_ENTRY_Bits.GetBits(const aIndex: Integer): DWORD;
-const DWORD_MASK_BITS = 8 + 5;
+const DWORD_MASK_BITS = 5 + 8;
 begin
   Result := aIndex and ((1 shl DWORD_MASK_BITS) - 1);
   Result := GetDWordBits(Data[aIndex shr DWORD_MASK_BITS], Result);

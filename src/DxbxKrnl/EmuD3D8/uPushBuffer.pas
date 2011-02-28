@@ -993,7 +993,10 @@ var
 begin
   Result := '';
   RegNr := pShaderToken.OutputRegister;
-  if (RegNr = 1) and (OMUX = OMUX_MAC) and (VSH_ILU(pShaderToken.ILU) <> ILU_NOP) then Mask := 0; // Ignore paired MAC opcodes that write to R1
+  case OMUX of // Test for paired opcodes (in other words : Are both <> NOP?)
+    OMUX_MAC: if (VSH_ILU(pShaderToken.ILU) <> ILU_NOP) then if (RegNr = 1) then Mask := 0; // Ignore paired MAC opcodes that write to R1
+    OMUX_ILU: if (VSH_MAC(pShaderToken.MAC) <> MAC_NOP) then RegNr := 1; // Paired ILU opcodes can only write to R1
+  end;
   if (Mask > 0) then
     Result := Opcode + ' R' + IntToStr(RegNr) + NV2A_VertexShaderMaskStr[Mask] + Inputs + ';'#13#10;
 
