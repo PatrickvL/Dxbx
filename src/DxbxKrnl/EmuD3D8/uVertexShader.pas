@@ -640,7 +640,7 @@ const
     'MAX',
     'SLT',
     'SGE',
-    'MOV' // Cxbx says : really 'arl' - Dxbx note : Alias for 'mov a0.x'
+    'ARL A0.x' // Dxbx note : Alias for 'mov a0.x'
   );
 
   NV2A_ILU_OpCode: array [VSH_ILU] of string = (

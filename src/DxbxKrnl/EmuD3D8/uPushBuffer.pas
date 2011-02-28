@@ -998,7 +998,8 @@ begin
     OMUX_ILU: if (VSH_MAC(pShaderToken.MAC) <> MAC_NOP) then RegNr := 1; // Paired ILU opcodes can only write to R1
   end;
   if (Mask > 0) then
-    Result := Opcode + ' R' + IntToStr(RegNr) + NV2A_VertexShaderMaskStr[Mask] + Inputs + ';'#13#10;
+    if Opcode = NV2A_MAC_OpCode[MAC_ARL] then Result := Opcode + Inputs + ';'#13#10
+    else Result := Opcode + ' R' + IntToStr(RegNr) + NV2A_VertexShaderMaskStr[Mask] + Inputs + ';'#13#10;
 
   // See if we must add a muxed opcode too :
   if VSH_OUTPUT_MUX(pShaderToken.OutputMultiplexer) <> OMUX then Exit;
@@ -1037,15 +1038,15 @@ begin
     if g_OpCodeParams_MAC[MAC].C then
       Result := Result + InputCStr;
     // Then prepend these inputs with the actual opcode, mask, and input :
-    if MAC = MAC_ARL then Result := 'ARL A0.x' + Result + ';'#13#10 // TODO : No paired opcodes?
-    else Result := DxbxDecodeVertexShaderOutput(pShaderToken, OMUX_MAC, pShaderToken.OutputMACWriteMask, NV2A_MAC_OpCode[MAC], {Inputs=}Result);
+    Result := DxbxDecodeVertexShaderOutput(pShaderToken, OMUX_MAC, pShaderToken.OutputMACWriteMask,
+      NV2A_MAC_OpCode[MAC], {Inputs=}Result);
   end;
 
-  // See what ILU opcode is used (if not masked away) :
-  ILU := VSH_ILU(pShaderToken.ILU);
-  if (ILU = ILU_NOP) or (pShaderToken.OutputILUWriteMask = 0) then Exit;
-  // Append the ILU opcode, mask and (the already determined) input C :
-  Result := Result + DxbxDecodeVertexShaderOutput(pShaderToken, OMUX_ILU, pShaderToken.OutputILUWriteMask, NV2A_ILU_OpCode[ILU], {Inputs=}InputCStr);
+  // See if a ILU opcode is present too :
+  if (VSH_ILU(pShaderToken.ILU) <> ILU_NOP) then
+    // Append the ILU opcode, mask and (the already determined) input C :
+    Result := Result + DxbxDecodeVertexShaderOutput(pShaderToken, OMUX_ILU, pShaderToken.OutputILUWriteMask,
+      NV2A_ILU_OpCode[VSH_ILU(pShaderToken.ILU)], {Inputs=}InputCStr);
 end;
 
 function DxbxDecodeVertexProgram(pVertexShader: PVSH_ENTRY_Bits): string;
@@ -1063,10 +1064,10 @@ begin
   Result := DxbxVertexShaderHeader + Result +
     'MOV oPos, R12;'#13#10 +
 //    '# Transform the vertex to clip coordinates :'#13#10 +
-//    'DP4 oPos.x, mvp[0], R12;'#13#10 +
-//    'DP4 oPos.y, mvp[1], R12;'#13#10 +
-//    'DP4 oPos.z, mvp[2], R12;'#13#10 +
-//    'DP4 oPos.w, mvp[3], R12;'#13#10 +
+//    'DP4 oPos.x, R12, mvp[0];'#13#10 +
+//    'DP4 oPos.y, R12, mvp[1];'#13#10 +
+//    'DP4 oPos.z, R12, mvp[2];'#13#10 +
+//    'DP4 oPos.w, R12, mvp[3];'#13#10 +
     'END';
 end;
 
@@ -3131,8 +3132,8 @@ begin
     // This part just reads all other components and passes them to the output :
     'MOV oD0, v3;'#13#10 +
     'MOV oD1, v4;'#13#10 +
-    'RCP oFog, v4.w;'#13#10 + // specular fog
-//    'RCP oFog, v0.z;'#13#10 + // z fog
+    'MOV oFog, v4.w;'#13#10 + // specular fog
+//    'MOV oFog, v0.z;'#13#10 + // z fog
 //    'RCP oFog, v0.w;'#13#10 + // w fog
     'MOV oPts, v1.x;'#13#10 +
     'MOV oB0, v7;'#13#10 +
