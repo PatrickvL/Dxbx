@@ -779,9 +779,9 @@ const
   (
     {NV2A_TX_WRAP_S_REPEAT:}          GL_REPEAT,          // = X_D3DTADDRESS_WRAP
     {NV2A_TX_WRAP_S_MIRRORED_REPEAT:} GL_MIRRORED_REPEAT, // = X_D3DTADDRESS_MIRROR
-    {NV2A_TX_WRAP_S_CLAMP_TO_EDGE:}   GL_CLAMP_TO_EDGE,   // = X_D3DTADDRESS_CLAMPTOEDGE
+    {NV2A_TX_WRAP_S_CLAMP_TO_EDGE:}   GL_CLAMP_TO_EDGE,   // = X_D3DTADDRESS_CLAMP (yes, a mixup!)
     {NV2A_TX_WRAP_S_CLAMP_TO_BORDER:} GL_CLAMP_TO_BORDER, // = X_D3DTADDRESS_BORDER
-    {NV2A_TX_WRAP_S_CLAMP:}           GL_CLAMP            // = X_D3DTADDRESS_CLAMP
+    {NV2A_TX_WRAP_S_CLAMP:}           GL_CLAMP            // = X_D3DTADDRESS_CLAMPTOEDGE (yes, a mixup!)
   );
 
 
@@ -1017,7 +1017,6 @@ end;
 function DxbxDecodeVertexToken(pShaderToken: PVSH_ENTRY_Bits): string;
 var
   MAC: VSH_MAC;
-  ILU: VSH_ILU;
   InputCStr: string;
 begin
   Result := '';
@@ -1060,14 +1059,24 @@ begin
     if pVertexShader.EndOfShader > 0 then Break;
     Inc(pVertexShader);
   until False;
-  // Note : Since we replaced oPos with r12, we have to append a "mov oPos, r12" at the end :
+
   Result := DxbxVertexShaderHeader + Result +
-    'MOV oPos, R12;'#13#10 +
-//    '# Transform the vertex to clip coordinates :'#13#10 +
-//    'DP4 oPos.x, R12, mvp[0];'#13#10 +
-//    'DP4 oPos.y, R12, mvp[1];'#13#10 +
-//    'DP4 oPos.z, R12, mvp[2];'#13#10 +
-//    'DP4 oPos.w, R12, mvp[3];'#13#10 +
+    // Note : Since we replaced oPos with r12 in the above decoding,
+    // we have to assign oPos at the end; This can be done in two ways;
+    // 1) When the shader is complete (including transformations),
+    //    we could just do a 'MOV oPos, R12;' and be done with it.
+    // 2) In case of D3DFVF_XYZRHW, it seems the NV2A applies the mvp
+    //    (model/view/projection) matrix transformation AFTER executing
+    //    the shader (but OpenGL expects *the*shader* to handle this
+    //    transformation).
+    // Until we can discern these two situations, we apply the matrix transformation :
+    // TODO : What should we do about normals, eye-space lighting and all that?
+    '# Dxbx addition : Transform the vertex to clip coordinates :'#13#10 +
+    'DP4 oPos.x, mvp[0], R12;'#13#10 +
+    'DP4 oPos.y, mvp[1], R12;'#13#10 +
+    'DP4 oPos.z, mvp[2], R12;'#13#10 +
+    'DP4 oPos.w, mvp[3], R12;'#13#10 +
+    '# End of shader :'#13#10 +
     'END';
 end;
 
@@ -1105,7 +1114,7 @@ begin
     // TODO : Cache shaders, to prevent recompiling them continuously.
     Shader := DxbxDecodeVertexProgram(@VertexShaderSlots[NV2AInstance.VP_START_FROM_ID]);
     if MayLog(lfUnit) then
-      DbgPrintf('  NV2A: New vertex shader decoded:'#13#10 + Shader);
+      DbgPrintf('  NV2A: New vertex program decoded:'#13#10 + Shader);
 
     ActiveVertexProgramID := VertexProgramIDs[1];
     glBindProgramARB(GL_VERTEX_PROGRAM_ARB, ActiveVertexProgramID);
@@ -1342,9 +1351,10 @@ begin
   HandledCount := 4;
   HandledBy := 'ViewportOffset(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 {$IFDEF DXBX_USE_OPENGL}
+  HandledBy := HandledBy + ' Set in c-37 = c[59]';
   glProgramEnvParameter4fvARB(
     {target=}GL_VERTEX_PROGRAM_ARB,
-    {index=}X_D3DSCM_RESERVED_CONSTANT2 + X_D3DSCM_CORRECTION, // C[-37] > c59
+    {index=}X_D3DSCM_RESERVED_CONSTANT2 + X_D3DSCM_CORRECTION,
     {params=}PGLfloat(pdwPushArguments)
   );
 {$ENDIF}
@@ -1360,9 +1370,10 @@ begin
   HandledCount := 4;
   HandledBy := 'ViewportScale(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 {$IFDEF DXBX_USE_OPENGL}
+  HandledBy := HandledBy + ' Set in c-38 = c[58]';
   glProgramEnvParameter4fvARB(
     {target=}GL_VERTEX_PROGRAM_ARB,
-    {index=}X_D3DSCM_RESERVED_CONSTANT1 + X_D3DSCM_CORRECTION, // C[-38] > c58
+    {index=}X_D3DSCM_RESERVED_CONSTANT1 + X_D3DSCM_CORRECTION,
     {params=}PGLfloat(pdwPushArguments)
   );
 {$ENDIF}
@@ -1380,7 +1391,29 @@ begin
     DxbxTypedValueToString(DxbxRenderStateInfo[XboxRenderState].T, pdwPushArguments^)]);
 end;
 
-procedure EmuNV2A_DepthTest();
+procedure {02a4 NV2A_FOG_ENABLE}EmuNV2A_SetFogEnable(); // X_D3DRS_FOGENABLE
+begin
+  HandledBy := 'SetFogEnable(' + BooleanToString(pdwPushArguments^ <> 0) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  if pdwPushArguments^ <> 0 then
+    glEnable(GL_FOG)
+  else
+    glDisable(GL_FOG);
+{$ENDIF}
+end;
+
+procedure {0304 NV2A_BLEND_FUNC_ENABLE}EmuNV2A_SetAlphaBlendEnable(); // = X_D3DRS_ALPHABLENDENABLE
+begin
+  HandledBy := 'SetAlphaBlendEnable(' + BooleanToString(pdwPushArguments^ <> 0) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  if pdwPushArguments^ <> 0 then
+    glEnable(GL_BLEND)
+  else
+    glDisable(GL_BLEND);
+{$ENDIF}
+end;
+
+procedure {030C NV2A_DEPTH_TEST_ENABLE}EmuNV2A_DepthTest(); // X_D3DRS_ZENABLE
 begin
   HandledBy := 'DepthTest := ' + BooleanToString(pdwPushArguments^ <> 0);
 {$IFDEF DXBX_USE_OPENGL}
@@ -1391,7 +1424,7 @@ begin
 {$ENDIF}
 end;
 
-procedure EmuNV2A_Dither();
+procedure {0310 NV2A_DITHER_ENABLE}EmuNV2A_Dither(); // X_D3DRS_DITHERENABLE
 begin
   HandledBy := 'Dither := ' + BooleanToString(pdwPushArguments^ <> 0);
 {$IFDEF DXBX_USE_OPENGL}
@@ -1402,7 +1435,18 @@ begin
 {$ENDIF}
 end;
 
-procedure EmuNV2A_StencilTest();
+procedure {0314 NV2A_LIGHTING_ENABLE}EmuNV2A_SetLightEnable();
+begin
+  HandledBy := 'SetLightEnable(' + BooleanToString(pdwPushArguments^ <> 0) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  if pdwPushArguments^ <> 0 then
+    glEnable(GL_LIGHTING)
+  else
+    glDisable(GL_LIGHTING);
+{$ENDIF}
+end;
+
+procedure {032C NV2A_STENCIL_ENABLE}EmuNV2A_StencilTest(); // = X_D3DRS_STENCILENABLE
 begin
   HandledBy := 'StencilTest := ' + BooleanToString(pdwPushArguments^ <> 0);
 {$IFDEF DXBX_USE_OPENGL}
@@ -1413,11 +1457,62 @@ begin
 {$ENDIF}
 end;
 
+procedure {0354 NV2A_DEPTH_FUNC}EmuNV2A_SetDepthFunc(); // = X_D3DRS_ZFUNC
+begin
+  HandledBy := 'SetDepthFunc(' + X_D3DCMPFUNC2String(pdwPushArguments^) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  // Note : X_D3DCMPFUNC enums correspond 1-on-1 to OpenGL constants;
+  // X_D3DCMP_NEVER                = $200 = GL_NEVER
+  // X_D3DCMP_LESS                 = $201 = GL_LESS
+  // X_D3DCMP_EQUAL                = $202 = GL_EQUAL
+  // X_D3DCMP_LESSEQUAL            = $203 = GL_LEQUAL
+  // X_D3DCMP_GREATER              = $204 = GL_GREATER
+  // X_D3DCMP_NOTEQUAL             = $205 = GL_NOTEQUAL
+  // X_D3DCMP_GREATEREQUAL         = $206 = GL_GEQUAL
+  // X_D3DCMP_ALWAYS               = $207 = GL_ALWAYS
+  glDepthFunc(pdwPushArguments^);
+{$ENDIF}
+end;
+
+
+procedure {035C NV2A_DEPTH_WRITE_ENABLE}EmuNV2A_SetDepthMask(); // = X_D3DRS_ZWRITEENABLE
+begin
+  HandledBy := 'SetDepthMask(' + BooleanToString(pdwPushArguments^ <> 0) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  glDepthMask(pdwPushArguments^ <> GL_FALSE);
+{$ENDIF}
+end;
+
+procedure {037c NV2A_SHADE_MODEL}EmuNV2A_SetShadeModel(); // = X_D3DRS_SHADEMODE
+begin
+  HandledBy := 'SetShadeModel(' + X_D3DSHADEMODE2String(NV2AInstance.SHADE_MODEL) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  // Note : X_D3DSHADEMODE enums correspond 1-on-1 to OpenGL constants;
+  // X_D3DSHADE_FLAT              = $1d00 = GL_FLAT
+  // X_D3DSHADE_GOURAUD           = $1d01 = GL_SMOOTH
+  glShadeModel(NV2AInstance.SHADE_MODEL);
+{$ENDIF}
+end;
+
+procedure {038c NV2A_POLYGON_MODE_FRONT}EmuNV2A_SetPolygonMode(); // = X_D3DRS_FILLMODE
+begin
+  HandledBy := 'SetPolygonMode(Front=' + X_D3DFILLMODE2String(NV2AInstance.POLYGON_MODE_FRONT) +
+                             ', Back=' + X_D3DFILLMODE2String(NV2AInstance.POLYGON_MODE_BACK) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  // Note : X_D3DFILLMODE enums correspond 1-on-1 to OpenGL constants;
+  // X_D3DFILL_POINT              = $1b00 = GL_POINT
+  // X_D3DFILL_WIREFRAME          = $1b01 = GL_LINE
+  // X_D3DFILL_SOLID              = $1b02 = GL_FILL
+  glPolygonMode(GL_FRONT, NV2AInstance.POLYGON_MODE_FRONT);
+  glPolygonMode(GL_BACK,  NV2AInstance.POLYGON_MODE_BACK);
+{$ENDIF}
+end;
+
 //
 // SetViewport
 //
 
-procedure EmuNV2A_DepthRange();
+procedure {0394 NV2A_DEPTH_RANGE_NEAR}EmuNV2A_DepthRange();
 var
   ZNear: FLOAT;
   ZFar: FLOAT;
@@ -1479,6 +1574,17 @@ begin
 //  glScalef(1.0, 1.0, -1.0);
 
 //  glFrustum(-320, 320, -240, 240, NV2AInstance.DEPTH_RANGE_NEAR, NV2AInstance.DEPTH_RANGE_FAR);
+{$ENDIF}
+end;
+
+procedure {03A4 NV2A_NORMALIZE_ENABLE}EmuNV2A_SetNormalizeEnable(); // = X_D3DRS_NORMALIZENORMALS
+begin
+  HandledBy := 'SetNormalizeEnable(' + BooleanToString(pdwPushArguments^ <> 0) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  if pdwPushArguments^ <> 0 then
+    glEnable(GL_NORMALIZE)
+  else
+    glDisable(GL_NORMALIZE);
 {$ENDIF}
 end;
 
@@ -2340,14 +2446,18 @@ const
   {0210 NV2A_COLOR_OFFSET}EmuNV2A_SetRenderTargetSurface,
   {0214}                         nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0240}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0280}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0280}nil, nil, nil, nil, nil,
+  {0294 NV2A_LIGHT_MODEL}EmuNV2A_SetRenderState, // X_D3DRS_LIGHTING
+                                      nil, nil, nil,
+  {02a4 NV2A_FOG_ENABLE}EmuNV2A_SetFogEnable, // X_D3DRS_FOGENABLE
+                                                          nil, nil, nil, nil, nil, nil,
   {02C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0300 NV2A_ALPHA_FUNC_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_ALPHATESTENABLE
-  {0304 NV2A_BLEND_FUNC_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_ALPHABLENDENABLE
+  {0304 NV2A_BLEND_FUNC_ENABLE}EmuNV2A_SetAlphaBlendEnable, // = X_D3DRS_ALPHABLENDENABLE
   {0308}nil,
   {030C NV2A_DEPTH_TEST_ENABLE}EmuNV2A_DepthTest, // X_D3DRS_ZENABLE
   {0310 NV2A_DITHER_ENABLE}EmuNV2A_Dither, // X_D3DRS_DITHERENABLE
-  {0314}nil,
+  {0314 NV2A_LIGHTING_ENABLE}EmuNV2A_SetLightEnable,
   {0318 NV2A_POINT_PARAMETERS_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_POINTSCALEENABLE
   {031C NV2A_POINT_SMOOTH_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_POINTSPRITEENABLE
   {0320}nil,
@@ -2363,9 +2473,9 @@ const
   {0348 NV2A_BLEND_FUNC_DST}EmuNV2A_SetRenderState, // = X_D3DRS_DESTBLEND
   {034C NV2A_BLEND_COLOR}EmuNV2A_SetRenderState, // = X_D3DRS_BLENDCOLOR
   {0350 NV2A_BLEND_EQUATION}EmuNV2A_SetRenderState, // = X_D3DRS_BLENDOP
-  {0354 NV2A_DEPTH_FUNC}EmuNV2A_SetRenderState, // = X_D3DRS_ZFUNC
+  {0354 NV2A_DEPTH_FUNC}EmuNV2A_SetDepthFunc, // = X_D3DRS_ZFUNC
   {0358 NV2A_COLOR_MASK}EmuNV2A_SetRenderState, // = X_D3DRS_COLORWRITEENABLE
-  {035C NV2A_DEPTH_WRITE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_ZWRITEENABLE
+  {035C NV2A_DEPTH_WRITE_ENABLE}EmuNV2A_SetDepthMask, // = X_D3DRS_ZWRITEENABLE
   {0360 NV2A_STENCIL_MASK}EmuNV2A_SetRenderState, // = X_D3DRS_STENCILWRITEMASK
   {0364 NV2A_STENCIL_FUNC_FUNC}EmuNV2A_SetRenderState, // = X_D3DRS_STENCILFUNC
   {0368 NV2A_STENCIL_FUNC_REF}EmuNV2A_SetRenderState, // = X_D3DRS_STENCILREF
@@ -2373,17 +2483,17 @@ const
   {0370}nil,
   {0374 NV2A_STENCIL_OP_ZFAIL}EmuNV2A_SetRenderState, // = X_D3DRS_STENCILZFAIL
   {0378 NV2A_STENCIL_OP_ZPASS}EmuNV2A_SetRenderState, // = X_D3DRS_STENCILPASS
-  {037c NV2A_SHADE_MODEL}EmuNV2A_SetRenderState, // = X_D3DRS_SHADEMODE
+  {037c NV2A_SHADE_MODEL}EmuNV2A_SetShadeModel, // = X_D3DRS_SHADEMODE
   {0380 NV2A_LINE_WIDTH}EmuNV2A_SetRenderState, // = X_D3DRS_LINEWIDTH
   {0384 NV2A_POLYGON_OFFSET_FACTOR}EmuNV2A_SetRenderState, // = X_D3DRS_POLYGONOFFSETZSLOPESCALE
   {0388 NV2A_POLYGON_OFFSET_UNITS}EmuNV2A_SetRenderState, // = X_D3DRS_POLYGONOFFSETZOFFSET
-  {038c NV2A_POLYGON_MODE_FRONT}EmuNV2A_SetRenderState, // = X_D3DRS_FILLMODE
+  {038c NV2A_POLYGON_MODE_FRONT}EmuNV2A_SetPolygonMode, // = X_D3DRS_FILLMODE
   {0390}nil,
   {0394 NV2A_DEPTH_RANGE_NEAR}EmuNV2A_DepthRange, // Always the last method for SetViewport, so we use it as a trigger
   {0398}nil,
   {039C}nil,
   {03A0 NV2A_FRONT_FACE}EmuNV2A_SetRenderState, // = X_D3DRS_FRONTFACE
-  {03A4 NV2A_NORMALIZE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_NORMALIZENORMALS
+  {03A4 NV2A_NORMALIZE_ENABLE}EmuNV2A_SetNormalizeEnable, // = X_D3DRS_NORMALIZENORMALS
   {03A8}                                                  nil, nil, nil, nil, nil, nil,
   {03C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0400}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
