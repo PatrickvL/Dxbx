@@ -1591,11 +1591,15 @@ begin
 end;
 
 procedure {034C NV2A_BLEND_COLOR}EmuNV2A_SetBlendColor(); // = X_D3DRS_BLENDCOLOR
-begin
-  HandledBy := 'SetBlendColor(' + ColorBytesToString(pdwPushArguments, 4) + ')';
 {$IFDEF DXBX_USE_OPENGL}
-  // Note : X_D3DBLEND enums correspond 1-on-1 to OpenGL constants;
-  glBlendFunc(NV2AInstance.BLEND_FUNC_SRC, NV2AInstance.BLEND_FUNC_DST);
+var
+  XColor: TD3DXColor;
+{$ENDIF}
+begin
+  HandledBy := 'SetBlendColor(' + ColorBytesToString(PByte(pdwPushArguments), 4) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  XColor := D3DXColorFromDWord(pdwPushArguments^);
+  glBlendColor(XColor.r, XColor.g, XColor.b, XColor.a);
 {$ENDIF}
 end;
 
@@ -2663,7 +2667,7 @@ const
   {0214}                         nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0240}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0280}nil, nil, nil, nil, nil,
-  {0294 NV2A_LIGHT_MODEL}EmuNV2A_SetRenderState, // X_D3DRS_LIGHTING
+  {0294 NV2A_LIGHT_MODEL}nil, //??EmuNV2A_SetRenderState, // X_D3DRS_LIGHTING??
                                       nil, nil, nil,
   {02a4 NV2A_FOG_ENABLE}EmuNV2A_SetRenderState, // X_D3DRS_FOGENABLE
                                                           nil, nil, nil, nil, nil, nil,
