@@ -144,6 +144,7 @@ begin
   // Dxbx note : Let the compiler sort this out, should be much quicker :
   case (aMethod and $00001ffc) of
     {00000100}NV2A_NOP: Result := X_D3DRS_PS_RESERVED; // XDK 3424 uses $00000100 (NOP), while 3911 onwards uses $00001d90 (SET_COLOR_CLEAR_VALUE)
+    {000002A4}NV2A_FOG_ENABLE: Result := X_D3DRS_FOGENABLE;
     {00000260}NV2A_RC_IN_ALPHA__0: Result := X_D3DRS_PSALPHAINPUTS0;
     {00000264}NV2A_RC_IN_ALPHA__1: Result := X_D3DRS_PSALPHAINPUTS1;
     {00000268}NV2A_RC_IN_ALPHA__2: Result := X_D3DRS_PSALPHAINPUTS2;
