@@ -1590,11 +1590,47 @@ begin
 {$ENDIF}
 end;
 
+procedure {034C NV2A_BLEND_COLOR}EmuNV2A_SetBlendColor(); // = X_D3DRS_BLENDCOLOR
+begin
+  HandledBy := 'SetBlendColor(' + ColorBytesToString(pdwPushArguments, 4) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  // Note : X_D3DBLEND enums correspond 1-on-1 to OpenGL constants;
+  glBlendFunc(NV2AInstance.BLEND_FUNC_SRC, NV2AInstance.BLEND_FUNC_DST);
+{$ENDIF}
+end;
+
 procedure {0350 NV2A_BLEND_EQUATION}EmuNV2A_SetBlendEquation(); // = X_D3DRS_BLENDOP
+{$IFDEF DXBX_USE_OPENGL}
+var
+  GLValue: TGLEnum;
+{$ENDIF}
 begin
   HandledBy := 'SetBlendEquation(' + X_D3DBLENDOP2String(pdwPushArguments^) + ')';
 {$IFDEF DXBX_USE_OPENGL}
-  glBlendEquation(pdwPushArguments^);
+  GLValue := pdwPushArguments^;
+  case X_D3DBLENDOP(pdwPushArguments^) of
+    X_D3DBLENDOP_ADD,         // = $8006 = GL_FUNC_ADD
+    X_D3DBLENDOP_SUBTRACT,    // = $800a = GL_FUNC_SUBTRACT
+    X_D3DBLENDOP_REVSUBTRACT, // = $800b = GL_FUNC_REVERSE_SUBTRACT
+    X_D3DBLENDOP_MIN,         // = $8007 = GL_MIN
+    X_D3DBLENDOP_MAX:         // = $8008 = GL_MAX
+      ; // Already assigned above
+
+    X_D3DBLENDOP_ADDSIGNED        {=$f006}:
+    begin
+      EmuWarning('Unsupported Xbox D3DBLENDOP : D3DBLENDOP_ADDSIGNED. Used approximation.');
+      GLValue := GL_FUNC_ADD;
+    end;
+    X_D3DBLENDOP_REVSUBTRACTSIGNED{=$f005}:
+    begin
+      EmuWarning('Unsupported Xbox D3DBLENDOP : D3DBLENDOP_REVSUBTRACTSIGNED. Used approximation.');
+      GLValue := GL_FUNC_REVERSE_SUBTRACT;
+    end;
+  else
+    DxbxKrnlCleanup('SetBlendEquation : Unexpected value!');
+  end;
+
+  glBlendEquation(GLValue);
 {$ENDIF}
 end;
 
@@ -2651,7 +2687,7 @@ const
   {0340 NV2A_ALPHA_FUNC_REF}EmuNV2A_SetAlphaFunc, // = X_D3DRS_ALPHAREF
   {0344 NV2A_BLEND_FUNC_SRC}EmuNV2A_SetBlendFunc, // = X_D3DRS_SRCBLEND
   {0348 NV2A_BLEND_FUNC_DST}EmuNV2A_SetBlendFunc, // = X_D3DRS_DESTBLEND
-  {034C NV2A_BLEND_COLOR}EmuNV2A_SetRenderState, // = X_D3DRS_BLENDCOLOR
+  {034C NV2A_BLEND_COLOR}EmuNV2A_SetBlendColor, // = X_D3DRS_BLENDCOLOR
   {0350 NV2A_BLEND_EQUATION}EmuNV2A_SetBlendEquation, // = X_D3DRS_BLENDOP
   {0354 NV2A_DEPTH_FUNC}EmuNV2A_SetDepthFunc, // = X_D3DRS_ZFUNC
   {0358 NV2A_COLOR_MASK}EmuNV2A_SetColorMask, // = X_D3DRS_COLORWRITEENABLE
