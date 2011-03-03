@@ -26,6 +26,8 @@ unit uPushBuffer;
   {$UNDEF DXBX_USE_D3D9}
 {$ENDIF}
 
+{$DEFINE DXBX_OPENGL_CONVENTIONAL} // Enabled = Use conventional vertex shader attributes. Disabled = generic attributes.
+
 {.$define _DEBUG_TRACK_PB}
 
 interface
@@ -151,6 +153,7 @@ const
     '!!ARBvp1.0'#13#10 +
     'TEMP R0,R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12;'#13#10 +
     'ADDRESS A0;'#13#10 +
+{$IFDEF DXBX_OPENGL_CONVENTIONAL}
     'ATTRIB v0 = vertex.position;'#13#10 + // Was: vertex.attrib[0] (See 'conventional' note above)
     'ATTRIB v1 = vertex.weight;'#13#10 + // Was: vertex.attrib[1]
     'ATTRIB v2 = vertex.normal;'#13#10 + // Was: vertex.attrib[2]
@@ -163,6 +166,20 @@ const
     'ATTRIB v9 = vertex.texcoord[1];'#13#10 + // Was: vertex.attrib[9]
     'ATTRIB v10 = vertex.texcoord[2];'#13#10 + // Was: vertex.attrib[10]
     'ATTRIB v11 = vertex.texcoord[3];'#13#10 + // Was: vertex.attrib[11]
+{$ELSE}
+    'ATTRIB v0 = vertex.attrib[0];'#13#10 +
+    'ATTRIB v1 = vertex.attrib[1];'#13#10 +
+    'ATTRIB v2 = vertex.attrib[2];'#13#10 +
+    'ATTRIB v3 = vertex.attrib[3];'#13#10 +
+    'ATTRIB v4 = vertex.attrib[4];'#13#10 +
+    'ATTRIB v5 = vertex.attrib[5];'#13#10 +
+    'ATTRIB v6 = vertex.attrib[6];'#13#10 +
+    'ATTRIB v7 = vertex.attrib[7];'#13#10 +
+    'ATTRIB v8 = vertex.attrib[8];'#13#10 +
+    'ATTRIB v9 = vertex.attrib[9];'#13#10 +
+    'ATTRIB v10 = vertex.attrib[10];'#13#10 +
+    'ATTRIB v11 = vertex.attrib[11];'#13#10 +
+{$ENDIF}
     'ATTRIB v12 = vertex.attrib[12];'#13#10 +
     'ATTRIB v13 = vertex.attrib[13];'#13#10 +
     'ATTRIB v14 = vertex.attrib[14];'#13#10 +
@@ -673,6 +690,7 @@ end;
 
 procedure DxbxVertexSlotEnable(const slot: uint);
 begin
+{$IFDEF DXBX_OPENGL_CONVENTIONAL}
   case slot of
      0: glEnableClientState(GL_VERTEX_ARRAY);          // ATTRIB v0 = vertex.position, set via glVertexPointer
      1: glEnableClientState(GL_WEIGHT_ARRAY_ARB);      // ATTRIB v1 = vertex.weight, set via glWeightPointerARB
@@ -690,6 +708,9 @@ begin
       glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     end;
   else
+{$ELSE}
+  begin
+{$ENDIF}
     glEnableVertexAttribArray(slot);
   end;
 end;
@@ -697,6 +718,7 @@ end;
 procedure DxbxVertexSlotSetPointer(const slot: TGLuint;
   const size: TGLint; const _type: TGLenum; const normalized: TGLboolean; const stride: TGLsizei; const _pointer: Pointer);
 begin
+{$IFDEF DXBX_OPENGL_CONVENTIONAL}
   case slot of
      0: glVertexPointer(size, _type, stride, _pointer);
      1: glWeightPointerARB(size, _type, stride, _pointer); // TODO : What if this extension is not supported? Use generic attrib?
@@ -714,12 +736,16 @@ begin
       glTexCoordPointer(size, _type, stride, _pointer);
     end;
   else
+{$ELSE}
+  begin
+{$ENDIF}
     glVertexAttribPointer(slot, size, _type, normalized, stride, _pointer);
   end;
 end;
 
 procedure DxbxVertexSlotDisable(const slot: uint);
 begin
+{$IFDEF DXBX_OPENGL_CONVENTIONAL}
   case slot of
      0: glDisableClientState(GL_VERTEX_ARRAY);          // ATTRIB v0 = vertex.position, set via glVertexPointer
      1: glDisableClientState(GL_WEIGHT_ARRAY_ARB);      // ATTRIB v1 = vertex.weight, set via glWeightPointerARB
@@ -737,6 +763,9 @@ begin
       glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     end;
   else
+{$ELSE}
+  begin
+{$ENDIF}
     glDisableVertexAttribArray(slot);
   end;
 end;
