@@ -140,23 +140,29 @@ const NV2A_COUNT_MAX = (NV2A_COUNT_MASK shr NV2A_COUNT_SHIFT) - 1; // = 2047
 const lfUnit = lfCxbx or lfPushBuffer;
 
 const
-  // Vertex shader header, mapping Xbox1 registers to the ARB syntax (original version by KingOfC) :
+  // Vertex shader header, mapping Xbox1 registers to the ARB syntax (original version by KingOfC).
+  // Note about the use of 'conventional' attributes in here: Since we prefer to use only one shader
+  // for both immediate and deferred mode rendering, we alias all attributes to conventional inputs
+  // as much as possible. Only when there's no conventional attribute available, we use generic attributes.
+  // So in the following header, we use conventional attributes first, and generic attributes for the
+  // rest of the vertex attribute slots. This makes it possible to support immediate and deferred mode
+  // rendering with the same shader, and the use of the OpenGL fixed-function pipeline without a shader.
   DxbxVertexShaderHeader: string =
     '!!ARBvp1.0'#13#10 +
     'TEMP R0,R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12;'#13#10 +
     'ADDRESS A0;'#13#10 +
-    'ATTRIB v0 = vertex.attrib[0];'#13#10 +
-    'ATTRIB v1 = vertex.attrib[1];'#13#10 +
-    'ATTRIB v2 = vertex.attrib[2];'#13#10 +
-    'ATTRIB v3 = vertex.attrib[3];'#13#10 +
-    'ATTRIB v4 = vertex.attrib[4];'#13#10 +
-    'ATTRIB v5 = vertex.attrib[5];'#13#10 +
+    'ATTRIB v0 = vertex.position;'#13#10 + // Was: vertex.attrib[0] (See 'conventional' note above)
+    'ATTRIB v1 = vertex.weight;'#13#10 + // Was: vertex.attrib[1]
+    'ATTRIB v2 = vertex.normal;'#13#10 + // Was: vertex.attrib[2]
+    'ATTRIB v3 = vertex.color.primary;'#13#10 + // Was: vertex.attrib[3]
+    'ATTRIB v4 = vertex.color.secondary;'#13#10 + // Was: vertex.attrib[4]
+    'ATTRIB v5 = vertex.fogcoord;'#13#10 + // Was: vertex.attrib[5]
     'ATTRIB v6 = vertex.attrib[6];'#13#10 +
     'ATTRIB v7 = vertex.attrib[7];'#13#10 +
-    'ATTRIB v8 = vertex.attrib[8];'#13#10 +
-    'ATTRIB v9 = vertex.attrib[9];'#13#10 +
-    'ATTRIB v10 = vertex.attrib[10];'#13#10 +
-    'ATTRIB v11 = vertex.attrib[11];'#13#10 +
+    'ATTRIB v8 = vertex.texcoord[0];'#13#10 + // Was: vertex.attrib[8]
+    'ATTRIB v9 = vertex.texcoord[1];'#13#10 + // Was: vertex.attrib[9]
+    'ATTRIB v10 = vertex.texcoord[2];'#13#10 + // Was: vertex.attrib[10]
+    'ATTRIB v11 = vertex.texcoord[3];'#13#10 + // Was: vertex.attrib[11]
     'ATTRIB v12 = vertex.attrib[12];'#13#10 +
     'ATTRIB v13 = vertex.attrib[13];'#13#10 +
     'ATTRIB v14 = vertex.attrib[14];'#13#10 +
@@ -665,6 +671,76 @@ begin
   end;
 end;
 
+procedure DxbxVertexSlotEnable(const slot: uint);
+begin
+  case slot of
+     0: glEnableClientState(GL_VERTEX_ARRAY);          // ATTRIB v0 = vertex.position, set via glVertexPointer
+     1: glEnableClientState(GL_WEIGHT_ARRAY_ARB);      // ATTRIB v1 = vertex.weight, set via glWeightPointerARB
+     2: glEnableClientState(GL_NORMAL_ARRAY);          // ATTRIB v2 = vertex.normal, set via glNormalPointer
+     3: glEnableClientState(GL_COLOR_ARRAY);           // ATTRIB v3 = vertex.color.primary, set via glColorPointer
+     4: glEnableClientState(GL_SECONDARY_COLOR_ARRAY); // ATTRIB v4 = vertex.color.secondary, set via glSecondaryColorPointer
+     5: glEnableClientState(GL_FOG_COORD_ARRAY);       // ATTRIB v5 = vertex.fogcoord, set via glFogCoordPointer
+
+     8, // ATTRIB v8 = vertex.texcoord[0], set via glTexCoordPointer
+     9, // ATTRIB v9 = vertex.texcoord[1], set via glTexCoordPointer
+    10, // ATTRIB v10 = vertex.texcoord[2], set via glTexCoordPointer
+    11: // ATTRIB v11 = vertex.texcoord[3], set via glTexCoordPointer
+    begin
+      glClientActiveTexture(GL_TEXTURE0 + slot - 8);
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    end;
+  else
+    glEnableVertexAttribArray(slot);
+  end;
+end;
+
+procedure DxbxVertexSlotSetPointer(const slot: TGLuint;
+  const size: TGLint; const _type: TGLenum; const normalized: TGLboolean; const stride: TGLsizei; const _pointer: Pointer);
+begin
+  case slot of
+     0: glVertexPointer(size, _type, stride, _pointer);
+     1: glWeightPointerARB(size, _type, stride, _pointer); // TODO : What if this extension is not supported? Use generic attrib?
+     2: glNormalPointer(_type, stride, _pointer);
+     3: glColorPointer(size, _type, stride, _pointer);
+     4: glSecondaryColorPointer(size, _type, stride, _pointer);
+     5: glFogCoordPointer(_type, stride, _pointer);
+
+     8, // ATTRIB v8 = vertex.texcoord[0]
+     9, // ATTRIB v9 = vertex.texcoord[1]
+    10, // ATTRIB v10 = vertex.texcoord[2]
+    11: // ATTRIB v11 = vertex.texcoord[3]
+    begin
+      glClientActiveTexture(GL_TEXTURE0 + slot - 8);
+      glTexCoordPointer(size, _type, stride, _pointer);
+    end;
+  else
+    glVertexAttribPointer(slot, size, _type, normalized, stride, _pointer);
+  end;
+end;
+
+procedure DxbxVertexSlotDisable(const slot: uint);
+begin
+  case slot of
+     0: glDisableClientState(GL_VERTEX_ARRAY);          // ATTRIB v0 = vertex.position, set via glVertexPointer
+     1: glDisableClientState(GL_WEIGHT_ARRAY_ARB);      // ATTRIB v1 = vertex.weight, set via glWeightPointerARB
+     2: glDisableClientState(GL_NORMAL_ARRAY);          // ATTRIB v2 = vertex.normal, set via glNormalPointer
+     3: glDisableClientState(GL_COLOR_ARRAY);           // ATTRIB v3 = vertex.color.primary, set via glColorPointer
+     4: glDisableClientState(GL_SECONDARY_COLOR_ARRAY); // ATTRIB v4 = vertex.color.secondary, set via glSecondaryColorPointer
+     5: glDisableClientState(GL_FOG_COORD_ARRAY);       // ATTRIB v5 = vertex.fogcoord, set via glFogCoordPointer
+
+     8, // ATTRIB v8 = vertex.texcoord[0], set via glTexCoordPointer
+     9, // ATTRIB v9 = vertex.texcoord[1], set via glTexCoordPointer
+    10, // ATTRIB v10 = vertex.texcoord[2], set via glTexCoordPointer
+    11: // ATTRIB v11 = vertex.texcoord[3], set via glTexCoordPointer
+    begin
+      glClientActiveTexture(GL_TEXTURE0 + slot - 8);
+      glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    end;
+  else
+    glDisableVertexAttribArray(slot);
+  end;
+end;
+
 procedure DxbxSetupVertexPointers(InlinePointer: PBYTE = nil);
 // Parse all NV2A_VTXBUF_ADDRESS and NV2A_VTXFMT data here, so that we know how where the vertex data is, and what format it has.
 // (If InlinePointer is given, NV2A_VTXBUF_ADDRESS is bypassed, since the vertex data is either tightly packed in the pushbuffer
@@ -697,7 +773,7 @@ begin
     NrElements := DxbxGetNV2AVertexFormatSize(i);
     if NrElements > 0 then // Skip X_D3DVSDT_NONE and other 0-sized attributes
     begin
-      glEnableVertexAttribArray(i);
+      DxbxVertexSlotEnable(i);
       VType := DxbxGetNV2AVertexFormatType(i);
 
       // If we don't point directly into the pushbuffer
@@ -742,7 +818,7 @@ begin
       begin
         Assert(NrElements in [1..4]);
 
-        glVertexAttribPointer(
+        DxbxVertexSlotSetPointer(
           {Index=}i,
           NrElements,
           {Type=}NV2AVertexFormatTypeToGL(VType),
@@ -776,7 +852,7 @@ begin
     end
     else
     begin
-      glDisableVertexAttribArray(i);
+      DxbxVertexSlotDisable(i);
       // Some shaders use vertex attributes without an input stream
       // (like the "Compressed Vertices" tutorial which uses v9);
       // So arrange for default input here :
@@ -1437,6 +1513,17 @@ begin
 {$ENDIF}
 end;
 
+procedure {0300 NV2A_ALPHA_FUNC_ENABLE}EmuNV2A_SetAlphaTestEnable(); // = X_D3DRS_ALPHATESTENABLE
+begin
+  HandledBy := 'SetAlphaTestEnable(' + BooleanToString(pdwPushArguments^ <> 0) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  if pdwPushArguments^ <> 0 then
+    glEnable(GL_ALPHA_TEST)
+  else
+    glDisable(GL_ALPHA_TEST);
+{$ENDIF}
+end;
+
 procedure {0304 NV2A_BLEND_FUNC_ENABLE}EmuNV2A_SetAlphaBlendEnable(); // = X_D3DRS_ALPHABLENDENABLE
 begin
   HandledBy := 'SetAlphaBlendEnable(' + BooleanToString(pdwPushArguments^ <> 0) + ')';
@@ -1489,6 +1576,14 @@ begin
     glEnable(GL_STENCIL_TEST)
   else
     glDisable(GL_STENCIL_TEST);
+{$ENDIF}
+end;
+
+procedure {033C, 0340}EmuNV2A_SetAlphaFunc(); // = X_D3DRS_ALPHAFUNC + X_D3DRS_ALPHAREF
+begin
+  HandledBy := 'SetAlphaFunc';
+{$IFDEF DXBX_USE_OPENGL}
+  glAlphaFunc(NV2AInstance.ALPHA_FUNC_FUNC, NV2AInstance.ALPHA_FUNC_REF);
 {$ENDIF}
 end;
 
@@ -2526,7 +2621,7 @@ const
   {02a4 NV2A_FOG_ENABLE}EmuNV2A_SetFogEnable, // X_D3DRS_FOGENABLE
                                                           nil, nil, nil, nil, nil, nil,
   {02C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0300 NV2A_ALPHA_FUNC_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_ALPHATESTENABLE
+  {0300 NV2A_ALPHA_FUNC_ENABLE}EmuNV2A_SetAlphaTestEnable, // = X_D3DRS_ALPHATESTENABLE
   {0304 NV2A_BLEND_FUNC_ENABLE}EmuNV2A_SetAlphaBlendEnable, // = X_D3DRS_ALPHABLENDENABLE
   {0308}nil,
   {030C NV2A_DEPTH_TEST_ENABLE}EmuNV2A_DepthTest, // X_D3DRS_ZENABLE
@@ -2541,8 +2636,8 @@ const
   {0330 NV2A_POLYGON_OFFSET_POINT_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_POINTOFFSETENABLE
   {0334 NV2A_POLYGON_OFFSET_LINE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_WIREFRAMEOFFSETENABLE
   {0338 NV2A_POLYGON_OFFSET_FILL_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_SOLIDOFFSETENABLE
-  {033C NV2A_ALPHA_FUNC_FUNC}EmuNV2A_SetRenderState, // = X_D3DRS_ALPHAFUNC
-  {0340 NV2A_ALPHA_FUNC_REF}EmuNV2A_SetRenderState, // = X_D3DRS_ALPHAREF
+  {033C NV2A_ALPHA_FUNC_FUNC}EmuNV2A_SetAlphaFunc, // = X_D3DRS_ALPHAFUNC
+  {0340 NV2A_ALPHA_FUNC_REF}EmuNV2A_SetAlphaFunc, // = X_D3DRS_ALPHAREF
   {0344 NV2A_BLEND_FUNC_SRC}EmuNV2A_SetBlendFunc, // = X_D3DRS_SRCBLEND
   {0348 NV2A_BLEND_FUNC_DST}EmuNV2A_SetBlendFunc, // = X_D3DRS_DESTBLEND
   {034C NV2A_BLEND_COLOR}EmuNV2A_SetRenderState, // = X_D3DRS_BLENDCOLOR
