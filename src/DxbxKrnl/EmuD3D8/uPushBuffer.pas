@@ -1533,6 +1533,7 @@ begin
   XboxRenderState := 0;
   case dwMethod of
     NV2A_LIGHTING_ENABLE:       begin GLFlag := GL_LIGHTING;     FlagName := 'GL_LIGHTING';     end;
+    NV2A_CULL_FACE_ENABLE:      begin GLFlag := GL_CULL_FACE;    FlagName := 'GL_CULL_FACE';    end;
   else
 {$ENDIF}
     XboxRenderState := DxbxXboxMethodToRenderState(dwMethod);
@@ -1721,6 +1722,27 @@ begin
   // X_D3DFILL_SOLID              = $1b02 = GL_FILL
   glPolygonMode(GL_FRONT, NV2AInstance.POLYGON_MODE_FRONT);
   glPolygonMode(GL_BACK,  NV2AInstance.POLYGON_MODE_BACK);
+{$ENDIF}
+end;
+
+procedure {039C NV2A_CULL_FACE}EmuNV2A_SetCullFace();
+begin
+  HandledBy := 'SetCullFace(' + X_D3DCULL2String(pdwPushArguments^) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  //  NV2A_CULL_FACE_FRONT                                       = $00000404; = GL_FRONT
+  //  NV2A_CULL_FACE_BACK                                        = $00000405; = GL_BACK
+  //  NV2A_CULL_FACE_FRONT_AND_BACK                              = $00000408; = GL_FRONT_AND_BACK
+  glCullFace(pdwPushArguments^);
+{$ENDIF}
+end;
+
+procedure {03A0 NV2A_FRONT_FACE}EmuNV2A_SetFrontFace(); // = X_D3DRS_FRONTFACE
+begin
+  HandledBy := 'SetFrontFace(' + X_D3DFRONT2String(pdwPushArguments^) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  //  NV2A_FRONT_FACE_CW                                         = $00000900; = GL_CW
+  //  NV2A_FRONT_FACE_CCW                                        = $00000901; = GL_CCW
+  glFrontFace(pdwPushArguments^);
 {$ENDIF}
 end;
 
@@ -2674,7 +2696,7 @@ const
   {02C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0300 NV2A_ALPHA_FUNC_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_ALPHATESTENABLE
   {0304 NV2A_BLEND_FUNC_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_ALPHABLENDENABLE
-  {0308}nil,
+  {0308 NV2A_CULL_FACE_ENABLE}EmuNV2A_SetRenderState, // Not actually a D3D renderstate, but uses the same path
   {030C NV2A_DEPTH_TEST_ENABLE}EmuNV2A_SetRenderState, // X_D3DRS_ZENABLE
   {0310 NV2A_DITHER_ENABLE}EmuNV2A_SetRenderState, // X_D3DRS_DITHERENABLE
   {0314 NV2A_LIGHTING_ENABLE}EmuNV2A_SetRenderState, // Not actually a D3D renderstate, but uses the same path
@@ -2711,8 +2733,8 @@ const
   {0390}nil,
   {0394 NV2A_DEPTH_RANGE_NEAR}EmuNV2A_DepthRange, // Always the last method for SetViewport, so we use it as a trigger
   {0398}nil,
-  {039C}nil,
-  {03A0 NV2A_FRONT_FACE}EmuNV2A_SetRenderState, // = X_D3DRS_FRONTFACE
+  {039C NV2A_CULL_FACE}EmuNV2A_SetCullFace,
+  {03A0 NV2A_FRONT_FACE}EmuNV2A_SetFrontFace, // = X_D3DRS_FRONTFACE
   {03A4 NV2A_NORMALIZE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_NORMALIZENORMALS
   {03A8}                                                  nil, nil, nil, nil, nil, nil,
   {03C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
