@@ -675,6 +675,7 @@ var
   Stride: uint;
   VType: DWORD;
   VertexAttribPointer: PBYTE;
+  Handled: Boolean;
 begin
   // Make sure we have no VBO active :
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -694,7 +695,7 @@ begin
   for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
   begin
     NrElements := DxbxGetNV2AVertexFormatSize(i);
-    if NrElements > 0 then
+    if NrElements > 0 then // Skip X_D3DVSDT_NONE and other 0-sized attributes
     begin
       glEnableVertexAttribArray(i);
       VType := DxbxGetNV2AVertexFormatType(i);
@@ -708,30 +709,64 @@ begin
         Stride := DxbxGetNV2AVertexFormatStride(i);
       end;
 
-      glVertexAttribPointer(
-        {Index=}i,
-        NrElements,
-        {Type=}NV2AVertexFormatTypeToGL(VType),
-        {Normalized=}(VType <> NV2A_VTXFMT_TYPE_FLOAT) or (i >= X_D3DVSDE_TEXCOORD0), // Note : Texture coordinates are not normalized, but what about others?
-        Stride,
-        VertexAttribPointer);
+      Handled := False;
+      case VType of
+        NV2A_VTXFMT_TYPE_COLORBYTE:
+          Assert(NrElements = 4); // For X_D3DVSDT_D3DCOLOR, 4 is the only COLORBYTE size that we're going to accept
 
-      // Only log coordinates when there are just a few vertices to draw :
-      if VertexCount <= 4 then
+        NV2A_VTXFMT_TYPE_FLOAT:
+        begin
+          Handled := (NrElements = 7); // X_D3DVSDT_FLOAT2H
+          if Handled then
+          begin
+            // TODO : Implement a buffer-conversion for this data type
+            // (make it a FLOAT4 and set the third float to 0.0).
+            // Then call glVertexAttribPointer on the result.
+            NrElements := 2; Handled := False; // Quick hack to get at least some data running (Stride should stay the same)
+          end;
+        end;
+
+        NV2A_VTXFMT_TYPE_NORMPACKED:
+        begin
+          Assert(NrElements = 1); // X_D3DVSDT_NORMPACKED3
+          // TODO : Implem'Not Iment a buffer-conversion for this data type
+          // (make it a FLOAT3 by splitting 32 bits in 11:11:10,
+          // see the old conversion code in VertexPatcher.PatchStream).
+          // Then call glVertexAttribPointer on the result.
+          DxbxKrnlCleanup('DxbxSetupVertexPointers - D3DVSDT_NORMPACKED3 conversion not yet implemented!');
+          Handled := True;
+        end;
+      end;
+
+      if not Handled then
       begin
-        // TODO : Prepend slot-string here too
-        HandledBy := HandledBy + ' ' + NV2AVertexFormatTypeToString(DxbxGetNV2AVertexFormatType(i)) + ':';
-        case DxbxGetNV2AVertexFormatType(i) of
-          NV2A_VTXFMT_TYPE_COLORBYTE:
-            HandledBy := HandledBy + ColorBytesToString(VertexAttribPointer, NrElements*VertexCount, NrElements, Stride);
-          NV2A_VTXFMT_TYPE_SHORT:
-            HandledBy := HandledBy + ShortsToString(PSHORT(VertexAttribPointer), NrElements*VertexCount, NrElements, Stride);
-          NV2A_VTXFMT_TYPE_FLOAT:
-            HandledBy := HandledBy + FloatsToString(PFLOAT(VertexAttribPointer), NrElements*VertexCount, NrElements, Stride);
-          NV2A_VTXFMT_TYPE_UBYTE:
-            HandledBy := HandledBy + UBytesToString(PUBYTE(VertexAttribPointer), NrElements*VertexCount, NrElements, Stride);
-          NV2A_VTXFMT_TYPE_USHORT:
-            HandledBy := HandledBy + UShortsToString(PUSHORT(VertexAttribPointer), NrElements*VertexCount, NrElements, Stride);
+        Assert(NrElements in [1..4]);
+
+        glVertexAttribPointer(
+          {Index=}i,
+          NrElements,
+          {Type=}NV2AVertexFormatTypeToGL(VType),
+          {Normalized=}(VType <> NV2A_VTXFMT_TYPE_FLOAT) or (i >= X_D3DVSDE_TEXCOORD0), // Note : Texture coordinates are not normalized, but what about others?
+          Stride,
+          VertexAttribPointer);
+
+        // Only log coordinates when there are just a few vertices to draw :
+        if VertexCount <= 4 then
+        begin
+          // TODO : Prepend slot-string here too
+          HandledBy := HandledBy + ' ' + NV2AVertexFormatTypeToString(DxbxGetNV2AVertexFormatType(i)) + ':';
+          case DxbxGetNV2AVertexFormatType(i) of
+            NV2A_VTXFMT_TYPE_COLORBYTE:
+              HandledBy := HandledBy + ColorBytesToString(VertexAttribPointer, NrElements*VertexCount, NrElements, Stride);
+            NV2A_VTXFMT_TYPE_SHORT:
+              HandledBy := HandledBy + ShortsToString(PSHORT(VertexAttribPointer), NrElements*VertexCount, NrElements, Stride);
+            NV2A_VTXFMT_TYPE_FLOAT:
+              HandledBy := HandledBy + FloatsToString(PFLOAT(VertexAttribPointer), NrElements*VertexCount, NrElements, Stride);
+            NV2A_VTXFMT_TYPE_UBYTE:
+              HandledBy := HandledBy + UBytesToString(PUBYTE(VertexAttribPointer), NrElements*VertexCount, NrElements, Stride);
+            NV2A_VTXFMT_TYPE_USHORT:
+              HandledBy := HandledBy + UShortsToString(PUSHORT(VertexAttribPointer), NrElements*VertexCount, NrElements, Stride);
+          end;
         end;
       end;
 
@@ -1546,6 +1581,9 @@ var
 //  ViewportScaleX: FLOAT;
 //  ViewportScaleY: FLOAT;
 //  ViewportScaleZ: FLOAT;
+{$IFDEF DXBX_USE_OPENGL}
+  p: array [0..15] of GLfloat;
+{$ENDIF}
 begin
   Assert(dwCount = 2);
   HandledCount := 2;
@@ -1591,6 +1629,7 @@ begin
   //
   // (The presense of NV2A_VIEWPORT_SCALE_X indicates a shader is active.)
   //
+
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glFrustum({Left=}-1.0, {Right=}1.0, {Bottom=}-1.0, {Top=}1.0, ZNear, ZFar);
@@ -1598,6 +1637,9 @@ begin
 //  glScalef(1.0, 1.0, -1.0);
 
 //  glFrustum(-320, 320, -240, 240, NV2AInstance.DEPTH_RANGE_NEAR, NV2AInstance.DEPTH_RANGE_FAR);
+
+  glGetFloatv(GL_PROJECTION_MATRIX, @p[0]);
+  HandledBy := HandledBy + ' GL_PROJECTION_MATRIX=' + FloatsToString(@p[0], 16);
 {$ENDIF}
 end;
 
@@ -1617,6 +1659,10 @@ end;
 //
 
 procedure EmuNV2A_ModelViewMatrix();
+{$IFDEF DXBX_USE_OPENGL}
+var
+  mv: array [0..15] of GLfloat;
+{$ENDIF}
 begin
   Assert(dwCount >= 16);
   // Note : Disable this assignment-line to get more pushbuffer debug output :
@@ -1644,7 +1690,10 @@ begin
   // D3D uses a left-handed coordinate space (z positive into screen), while OpenGL uses the right-handed system.
   // So, switch to left-handed coordinate space (as per http://www.opengl.org/resources/faq/technical/transformations.htm) :
   // TODO : Is this indeed necessary?
-  glScalef(1.0, 1.0, -1.0);
+//  glScalef(1.0, 1.0, -1.0);
+
+  glGetFloatv(GL_MODELVIEW_MATRIX, @mv[0]);
+  HandledBy := HandledBy + ' GL_MODELVIEW_MATRIX=' + FloatsToString(@mv[0], 16);
 {$ENDIF}
 end;
 
@@ -1772,8 +1821,9 @@ begin
 {$ENDIF}
     if PostponedDrawType <> pdUndetermined then
     begin
+{$IFDEF DXBX_USE_OPENGL}
       DxbxUpdateVertexShader();
-
+{$ENDIF}
       // Trigger the draw :
       case PostponedDrawType of
         pdDrawVertices:
@@ -3238,7 +3288,7 @@ begin
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   // Switch to left-handed coordinate space (as per http://www.opengl.org/resources/faq/technical/transformations.htm) :
-  glScalef(1.0, 1.0, -1.0);
+//  glScalef(1.0, 1.0, -1.0);
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL); // Nearer Z coordinates cover further Z
