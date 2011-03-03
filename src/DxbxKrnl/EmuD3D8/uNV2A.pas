@@ -1304,6 +1304,7 @@ const   NV2A_VTXFMT_TYPE_SHORT                                    = $00000001;
 const   NV2A_VTXFMT_TYPE_FLOAT                                    = $00000002;
 const   NV2A_VTXFMT_TYPE_UBYTE                                    = $00000004;
 const   NV2A_VTXFMT_TYPE_USHORT                                   = $00000005;
+const   NV2A_VTXFMT_TYPE_NORMPACKED                               = $00000006; // Dxbx
 const  NV2A_VTXFMT_SIZE_SHIFT                                     = 4;
 const  NV2A_VTXFMT_SIZE_MASK                                      = $000000f0;
 const  NV2A_VTXFMT_STRIDE_SHIFT                                   = 8;
