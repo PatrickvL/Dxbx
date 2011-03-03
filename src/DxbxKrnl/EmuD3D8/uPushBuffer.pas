@@ -1520,92 +1520,57 @@ begin
 end;
 
 procedure EmuNV2A_SetRenderState();
-// Temporary function for generic logging. Each render-state needs specific emulation.
 var
   XboxRenderState: X_D3DRenderStateType;
+{$IFDEF DXBX_USE_OPENGL}
+  GLFlag: DWORD;
+  FlagName: string;
+{$ENDIF}
 begin
-  XboxRenderState := DxbxXboxMethodToRenderState(dwMethod);
+{$IFDEF DXBX_USE_OPENGL}
+  GLFlag := 0;
+  FlagName := '';
+  XboxRenderState := 0;
+  case dwMethod of
+    NV2A_LIGHTING_ENABLE:       begin GLFlag := GL_LIGHTING;     FlagName := 'GL_LIGHTING';     end;
+  else
+{$ENDIF}
+    XboxRenderState := DxbxXboxMethodToRenderState(dwMethod);
+    if int(XboxRenderState) < 0 then DxbxKrnlCleanup('EmuNV2A_SetRenderState coupled to unknown method?');
+{$IFDEF DXBX_USE_OPENGL}
+    case XboxRenderState of
+      X_D3DRS_FOGENABLE:        begin GLFlag := GL_FOG;          FlagName := 'GL_FOG';          end;
+      X_D3DRS_ALPHATESTENABLE:  begin GLFlag := GL_ALPHA_TEST;   FlagName := 'GL_ALPHA_TEST';   end;
+      X_D3DRS_ALPHABLENDENABLE: begin GLFlag := GL_BLEND;        FlagName := 'GL_BLEND';        end;
+      X_D3DRS_ZENABLE:          begin GLFlag := GL_DEPTH_TEST;   FlagName := 'GL_DEPTH_TEST';   end;
+      X_D3DRS_DITHERENABLE:     begin GLFlag := GL_DITHER;       FlagName := 'GL_DITHER';       end;
+      X_D3DRS_STENCILENABLE:    begin GLFlag := GL_STENCIL_TEST; FlagName := 'GL_STENCIL_TEST'; end;
+      X_D3DRS_NORMALIZENORMALS: begin GLFlag := GL_NORMALIZE;    FlagName := 'GL_NORMALIZE';    end;
+    end;
+  end;
+
+  if GLFlag > 0 then
+  begin
+    if pdwPushArguments^ <> 0 then
+    begin
+      glEnable(GLFlag);
+      HandledBy := 'glEnable';
+    end
+    else
+    begin
+      glDisable(GLFlag);
+      HandledBy := 'glDisable';
+    end;
+
+    HandledBy := HandledBy +'(' + FlagName + ')';
+    Exit;
+  end;
+{$ENDIF}
+
   HandledBy := Format('SetRenderState(%-33s, 0x%.08X {=%s})', [
     DxbxRenderStateInfo[XboxRenderState].S,
     pdwPushArguments^,
     DxbxTypedValueToString(DxbxRenderStateInfo[XboxRenderState].T, pdwPushArguments^)]);
-end;
-
-procedure {02a4 NV2A_FOG_ENABLE}EmuNV2A_SetFogEnable(); // X_D3DRS_FOGENABLE
-begin
-  HandledBy := 'SetFogEnable(' + BooleanToString(pdwPushArguments^ <> 0) + ')';
-{$IFDEF DXBX_USE_OPENGL}
-  if pdwPushArguments^ <> 0 then
-    glEnable(GL_FOG)
-  else
-    glDisable(GL_FOG);
-{$ENDIF}
-end;
-
-procedure {0300 NV2A_ALPHA_FUNC_ENABLE}EmuNV2A_SetAlphaTestEnable(); // = X_D3DRS_ALPHATESTENABLE
-begin
-  HandledBy := 'SetAlphaTestEnable(' + BooleanToString(pdwPushArguments^ <> 0) + ')';
-{$IFDEF DXBX_USE_OPENGL}
-  if pdwPushArguments^ <> 0 then
-    glEnable(GL_ALPHA_TEST)
-  else
-    glDisable(GL_ALPHA_TEST);
-{$ENDIF}
-end;
-
-procedure {0304 NV2A_BLEND_FUNC_ENABLE}EmuNV2A_SetAlphaBlendEnable(); // = X_D3DRS_ALPHABLENDENABLE
-begin
-  HandledBy := 'SetAlphaBlendEnable(' + BooleanToString(pdwPushArguments^ <> 0) + ')';
-{$IFDEF DXBX_USE_OPENGL}
-  if pdwPushArguments^ <> 0 then
-    glEnable(GL_BLEND)
-  else
-    glDisable(GL_BLEND);
-{$ENDIF}
-end;
-
-procedure {030C NV2A_DEPTH_TEST_ENABLE}EmuNV2A_DepthTest(); // X_D3DRS_ZENABLE
-begin
-  HandledBy := 'DepthTest := ' + BooleanToString(pdwPushArguments^ <> 0);
-{$IFDEF DXBX_USE_OPENGL}
-  if pdwPushArguments^ <> 0 then
-    glEnable(GL_DEPTH_TEST)
-  else
-    glDisable(GL_DEPTH_TEST);
-{$ENDIF}
-end;
-
-procedure {0310 NV2A_DITHER_ENABLE}EmuNV2A_Dither(); // X_D3DRS_DITHERENABLE
-begin
-  HandledBy := 'Dither := ' + BooleanToString(pdwPushArguments^ <> 0);
-{$IFDEF DXBX_USE_OPENGL}
-  if pdwPushArguments^ <> 0 then
-    glEnable(GL_DITHER)
-  else
-    glDisable(GL_DITHER);
-{$ENDIF}
-end;
-
-procedure {0314 NV2A_LIGHTING_ENABLE}EmuNV2A_SetLightEnable();
-begin
-  HandledBy := 'SetLightEnable(' + BooleanToString(pdwPushArguments^ <> 0) + ')';
-{$IFDEF DXBX_USE_OPENGL}
-  if pdwPushArguments^ <> 0 then
-    glEnable(GL_LIGHTING)
-  else
-    glDisable(GL_LIGHTING);
-{$ENDIF}
-end;
-
-procedure {032C NV2A_STENCIL_ENABLE}EmuNV2A_StencilTest(); // = X_D3DRS_STENCILENABLE
-begin
-  HandledBy := 'StencilTest := ' + BooleanToString(pdwPushArguments^ <> 0);
-{$IFDEF DXBX_USE_OPENGL}
-  if pdwPushArguments^ <> 0 then
-    glEnable(GL_STENCIL_TEST)
-  else
-    glDisable(GL_STENCIL_TEST);
-{$ENDIF}
 end;
 
 procedure {033C, 0340}EmuNV2A_SetAlphaFunc(); // = X_D3DRS_ALPHAFUNC + X_D3DRS_ALPHAREF
@@ -1622,6 +1587,14 @@ begin
 {$IFDEF DXBX_USE_OPENGL}
   // Note : X_D3DBLEND enums correspond 1-on-1 to OpenGL constants;
   glBlendFunc(NV2AInstance.BLEND_FUNC_SRC, NV2AInstance.BLEND_FUNC_DST);
+{$ENDIF}
+end;
+
+procedure {0350 NV2A_BLEND_EQUATION}EmuNV2A_SetBlendEquation(); // = X_D3DRS_BLENDOP
+begin
+  HandledBy := 'SetBlendEquation(' + X_D3DBLENDOP2String(pdwPushArguments^) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  glBlendEquation(pdwPushArguments^);
 {$ENDIF}
 end;
 
@@ -1642,11 +1615,31 @@ begin
 {$ENDIF}
 end;
 
+procedure {0358 NV2A_COLOR_MASK}EmuNV2A_SetColorMask(); // = X_D3DRS_COLORWRITEENABLE
+begin
+  HandledBy := 'SetColorMask(' + DWord2Str(pdwPushArguments^) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  glColorMask(
+        {red=}(pdwPushArguments^ and $00ff0000) > 0,
+      {green=}(pdwPushArguments^ and $0000ff00) > 0,
+       {blue=}(pdwPushArguments^ and $000000ff) > 0,
+      {alpha=}(pdwPushArguments^ and $ff000000) > 0);
+{$ENDIF}
+end;
+
 procedure {035C NV2A_DEPTH_WRITE_ENABLE}EmuNV2A_SetDepthMask(); // = X_D3DRS_ZWRITEENABLE
 begin
   HandledBy := 'SetDepthMask(' + BooleanToString(pdwPushArguments^ <> 0) + ')';
 {$IFDEF DXBX_USE_OPENGL}
   glDepthMask(pdwPushArguments^ <> GL_FALSE);
+{$ENDIF}
+end;
+
+procedure {0360 NV2A_STENCIL_MASK}EmuNV2A_SetStencilMask(); // = X_D3DRS_STENCILWRITEMASK
+begin
+  HandledBy := 'SetStencilMask(' + DWord2Str(pdwPushArguments^) + ')';
+{$IFDEF DXBX_USE_OPENGL}
+  glStencilMask(pdwPushArguments^);
 {$ENDIF}
 end;
 
@@ -1764,17 +1757,6 @@ begin
 
   glGetFloatv(GL_PROJECTION_MATRIX, @p[0]);
   HandledBy := HandledBy + ' GL_PROJECTION_MATRIX=' + FloatsToString(@p[0], 16);
-{$ENDIF}
-end;
-
-procedure {03A4 NV2A_NORMALIZE_ENABLE}EmuNV2A_SetNormalizeEnable(); // = X_D3DRS_NORMALIZENORMALS
-begin
-  HandledBy := 'SetNormalizeEnable(' + BooleanToString(pdwPushArguments^ <> 0) + ')';
-{$IFDEF DXBX_USE_OPENGL}
-  if pdwPushArguments^ <> 0 then
-    glEnable(GL_NORMALIZE)
-  else
-    glDisable(GL_NORMALIZE);
 {$ENDIF}
 end;
 
@@ -2647,21 +2629,21 @@ const
   {0280}nil, nil, nil, nil, nil,
   {0294 NV2A_LIGHT_MODEL}EmuNV2A_SetRenderState, // X_D3DRS_LIGHTING
                                       nil, nil, nil,
-  {02a4 NV2A_FOG_ENABLE}EmuNV2A_SetFogEnable, // X_D3DRS_FOGENABLE
+  {02a4 NV2A_FOG_ENABLE}EmuNV2A_SetRenderState, // X_D3DRS_FOGENABLE
                                                           nil, nil, nil, nil, nil, nil,
   {02C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0300 NV2A_ALPHA_FUNC_ENABLE}EmuNV2A_SetAlphaTestEnable, // = X_D3DRS_ALPHATESTENABLE
-  {0304 NV2A_BLEND_FUNC_ENABLE}EmuNV2A_SetAlphaBlendEnable, // = X_D3DRS_ALPHABLENDENABLE
+  {0300 NV2A_ALPHA_FUNC_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_ALPHATESTENABLE
+  {0304 NV2A_BLEND_FUNC_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_ALPHABLENDENABLE
   {0308}nil,
-  {030C NV2A_DEPTH_TEST_ENABLE}EmuNV2A_DepthTest, // X_D3DRS_ZENABLE
-  {0310 NV2A_DITHER_ENABLE}EmuNV2A_Dither, // X_D3DRS_DITHERENABLE
-  {0314 NV2A_LIGHTING_ENABLE}EmuNV2A_SetLightEnable,
+  {030C NV2A_DEPTH_TEST_ENABLE}EmuNV2A_SetRenderState, // X_D3DRS_ZENABLE
+  {0310 NV2A_DITHER_ENABLE}EmuNV2A_SetRenderState, // X_D3DRS_DITHERENABLE
+  {0314 NV2A_LIGHTING_ENABLE}EmuNV2A_SetRenderState, // Not actually a D3D renderstate, but uses the same path
   {0318 NV2A_POINT_PARAMETERS_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_POINTSCALEENABLE
   {031C NV2A_POINT_SMOOTH_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_POINTSPRITEENABLE
   {0320}nil,
   {0324}nil,
   {0328 NV2A_SKIN_MODE}EmuNV2A_SetRenderState, // = X_D3DRS_VERTEXBLEND
-  {032C NV2A_STENCIL_ENABLE}EmuNV2A_StencilTest, // = X_D3DRS_STENCILENABLE
+  {032C NV2A_STENCIL_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_STENCILENABLE
   {0330 NV2A_POLYGON_OFFSET_POINT_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_POINTOFFSETENABLE
   {0334 NV2A_POLYGON_OFFSET_LINE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_WIREFRAMEOFFSETENABLE
   {0338 NV2A_POLYGON_OFFSET_FILL_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_SOLIDOFFSETENABLE
@@ -2670,11 +2652,11 @@ const
   {0344 NV2A_BLEND_FUNC_SRC}EmuNV2A_SetBlendFunc, // = X_D3DRS_SRCBLEND
   {0348 NV2A_BLEND_FUNC_DST}EmuNV2A_SetBlendFunc, // = X_D3DRS_DESTBLEND
   {034C NV2A_BLEND_COLOR}EmuNV2A_SetRenderState, // = X_D3DRS_BLENDCOLOR
-  {0350 NV2A_BLEND_EQUATION}EmuNV2A_SetRenderState, // = X_D3DRS_BLENDOP
+  {0350 NV2A_BLEND_EQUATION}EmuNV2A_SetBlendEquation, // = X_D3DRS_BLENDOP
   {0354 NV2A_DEPTH_FUNC}EmuNV2A_SetDepthFunc, // = X_D3DRS_ZFUNC
-  {0358 NV2A_COLOR_MASK}EmuNV2A_SetRenderState, // = X_D3DRS_COLORWRITEENABLE
+  {0358 NV2A_COLOR_MASK}EmuNV2A_SetColorMask, // = X_D3DRS_COLORWRITEENABLE
   {035C NV2A_DEPTH_WRITE_ENABLE}EmuNV2A_SetDepthMask, // = X_D3DRS_ZWRITEENABLE
-  {0360 NV2A_STENCIL_MASK}EmuNV2A_SetRenderState, // = X_D3DRS_STENCILWRITEMASK
+  {0360 NV2A_STENCIL_MASK}EmuNV2A_SetStencilMask, // = X_D3DRS_STENCILWRITEMASK
   {0364 NV2A_STENCIL_FUNC_FUNC}EmuNV2A_SetStencilFunc, // = X_D3DRS_STENCILFUNC
   {0368 NV2A_STENCIL_FUNC_REF}EmuNV2A_SetStencilFunc, // = X_D3DRS_STENCILREF
   {036C NV2A_STENCIL_FUNC_MASK}EmuNV2A_SetStencilFunc, // = X_D3DRS_STENCILMASK
@@ -2691,7 +2673,7 @@ const
   {0398}nil,
   {039C}nil,
   {03A0 NV2A_FRONT_FACE}EmuNV2A_SetRenderState, // = X_D3DRS_FRONTFACE
-  {03A4 NV2A_NORMALIZE_ENABLE}EmuNV2A_SetNormalizeEnable, // = X_D3DRS_NORMALIZENORMALS
+  {03A4 NV2A_NORMALIZE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_NORMALIZENORMALS
   {03A8}                                                  nil, nil, nil, nil, nil, nil,
   {03C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0400}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
