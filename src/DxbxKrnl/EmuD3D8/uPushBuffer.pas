@@ -25,7 +25,7 @@ unit uPushBuffer;
   {$UNDEF DXBX_USE_D3D8}
   {$UNDEF DXBX_USE_D3D9}
 
-  {$DEFINE DXBX_OPENGL_CONVENTIONAL} // Enabled = Use conventional vertex shader attributes. Disabled = generic attributes.
+  {.$DEFINE DXBX_OPENGL_CONVENTIONAL} // Enabled = Use conventional vertex shader attributes. Disabled = generic attributes.
 {$ENDIF}
 
 {.$define _DEBUG_TRACK_PB}
@@ -786,18 +786,11 @@ begin
   // Make sure we have no VBO active :
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-  glEnable(GL_VERTEX_PROGRAM_ARB);
-
-  // TODO : Implement an alternative route for the following code,
-  // if the current OpenGL context doesn't support this :
-//  glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[0]);
-
   // If we point directly into a buffer buffer, we already calculated
   // the address of the first attribute and the accompanying stride :
   VertexAttribPointer := InlinePointer;
   Stride := DxbxCurrentVertexStride;
 
-  // glEnableClientState(GL_VERTEX_ARRAY); // This would be needed for the older glVertexPointer API
   for i := X_D3DVSDE_POSITION to X_D3DVSDE_TEXCOORD3 do
   begin
     NrElements := DxbxGetNV2AVertexFormatSize(i);
@@ -894,9 +887,6 @@ end;
 
 procedure DxbxFinishVertexPointers();
 begin
-//  glDisableClientState(GL_VERTEX_ARRAY);
-//  glDisableClientState(GL_COLOR_ARRAY);
-  glDisable(GL_VERTEX_PROGRAM_ARB);
 end;
 
 const
@@ -1213,6 +1203,14 @@ begin
     // Until we can discern these two situations, we apply the matrix transformation :
     // TODO : What should we do about normals, eye-space lighting and all that?
 
+(*
+    '# Dxbx addition : Transform the vertex to clip coordinates :'#13#10 +
+    'DP4 R0.x, mvp[0], R12;'#13#10 +
+    'DP4 R0.y, mvp[1], R12;'#13#10 +
+    'DP4 R0.z, mvp[2], R12;'#13#10 +
+    'DP4 R0.w, mvp[3], R12;'#13#10 +
+    'MOV R12, R0;'#13#10 +
+*)
     (* Z coord [0;1]->[-1;1] mapping, see comment in transform_projection in state.c
      *
      * Basically we want (in homogeneous coordinates) z = z * 2 - 1. However, shaders are run
@@ -1222,15 +1220,9 @@ begin
     '# Apply Z coord mapping'#13#10 +
     'ADD R12.z, R12.z, R12.z;'#13#10 +
     'ADD R12.z, R12.z, -R12.w;'#13#10 +
-    'MOV oPos, R12;'#13#10 +
-(*
-    '# Dxbx addition : Transform the vertex to clip coordinates :'#13#10 +
-    'DP4 oPos.x, mvp[0], R12;'#13#10 +
-    'DP4 oPos.y, mvp[1], R12;'#13#10 +
-    'DP4 oPos.z, mvp[2], R12;'#13#10 +
-    'DP4 oPos.w, mvp[3], R12;'#13#10 +
-*)
+
     '# End of shader :'#13#10 +
+    'MOV oPos, R12;'#13#10 +
     'END';
 end;
 
@@ -1239,6 +1231,9 @@ var
   GLErrorPos: int;
   AnsiShader: AnsiString;
 begin
+  if MayLog(lfUnit) then
+    DbgPrintf('  NV2A: New vertex program :'#13#10 + Shader);
+
   AnsiShader := AnsiString(Shader);
   glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, Length(AnsiShader), Pointer(AnsiShader));
 
@@ -1260,6 +1255,7 @@ var
 begin
   if IsEngineFixedFunctionPipeline() then
   begin
+    // TODO : Use a shader that emulates the NV2A fixed function pipeline.
     ActiveVertexProgramID := VertexProgramIDs[0];
     glBindProgramARB(GL_VERTEX_PROGRAM_ARB, ActiveVertexProgramID);
   end
@@ -1267,14 +1263,20 @@ begin
   begin
     // TODO : Cache shaders, to prevent recompiling them continuously.
     Shader := DxbxDecodeVertexProgram(@VertexShaderSlots[NV2AInstance.VP_START_FROM_ID]);
-    if MayLog(lfUnit) then
-      DbgPrintf('  NV2A: New vertex program decoded:'#13#10 + Shader);
-
     ActiveVertexProgramID := VertexProgramIDs[1];
     glBindProgramARB(GL_VERTEX_PROGRAM_ARB, ActiveVertexProgramID);
     DxbxCompileShader(Shader);
   end;
+
+  // Enable vertex shading
+  glEnable(GL_VERTEX_PROGRAM_ARB);
 end;
+
+procedure DxbxFinishVertexShader();
+begin
+  glDisable(GL_VERTEX_PROGRAM_ARB);
+end;
+
 {$ENDIF}
 
 procedure PostponedDrawVertices;
@@ -2122,7 +2124,17 @@ var
   NewPrimitiveType: X_D3DPRIMITIVETYPE;
 begin
   NewPrimitiveType := X_D3DPRIMITIVETYPE(NV2AInstance.VERTEX_BEGIN_END);
-  if (NewPrimitiveType = X_D3DPT_NONE) then
+  if (NewPrimitiveType <> X_D3DPT_NONE) then
+  begin
+    HandledBy := Format('DrawBegin(PrimitiveType=%d{=%s})', [Ord(NewPrimitiveType), X_D3DPRIMITIVETYPE2String(NewPrimitiveType)]);
+{$IFDEF DXBX_USE_OPENGL}
+    DxbxUpdateTextures();
+    DxbxUpdateVertexShader();
+//    DxbxUpdatePixelShader();
+    glBegin(NV2APrimitiveTypeToGL(NewPrimitiveType));
+{$ENDIF}
+  end
+  else
   begin
     HandledBy := 'DrawEnd()';
 
@@ -2133,9 +2145,6 @@ begin
 {$ENDIF}
     if PostponedDrawType <> pdUndetermined then
     begin
-{$IFDEF DXBX_USE_OPENGL}
-      DxbxUpdateVertexShader();
-{$ENDIF}
       // Trigger the draw :
       case PostponedDrawType of
         pdDrawVertices:
@@ -2144,14 +2153,8 @@ begin
           PostponedDrawIndexedVertices;
       end;
     end;
-  end
-  else
-  begin
-    HandledBy := Format('DrawBegin(PrimitiveType=%d{=%s})', [Ord(NewPrimitiveType), X_D3DPRIMITIVETYPE2String(NewPrimitiveType)]);
 {$IFDEF DXBX_USE_OPENGL}
-    DxbxUpdateTextures();
-//    DxbxUpdatePixelShader();
-    glBegin(NV2APrimitiveTypeToGL(NewPrimitiveType));
+    DxbxFinishVertexShader();
 {$ENDIF}
   end;
 
@@ -2959,14 +2962,14 @@ const
   {0B74 NV2A_VP_UPLOAD_INST__29}EmuNV2A_SetVertexShaderBatch,
   {0B78 NV2A_VP_UPLOAD_INST__30}EmuNV2A_SetVertexShaderBatch,
   {0B7C NV2A_VP_UPLOAD_INST__31}EmuNV2A_SetVertexShaderBatch,
-  {0B80 NV2A_VP_UPLOAD_CONST__0}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
-  {0B90 NV2A_VP_UPLOAD_CONST__4}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
-  {0BA0 NV2A_VP_UPLOAD_CONST__8}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
-  {0BB0 NV2A_VP_UPLOAD_CONST__12}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
-  {0BC0 NV2A_VP_UPLOAD_CONST__16}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
-  {0BD0 NV2A_VP_UPLOAD_CONST__20}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
-  {0BE0 NV2A_VP_UPLOAD_CONST__24}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
-  {0BF0 NV2A_VP_UPLOAD_CONST__28}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
+  {0B80 NV2A_VP_UPLOAD_CONST__0}EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant,
+  {0B90 NV2A_VP_UPLOAD_CONST__4}EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant,
+  {0BA0 NV2A_VP_UPLOAD_CONST__8}EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant,
+  {0BB0 NV2A_VP_UPLOAD_CONST__12}EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant,
+  {0BC0 NV2A_VP_UPLOAD_CONST__16}EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant,
+  {0BD0 NV2A_VP_UPLOAD_CONST__20}EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant,
+  {0BE0 NV2A_VP_UPLOAD_CONST__24}EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant,
+  {0BF0 NV2A_VP_UPLOAD_CONST__28}EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant, EmuNV2A_SetVertexShaderConstant,
   {0C00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0C40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0C80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
@@ -3628,9 +3631,6 @@ begin
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // GL_LINE for wireframe
 
-  // Enable vertex shading
-  glEnable(GL_VERTEX_PROGRAM_ARB);
-
   // TODO : The following code only works on cards that support the
   // vertex program extensions (NVidia cards mainly); So for ATI we
   // have to come up with another solution !!!
@@ -3645,13 +3645,14 @@ begin
 
   // Precompiled shader for the fixed function pipeline :
   szCode := DxbxVertexShaderHeader +
-    // This part adjusts the vertex position by the super-sampling scale & offset :
+    '# This part adjusts the vertex position by the super-sampling scale & offset :'#13#10 +
     'MOV R0, v0;'#13#10 +
     'RCP R0.w, R0.w;'#13#10 +
     'MUL R0, R0, c[0];'#13#10 + // c[-96] in D3D speak - applies SuperSampleScale
     // Note : Use R12 instead of oPos because this is not yet the final assignment :
     'ADD R12, R0, c[1];'#13#10 + // c[-95] in D3D speak - applies SuperSampleOffset
-    // This part just reads all other components and passes them to the output :
+
+    '# This part just reads all other components and passes them to the output :'#13#10 +
     'MOV oD0, v3;'#13#10 +
     'MOV oD1, v4;'#13#10 +
     'MOV oFog, v4.w;'#13#10 + // specular fog
@@ -3664,19 +3665,29 @@ begin
     'MOV oT1, v10;'#13#10 +
     'MOV oT2, v11;'#13#10 +
     'MOV oT3, v12;'#13#10 +
-//    // This part applies the screen-space transform (not present when "#pragma screenspace" was used) :
-//    'MUL R12.xyz, R12, c58;'#13#10 + // c[-38] in D3D speak - see EmuNV2A_ViewportScale,
-//    'RCP R1.x, R12.w;'#13#10 + // Originally RCC, but that's not supported in ARBvp1.0 (use "MIN R1, R1, 0" and "MAX R1, R1, 1"?)
-//    'MAD R12.xyz, R12, R1.x, c59;'#13#10 + // c[-37] in D3D speak - see EmuNV2A_ViewportOffset
-    // Here's the final assignment to oPos :
-    'MOV oPos, R12;'#13#10 +
 
+    '# This part applies the screen-space transform (not present when "#pragma screenspace" was used) :'#13#10 +
+    'MUL R12.xyz, R12, c[58];'#13#10 + // c[-38] in D3D speak - see EmuNV2A_ViewportScale,
+    'RCP R1.x, R12.w;'#13#10 + // Originally RCC, but that's not supported in ARBvp1.0 (use "MIN R1, R1, 0" and "MAX R1, R1, 1"?)
+    'MAD R12.xyz, R12, R1.x, c[59];'#13#10 + // c[-37] in D3D speak - see EmuNV2A_ViewportOffset
+
+    '# Dxbx addition : Transform the vertex to clip coordinates :'#13#10 +
+    'DP4 R0.x, mvp[0], R12;'#13#10 +
+    'DP4 R0.y, mvp[1], R12;'#13#10 +
+    'DP4 R0.z, mvp[2], R12;'#13#10 +
+    'DP4 R0.w, mvp[3], R12;'#13#10 +
+    'MOV R12, R0;'#13#10 +
+
+    '# Apply Z coord mapping'#13#10 +
+    'ADD R12.z, R12.z, R12.z;'#13#10 +
+    'ADD R12.z, R12.z, -R12.w;'#13#10 +
+
+    '# Here''s the final assignment to oPos :'#13#10 +
+    'MOV oPos, R12;'#13#10 +
     'END';
 
   glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[0]);
   DxbxCompileShader(szCode);
-
-  glDisable(GL_VERTEX_PROGRAM_ARB);
 end;
 {$ENDIF}
 
