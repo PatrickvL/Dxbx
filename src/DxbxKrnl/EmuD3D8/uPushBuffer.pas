@@ -24,9 +24,9 @@ unit uPushBuffer;
   {$UNDEF DXBX_USE_D3D}
   {$UNDEF DXBX_USE_D3D8}
   {$UNDEF DXBX_USE_D3D9}
-{$ENDIF}
 
-{$DEFINE DXBX_OPENGL_CONVENTIONAL} // Enabled = Use conventional vertex shader attributes. Disabled = generic attributes.
+  {$DEFINE DXBX_OPENGL_CONVENTIONAL} // Enabled = Use conventional vertex shader attributes. Disabled = generic attributes.
+{$ENDIF}
 
 {.$define _DEBUG_TRACK_PB}
 
@@ -141,7 +141,11 @@ const NV2A_COUNT_MAX = (NV2A_COUNT_MASK shr NV2A_COUNT_SHIFT) - 1; // = 2047
 
 const lfUnit = lfCxbx or lfPushBuffer;
 
+{$IFDEF DXBX_OPENGL_CONVENTIONAL}
 var
+{$ELSE}
+const
+{$ENDIF}
   // Vertex shader header, mapping Xbox1 registers to the ARB syntax (original version by KingOfC).
   // Note about the use of 'conventional' attributes in here: Since we prefer to use only one shader
   // for both immediate and deferred mode rendering, we alias all attributes to conventional inputs
@@ -268,6 +272,9 @@ end;
 type
   TPostponedDrawType = (pdUndetermined, pdDrawVertices, pdDrawIndexedVertices);
 
+type
+  DXBXVIEWPORT = D3DVIEWPORT;
+
 var
   // Global(s)
   NV2AInstance: RNV2AInstance;
@@ -298,8 +305,8 @@ var
   pIBMem: array [0..2-1] of WORD = (0, 0);
   maxIBSize: uint = 0;
   VertexOffset: uint = 0;
+  Viewport: DXBXVIEWPORT = (X:0; Y:0; Width:640; Height:480; MinZ:-1.0; MaxZ:1.0);
 {$IFDEF DXBX_USE_D3D}
-  Viewport: D3DVIEWPORT;
   pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8; // = XTL_PIDirect3DIndexBuffer8
   pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
 {$ENDIF}
@@ -1205,11 +1212,24 @@ begin
     //    transformation).
     // Until we can discern these two situations, we apply the matrix transformation :
     // TODO : What should we do about normals, eye-space lighting and all that?
+
+    (* Z coord [0;1]->[-1;1] mapping, see comment in transform_projection in state.c
+     *
+     * Basically we want (in homogeneous coordinates) z = z * 2 - 1. However, shaders are run
+     * before the homogeneous divide, so we have to take the w into account: z = ((z / w) * 2 - 1) * w,
+     * which is the same as z = z * 2 - w.
+     *)
+    '# Apply Z coord mapping'#13#10 +
+    'ADD R12.z, R12.z, R12.z;'#13#10 +
+    'ADD R12.z, R12.z, -R12.w;'#13#10 +
+    'MOV oPos, R12;'#13#10 +
+(*
     '# Dxbx addition : Transform the vertex to clip coordinates :'#13#10 +
     'DP4 oPos.x, mvp[0], R12;'#13#10 +
     'DP4 oPos.y, mvp[1], R12;'#13#10 +
     'DP4 oPos.z, mvp[2], R12;'#13#10 +
     'DP4 oPos.w, mvp[3], R12;'#13#10 +
+*)
     '# End of shader :'#13#10 +
     'END';
 end;
@@ -1325,6 +1345,8 @@ begin
     DxbxSetRenderStateInternal('  NV2A SetRenderState', XRenderState, pdwPushArguments^);
 end;
 
+procedure _unused(); begin DxbxKrnlCleanup('Unexpected NV2A slot usage!'); HandledCount := dwCount; end;
+procedure _overflow(); begin DxbxKrnlCleanup('Unhandled NV2A slot overflow!'); HandledCount := dwCount; end;
 procedure EmuNV2A_NOP(); begin {HandledBy := 'nop'; }HandledCount := dwCount; end;
 procedure EmuNV2A_CDevice_Init(); begin HandledBy := '_CDevice_Init'; end;
 procedure EmuNV2A_VertexCacheInvalidate(); begin HandledBy := 'D3DVertexBuffer_Lock'; end;
@@ -1707,6 +1729,8 @@ end;
 
 procedure {038c NV2A_POLYGON_MODE_FRONT}EmuNV2A_SetPolygonMode(); // = X_D3DRS_FILLMODE
 begin
+  Assert(dwCount = 2);
+  HandledCount := 2;
   HandledBy := 'SetPolygonMode(Front=' + X_D3DFILLMODE2String(NV2AInstance.POLYGON_MODE_FRONT) +
                              ', Back=' + X_D3DFILLMODE2String(NV2AInstance.POLYGON_MODE_BACK) + ')';
 {$IFDEF DXBX_USE_OPENGL}
@@ -1740,14 +1764,143 @@ begin
 {$ENDIF}
 end;
 
+{$IFDEF DXBX_USE_OPENGL}
+var
+  context_last_was_rhw: Boolean = True; // Fixed on True to support Vertices sample right now.
+  context_render_offscreen: Boolean = False; // Fixed on False until we support SetRenderTarget emulation
+
+procedure DxbxUpdateTransformProjection();
+// This comes straight from transform_projection() in http://source.winehq.org/source/dlls/wined3d/state.c :
+var
+  x, y, w, h: TGLdouble;
+  xoffset, yoffset: TGLFloat;
+begin
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+
+  if (context_last_was_rhw) then
+  begin
+    x := {stateblock->state.}viewport.X;
+    y := {stateblock->state.}viewport.Y;
+    w := {stateblock->state.}viewport.Width;
+    h := {stateblock->state.}viewport.Height;
+
+    DbgPrintf('  Calling glOrtho with x %g, y %g, w %g, h %g.', [x, y, w, h]);
+    if (context_render_offscreen) then
+      glOrtho(x, x + w, -y, -y - h, 0.0, -1.0)
+    else
+      glOrtho(x, x + w, y + h, y, 0.0, -1.0);
+
+    (* D3D texture coordinates are flipped compared to OpenGL ones, so
+     * render everything upside down when rendering offscreen. *)
+    if (context_render_offscreen) then
+      glScalef(1.0, -1.0, 1.0);
+
+    (* Window Coord 0 is the middle of the first pixel, so translate by 1/2 pixels *)
+    glTranslatef(63.0 / 128.0, 63.0 / 128.0, 0.0);
+  end
+  else
+  begin
+    (* The rule is that the window coordinate 0 does not correspond to the
+        beginning of the first pixel, but the center of the first pixel.
+        As a consequence if you want to correctly draw one line exactly from
+        the left to the right end of the viewport (with all matrices set to
+        be identity), the x coords of both ends of the line would be not
+        -1 and 1 respectively but (-1-1/viewport_widh) and (1-1/viewport_width)
+        instead.
+
+        1.0 / Width is used because the coord range goes from -1.0 to 1.0, then we
+        divide by the Width/Height, so we need the half range(1.0) to translate by
+        half a pixel.
+
+        The other fun is that d3d's output z range after the transformation is [0;1],
+        but opengl's is [-1;1]. Since the z buffer is in range [0;1] for both, gl
+        scales [-1;1] to [0;1]. This would mean that we end up in [0.5;1] and loose a lot
+        of Z buffer precision and the clear values do not match in the z test. Thus scale
+        [0;1] to [-1;1], so when gl undoes that we utilize the full z range
+     *)
+
+    (*
+     * Careful with the order of operations here, we're essentially working backwards:
+     * x = x + 1/w;
+     * y = (y - 1/h) * flip;
+     * z = z * 2 - 1;
+     *
+     * Becomes:
+     * glTranslatef(0.0, 0.0, -1.0);
+     * glScalef(1.0, 1.0, 2.0);
+     *
+     * glScalef(1.0, flip, 1.0);
+     * glTranslatef(1/w, -1/h, 0.0);
+     *
+     * This is equivalent to:
+     * glTranslatef(1/w, -flip/h, -1.0)
+     * glScalef(1.0, flip, 2.0);
+     *)
+
+    (* Translate by slightly less than a half pixel to force a top-left
+     * filling convention. We want the difference to be large enough that
+     * it doesn't get lost due to rounding inside the driver, but small
+     * enough to prevent it from interfering with any anti-aliasing. *)
+    xoffset := (63.0 / 64.0) / {stateblock->state.}viewport.Width;
+    yoffset := -(63.0 / 64.0) / {stateblock->state.}viewport.Height;
+
+    if (context_render_offscreen) then
+    begin
+      (* D3D texture coordinates are flipped compared to OpenGL ones, so
+       * render everything upside down when rendering offscreen. *)
+      glTranslatef(xoffset, -yoffset, -1.0);
+      glScalef(1.0, -1.0, 2.0);
+    end
+    else
+    begin
+      glTranslatef(xoffset, yoffset, -1.0);
+      glScalef(1.0, 1.0, 2.0);
+    end;
+
+//    glMultMatrixf(&stateblock->state.transforms[WINED3DTS_PROJECTION].u.m[0][0]);
+  end;
+end;
+
+procedure DxbxUpdateViewport();
+// This comes straight from viewport_miscpart() in http://source.winehq.org/source/dlls/wined3d/state.c :
+var
+//  IWineD3DSurfaceImpl *target = stateblock->device->render_targets[0];
+  {width, }height: UINT;
+  vp: DXBXVIEWPORT;
+begin
+//  target = stateblock.device.render_targets[0];
+  vp := {stateblock.state.}viewport;
+
+//  if (vp.Width > target.currentDesc.Width) then vp.Width := target.currentDesc.Width;
+//  if (vp.Height > target.currentDesc.Height) then vp.Height := target.currentDesc.Height;
+
+  glDepthRange({zNear=}vp.MinZ, {zFar=}vp.MaxZ);
+  (* Note: GL requires lower left, DirectX supplies upper left. This is reversed when using offscreen rendering
+   *)
+  if (context_render_offscreen) then
+    glViewport(vp.X, vp.Y, vp.Width, vp.Height)
+  else
+  begin
+    height := vp.Height; // Note : Temporary, until we support SetRenderTarget
+//    target.get_drawable_size(context, &width, &height);
+
+    glViewport(vp.X,
+               (height - (vp.Y + vp.Height)),
+               vp.Width, vp.Height);
+  end;
+end;
+
+{$ENDIF}
+
 //
 // SetViewport
 //
 
 procedure {0394 NV2A_DEPTH_RANGE_NEAR}EmuNV2A_DepthRange();
 var
-  ZNear: FLOAT;
-  ZFar: FLOAT;
+  MinZ: FLOAT;
+  MaxZ: FLOAT;
 //  ViewportTranslateX: FLOAT;
 //  ViewportTranslateY: FLOAT;
 //  ViewportTranslateZ: FLOAT;
@@ -1778,18 +1931,18 @@ begin
 //    end;
 //  end;
 
-  ZNear := NV2AInstance.DEPTH_RANGE_NEAR / ZScale;
-  ZFar := NV2AInstance.DEPTH_RANGE_FAR / ZScale;
+  MinZ := NV2AInstance.DEPTH_RANGE_NEAR / ZScale;
+  MaxZ := NV2AInstance.DEPTH_RANGE_FAR / ZScale;
 
-{$IFDEF DXBX_USE_D3D}
   // TODO : Calculate the correct ViewPort values using the above determined variables :
-  ViewPort.X := 0;
-  ViewPort.Y := 0;
-  ViewPort.Width := 640;
-  ViewPort.Height := 480;
+//  ViewPort.X := 0;
+//  ViewPort.Y := 0;
+//  ViewPort.Width := 640;
+//  ViewPort.Height := 480;
   // TODO : The following should behave differently under fixed-function when D3DRS_ZENABLE=D3DZB_USEW :
-  ViewPort.MinZ := ZNear;
-  ViewPort.MaxZ := ZFar;
+  ViewPort.MinZ := MinZ;
+  ViewPort.MaxZ := MaxZ;
+{$IFDEF DXBX_USE_D3D}
   // Place the native call :
   g_pD3DDevice.SetViewport(ViewPort);
 {$ENDIF}
@@ -1800,16 +1953,11 @@ begin
   //  NV2A_VIEWPORT_SCALE_X({320, -240, 16777215, 0}) > goes into c[58] (see EmuNV2A_ViewportScale)
   //  NV2A_DEPTH_RANGE_NEAR({0, 16777215}) > handled here
   //
-  // (The presense of NV2A_VIEWPORT_SCALE_X indicates a shader is active.)
+  // (The presence of NV2A_VIEWPORT_SCALE_X indicates a shader is active.)
   //
 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glFrustum({Left=}-1.0, {Right=}1.0, {Bottom=}-1.0, {Top=}1.0, ZNear, ZFar);
-  //  gluPerspective(90, cWidth/cHeight, cZNear, cZFar);
-//  glScalef(1.0, 1.0, -1.0);
-
-//  glFrustum(-320, 320, -240, 240, NV2AInstance.DEPTH_RANGE_NEAR, NV2AInstance.DEPTH_RANGE_FAR);
+  DxbxUpdateTransformProjection();
+  DxbxUpdateViewport();
 
   glGetFloatv(GL_PROJECTION_MATRIX, @p[0]);
   HandledBy := HandledBy + ' GL_PROJECTION_MATRIX=' + FloatsToString(@p[0], 16);
@@ -1901,6 +2049,7 @@ begin
 {$IFDEF DXBX_USE_OPENGL}
 //  glMatrixMode(GL_PROJECTION);
 //  glLoadMatrixf(PGLfloat(pdwPushArguments));
+//  DxbxUpdateTransformProjection();
 {$ENDIF}
 end;
 
@@ -1912,12 +2061,15 @@ procedure EmuNV2A_SetVertexShaderConstant();
 var
   Slot: uint;
 begin
+  Assert(dwCount >= 4); // Input must at least be 1 set of coordinates
+  Assert(dwCount and 3 = 0); // Input must be a multiple of 4
+
   HandledBy := 'SetVertexShaderConstant';
 
   // Make sure we use the correct index if we enter at an offset other than 0 :
   Slot := (dwMethod - NV2A_VP_UPLOAD_CONST__0) div 4;
   // Since we always start at NV2A_VP_UPLOAD_CONST__0, never handle more than allowed :
-  Assert(Slot + dwCount <= NV2A_VP_UPLOAD_CONST__SIZE);
+  Assert((Slot + (dwCount div 4)) <= NV2A_VP_UPLOAD_CONST__SIZE);
 
 {$IFDEF DXBX_USE_D3D}
   HandledCount := dwCount;
@@ -1927,12 +2079,10 @@ begin
       // The VP_UPLOAD_CONST_ID GPU register is always pushed before the actual values, and contains the base Register for this batch :
       {Register=}NV2AInstance.VP_UPLOAD_CONST_ID + Slot,
       {pConstantData=}pdwPushArguments,
-      {ConstantCount=}dwCount
+      {ConstantCount=}HandledCount div 4,
   );
 {$ENDIF}
 {$IFDEF DXBX_USE_OPENGL}
-  Assert(dwCount and 3 = 0); // Input must be a multiple of 4
-
   // Just set the constant right from the pushbuffer, as they come in batches and won't exceed the native bounds;
   // Can we set them in 1 go?
   if GL_EXT_gpu_program_parameters then
@@ -2071,6 +2221,7 @@ procedure EmuNV2A_SetVertexData2F();
 var
   Slot: uint;
 begin
+  Assert(dwCount = 2);
   Slot := (dwMethod - NV2A_VERTEX_DATA2F__0) div 8;
   HandledCount := 2;
   HandledBy := 'SetVertexData2F(' + X_D3DVSDE2String(Slot) + ', ' + FloatsToString(pdwPushArguments, HandledCount) + ')';
@@ -2107,6 +2258,7 @@ procedure EmuNV2A_SetVertexData4S();
 var
   Slot: uint;
 begin
+  Assert(dwCount = 2);
   Slot := (dwMethod - NV2A_VERTEX_DATA4S__0) div 8;
   HandledCount := 2;
   HandledBy := 'SetVertexData4S(' + X_D3DVSDE2String(Slot) + ', ' + ShortsToString(PSHORT(pdwPushArguments), 4) + ')';
@@ -2119,6 +2271,7 @@ procedure EmuNV2A_SetVertexData4F();
 var
   Slot: uint;
 begin
+  Assert(dwCount = 4);
   Slot := (dwMethod - NV2A_VERTEX_DATA4F__0) div 16;
   HandledCount := 4;
   HandledBy := 'SetVertexData4F(' + X_D3DVSDE2String(Slot) + ', ' + FloatsToString(pdwPushArguments, HandledCount) + ')';
@@ -2723,10 +2876,8 @@ const
   {0380 NV2A_LINE_WIDTH}EmuNV2A_SetRenderState, // = X_D3DRS_LINEWIDTH
   {0384 NV2A_POLYGON_OFFSET_FACTOR}EmuNV2A_SetRenderState, // = X_D3DRS_POLYGONOFFSETZSLOPESCALE
   {0388 NV2A_POLYGON_OFFSET_UNITS}EmuNV2A_SetRenderState, // = X_D3DRS_POLYGONOFFSETZOFFSET
-  {038c NV2A_POLYGON_MODE_FRONT}EmuNV2A_SetPolygonMode, // = X_D3DRS_FILLMODE
-  {0390}nil,
-  {0394 NV2A_DEPTH_RANGE_NEAR}EmuNV2A_DepthRange, // Always the last method for SetViewport, so we use it as a trigger
-  {0398}nil,
+  {038c NV2A_POLYGON_MODE_FRONT}EmuNV2A_SetPolygonMode, _overflow, // = X_D3DRS_FILLMODE
+  {0394 NV2A_DEPTH_RANGE_NEAR}EmuNV2A_DepthRange, _overflow, // Always the last method for SetViewport, so we use it as a trigger
   {039C NV2A_CULL_FACE}EmuNV2A_SetCullFace,
   {03A0 NV2A_FRONT_FACE}EmuNV2A_SetFrontFace, // = X_D3DRS_FRONTFACE
   {03A4 NV2A_NORMALIZE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_NORMALIZENORMALS
@@ -2734,8 +2885,10 @@ const
   {03C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0400}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0440}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0480 NV2A_MODELVIEW0_MATRIX__0}EmuNV2A_ModelViewMatrix,
-             nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0480 NV2A_MODELVIEW0_MATRIX__0}EmuNV2A_ModelViewMatrix, _overflow, _overflow, _overflow,
+  _overflow, _overflow, _overflow, _overflow,
+  _overflow, _overflow, _overflow, _overflow,
+  _overflow, _overflow, _overflow, _overflow,
   {04C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0500}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0540}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
@@ -2743,8 +2896,10 @@ const
   {05C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0600}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0640}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0680 NV2A_COMPOSITE_MATRIX__0}EmuNV2A_CompositeMatrix, // SetTransform
-             nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {0680 NV2A_COMPOSITE_MATRIX__0}EmuNV2A_CompositeMatrix,  _overflow, _overflow, _overflow, // SetTransform
+  _overflow, _overflow, _overflow, _overflow,
+  _overflow, _overflow, _overflow, _overflow,
+  _overflow, _overflow, _overflow, _overflow,
   {06C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0700}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0740}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
@@ -2761,8 +2916,8 @@ const
   {09F8 NV2A_SWATH_WIDTH}EmuNV2A_SetRenderState, // = X_D3DRS_SWATHWIDTH
   {09FC NV2A_FLAT_SHADE_OP}EmuNV2A_CDevice_Init,
   {0A00}nil, nil, nil, nil, nil, nil, nil, nil,
-  {0A20 NV2A_VIEWPORT_TRANSLATE_X}EmuNV2A_ViewportOffset, nil, nil, nil,
-                                                                    nil, nil, nil, nil,
+  {0A20 NV2A_VIEWPORT_TRANSLATE_X}EmuNV2A_ViewportOffset, _overflow, _overflow, _overflow,
+  {0A20}nil, nil, nil, nil,
   {0A40}nil, nil, nil, nil,
   {0A50 NV2A_EYE_POSITION__0}EmuNV2A_CDevice_Init,
   {0A54 NV2A_EYE_POSITION__1}EmuNV2A_CDevice_Init,
@@ -2771,7 +2926,7 @@ const
                                                 nil, nil, nil, nil, nil, nil, nil, nil,
   {0A80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0AC0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {0AF0 NV2A_VIEWPORT_SCALE_X}EmuNV2A_ViewportScale, nil, nil, nil,
+  {0AF0 NV2A_VIEWPORT_SCALE_X}EmuNV2A_ViewportScale, _overflow, _overflow, _overflow,
   {0B00 NV2A_VP_UPLOAD_INST__0}EmuNV2A_SetVertexShaderBatch,
   {0B04 NV2A_VP_UPLOAD_INST__1}EmuNV2A_SetVertexShaderBatch,
   {0B08 NV2A_VP_UPLOAD_INST__2}EmuNV2A_SetVertexShaderBatch,
@@ -2804,38 +2959,14 @@ const
   {0B74 NV2A_VP_UPLOAD_INST__29}EmuNV2A_SetVertexShaderBatch,
   {0B78 NV2A_VP_UPLOAD_INST__30}EmuNV2A_SetVertexShaderBatch,
   {0B7C NV2A_VP_UPLOAD_INST__31}EmuNV2A_SetVertexShaderBatch,
-  {0B80 NV2A_VP_UPLOAD_CONST__0}EmuNV2A_SetVertexShaderConstant,
-  {0B84 NV2A_VP_UPLOAD_CONST__1}EmuNV2A_SetVertexShaderConstant,
-  {0B88 NV2A_VP_UPLOAD_CONST__2}EmuNV2A_SetVertexShaderConstant,
-  {0B8C NV2A_VP_UPLOAD_CONST__3}EmuNV2A_SetVertexShaderConstant,
-  {0B90 NV2A_VP_UPLOAD_CONST__4}EmuNV2A_SetVertexShaderConstant,
-  {0B94 NV2A_VP_UPLOAD_CONST__5}EmuNV2A_SetVertexShaderConstant,
-  {0B98 NV2A_VP_UPLOAD_CONST__6}EmuNV2A_SetVertexShaderConstant,
-  {0B9C NV2A_VP_UPLOAD_CONST__7}EmuNV2A_SetVertexShaderConstant,
-  {0BA0 NV2A_VP_UPLOAD_CONST__8}EmuNV2A_SetVertexShaderConstant,
-  {0BA4 NV2A_VP_UPLOAD_CONST__9}EmuNV2A_SetVertexShaderConstant,
-  {0BA8 NV2A_VP_UPLOAD_CONST__10}EmuNV2A_SetVertexShaderConstant,
-  {0BAC NV2A_VP_UPLOAD_CONST__11}EmuNV2A_SetVertexShaderConstant,
-  {0BB0 NV2A_VP_UPLOAD_CONST__12}EmuNV2A_SetVertexShaderConstant,
-  {0BB4 NV2A_VP_UPLOAD_CONST__13}EmuNV2A_SetVertexShaderConstant,
-  {0BB8 NV2A_VP_UPLOAD_CONST__14}EmuNV2A_SetVertexShaderConstant,
-  {0BBC NV2A_VP_UPLOAD_CONST__15}EmuNV2A_SetVertexShaderConstant,
-  {0BC0 NV2A_VP_UPLOAD_CONST__16}EmuNV2A_SetVertexShaderConstant,
-  {0BC4 NV2A_VP_UPLOAD_CONST__17}EmuNV2A_SetVertexShaderConstant,
-  {0BC8 NV2A_VP_UPLOAD_CONST__18}EmuNV2A_SetVertexShaderConstant,
-  {0BCC NV2A_VP_UPLOAD_CONST__19}EmuNV2A_SetVertexShaderConstant,
-  {0BD0 NV2A_VP_UPLOAD_CONST__20}EmuNV2A_SetVertexShaderConstant,
-  {0BD4 NV2A_VP_UPLOAD_CONST__21}EmuNV2A_SetVertexShaderConstant,
-  {0BD8 NV2A_VP_UPLOAD_CONST__22}EmuNV2A_SetVertexShaderConstant,
-  {0BDC NV2A_VP_UPLOAD_CONST__23}EmuNV2A_SetVertexShaderConstant,
-  {0BE0 NV2A_VP_UPLOAD_CONST__24}EmuNV2A_SetVertexShaderConstant,
-  {0BE4 NV2A_VP_UPLOAD_CONST__25}EmuNV2A_SetVertexShaderConstant,
-  {0BE8 NV2A_VP_UPLOAD_CONST__26}EmuNV2A_SetVertexShaderConstant,
-  {0BEC NV2A_VP_UPLOAD_CONST__27}EmuNV2A_SetVertexShaderConstant,
-  {0BF0 NV2A_VP_UPLOAD_CONST__28}EmuNV2A_SetVertexShaderConstant,
-  {0BF4 NV2A_VP_UPLOAD_CONST__29}EmuNV2A_SetVertexShaderConstant,
-  {0BF8 NV2A_VP_UPLOAD_CONST__30}EmuNV2A_SetVertexShaderConstant,
-  {0BFC NV2A_VP_UPLOAD_CONST__31}EmuNV2A_SetVertexShaderConstant,
+  {0B80 NV2A_VP_UPLOAD_CONST__0}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
+  {0B90 NV2A_VP_UPLOAD_CONST__4}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
+  {0BA0 NV2A_VP_UPLOAD_CONST__8}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
+  {0BB0 NV2A_VP_UPLOAD_CONST__12}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
+  {0BC0 NV2A_VP_UPLOAD_CONST__16}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
+  {0BD0 NV2A_VP_UPLOAD_CONST__20}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
+  {0BE0 NV2A_VP_UPLOAD_CONST__24}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
+  {0BF0 NV2A_VP_UPLOAD_CONST__28}EmuNV2A_SetVertexShaderConstant, _overflow, _overflow, _overflow,
   {0C00}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0C40}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {0C80}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
@@ -2873,16 +3004,40 @@ const
   {147C NV2A_POLYGON_STIPPLE_ENABLE}EmuNV2A_SetRenderState, // = X_D3DRS_STIPPLEENABLE
   {1480}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {14C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1500 NV2A_VERTEX_POS_3F_X}EmuNV2A_SetVertexPos3f,
-             nil, nil, nil, nil, nil,
-  {1518 NV2A_VERTEX_POS_4F_X}EmuNV2A_SetVertexPos4f,
-                                           nil, nil, nil,
-  {1528 NV2A_VERTEX_POS_3I_XY}EmuNV2A_SetVertexPos4s,
-                                                               nil, nil, nil, nil, nil,
-  {1540}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1580}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {15C0}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1600}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+  {1500 NV2A_VERTEX_POS_3F_X}EmuNV2A_SetVertexPos3f, _overflow, _overflow,
+  {1508}nil, nil, nil,
+  {1518 NV2A_VERTEX_POS_4F_X}EmuNV2A_SetVertexPos4f, _overflow, _overflow, _overflow,
+  {1528 NV2A_VERTEX_POS_3I_XY}EmuNV2A_SetVertexPos4s, _overflow,
+  {1530 NV2A_VERTEX_NOR_3F_X}_unused, _unused, _unused, _unused,
+  {1540 NV2A_VERTEX_NOR_3I_XY}_unused, _unused, _unused, _unused,
+  {1550 NV2A_VERTEX_COL_4F_X}_unused, _unused, _unused, _unused,
+  {1560 NV2A_VERTEX_COL_3F_X}_unused, _unused, _unused, _unused,
+  {1570 NV2A_VERTEX_COL2_4F_X}_unused, _unused, _unused, _unused,
+  {1580 NV2A_VERTEX_COL2_3F_X}_unused, _unused, _unused,
+  {158c NV2A_VERTEX_COL2_4I}_unused,
+
+  {1590 NV2A_VERTEX_TX0_2F_S}_unused, _unused,
+  {1598 NV2A_VERTEX_TX0_2I}_unused, _unused,
+  {15A0 NV2A_VERTEX_TX0_4F_S}_unused,_unused,_unused,_unused,
+  {15B0 NV2A_VERTEX_TX0_4I_ST}_unused, _unused,
+
+  {15B8 NV2A_VERTEX_TX1_2F_S}_unused, _unused,
+  {15C0 NV2A_VERTEX_TX1_2I}_unused, _unused,
+  {15C8 NV2A_VERTEX_TX1_4F_S}_unused, _unused, _unused, _unused,
+  {15D8 NV2A_VERTEX_TX1_4I_ST}_unused, _unused,
+
+  {15E0 NV2A_VERTEX_TX2_2F_S}_unused, _unused,
+  {15E8 NV2A_VERTEX_TX2_2I}_unused, _unused,
+  {15F0 NV2A_VERTEX_TX2_4F_S}_unused, _unused, _unused, _unused,
+  {1600 NV2A_VERTEX_TX2_4I_ST}_unused, _unused,
+
+  {1608 NV2A_VERTEX_TX3_2F_S}_unused, _unused,
+  {1610 NV2A_VERTEX_TX3_2I}_unused, _unused,
+  {1618}nil, nil, // Yeah, a gap.
+  {1620 NV2A_VERTEX_TX3_4F_S}_unused, _unused, _unused, _unused,
+  {1630 NV2A_VERTEX_TX3_4I_ST}_unused, _unused,
+
+  {1638}nil, nil,
   {1640}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1680}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {16BC NV2A_EDGEFLAG_ENABLE}EmuNV2A_CDevice_Init,
@@ -2903,46 +3058,51 @@ const
   {1818 NV2A_VERTEX_DATA}EmuNV2A_VertexData,
                                            nil, nil, nil, nil, nil, nil, nil, nil, nil,
   {1840}nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-  {1880}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
-  {1890}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
-  {18A0}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
-  {18B0}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
-  {18C0}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
-  {18D0}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
-  {18E0}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
-  {18F0}EmuNV2A_SetVertexData2F, nil, EmuNV2A_SetVertexData2F, nil,
+  // NV2A_VERTEX_DATA2F__0 .. NV2A_VERTEX_DATA2F__15
+  {1880}EmuNV2A_SetVertexData2F, _overflow, EmuNV2A_SetVertexData2F, _overflow,
+  {1890}EmuNV2A_SetVertexData2F, _overflow, EmuNV2A_SetVertexData2F, _overflow,
+  {18A0}EmuNV2A_SetVertexData2F, _overflow, EmuNV2A_SetVertexData2F, _overflow,
+  {18B0}EmuNV2A_SetVertexData2F, _overflow, EmuNV2A_SetVertexData2F, _overflow,
+  {18C0}EmuNV2A_SetVertexData2F, _overflow, EmuNV2A_SetVertexData2F, _overflow,
+  {18D0}EmuNV2A_SetVertexData2F, _overflow, EmuNV2A_SetVertexData2F, _overflow,
+  {18E0}EmuNV2A_SetVertexData2F, _overflow, EmuNV2A_SetVertexData2F, _overflow,
+  {18F0}EmuNV2A_SetVertexData2F, _overflow, EmuNV2A_SetVertexData2F, _overflow,
+  // NV2A_VERTEX_DATA2S__0 .. NV2A_VERTEX_DATA2S__15
   {1900}EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S,
   {1910}EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S,
   {1920}EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S,
   {1930}EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S, EmuNV2A_SetVertexData2S,
+  // NV2A_VERTEX_DATA4UB__0 .. NV2A_VERTEX_DATA4UB__15
   {1940}EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB,
   {1950}EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB,
   {1960}EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB,
   {1970}EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB, EmuNV2A_SetVertexData4UB,
-  {1980}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
-  {1990}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
-  {19A0}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
-  {19B0}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
-  {19C0}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
-  {19D0}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
-  {19E0}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
-  {19F0}EmuNV2A_SetVertexData4S, nil, EmuNV2A_SetVertexData4S, nil,
-  {1A00}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1A10}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1A20}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1A30}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1A40}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1A50}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1A60}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1A70}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1A80}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1A90}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1AA0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1AB0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1AC0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1AD0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1AE0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
-  {1AF0}EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F, EmuNV2A_SetVertexData4F,
+  // NV2A_VERTEX_DATA4S__0 .. NV2A_VERTEX_DATA4S__15
+  {1980}EmuNV2A_SetVertexData4S, _overflow, EmuNV2A_SetVertexData4S, _overflow,
+  {1990}EmuNV2A_SetVertexData4S, _overflow, EmuNV2A_SetVertexData4S, _overflow,
+  {19A0}EmuNV2A_SetVertexData4S, _overflow, EmuNV2A_SetVertexData4S, _overflow,
+  {19B0}EmuNV2A_SetVertexData4S, _overflow, EmuNV2A_SetVertexData4S, _overflow,
+  {19C0}EmuNV2A_SetVertexData4S, _overflow, EmuNV2A_SetVertexData4S, _overflow,
+  {19D0}EmuNV2A_SetVertexData4S, _overflow, EmuNV2A_SetVertexData4S, _overflow,
+  {19E0}EmuNV2A_SetVertexData4S, _overflow, EmuNV2A_SetVertexData4S, _overflow,
+  {19F0}EmuNV2A_SetVertexData4S, _overflow, EmuNV2A_SetVertexData4S, _overflow,
+  // NV2A_VERTEX_DATA4F__0 .. NV2A_VERTEX_DATA4F__15
+  {1A00}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1A10}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1A20}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1A30}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1A40}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1A50}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1A60}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1A70}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1A80}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1A90}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1AA0}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1AB0}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1AC0}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1AD0}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1AE0}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
+  {1AF0}EmuNV2A_SetVertexData4F, _overflow, _overflow, _overflow,
   {1B00}nil,
   {1B04 NV2A_TX_FORMAT(0)}EmuNV2A_TextureFormat,
                   nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
@@ -3440,24 +3600,33 @@ begin
   ReadImplementationProperties; // Determine a set of booleans indicating which OpenGL extensions are available
   ReadExtensions; // Assign all OpenGL extension API's (DON'T call them if the extension is not available!)
 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-//  glOrtho({Left=}0, {Right=}640, {Bottom=}480, {Top}0, {ZNear=}-1.0, {ZFar=}500);
-//  //  glFrustum(-0.1, 0.1, -0.1, 0.1, 0.3, 25.0); ?
-  glFrustum({Left=}-1.0, {Right=}1.0, {Bottom=}-1.0, {Top=}1.0, {ZNear=}0.1, {ZFar=}1000.0);
-//  glScalef(1.0, 1.0, -1.0);
+  // Initialize the viewport :
+  Viewport.X := 0;
+  Viewport.Y := 0;
+  Viewport.Width := g_EmuCDPD.pPresentationParameters.BackBufferWidth;
+  Viewport.Height := g_EmuCDPD.pPresentationParameters.BackBufferHeight;
+  Viewport.MinZ := -1.0;
+  Viewport.MaxZ := 1.0;
+
+  DxbxUpdateTransformProjection();
+  DxbxUpdateViewport();
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   // Switch to left-handed coordinate space (as per http://www.opengl.org/resources/faq/technical/transformations.htm) :
 //  glScalef(1.0, 1.0, -1.0);
 
+  // Set some defaults :
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_FRONT);
+
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL); // Nearer Z coordinates cover further Z
 
-  glViewport(0, 0,
-    g_EmuCDPD.pPresentationParameters.BackBufferWidth,
-    g_EmuCDPD.pPresentationParameters.BackBufferHeight);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glAlphaFunc(GL_GEQUAL, 0.5);
+
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // GL_LINE for wireframe
 
   // Enable vertex shading
   glEnable(GL_VERTEX_PROGRAM_ARB);
@@ -3467,10 +3636,12 @@ begin
   // have to come up with another solution !!!
   glGenProgramsARB(4, @VertexProgramIDs[0]);
 
+{$IFDEF DXBX_OPENGL_CONVENTIONAL}
   if GL_ARB_vertex_blend then
     DxbxVertexShaderHeader := Format(DxbxVertexShaderHeader, ['weight'])
   else
     DxbxVertexShaderHeader := Format(DxbxVertexShaderHeader, ['attrib[1]']);
+{$ENDIF}
 
   // Precompiled shader for the fixed function pipeline :
   szCode := DxbxVertexShaderHeader +
