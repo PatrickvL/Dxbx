@@ -141,7 +141,7 @@ const NV2A_COUNT_MAX = (NV2A_COUNT_MASK shr NV2A_COUNT_SHIFT) - 1; // = 2047
 
 const lfUnit = lfCxbx or lfPushBuffer;
 
-const
+var
   // Vertex shader header, mapping Xbox1 registers to the ARB syntax (original version by KingOfC).
   // Note about the use of 'conventional' attributes in here: Since we prefer to use only one shader
   // for both immediate and deferred mode rendering, we alias all attributes to conventional inputs
@@ -155,7 +155,7 @@ const
     'ADDRESS A0;'#13#10 +
 {$IFDEF DXBX_OPENGL_CONVENTIONAL}
     'ATTRIB v0 = vertex.position;'#13#10 + // Was: vertex.attrib[0] (See 'conventional' note above)
-    'ATTRIB v1 = vertex.weight;'#13#10 + // Was: vertex.attrib[1]
+    'ATTRIB v1 = vertex.%s;'#13#10 + // Note : We replace this with 'weight' or 'attrib[1]' depending GL_ARB_vertex_blend
     'ATTRIB v2 = vertex.normal;'#13#10 + // Was: vertex.attrib[2]
     'ATTRIB v3 = vertex.color.primary;'#13#10 + // Was: vertex.attrib[3]
     'ATTRIB v4 = vertex.color.secondary;'#13#10 + // Was: vertex.attrib[4]
@@ -195,18 +195,8 @@ const
     'OUTPUT oT1 = result.texcoord[1];'#13#10 +
     'OUTPUT oT2 = result.texcoord[2];'#13#10 +
     'OUTPUT oT3 = result.texcoord[3];'#13#10 +
-    // PatrickvL addition :
     'PARAM c[] = { program.env[0..191] };'#13#10 + // All constants in 1 array declaration (requires NV_gpu_program4?)
     'PARAM mvp[4] = { state.matrix.mvp };'#13#10;
-
-//    'PARAM c0 = program.env[0];'#13#10 +
-//    'PARAM c1 = program.env[1];'#13#10 +
-//    // TODO : Add PARAM declarations for all c[0-191]
-//    'PARAM c58 = program.env[58];'#13#10 + // X_D3DSCM_RESERVED_CONSTANT1 + X_D3DSCM_CORRECTION
-//    'PARAM c59 = program.env[59];'#13#10 + // X_D3DSCM_RESERVED_CONSTANT2 + X_D3DSCM_CORRECTION
-//    'PARAM c133 = program.env[133];'#13#10 +
-//    'PARAM c134 = program.env[134];'#13#10 +
-//    'PARAM c191 = program.env[191];'#13#10;
 
 procedure D3DPUSH_DECODE(const dwPushCommand: DWORD; out dwMethod, dwSubCh, dwCount: DWORD; out bNoInc: BOOL_);
 begin
@@ -721,7 +711,11 @@ begin
 {$IFDEF DXBX_OPENGL_CONVENTIONAL}
   case slot of
      0: glVertexPointer(size, _type, stride, _pointer);
-     1: glWeightPointerARB(size, _type, stride, _pointer); // TODO : What if this extension is not supported? Use generic attrib?
+     1:
+      if GL_ARB_vertex_blend then
+        glWeightPointerARB(size, _type, stride, _pointer)
+      else
+        glVertexAttribPointer(slot, size, _type, normalized, stride, _pointer);
      2: glNormalPointer(_type, stride, _pointer);
      3: glColorPointer(size, _type, stride, _pointer);
      4: glSecondaryColorPointer(size, _type, stride, _pointer);
@@ -1491,7 +1485,7 @@ begin
   HandledCount := 4;
   HandledBy := 'ViewportOffset(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 {$IFDEF DXBX_USE_OPENGL}
-  HandledBy := HandledBy + ' Set in c-37 = c[59]';
+  HandledBy := HandledBy + ' Set in c-37 = c[59]'; // = X_D3DSCM_RESERVED_CONSTANT2 + X_D3DSCM_CORRECTION
   glProgramEnvParameter4fvARB(
     {target=}GL_VERTEX_PROGRAM_ARB,
     {index=}X_D3DSCM_RESERVED_CONSTANT2 + X_D3DSCM_CORRECTION,
@@ -1510,7 +1504,7 @@ begin
   HandledCount := 4;
   HandledBy := 'ViewportScale(' + FloatsToString(pdwPushArguments, HandledCount) + ')';
 {$IFDEF DXBX_USE_OPENGL}
-  HandledBy := HandledBy + ' Set in c-38 = c[58]';
+  HandledBy := HandledBy + ' Set in c-38 = c[58]'; // = X_D3DSCM_RESERVED_CONSTANT1 + X_D3DSCM_CORRECTION
   glProgramEnvParameter4fvARB(
     {target=}GL_VERTEX_PROGRAM_ARB,
     {index=}X_D3DSCM_RESERVED_CONSTANT1 + X_D3DSCM_CORRECTION,
@@ -1802,8 +1796,8 @@ begin
 {$IFDEF DXBX_USE_OPENGL}
   // Output from Vertices sample :
   //
-  //  NV2A_VIEWPORT_TRANSLATE_X({320.53125, 240.53125, 0, 0}) > goes into c[133] (see EmuNV2A_ViewportOffset)
-  //  NV2A_VIEWPORT_SCALE_X({320, -240, 16777215, 0}) > goes into c[134] (see EmuNV2A_ViewportScale)
+  //  NV2A_VIEWPORT_TRANSLATE_X({320.53125, 240.53125, 0, 0}) > goes into c[59] (see EmuNV2A_ViewportOffset)
+  //  NV2A_VIEWPORT_SCALE_X({320, -240, 16777215, 0}) > goes into c[58] (see EmuNV2A_ViewportScale)
   //  NV2A_DEPTH_RANGE_NEAR({0, 16777215}) > handled here
   //
   // (The presense of NV2A_VIEWPORT_SCALE_X indicates a shader is active.)
@@ -3472,6 +3466,11 @@ begin
   // vertex program extensions (NVidia cards mainly); So for ATI we
   // have to come up with another solution !!!
   glGenProgramsARB(4, @VertexProgramIDs[0]);
+
+  if GL_ARB_vertex_blend then
+    DxbxVertexShaderHeader := Format(DxbxVertexShaderHeader, ['weight'])
+  else
+    DxbxVertexShaderHeader := Format(DxbxVertexShaderHeader, ['attrib[1]']);
 
   // Precompiled shader for the fixed function pipeline :
   szCode := DxbxVertexShaderHeader +
