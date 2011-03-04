@@ -1187,6 +1187,10 @@ const  NV2A_VERTEX_COL_4I_B_SHIFT                                 = 16;
 const  NV2A_VERTEX_COL_4I_B_MASK                                  = $00ff0000;
 const  NV2A_VERTEX_COL_4I_A_SHIFT                                 = 24;
 const  NV2A_VERTEX_COL_4I_A_MASK                                  = $ff000000;
+const NV2A_VERTEX_COL2_4F_X                                       = $00001570; // Dxbx
+const NV2A_VERTEX_COL2_4F_Y                                       = $00001574; // Dxbx
+const NV2A_VERTEX_COL2_4F_Z                                       = $00001578; // Dxbx
+const NV2A_VERTEX_COL2_4F_W                                       = $0000157c; // Dxbx
 const NV2A_VERTEX_COL2_3F_X                                       = $00001580;
 const NV2A_VERTEX_COL2_3F_Y                                       = $00001584;
 const NV2A_VERTEX_COL2_3F_Z                                       = $00001588;
@@ -1797,7 +1801,7 @@ const NV2A_Max = NV2A_VP_UPLOAD_CONST_ID;
 const
   // This declaration contains the above constants, but in a more compact form.
   // It's is decoded by InitNV2AInfo into a lookup-table for string-conversions.
-  CompactNV2AInfo: array [0..317] of record
+  CompactNV2AInfo: array [0..321] of record
     Method: Integer;
     Name: string;
     Pitch: Integer; // Default 0 means 4
@@ -2011,6 +2015,10 @@ const
   (Method:$00001564; Name:'NV2A_VERTEX_COL_3F_Y'),
   (Method:$00001568; Name:'NV2A_VERTEX_COL_3F_Z'),
   (Method:$0000156c; Name:'NV2A_VERTEX_COL_4I'),
+  (Method:$00001570; Name:'NV2A_VERTEX_COL2_4F_X'),
+  (Method:$00001574; Name:'NV2A_VERTEX_COL2_4F_Y'),
+  (Method:$00001578; Name:'NV2A_VERTEX_COL2_4F_Z'),
+  (Method:$0000157c; Name:'NV2A_VERTEX_COL2_4F_W'),
   (Method:$00001580; Name:'NV2A_VERTEX_COL2_3F_X'),
   (Method:$00001584; Name:'NV2A_VERTEX_COL2_3F_Y'),
   (Method:$00001588; Name:'NV2A_VERTEX_COL2_3F_Z'),
@@ -2375,11 +2383,14 @@ type
       {00001564}VERTEX_COL_3F_Y: FLOAT;
       {00001568}VERTEX_COL_3F_Z: FLOAT;
       {0000156c}VERTEX_COL_4I: DWORD;
-      _00001570_Unknown: array [$1570..NV2A_VERTEX_COL2_3F_X-1] of BYTE;
+      {00001570}VERTEX_COL2_4F_X: FLOAT;
+      {00001574}VERTEX_COL2_4F_Y: FLOAT;
+      {00001578}VERTEX_COL2_4F_Z: FLOAT;
+      {0000157c}VERTEX_COL2_4F_W: FLOAT;
       {00001580}VERTEX_COL2_3F_X: FLOAT;
       {00001584}VERTEX_COL2_3F_Y: FLOAT;
       {00001588}VERTEX_COL2_3F_Z: FLOAT;
-      {0000158c}VERTEX_COL2_4I: FLOAT;
+      {0000158c}VERTEX_COL2_4I: DWORD;
       {00001590}VERTEX_TX0_2F_S: FLOAT;
       {00001594}VERTEX_TX0_2F_T: FLOAT;
       {00001598}VERTEX_TX0_2I: DWORD;
