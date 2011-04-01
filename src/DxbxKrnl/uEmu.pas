@@ -229,6 +229,8 @@ begin
 end;
 
 function HandleAccessViolation(E: PEXCEPTION_RECORD; C: PCONTEXT): Boolean;
+const
+  MemMask = $03FFFFFF;
 begin
   Result := True; // assume we can fix this exception
 
@@ -238,12 +240,30 @@ begin
   begin
     // Decode the opcode to see if we can fix it :
     case PBytes(E.ExceptionAddress)[0] of
-      $89: begin
+      $0F: begin
+        case PBytes(E.ExceptionAddress)[1] of
+          $28: begin
+            // From XPong :
+            // 000605F2 0F280486         movaps xmm0,dqword ptr [esi+eax*4]
+            C.ESI := C.ESI and MemMask; // Remove the high-bit from the destination address
+            Exit;
+          end;
+          $2B: begin
+            // From XPong :
+            // 0005FED3 0F2B0487         movntps dqword ptr [edi+eax*4],xmm0
+            C.EDI := C.EDI and MemMask; // Remove the high-bit from the destination address
+            Exit;
+          end;
+        end;
+      end;
+
+
+      $89, $8B: begin
         case PBytes(E.ExceptionAddress)[1] of
           $11: begin
             // From AlphaFog :
             // 00011F87 89 11 mov dword ptr [ecx],edx
-            C.ECX := C.ECX and $7FFFFFFF; // Remove the high-bit from the destination address
+            C.ECX := C.ECX and MemMask; // Remove the high-bit from the destination address
             Exit;
           end;
 
@@ -258,17 +278,24 @@ begin
             end;
           end;
 
+          $1C: begin
+            // From XPONG :
+            // 0005F988 891CC7           mov [edi+eax*8],ebx
+            C.EDI := C.EDI and MemMask; // Remove the high-bit from the destination address
+            Exit;
+          end;
+
           $2B: begin
             // From Lights :
             // 00011136 89 2B mov dword ptr [ebx],ebp
-            C.EBX := C.EBX and $7FFFFFFF; // Remove the high-bit from the destination address
+            C.EBX := C.EBX and MemMask; // Remove the high-bit from the destination address
             Exit;
           end;
 
           $32: begin
             // From AlphaFog :
             // 00012003 89 32 mov dword ptr [edx],esi
-            C.EDX := C.EDX and $7FFFFFFF; // Remove the high-bit from the destination address
+            C.EDX := C.EDX and MemMask; // Remove the high-bit from the destination address
             Exit;
           end;
 
@@ -276,7 +303,7 @@ begin
             // From AlphaFog :
             // 00012066 89 4828 mov dword ptr [eax+$28],ecx
             // 00013340 89 6804 mov dword ptr [eax+$04],ebp
-            C.EAX := C.EAX and $7FFFFFFF; // Remove the high-bit from the destination address
+            C.EAX := C.EAX and MemMask; // Remove the high-bit from the destination address
             Exit;
           end;
 
@@ -288,6 +315,16 @@ begin
           // From Wings of War :
           // 0011E20F A3 00000080 mov dword ptr [$80000000],eax
           Inc(C.Eip, 5);
+          Exit;
+        end;
+      end;
+
+      $A5: begin
+        begin
+          // From XPONG :
+          // 00042B4C A5               movsd
+          C.EDI := C.EDI and MemMask; // Remove the high-bit from the destination address
+          C.ESI := C.ESI and MemMask; // Remove the high-bit from the destination address
           Exit;
         end;
       end;
@@ -306,19 +343,43 @@ begin
             begin
               // From Textures :
               // 000112AB C740FC FFFFFFFF mov dword ptr [eax-$04],$FFFFFFFF
-              C.EAX := C.EAX and $7FFFFFFF; // Remove the high-bit from the destination address
+              C.EAX := C.EAX and MemMask; // Remove the high-bit from the destination address
               Exit;
             end;
           end;
         end;
       end;
 
+      $D9: begin
+        case PBytes(E.ExceptionAddress)[1] of
+          $00, $18, $40: begin
+            // From XPONG :
+            // 0003355B D900             fld dword ptr [eax]
+            // 0003343A D94008           fld dword ptr [eax+$08]
+            // 0003353C D918             fstp dword ptr [eax]
+            C.EAX := C.EAX and MemMask; // Remove the high-bit from the destination address
+            Exit;
+          end;
+
+          $19: begin
+            // From XPONG :
+            // 000335C8 D919             fstp dword ptr [ecx]
+            C.ECX := C.ECX and MemMask; // Remove the high-bit from the destination address
+            Exit;
+          end;
+
+        end;
+      end;
+
+
       $F3: begin
         // From Vertices :
         // 00011145 F3 A5 rep movsd
+        // 00060900 F3A5             rep movsd
         if (PBytes(E.ExceptionAddress)[1] = $A5) then
         begin
-          C.EDI := C.EDI and $7FFFFFFF; // Remove the high-bit from the destination address
+          C.EDI := C.EDI and MemMask; // Remove the high-bit from the destination address
+          C.ESI := C.ESI and MemMask; // Remove the high-bit from the destination address
           Exit;
         end;
       end;
