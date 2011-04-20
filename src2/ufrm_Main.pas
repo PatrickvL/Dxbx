@@ -1624,7 +1624,10 @@ end;
 procedure Tfrm_Main.actOpenXbeExecute(Sender: TObject);
 begin
   if XbeOpenDialog.Execute then
+  begin
+    actStopEmulation.Execute;
     OpenXbeFile(XbeOpenDialog.FileName);
+  end;
 end;
 
 procedure Tfrm_Main.actRemoveInvalidFromListExecute(Sender: TObject);
