@@ -587,7 +587,10 @@ end; // FormCreate
 procedure Tfrm_Main.FormDestroy(Sender: TObject);
 begin
   WriteSettingsIni();
-  SaveXBEListByFile(GetDxbxBasePath + '\' + cXDK_TRACKER_DATA_FILE, {aPublishedBy=}'');
+
+  if DirectoryExists(GetDxbxBasePath) then
+    SaveXBEListByFile(GetDxbxBasePath + '\' + cXDK_TRACKER_DATA_FILE, {aPublishedBy=}'');
+
   CloseXbe();
   CloseLogs();
 end;
