@@ -2081,7 +2081,7 @@ begin
       // The VP_UPLOAD_CONST_ID GPU register is always pushed before the actual values, and contains the base Register for this batch :
       {Register=}NV2AInstance.VP_UPLOAD_CONST_ID + Slot,
       {pConstantData=}pdwPushArguments,
-      {ConstantCount=}HandledCount div 4,
+      {ConstantCount=}HandledCount div 4
   );
 {$ENDIF}
 {$IFDEF DXBX_USE_OPENGL}
