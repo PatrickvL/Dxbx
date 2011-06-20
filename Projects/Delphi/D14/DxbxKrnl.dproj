@@ -23,9 +23,11 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_ExeOutput>..\..\..\Source\Delphi\Bin</DCC_ExeOutput>
+			<DCC_DcuOutput>..\..\..\Source\Delphi\Dcu</DCC_DcuOutput>
 			<DCC_Define>DXBX_DLL;$(DCC_Define)</DCC_Define>
 			<DCC_Alignment>4</DCC_Alignment>
-			<DCC_DependencyCheckOutputName>DxbxKrnl.dll</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>..\..\..\Source\Delphi\Bin\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
 			<GenDll>true</GenDll>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
@@ -46,17 +48,15 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_MapFile>3</DCC_MapFile>
-			<DCC_DependencyCheckOutputName>..\..\Bin\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
 			<DCC_Define>DEBUG;_DEBUG_TRACE;$(DCC_Define)</DCC_Define>
 			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;..\..\Libraries\FastMM;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ResourcePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ResourcePath)</DCC_ResourcePath>
 			<DCC_ObjPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ObjPath)</DCC_ObjPath>
 			<DCC_IncludePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_IncludePath)</DCC_IncludePath>
-			<DCC_DcuOutput>..\..\dcu\d11\</DCC_DcuOutput>
+			<DCC_DcuOutput>..\..\..\Source\Delphi\Dcu</DCC_DcuOutput>
 			<DCC_ObjOutput>..\..\dcu\d11\</DCC_ObjOutput>
 			<DCC_HppOutput>..\..\dcu\d11\</DCC_HppOutput>
-			<DCC_ExeOutput>..\..\Bin\</DCC_ExeOutput>
 		</PropertyGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
@@ -112,83 +112,63 @@
 			<DelphiCompile Include="DxbxKrnl.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<RcCompile Include="..\..\resource\SvnRevision.rc">
+			<RcCompile Include="..\..\..\Resources\SvnRevision.rc">
 				<ContainerId>RC</ContainerId>
 				<ContainerId>RC</ContainerId>
 				<Form>SvnRevision.res</Form>
 			</RcCompile>
-			<DCCReference Include="..\..\src\uLog.pas"/>
-			<DCCReference Include="..\..\src\uMutex.pas"/>
-			<DCCReference Include="..\..\src\uStoredTrieTypes.pas"/>
-			<DCCReference Include="..\..\src\uTime.pas"/>
-			<DCCReference Include="..\..\src\uTypes.pas"/>
-			<DCCReference Include="..\..\src\uXBController.pas"/>
-			<DCCReference Include="..\..\src\uXbe.pas"/>
-			<DCCReference Include="..\..\src\uXboxLibraryUtils.pas"/>
-			<DCCReference Include="..\..\src\uXbVideo.pas"/>
-			<DCCReference Include="..\..\src\uConsoleClass.pas"/>
-			<DCCReference Include="..\..\src\uConsts.pas"/>
-			<DCCReference Include="..\..\src\uCRC16.pas"/>
-			<DCCReference Include="..\..\src\uEmuShared.pas"/>
-			<DCCReference Include="..\..\src\uError.pas"/>
-			<DCCReference Include="..\..\src\uKernelThunk.pas"/>
-			<DCCReference Include="..\..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas"/>
-			<DCCReference Include="..\..\Libraries\Jcl\windows\JclDebug.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuAlloc.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuDInput.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuDSound.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuFile.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuFS.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnl.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlAv.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlDbg.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlEx.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlFs.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlHal.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlIo.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlKd.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlKe.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlMm.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlNt.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlOb.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlPs.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlRtl.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlXbox.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlXc.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuKrnlXe.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuLDT.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXapi.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXG.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXOnline.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXTL.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uHLEIntercept.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\DxLibraryAPIScanning.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uDxbxDebugUtils.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uDxbxKrnl.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uDxbxKrnlUtils.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmu.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uState.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uVertexBuffer.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uVertexShader.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uConvert.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uPushBuffer.pas"/>
-			<DCCReference Include="..\..\src\uDxbxUtils.pas"/>
-			<DCCReference Include="..\..\src\uEmuExe.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uResourceTracker.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Utils.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uPixelShader.pas"/>
-			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
-			<DCCReference Include="..\..\src\uFileSystem.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXactEng.pas"/>
-			<DCCReference Include="..\..\src\uXbSound.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\DbgConsole.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uMiniport.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uNV2A.pas"/>
-			<DCCReference Include="..\..\Libraries\GLScene\OpenGL1x.pas"/>
-			<DCCReference Include="..\..\Libraries\GLScene\VectorTypes.pas"/>
-			<DCCReference Include="..\..\Libraries\GLScene\OpenGLTokens.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\Libraries\GLScene\OpenGL1x.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\Libraries\GLScene\OpenGLTokens.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\Libraries\GLScene\VectorTypes.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\Libraries\Jcl\windows\JclDebug.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uConvert.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uMiniport.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uNV2A.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uPixelShader.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uPushBuffer.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uState.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uVertexBuffer.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uVertexShader.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\DbgConsole.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\DxLibraryAPIScanning.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uDxbxDebugUtils.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uDxbxKrnl.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uDxbxKrnlUtils.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmu.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuAlloc.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuD3D8.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuD3D8Types.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuD3D8Utils.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuDInput.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuDSound.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuFile.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuFS.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnl.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlAv.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlDbg.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlEx.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlFs.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlHal.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlIo.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlKd.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlKe.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlMm.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlNt.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlOb.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlPs.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlRtl.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlXbox.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlXc.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuKrnlXe.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuLDT.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuXactEng.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuXapi.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuXG.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuXOnline.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuXTL.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uHLEIntercept.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uResourceTracker.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
