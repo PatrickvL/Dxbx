@@ -1,39 +1,40 @@
 program XBEExplorer;
 
-{$R 'XBEExplorerResources.res' '..\..\resource\XBEExplorerResources.rc'}
+{$R 'XBEExplorerResources.res' '..\..\..\resources\XBEExplorerResources.rc'}
 
 uses
   Forms,
   SysUtils,
-  uXBEExplorerMain in '..\..\src\XBEExplorer\uXBEExplorerMain.pas' {FormXBEExplorer},
-  uXbe in '..\..\src\uXbe.pas',
-  uTypes in '..\..\src\uTypes.pas',
-  uConsts in '..\..\src\uConsts.pas',
-  uDxbxUtils in '..\..\src\uDxbxUtils.pas',
-  uLog in '..\..\src\uLog.pas',
-  uTime in '..\..\src\uTime.pas',
-  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
-  uConsoleClass in '..\..\src\uConsoleClass.pas',
-  uHexViewer in '..\..\src\XBEExplorer\uHexViewer.pas' {HexViewer: TFrame},
-  uStringsViewer in '..\..\src\XBEExplorer\uStringsViewer.pas',
-  uXDVDFS in '..\..\src\uXDVDFS.pas',
-  uFileSystem in '..\..\src\uFileSystem.pas',
-  uExploreFileSystem in '..\..\src\XBEExplorer\uExploreFileSystem.pas' {frmExploreFileSystem},
-  uDisassembleViewer in '..\..\src\XBEExplorer\uDisassembleViewer.pas',
-  BeaEngine in '..\..\Libraries\BeaEngine\BeaEngine.pas',
-  uSectionViewer in '..\..\src\XBEExplorer\uSectionViewer.pas',
-  uViewerUtils in '..\..\src\XBEExplorer\uViewerUtils.pas',
-  uDisassembleUtils in '..\..\src\uDisassembleUtils.pas',
-  VistaIconFix in '..\..\src\VistaIconFix.pas',
-  uCRC16 in '..\..\src\uCRC16.pas';
+  BeaEngine in '..\..\..\Source\Delphi\Libraries\BeaEngine\BeaEngine.pas',
+  uDisassembleViewer in '..\..\..\Source\Delphi\src\Tools\XBEExplorer\uDisassembleViewer.pas',
+  uExploreFileSystem in '..\..\..\Source\Delphi\src\Tools\XBEExplorer\uExploreFileSystem.pas' {frmExploreFileSystem},
+  uHexViewer in '..\..\..\Source\Delphi\src\Tools\XBEExplorer\uHexViewer.pas',
+  uSectionViewer in '..\..\..\Source\Delphi\src\Tools\XBEExplorer\uSectionViewer.pas',
+  uStringsViewer in '..\..\..\Source\Delphi\src\Tools\XBEExplorer\uStringsViewer.pas',
+  uViewerUtils in '..\..\..\Source\Delphi\src\Tools\XBEExplorer\uViewerUtils.pas',
+  uXBEExplorerMain in '..\..\..\Source\Delphi\src\Tools\XBEExplorer\uXBEExplorerMain.pas' {FormXBEExplorer},
+  uConsoleClass in '..\..\..\Source\Delphi\src\uConsoleClass.pas',
+  uConsts in '..\..\..\Source\Delphi\src\uConsts.pas',
+  uCRC16 in '..\..\..\Source\Delphi\src\uCRC16.pas',
+  uDisassembleUtils in '..\..\..\Source\Delphi\src\uDisassembleUtils.pas',
+  uDxbxUtils in '..\..\..\Source\Delphi\src\uDxbxUtils.pas',
+  uFileSystem in '..\..\..\Source\Delphi\src\uFileSystem.pas',
+  uLog in '..\..\..\Source\Delphi\src\uLog.pas',
+  uTime in '..\..\..\Source\Delphi\src\uTime.pas',
+  uTypes in '..\..\..\Source\Delphi\src\uTypes.pas',
+  uXbe in '..\..\..\Source\Delphi\src\uXbe.pas',
+  uXDVDFS in '..\..\..\Source\Delphi\src\uXDVDFS.pas',
+  uEmuD3D8Types in '..\..\..\Source\Delphi\src\DxbxKrnl\uEmuD3D8Types.pas',
+  VistaIconFix in '..\..\..\Source\Delphi\src\VistaIconFix.pas';
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TFormXBEExplorer, FormXBEExplorer);
   Application.Title := FormXBEExplorer.Caption;
+  Application.CreateForm(TfrmExploreFileSystem, frmExploreFileSystem);
+  Application.CreateForm(TFormXBEExplorer, FormXBEExplorer);
   if ParamCount > 0 then
     if FileExists(ParamStr(1)) then
       FormXBEExplorer.OpenFile(ParamStr(1));

@@ -23,8 +23,12 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_UsePackage>vclx;vcl;vclimg;dbrtl;Rave77VCL;bdertl;rtl;vclactnband;vcldb;vcldbx;vcltouch;xmlrtl;dsnap;dsnapcon;TeeUI;TeeDB;Tee;vclib;ibxpress;adortl;IndyCore;IndySystem;IndyProtocols;inet;intrawebdb_100_140;Intraweb_100_140;VclSmp;vclie;inetdb;webdsnap;websnap;inetdbbde;inetdbxpress;soaprtl;vclribbon;DbxCommonDriver;DbxClientDriver;DBXInterBaseDriver;DBXMySQLDriver;dbexpress;dbxcds</DCC_UsePackage>
+			<DCC_UnitSearchPath>..\..\..\Source\Delphi\src\Include;..\..\..\Source\Delphi\Libraries\Jcl\include;..\..\..\Source\Delphi\Libraries\Jwapi\Win32API;..\..\..\Source\Delphi\Libraries\Jcl\Commen;..\..\..\Source\Delphi\Libraries\Jcl\windows;..\..\..\Source\Delphi\Libraries\Jwapi\Includes;..\..\..\Source\Delphi\src;..\..\..\Source\Delphi\Libraries\DirectX9;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ExeOutput>..\..\..\Source\Delphi\Bin\Tools\</DCC_ExeOutput>
+			<DCC_DcuOutput>..\..\..\Source\Delphi\Dcu</DCC_DcuOutput>
 			<BRCC_CompilerToUse>rc</BRCC_CompilerToUse>
-			<DCC_DependencyCheckOutputName>XBEExplorer.exe</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>..\..\..\Source\Delphi\Bin\Tools\XBEExplorer.exe</DCC_DependencyCheckOutputName>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<Version>7.0</Version>
@@ -34,14 +38,10 @@
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_DependencyCheckOutputName>..\..\bin\XBEExplorer.exe</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
-			<DCC_ExeOutput>..\..\bin</DCC_ExeOutput>
-			<DCC_DcuOutput>..\..\dcu</DCC_DcuOutput>
 			<DCC_ObjOutput>..\..\dcu</DCC_ObjOutput>
 			<DCC_HppOutput>..\..\dcu</DCC_HppOutput>
-			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ResourcePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ResourcePath)</DCC_ResourcePath>
 			<DCC_ObjPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ObjPath)</DCC_ObjPath>
 			<DCC_IncludePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_IncludePath)</DCC_IncludePath>
@@ -86,6 +86,10 @@
 					<Source>
 						<Source Name="MainSource">XBEExplorer.dpr</Source>
 					</Source>
+					<Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k140.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dclofficexp140.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+					</Excluded_Packages>
 				</Delphi.Personality>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
@@ -94,39 +98,36 @@
 			<DelphiCompile Include="XBEExplorer.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<RcCompile Include="..\..\resource\XBEExplorerResources.rc">
+			<RcCompile Include="..\..\..\resources\XBEExplorerResources.rc">
 				<ContainerId>RC</ContainerId>
 				<ContainerId>RC</ContainerId>
 				<Form>XBEExplorerResources.res</Form>
 			</RcCompile>
-			<DCCReference Include="..\..\src\XBEExplorer\uXBEExplorerMain.pas">
-				<Form>FormXBEExplorer</Form>
-			</DCCReference>
-			<DCCReference Include="..\..\src\uXbe.pas"/>
-			<DCCReference Include="..\..\src\uTypes.pas"/>
-			<DCCReference Include="..\..\src\uConsts.pas"/>
-			<DCCReference Include="..\..\src\uDxbxUtils.pas"/>
-			<DCCReference Include="..\..\src\uLog.pas"/>
-			<DCCReference Include="..\..\src\uTime.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas"/>
-			<DCCReference Include="..\..\src\uConsoleClass.pas"/>
-			<DCCReference Include="..\..\src\XBEExplorer\uHexViewer.pas">
-				<Form>HexViewer</Form>
-				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
-			<DCCReference Include="..\..\src\XBEExplorer\uStringsViewer.pas"/>
-			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
-			<DCCReference Include="..\..\src\uFileSystem.pas"/>
-			<DCCReference Include="..\..\src\XBEExplorer\uExploreFileSystem.pas">
+			<DCCReference Include="..\..\..\Source\Delphi\Libraries\BeaEngine\BeaEngine.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\Tools\XBEExplorer\uDisassembleViewer.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\Tools\XBEExplorer\uExploreFileSystem.pas">
 				<Form>frmExploreFileSystem</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src\XBEExplorer\uDisassembleViewer.pas"/>
-			<DCCReference Include="..\..\Libraries\BeaEngine\BeaEngine.pas"/>
-			<DCCReference Include="..\..\src\XBEExplorer\uSectionViewer.pas"/>
-			<DCCReference Include="..\..\src\XBEExplorer\uViewerUtils.pas"/>
-			<DCCReference Include="..\..\src\uDisassembleUtils.pas"/>
-			<DCCReference Include="..\..\src\VistaIconFix.pas"/>
-			<DCCReference Include="..\..\src\uCRC16.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\Tools\XBEExplorer\uHexViewer.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\Tools\XBEExplorer\uSectionViewer.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\Tools\XBEExplorer\uStringsViewer.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\Tools\XBEExplorer\uViewerUtils.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\Tools\XBEExplorer\uXBEExplorerMain.pas">
+				<Form>FormXBEExplorer</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uConsoleClass.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uConsts.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uCRC16.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uDisassembleUtils.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uDxbxUtils.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uFileSystem.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uLog.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uTime.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uTypes.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uXbe.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uXDVDFS.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuD3D8Types.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\VistaIconFix.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

@@ -66,7 +66,6 @@ object frmExploreFileSystem: TfrmExploreFileSystem
     Width = 241
     Height = 21
     Style = csDropDownList
-    ItemHeight = 0
     TabOrder = 0
     OnChange = ComboBox1Change
   end
