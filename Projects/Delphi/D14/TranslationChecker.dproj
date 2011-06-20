@@ -23,7 +23,10 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_DependencyCheckOutputName>TranslationChecker.exe</DCC_DependencyCheckOutputName>
+			<DCC_UnitSearchPath>..\..\..\Source\Delphi\src\Include;..\..\..\Source\Delphi\Libraries\Jcl\include;..\..\..\Source\Delphi\Libraries\Jwapi\Win32API;..\..\..\Source\Delphi\Libraries\Jcl\Commen;..\..\..\Source\Delphi\Libraries\Jcl\windows;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ExeOutput>..\..\..\Source\Delphi\Bin\Tools\</DCC_ExeOutput>
+			<DCC_DcuOutput>..\..\..\Source\Delphi\Dcu</DCC_DcuOutput>
+			<DCC_DependencyCheckOutputName>..\..\..\Source\Delphi\Bin\Tools\TranslationChecker.exe</DCC_DependencyCheckOutputName>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<Version>7.0</Version>
@@ -33,15 +36,13 @@
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_DcuOutput>..\..\..\Source\Delphi\Dcu\</DCC_DcuOutput>
+			<DCC_ExeOutput>..\..\..\Source\Delphi\Bin\Tools\</DCC_ExeOutput>
 			<DCC_MapFile>3</DCC_MapFile>
-			<DCC_DependencyCheckOutputName>..\..\Bin\TranslationChecker.exe</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
-			<DCC_ExeOutput>..\..\Bin\</DCC_ExeOutput>
-			<DCC_DcuOutput>..\..\dcu\</DCC_DcuOutput>
 			<DCC_ObjOutput>..\..\dcu\</DCC_ObjOutput>
 			<DCC_HppOutput>..\..\dcu\</DCC_HppOutput>
-			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ResourcePath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ResourcePath)</DCC_ResourcePath>
 			<DCC_ObjPath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ObjPath)</DCC_ObjPath>
 			<DCC_IncludePath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_IncludePath)</DCC_IncludePath>
@@ -94,8 +95,8 @@
 			<DelphiCompile Include="TranslationChecker.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="..\..\src\uTypes.pas"/>
-			<DCCReference Include="..\..\src\Tools\TranslationChecker\uTranslationChecker.pas">
+			<DCCReference Include="..\..\..\Source\Delphi\src\uTypes.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\Tools\TranslationChecker\uTranslationChecker.pas">
 				<Form>Form1</Form>
 			</DCCReference>
 			<BuildConfiguration Include="Base">

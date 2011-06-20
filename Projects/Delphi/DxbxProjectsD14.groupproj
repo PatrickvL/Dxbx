@@ -3,12 +3,6 @@
 			<ProjectGuid>{506B3C32-510A-4286-8C14-105BD2EB8A1A}</ProjectGuid>
 		</PropertyGroup>
 		<ItemGroup>
-			<Projects Include="d14\XdkTracker.dproj">
-				<Dependencies/>
-			</Projects>
-			<Projects Include="d14\XIso.dproj">
-				<Dependencies/>
-			</Projects>
 			<Projects Include="d14\TranslationChecker.dproj">
 				<Dependencies/>
 			</Projects>
@@ -24,9 +18,6 @@
 			<Projects Include="d14\XBEExplorer.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="d14\SvnBuilder.dproj">
-				<Dependencies/>
-			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -35,24 +26,6 @@
 				<Default.Personality/>
 			</BorlandProject>
 		</ProjectExtensions>
-		<Target Name="XdkTracker">
-			<MSBuild Projects="d14\XdkTracker.dproj"/>
-		</Target>
-		<Target Name="XdkTracker:Clean">
-			<MSBuild Targets="Clean" Projects="d14\XdkTracker.dproj"/>
-		</Target>
-		<Target Name="XdkTracker:Make">
-			<MSBuild Targets="Make" Projects="d14\XdkTracker.dproj"/>
-		</Target>
-		<Target Name="XIso">
-			<MSBuild Projects="d14\XIso.dproj"/>
-		</Target>
-		<Target Name="XIso:Clean">
-			<MSBuild Targets="Clean" Projects="d14\XIso.dproj"/>
-		</Target>
-		<Target Name="XIso:Make">
-			<MSBuild Targets="Make" Projects="d14\XIso.dproj"/>
-		</Target>
 		<Target Name="TranslationChecker">
 			<MSBuild Projects="d14\TranslationChecker.dproj"/>
 		</Target>
@@ -98,23 +71,14 @@
 		<Target Name="XBEExplorer:Make">
 			<MSBuild Targets="Make" Projects="d14\XBEExplorer.dproj"/>
 		</Target>
-		<Target Name="SvnBuilder">
-			<MSBuild Projects="d14\SvnBuilder.dproj"/>
-		</Target>
-		<Target Name="SvnBuilder:Clean">
-			<MSBuild Targets="Clean" Projects="d14\SvnBuilder.dproj"/>
-		</Target>
-		<Target Name="SvnBuilder:Make">
-			<MSBuild Targets="Make" Projects="d14\SvnBuilder.dproj"/>
-		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="XdkTracker;XIso;TranslationChecker;PatternTrieBuilder;DxbxKrnl;Dxbx;XBEExplorer;SvnBuilder"/>
+			<CallTarget Targets="TranslationChecker;PatternTrieBuilder;DxbxKrnl;Dxbx;XBEExplorer"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="XdkTracker:Clean;XIso:Clean;TranslationChecker:Clean;PatternTrieBuilder:Clean;DxbxKrnl:Clean;Dxbx:Clean;XBEExplorer:Clean;SvnBuilder:Clean"/>
+			<CallTarget Targets="TranslationChecker:Clean;PatternTrieBuilder:Clean;DxbxKrnl:Clean;Dxbx:Clean;XBEExplorer:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="XdkTracker:Make;XIso:Make;TranslationChecker:Make;PatternTrieBuilder:Make;DxbxKrnl:Make;Dxbx:Make;XBEExplorer:Make;SvnBuilder:Make"/>
+			<CallTarget Targets="TranslationChecker:Make;PatternTrieBuilder:Make;DxbxKrnl:Make;Dxbx:Make;XBEExplorer:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>
