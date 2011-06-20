@@ -23,11 +23,11 @@ program PatternTrieBuilder;
 
 uses
   SysUtils,
-  uPatternsToTrie in '..\..\src\Tools\PatternTrieBuilder\uPatternsToTrie.pas',
-  uDxbxUtils in '..\..\src\uDxbxUtils.pas',
-  uStoredTrieTypes in '..\..\src\uStoredTrieTypes.pas',
-  uTypes in '..\..\src\uTypes.pas',
-  uCRC16 in '..\..\src\uCRC16.pas';
+  uTypes in '..\..\..\Source\Delphi\src\uTypes.pas',
+  uStoredTrieTypes in '..\..\..\Source\Delphi\src\uStoredTrieTypes.pas',
+  uDxbxUtils in '..\..\..\Source\Delphi\src\uDxbxUtils.pas',
+  uCRC16 in '..\..\..\Source\Delphi\src\uCRC16.pas',
+  uPatternsToTrie in '..\..\..\Source\Delphi\src\Tools\PatternTrieBuilder\uPatternsToTrie.pas';
 
 begin
   try
