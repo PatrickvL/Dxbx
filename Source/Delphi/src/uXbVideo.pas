@@ -27,8 +27,8 @@ uses
   Windows,
   SysUtils,
   // Dxbx
-  uTypes
-  , uError;
+  uTypes,
+  uError;
 
 // Dxbx Note : Cxbx uses BOOL in this unit, but that's an int-based type and we prefer a true boolean type,
 // so we'll use the _BOOL type (=System.Boolean) instead for our property getters and setters.

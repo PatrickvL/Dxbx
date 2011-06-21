@@ -23,6 +23,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_UnitSearchPath>..\..\..\Source\Delphi\src\Include;..\..\..\Source\Delphi\Libraries\Jcl\include;..\..\..\Source\Delphi\Libraries\Jcl\Commen;..\..\..\Source\Delphi\Libraries\Jcl\Windows;..\..\..\Source\Delphi\Libraries\Jwapi\Win32API;..\..\..\Source\Delphi\Libraries\Jwapi\includes;..\..\..\Source\Delphi\Libraries\DirectX9;..\..\..\Source\Delphi\Libraries\BeaEngine;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ExeOutput>..\..\..\Source\Delphi\Bin</DCC_ExeOutput>
 			<DCC_DcuOutput>..\..\..\Source\Delphi\Dcu</DCC_DcuOutput>
 			<DCC_Define>DXBX_DLL;$(DCC_Define)</DCC_Define>
@@ -120,7 +121,6 @@
 			<DCCReference Include="..\..\..\Source\Delphi\Libraries\GLScene\OpenGL1x.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\Libraries\GLScene\OpenGLTokens.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\Libraries\GLScene\VectorTypes.pas"/>
-			<DCCReference Include="..\..\..\Source\Delphi\Libraries\Jcl\windows\JclDebug.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uConvert.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uMiniport.pas"/>
@@ -169,6 +169,47 @@
 			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuXTL.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uHLEIntercept.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uResourceTracker.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uBitUtils.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uConsoleClass.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uConsts.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uCRC16.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uDisassembleUtils.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uDxbxUtils.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uDxbxXml.pas">
+				<Form>DxbxXml</Form>
+				<DesignClass>TDataModule</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uEmuExe.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uEmuShared.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uError.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uFileSystem.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\ufrm_About.pas">
+				<Form>frm_About</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\..\Source\Delphi\src\ufrm_Configuration.pas">
+				<Form>fmConfiguration</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\..\Source\Delphi\src\ufrm_Main.pas">
+				<Form>frm_Main</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uImportGames.pas">
+				<Form>frm_XBEList</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uKernelThunk.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uLog.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uMutex.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uStoredTrieTypes.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uTime.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uTypes.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uWindows.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uXBController.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uXbe.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uXboxLibraryUtils.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uXbSound.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uXbVideo.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uXDVDFS.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\VistaIconFix.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uData.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
