@@ -23,6 +23,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_UnitSearchPath>..\..\..\Source\Delphi\src\Include;..\..\..\Source\Delphi\Libraries\Jcl\include;..\..\..\Source\Delphi\Libraries\Jwapi\Win32API;..\..\..\Source\Delphi\Libraries\Jwapi\Includes;..\..\..\Source\Delphi\Libraries\Jcl\windows;..\..\..\Source\Delphi\Libraries\Jcl\Commen;..\..\..\Source\Delphi\Libraries\DirectX9;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<BRCC_CompilerToUse>rc</BRCC_CompilerToUse>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
 			<DCC_Optimize>false</DCC_Optimize>
@@ -120,44 +121,51 @@
 			<DelphiCompile Include="Dxbx.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<RcCompile Include="..\..\resource\DxbxResources.rc">
+			<RcCompile Include="..\..\..\Resources\DxbxResources.rc">
 				<ContainerId>RC</ContainerId>
 				<ContainerId>RC</ContainerId>
 				<Form>DxbxResources.res</Form>
 			</RcCompile>
-			<RcCompile Include="..\..\resource\SvnRevision.rc">
+			<RcCompile Include="..\..\..\Resources\SvnRevision.rc">
 				<ContainerId>RC</ContainerId>
 				<ContainerId>RC</ContainerId>
 				<Form>SvnRevision.res</Form>
 			</RcCompile>
-			<DCCReference Include="..\..\src\uEmuShared.pas"/>
-			<DCCReference Include="..\..\src\uError.pas"/>
-			<DCCReference Include="..\..\src\ufrm_About.pas"/>
-			<DCCReference Include="..\..\src\ufrm_Main.pas"/>
-			<DCCReference Include="..\..\src\uLog.pas"/>
-			<DCCReference Include="..\..\src\uMutex.pas"/>
-			<DCCReference Include="..\..\src\uTime.pas"/>
-			<DCCReference Include="..\..\src\uTypes.pas"/>
-			<DCCReference Include="..\..\src\uWindows.pas"/>
-			<DCCReference Include="..\..\src\uXBController.pas"/>
-			<DCCReference Include="..\..\src\uXbe.pas"/>
-			<DCCReference Include="..\..\src\uXbVideo.pas"/>
-			<DCCReference Include="..\..\src\uConsoleClass.pas"/>
-			<DCCReference Include="..\..\src\uConsts.pas"/>
-			<DCCReference Include="..\..\src\uDxbxXml.pas"/>
-			<DCCReference Include="..\..\src\uDxbxUtils.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas"/>
-			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
-			<DCCReference Include="..\..\src\uFileSystem.pas"/>
-			<DCCReference Include="..\..\src\Tools\XdkTracker\src\uData.pas"/>
-			<DCCReference Include="..\..\src\VistaIconFix.pas"/>
-			<DCCReference Include="..\..\src\ufrm_Configuration.pas">
-				<Form>fmConfiguration</Form>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uEmuShared.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uError.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\ufrm_About.pas">
+				<Form>frm_About</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src\uImportGames.pas">
+			<DCCReference Include="..\..\..\Source\Delphi\src\ufrm_Main.pas">
+				<Form>frm_Main</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uLog.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\VistaIconFix.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uXDVDFS.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uXbVideo.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uXbSound.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uMutex.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uXBController.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uWindows.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uTypes.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uImportGames.pas">
 				<Form>frm_XBEList</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\src\uXbSound.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\ufrm_Configuration.pas">
+				<Form>fmConfiguration</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uFileSystem.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uConsoleClass.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uConsts.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uDxbxUtils.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuD3D8Types.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uData.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uXbe.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uTime.pas"/>
+			<DCCReference Include="..\..\..\Source\Delphi\src\uDxbxXml.pas">
+				<Form>DxbxXml</Form>
+				<DesignClass>TDataModule</DesignClass>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
