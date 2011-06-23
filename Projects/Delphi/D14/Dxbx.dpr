@@ -19,36 +19,36 @@ program Dxbx;
 
 {$INCLUDE Dxbx.inc}
 
-{$R 'DxbxResources.res' '..\..\resource\DxbxResources.rc'}
-{$R 'SvnRevision.res' '..\..\resource\SvnRevision.rc'}
+{$R 'DxbxResources.res' '..\..\..\Resources\DxbxResources.rc'}
+{$R 'SvnRevision.res' '..\..\..\Resources\SvnRevision.rc'}
 
 uses
   SysUtils,
   Forms,
-  uEmuShared in '..\..\src\uEmuShared.pas',
-  uError in '..\..\src\uError.pas',
-  ufrm_About in '..\..\src\ufrm_About.pas',
-  ufrm_Main in '..\..\src\ufrm_Main.pas',
-  uLog in '..\..\src\uLog.pas',
-  uMutex in '..\..\src\uMutex.pas',
-  uTime in '..\..\src\uTime.pas',
-  uTypes in '..\..\src\uTypes.pas',
-  uWindows in '..\..\src\uWindows.pas',
-  uXBController in '..\..\src\uXBController.pas',
-  uXbe in '..\..\src\uXbe.pas',
-  uXbVideo in '..\..\src\uXbVideo.pas',
-  uConsoleClass in '..\..\src\uConsoleClass.pas',
-  uConsts in '..\..\src\uConsts.pas',
-  uDxbxXml in '..\..\src\uDxbxXml.pas',
-  uDxbxUtils in '..\..\src\uDxbxUtils.pas',
-  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
-  uXDVDFS in '..\..\src\uXDVDFS.pas',
-  uFileSystem in '..\..\src\uFileSystem.pas',
-  uData in '..\..\src\Tools\XdkTracker\src\uData.pas',
-  VistaIconFix in '..\..\src\VistaIconFix.pas',
-  ufrm_Configuration in '..\..\src\ufrm_Configuration.pas' {fmConfiguration},
-  uImportGames in '..\..\src\uImportGames.pas' {frm_XBEList},
-  uXbSound in '..\..\src\uXbSound.pas';
+  uEmuShared in '..\..\..\Source\Delphi\src\uEmuShared.pas',
+  uError in '..\..\..\Source\Delphi\src\uError.pas',
+  ufrm_About in '..\..\..\Source\Delphi\src\ufrm_About.pas' {frm_About},
+  ufrm_Main in '..\..\..\Source\Delphi\src\ufrm_Main.pas' {frm_Main},
+  uLog in '..\..\..\Source\Delphi\src\uLog.pas',
+  VistaIconFix in '..\..\..\Source\Delphi\src\VistaIconFix.pas',
+  uXDVDFS in '..\..\..\Source\Delphi\src\uXDVDFS.pas',
+  uXbVideo in '..\..\..\Source\Delphi\src\uXbVideo.pas',
+  uXbSound in '..\..\..\Source\Delphi\src\uXbSound.pas',
+  uMutex in '..\..\..\Source\Delphi\src\uMutex.pas',
+  uXBController in '..\..\..\Source\Delphi\src\uXBController.pas',
+  uWindows in '..\..\..\Source\Delphi\src\uWindows.pas',
+  uTypes in '..\..\..\Source\Delphi\src\uTypes.pas',
+  uImportGames in '..\..\..\Source\Delphi\src\uImportGames.pas' {frm_XBEList},
+  ufrm_Configuration in '..\..\..\Source\Delphi\src\ufrm_Configuration.pas' {fmConfiguration},
+  uFileSystem in '..\..\..\Source\Delphi\src\uFileSystem.pas',
+  uConsoleClass in '..\..\..\Source\Delphi\src\uConsoleClass.pas',
+  uConsts in '..\..\..\Source\Delphi\src\uConsts.pas',
+  uDxbxUtils in '..\..\..\Source\Delphi\src\uDxbxUtils.pas',
+  uEmuD3D8Types in '..\..\..\Source\Delphi\src\DxbxKrnl\uEmuD3D8Types.pas',
+  uData in '..\..\..\Source\Delphi\src\uData.pas',
+  uXbe in '..\..\..\Source\Delphi\src\uXbe.pas',
+  uTime in '..\..\..\Source\Delphi\src\uTime.pas',
+  uDxbxXml in '..\..\..\Source\Delphi\src\uDxbxXml.pas' {DxbxXml: TDataModule};
 
 {$R *.RES}
 
