@@ -34,6 +34,7 @@ uses
   XboxKrnl,
   // Dxbx
   uLog,
+  XbeHeaders,
   uXbe,
   uEmuFS,
   uEmuKrnl,

@@ -51,6 +51,11 @@ const
   clXboxGreen = $22CC88;//22BB77;//27BB73;//00DE97;//0DB366;//0FB869;
 
 type
+  TDxbxEmu = Class
+  public
+    Xbe: TXbe;
+  End;
+
   Tfrm_Main = class(TForm)
     d: TMainMenu;
     mnu_File: TMenuItem;
@@ -192,7 +197,6 @@ type
     procedure FindFiles(FilesList: TStringList; StartDir, FileMask: string);
     function BrowseDialog (const Title: string; const Flag: integer): string;
 
-//    function ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
     function FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
     function _ReadXBEInfoFromNode(const XBEInfoNode: IXMLNode): TXBEInfo;
     procedure UpdateBackground;
@@ -213,7 +217,7 @@ type
 
     function LoadXBEListByXml(aXml: String): Integer;
   private
-    m_Xbe: TXbe;
+    DxbxEmu: TDxbxEmu;
 
     Emulation_State: EMU_STATE;
 
@@ -526,6 +530,8 @@ var
   XBEFilePath: string;
   DummyStr: string;
 begin
+  DxbxEmu := TDxbxEmu.Create;
+
   Application.OnMessage := AppMessage;
   ApplicationDir := ExtractFilePath(Application.ExeName);
 
@@ -578,7 +584,7 @@ begin
   if  (XBEFilePath <> '')
   and Drives.D.OpenImage(XBEFilePath, {out}DummyStr) then
   begin
-    if OpenXbe(XBEFilePath, {var}m_Xbe) then
+    if OpenXbe(XBEFilePath, {var}DxbxEmu.Xbe) then
       LaunchXBE;
     // TODO : Error logging should go here
   end;
@@ -603,6 +609,7 @@ begin
 
   FreeAndNil(BackgroundImage);
 
+  FreeAndNil(DxbxEmu);
   inherited Destroy;
 end;
 
@@ -622,7 +629,7 @@ begin
       DragQueryFile(Msg.wParam, i, pcFileName, iSize);
       if LoadXbe(pcFileName) then
       begin
-        DxbxXml.CreateXmlXbeDumpAsText(XbeXml, m_Xbe, pcFileName);
+        DxbxXml.CreateXmlXbeDumpAsText(XbeXml, DxbxEmu.Xbe, pcFileName);
         LoadXBEListByXml(XbeXml);
         Application.ProcessMessages; // Just to stay responsive with large drops
       end;
@@ -779,7 +786,7 @@ begin
     //
   else
   begin
-    m_Xbe := nil;
+    DxbxEmu.Xbe := nil;
     UpdateTitleInformation;
   end;
 end;
@@ -907,9 +914,9 @@ begin
     VK_DELETE: // Delete key means : ask to remove active xbe from list
     begin
       Key := 0;
-      if Assigned(m_Xbe) and m_Xbe.isValid then
+      if Assigned(DxbxEmu.Xbe) and DxbxEmu.Xbe.isValid then
       begin
-        i := FindByFileName(m_Xbe.XbePath);
+        i := FindByFileName(DxbxEmu.Xbe.XbePath);
         if i >= 0 then
           RemoveGameFromList(i);
       end
@@ -1072,13 +1079,13 @@ procedure Tfrm_Main.actStartEmulationExecute(Sender: TObject);
 var
   NoRunReason: string;
 begin
-  if not Assigned(m_Xbe) then
+  if not Assigned(DxbxEmu.Xbe) then
   begin
     MessageDlg('No xbe file loaded', mtInformation, [mbOk], 0);
     Exit;
   end;
 
-  if CanRunXbe(m_Xbe, {var}NoRunReason) then
+  if CanRunXbe(DxbxEmu.Xbe, {var}NoRunReason) then
     LaunchXBE
   else
     MessageDlg('Cannot launch xbe!'#13#10 + NoRunReason, mtError, [mbOk], 0);
@@ -1092,7 +1099,7 @@ end;
 procedure Tfrm_Main.actConsoleXbeInfoExecute(Sender: TObject);
 begin
   // dump xbe information to debug console
-  if m_Xbe.DumpInformation then
+  if DxbxEmu.Xbe.DumpInformation then
     WriteLog(m_szAsciiTitle + '`s .xbe info was successfully dumped.')
   else
     WriteLog(m_szAsciiTitle + '`s .xbe info was successfully dumped.'); // NOT!
@@ -1201,7 +1208,7 @@ end;
 
 procedure Tfrm_Main.actFileXbeInfoExecute(Sender: TObject);
 begin
-  SaveDialog.FileName := m_Xbe.DetermineDumpFileName;
+  SaveDialog.FileName := DxbxEmu.Xbe.DetermineDumpFileName;
   SaveDialog.Filter := DIALOG_FILTER_TEXT;
 
   if SaveDialog.Execute then
@@ -1213,7 +1220,7 @@ begin
         Exit;
     end;
 
-    m_Xbe.DumpInformation(SaveDialog.FileName);
+    DxbxEmu.Xbe.DumpInformation(SaveDialog.FileName);
     WriteLog(m_szAsciiTitle + '''s .xbe info was successfully dumped.');
     MessageDlg(m_szAsciiTitle + '''s .xbe info was successfully dumped.', mtInformation, [mbOk], 0);
   end;
@@ -1335,40 +1342,6 @@ begin
 
   DirList.Free;
 end;
-
-(*function Tfrm_Main.ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
-var
-  i: Integer;
-  XBEInfo: TXBEInfo;
-begin
-  Result := 0;
-
-  frm_XBEList := Tfrm_XBEList.Create(Self);
-  try
-    // Precalculate the IsDuplicate members (this will be used to feed the checkboxes) :
-    for i := 0 to XBEImportList.Count - 1 do
-    begin
-      XBEInfo := TXBEInfo(XBEImportList.Objects[i]);
-      XBEInfo.IsDuplicate := FindDuplicate(XBEInfo) >= 0;
-    end;
-
-    // Put this list into the view :
-    frm_XBEList.FillXBEList(XBEImportList, {ShowAsImport=}True);
-
-    if frm_XBEList.ShowModal = mrOk then
-    begin
-      for i := 0 to frm_XBEList.lst_XBEs.Items.Count - 1 do
-        if  frm_XBEList.lst_XBEs.Items[i].Checked
-        and InsertXBEInfo(TXBEInfo(frm_XBEList.lst_XBEs.Items[i].Data)) then
-          Inc(Result);
-
-      MyXBEList.Sort;
-    end;
-  finally
-    frm_XBEList.Release;
-    frm_XBEList := nil;
-  end;
-end; // ShowImportList *)
 
 function Tfrm_Main.ImportXBEGameList(aImportFilePath: string = '';
   aUseImportDialog: Boolean = False): Integer;
@@ -1675,8 +1648,8 @@ procedure Tfrm_Main.actXbeExplorerExecute(Sender: TObject);
 var
   Parameters: string;
 begin
-  if Assigned(m_Xbe) and m_Xbe.isValid then
-    Parameters := AnsiQuotedStr(m_Xbe.XbePath, '"')
+  if Assigned(DxbxEmu.Xbe) and DxbxEmu.Xbe.isValid then
+    Parameters := AnsiQuotedStr(DxbxEmu.Xbe.XbePath, '"')
   else
     Parameters := '';
 
@@ -1692,10 +1665,10 @@ procedure Tfrm_Main.actXdkTrackerXbeInfoExecute(Sender: TObject);
 var
   DumpFilePath: string;
 begin
-  if Assigned(m_Xbe) and m_Xbe.isValid then
+  if Assigned(DxbxEmu.Xbe) and DxbxEmu.Xbe.isValid then
   begin
     DumpFilePath := FApplicationDir + 'Tools\Dump.dat';
-    DxbxXml.CreateXmlXbeDump(DumpFilePath, m_Xbe);
+    DxbxXml.CreateXmlXbeDump(DumpFilePath, DxbxEmu.Xbe);
 
     if not SendCommandToXdkTracker then
       StartTool(cXDKTrackerPath, '/XBEDUMP');
@@ -1776,7 +1749,7 @@ procedure Tfrm_Main.AdjustMenu;
 begin
   // Update File menu actions :
   actOpenXbe.Enabled := True;
-  actCloseXbe.Enabled := Assigned(m_Xbe) and m_Xbe.isValid;
+  actCloseXbe.Enabled := Assigned(DxbxEmu.Xbe) and DxbxEmu.Xbe.isValid;
 
   mnu_RecentXbefiles.Enabled := (mnu_RecentXbefiles.Count > 0);
 
@@ -1801,7 +1774,7 @@ begin
 
   // Update Edit menu actions (should be done after actXdkTracker update) :
   mnu_Patch.Enabled := False;
-  mnu_DumpxbeinfoTo.Enabled := Assigned(m_Xbe) and m_Xbe.isValid;
+  mnu_DumpxbeinfoTo.Enabled := Assigned(DxbxEmu.Xbe) and DxbxEmu.Xbe.isValid;
 
   mnu_BypassSymbolCache.Checked := g_EmuShared.m_BypassSymbolCache;
 end; // AdjustMenu
@@ -1824,7 +1797,7 @@ var
 begin
   Parameters :=
     {LaunchArgument=}'/load ' +
-    {XbePath=}AnsiQuotedStr(m_Xbe.XbePath, '"') + ' ' +
+    {XbePath=}AnsiQuotedStr(DxbxEmu.Xbe.XbePath, '"') + ' ' +
     {WindowHandle=}IntToStr(GetEmuWindowHandle) + ' ' +
     {DebugMode=}IntToStr(Ord(KernelDebugMode)) + ' ' +
     {DebugFileName=}AnsiQuotedStr(GetTitleSpecificKernelDebugFilePath, '"');
@@ -1845,7 +1818,7 @@ begin
     Exit;
 
   CloseXbe();
-  Result := OpenXbe(aFileName, {var}m_Xbe);
+  Result := OpenXbe(aFileName, {var}DxbxEmu.Xbe);
   if Result then
   begin
     RecentXbeAdd(XbeOpenDialog.FileName);
@@ -1860,9 +1833,9 @@ end; // LoadXbe
 
 procedure Tfrm_Main.CloseXbe;
 begin
-  if Assigned(m_Xbe) and m_Xbe.isValid then
+  if Assigned(DxbxEmu.Xbe) and DxbxEmu.Xbe.isValid then
   begin
-    FreeAndNil(m_Xbe);
+    FreeAndNil(DxbxEmu.Xbe);
 
     UpdateTitleInformation;
 
@@ -1923,14 +1896,14 @@ var
   LibName: string;
   Version: string;
 begin
-  if Assigned(m_XBE) and m_xbe.isValid and m_XBE.ExportLogoBitmap(ImageLogo.Picture.Bitmap) then
+  if Assigned(DxbxEmu.XBE) and DxbxEmu.xbe.isValid and DxbxEmu.XBE.ExportLogoBitmap(ImageLogo.Picture.Bitmap) then
     ImageLogo.Show
   else
     ImageLogo.Hide;
 
-  if Assigned(m_XBE) and m_xbe.isValid then
+  if Assigned(DxbxEmu.XBE) and DxbxEmu.xbe.isValid then
   begin
-    if not m_XBE.ExportIconBitmap(ImageIcon.Picture.Bitmap) then
+    if not DxbxEmu.XBE.ExportIconBitmap(ImageIcon.Picture.Bitmap) then
       ImageIcon.Picture.Assign(GetJPEGResource('GUIIconNotAvailable'));
 
       // Round of the corners a bit :
@@ -1970,7 +1943,7 @@ begin
   else
     ImageIcon.Hide;
 
-  if Assigned(m_XBE) and m_Xbe.isValid then
+  if Assigned(DxbxEmu.XBE) and DxbxEmu.Xbe.isValid then
   begin
     lblXbeInformation.Caption := Format(
       '%s'#13 +
@@ -1979,21 +1952,21 @@ begin
       #13 +
       'Library versions', [
       PChar(m_szAsciiTitle),
-      m_XBE.m_Certificate.dwTitleId,
-      GameRegionToString(m_XBE.m_Certificate.dwGameRegion)]);
+      DxbxEmu.XBE.m_Certificate.dwTitleId,
+      GameRegionToString(DxbxEmu.XBE.m_Certificate.dwGameRegion)]);
 
     // Add library versions (TODO : Sort them alfabetically)
-    for i := 0 to Integer(m_XBE.m_Header.dwLibraryVersions) - 1 do
+    for i := 0 to Integer(DxbxEmu.XBE.m_Header.dwLibraryVersions) - 1 do
     begin
-      LibName := string(Copy(m_XBE.m_LibraryVersion[i].szName, 1, XBE_LIBRARYNAME_MAXLENGTH));
-      Version := IntToStr(m_XBE.m_LibraryVersion[i].wMajorVersion) + '.' +
-        IntToStr(m_XBE.m_LibraryVersion[i].wMinorVersion) + '.' +
-        IntToStr(m_XBE.m_LibraryVersion[i].wBuildVersion);
+      LibName := string(Copy(DxbxEmu.XBE.m_LibraryVersion[i].szName, 1, XBE_LIBRARYNAME_MAXLENGTH));
+      Version := IntToStr(DxbxEmu.XBE.m_LibraryVersion[i].wMajorVersion) + '.' +
+        IntToStr(DxbxEmu.XBE.m_LibraryVersion[i].wMinorVersion) + '.' +
+        IntToStr(DxbxEmu.XBE.m_LibraryVersion[i].wBuildVersion);
       lblXbeInformation.Caption := lblXbeInformation.Caption +
         #13 + LibName + StringOfChar(' ', 8 - Length(LibName)) + ':' + Version;
     end;
 
-    if CanRunXbe(m_Xbe, {var}LibName) then
+    if CanRunXbe(DxbxEmu.Xbe, {var}LibName) then
     begin
       // Update Xbe compatibility state only if not running already :
       if Emulation_State <> esRunning then
@@ -2152,21 +2125,14 @@ begin
         // Old-style 'Name' values are read here, interpreted as FileName :
         FileName := XML_ReadString(XBEInfoNode, 'Name');
 
-      // For now, only add to list when the user can intervene,
-      // or when not yet present :
-//      if aUseImportDialog
-//      or (FindByFileName(FileName) < 0) }then
         XBEImportList.AddObject('', _ReadXBEInfoFromNode(XBEInfoNode));
 
       XBEInfoNode := XBEInfoNode.NextSibling;
     end;
 
-//    if aUseImportDialog then
-//      Result := ShowImportList(XBEImportList, Publisher)
-//    else
-      for i := 0 to XBEImportList.Count - 1 do
-        if InsertXBEInfo(TXBEInfo(XBEImportList.Objects[i])) then
-          Inc(Result);
+    for i := 0 to XBEImportList.Count - 1 do
+      if InsertXBEInfo(TXBEInfo(XBEImportList.Objects[i])) then
+        Inc(Result);
 
     MyXBEList.Sort;
 
@@ -2219,7 +2185,7 @@ begin
   if FileExists(aFileName) then
     if LoadXbe(aFileName) then
     begin
-      DxbxXml.CreateXmlXbeDumpAsText(XbeXml, m_Xbe, aFileName);
+      DxbxXml.CreateXmlXbeDumpAsText(XbeXml, DxbxEmu.Xbe, aFileName);
       LoadXBEListByXml(XbeXml);
       UpdateFilter;
     end;

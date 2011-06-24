@@ -40,6 +40,7 @@ uses
   uTypes,
   uDxbxUtils,
   uLog,
+  XbeHeaders,
   uXbe,
   uDxbxDebugUtils,
   uDxbxKrnlUtils,

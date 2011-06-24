@@ -53,34 +53,6 @@ var
 
 implementation
 
-function AttributesToString(Attr: Integer): string;
-begin
-  if Attr = Integer(INVALID_FILE_ATTRIBUTES) then
-  begin
-    Result := 'Invalid';
-    Exit;
-  end;
-
-  Result := '';
-  if Attr and FILE_ATTRIBUTE_READONLY             > 0 then Result := Result + ', ReadOnly';
-  if Attr and FILE_ATTRIBUTE_HIDDEN               > 0 then Result := Result + ', Hidden';
-  if Attr and FILE_ATTRIBUTE_SYSTEM               > 0 then Result := Result + ', System';
-  if Attr and FILE_ATTRIBUTE_DIRECTORY            > 0 then Result := Result + ', Directory';
-  if Attr and FILE_ATTRIBUTE_ARCHIVE              > 0 then Result := Result + ', Archive';
-  if Attr and FILE_ATTRIBUTE_DEVICE               > 0 then Result := Result + ', Device';
-  if Attr and FILE_ATTRIBUTE_NORMAL               > 0 then Result := Result + ', Normal';
-  if Attr and FILE_ATTRIBUTE_TEMPORARY            > 0 then Result := Result + ', Temporary';
-  if Attr and FILE_ATTRIBUTE_SPARSE_FILE          > 0 then Result := Result + ', Sparse file';
-  if Attr and FILE_ATTRIBUTE_REPARSE_POINT        > 0 then Result := Result + ', Reparse point';
-  if Attr and FILE_ATTRIBUTE_COMPRESSED           > 0 then Result := Result + ', Compressed';
-  if Attr and FILE_ATTRIBUTE_OFFLINE              > 0 then Result := Result + ', Offline';
-  if Attr and FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  > 0 then Result := Result + ', Not content indexed';
-  if Attr and FILE_ATTRIBUTE_ENCRYPTED            > 0 then Result := Result + ', Encrypted';
-{$IF DECLARED (FILE_ATTRIBUTE_VIRTUAL)}
-  if Attr and FILE_ATTRIBUTE_VIRTUAL              > 0 then Result := Result + ', Virtual';
-{$IFEND}
-  Delete(Result, 1, 2);
-end;
 
 {$R *.dfm}
 

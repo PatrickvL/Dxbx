@@ -39,6 +39,7 @@ uses
   uFileSystem, // Drives
   uDxbxUtils,
   uLog,
+  XbeHeaders,
   uXbe, // PXbeHeader
   uKernelThunk,
   uEmuFile,

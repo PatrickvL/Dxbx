@@ -31,7 +31,8 @@ uses
   XMLDoc,
   // Dxbx
   uConsts,
-  uXbe;
+  uXbe,
+  XbeHeaders;
 
 type
   TDxbxXml = class(TDataModule)

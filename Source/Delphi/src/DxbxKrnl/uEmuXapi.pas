@@ -39,6 +39,7 @@ uses
   uTypes,
   uDxbxUtils,
   uLog, // DbgPrintf
+  XbeHeaders,
   uXbe,
   uDxbxKrnlUtils, // DxbxKrnl_XbeHeader
   uEmuAlloc,

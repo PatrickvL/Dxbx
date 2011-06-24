@@ -35,6 +35,7 @@ uses
   uConsts,
   uTypes,
   uDxbxUtils,
+  XbeHeaders,
   uXbe,
   uViewerUtils,
   uSectionViewer,
@@ -429,7 +430,6 @@ begin
 end;
 
 // LibVersionClick
-
 
 procedure TFormXBEExplorer.HandleGridDrawCell(Sender: TObject; aCol, aRow: Integer;
   Rect: TRect; State: TGridDrawState);
