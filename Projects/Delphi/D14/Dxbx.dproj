@@ -23,6 +23,8 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_ExeOutput>..\..\..\Source\Delphi\Bin</DCC_ExeOutput>
+			<DCC_DcuOutput>..\..\..\Source\Delphi\Dcu</DCC_DcuOutput>
 			<DCC_UnitSearchPath>..\..\..\Source\Delphi\src\Include;..\..\..\Source\Delphi\Libraries\Jcl\include;..\..\..\Source\Delphi\Libraries\Jwapi\Win32API;..\..\..\Source\Delphi\Libraries\Jwapi\Includes;..\..\..\Source\Delphi\Libraries\Jcl\windows;..\..\..\Source\Delphi\Libraries\Jcl\Commen;..\..\..\Source\Delphi\Libraries\DirectX9;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<BRCC_CompilerToUse>rc</BRCC_CompilerToUse>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
@@ -31,17 +33,14 @@
 			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
-			<DCC_DependencyCheckOutputName>Dxbx.exe</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>..\..\..\Source\Delphi\Bin\Dxbx.exe</DCC_DependencyCheckOutputName>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
-			<DCC_DependencyCheckOutputName>..\..\bin\Dxbx.exe</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
 			<DCC_DebugInformation>False</DCC_DebugInformation>
 			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-			<DCC_ExeOutput>..\..\bin</DCC_ExeOutput>
-			<DCC_DcuOutput>..\..\dcu</DCC_DcuOutput>
 			<DCC_ObjOutput>..\..\dcu</DCC_ObjOutput>
 			<DCC_HppOutput>..\..\dcu</DCC_HppOutput>
 			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
@@ -56,15 +55,12 @@
 			<DCC_RangeChecking>true</DCC_RangeChecking>
 			<DCC_Inlining>off</DCC_Inlining>
 			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
-			<DCC_DependencyCheckOutputName>..\..\bin\Dxbx.exe</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ResourcePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;$(DCC_ResourcePath)</DCC_ResourcePath>
 			<DCC_ObjPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;$(DCC_ObjPath)</DCC_ObjPath>
 			<DCC_IncludePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;$(DCC_IncludePath)</DCC_IncludePath>
-			<DCC_ExeOutput>..\..\bin</DCC_ExeOutput>
-			<DCC_DcuOutput>..\..\dcu</DCC_DcuOutput>
 			<DCC_ObjOutput>..\..\dcu</DCC_ObjOutput>
 			<DCC_HppOutput>..\..\dcu</DCC_HppOutput>
 			<DCC_IOChecking>False</DCC_IOChecking>
@@ -166,6 +162,7 @@
 				<Form>DxbxXml</Form>
 				<DesignClass>TDataModule</DesignClass>
 			</DCCReference>
+			<DCCReference Include="..\..\..\Source\Delphi\src\Headers\XbeHeaders.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

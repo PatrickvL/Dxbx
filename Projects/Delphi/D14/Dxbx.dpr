@@ -48,7 +48,8 @@ uses
   uData in '..\..\..\Source\Delphi\src\uData.pas',
   uXbe in '..\..\..\Source\Delphi\src\uXbe.pas',
   uTime in '..\..\..\Source\Delphi\src\uTime.pas',
-  uDxbxXml in '..\..\..\Source\Delphi\src\uDxbxXml.pas' {DxbxXml: TDataModule};
+  uDxbxXml in '..\..\..\Source\Delphi\src\uDxbxXml.pas' {DxbxXml: TDataModule},
+  XbeHeaders in '..\..\..\Source\Delphi\src\Headers\XbeHeaders.pas';
 
 {$R *.RES}
 

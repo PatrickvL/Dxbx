@@ -41,6 +41,7 @@ uses
   uTypes,
   uDxbxUtils,
   uLog,
+  XbeHeaders,
   uXbe,
   uEmuAlloc,
   uEmuLDT;

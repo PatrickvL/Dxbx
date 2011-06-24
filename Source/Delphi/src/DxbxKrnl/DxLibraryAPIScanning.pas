@@ -35,6 +35,7 @@ uses
   uTypes,
   uDxbxUtils,
   uLog,
+  XbeHeaders,
   uXBE,
   uDxbxKrnlUtils,
   uCRC16,

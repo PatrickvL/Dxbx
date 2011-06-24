@@ -36,6 +36,7 @@ uses
   uConsts,
   uTypes,
   uLog, // for WriteLog
+  XbeHeaders,
   uXBE; // PXBE_TLS
 
 function XBE_FindSectionHeaderByName(pSectionName: PAnsiChar): PXBE_SECTIONHEADER;

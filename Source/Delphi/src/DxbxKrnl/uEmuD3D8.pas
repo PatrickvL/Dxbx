@@ -54,6 +54,7 @@ uses
   uTypes, // Use after uXBVideo, to declare BOOL correctly!
   uDxbxUtils,
   uLog,
+  XbeHeaders,
   uXbe,
   uDxbxKrnlUtils,
   uState,

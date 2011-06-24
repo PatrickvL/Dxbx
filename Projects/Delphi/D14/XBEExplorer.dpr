@@ -25,7 +25,8 @@ uses
   uXbe in '..\..\..\Source\Delphi\src\uXbe.pas',
   uXDVDFS in '..\..\..\Source\Delphi\src\uXDVDFS.pas',
   uEmuD3D8Types in '..\..\..\Source\Delphi\src\DxbxKrnl\uEmuD3D8Types.pas',
-  VistaIconFix in '..\..\..\Source\Delphi\src\VistaIconFix.pas';
+  VistaIconFix in '..\..\..\Source\Delphi\src\VistaIconFix.pas',
+  XbeHeaders in '..\..\..\Source\Delphi\src\Headers\XbeHeaders.pas';
 
 {$R *.res}
 

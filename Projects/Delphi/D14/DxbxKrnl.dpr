@@ -116,7 +116,8 @@ uses
   uXbVideo in '..\..\..\Source\Delphi\src\uXbVideo.pas',
   uXDVDFS in '..\..\..\Source\Delphi\src\uXDVDFS.pas',
   VistaIconFix in '..\..\..\Source\Delphi\src\VistaIconFix.pas',
-  uData in '..\..\..\Source\Delphi\src\uData.pas';
+  uData in '..\..\..\Source\Delphi\src\uData.pas',
+  XbeHeaders in '..\..\..\Source\Delphi\src\Headers\XbeHeaders.pas';
 
 {$IMAGEBASE $10000000}
 

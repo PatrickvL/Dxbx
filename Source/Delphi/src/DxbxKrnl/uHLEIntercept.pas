@@ -33,6 +33,7 @@ uses
   uTypes,
   uLog,
   uDxbxKrnlUtils,
+  XbeHeaders,
   uXbe,
   uEmuShared,
   uEmuFS,

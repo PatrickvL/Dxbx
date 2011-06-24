@@ -36,6 +36,7 @@ uses
   uConsts,
   uTypes,
   uLog,
+  XbeHeaders,
   uXbe,
   uEmuFS,
   uEmuXapi, // XTL_SECTIONHANDLE, XTL_EmuXLoadSectionByHandle
