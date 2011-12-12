@@ -2,7 +2,7 @@ object FormXBEExplorer: TFormXBEExplorer
   Left = 0
   Top = 0
   Caption = 'XBE Explorer'
-  ClientHeight = 788
+  ClientHeight = 612
   ClientWidth = 836
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -16,44 +16,49 @@ object FormXBEExplorer: TFormXBEExplorer
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 219
-    Top = 25
-    Height = 763
+    Top = 23
+    Height = 589
     ExplicitLeft = 424
     ExplicitTop = 376
     ExplicitHeight = 100
   end
   object PageControl: TPageControl
     Left = 222
-    Top = 25
+    Top = 23
     Width = 614
-    Height = 763
+    Height = 589
     Align = alClient
     TabOrder = 0
+    ExplicitTop = 25
+    ExplicitHeight = 701
   end
   object ActionMainMenuBar: TActionMainMenuBar
     Left = 0
     Top = 0
     Width = 836
-    Height = 25
+    Height = 23
     UseSystemFont = False
     ActionManager = ActionManager
-    ColorMap.HighlightColor = clWhite
+    ColorMap.HighlightColor = 15660791
     ColorMap.BtnSelectedColor = clBtnFace
-    ColorMap.UnusedColor = clWhite
+    ColorMap.UnusedColor = 15660791
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -12
-    Font.Name = 'Segoe UI'
+    Font.Height = -11
+    Font.Name = 'Tahoma'
     Font.Style = []
     Spacing = 0
+    ExplicitHeight = 25
   end
   object Panel1: TPanel
     Left = 0
-    Top = 25
+    Top = 23
     Width = 219
-    Height = 763
+    Height = 589
     Align = alLeft
     TabOrder = 2
+    ExplicitTop = 25
+    ExplicitHeight = 701
     object Splitter2: TSplitter
       Left = 1
       Top = 1
@@ -80,10 +85,11 @@ object FormXBEExplorer: TFormXBEExplorer
       Left = 1
       Top = 326
       Width = 217
-      Height = 436
+      Height = 262
       Align = alClient
       Caption = 'Panel2'
       TabOrder = 1
+      ExplicitHeight = 374
       object edt_SymbolFilter: TEdit
         Left = 1
         Top = 1
@@ -97,7 +103,7 @@ object FormXBEExplorer: TFormXBEExplorer
         Left = 1
         Top = 22
         Width = 215
-        Height = 413
+        Height = 239
         Align = alClient
         Columns = <
           item
@@ -115,6 +121,7 @@ object FormXBEExplorer: TFormXBEExplorer
         ViewStyle = vsReport
         OnColumnClick = lst_DissambledFunctionsColumnClick
         OnDblClick = lst_DissambledFunctionsDblClick
+        ExplicitHeight = 351
       end
     end
   end
@@ -146,6 +153,7 @@ object FormXBEExplorer: TFormXBEExplorer
     end
     object Extra1: TMenuItem
       Caption = 'Extra'
+      Enabled = False
       object ExploreFileSystem1: TMenuItem
         Caption = 'Explore Filesystem...'
         OnClick = ExploreFileSystem1Click

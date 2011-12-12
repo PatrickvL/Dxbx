@@ -55,12 +55,12 @@ type
   private
     MyFile: TMemoryStream;
     FRawData: MathPtr;
-    FIsValid: boolean;
     m_KernelLibraryVersion: XBE_LIBRARYVERSION;
     m_XAPILibraryVersion: XBE_LIBRARYVERSION;
     procedure ConstructorInit;
     function GetFileSize: Int64;
   public
+    FIsValid: boolean;
     XbePath: string;
     m_Header: XBEIMAGE_HEADER;
     m_Certificate: XBE_CERTIFICATE;
@@ -1089,7 +1089,8 @@ end;
 function TXbe.ExportXPRToBitmap(XprImage: PXPR_IMAGE; aBitmap: TBitmap): Boolean;
 var
   Width, Height: Cardinal;
-  Scanlines: RGB32Scanlines;
+  Scanlines16: RGB16Scanlines;
+  Scanlines32: RGB32Scanlines;
 begin
   Result := False;
 
@@ -1101,17 +1102,30 @@ begin
     Height := 1 shl ((XprImage.hdr.Texture.Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
 
     // Prepare easy access to the bitmap data :
-    aBitmap.PixelFormat := pf32bit;
     aBitmap.SetSize(Width, Height);
-    Scanlines.Initialize(aBitmap);
+    if (XprImage.hdr.Header.dwTotalSize - XprImage.hdr.Header.dwHeaderSize)/Width/Height = 2 then
+      begin // 16 bit per pixel textures
+        aBitmap.PixelFormat := pf16bit;
+        Scanlines16.Initialize(aBitmap);
 
-    // Read the texture into the bitmap :
-    Result := ReadD3DTextureFormatIntoBitmap(
-      {Format=}(XprImage.hdr.Texture.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT,
-      {Data=}PBytes(@(XprImage.pBits[0])),
-      {DataSize=}XprImage.hdr.Header.dwTotalSize - XprImage.hdr.Header.dwHeaderSize,
-      {Output=}@Scanlines);
-      
+        // Read the texture into the 16bit bitmap :
+        Result := ReadD3D16bitTextureFormatIntoBitmap(
+          {Format=}(XprImage.hdr.Texture.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT,
+          {Data=}PBytes(@(XprImage.pBits[0])),
+          {DataSize=}XprImage.hdr.Header.dwTotalSize - XprImage.hdr.Header.dwHeaderSize,
+          {Output=}@Scanlines16);
+      end else
+      begin // 32 bit per pixel textures
+        aBitmap.PixelFormat := pf32bit;
+        Scanlines32.Initialize(aBitmap);
+
+        // Read the texture into the 32bit bitmap :
+        Result := ReadD3DTextureFormatIntoBitmap(
+          {Format=}(XprImage.hdr.Texture.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT,
+          {Data=}PBytes(@(XprImage.pBits[0])),
+          {DataSize=}XprImage.hdr.Header.dwTotalSize - XprImage.hdr.Header.dwHeaderSize,
+          {Output=}@Scanlines32);
+      end;
     Exit;
   end;
 
