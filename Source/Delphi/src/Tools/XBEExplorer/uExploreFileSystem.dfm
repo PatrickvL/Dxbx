@@ -56,8 +56,6 @@ object frmExploreFileSystem: TfrmExploreFileSystem
     Width = 441
     Height = 393
     Anchors = [akLeft, akTop, akRight, akBottom]
-    Lines.Strings = (
-      'Memo1')
     TabOrder = 2
   end
   object ComboBox1: TComboBox

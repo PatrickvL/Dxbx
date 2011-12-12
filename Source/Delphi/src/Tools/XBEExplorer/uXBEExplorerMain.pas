@@ -211,6 +211,7 @@ end;
 procedure TFormXBEExplorer.actCloseExecute(Sender: TObject);
 begin
   CloseFile;
+  Extra1.Enabled := False;
 end;
 
 procedure TFormXBEExplorer.actSaveAsUpdate(Sender: TObject);
@@ -241,7 +242,7 @@ end;
 procedure TFormXBEExplorer.About1Click(Sender: TObject);
 begin
   TaskMessageDlg('About ' + Application.Title,
-    Application.Title + ' version ' + _XBE_EXPLORER_VERSION + ' © 2010, PatrickvL.  Released under GPL3.'#13#13 +
+    Application.Title + ' version ' + _XBE_EXPLORER_VERSION + ' © 2011, PatrickvL.  Released under GPL3.'#13#13 +
     Application.Title + ' is part of Dxbx - the Delphi Xbox1 emulator.'#13#13 +
     'Website : http://sourceforge.net/projects/dxbx/',
     mtInformation, [mbOK], 0);
@@ -963,6 +964,12 @@ begin // OpenFile
 
   CloseFile;
   MyXBE := TXbe.Create(aFilePath);
+  if MyXBE.FisValid = False then
+    begin
+      MyXBE:=nil;
+      FormXBEExplorer.Extra1.Enabled := False;
+      Exit; // wrong magic etc
+    end;
   FXBEFileName := ExtractFileName(aFilePath);
 
   if not LoadSymbols and FileExists('Dxbx.exe') then
@@ -1038,7 +1045,7 @@ begin // OpenFile
   end;
 
   TreeView1.Selected := Node0;
-
+  FormXBEExplorer.Extra1.Enabled := True;
   Result := True;
 end; // OpenFile
 

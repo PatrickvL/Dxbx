@@ -36,8 +36,9 @@ uses
   uTypes;
 
 const // instead of using uEmuD3D8Types :
-  X_D3DFMT_A8R8G8B8 = $06; // 6, Swizzled
-//  X_D3DFMT_X8R8G8B8 = $07; // 7, Swizzled
+  X_D3DFMT_R5G6B5 = $05; // Swizzled 16bit ppx
+  X_D3DFMT_A8R8G8B8 = $06; // Swizzled 32bit ppx
+  X_D3DFMT_X8R8G8B8 = $07; // Swizzled 32bit ppx
   X_D3DFMT_P8 = $0B; // 11, Swizzled, 8-bit Palletized
   X_D3DFMT_DXT1 = $0C; // 12, Compressed, opaque/one-bit alpha
   X_D3DFMT_DXT2 = $0E;
@@ -243,7 +244,9 @@ type
 
 function ReadS3TCFormatIntoBitmap(const aFormat: Byte; const aData: PBytes; const aDataSize: Cardinal; const aOutput: PRGB32Scanlines): Boolean;
 function ReadSwizzledFormatIntoBitmap(const aFormat: Byte; const aData: PBytes; const aDataSize: Cardinal; const aOutput: PRGB32Scanlines): Boolean;
+function ReadSwizzled16bitFormatIntoBitmap(const aFormat: Byte; const aData: PBytes; const aDataSize: Cardinal; const aOutput: PRGB16Scanlines): Boolean;
 function ReadD3DTextureFormatIntoBitmap(const aFormat: Byte; const aData: PBytes; const aDataSize: Cardinal; const aOutput: PRGB32Scanlines): Boolean;
+function ReadD3D16bitTextureFormatIntoBitmap(const aFormat: Byte; const aData: PBytes; const aDataSize: Cardinal; const aOutput: PRGB16Scanlines): Boolean;
 
 function GetDxbxBasePath: string;
 function SymbolCacheFolder: string;
@@ -1274,7 +1277,77 @@ begin
   Result := Length(FScanlines);
 end;
 
-//
+// Unswizzle a texture. (Only works for 32bit, with power of 2 width and height.)
+// Code is loosly based on XBMC guilib\DirectXGraphics.cpp
+// Delphi translation and speed improvements by PatrickvL
+function ReadSwizzled16bitFormatIntoBitmap(
+  const aFormat: Byte;
+  const aData: PBytes;
+  const aDataSize: Cardinal;
+  const aOutput: PRGB16Scanlines): Boolean;
+
+  // Generic swizzle function, usable for both x and y dimensions.
+  // When passing x, Max should be 2*height, and Shift should be 0
+  // When passing y, Max should be width, and Shift should be 1
+  function _Swizzle(const Value, Max, Shift: Cardinal): Cardinal;
+  begin
+    if Value < Max then
+      Result := Value
+    else
+      Result := Value mod Max;
+
+    // The following is based on http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN :
+                                                        // --------------------------------11111111111111111111111111111111
+    Result := (Result or (Result shl 8)) and $00FF00FF; // 0000000000000000111111111111111100000000000000001111111111111111
+    Result := (Result or (Result shl 4)) and $0F0F0F0F; // 0000111100001111000011110000111100001111000011110000111100001111
+    Result := (Result or (Result shl 2)) and $33333333; // 0011001100110011001100110011001100110011001100110011001100110011
+    Result := (Result or (Result shl 1)) and $55555555; // 0101010101010101010101010101010101010101010101010101010101010101
+
+    Result := Result shl Shift; // y counts twice :        1010101010101010101010101010101010101010101010101010101010101010
+
+    if Value >= Max then
+      Inc(Result, (Value div Max) * Max * Max shr (1 - Shift)); // x halves this
+  end;
+
+var
+  height, width: Cardinal;
+  xswizzle: array of Cardinal;
+  x, y, sy: Cardinal;
+  yscanline: PRGB16Array;
+begin
+  // Sanity checks :
+  Result := (aFormat in [X_D3DFMT_R5G6B5])
+        and Assigned(aData)
+        and (aDataSize > 0)
+        and Assigned(aOutput)
+        and (aOutput.Height > 0)
+        and (aOutput.Width > 0);
+  if not Result then
+    Exit;
+
+  height := aOutput.Height;
+  width := aOutput.Width;
+
+  // Precalculate x-swizzle :
+  SetLength(xswizzle, width);
+  if width > 0 then // Dxbx addition, to prevent underflow
+  for x := 0 to width - 1 do
+    xswizzle[x] := _Swizzle(x, {Max=}(height * 2), {Shift=}0);
+
+  // Loop over all lines :
+  if height > 0 then // Dxbx addition, to prevent underflow
+  for y := 0 to height - 1 do
+  begin
+    // Calculate y-swizzle :
+    sy := _Swizzle(y, {Max=}width, {Shift=}1);
+
+    // Copy whole line in one go (using pre-calculated x-swizzle) :
+    yscanline := aOutput.Scanlines[y];
+    if width > 0 then // Dxbx addition, to prevent underflow
+    for x := 0 to width - 1 do
+      yscanline[x] := PRGB16Array(aData)[xswizzle[x] + sy];
+  end; // for y
+end; // ReadSwizzled16bitFormatIntoBitmap
 
 // Unswizzle a texture. (Only works for 32bit, with power of 2 width and height.)
 // Code is loosly based on XBMC guilib\DirectXGraphics.cpp
@@ -1315,7 +1388,7 @@ var
   yscanline: PRGB32Array;
 begin
   // Sanity checks :
-  Result := (aFormat in [X_D3DFMT_A8R8G8B8])
+  Result := (aFormat in [X_D3DFMT_A8R8G8B8,X_D3DFMT_X8R8G8B8])
         and Assigned(aData)
         and (aDataSize > 0)
         and Assigned(aOutput)
@@ -1467,15 +1540,30 @@ begin
     X_D3DFMT_DXT5:
       // Read the compressed texture into the bitmap :
       Result := ReadS3TCFormatIntoBitmap(aFormat, aData, aDataSize, aOutput);
-
-    X_D3DFMT_A8R8G8B8:
+    X_D3DFMT_A8R8G8B8,
+    X_D3DFMT_X8R8G8B8:
       // Read the swizzled texture into the bitmap :
       Result := ReadSwizzledFormatIntoBitmap(aFormat, aData, aDataSize, aOutput);
-
   else
     Result := False;
   end;
 end;
+
+function ReadD3D16bitTextureFormatIntoBitmap(
+  const aFormat: Byte;
+  const aData: PBytes;
+  const aDataSize: Cardinal;
+  const aOutput: PRGB16Scanlines): Boolean;
+begin
+  case aFormat of
+    X_D3DFMT_R5G6B5:
+      // Uncompressed texture :
+      Result := ReadSwizzled16bitFormatIntoBitmap(aFormat, aData, aDataSize, aOutput);
+  else
+    Result := False;
+  end;
+end;
+
 
 function GetDxbxBasePath: string;
 begin
