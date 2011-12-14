@@ -739,10 +739,8 @@ var
     _AddRange(0, SizeOf(TXbeHeader), 'XBE Header');
     _AddRange(Hdr.dwCertificateAddr - Hdr.dwBaseAddr, SizeOf(TXbeCertificate), 'Certificate');
     _AddRange(Hdr.dwTLSAddr, SizeOf(TXbeTLS), 'TLS');
-//    _AddRange(Hdr.dwPeBaseAddr - Hdr.dwBaseAddr, 0, 'PeBase');
     _AddRange(Hdr.dwDebugPathNameAddr - Hdr.dwBaseAddr, Length(MyXbe.GetAddrStr(Hdr.dwDebugPathNameAddr))+1, 'DebugPathName');
     _AddRange(Hdr.dwDebugUnicodeFileNameAddr - Hdr.dwBaseAddr, ByteLength(MyXbe.GetAddrWStr(Hdr.dwDebugUnicodeFileNameAddr))+2, 'DebugUnicodeFileName');
-//    _AddRange(Hdr.dwKernelImageThunkAddr - Hdr.dwBaseAddr, 1, 'KernelImageThunk');
     if Hdr.dwNonKernelImportDirAddr > 0 then
       _AddRange(Hdr.dwNonKernelImportDirAddr - Hdr.dwBaseAddr, 1, 'NonKernelImportDir');
     _AddRange(Hdr.dwLogoBitmapAddr - Hdr.dwBaseAddr, Hdr.dwSizeofLogoBitmap, 'LogoBitmap');
@@ -968,6 +966,7 @@ begin // OpenFile
     begin
       MyXBE:=nil;
       FormXBEExplorer.Extra1.Enabled := False;
+      Result := False;
       Exit; // wrong magic etc
     end;
   FXBEFileName := ExtractFileName(aFilePath);

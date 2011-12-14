@@ -39,16 +39,15 @@ object FormXBEExplorer: TFormXBEExplorer
     Height = 23
     UseSystemFont = False
     ActionManager = ActionManager
-    ColorMap.HighlightColor = 15660791
+    ColorMap.HighlightColor = clWhite
     ColorMap.BtnSelectedColor = clBtnFace
-    ColorMap.UnusedColor = 15660791
+    ColorMap.UnusedColor = clWhite
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = []
     Spacing = 0
-    ExplicitHeight = 25
   end
   object Panel1: TPanel
     Left = 0
