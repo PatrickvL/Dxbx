@@ -33,7 +33,6 @@ uses
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.Title := FormXBEExplorer.Caption;
   Application.CreateForm(TFormXBEExplorer, FormXBEExplorer);
   Application.CreateForm(TfrmExploreFileSystem, frmExploreFileSystem);
   if ParamCount > 0 then
