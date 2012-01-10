@@ -1,0 +1,218 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="9"/>
+    <PathDelim Value="\"/>
+    <General>
+      <MainUnit Value="0"/>
+      <ResourceType Value="res"/>
+      <UseXPManifest Value="True"/>
+      <Icon Value="0"/>
+      <ActiveWindowIndexAtStart Value="0"/>
+    </General>
+    <i18n>
+      <EnableI18N LFM="False"/>
+    </i18n>
+    <VersionInfo>
+      <StringTable ProductVersion=""/>
+    </VersionInfo>
+    <BuildModes Count="1" Active="Default">
+      <Item1 Name="Default" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
+      <ExcludeFileFilter Value="*.(bak|ppu|o|so);*~;backup"/>
+    </PublishOptions>
+    <RunParams>
+      <local>
+        <FormatVersion Value="1"/>
+      </local>
+    </RunParams>
+    <RequiredPackages Count="1">
+      <Item1>
+        <PackageName Value="LCL"/>
+      </Item1>
+    </RequiredPackages>
+    <Units Count="2">
+      <Unit0>
+        <Filename Value="Dxbx.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Dxbx"/>
+        <UsageCount Value="22"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Main"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="MainFrm"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="43" Y="5"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+    </Units>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="18" Column="1" TopLine="1"/>
+      </Position1>
+      <Position2>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="19" Column="1" TopLine="1"/>
+      </Position2>
+      <Position3>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="20" Column="1" TopLine="1"/>
+      </Position3>
+      <Position4>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="21" Column="1" TopLine="1"/>
+      </Position4>
+      <Position5>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="22" Column="1" TopLine="1"/>
+      </Position5>
+      <Position6>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="23" Column="1" TopLine="1"/>
+      </Position6>
+      <Position7>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="24" Column="1" TopLine="1"/>
+      </Position7>
+      <Position8>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="25" Column="1" TopLine="1"/>
+      </Position8>
+      <Position9>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="26" Column="1" TopLine="1"/>
+      </Position9>
+      <Position10>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="27" Column="1" TopLine="1"/>
+      </Position10>
+      <Position11>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="28" Column="1" TopLine="1"/>
+      </Position11>
+      <Position12>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="29" Column="1" TopLine="1"/>
+      </Position12>
+      <Position13>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="30" Column="1" TopLine="1"/>
+      </Position13>
+      <Position14>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="31" Column="1" TopLine="1"/>
+      </Position14>
+      <Position15>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="32" Column="1" TopLine="1"/>
+      </Position15>
+      <Position16>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="31" Column="1" TopLine="1"/>
+      </Position16>
+      <Position17>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="30" Column="1" TopLine="1"/>
+      </Position17>
+      <Position18>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="29" Column="1" TopLine="1"/>
+      </Position18>
+      <Position19>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="28" Column="1" TopLine="1"/>
+      </Position19>
+      <Position20>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="27" Column="1" TopLine="1"/>
+      </Position20>
+      <Position21>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="26" Column="1" TopLine="1"/>
+      </Position21>
+      <Position22>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="25" Column="1" TopLine="1"/>
+      </Position22>
+      <Position23>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="24" Column="1" TopLine="1"/>
+      </Position23>
+      <Position24>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="25" Column="1" TopLine="1"/>
+      </Position24>
+      <Position25>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="26" Column="1" TopLine="1"/>
+      </Position25>
+      <Position26>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="6" Column="24" TopLine="1"/>
+      </Position26>
+      <Position27>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="18" Column="16" TopLine="1"/>
+      </Position27>
+      <Position28>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="20" Column="16" TopLine="1"/>
+      </Position28>
+      <Position29>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="21" Column="16" TopLine="1"/>
+      </Position29>
+      <Position30>
+        <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
+        <Caret Line="5" Column="43" TopLine="1"/>
+      </Position30>
+    </JumpHistory>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="9"/>
+    <PathDelim Value="\"/>
+    <Target>
+      <Filename Value="Dxbx"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="..\..\Source\Lazarus\Src"/>
+      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <Linking>
+      <Options>
+        <Win32>
+          <GraphicApplication Value="True"/>
+        </Win32>
+      </Options>
+    </Linking>
+    <Other>
+      <CompilerPath Value="$(CompPath)"/>
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>

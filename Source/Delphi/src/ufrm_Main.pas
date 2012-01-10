@@ -57,7 +57,7 @@ type
   End;
 
   Tfrm_Main = class(TForm)
-    d: TMainMenu;
+    MainMenu: TMainMenu;
     mnu_File: TMenuItem;
     Exit1: TMenuItem;
     N1: TMenuItem;
