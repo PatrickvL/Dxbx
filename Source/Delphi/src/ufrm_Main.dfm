@@ -11,7 +11,7 @@ object frm_Main: Tfrm_Main
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  Menu = d
+  Menu = MainMenu
   OldCreateOrder = False
   Position = poScreenCenter
   Visible = True
@@ -127,7 +127,7 @@ object frm_Main: Tfrm_Main
     OnKeyPress = cbFreeTextFilterKeyPress
     OnSelect = cbFreeTextFilterSelect
   end
-  object d: TMainMenu
+  object MainMenu: TMainMenu
     Left = 8
     Top = 12
     object mnu_File: TMenuItem
@@ -240,7 +240,7 @@ object frm_Main: Tfrm_Main
         Action = actCleanSymbolCache
       end
       object mnu_BypassSymbolCache: TMenuItem
-        Caption = 'Bypass symbol cache'
+        Caption = 'Bypass Symbol Cache'
         OnClick = mnu_BypassSymbolCacheClick
       end
       object N5: TMenuItem
@@ -276,7 +276,7 @@ object frm_Main: Tfrm_Main
     end
   end
   object ActionList: TActionList
-    Left = 40
+    Left = 64
     Top = 12
     object actXbeExplorer: TAction
       Category = 'Tools'
@@ -406,21 +406,21 @@ object frm_Main: Tfrm_Main
     FileName = 'default.xbe'
     Filter = 'Xbox Executable (*.xbe)|*.xbe|Xbox Iso (*.iso)|*.iso'
     Options = [ofExtensionDifferent, ofPathMustExist, ofFileMustExist, ofNoTestFileCreate, ofEnableSizing]
-    Left = 72
+    Left = 128
     Top = 12
   end
   object SaveDialog: TSaveDialog
     FileName = 'DxbxDebug.txt'
     Filter = 'Text Documents ( *.txt )|*.txt'
-    Left = 104
-    Top = 12
+    Left = 216
+    Top = 108
   end
   object ExeSaveDialog: TSaveDialog
     DefaultExt = '*.exe'
     FileName = 'default.exe'
     Filter = 'Windows Executable (*.exe)|*.exe'
-    Left = 104
-    Top = 44
+    Left = 216
+    Top = 60
   end
   object XMLDocument: TXMLDocument
     Left = 8
@@ -430,8 +430,8 @@ object frm_Main: Tfrm_Main
   object ImportDialog: TOpenDialog
     DefaultExt = '*.xml'
     Filter = 'Xml Files ( *.xml )|*.xml'
-    Left = 184
-    Top = 12
+    Left = 128
+    Top = 68
   end
   object ExportDialog: TSaveDialog
     DefaultExt = '*.xml'

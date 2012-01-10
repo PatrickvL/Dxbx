@@ -1,0 +1,210 @@
+object Main: TMain
+  Left = 474
+  Height = 600
+  Top = 219
+  Width = 800
+  Caption = 'Dxbx - Lazarus Edition'
+  ClientHeight = 580
+  ClientWidth = 800
+  Color = clBlack
+  Font.Color = clWhite
+  Menu = MainMenu
+  LCLVersion = '0.9.30'
+  object lblFreeTextFilter: TLabel
+    Left = 16
+    Height = 16
+    Top = 552
+    Width = 134
+    Caption = '&Show entries containing :'
+    ParentColor = False
+  end
+  object cbFreeTextFilter: TComboBox
+    Left = 160
+    Height = 23
+    Top = 545
+    Width = 208
+    Color = clBlack
+    Font.Color = clWhite
+    ItemHeight = 15
+    ParentFont = False
+    TabOrder = 0
+  end
+  object DrawGrid1: TDrawGrid
+    Left = 3
+    Height = 404
+    Top = 120
+    Width = 633
+    DefaultColWidth = 120
+    DefaultDrawing = False
+    ExtendedSelect = False
+    FixedColor = clGray
+    FixedCols = 0
+    Flat = True
+    ParentColor = True
+    RowCount = 99
+    TabOrder = 1
+    TitleFont.Color = clWhite
+  end
+  object Image1: TImage
+    Left = 655
+    Height = 128
+    Top = 134
+    Width = 128
+  end
+  object Image2: TImage
+    Left = 640
+    Height = 44
+    Top = 530
+    Width = 150
+  end
+  object MainMenu: TMainMenu
+    left = 24
+    top = 40
+    object mnuFile: TMenuItem
+      Caption = '&File'
+      object mnuOpenXbe: TMenuItem
+        Caption = '&Open Xbe'
+      end
+      object mnuImportXbesFromDir: TMenuItem
+        Caption = '&Import Xbe`s from dir'
+      end
+      object mnuCloseXbe: TMenuItem
+        Caption = 'Close Xbe'
+      end
+      object MenuItem1: TMenuItem
+        Caption = '-'
+      end
+      object mnuRecentXbefiles: TMenuItem
+        Caption = 'Recent Xbe files'
+      end
+      object MenuItem2: TMenuItem
+        Caption = '-'
+      end
+      object mnuGameList: TMenuItem
+        Caption = '&Game list'
+      end
+      object MenuItem3: TMenuItem
+        Caption = '-'
+      end
+      object mnuClose: TMenuItem
+        Caption = '&Close'
+      end
+    end
+    object mnuEdit: TMenuItem
+      Caption = '&Edit'
+      object mnuPatch: TMenuItem
+        Caption = '&Patch'
+      end
+      object MenuItem4: TMenuItem
+        Caption = '-'
+      end
+      object mnuDumpXbeInfoTo: TMenuItem
+        Caption = '&Dump xbe info to'
+        object mnuDumpConsole: TMenuItem
+          Caption = '&Console'
+        end
+        object mnuDumpToFile: TMenuItem
+          Caption = '&File'
+        end
+        object MenuItem5: TMenuItem
+          Caption = '-'
+        end
+        object mnuXDKTracker: TMenuItem
+          Caption = 'XDKTracker'
+        end
+      end
+    end
+    object mnuView: TMenuItem
+      Caption = '&View'
+      object mnuDebugOutGui: TMenuItem
+        Caption = 'Debug output (GUI)'
+        object mnuDebugOutGuiConsole: TMenuItem
+          Caption = '&Console'
+        end
+        object mnuDebugOutGuiFile: TMenuItem
+          Caption = '&File'
+        end
+        object mnuDebugOutGuiNone: TMenuItem
+          Caption = '&None'
+        end
+      end
+      object mnuDebugOutKrnl: TMenuItem
+        Caption = 'Debug output (Kernel)'
+        object mnuDebugOutKrnlConsole: TMenuItem
+          Caption = '&Console'
+        end
+        object mnuDebugOutKrnlFile: TMenuItem
+          Caption = '&File'
+        end
+        object mnuDebugOutKrnlNone: TMenuItem
+          Caption = '&None'
+        end
+      end
+    end
+    object mnuSettings: TMenuItem
+      Caption = '&Settings'
+      object mnuCleanSymbolCache: TMenuItem
+        Caption = 'Clean Symbol Cache'
+      end
+      object mnuBypassSymbolCache: TMenuItem
+        Caption = 'Bypass Symbol Cache'
+      end
+      object MenuItem6: TMenuItem
+        Caption = '-'
+      end
+      object mnuConfiguration: TMenuItem
+        Caption = '&Configuration'
+      end
+    end
+    object mnuEmulation: TMenuItem
+      Caption = '&Emulation'
+      object mnuStartEmu: TMenuItem
+        Caption = '&Start'
+        ShortCut = 116
+      end
+      object mnuStopEmu: TMenuItem
+        Caption = '&Stop'
+        ShortCut = 117
+      end
+    end
+    object mnuTools: TMenuItem
+      Caption = '&Tools'
+      object mnuXbeExplorer: TMenuItem
+        Caption = 'Xbe Explorer'
+      end
+      object mnuXiso: TMenuItem
+        Caption = 'xIso - Dxbx Edition'
+      end
+    end
+    object mnuHelp: TMenuItem
+      Caption = '&Help'
+      object mnuAbout: TMenuItem
+        Caption = '&About'
+      end
+    end
+  end
+  object ActionList: TActionList
+    left = 64
+    top = 40
+  end
+  object XbeOpenDialog: TOpenDialog
+    left = 136
+    top = 40
+  end
+  object ImportDialog: TOpenDialog
+    left = 136
+    top = 96
+  end
+  object ExportDialog: TSaveDialog
+    left = 232
+    top = 40
+  end
+  object ExeSaveDialog: TSaveDialog
+    left = 232
+    top = 96
+  end
+  object SaveDialog: TSaveDialog
+    left = 232
+    top = 152
+  end
+end
