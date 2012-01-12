@@ -23,7 +23,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_UnitSearchPath>..\..\..\Source\Delphi\src\Include;..\..\..\Source\Delphi\Libraries\Jcl\include;..\..\..\Source\Delphi\Libraries\Jwapi\Win32API;..\..\..\Source\Delphi\Libraries\Jcl\Commen;..\..\..\Source\Delphi\Libraries\Jcl\windows;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>..\..\..\Source\Delphi\src\Include;..\..\..\Libraries\Pascal\Jcl\include;..\..\..\Libraries\Pascal\Jwapi\Win32API;..\..\..\Libraries\Pascal\Jcl\Commen;..\..\..\Libraries\Pascal\Jcl\windows;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ExeOutput>..\..\..\Source\Delphi\Bin\Tools\</DCC_ExeOutput>
 			<DCC_DcuOutput>..\..\..\Source\Delphi\Dcu</DCC_DcuOutput>
 			<DCC_DependencyCheckOutputName>..\..\..\Source\Delphi\Bin\Tools\TranslationChecker.exe</DCC_DependencyCheckOutputName>

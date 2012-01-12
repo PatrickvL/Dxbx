@@ -366,34 +366,12 @@ var
 // Key messages can be trapped at the application level :
 procedure Tfrm_Main.AppMessage(var Msg: TMsg; var Handled: Boolean);
 begin
-//case Msg.message of WM_PAINT,WM_NCMOUSEMOVE..WM_NCXBUTTONDBLCLK, WM_COMMAND..WM_GESTURENOTIFY, WM_MOUSEFIRST..WM_MOUSELAST, WM_NCMOUSEHOVER..WM_MOUSELEAVE:; else
-//DbgPrintf('AppMessage() Msg.message = %d (%x)   LOWORD(Msg.wParam) = %d (%x)', [Msg.message, Msg.message, LOWORD(Msg.wParam), LOWORD(Msg.wParam)]);
-//end;
-
   // Dxbx : Protect against a loss of the child handle (otherwise, the GUI we would hang) :
   if not IsWindow(m_hwndChild) then
     m_hwndChild := HNULL;
 
   Handled := False;
   case Msg.message of
-//    WM_USER_PARENTNOTIFY,
-//    WM_PARENTNOTIFY:
-//      case LOWORD(Msg.wParam) of
-//        WM_CREATE:
-//        begin
-//          m_hwndChild := GetWindow(Msg.hwnd, GW_CHILD);
-//          UpdateTitleInformation;
-//          Handled := True;
-//        end;
-//
-//        WM_DESTROY:
-//        begin
-//          m_hwndChild := HNULL;
-//          UpdateTitleInformation;
-//          Handled := True;
-//        end;
-//      end;
-
     WM_SYSKEYDOWN:
       if m_hwndChild <> 0 then
       begin
@@ -1565,13 +1543,7 @@ end; // actFileDebugKernelExecute
 
 procedure Tfrm_Main.actAboutExecute(Sender: TObject);
 begin
-  frm_About := Tfrm_About.Create(Self);
-
-  if frm_About.ShowModal = mrOk then
-  begin
-  end;
-
-  FreeAndNil({var}frm_About);
+  Tfrm_About.Execute;
 end;
 
 procedure Tfrm_Main.actCleanSymbolCacheExecute(Sender: TObject);

@@ -23,7 +23,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_UnitSearchPath>..\..\..\Source\Delphi\src\Include;..\..\..\Source\Delphi\Libraries\Jcl\include;..\..\..\Source\Delphi\Libraries\Jcl\Commen;..\..\..\Source\Delphi\Libraries\Jcl\Windows;..\..\..\Source\Delphi\Libraries\Jwapi\Win32API;..\..\..\Source\Delphi\Libraries\Jwapi\includes;..\..\..\Source\Delphi\Libraries\DirectX9;..\..\..\Source\Delphi\Libraries\BeaEngine;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>..\..\..\Source\Delphi\src\Include;..\..\..\Libraries\Pascal\Jcl\include;..\..\..\Libraries\Pascal\Jcl\Commen;..\..\..\Libraries\Pascal\Jcl\Windows;..\..\..\Libraries\Pascal\Jwapi\Win32API;..\..\..\Libraries\Pascal\Jwapi\includes;..\..\..\Libraries\Pascal\DirectX9;..\..\..\Libraries\Pascal\BeaEngine;..\..\..\Libraries\Pascal\GlScene;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ExeOutput>..\..\..\Source\Delphi\Bin</DCC_ExeOutput>
 			<DCC_DcuOutput>..\..\..\Source\Delphi\Dcu</DCC_DcuOutput>
 			<DCC_Define>DXBX_DLL;$(DCC_Define)</DCC_Define>
@@ -32,18 +32,15 @@
 			<GenDll>true</GenDll>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
-			<DCC_DependencyCheckOutputName>..\..\bin\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
+			<DCC_UnitSearchPath>..\..\..\Libraries\Pascal\GlScene</DCC_UnitSearchPath>
 			<Version>7.0</Version>
 			<DCC_DebugInformation>False</DCC_DebugInformation>
 			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ResourcePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;$(DCC_ResourcePath)</DCC_ResourcePath>
 			<DCC_ObjPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;$(DCC_ObjPath)</DCC_ObjPath>
 			<DCC_IncludePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;$(DCC_IncludePath)</DCC_IncludePath>
-			<DCC_ExeOutput>..\..\bin</DCC_ExeOutput>
-			<DCC_DcuOutput>..\..\dcu</DCC_DcuOutput>
 			<DCC_ObjOutput>..\..\dcu</DCC_ObjOutput>
 			<DCC_HppOutput>..\..\dcu</DCC_HppOutput>
 		</PropertyGroup>
@@ -51,11 +48,9 @@
 			<DCC_MapFile>3</DCC_MapFile>
 			<Version>7.0</Version>
 			<DCC_Define>DEBUG;_DEBUG_TRACE;$(DCC_Define)</DCC_Define>
-			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;..\..\Libraries\FastMM;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ResourcePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ResourcePath)</DCC_ResourcePath>
 			<DCC_ObjPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ObjPath)</DCC_ObjPath>
 			<DCC_IncludePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_IncludePath)</DCC_IncludePath>
-			<DCC_DcuOutput>..\..\..\Source\Delphi\Dcu</DCC_DcuOutput>
 			<DCC_ObjOutput>..\..\dcu\d11\</DCC_ObjOutput>
 			<DCC_HppOutput>..\..\dcu\d11\</DCC_HppOutput>
 		</PropertyGroup>
@@ -118,10 +113,6 @@
 				<ContainerId>RC</ContainerId>
 				<Form>SvnRevision.res</Form>
 			</RcCompile>
-			<DCCReference Include="..\..\..\Source\Delphi\Libraries\GLScene\OpenGL1x.pas"/>
-			<DCCReference Include="..\..\..\Source\Delphi\Libraries\GLScene\OpenGLTokens.pas"/>
-			<DCCReference Include="..\..\..\Source\Delphi\Libraries\GLScene\VectorTypes.pas"/>
-			<DCCReference Include="..\..\..\Source\Delphi\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uConvert.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uMiniport.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uNV2A.pas"/>
@@ -211,6 +202,10 @@
 			<DCCReference Include="..\..\..\Source\Delphi\src\VistaIconFix.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\src\uData.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\src\Headers\XbeHeaders.pas"/>
+			<DCCReference Include="..\..\..\Libraries\Pascal\OpenXDK\include\xboxkrnl\XboxKrnl.pas"/>
+			<DCCReference Include="..\..\..\Libraries\Pascal\GLScene\OpenGL1x.pas"/>
+			<DCCReference Include="..\..\..\Libraries\Pascal\GLScene\OpenGLTokens.pas"/>
+			<DCCReference Include="..\..\..\Libraries\Pascal\GLScene\VectorTypes.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

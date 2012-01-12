@@ -38,10 +38,6 @@ library DxbxKrnl;
 uses
   Windows,
   SysUtils,
-  OpenGL1x in '..\..\..\Source\Delphi\Libraries\GLScene\OpenGL1x.pas',
-  OpenGLTokens in '..\..\..\Source\Delphi\Libraries\GLScene\OpenGLTokens.pas',
-  VectorTypes in '..\..\..\Source\Delphi\Libraries\GLScene\VectorTypes.pas',
-  XboxKrnl in '..\..\..\Source\Delphi\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas',
   uConvert in '..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uConvert.pas',
   uMiniport in '..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uMiniport.pas',
   uNV2A in '..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uNV2A.pas',
@@ -119,7 +115,11 @@ uses
   uXDVDFS in '..\..\..\Source\Delphi\src\uXDVDFS.pas',
   VistaIconFix in '..\..\..\Source\Delphi\src\VistaIconFix.pas',
   uData in '..\..\..\Source\Delphi\src\uData.pas',
-  XbeHeaders in '..\..\..\Source\Delphi\src\Headers\XbeHeaders.pas';
+  XbeHeaders in '..\..\..\Source\Delphi\src\Headers\XbeHeaders.pas',
+  XboxKrnl in '..\..\..\Libraries\Pascal\OpenXDK\include\xboxkrnl\XboxKrnl.pas',
+  OpenGL1x in '..\..\..\Libraries\Pascal\GLScene\OpenGL1x.pas',
+  OpenGLTokens in '..\..\..\Libraries\Pascal\GLScene\OpenGLTokens.pas',
+  VectorTypes in '..\..\..\Libraries\Pascal\GLScene\VectorTypes.pas';
 
 {$IMAGEBASE $10000000}
 
