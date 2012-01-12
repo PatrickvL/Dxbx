@@ -33,19 +33,14 @@ type
   Tfrm_About = class(TForm)
     Image1: TImage;
     procedure FormCreate(Sender: TObject);
-  private
-    { Private declarations }
   public
-    { Public declarations }
+    class function Execute: Boolean;
   end;
 
 type
   TGraphicHelper = class helper for TGraphic
     procedure LoadFromResourceName(Instance: THandle; const ResName: string);
   end;
-
-var
-  frm_About: Tfrm_About;
 
 function GetJPEGResource(const aResourceName: string): TJPEGImage;
 
@@ -77,6 +72,18 @@ begin
 end;
 
 {$R *.dfm}
+
+class function Tfrm_About.Execute: Boolean;
+var
+  frm_About: Tfrm_About;
+begin
+  frm_About := Tfrm_About.Create(nil);
+  try
+    Result := (frm_About.ShowModal = mrOk);
+  finally
+    FreeAndNil({var}frm_About);
+  end;
+end;
 
 procedure Tfrm_About.FormCreate(Sender: TObject);
 var

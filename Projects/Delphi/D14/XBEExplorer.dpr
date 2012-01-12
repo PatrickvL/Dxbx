@@ -5,7 +5,6 @@ program XBEExplorer;
 uses
   Forms,
   SysUtils,
-  BeaEngine in '..\..\..\Source\Delphi\Libraries\BeaEngine\BeaEngine.pas',
   uDisassembleViewer in '..\..\..\Source\Delphi\src\Tools\XBEExplorer\uDisassembleViewer.pas',
   uExploreFileSystem in '..\..\..\Source\Delphi\src\Tools\XBEExplorer\uExploreFileSystem.pas' {frmExploreFileSystem},
   uHexViewer in '..\..\..\Source\Delphi\src\Tools\XBEExplorer\uHexViewer.pas',
@@ -26,7 +25,8 @@ uses
   uXDVDFS in '..\..\..\Source\Delphi\src\uXDVDFS.pas',
   uEmuD3D8Types in '..\..\..\Source\Delphi\src\DxbxKrnl\uEmuD3D8Types.pas',
   VistaIconFix in '..\..\..\Source\Delphi\src\VistaIconFix.pas',
-  XbeHeaders in '..\..\..\Source\Delphi\src\Headers\XbeHeaders.pas';
+  XbeHeaders in '..\..\..\Source\Delphi\src\Headers\XbeHeaders.pas',
+  BeaEngine in '..\..\..\Libraries\Pascal\BeaEngine\BeaEngine.pas';
 
 {$R *.res}
 

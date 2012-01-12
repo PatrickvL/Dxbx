@@ -5,8 +5,12 @@ unit MainFrm;
 interface
 
 uses
+  // Lazarus
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Menus,
-  ActnList, StdCtrls, Grids, ExtCtrls;
+  ActnList, StdCtrls, Grids, ExtCtrls//,
+  // Dxbx
+//  uDxbxUtils
+  ;
 
 type
 
@@ -74,6 +78,8 @@ type
 
 var
   Main: TMain;
+  KernelDebugMode: TDebugMode = dmNone;
+  KernelDebugFilePath: string = ''; // Just the default folder
 
 implementation
 
@@ -81,6 +87,43 @@ implementation
 
 { TMain }
 
+function BrowseDialogCallBack
+  (Wnd: HWND; uMsg: UINT; lParam, lpData: LPARAM):
+  integer stdcall;
+var
+  wa, rect: TRect;
+  dialogPT: TPoint;
+begin
+  //center in work area
+  if uMsg = BFFM_INITIALIZED then
+  begin
+    wa := Screen.WorkAreaRect;
+    GetWindowRect(Wnd, Rect);
+    dialogPT.X := ((wa.Right-wa.Left) div 2) -
+                  ((rect.Right-rect.Left) div 2);
+    dialogPT.Y := ((wa.Bottom-wa.Top) div 2) -
+                  ((rect.Bottom-rect.Top) div 2);
+    MoveWindow(Wnd,
+               dialogPT.X,
+               dialogPT.Y,
+               Rect.Right - Rect.Left,
+               Rect.Bottom - Rect.Top,
+               True);
+    SendMessage(wnd, BFFM_SETSELECTIONW, Longint(true), lpdata);
+  end;
+
+  Result := 0;
+end;
+
+function GetTitleSpecificKernelDebugFilePath: string;
+begin
+  // Was DXBX_KERNEL_DEBUG_FILENAME
+  if KernelDebugFilePath <> '' then
+    if LastChar(KernelDebugFilePath) <> '\' then
+      KernelDebugFilePath := KernelDebugFilePath + '\';
+
+  Result := KernelDebugFilePath + Format('DxbxKrnl %s (%d).txt', [TitleToNiceFilename(m_szAsciiTitle), SvnRevision])
+end;
 
 
 end.

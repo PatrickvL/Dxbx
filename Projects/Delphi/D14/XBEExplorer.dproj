@@ -24,9 +24,9 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DCC_UsePackage>vclx;vcl;vclimg;dbrtl;Rave77VCL;bdertl;rtl;vclactnband;vcldb;vcldbx;vcltouch;xmlrtl;dsnap;dsnapcon;TeeUI;TeeDB;Tee;vclib;ibxpress;adortl;IndyCore;IndySystem;IndyProtocols;inet;intrawebdb_100_140;Intraweb_100_140;VclSmp;vclie;inetdb;webdsnap;websnap;inetdbbde;inetdbxpress;soaprtl;vclribbon;DbxCommonDriver;DbxClientDriver;DBXInterBaseDriver;DBXMySQLDriver;dbexpress;dbxcds</DCC_UsePackage>
-			<DCC_UnitSearchPath>..\..\..\Source\Delphi\src\Include;..\..\..\Source\Delphi\Libraries\Jcl\include;..\..\..\Source\Delphi\Libraries\Jwapi\Win32API;..\..\..\Source\Delphi\Libraries\Jcl\Commen;..\..\..\Source\Delphi\Libraries\Jcl\windows;..\..\..\Source\Delphi\Libraries\Jwapi\Includes;..\..\..\Source\Delphi\src;..\..\..\Source\Delphi\Libraries\DirectX9;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>..\..\..\Source\Delphi\src\Include;..\..\..\Libraries\Pascal\Jcl\include;..\..\..\Libraries\Pascal\Jwapi\Win32API;..\..\..\Libraries\Pascal\Jcl\Commen;..\..\..\Libraries\Pascal\Jcl\windows;..\..\..\Libraries\Pascal\Jwapi\Includes;..\..\..\Source\Delphi\src;..\..\..\Libraries\Pascal\DirectX9;..\..\..\Libraries\Pascal\BeaEngine;D:\Xbox\Dxbx\Libraries\Pascal\BeaEngine;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ExeOutput>..\..\..\Source\Delphi\Bin\Tools\</DCC_ExeOutput>
-			<DCC_DcuOutput>..\..\..\Source\Delphi\Dcu</DCC_DcuOutput>
+			<DCC_DcuOutput>..\..\..\Source\Delphi\Dcu\</DCC_DcuOutput>
 			<BRCC_CompilerToUse>rc</BRCC_CompilerToUse>
 			<DCC_DependencyCheckOutputName>..\..\..\Source\Delphi\Bin\Tools\XBEExplorer.exe</DCC_DependencyCheckOutputName>
 		</PropertyGroup>
@@ -103,7 +103,6 @@
 				<ContainerId>RC</ContainerId>
 				<Form>XBEExplorerResources.res</Form>
 			</RcCompile>
-			<DCCReference Include="..\..\..\Source\Delphi\Libraries\BeaEngine\BeaEngine.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\src\Tools\XBEExplorer\uDisassembleViewer.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\src\Tools\XBEExplorer\uExploreFileSystem.pas">
 				<Form>frmExploreFileSystem</Form>
@@ -129,6 +128,7 @@
 			<DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\uEmuD3D8Types.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\src\VistaIconFix.pas"/>
 			<DCCReference Include="..\..\..\Source\Delphi\src\Headers\XbeHeaders.pas"/>
+			<DCCReference Include="..\..\..\Libraries\Pascal\BeaEngine\BeaEngine.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
