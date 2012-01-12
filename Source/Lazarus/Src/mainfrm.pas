@@ -7,9 +7,9 @@ interface
 uses
   // Lazarus
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Menus,
-  ActnList, StdCtrls, Grids, ExtCtrls//,
+  ActnList, StdCtrls, Grids, ExtCtrls,
   // Dxbx
-//  uDxbxUtils
+  uDxbxUtils
   ;
 
 type
@@ -17,6 +17,7 @@ type
   { TMain }
 
   TMain = class(TForm)
+    actAbout: TAction;
     ActionList: TActionList;
     cbFreeTextFilter: TComboBox;
     DrawGrid1: TDrawGrid;
@@ -69,6 +70,7 @@ type
     ExeSaveDialog: TSaveDialog;
     SaveDialog: TSaveDialog;
     XbeOpenDialog: TOpenDialog;
+    procedure actAboutExecute(Sender: TObject);
 
   private
     { private declarations }
@@ -86,6 +88,9 @@ implementation
 {$R *.lfm}
 
 { TMain }
+
+uses
+  aboutFrm;
 
 function BrowseDialogCallBack
   (Wnd: HWND; uMsg: UINT; lParam, lpData: LPARAM):
@@ -123,6 +128,13 @@ begin
       KernelDebugFilePath := KernelDebugFilePath + '\';
 
   Result := KernelDebugFilePath + Format('DxbxKrnl %s (%d).txt', [TitleToNiceFilename(m_szAsciiTitle), SvnRevision])
+end;
+
+{ TMain }
+
+procedure TMain.actAboutExecute(Sender: TObject);
+begin
+  TAboutFrm.Execute;
 end;
 
 

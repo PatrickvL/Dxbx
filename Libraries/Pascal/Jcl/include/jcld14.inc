@@ -36,43 +36,43 @@
 {                                                                                                  }
 {**************************************************************************************************}
 
-// $Id: jcl.template.inc 2000 2007-04-20 17:01:29Z outchy $
+// $Id: jcl.template.inc 3362 2010-10-05 13:24:05Z outchy $
 
 // Math precision selection, mutually exclusive
-{$DEFINE MATH_EXTENDED_PRECISION}
+// FPC does not support EXTENDED when targetting x86_64, MATH_DOUBLE_PRECISION is the default in this situation
+{.$DEFINE MATH_EXTENDED_PRECISION} // default
 {.$DEFINE MATH_DOUBLE_PRECISION}
 {.$DEFINE MATH_SINGLE_PRECISION}
 
 
 // Math functions takes care of infinites and NaN
-{$DEFINE MATH_EXT_EXTREMEVALUES}
+{.$DEFINE MATH_EXT_EXTREMEVALUES}
 
 
 // JclHookExcept support for hooking exceptions from DLLs
 {.$DEFINE HOOK_DLL_EXCEPTIONS}
 
 
-//Threadsafe directive (added for DCL support)
-{$DEFINE THREADSAFE}
+//Threadsafe directive
+{.$DEFINE THREADSAFE}
 
 
 // To exclude obsolete code from compilation, remove the point from the line below
-{$DEFINE DROP_OBSOLETE_CODE}
+{.$DEFINE DROP_OBSOLETE_CODE}
 
 
-//Support for JclUnitVersioning.pas)
-{$DEFINE UNITVERSIONING}
+//Support for JclUnitVersioning.pas, not supported by Delphi 2005 (automatically disabled afterward)
+{.$DEFINE UNITVERSIONING}
+
 
 // debug sources
 // defining these symbols will the debug source to be automatically registered
 {.$DEFINE DEBUG_NO_BINARY}
-{.$DEFINE DEBUG_NO_TD32}
+{.$DEFINE DEBUG_NO_TD32}     // automatically defined for FPC
 {.$DEFINE DEBUG_NO_MAP}
 {.$DEFINE DEBUG_NO_EXPORTS}
 {.$DEFINE DEBUG_NO_SYMBOLS}
 
-// mark EDI units as weak package units (to avoid conflicts with the EDI package)
-{.$DEFINE EDI_WEAK_PACKAGE_UNITS}
 
 // PCRE options, mutually exclusive
 // IMPORTANT: The static link works only for Delphi 2005 and newer
@@ -82,13 +82,50 @@
 //   static dll import: PCRE_LINKDLL
 //   dynamic dll import: PCRE_LINKONREQUEST
 
-{$DEFINE PCRE_STATICLINK}
+{.$DEFINE PCRE_STATICLINK}
 {.$DEFINE PCRE_LINKDLL}
-{.$DEFINE PCRE_LINKONREQUEST}
+{.$DEFINE PCRE_LINKONREQUEST} // default
+
 
 // BZIP2 options, mutually exclusive
-// IMPORTANT: The static link is still experimental
 
-{.$DEFINE BZIP2_STATICLINK}
+{.$DEFINE BZIP2_STATICLINK} // default
 {.$DEFINE BZIP2_LINKDLL}
-{$DEFINE BZIP2_LINKONREQUEST}
+{.$DEFINE BZIP2_LINKONREQUEST}
+
+
+// ZLIB options, mutually exclusive
+
+{.$DEFINE ZLIB_STATICLINK} // default
+{.$DEFINE ZLIB_LINKDLL}
+{.$DEFINE ZLIB_LINKONREQUEST}
+
+
+// Unicode options
+// use RTL Character Database rather than JCL one, less accurate but reduce executable size
+{.$DEFINE UNICODE_RTL_DATABASE}
+
+// insert a replacement character if sequence is corrupted rather than raising an exception
+{.$DEFINE UNICODE_SILENT_FAILURE}
+
+// defines resource compression (uncompressed, compressed with ZLib, compressed with BZip2), mutually exclusive
+{.$DEFINE UNICODE_RAW_DATA} // default
+{.$DEFINE UNICODE_ZLIB_DATA}
+{.$DEFINE UNICODE_BZIP2_DATA}
+
+
+// container options
+// define mapping of TJclStr* containers to TJclAnsiStr* or TJclWideStr* (mutually exclusive)
+{.$DEFINE CONTAINER_ANSISTR} // default for D2007 and older
+{.$DEFINE CONTAINER_WIDESTR}
+{.$DEFINE CONTAINER_UNICODESTR} // default for D2009 and newer, not supported for Delphi 2007 and older
+{.$DEFINE CONTAINER_NOSTR}
+
+
+// 7Zip options, mutually exclusive
+// IMPORTANT: The static link is not supported yet
+
+{.$DEFINE 7ZIP_STATICLINK} // not supported yet
+{.$DEFINE 7ZIP_LINKDLL}
+{.$DEFINE 7ZIP_LINKONREQUEST} // default
+

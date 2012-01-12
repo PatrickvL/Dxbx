@@ -186,6 +186,10 @@ object Main: TMain
   object ActionList: TActionList
     left = 64
     top = 40
+    object actAbout: TAction
+      Caption = '&About'
+      OnExecute = actAboutExecute
+    end
   end
   object XbeOpenDialog: TOpenDialog
     left = 136

@@ -121,7 +121,7 @@
 
 // Let all other compiler options depend on the project options.
 
-{$INCLUDE jedi.inc} // Pull in the JEDI shared directives
+{$INCLUDE jedi\jedi.inc} // Pull in the JEDI shared directives
 
 // Additional feature directive checks :
 

@@ -37,8 +37,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-02 11:02:42 +0200 (zo, 02 aug 2009)                             $ }
-{ Revision:      $Rev:: 2907                                                                     $ }
+{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3594                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -46,6 +46,7 @@
 unit JclShell;
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 interface
 
@@ -53,8 +54,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, SysUtils,
-  ShlObj,
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, System.SysUtils, Winapi.ShlObj,
+  {$ELSE ~HAS_UNITSCOPE}
+  Windows, SysUtils, ShlObj,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase, JclWin32, JclSysUtils;
 
 // Files and Folders
@@ -173,6 +177,8 @@ function ShellOpenAs(const FileName: string): Boolean;
 function ShellRasDial(const EntryName: string): Boolean;
 function ShellRunControlPanel(const NameOrFileName: string; AppletNumber: Integer = 0): Boolean;
 
+function RunAsAdmin(const FileName: string; const Parameters: string = ''; const Parent: THandle = 0): Boolean;
+
 function GetFileNameIcon(const FileName: string; Flags: Cardinal = 0): HICON;
 
 type
@@ -201,9 +207,9 @@ var
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclShell.pas $';
-    Revision: '$Revision: 2907 $';
-    Date: '$Date: 2009-08-02 11:02:42 +0200 (zo, 02 aug 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/windows/JclShell.pas $';
+    Revision: '$Revision: 3594 $';
+    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -213,9 +219,11 @@ const
 implementation
 
 uses
-  ActiveX,
-  CommCtrl,
-  Messages, ShellApi,
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.ActiveX, Winapi.CommCtrl, Winapi.Messages, Winapi.ShellAPI,
+  {$ELSE ~HAS_UNITSCOPE}
+  ActiveX, CommCtrl, Messages, ShellAPI,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclFileUtils, JclStrings, JclSysInfo;
 
 type
@@ -230,6 +238,7 @@ const
   cVerbProperties = 'properties';
   cVerbOpen = 'open';
   cVerbExplore = 'explore';
+  cVerbRunas = 'runas';
 
 //=== Files and Folders ======================================================
 
@@ -273,7 +282,7 @@ begin
   Exclude(Options, doFilesOnly);
   Result := SHDeleteFiles(Parent, PathAddSeparator(Folder) + '*.*', Options);
   if Result then
-    SHDeleteFiles(Parent, Folder, Options);
+    Result := SHDeleteFiles(Parent, PathRemoveSeparator(Folder), Options);
 end;
 
 // Helper function to map a TSHRenameOptions set to a cardinal
@@ -432,7 +441,7 @@ begin
     begin
       IconIndex := 0;
       ExtractIcon.GetIconLocation(0, @IconFile, MAX_PATH, IconIndex, Flags);
-      if (IconIndex < 0) and ((Flags and GIL_NOTFILENAME) = GIL_NOTFILENAME) then
+      if (IconIndex < 0) or ((Flags and GIL_NOTFILENAME) = 0) then
         ExtractIconEx(@IconFile, IconIndex, F.IconLarge, F.IconSmall, 1)
       else
         ExtractIcon.Extract(@IconFile, IconIndex, F.IconLarge, F.IconSmall,
@@ -450,22 +459,31 @@ var
   FolderPidl: PItemIdList;
 begin
   ClearEnumFolderRec(F, False, False);
-  SHGetDesktopFolder(DesktopFolder);
-  if SpecialFolder = CSIDL_DESKTOP then
-    F.Folder := DesktopFolder
-  else
+  Result := Succeeded(SHGetDesktopFolder(DesktopFolder));
+  if Result then
   begin
-    SHGetSpecialFolderLocation(0, SpecialFolder, FolderPidl);
-    try
-      DesktopFolder.BindToObject(FolderPidl, nil, IID_IShellFolder, Pointer(F.Folder));
-    finally
-      PidlFree(FolderPidl);
+    if SpecialFolder = CSIDL_DESKTOP then
+      F.Folder := DesktopFolder
+    else
+    begin
+      Result := Succeeded(SHGetSpecialFolderLocation(0, SpecialFolder, FolderPidl));
+      if Result then
+      begin
+        try
+          Result := Succeeded(DesktopFolder.BindToObject(FolderPidl, nil, IID_IShellFolder, Pointer(F.Folder)));
+        finally
+          CoTaskMemFree(FolderPidl);
+        end;
+      end;
     end;
   end;
-  F.Folder.EnumObjects(0, EnumFolderFlagsToCardinal(Flags), F.EnumIdList);
-  Result := SHEnumFolderNext(F);
-  if not Result then
-    SHEnumFolderClose(F);
+  if Result then
+  begin
+    F.Folder.EnumObjects(0, EnumFolderFlagsToCardinal(Flags), F.EnumIdList);
+    Result := SHEnumFolderNext(F);
+    if not Result then
+      SHEnumFolderClose(F);
+  end;
 end;
 
 function SHEnumFolderFirst(const Folder: string; Flags: TEnumFolderFlags;
@@ -495,7 +513,7 @@ begin
   if Succeeded(SHGetSpecialFolderLocation(0, FolderID, FolderPidl)) then
   begin
     Result := PidlToPath(FolderPidl);
-    PidlFree(FolderPidl);
+    CoTaskMemFree(FolderPidl);
   end
   else
     Result := '';
@@ -589,7 +607,7 @@ begin
   WndClass.lpszClassName := PChar(IcmCallbackWnd);
   WndClass.lpfnWndProc := @MenuCallback;
   WndClass.hInstance := HInstance;
-  Windows.RegisterClass(WndClass);
+  {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.RegisterClass(WndClass);
   Result := CreateWindow(IcmCallbackWnd, IcmCallbackWnd, WS_POPUPWINDOW, 0,
     0, 0, 0, 0, 0, HInstance, Pointer(ContextMenu));
 end;
@@ -685,13 +703,11 @@ end;
 
 function OpenSpecialFolder(FolderID: Integer; Parent: THandle; Explore: Boolean): Boolean;
 var
-  Malloc: IMalloc;
   Pidl: PItemIDList;
   Sei: TShellExecuteInfo;
 begin
   Result := False;
-  if Succeeded(SHGetMalloc(Malloc)) and
-    Succeeded(SHGetSpecialFolderLocation(Parent, FolderID, Pidl)) then
+  if Succeeded(SHGetSpecialFolderLocation(Parent, FolderID, Pidl)) then
   begin
     ResetMemory(Sei, SizeOf(Sei));
     with Sei do
@@ -718,7 +734,7 @@ begin
     {$IFNDEF TYPEDADDRESS_ON}
     {$TYPEDADDRESS OFF}
     {$ENDIF ~TYPEDADDRESS_ON}
-    Malloc.Free(Pidl);
+    CoTaskMemFree(Pidl);
   end;
 end;
 
@@ -816,7 +832,7 @@ begin
         end;
       end;
     end;
-    PidlFree(Drives);
+    CoTaskMemFree(Drives);
   end;
 end;
 
@@ -925,6 +941,7 @@ begin
     Result := True
   else
   begin
+    Malloc := nil;
     if Succeeded(SHGetMalloc(Malloc)) and (Malloc.DidAlloc(IdList) > 0) then
     begin
       Malloc.Free(IdList);
@@ -1047,11 +1064,15 @@ begin
   SetLength(Path, MAX_PATH);
   if Succeeded(SHGetSpecialFolderLocation(0, Folder, Pidl)) then
   begin
-    Path := PidltoPath(Pidl);
-    if Path <> '' then
-    begin
-      StrResetLength(Path);
-      Result := ShellLinkCreate(Link, PathAddSeparator(Path) + FileName);
+    try
+      Path := PidltoPath(Pidl);
+      if Path <> '' then
+      begin
+        StrResetLength(Path);
+        Result := ShellLinkCreate(Link, PathAddSeparator(Path) + FileName);
+      end;
+    finally
+      CoTaskMemFree(Pidl);
     end;
   end;
 end;
@@ -1456,8 +1477,8 @@ begin
        end;
      finally
        FreeLibrary(RasDlg);
-     end;   
-   end 
+     end;
+   end
    else
      Result := ShellExecEx('rundll32', Format('rnaui.dll,RnaDial "%s"', [EntryName]), '', SW_SHOWNORMAL);
 end;
@@ -1489,6 +1510,28 @@ begin
     Result := False;
     SetLastError(ERROR_FILE_NOT_FOUND);
   end;
+end;
+
+// Compare http://msdn.microsoft.com/en-us/library/bb756922.aspx
+
+function RunAsAdmin(const FileName: string; const Parameters: string = ''; const Parent: THandle = 0): Boolean;
+var
+  Sei: TShellExecuteInfo;
+begin
+  ResetMemory(Sei, SizeOf(Sei));
+  Sei.cbSize := SizeOf(TShellExecuteInfo);
+  Sei.Wnd := Parent;
+  Sei.fMask := SEE_MASK_FLAG_DDEWAIT or SEE_MASK_FLAG_NO_UI;
+  Sei.lpVerb := PChar(cVerbRunas);
+  Sei.lpFile := PChar(FileName);
+  Sei.lpParameters := PCharOrNil(Parameters);
+  Sei.nShow := SW_SHOWNORMAL;
+
+  {$TYPEDADDRESS ON}
+  Result := ShellExecuteEx(@Sei);
+  {$IFNDEF TYPEDADDRESS_ON}
+  {$TYPEDADDRESS OFF}
+  {$ENDIF ~TYPEDADDRESS_ON}
 end;
 
 function GetFileExeType(const FileName: TFileName): TJclFileExeType;

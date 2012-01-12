@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 12:57:33 +0200 (za, 12 sep 2009)                             $ }
-{ Revision:      $Rev:: 2993                                                                     $ }
+{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3594                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -51,8 +51,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows,
-  Classes, SysUtils, Contnrs,
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, System.Classes, System.SysUtils, System.Contnrs,
+  {$ELSE ~HAS_UNITSCOPE}
+  Windows, Classes, SysUtils, Contnrs,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase;
 
 // Console
@@ -391,9 +394,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclConsole.pas $';
-    Revision: '$Revision: 2993 $';
-    Date: '$Date: 2009-09-12 12:57:33 +0200 (za, 12 sep 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/windows/JclConsole.pas $';
+    Revision: '$Revision: 3594 $';
+    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -406,7 +409,11 @@ uses
   {$IFDEF FPC}
   JwaWinNT,
   {$ENDIF FPC}
+  {$IFDEF HAS_UNITSCOPE}
+  System.Math, System.TypInfo,
+  {$ELSE ~HAS_UNITSCOPE}
   Math, TypInfo,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclFileUtils, JclResources, JclSysUtils;
 
 {$IFDEF FPC}

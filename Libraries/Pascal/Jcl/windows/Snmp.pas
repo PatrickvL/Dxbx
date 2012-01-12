@@ -30,9 +30,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-11 23:36:32 +0200 (vr, 11 sep 2009)                             $ }
-{ Revision:      $Rev:: 2992                                                                     $ }
-{ Author:        $Author:: wpostma                                                               $ }
+{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3594                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -41,6 +41,7 @@ unit Snmp;
 interface
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 {$DEFINE SNMP_DYNAMIC_LINK}
 {$DEFINE SNMP_DYNAMIC_LINK_EXPLICIT}
@@ -48,6 +49,7 @@ interface
 
 {$ALIGN ON}
 {$MINENUMSIZE 4}
+
 {$IFNDEF SNMP_DYNAMIC_LINK}
 {$IFDEF SUPPORTS_WEAKPACKAGEUNIT}
   {$WEAKPACKAGEUNIT ON}
@@ -59,7 +61,16 @@ interface
 {$ENDIF}
 
 uses
+  {$IFDEF UNITVERSIONING}
+  JclUnitVersioning,
+  {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, System.SysUtils;
+  {$ELSE ~HAS_UNITSCOPE}
   Windows, SysUtils;
+  {$ENDIF ~HAS_UNITSCOPE}
+
+//DOM-IGNORE-BEGIN
 
 (*$HPPEMIT '#include <snmp.h>'*)
 
@@ -651,6 +662,8 @@ var
   SnmpExtensionClose: TSnmpExtensionClose;
   {$EXTERNALSYM SnmpExtensionClose}
 
+//DOM-IGNORE-END
+
 function SnmpExtensionLoaded: Boolean;
 function LoadSnmpExtension(const LibName: string): Boolean;
 function UnloadSnmpExtension: Boolean;
@@ -662,6 +675,18 @@ function LoadSnmp: Boolean;
 function UnloadSnmp: Boolean;
 {$ENDIF SNMP_DYNAMIC_LINK_EXPLICIT}
 {$ENDIF SNMP_DYNAMIC_LINK}
+
+{$IFDEF UNITVERSIONING}
+const
+  UnitVersioning: TUnitVersionInfo = (
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/windows/Snmp.pas $';
+    Revision: '$Revision: 3594 $';
+    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
+    LogPath: 'JCL\source\windows';
+    Extra: '';
+    Data: nil
+    );
+{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -888,16 +913,34 @@ function SNMP_DBG_realloc; external snmpapilib name 'SnmpUtilMemReAlloc';
 
 {$ENDIF ~SNMP_DYNAMIC_LINK}
 
-{$IFDEF SNMP_DYNAMIC_LINK}
-{$IFNDEF SNMP_DYNAMIC_LINK_EXPLICIT}
+procedure InitializeSnmp;
+begin
+  {$IFDEF SNMP_DYNAMIC_LINK}
+  {$IFNDEF SNMP_DYNAMIC_LINK_EXPLICIT}
+  LoadSnmp;
+  {$ENDIF ~SNMP_DYNAMIC_LINK_EXPLICIT}
+  {$ENDIF SNMP_DYNAMIC_LINK}
+end;
+
+procedure FinalizeSnmp;
+begin
+  {$IFDEF SNMP_DYNAMIC_LINK}
+  {$IFNDEF SNMP_DYNAMIC_LINK_EXPLICIT}
+  UnloadSnmp;
+  {$ENDIF ~SNMP_DYNAMIC_LINK_EXPLICIT}
+  {$ENDIF SNMP_DYNAMIC_LINK}
+end;
 
 initialization
-  LoadSnmp;
+  InitializeSnmp;
+  {$IFDEF UNITVERSIONING}
+  RegisterUnitVersion(HInstance, UnitVersioning);
+  {$ENDIF UNITVERSIONING}
 
 finalization
-  UnloadSnmp;
-
-{$ENDIF ~SNMP_DYNAMIC_LINK_EXPLICIT}
-{$ENDIF SNMP_DYNAMIC_LINK}
+  FinalizeSnmp;
+  {$IFDEF UNITVERSIONING}
+  UnregisterUnitVersion(HInstance);
+  {$ENDIF UNITVERSIONING}
 
 end.

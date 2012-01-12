@@ -24,6 +24,7 @@
 {   Robert Rossmair (rrossmair)                                                                    }
 {   ZENsan                                                                                         }
 {   Florent Ouchet (outchy)                                                                        }
+{   Kiriakos Vlahos                                                                                }
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
@@ -32,8 +33,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-12 20:31:19 +0200 (wo, 12 aug 2009)                             $ }
-{ Revision:      $Rev:: 2944                                                                     $ }
+{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3594                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -48,7 +49,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  System.Classes, System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   Classes, SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase;
 
 // Exceptions
@@ -88,8 +93,8 @@ const
 
 type
   {$IFDEF SUPPORTS_UNICODE}
-  TJclWideStrings = Classes.TStrings;
-  TJclWideStringList = Classes.TStringList;
+  TJclWideStrings = {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Classes.TStrings;
+  TJclWideStringList = {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Classes.TStringList;
   {$ELSE ~SUPPORTS_UNICODE}
 
   TWideFileOptionsType =
@@ -337,9 +342,9 @@ function MultiSzDup(const Source: PWideMultiSz): PWideMultiSz;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclWideStrings.pas $';
-    Revision: '$Revision: 2944 $';
-    Date: '$Date: 2009-08-12 20:31:19 +0200 (wo, 12 aug 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/common/JclWideStrings.pas $';
+    Revision: '$Revision: 3594 $';
+    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -349,16 +354,27 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF HAS_UNIT_RTLCONSTS}
+  System.RTLConsts,
+  {$ENDIF HAS_UNIT_RTLCONSTS}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF MSWINDOWS}
+  System.Math,
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF HAS_UNIT_RTLCONSTS}
   RTLConsts,
-  {$ELSE ~HAS_UNIT_RTLCONSTS}
-  Consts,
-  {$ENDIF ~HAS_UNIT_RTLCONSTS}
+  {$ENDIF HAS_UNIT_RTLCONSTS}
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
   Math,
-  JclResources, JclUnicode;
+  {$ENDIF ~HAS_UNITSCOPE}
+  {$IFNDEF UNICODE_RTL_DATABASE}
+  JclUnicode,
+  {$ENDIF ~UNICODE_RTL_DATABASE}
+  JclResources;
 
 procedure SwapWordByteOrder(P: PWideChar; Len: SizeInt);
 begin
@@ -518,6 +534,11 @@ function StrICompW(const Str1, Str2: PWideChar): SizeInt;
 // Compares Str1 to Str2 without case sensitivity.
 // See also comments in StrCompW, but keep in mind that case folding might result in
 // one-to-many mappings which must be considered here.
+{$IFDEF UNICODE_RTL_DATABASE}
+begin
+   Result := AnsiStrIComp(Str1, Str2)
+end;
+{$ELSE ~UNICODE_RTL_DATABASE}
 var
   C1, C2: Word;
   S1, S2: PWideChar;
@@ -563,10 +584,16 @@ begin
   if Result = 0 then
     Result := (Run1 - PWideChar(Folded1)) - (Run2 - PWideChar(Folded2));
 end;
+{$ENDIF ~UNICODE_RTL_DATABASE}
 
 function StrLICompW(const Str1, Str2: PWideChar; MaxLen: SizeInt): SizeInt;
 // compares strings up to MaxLen code points
 // see also StrICompW
+{$IFDEF UNICODE_RTL_DATABASE}
+begin
+   Result := AnsiStrIComp(Str1, Str2)
+end;
+{$ELSE UNICODE_RTL_DATABASE}
 var
   S1, S2: PWideChar;
   C1, C2: Word;
@@ -615,6 +642,7 @@ begin
   else
     Result := 0;
 end;
+{$ENDIF UNICODE_RTL_DATABASE}
 
 function StrLICompW2(const Str1, Str2: PWideChar; MaxLen: SizeInt): SizeInt;
 var
@@ -816,24 +844,17 @@ asm
        POP     ESI
        {$ENDIF CPU32}
        {$IFDEF CPU64}
-       // save context
-       PUSH    RDI
-       PUSH    RSI
        // --> RCX Str
-       MOV     RSI, RCX
-       MOV     RDI, RSI
        XOR     RAX, RAX // clear high order byte to be able to use 64bit operand below
 @@1:
-       LODSW
+       MOV     AX, WORD PTR [ECX]
        OR      RAX, RAX
        JZ      @@2
        XCHG    AL, AH
-       STOSW
+       MOV     WORD PTR [ECX], AX
+       ADD     ECX, 2
        JMP     @@1
 @@2:
-       // restore context
-       POP     RSI
-       POP     RDI
        {$ENDIF CPU64}
 end;
 
@@ -887,41 +908,15 @@ end;
 //       searched. This makes this function extremly fast.
 //
 function StrScanW(Str: PWideChar; Chr: WideChar; StrLen: SizeInt): PWideChar;
-asm
-       {$IFDEF CPU32}
-       // --> EAX Str
-       //     DX  Chr
-       //     ECX StrLen
-       // <-- EAX Result
-       TEST    EAX, EAX
-       JZ      @@Exit        // get out if the string is nil or StrLen is 0
-       JECXZ   @@Exit
-@@Loop:
-       CMP     [EAX], DX     // this unrolled loop is actually faster on modern processors
-       JE      @@Exit        // than REP SCASW
-       ADD     EAX, 2
-       DEC     ECX
-       JNZ     @@Loop
-       XOR     EAX, EAX
-       {$ENDIF CPU32}
-       {$IFDEF CPU64}
-       // --> RCX Str
-       //     DX  Chr
-       //     R8  StrLen
-       // <-- EAX Result
-       TEST    R8, R8
-       JZ      @@Exit        // get out if the string is nil or StrLen is 0
-       JRCXZ   @@Exit
-       MOV     RAX, RCX
-@@Loop:
-       CMP     [RAX], DX     // this unrolled loop is actually faster on modern processors
-       JE      @@Exit        // than REP SCASW
-       ADD     RAX, 2
-       DEC     R8
-       JNZ     @@Loop
-       XOR     RAX, RAX
-       {$ENDIF CPU64}
-@@Exit:
+begin
+  Result := Str;
+  while StrLen > 0 do
+  begin
+    if Result^ = Chr then
+      Exit;
+    Inc(Result);
+  end;
+  Result := nil;
 end;
 
 function StrBufSizeW(const Str: PWideChar): SizeInt;
@@ -949,40 +944,18 @@ end;
 
 function StrPLCopyW(Dest: PWideChar; const Source: AnsiString; MaxLen: SizeInt): PWideChar;
 // copies characters from a Pascal-style string into a null-terminated wide string
-asm
-       {$IFDEF CPU32}
-       // --> EAX Dest
-       //     EDX Source
-       //     ECX MaxLen
-       // <-- EAX Result
-       PUSH EDI
-       PUSH ESI
-       MOV EDI, EAX
-       MOV ESI, EDX
-       MOV EDX, EAX
-       XOR AX, AX
-@@1:   LODSB
-       STOSW
-       DEC ECX
-       JNZ @@1
-       MOV EAX, EDX
-       POP ESI
-       POP EDI
-       {$ENDIF CPU32}
-       {$IFDEF CPU64}
-       // --> RCX Dest
-       //     RDX Source
-       //     R8  MaxLen
-       // <-- RAX Result
-       MOV RDI, RCX
-       MOV RSI, RDX
-       XOR AX, AX
-@@1:   LODSB
-       STOSW
-       DEC ECX
-       JNZ @@1
-       MOV RAX, RCX
-       {$ENDIF CPU64}
+var
+  P: PAnsiChar;
+begin
+  P := PAnsiChar(Pointer(Source));
+  while MaxLen > 0 do
+  begin
+    Dest^ := WideChar(Ord(P^));
+    Inc(P);
+    Inc(Dest);
+    Dec(MaxLen);
+  end;
+  Result := Dest;
 end;
 
 //=== WideString functions ===================================================
