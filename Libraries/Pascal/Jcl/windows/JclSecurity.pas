@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (zo, 09 aug 2009)                              $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3594                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -51,7 +51,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   Windows, SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase;
 
 type
@@ -62,7 +66,26 @@ function CreateNullDacl(out Sa: TSecurityAttributes; const Inheritable: Boolean)
 function CreateInheritable(out Sa: TSecurityAttributes): PSecurityAttributes;
 
 // Privileges
+function IsGroupMember(RelativeGroupID: DWORD): Boolean;
 function IsAdministrator: Boolean;
+function IsUser: Boolean;
+function IsGuest: Boolean;
+function IsPowerUser: Boolean;
+function IsAccountOperator: Boolean;
+function IsSystemOperator: Boolean;
+function IsPrintOperator: Boolean;
+function IsBackupOperator: Boolean;
+function IsReplicator: Boolean;
+function IsRASServer: Boolean;
+function IsPreWin2000CompAccess: Boolean;
+function IsRemoteDesktopUser: Boolean;
+function IsNetworkConfigurationOperator: Boolean;
+function IsIncomingForestTrustBuilder: Boolean;
+function IsMonitoringUser: Boolean;
+function IsLoggingUser: Boolean;
+function IsAuthorizationAccess: Boolean;
+function IsTSLicenseServer: Boolean;
+
 function EnableProcessPrivilege(const Enable: Boolean; const Privilege: string): Boolean;
 function EnableThreadPrivilege(const Enable: Boolean; const Privilege: string): Boolean;
 function IsPrivilegeEnabled(const Privilege: string): Boolean;
@@ -72,8 +95,8 @@ function SetUserObjectFullAccess(hUserObject: THandle): Boolean;
 function GetUserObjectName(hUserObject: THandle): string;
 
 // Account Information
-procedure LookupAccountBySid(Sid: PSID; out Name, Domain: AnsiString); overload;
-procedure LookupAccountBySid(Sid: PSID; out Name, Domain: WideString); overload;
+procedure LookupAccountBySid(Sid: PSID; out Name, Domain: AnsiString; Silent: Boolean = False); overload;
+procedure LookupAccountBySid(Sid: PSID; out Name, Domain: WideString; Silent: Boolean = False); overload;
 procedure QueryTokenInformation(Token: THandle; InformationClass: TTokenInformationClass; var Buffer: Pointer);
 procedure FreeTokenInformation(var Buffer: Pointer);
 function GetInteractiveUserName: string;
@@ -92,9 +115,9 @@ function IsElevated: Boolean;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclSecurity.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (zo, 09 aug 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/windows/JclSecurity.pas $';
+    Revision: '$Revision: 3594 $';
+    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -104,7 +127,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.Classes,
+  {$ELSE ~HAS_UNITSCOPE}
   Classes,
+  {$ENDIF ~HAS_UNITSCOPE}
   {$IFDEF BORLAND}
   AccCtrl,
   {$ENDIF BORLAND}
@@ -149,7 +176,7 @@ end;
 
 //=== Privileges =============================================================
 
-function IsAdministrator: Boolean;
+function IsGroupMember(RelativeGroupID: DWORD): Boolean;
 var
   psidAdmin: Pointer;
   Token: THandle;
@@ -161,7 +188,7 @@ const
   SE_GROUP_USE_FOR_DENY_ONLY = $00000010;
 begin
   Result := not IsWinNT;
-  if Result then // Win9x/ME
+  if Result then // Win9x and ME don't have user groups
     Exit;
   psidAdmin := nil;
   TokenInfo := nil;
@@ -175,7 +202,7 @@ begin
     begin
       {$IFDEF FPC}
       Win32Check(AllocateAndInitializeSid(SECURITY_NT_AUTHORITY, 2,
-        SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
+        SECURITY_BUILTIN_DOMAIN_RID, RelativeGroupID, 0, 0, 0, 0, 0, 0,
         psidAdmin));
       if GetTokenInformation(Token, TokenGroups, nil, 0, @Count) or
        (GetLastError <> ERROR_INSUFFICIENT_BUFFER) then
@@ -184,7 +211,7 @@ begin
       Win32Check(GetTokenInformation(Token, TokenGroups, TokenInfo, Count, @Count));
       {$ELSE FPC}
       Win32Check(AllocateAndInitializeSid(SECURITY_NT_AUTHORITY, 2,
-        SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
+        SECURITY_BUILTIN_DOMAIN_RID, RelativeGroupID, 0, 0, 0, 0, 0, 0,
         psidAdmin));
       if GetTokenInformation(Token, TokenGroups, nil, 0, Count) or
        (GetLastError <> ERROR_INSUFFICIENT_BUFFER) then
@@ -216,6 +243,96 @@ begin
     if psidAdmin <> nil then
       FreeSid(psidAdmin);
   end;
+end;
+
+function IsAdministrator: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_ADMINS);
+end;
+
+function IsUser: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_USERS);
+end;
+
+function IsGuest: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_GUESTS);
+end;
+
+function IsPowerUser: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_POWER_USERS);
+end;
+
+function IsAccountOperator: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_ACCOUNT_OPS);
+end;
+
+function IsSystemOperator: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_SYSTEM_OPS);
+end;
+
+function IsPrintOperator: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_PRINT_OPS);
+end;
+
+function IsBackupOperator: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_BACKUP_OPS);
+end;
+
+function IsReplicator: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_REPLICATOR);
+end;
+
+function IsRASServer: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_RAS_SERVERS);
+end;
+
+function IsPreWin2000CompAccess: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_PREW2KCOMPACCESS);
+end;
+
+function IsRemoteDesktopUser: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_REMOTE_DESKTOP_USERS);
+end;
+
+function IsNetworkConfigurationOperator: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS);
+end;
+
+function IsIncomingForestTrustBuilder: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_INCOMING_FOREST_TRUST_BUILDERS);
+end;
+
+function IsMonitoringUser: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_MONITORING_USERS);
+end;
+
+function IsLoggingUser: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_LOGGING_USERS);
+end;
+
+function IsAuthorizationAccess: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_AUTHORIZATIONACCESS);
+end;
+
+function IsTSLicenseServer: Boolean;
+begin
+  Result := IsGroupMember(DOMAIN_ALIAS_RID_TS_LICENSE_SERVERS);
 end;
 
 function EnableProcessPrivilege(const Enable: Boolean; const Privilege: string): Boolean;
@@ -359,10 +476,11 @@ end;
 
 //=== Account Information ====================================================
 
-procedure LookupAccountBySid(Sid: PSID; out Name, Domain: AnsiString);
+procedure LookupAccountBySid(Sid: PSID; out Name, Domain: AnsiString; Silent: Boolean);
 var
   NameSize, DomainSize: DWORD;
   Use: SID_NAME_USE;
+  Success: Boolean;
 begin
   if IsWinNT then
   begin
@@ -374,7 +492,14 @@ begin
       SetLength(Name, NameSize - 1);
     if DomainSize > 0 then
       SetLength(Domain, DomainSize - 1);
-    Win32Check(LookupAccountSidA(nil, Sid, PAnsiChar(Name), NameSize, PAnsiChar(Domain), DomainSize, Use));
+    Success := LookupAccountSidA(nil, Sid, PAnsiChar(Name), NameSize, PAnsiChar(Domain), DomainSize, Use);
+    if Silent and not Success then
+    begin
+      Name := AnsiString(SIDToString(Sid));
+      Domain := '';
+    end
+    else
+      Win32Check(Success);
   end
   else
   begin             // if Win9x, then function return ''
@@ -383,10 +508,11 @@ begin
   end;
 end;
 
-procedure LookupAccountBySid(Sid: PSID; out Name, Domain: WideString);
+procedure LookupAccountBySid(Sid: PSID; out Name, Domain: WideString; Silent: Boolean);
 var
   NameSize, DomainSize: DWORD;
   Use: SID_NAME_USE;
+  Success: Boolean;
 begin
   if IsWinNT then
   begin
@@ -398,7 +524,14 @@ begin
       SetLength(Name, NameSize - 1);
     if DomainSize > 0 then
       SetLength(Domain, DomainSize - 1);
-    Win32Check(LookupAccountSidW(nil, Sid, PWideChar(Name), NameSize, PWideChar(Domain), DomainSize, Use));
+    Success := LookupAccountSidW(nil, Sid, PWideChar(Name), NameSize, PWideChar(Domain), DomainSize, Use);
+    if Silent and not Success then
+    begin
+      Name := WideString(SIDToString(Sid));
+      Domain := '';
+    end
+    else
+      Win32Check(Success);
   end
   else
   begin

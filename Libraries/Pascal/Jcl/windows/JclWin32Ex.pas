@@ -19,8 +19,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (di, 25 aug 2009)                             $ }
-{ Revision:      $Rev:: 2969                                                                     $ }
+{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3594                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -28,6 +28,7 @@
 unit JclWin32Ex;
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 interface
 
@@ -35,7 +36,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, Sysutils;
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, System.SysUtils;
+  {$ELSE ~HAS_UNITSCOPE}
+  Windows, SysUtils;
+  {$ENDIF ~HAS_UNITSCOPE}
 
 type
   TJclWin32ExFunction = (jwfTryEnterCriticalSection, jwfSignalObjectAndWait,
@@ -78,9 +83,9 @@ procedure JclCheckAndInitializeOpenGL;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclWin32Ex.pas $';
-    Revision: '$Revision: 2969 $';
-    Date: '$Date: 2009-08-25 20:22:46 +0200 (di, 25 aug 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/windows/JclWin32Ex.pas $';
+    Revision: '$Revision: 3594 $';
+    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

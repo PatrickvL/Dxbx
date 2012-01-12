@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (di, 25 aug 2009)                             $ }
-{ Revision:      $Rev:: 2969                                                                     $ }
+{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3594                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -38,7 +38,7 @@
 {$WRITEABLECONST OFF} // Read-only typed constants
 {$TYPEDADDRESS OFF}   // Type checked pointers off
 
-{$I jedi.inc} // Pull in the JCL/J-VCL shared directives
+{$I jedi\jedi.inc} // Pull in the JCL/J-VCL shared directives
 
 {$IFNDEF JEDI_INC}
 ALERT_jedi_inc_incompatible
@@ -94,7 +94,7 @@ ALERT_jedi_inc_incompatible
     {$IFDEF DELPHI7}
       {$I jcld7.inc}
       {$DEFINE JCL_CONFIGURED}
-    {$ENDIF DELPIH7}
+    {$ENDIF DELPIH7}  
     {----------------------------}
     { BDS                        }
     {----------------------------}
@@ -134,6 +134,23 @@ ALERT_jedi_inc_incompatible
       {$I jcld14.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS7}
+    {----------------------------}
+    {$IFDEF BDS8}
+      {$I jcld15.inc}
+      {$DEFINE JCL_CONFIGURED}
+    {$ENDIF BDS8}
+    {----------------------------}
+    {$IFDEF BDS9}
+      {$IFDEF MSWINDOWS}
+      {$IFDEF CPUX86}
+      {$I jcld16win32.inc}
+      {$ENDIF CPUX86}
+      {$IFDEF CPUX64}
+      {$I jcld16win64.inc}
+      {$ENDIF CPUX64}
+      {$DEFINE JCL_CONFIGURED}
+      {$ENDIF MSWINDOWS}
+    {$ENDIF BDS9}
     {----------------------------}
     {$IFDEF FPC}
       {$I jclfpc.inc}
@@ -266,6 +283,10 @@ ALERT_jedi_inc_incompatible
   {$DEFINE ZLIB_EXPORT_CDECL}
 {$ENDIF ZLIB_LINKONREQUEST}
 // calling convention for static link is fastcall
+
+{$IFNDEF HAS_UNIT_CHARACTER}
+  {$UNDEF UNICODE_RTL_DATABASE}
+{$ENDIF ~HAS_UNIT_CHARACTER}
 
 {$IFDEF UNICODE_RAW_DATA}
   {$UNDEF UNICODE_ZLIB_DATA}

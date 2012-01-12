@@ -34,8 +34,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-16 22:37:26 +0200 (vr, 16 okt 2009)                             $ }
-{ Revision:      $Rev:: 3047                                                                     $ }
+{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                        $ }
+{ Revision:      $Rev:: 3594                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -45,15 +45,23 @@ unit JclDebug;
 interface
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF MSWINDOWS}
+  System.Classes, System.SysUtils, System.Contnrs,
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
   Classes, SysUtils, Contnrs,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase, JclFileUtils, JclPeImage,
   {$IFDEF BORLAND}
   JclTD32,
@@ -64,10 +72,8 @@ uses
 procedure AssertKindOf(const ClassName: string; const Obj: TObject); overload;
 procedure AssertKindOf(const ClassType: TClass; const Obj: TObject); overload;
 
-{$IFDEF KEEP_DEPRECATED}
-procedure Trace(const Msg: string);
-{$EXTERNALSYM Trace}
-{$ENDIF KEEP_DEPRECATED}
+// use TraceMsg
+// procedure Trace(const Msg: string);
 procedure TraceMsg(const Msg: string);
 procedure TraceFmt(const Fmt: string; const Args: array of const);
 procedure TraceLoc(const Msg: string);
@@ -179,15 +185,21 @@ type
     property OnLineNumbers: TJclMapLineNumbersEvent read FOnLineNumbers write FOnLineNumbers;
   end;
 
+  TJclMapStringCache = record
+    CachedValue: string;
+    RawValue: PJclMapString;
+  end;
+
   // MAP file scanner
   PJclMapSegmentClass = ^TJclMapSegmentClass;
   TJclMapSegmentClass = record
-    Segment: Word;
-    Addr: DWORD;
-    VA: DWORD;
-    Len: DWORD;
-    SectionName: PJclMapString;
-    GroupName: PJclMapString;
+    Segment: Word; // segment ID
+    Start: DWORD;  // start as in the map file
+    Addr: DWORD;   // start as in process memory
+    VA: DWORD;     // position relative to module base adress
+    Len: DWORD;    // segment length
+    SectionName: TJclMapStringCache;
+    GroupName: TJclMapStringCache;
   end;
 
   PJclMapSegment = ^TJclMapSegment;
@@ -195,14 +207,14 @@ type
     Segment: Word;
     StartVA: DWORD; // VA relative to (module base address + $10000)
     EndVA: DWORD;
-    UnitName: PJclMapString;
+    UnitName: TJclMapStringCache;
   end;
 
   PJclMapProcName = ^TJclMapProcName;
   TJclMapProcName = record
     Segment: Word;
     VA: DWORD; // VA relative to (module base address + $10000)
-    ProcName: PJclMapString;
+    ProcName: TJclMapStringCache;
   end;
 
   PJclMapLineNumber = ^TJclMapLineNumber;
@@ -225,7 +237,7 @@ type
     FProcNamesCnt: Integer;
     FSegmentCnt: Integer;
   protected
-    function AddrToVA(const Addr: DWORD): DWORD;
+    function MAPAddrToVA(const Addr: DWORD): DWORD;
     procedure ClassTableItem(const Address: TJclMapAddress; Len: Integer; SectionName, GroupName: PJclMapString); override;
     procedure SegmentItem(const Address: TJclMapAddress; Len: Integer; GroupName, UnitName: PJclMapString); override;
     procedure PublicsByNameItem(const Address: TJclMapAddress; Name: PJclMapString); override;
@@ -235,6 +247,11 @@ type
     procedure Scan;
   public
     constructor Create(const MapFileName: TFileName; Module: HMODULE); override;
+
+    class function MapStringCacheToFileName(var MapString: TJclMapStringCache): string;
+    class function MapStringCacheToModuleName(var MapString: TJclMapStringCache): string;
+    class function MapStringCacheToStr(var MapString: TJclMapStringCache; IgnoreSpaces: Boolean = False): string;
+
     // Addr are virtual addresses relative to (module base address + $10000)
     function LineNumberFromAddr(Addr: DWORD): Integer; overload;
     function LineNumberFromAddr(Addr: DWORD; out Offset: Integer): Integer; overload;
@@ -540,7 +557,7 @@ procedure ClearLocationData;
 
 function FileByLevel(const Level: Integer = 0): string;
 function ModuleByLevel(const Level: Integer = 0): string;
-function ProcByLevel(const Level: Integer = 0): string;
+function ProcByLevel(const Level: Integer = 0; OnlyProcedureName: boolean =false): string;
 function LineByLevel(const Level: Integer = 0): Integer;
 function MapByLevel(const Level: Integer; var File_, Module_, Proc_: string; var Line_: Integer): Boolean;
 
@@ -635,7 +652,7 @@ type
     FDelayedTrace: Boolean;
     FInStackTracing: Boolean;
     FRaw: Boolean;
-    FStackOffset: TJclAddr;
+    FStackOffset: Int64;
     function GetItems(Index: Integer): TJclStackInfoItem;
     function NextStackFrame(var StackFrame: PStackFrame; var StackInfo: TStackInfo): Boolean;
     procedure StoreToList(const StackInfo: TStackInfo);
@@ -687,6 +704,9 @@ function JclGetExceptStackList(ThreadID: DWORD): TJclStackInfoList;
 function JclGetExceptStackListToStrings(ThreadID: DWORD; Strings: TStrings;
   IncludeModuleName: Boolean = False; IncludeAddressOffset: Boolean = False;
   IncludeStartProcLineOffset: Boolean = False; IncludeVAddress: Boolean = False): Boolean;
+
+// helper function for DUnit runtime memory leak check
+procedure JclClearGlobalStackData;
 
 // Exception frame info routines
 type
@@ -976,11 +996,9 @@ type
      stDelayedTrace, stTraceAllExceptions, stMainThreadOnly, stDisableIfDebuggerAttached);
   TJclStackTrackingOptions = set of TJclStackTrackingOption;
 
-{$IFDEF KEEP_DEPRECATED}
-const
+//const
   // replaced by RemoveIgnoredException(EAbort)
-  stTraceEAbort = stTraceAllExceptions;
-{$ENDIF KEEP_DEPRECATED}
+  // stTraceEAbort = stTraceAllExceptions;
 
 var
   JclStackTrackingOptions: TJclStackTrackingOptions = [stStack];
@@ -995,13 +1013,15 @@ procedure AddIgnoredExceptionByName(const AExceptionClassName: string);
 procedure RemoveIgnoredException(const ExceptionClass: TClass);
 procedure RemoveIgnoredExceptionByName(const AExceptionClassName: string);
 function IsIgnoredException(const ExceptionClass: TClass): Boolean;
+// function to add additional system modules to be included in the stack trace
+procedure AddModule(const ModuleName: string);
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebug.pas $';
-    Revision: '$Revision: 3047 $';
-    Date: '$Date: 2009-10-16 22:37:26 +0200 (vr, 16 okt 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/windows/JclDebug.pas $';
+    Revision: '$Revision: 3594 $';
+    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1011,6 +1031,17 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.RTLConsts,
+  {$IFDEF HAS_UNIT_CHARACTER}
+  System.Character,
+  {$ENDIF HAS_UNIT_CHARACTER}
+  {$ELSE ~HAS_UNITSCOPE}
+  RTLConsts,
+  {$IFDEF HAS_UNIT_CHARACTER}
+  Character,
+  {$ENDIF HAS_UNIT_CHARACTER}
+  {$ENDIF ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   JclRegistry,
   {$ENDIF MSWINDOWS}
@@ -1092,14 +1123,6 @@ procedure AssertKindOf(const ClassType: TClass; const Obj: TObject);
 begin
   Assert(Obj.InheritsFrom(ClassType));
 end;
-
-
-{$IFDEF KEEP_DEPRECATED}
-procedure Trace(const Msg: string);
-begin
-  TraceMsg(Msg);
-end;
-{$ENDIF KEEP_DEPRECATED}
 
 procedure TraceMsg(const Msg: string);
 begin
@@ -1310,7 +1333,8 @@ begin
   PExtension := PEnd;
   while (PExtension >= MapString) and (PExtension^ <> '.') and (PExtension^ <> '|') do
     Dec(PExtension);
-  if (PExtension^ = '.') then
+  if (StrLIComp(PExtension, '.pas ', 5) = 0) or
+     (StrLIComp(PExtension, '.obj ', 5) = 0) then
     PEnd := PExtension;
   PExtension := PEnd;
   while (PExtension >= MapString) and (PExtension^ <> '|') and (PExtension^ <> '\') do
@@ -1368,22 +1392,22 @@ var
   L: Integer;
   P1, P2: PJclMapString;
 
+  function Eof: Boolean;
+  begin
+    Result := (CurrPos >= EndPos);
+  end;
+
   procedure SkipWhiteSpace;
   begin
-    while CharIsWhiteSpace(Char(CurrPos^)) do
+    while not Eof and CharIsWhiteSpace(Char(CurrPos^)) do
       Inc(CurrPos);
   end;
 
   procedure SkipEndLine;
   begin
-    while not CharIsReturn(Char(CurrPos^)) do
+    while not Eof and not CharIsReturn(Char(CurrPos^)) do
       Inc(CurrPos);
     SkipWhiteSpace;
-  end;
-
-  function Eof: Boolean;
-  begin
-    Result := (CurrPos >= EndPos);
   end;
 
   function IsDecDigit: Boolean;
@@ -1412,7 +1436,7 @@ var
     end;
   end;
 
-  function ReadHexValue: Integer;
+  function ReadHexValue: DWORD;
   var
     C: Char;
   begin
@@ -1421,20 +1445,11 @@ var
       C := Char(CurrPos^);
       case C of
         '0'..'9':
-          begin
-            Result := Result * 16;
-            Inc(Result, Ord(C) - Ord('0'));
-          end;
+          Result := (Result shl 4) or DWORD(Ord(C) - Ord('0'));
         'A'..'F':
-          begin
-            Result := Result * 16;
-            Inc(Result, Ord(C) - Ord('A') + 10);
-          end;
+          Result := (Result shl 4) or DWORD(Ord(C) - Ord('A') + 10);
         'a'..'f':
-          begin
-            Result := Result * 16;
-            Inc(Result, Ord(C) - Ord('a') + 10);
-          end;
+          Result := (Result shl 4) or DWORD(Ord(C) - Ord('a') + 10);
         'H', 'h':
           begin
             Inc(CurrPos);
@@ -1575,7 +1590,7 @@ begin
         PublicsByNameItem(A, P1);
       end;
     if SyncToHeader(PublicsByValueHeader) then
-      while IsDecDigit do
+      while not Eof and IsDecDigit do
       begin
         A := ReadAddress;
         P1 := ReadString;
@@ -1662,20 +1677,53 @@ begin
   Scan;
 end;
 
-function TJclMapScanner.AddrToVA(const Addr: DWORD): DWORD;
+function TJclMapScanner.MAPAddrToVA(const Addr: DWORD): DWORD;
 begin
   // MAP file format was changed in Delphi 2005
   // before Delphi 2005: segments started at offset 0
   //                     only one segment of code
   // after Delphi 2005: segments started at code base address (module base address + $10000)
   //                    2 segments of code
-  if (Length(FSegmentClasses) > 0) and (FSegmentClasses[0].Addr > 0) then
+  if (Length(FSegmentClasses) > 0) and (FSegmentClasses[0].Start > 0) and (Addr >= FSegmentClasses[0].Start) then
     // Delphi 2005 and later
     // The first segment should be code starting at module base address + $10000
-    Result := Addr - FSegmentClasses[0].Addr
+    Result := Addr - FSegmentClasses[0].Start
   else
     // before Delphi 2005
     Result := Addr;
+end;
+
+class function TJclMapScanner.MapStringCacheToFileName(
+  var MapString: TJclMapStringCache): string;
+begin
+  Result := MapString.CachedValue;
+  if Result = '' then
+  begin
+    Result := MapStringToFileName(MapString.RawValue);
+    MapString.CachedValue := Result;
+  end;
+end;
+
+class function TJclMapScanner.MapStringCacheToModuleName(
+  var MapString: TJclMapStringCache): string;
+begin
+  Result := MapString.CachedValue;
+  if Result = '' then
+  begin
+    Result := MapStringToModuleName(MapString.RawValue);
+    MapString.CachedValue := Result;
+  end;
+end;
+
+class function TJclMapScanner.MapStringCacheToStr(var MapString: TJclMapStringCache;
+  IgnoreSpaces: Boolean): string;
+begin
+  Result := MapString.CachedValue;
+  if Result = '' then
+  begin
+    Result := MapStringToStr(MapString.RawValue, IgnoreSpaces);
+    MapString.CachedValue := Result;
+  end;
 end;
 
 procedure TJclMapScanner.ClassTableItem(const Address: TJclMapAddress; Len: Integer;
@@ -1687,11 +1735,16 @@ begin
   C := Length(FSegmentClasses);
   SetLength(FSegmentClasses, C + 1);
   FSegmentClasses[C].Segment := Address.Segment;
-  FSegmentClasses[C].Addr := Address.Offset;
-  FSegmentClasses[C].VA := AddrToVA(Address.Offset);
+  FSegmentClasses[C].Start := Address.Offset;
+  FSegmentClasses[C].Addr := Address.Offset; // will be fixed below while considering module mapped address
+  // test GroupName because SectionName = '.tls' in Delphi and '_tls' in BCB
+  if StrLIComp(GroupName, 'TLS', 3) = 0 then
+    FSegmentClasses[C].VA := FSegmentClasses[C].Start
+  else
+    FSegmentClasses[C].VA := MAPAddrToVA(FSegmentClasses[C].Start);
   FSegmentClasses[C].Len := Len;
-  FSegmentClasses[C].SectionName := SectionName;
-  FSegmentClasses[C].GroupName := GroupName;
+  FSegmentClasses[C].SectionName.RawValue := SectionName;
+  FSegmentClasses[C].GroupName.RawValue := GroupName;
 
   if FModule <> 0 then
   begin
@@ -1748,7 +1801,10 @@ begin
     if (FSegmentClasses[SegIndex].Segment = Address.Segment)
       and (DWORD(Address.Offset) < FSegmentClasses[SegIndex].Len) then
   begin
-    VA := AddrToVA(Address.Offset + FSegmentClasses[SegIndex].Addr);
+    if StrLIComp(FSegmentClasses[SegIndex].GroupName.RawValue, 'TLS', 3) = 0 then
+      Va := Address.Offset
+    else
+      VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
     { Starting with Delphi 2005, "empty" units are listes with the last line and
       the VA 0001:00000000. When we would accept 0 VAs here, System.pas functions
       could be mapped to other units and line numbers. Discaring such items should
@@ -1769,7 +1825,7 @@ begin
       SetLength(FSourceNames, C + 1);
       FSourceNames[C].Segment := FSegmentClasses[SegIndex].Segment;
       FSourceNames[C].VA := VA;
-      FSourceNames[C].ProcName := FNewUnitFileName;
+      FSourceNames[C].ProcName.RawValue := FNewUnitFileName;
       FNewUnitFileName := nil;
     end;
     Break;
@@ -1791,7 +1847,7 @@ begin
   for I := Length(FSegments) - 1 downto 0 do
     if (FSegments[I].StartVA <= Addr) and (Addr < FSegments[I].EndVA) then
     begin
-      Result := MapStringToModuleName(FSegments[I].UnitName);
+      Result := MapStringCacheToModuleName(FSegments[I].UnitName);
       Break;
     end;
 end;
@@ -1832,7 +1888,7 @@ begin
   I := SearchDynArray(FProcNames, SizeOf(FProcNames[0]), Search_MapProcName, @Addr, True);
   if (I <> -1) and (FProcNames[I].VA >= ModuleStartAddr) then
   begin
-    Result := MapStringToStr(FProcNames[I].ProcName, True);
+    Result := MapStringCacheToStr(FProcNames[I].ProcName, True);
     Offset := Addr - FProcNames[I].VA;
   end;
 end;
@@ -1853,8 +1909,11 @@ begin
     if FProcNamesCnt mod 256 = 0 then
       SetLength(FProcNames, FProcNamesCnt + 256);
     FProcNames[FProcNamesCnt].Segment := FSegmentClasses[SegIndex].Segment;
-    FProcNames[FProcNamesCnt].VA := AddrToVA(Address.Offset + FSegmentClasses[SegIndex].Addr);
-    FProcNames[FProcNamesCnt].ProcName := Name;
+    if StrLIComp(FSegmentClasses[SegIndex].GroupName.RawValue, 'TLS', 3) = 0 then
+      FProcNames[FProcNamesCnt].VA := Address.Offset
+    else
+      FProcNames[FProcNamesCnt].VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
+    FProcNames[FProcNamesCnt].ProcName.RawValue := Name;
     Inc(FProcNamesCnt);
     Break;
   end;
@@ -1900,13 +1959,16 @@ begin
     if (FSegmentClasses[SegIndex].Segment = Address.Segment)
       and (DWORD(Address.Offset) < FSegmentClasses[SegIndex].Len) then
   begin
-    VA := AddrToVA(Address.Offset + FSegmentClasses[SegIndex].Addr);
+    if StrLIComp(FSegmentClasses[SegIndex].GroupName.RawValue, 'TLS', 3) = 0 then
+      VA := Address.Offset
+    else
+      VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
     if FSegmentCnt mod 16 = 0 then
       SetLength(FSegments, FSegmentCnt + 16);
     FSegments[FSegmentCnt].Segment := FSegmentClasses[SegIndex].Segment;
     FSegments[FSegmentCnt].StartVA := VA;
     FSegments[FSegmentCnt].EndVA := VA + DWORD(Len);
-    FSegments[FSegmentCnt].UnitName := UnitName;
+    FSegments[FSegmentCnt].UnitName.RawValue := UnitName;
     Inc(FSegmentCnt);
     Break;
   end;
@@ -1922,14 +1984,14 @@ begin
   Result := '';
   I := SearchDynArray(FSourceNames, SizeOf(FSourceNames[0]), Search_MapProcName, @Addr, True);
   if (I <> -1) and (FSourceNames[I].VA >= ModuleStartVA) then
-    Result := MapStringToStr(FSourceNames[I].ProcName);
+    Result := MapStringCacheToStr(FSourceNames[I].ProcName);
   if Result = '' then
   begin
     // try with module names (C++Builder compliance)
     for I := Length(FSegments) - 1 downto 0 do
       if (FSegments[I].StartVA <= Addr) and (Addr < FSegments[I].EndVA) then
     begin
-      Result := MapStringToFileName(FSegments[I].UnitName);
+      Result := MapStringCacheToFileName(FSegments[I].UnitName);
       Break;
     end;
   end;
@@ -2037,7 +2099,7 @@ end;
 
 function EncodeNameString(const S: string): AnsiString;
 var
-  I, StartIndex: Integer;
+  I, StartIndex, EndIndex: Integer;
   C: Byte;
   P: PByte;
 begin
@@ -2057,9 +2119,13 @@ begin
     P^ := 2 // store '@' leading char information
   else
     Dec(P);
-  for I := 0 to Length(S) - StartIndex do // including null char
+  EndIndex := Length(S) - StartIndex;
+  for I := 0 to EndIndex do // including null char
   begin
-    C := Byte(S[I + 1 + StartIndex]);
+    if I = EndIndex then
+      C := 0
+    else
+      C := Byte(S[I + 1 + StartIndex]);
     case AnsiChar(C) of
       #0:
         C := 0;
@@ -2088,7 +2154,7 @@ begin
         end;
       2:
         begin
-          P^ := P^ or (C shl 4);
+          P^ := P^ or Byte(C shl 4);
           Inc(P);
           P^ := (C shr 4) and $03;
         end;
@@ -2175,9 +2241,12 @@ function InsertDebugDataIntoExecutableFile(const ExecutableFileName: TFileName;
   BinDebug: TJclBinDebugGenerator; out LinkerBugUnit: string;
   out MapFileSize, JclDebugDataSize, LineNumberErrors: Integer): Boolean;
 var
-  ImageStream: TMemoryStream;
-  NtHeaders32: PImageNtHeaders32;
-  Sections, LastSection, JclDebugSection: PImageSectionHeader;
+  ImageStream: TStream;
+  NtHeaders32: TImageNtHeaders32;
+  ImageSectionHeaders: TImageSectionHeaderArray;
+  NtHeaders32Position, ImageSectionHeadersPosition, JclDebugSectionPosition: Int64;
+  JclDebugSection: TImageSectionHeader;
+  LastSection: PImageSectionHeader;
   VirtualAlignedSize: DWORD;
   I, X, NeedFill: Integer;
 
@@ -2206,69 +2275,75 @@ begin
   if not Result then
     Exit;
 
-  ImageStream := TMemoryStream.Create;
+  ImageStream := TFileStream.Create(ExecutableFileName, fmOpenReadWrite or fmShareExclusive);
   try
     try
-      ImageStream.LoadFromFile(ExecutableFileName);
-      if PeMapImgTarget(ImageStream.Memory) = taWin32 then
+      if PeMapImgTarget(ImageStream, 0) = taWin32 then
       begin
         MapFileSize := BinDebug.Stream.Size;
         JclDebugDataSize := BinDebug.DataStream.Size;
-        NtHeaders32 := PeMapImgNtHeaders32(ImageStream.Memory);
-        Assert(NtHeaders32 <> nil);
-        Sections := PeMapImgSections32(NtHeaders32);
-        Assert(Sections <> nil);
+        NtHeaders32Position := PeMapImgNtHeaders32(ImageStream, 0, NtHeaders32);
+        Assert(NtHeaders32Position <> -1);
+        ImageSectionHeadersPosition := PeMapImgSections32(ImageStream, NtHeaders32Position, NtHeaders32, ImageSectionHeaders);
+        Assert(ImageSectionHeadersPosition <> -1);
         // Check whether there is not a section with the name already. If so, return True (#0000069)
-        if PeMapImgFindSection32(NtHeaders32, JclDbgDataResName) <> nil then
+        if PeMapImgFindSection(ImageSectionHeaders, JclDbgDataResName) <> -1 then
         begin
           Result := True;
           Exit;
         end;
 
-        LastSection := Sections;
-        Inc(LastSection, NtHeaders32^.FileHeader.NumberOfSections - 1);
-        JclDebugSection := LastSection;
-        Inc(JclDebugSection);
-
+        JclDebugSectionPosition := ImageSectionHeadersPosition + (SizeOf(ImageSectionHeaders[0]) * Length(ImageSectionHeaders));
+        LastSection := @ImageSectionHeaders[High(ImageSectionHeaders)];
+        
         // Increase the number of sections
-        Inc(NtHeaders32^.FileHeader.NumberOfSections);
-        ResetMemory(JclDebugSection^, SizeOf(TImageSectionHeader));
+        Inc(NtHeaders32.FileHeader.NumberOfSections);
+
+        ResetMemory(JclDebugSection, SizeOf(JclDebugSection));
         // JCLDEBUG Virtual Address
-        JclDebugSection^.VirtualAddress := LastSection^.VirtualAddress + LastSection^.Misc.VirtualSize;
-        RoundUpToAlignment(JclDebugSection^.VirtualAddress, NtHeaders32^.OptionalHeader.SectionAlignment);
+        JclDebugSection.VirtualAddress := LastSection^.VirtualAddress + LastSection^.Misc.VirtualSize;
+        RoundUpToAlignment(JclDebugSection.VirtualAddress, NtHeaders32.OptionalHeader.SectionAlignment);
         // JCLDEBUG Physical Offset
-        JclDebugSection^.PointerToRawData := LastSection^.PointerToRawData + LastSection^.SizeOfRawData;
-        RoundUpToAlignment(JclDebugSection^.PointerToRawData, NtHeaders32^.OptionalHeader.FileAlignment);
+        JclDebugSection.PointerToRawData := LastSection^.PointerToRawData + LastSection^.SizeOfRawData;
+        RoundUpToAlignment(JclDebugSection.PointerToRawData, NtHeaders32.OptionalHeader.FileAlignment);
         // JCLDEBUG Section name
-        StrPLCopy(PAnsiChar(@JclDebugSection^.Name), JclDbgDataResName, IMAGE_SIZEOF_SHORT_NAME);
+        StrPLCopy(PAnsiChar(@JclDebugSection.Name), JclDbgDataResName, IMAGE_SIZEOF_SHORT_NAME);
         // JCLDEBUG Characteristics flags
-        JclDebugSection^.Characteristics := IMAGE_SCN_MEM_READ or IMAGE_SCN_CNT_INITIALIZED_DATA;
+        JclDebugSection.Characteristics := IMAGE_SCN_MEM_READ or IMAGE_SCN_CNT_INITIALIZED_DATA;
 
         // Size of virtual data area
-        JclDebugSection^.Misc.VirtualSize := JclDebugDataSize;
+        JclDebugSection.Misc.VirtualSize := JclDebugDataSize;
         VirtualAlignedSize := JclDebugDataSize;
-        RoundUpToAlignment(VirtualAlignedSize, NtHeaders32^.OptionalHeader.SectionAlignment);
+        RoundUpToAlignment(VirtualAlignedSize, NtHeaders32.OptionalHeader.SectionAlignment);
         // Update Size of Image
-        Inc(NtHeaders32^.OptionalHeader.SizeOfImage, VirtualAlignedSize);
+        Inc(NtHeaders32.OptionalHeader.SizeOfImage, VirtualAlignedSize);
         // Raw data size
-        JclDebugSection^.SizeOfRawData := JclDebugDataSize;
-        RoundUpToAlignment(JclDebugSection^.SizeOfRawData, NtHeaders32^.OptionalHeader.FileAlignment);
+        JclDebugSection.SizeOfRawData := JclDebugDataSize;
+        RoundUpToAlignment(JclDebugSection.SizeOfRawData, NtHeaders32.OptionalHeader.FileAlignment);
         // Update Initialized data size
-        Inc(NtHeaders32^.OptionalHeader.SizeOfInitializedData, JclDebugSection^.SizeOfRawData);
+        Inc(NtHeaders32.OptionalHeader.SizeOfInitializedData, JclDebugSection.SizeOfRawData);
+
+        // write NT Headers 32
+        if (ImageStream.Seek(NtHeaders32Position, soBeginning) <> NtHeaders32Position) or
+          (ImageStream.Write(NtHeaders32, SizeOf(NtHeaders32)) <> SizeOf(NtHeaders32)) then
+          raise EJclPeImageError.CreateRes(@SWriteError);
+
+        // write section header
+        if (ImageStream.Seek(JclDebugSectionPosition, soBeginning) <> JclDebugSectionPosition) or
+          (ImageStream.Write(JclDebugSection, SizeOf(JclDebugSection)) <> SizeOf(JclDebugSection)) then
+          raise EJclPeImageError.CreateRes(@SWriteError);
 
         // Fill data to alignment
-        NeedFill := INT_PTR(JclDebugSection^.SizeOfRawData) - JclDebugDataSize;
+        NeedFill := INT_PTR(JclDebugSection.SizeOfRawData) - JclDebugDataSize;
 
         // Note: Delphi linker seems to generate incorrect (unaligned) size of
         // the executable when adding TD32 debug data so the position could be
         // behind the size of the file then.
-        ImageStream.Seek(JclDebugSection^.PointerToRawData, soFromBeginning);
+        ImageStream.Seek({0 +} JclDebugSection.PointerToRawData, soFromBeginning);
         ImageStream.CopyFrom(BinDebug.DataStream, 0);
         X := 0;
         for I := 1 to NeedFill do
           ImageStream.WriteBuffer(X, 1);
-
-        ImageStream.SaveToFile(ExecutableFileName);
       end
       else
         Result := False;
@@ -2395,7 +2470,7 @@ var
         if FSegmentClasses[SegIndex].Segment = SegID then
       begin
         LastSegmentID := FSegmentClasses[SegIndex].Segment;
-        GroupName := MapStringToStr(FSegmentClasses[SegIndex].GroupName);
+        GroupName := MapStringCacheToStr(FSegmentClasses[SegIndex].GroupName);
         LastSegmentStored := (GroupName = 'CODE') or (GroupName = 'ICODE');
         Break;
       end;
@@ -2431,7 +2506,7 @@ begin
       if IsSegmentStored(FSegments[I].Segment) then
     begin
       WriteValueOfs(FSegments[I].StartVA, L1);
-      WriteValueOfs(AddWord(MapStringToModuleName(FSegments[I].UnitName)), L2);
+      WriteValueOfs(AddWord(MapStringCacheToModuleName(FSegments[I].UnitName)), L2);
     end;
     WriteValue(MaxInt);
 
@@ -2442,7 +2517,7 @@ begin
       if IsSegmentStored(FSourceNames[I].Segment) then
     begin
       WriteValueOfs(FSourceNames[I].VA, L1);
-      WriteValueOfs(AddWord(MapStringToStr(FSourceNames[I].ProcName)), L2);
+      WriteValueOfs(AddWord(MapStringCacheToStr(FSourceNames[I].ProcName)), L2);
     end;
     WriteValue(MaxInt);
 
@@ -2455,7 +2530,7 @@ begin
     begin
       WriteValueOfs(FProcNames[I].VA, L1);
       // MAP files generated by C++Builder have spaces in their names
-      S := MapStringToStr(FProcNames[I].ProcName, True);
+      S := MapStringCacheToStr(FProcNames[I].ProcName, True);
       D := Pos('.', S);
       if D = 1 then
       begin
@@ -3870,7 +3945,7 @@ begin
         Result := (SymLoadModuleFunc(ProcessHandle, 0, PAnsiChar(AnsiString(ModuleFileName)), nil, 0, 0) <> 0) and
                   SymGetModuleInfoAFunc(ProcessHandle, Module, ModuleInfoA);
       end;
-      Result := Result and (ModuleInfoW.BaseOfImage <> 0) and
+      Result := Result and (ModuleInfoA.BaseOfImage <> 0) and
                 not (ModuleInfoA.SymType in [SymNone, SymExport]);
     end
     else
@@ -4100,12 +4175,17 @@ begin
   Result := GetLocationInfo(Caller(Level + 1)).UnitName;
 end;
 
-function ProcByLevel(const Level: Integer): string;
+function ProcByLevel(const Level: Integer; OnlyProcedureName: boolean): string;
 begin
   Result := GetLocationInfo(Caller(Level + 1)).ProcedureName;
+  if OnlyProcedureName = true then
+  begin
+    if StrILastPos('.', Result) > 0 then
+      Result :=StrRestOf(Result, StrILastPos('.', Result)+1);
+  end;
 end;
 
-function LineByLevel(const Level: Integer): Integer;
+  function LineByLevel(const Level: Integer): Integer;
 begin
   Result := GetLocationInfo(Caller(Level + 1)).LineNumber;
 end;
@@ -4254,6 +4334,7 @@ type
   public
     destructor Destroy; override;
     procedure AddObject(AObject: TJclStackBaseList);
+    procedure Clear;
     procedure LockThreadID(TID: DWORD);
     procedure UnlockThreadID;
     function FindObject(TID: DWORD; AClass: TJclStackBaseListClass): TJclStackBaseList;
@@ -4290,6 +4371,22 @@ begin
       ReplacedObj.Free;
     end;
     Add(AObject);
+  finally
+    UnlockList;
+  end;
+end;
+
+procedure TJclGlobalStackList.Clear;
+begin
+  with LockList do
+  try
+    while Count > 0 do
+      TObject(Items[0]).Free;
+    { The following call to Clear seems to be useless, but it deallocates memory
+      by setting the lists capacity back to zero. For the runtime memory leak check
+      within DUnit it is important that the allocated memory before and after the
+      test is equal. }
+    Clear; // do not remove
   finally
     UnlockList;
   end;
@@ -4370,12 +4467,14 @@ end;
 type
   TJclGlobalModulesList = class(TObject)
   private
+    FAddedModules: TStringList;
     FHookedModules: TJclModuleArray;
     FLock: TJclCriticalSection;
     FModulesList: TJclModuleInfoList;
   public
     constructor Create;
     destructor Destroy; override;
+    procedure AddModule(const ModuleName: string);
     function CreateModulesList: TJclModuleInfoList;
     procedure FreeModulesList(var ModulesList: TJclModuleInfoList);
     function ValidateAddress(Addr: Pointer): Boolean;
@@ -4393,7 +4492,29 @@ destructor TJclGlobalModulesList.Destroy;
 begin
   FreeAndNil(FLock);
   FreeAndNil(FModulesList);
+  FreeAndNil(FAddedModules);
   inherited Destroy;
+end;
+
+procedure TJclGlobalModulesList.AddModule(const ModuleName: string);
+var
+  IsMultiThreaded: Boolean;
+begin
+  IsMultiThreaded := IsMultiThread;
+  if IsMultiThreaded then
+    FLock.Enter;
+  try
+    if not Assigned(FAddedModules) then
+    begin
+      FAddedModules := TStringList.Create;
+      FAddedModules.Sorted := True;
+      FAddedModules.Duplicates := dupIgnore;
+    end;
+    FAddedModules.Add(ModuleName);
+  finally
+    if IsMultiThreaded then
+      FLock.Leave;
+  end;
 end;
 
 function TJclGlobalModulesList.CreateModulesList: TJclModuleInfoList;
@@ -4401,6 +4522,7 @@ var
   I: Integer;
   SystemModulesOnly: Boolean;
   IsMultiThreaded: Boolean;
+  AddedModuleHandle: HMODULE;
 begin
   IsMultiThreaded := IsMultiThread;
   if IsMultiThreaded then
@@ -4414,6 +4536,14 @@ begin
       if SystemModulesOnly and JclHookedExceptModulesList(FHookedModules) then
         for I := Low(FHookedModules) to High(FHookedModules) do
           Result.AddModule(FHookedModules[I], True);
+      if Assigned(FAddedModules) then
+        for I := 0 to FAddedModules.Count - 1 do
+        begin
+          AddedModuleHandle := GetModuleHandle(PChar(FAddedModules[I]));
+          if (AddedModuleHandle <> 0) and
+            not Assigned(Result.ModuleFromAddress[Pointer(AddedModuleHandle)]) then
+            Result.AddModule(AddedModuleHandle, True);
+        end;
       if stStaticModuleList in JclStackTrackingOptions then
         FModulesList := Result;
     end
@@ -4560,6 +4690,11 @@ begin
   if Result then
     List.AddToStrings(Strings, IncludeModuleName, IncludeAddressOffset, IncludeStartProcLineOffset,
       IncludeVAddress);
+end;
+
+procedure JclClearGlobalStackData;
+begin
+  GlobalStackList.Clear;
 end;
 
 function JclCreateStackList(Raw: Boolean; AIgnoreLevels: DWORD; FirstCaller: Pointer): TJclStackInfoList;
@@ -4822,6 +4957,9 @@ begin
         StackInfo.CallerAddr := StackFrameCallerAddr - CallInstructionSize
       else
         StackInfo.CallerAddr := StackFrameCallerAddr;
+      // the stack may be messed up in big projects, avoid overflow in arithmetics
+      if StackFrameCallerFrame < TJclAddr(StackFrame) then
+        Break;
       StackInfo.DumpSize := StackFrameCallerFrame - TJclAddr(StackFrame);
       StackInfo.ParamSize := (StackInfo.DumpSize - SizeOf(TStackFrame)) div 4;
       if PStackFrame(StackFrame^.CallerFrame) = StackFrame then
@@ -4855,8 +4993,7 @@ var
   StackFrame: PStackFrame;
   StackInfo: TStackInfo;
 begin
-  if Capacity < 32 then
-    Capacity := 32; // reduce ReallocMem calls, must be > 1 because the caller's EIP register is already in the list
+  Capacity := 32; // reduce ReallocMem calls, must be > 1 because the caller's EIP register is already in the list
 
   // Start at level 0
   StackInfo.Level := 0;
@@ -5016,7 +5153,7 @@ begin
     //CopyMemory(FStackData, StackPtr, StackDataSize);
   end;
 
-  FStackOffset := TJclAddr(FStackData) - TJclAddr(StackPtr);
+  FStackOffset := Int64(FStackData) - Int64(StackPtr);
   FFramePointer := Pointer(TJclAddr(FFramePointer) + FStackOffset);
   TopOfStack := TopOfStack + FStackOffset;
 end;
@@ -5037,84 +5174,88 @@ begin
   // todo: 64 bit version
 
   // First check that the address is within range of our code segment!
-  C8P := PDWORD(CodeAddr - 8);
-  C4P := PDWORD(CodeAddr - 4);
-  Result := (CodeAddr > 8) and ValidCodeAddr(TJclAddr(C8P), FModuleInfoList) and not IsBadReadPtr(C8P, 8);
-
-  // Now check to see if the instruction preceding the return address
-  // could be a valid CALL instruction
+  Result := CodeAddr > 8;
   if Result then
   begin
-    try
-      CodeDWORD8 := PDWORD(C8P)^;
-      CodeDWORD4 := PDWORD(C4P)^;
-      // CodeDWORD8 = (ReturnAddr-5):(ReturnAddr-6):(ReturnAddr-7):(ReturnAddr-8)
-      // CodeDWORD4 = (ReturnAddr-1):(ReturnAddr-2):(ReturnAddr-3):(ReturnAddr-4)
+    C8P := PDWORD(CodeAddr - 8);
+    C4P := PDWORD(CodeAddr - 4);
+    Result := ValidCodeAddr(TJclAddr(C8P), FModuleInfoList) and not IsBadReadPtr(C8P, 8);
 
-      // ModR/M bytes contain the following bits:
-      // Mod        = (76)
-      // Reg/Opcode = (543)
-      // R/M        = (210)
-      RM1 := (CodeDWORD4 shr 24) and $7;
-      RM2 := (CodeDWORD4 shr 16) and $7;
-      //RM3 := (CodeDWORD4 shr 8)  and $7;
-      //RM4 :=  CodeDWORD4         and $7;
-      RM5 := (CodeDWORD8 shr 24) and $7;
-      //RM6 := (CodeDWORD8 shr 16) and $7;
-      //RM7 := (CodeDWORD8 shr 8)  and $7;
+    // Now check to see if the instruction preceding the return address
+    // could be a valid CALL instruction
+    if Result then
+    begin
+      try
+        CodeDWORD8 := PDWORD(C8P)^;
+        CodeDWORD4 := PDWORD(C4P)^;
+        // CodeDWORD8 = (ReturnAddr-5):(ReturnAddr-6):(ReturnAddr-7):(ReturnAddr-8)
+        // CodeDWORD4 = (ReturnAddr-1):(ReturnAddr-2):(ReturnAddr-3):(ReturnAddr-4)
 
-      // Check the instruction prior to the potential call site.
-      // We consider it a valid call site if we find a CALL instruction there
-      // Check the most common CALL variants first
-      if ((CodeDWORD8 and $FF000000) = $E8000000) then
-        // 5 bytes, "CALL NEAR REL32" (E8 cd)
-        CallInstructionSize := 5
-      else
-      if ((CodeDWORD4 and $F8FF0000) = $10FF0000) and not (RM1 in [4, 5]) then
-        // 2 bytes, "CALL NEAR [EAX]" (FF /2) where Reg = 010, Mod = 00, R/M <> 100 (1 extra byte)
-        // and R/M <> 101 (4 extra bytes)
-        CallInstructionSize := 2
-      else
-      if ((CodeDWORD4 and $F8FF0000) = $D0FF0000) then
-        // 2 bytes, "CALL NEAR EAX" (FF /2) where Reg = 010 and Mod = 11
-        CallInstructionSize := 2
-      else
-      if ((CodeDWORD4 and $00FFFF00) = $0014FF00) then
-        // 3 bytes, "CALL NEAR [EAX+EAX*i]" (FF /2) where Reg = 010, Mod = 00 and RM = 100
-        // SIB byte not validated
-        CallInstructionSize := 3
-      else
-      if ((CodeDWORD4 and $00F8FF00) = $0050FF00) and (RM2 <> 4) then
-        // 3 bytes, "CALL NEAR [EAX+$12]" (FF /2) where Reg = 010, Mod = 01 and RM <> 100 (1 extra byte)
-        CallInstructionSize := 3
-      else
-      if ((CodeDWORD4 and $0000FFFF) = $000054FF) then
-        // 4 bytes, "CALL NEAR [EAX+EAX+$12]" (FF /2) where Reg = 010, Mod = 01 and RM = 100
-        // SIB byte not validated
-        CallInstructionSize := 4
-      else
-      if ((CodeDWORD8 and $FFFF0000) = $15FF0000) then
-        // 6 bytes, "CALL NEAR [$12345678]" (FF /2) where Reg = 010, Mod = 00 and RM = 101
-        CallInstructionSize := 6
-      else
-      if ((CodeDWORD8 and $F8FF0000) = $90FF0000) and (RM5 <> 4) then
-        // 6 bytes, "CALL NEAR [EAX+$12345678]" (FF /2) where Reg = 010, Mod = 10 and RM <> 100 (1 extra byte)
-        CallInstructionSize := 6
-      else
-      if ((CodeDWORD8 and $00FFFF00) = $0094FF00) then
-        // 7 bytes, "CALL NEAR [EAX+EAX+$1234567]" (FF /2) where Reg = 010, Mod = 10 and RM = 100
-        CallInstructionSize := 7
-      else
-      if ((CodeDWORD8 and $0000FF00) = $00009A00) then
-        // 7 bytes, "CALL FAR $1234:12345678" (9A ptr16:32)
-        CallInstructionSize := 7
-      else
+        // ModR/M bytes contain the following bits:
+        // Mod        = (76)
+        // Reg/Opcode = (543)
+        // R/M        = (210)
+        RM1 := (CodeDWORD4 shr 24) and $7;
+        RM2 := (CodeDWORD4 shr 16) and $7;
+        //RM3 := (CodeDWORD4 shr 8)  and $7;
+        //RM4 :=  CodeDWORD4         and $7;
+        RM5 := (CodeDWORD8 shr 24) and $7;
+        //RM6 := (CodeDWORD8 shr 16) and $7;
+        //RM7 := (CodeDWORD8 shr 8)  and $7;
+
+        // Check the instruction prior to the potential call site.
+        // We consider it a valid call site if we find a CALL instruction there
+        // Check the most common CALL variants first
+        if ((CodeDWORD8 and $FF000000) = $E8000000) then
+          // 5 bytes, "CALL NEAR REL32" (E8 cd)
+          CallInstructionSize := 5
+        else
+        if ((CodeDWORD4 and $F8FF0000) = $10FF0000) and not (RM1 in [4, 5]) then
+          // 2 bytes, "CALL NEAR [EAX]" (FF /2) where Reg = 010, Mod = 00, R/M <> 100 (1 extra byte)
+          // and R/M <> 101 (4 extra bytes)
+          CallInstructionSize := 2
+        else
+        if ((CodeDWORD4 and $F8FF0000) = $D0FF0000) then
+          // 2 bytes, "CALL NEAR EAX" (FF /2) where Reg = 010 and Mod = 11
+          CallInstructionSize := 2
+        else
+        if ((CodeDWORD4 and $00FFFF00) = $0014FF00) then
+          // 3 bytes, "CALL NEAR [EAX+EAX*i]" (FF /2) where Reg = 010, Mod = 00 and RM = 100
+          // SIB byte not validated
+          CallInstructionSize := 3
+        else
+        if ((CodeDWORD4 and $00F8FF00) = $0050FF00) and (RM2 <> 4) then
+          // 3 bytes, "CALL NEAR [EAX+$12]" (FF /2) where Reg = 010, Mod = 01 and RM <> 100 (1 extra byte)
+          CallInstructionSize := 3
+        else
+        if ((CodeDWORD4 and $0000FFFF) = $000054FF) then
+          // 4 bytes, "CALL NEAR [EAX+EAX+$12]" (FF /2) where Reg = 010, Mod = 01 and RM = 100
+          // SIB byte not validated
+          CallInstructionSize := 4
+        else
+        if ((CodeDWORD8 and $FFFF0000) = $15FF0000) then
+          // 6 bytes, "CALL NEAR [$12345678]" (FF /2) where Reg = 010, Mod = 00 and RM = 101
+          CallInstructionSize := 6
+        else
+        if ((CodeDWORD8 and $F8FF0000) = $90FF0000) and (RM5 <> 4) then
+          // 6 bytes, "CALL NEAR [EAX+$12345678]" (FF /2) where Reg = 010, Mod = 10 and RM <> 100 (1 extra byte)
+          CallInstructionSize := 6
+        else
+        if ((CodeDWORD8 and $00FFFF00) = $0094FF00) then
+          // 7 bytes, "CALL NEAR [EAX+EAX+$1234567]" (FF /2) where Reg = 010, Mod = 10 and RM = 100
+          CallInstructionSize := 7
+        else
+        if ((CodeDWORD8 and $0000FF00) = $00009A00) then
+          // 7 bytes, "CALL FAR $1234:12345678" (9A ptr16:32)
+          CallInstructionSize := 7
+        else
+          Result := False;
+        // Because we're not doing a complete disassembly, we will potentially report
+        // false positives. If there is odd code that uses the CALL 16:32 format, we
+        // can also get false negatives.
+      except
         Result := False;
-      // Because we're not doing a complete disassembly, we will potentially report
-      // false positives. If there is odd code that uses the CALL 16:32 format, we
-      // can also get false negatives.
-    except
-      Result := False;
+      end;
     end;
   end;
 end;
@@ -5287,7 +5428,7 @@ begin
           HandlerAt := FExcTab[I].Handler
         else
         begin
-          ParentVTable := PPointer(TJclAddr(VTable) + TJclAddr(vmtParent))^;
+          ParentVTable := TClass(VTable).ClassParent;
           if ParentVTable = VTable then
             VTable := nil
           else
@@ -5355,7 +5496,7 @@ end;
 //=== Exception hooking ======================================================
 
 var
-  TrackingActive: Boolean;
+  TrackingActiveCount: Integer;
   IgnoredExceptions: TThreadList = nil;
   IgnoredExceptionClassNames: TStringList = nil;
   IgnoredExceptionClassNamesCritSect: TJclCriticalSection = nil;
@@ -5462,10 +5603,15 @@ begin
   end;
 end;
 
+procedure AddModule(const ModuleName: string);
+begin
+  GlobalModulesList.AddModule(ModuleName);
+end;
+
 procedure DoExceptNotify(ExceptObj: TObject; ExceptAddr: Pointer; OSException: Boolean;
   BaseOfStack: Pointer);
 begin
-  if TrackingActive and (not (stDisableIfDebuggerAttached in JclStackTrackingOptions) or (not IsDebuggerAttached)) and
+  if (TrackingActiveCount > 0) and (not (stDisableIfDebuggerAttached in JclStackTrackingOptions) or (not IsDebuggerAttached)) and
     Assigned(ExceptObj) and (not IsIgnoredException(ExceptObj.ClassType)) and
     (not (stMainThreadOnly in JclStackTrackingOptions) or (GetCurrentThreadId = MainThreadID)) then
   begin
@@ -5478,34 +5624,51 @@ end;
 
 function JclStartExceptionTracking: Boolean;
 begin
-  if TrackingActive then
-    Result := False
+  {Increment the tracking count only if exceptions are already being tracked or tracking can be started
+   successfully.}
+  if TrackingActiveCount = 0 then
+  begin
+    if JclHookExceptions and JclAddExceptNotifier(DoExceptNotify, npFirstChain) then
+    begin
+      TrackingActiveCount := 1;
+      Result := True;
+    end
+    else
+      Result := False;
+  end
   else
   begin
-    Result := JclHookExceptions and JclAddExceptNotifier(DoExceptNotify, npFirstChain);
-    TrackingActive := Result;
+    Inc(TrackingActiveCount);
+    Result := False;
   end;
 end;
 
 function JclStopExceptionTracking: Boolean;
 begin
-  if TrackingActive then
+  {If the current tracking count is 1, an attempt is made to stop tracking exceptions. If successful the
+   tracking count is set back to 0. If the current tracking count is > 1 it is simply decremented.}
+  if TrackingActiveCount = 1 then
   begin
     Result := JclRemoveExceptNotifier(DoExceptNotify);
-    TrackingActive := False;
+    if Result then
+      Dec(TrackingActiveCount);
   end
   else
+  begin
+    if TrackingActiveCount > 0 then
+      Dec(TrackingActiveCount);
     Result := False;
+  end;
 end;
 
 function JclExceptionTrackingActive: Boolean;
 begin
-  Result := TrackingActive;
+  Result := TrackingActiveCount > 0;
 end;
 
 function JclTrackExceptionsFromLibraries: Boolean;
 begin
-  Result := TrackingActive;
+  Result := TrackingActiveCount > 0;
   if Result then
     JclInitializeLibrariesHookExcept;
 end;
@@ -5604,12 +5767,12 @@ begin
   FThreadName := AThreadName;
   inherited Create(True);
   JclDebugThreadList.RegisterThread(Self, AThreadName);
-  {$IFDEF RTL210_UP}
-  Suspended := False;
-  {$ELSE ~RTL210_UP}
   if not ASuspended then
+    {$IFDEF RTL210_UP}
+    Suspended := False;
+    {$ELSE ~RTL210_UP}
     Resume;
-  {$ENDIF ~RTL210_UP}
+    {$ENDIF ~RTL210_UP}
 end;
 
 destructor TJclDebugThread.Destroy;

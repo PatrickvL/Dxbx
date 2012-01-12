@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (do, 30 jul 2009)                             $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3594                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -55,7 +55,7 @@ type
     FamilyCodePage: Word;
   end;
 
-const JclCharsetInfos: array [0..301] of TJclCharsetInfo =
+const JclCharsetInfos: array [0..305] of TJclCharsetInfo =
 (* Arabic (ASMO 708) ASMO-708 708 1256 *)
     ((Name: 'ASMO-708'; CodePage: 708; FamilyCodePage: 1256),
 (* Arabic (DOS) DOS-720 720 1256 *)
@@ -127,6 +127,7 @@ const JclCharsetInfos: array [0..301] of TJclCharsetInfo =
      (Name: 'cn-big5'; CodePage: 950; FamilyCodePage: 950),
      (Name: 'csbig5'; CodePage: 950; FamilyCodePage: 950),
      (Name: 'x-x-big5'; CodePage: 950; FamilyCodePage: 950),
+     (Name: 'MS950'; CodePage: 950; FamilyCodePage: 950),
 (* Chinese Traditional (CNS) x-Chinese-CNS 20000 950 *)
      (Name: 'x-Chinese-CNS'; CodePage: 20000; FamilyCodePage: 950),
 (* Chinese Traditional (Eten) x-Chinese-Eten 20002 950 *)
@@ -199,6 +200,7 @@ const JclCharsetInfos: array [0..301] of TJclCharsetInfo =
      (Name: 'x-mac-hebrew'; CodePage: 10005; FamilyCodePage: 1255),
 (* Hebrew (Windows) windows-1255 ISO_8859-8-I, ISO-8859-8, visual 1255 1255 *)
      (Name: 'windows-1255'; CodePage: 1255; FamilyCodePage: 1255),
+     (Name: 'CP1255'; CodePage: 1255; FamilyCodePage: 1255),
      (Name: 'ISO_8859-8-I'; CodePage: 1255; FamilyCodePage: 1255),
      (Name: 'ISO-8859-8'; CodePage: 1255; FamilyCodePage: 1255),
      (Name: 'visual'; CodePage: 1255; FamilyCodePage: 1255),
@@ -335,6 +337,7 @@ const JclCharsetInfos: array [0..301] of TJclCharsetInfo =
      (Name: 'shift-jis'; CodePage: 932; FamilyCodePage: 932),
      (Name: 'x-ms-cp932'; CodePage: 932; FamilyCodePage: 932),
      (Name: 'x-sjis'; CodePage: 932; FamilyCodePage: 932),
+     (Name: 'MS932'; CodePage: 932; FamilyCodePage: 932),
 (* Korean ks_c_5601-1987 csKSC56011987, euc-kr, iso-ir-149, korean, ks_c_5601, ks_c_5601_1987, ks_c_5601-1989, KSC_5601, KSC5601 949 949 *)
      (Name: 'ks_c_5601-1987'; CodePage: 949; FamilyCodePage: 949),
      (Name: 'csKSC56011987'; CodePage: 949; FamilyCodePage: 949),
@@ -410,8 +413,8 @@ const JclCharsetInfos: array [0..301] of TJclCharsetInfo =
      (Name: 'iso-ir-148'; CodePage: 1254; FamilyCodePage: 1254),
      (Name: 'latin5'; CodePage: 1254; FamilyCodePage: 1254),
 (* Unicode unicode utf-16 1200 1200 *)
-     (Name: 'unicode'; CodePage: 1200; FamilyCodePage: 1200),
      (Name: 'utf-16'; CodePage: 1200; FamilyCodePage: 1200),
+     (Name: 'unicode'; CodePage: 1200; FamilyCodePage: 1200),
 (* Unicode (Big-Endian) unicodeFFFE 1201 1200 *)
      (Name: 'unicodeFFFE'; CodePage: 1201; FamilyCodePage: 1200),
 (* Unicode (UTF-7) utf-7 csUnicode11UTF7, unicode-1-1-utf-7, x-unicode-2-0-utf-7 65000 1200 *)
@@ -459,6 +462,7 @@ const JclCharsetInfos: array [0..301] of TJclCharsetInfo =
      (Name: 'Windows-1252'; CodePage: 1252; FamilyCodePage: 1252),
      (Name: 'ANSI_X3.4-1968'; CodePage: 1252; FamilyCodePage: 1252),
      (Name: 'ANSI_X3.4-1986'; CodePage: 1252; FamilyCodePage: 1252),
+     (Name: 'CP1252'; CodePage: 1252; FamilyCodePage: 1252),
      (Name: 'ascii'; CodePage: 1252; FamilyCodePage: 1252),
      (Name: 'cp367'; CodePage: 1252; FamilyCodePage: 1252),
      (Name: 'cp819'; CodePage: 1252; FamilyCodePage: 1252),
@@ -487,9 +491,9 @@ function CharsetNameFromCodePage(CodePage: Word): string;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclCharsets.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (do, 30 jul 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/common/JclCharsets.pas $';
+    Revision: '$Revision: 3594 $';
+    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -499,7 +503,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclResources;
 
 function FamilyCodePageFromCharsetName(const CharsetName: string): Word;

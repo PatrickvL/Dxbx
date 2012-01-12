@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (zo, 09 aug 2009)                             $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3594                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -39,15 +39,23 @@ unit JclTD32;
 interface
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF MSWINDOWS}
+  System.Classes, System.SysUtils, System.Contnrs,
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
   Classes, SysUtils, Contnrs,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase,
   {$IFDEF BORLAND}
   JclPeImage,
@@ -829,28 +837,6 @@ type
     function SourceNameFromAddr(AAddr: DWORD): string;
   end;
 
-  {$IFDEF _KEEP_DEPRECATED}
-  TJclModuleInfo = TJclTD32ModuleInfo;
-  TJclLineInfo = TJclTD32LineInfo;
-  TJclSourceModuleInfo = TJclTD32SourceModuleInfo;
-  TJclSymbolInfo = TJclTD32SymbolInfo;
-  TJclProcSymbolInfo = TJclTD32ProcSymbolInfo;
-  TJclLocalProcSymbolInfo = TJclTD32LocalProcSymbolInfo;
-  TJclGlobalProcSymbolInfo = TJclTD32GlobalProcSymbolInfo;
-  TJclObjNameSymbolInfo = TJclTD32ObjNameSymbolInfo;
-  TJclDataSymbolInfo = TJclTD32DataSymbolInfo;
-  TJclLDataSymbolInfo = TJclTD32LDataSymbolInfo;
-  TJclGDataSymbolInfo = TJclTD32GDataSymbolInfo;
-  TJclPublicSymbolInfo = TJclTD32PublicSymbolInfo;
-  TJclWithSymbolInfo = TJclTD32WithSymbolInfo;
-  TJclLabelSymbolInfo = TJclTD32LabelSymbolInfo;
-  TJclConstantSymbolInfo = TJclTD32ConstantSymbolInfo;
-  TJclUdtSymbolInfo = TJclTD32UdtSymbolInfo;
-  TJclVftPathSymbolInfo = TJclTD32VftPathSymbolInfo;
-  TJclInfoParser = TJclTD32InfoParser;
-  TJclInfoScanner = TJclTD32InfoScanner;
-  {$ENDIF KEEP_DEPRECATED}
-
   {$IFDEF BORLAND}
   // PE Image with TD32 information and source location support 
   TJclPeBorTD32Image = class(TJclPeBorImage)
@@ -875,9 +861,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclTD32.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (zo, 09 aug 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/windows/JclTD32.pas $';
+    Revision: '$Revision: 3594 $';
+    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1203,8 +1189,14 @@ begin
       Inc(pszName);
       // Get the name
       FNames.Add(pszName);
-      // skip the length of name and a NULL at the end
-      Inc(pszName, Len + 1);
+      // first, skip the length of name
+      Inc(pszName, Len);
+      // the length is only correct modulo 256 because it is stored on a single byte,
+      // so we have to iterate until we find the real end of the string
+      while PszName^ <> #0 do
+        Inc(pszName, 256);
+      // then, skip a NULL at the end
+      Inc(pszName, 1);
     end;
   end;
 end;

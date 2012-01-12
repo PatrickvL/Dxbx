@@ -31,8 +31,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (zo, 09 aug 2009)                             $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3594                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -80,9 +80,9 @@ function Unmask8087Exceptions(Exceptions: T8087Exceptions; ClearBefore: Boolean 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/Jcl8087.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (zo, 09 aug 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/common/Jcl8087.pas $';
+    Revision: '$Revision: 3594 $';
+    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -95,11 +95,9 @@ const
   X87ExceptBits = $3F;
 
 function Get8087ControlWord: Word;
-begin
-  asm
+asm
           FSTCW   Result
           FWAIT
-  end;
 end;
 
 function Get8087Infinity: T8087Infinity;
@@ -117,6 +115,18 @@ begin
   Result := T8087Rounding((Get8087ControlWord and $0C00) shr 10);
 end;
 
+{$IFDEF CPU64}
+function Get8087StatusWord(ClearExceptions: Boolean): Word;
+asm
+          TEST    ClearExceptions, ClearExceptions
+          JZ      @@Without
+          FSTSW   Result                    //   get status word (clears exceptions)
+          JMP     @@Leave
+@@Without:
+          FNSTSW  Result                    //   get status word (without clearing exceptions)
+@@Leave:
+end;
+{$ELSE}
 function Get8087StatusWord(ClearExceptions: Boolean): Word;
 begin
   if ClearExceptions then
@@ -128,6 +138,7 @@ begin
           FNSTSW  Result                    //   get status word (without clearing exceptions)
   end;
 end;
+{$ENDIF CPU64}
 
 function Set8087Infinity(const Infinity: T8087Infinity): T8087Infinity;
 var
@@ -157,23 +168,29 @@ begin
 end;
 
 function Set8087ControlWord(const Control: Word): Word;
-begin
-  asm
+var
+  StackControl: Word;
+asm
+          MOV     StackControl, Control
           FNCLEX
-          FSTCW   Result    // save the old control word
-          FLDCW   Control   // load the new control word
-  end;
+          FSTCW   Result         // save the old control word
+          FLDCW   StackControl   // load the new control word
 end;
 
 function ClearPending8087Exceptions: T8087Exceptions;
+
+  function GetSW: Word;
+  asm
+          FNSTSW  Result
+          AND     Result, X87ExceptBits
+          FNCLEX
+  end;
+
 var
   SW: Word;
 begin
-  asm
-          FNSTSW  SW
-          AND     SW, X87ExceptBits
-          FNCLEX
-  end;
+  SW := GetSW;
+
   Result := [];
   if (SW and $01) <> 0 then
     Include(Result, emInvalidOp);
@@ -190,13 +207,17 @@ begin
 end;
 
 function GetPending8087Exceptions: T8087Exceptions;
+
+  function GetSW: Word;
+  asm
+          FNSTSW  Result
+          AND     Result, X87ExceptBits
+  end;
+
 var
   SW: Word;
 begin
-  asm
-          FNSTSW  SW
-          AND     SW, X87ExceptBits
-  end;
+  SW := GetSW;
   Result := [];
   if (SW and $01) <> 0 then
     Include(Result, emInvalidOp);
@@ -213,13 +234,17 @@ begin
 end;
 
 function GetMasked8087Exceptions: T8087Exceptions;
+
+  function GetCW: Word;
+  asm
+          FSTCW   Result
+          AND     Result, X87ExceptBits
+  end;
+
 var
   CW: Word;
 begin
-  asm
-          FSTCW   CW
-          AND     CW, X87ExceptBits
-  end;
+  CW := GetCW;
   Result := [];
   if (CW and $01) <> 0 then
     Include(Result, emInvalidOp);
@@ -236,13 +261,30 @@ begin
 end;
 
 function SetMasked8087Exceptions(Exceptions: T8087Exceptions; ClearBefore: Boolean): T8087Exceptions;
+
+  function ClearPendingExceptions: Word;
+  asm
+        FNCLEX                     // clear pending exceptions
+  end;
+
+  function SetCW(NewCW: Word): Word;
+  var
+    StackNewCW: Word;
+  asm
+        FSTCW   Result
+        FWAIT
+        MOV     StackNewCW, NewCW
+        MOV     AX, Result
+        AND     AX, NOT X87ExceptBits  // mask exception mask bits 0..5
+        OR      StackNewCW, AX
+        FLDCW   StackNewCW
+  end;
+
 var
   OldCW, NewCW: Word;
 begin
   if ClearBefore then
-  asm
-        FNCLEX                     // clear pending exceptions
-  end;
+    ClearPendingExceptions;
   NewCW := 0;
   if emInvalidOp in Exceptions then
     NewCW := NewCW or $01;
@@ -256,14 +298,7 @@ begin
     NewCW := NewCW or $10;
   if emPrecision in Exceptions then
     NewCW := NewCW or $20;
-  asm
-        FSTCW   OldCW
-        FWAIT
-        MOV     AX, OldCW
-        AND     AX, NOT X87ExceptBits  // mask exception mask bits 0..5
-        OR      NewCW, AX
-        FLDCW   NewCW
-  end;
+  OldCW := SetCW(NewCW);
   Result := [];
   if (OldCW and $01) <> 0 then
     Include(Result, emInvalidOp);

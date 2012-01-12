@@ -43,8 +43,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (za, 12 sep 2009)                             $ }
-{ Revision:      $Rev:: 3007                                                                     $ }
+{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3594                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -52,10 +52,10 @@
 unit JclWin32;
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 {$MINENUMSIZE 4}
 {$ALIGN ON}
-{$WARNINGS OFF}
 
 interface
 
@@ -63,11 +63,17 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, System.SysUtils,
+  {$IFNDEF FPC}
+  Winapi.AccCtrl, Winapi.ActiveX,
+  {$ENDIF ~FPC}
+  {$ELSE ~HAS_UNITSCOPE}
   Windows, SysUtils,
   {$IFNDEF FPC}
-  AccCtrl,
-  ActiveX,
+  AccCtrl, ActiveX,
   {$ENDIF ~FPC}
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase;
 
 {$HPPEMIT '#include <WinDef.h>'}
@@ -94,6 +100,14 @@ uses
 {$HPPEMIT '#include <objbase.h>'}
 {$HPPEMIT '#include <ntsecapi.h>'}
 {$HPPEMIT ''}
+{$IFDEF RTL230_UP}
+{$HPPEMIT '// To avoid ambiguity between IMAGE_LOAD_CONFIG_DIRECTORY32 and  Winapi::Windows::IMAGE_LOAD_CONFIG_DIRECTORY32'}
+{$HPPEMIT '#define IMAGE_LOAD_CONFIG_DIRECTORY32 ::IMAGE_LOAD_CONFIG_DIRECTORY32'}
+{$HPPEMIT ''}
+{$HPPEMIT '// To avoid ambiguity between IMAGE_LOAD_CONFIG_DIRECTORY64 and  Winapi::Windows::IMAGE_LOAD_CONFIG_DIRECTORY64'}
+{$HPPEMIT '#define IMAGE_LOAD_CONFIG_DIRECTORY64 ::IMAGE_LOAD_CONFIG_DIRECTORY64'}
+{$HPPEMIT ''}
+{$ENDIF RTL230_UP}
 
 // EJclWin32Error
 type
@@ -109,6 +123,8 @@ type
     property LastError: DWORD read FLastError;
     property LastErrorMsg: string read FLastErrorMsg;
   end;
+
+//DOM-IGNORE-BEGIN
 
 {$IFNDEF FPC}
 
@@ -2946,6 +2962,30 @@ const
   FILE_FLAG_FIRST_PIPE_INSTANCE = $00080000;
   {$EXTERNALSYM FILE_FLAG_FIRST_PIPE_INSTANCE}
 
+// line 2727
+type
+  _MEMORYSTATUSEX = packed record
+    dwLength: DWORD;
+    dwMemoryLoad: DWORD;
+    ullTotalPhys: Int64;
+    ullAvailPhys: Int64;
+    ullTotalPageFile: Int64;
+    ullAvailPageFile: Int64;
+    ullTotalVirtual: Int64;
+    ullAvailVirtual: Int64;
+    ullAvailExtendedVirtual: Int64;
+  end;
+  {$EXTERNALSYM _MEMORYSTATUSEX}
+
+  MEMORYSTATUSEX = _MEMORYSTATUSEX;
+  {$EXTERNALSYM MEMORYSTATUSEX}
+  LPMEMORYSTATUSEX = ^_MEMORYSTATUSEX;
+  {$EXTERNALSYM LPMEMORYSTATUSEX}
+
+  TMemoryStatusEx = _MEMORYSTATUSEX;
+
+function GlobalMemoryStatusEx(out lpBuffer: TMemoryStatusEx): BOOL; stdcall;
+
 // line 3189
   
 
@@ -3068,8 +3108,11 @@ function LocateExtendedFeature(ContextEx: PCONTEXT_EX; FeatureId: DWORD; Length:
 function LocateLegacyContext(ContextEx: PCONTEXT_EX; Length: PDWORD): PCONTEXT; stdcall;
 {$EXTERNALSYM LocateLegacyContext}
 
-procedure SetExtendedFeaturesMask(ContextEx: PCONTEXT_EX; const FeatureMask: Int64);
+procedure SetExtendedFeaturesMask(ContextEx: PCONTEXT_EX; const FeatureMask: Int64); stdcall;
 {$EXTERNALSYM SetExtendedFeaturesMask}
+
+function ProcessIdToSessionId(dwProcessId: DWORD; out dwSessionId: DWORD): BOOL; stdcall;
+{$EXTERNALSYM ProcessIdToSessionId}
 
 
 // From JwaAclApi
@@ -3080,7 +3123,6 @@ function SetNamedSecurityInfoW(pObjectName: LPWSTR; ObjectType: SE_OBJECT_TYPE;
   SecurityInfo: SECURITY_INFORMATION; psidOwner, psidGroup: PSID;
   pDacl, pSacl: PACL): DWORD; stdcall;
 {$EXTERNALSYM SetNamedSecurityInfoW}
-
 const
   IMAGE_SEPARATION = (64*1024);
   {$EXTERNALSYM IMAGE_SEPARATION}
@@ -3113,14 +3155,14 @@ type
 
 function ReBaseImage(CurrentImageName: PAnsiChar; SymbolPath: PAnsiChar; fReBase: BOOL;
   fRebaseSysfileOk: BOOL; fGoingDown: BOOL; CheckImageSize: ULONG;
-  var OldImageSize: ULONG; var OldImageBase: ULONG_PTR; var NewImageSize: ULONG;
-  var NewImageBase: ULONG_PTR; TimeStamp: ULONG): BOOL; stdcall;
+  var OldImageSize: TJclAddr32; var OldImageBase: TJclAddr;
+  var NewImageSize: TJclAddr32; var NewImageBase: TJclAddr; TimeStamp: ULONG): BOOL; stdcall;
 {$EXTERNALSYM ReBaseImage}
 
 function ReBaseImage64(CurrentImageName: PAnsiChar; SymbolPath: PAnsiChar; fReBase: BOOL;
   fRebaseSysfileOk: BOOL; fGoingDown: BOOL; CheckImageSize: ULONG;
-  var OldImageSize: ULONG; var OldImageBase: TJclAddr64; var NewImageSize: ULONG;
-  var NewImageBase: TJclAddr64; TimeStamp: ULONG): BOOL; stdcall;
+  var OldImageSize: TJclAddr32; var OldImageBase: TJclAddr64;
+  var NewImageSize: TJclAddr32; var NewImageBase: TJclAddr64; TimeStamp: ULONG): BOOL; stdcall;
 {$EXTERNALSYM ReBaseImage64}
 
 // line 199
@@ -3374,7 +3416,6 @@ const
 
   SYMOPT_DEBUG                  = $80000000;
   {$EXTERNALSYM SYMOPT_DEBUG}
-
 
 const
   NERR_Success = 0; // Success
@@ -5014,6 +5055,25 @@ type
 function NetApiBufferFree(Buffer: Pointer): NET_API_STATUS; stdcall;
 {$EXTERNALSYM NetApiBufferFree}
 
+type
+  _WKSTA_INFO_100 = record
+    wki100_platform_id: DWORD;
+    wki100_computername: LMSTR;
+    wki100_langroup: LMSTR;
+    wki100_ver_major: DWORD;
+    wki100_ver_minor: DWORD;
+  end;
+  {$EXTERNALSYM _WKSTA_INFO_100}
+  WKSTA_INFO_100 = _WKSTA_INFO_100;
+  {$EXTERNALSYM WKSTA_INFO_100}
+  PWKSTA_INFO_100 = ^_WKSTA_INFO_100;
+  {$EXTERNALSYM PWKSTA_INFO_100}
+  LPWKSTA_INFO_100 = ^_WKSTA_INFO_100;
+  {$EXTERNALSYM LPWKSTA_INFO_100}
+
+function NetWkstaGetInfo(servername: PWideChar; level: DWORD; out bufptr: PByte): NET_API_STATUS; stdcall;
+{$EXTERNALSYM NetWkstaGetInfo}
+
 (****************************************************************
  *                                                              *
  *              Data structure templates                        *
@@ -5594,7 +5654,6 @@ const
   UDIRTYUI = (SHTDN_REASON_FLAG_DIRTY_UI);
   {$EXTERNALSYM UDIRTYUI}
 
-
 const
   CSIDL_LOCAL_APPDATA        = $001C; { <user name>\Local Settings\Application Data (non roaming) }
   CSIDL_COMMON_APPDATA       = $0023; { All Users\Application Data }
@@ -5603,6 +5662,7 @@ const
   CSIDL_PROGRAM_FILES        = $0026; { C:\Program Files }
   CSIDL_MYPICTURES           = $0027; { C:\Program Files\My Pictures }
   CSIDL_PROFILE              = $0028; { USERPROFILE }
+  CSIDL_PROGRAM_FILESX86     = $002A; { C:\Program Files (x86)\My Pictures }
   CSIDL_PROGRAM_FILES_COMMON = $002B; { C:\Program Files\Common }
   CSIDL_COMMON_TEMPLATES     = $002D; { All Users\Templates }
   CSIDL_COMMON_DOCUMENTS     = $002E; { All Users\Documents }
@@ -6788,142 +6848,6 @@ type
   //PImgDelayDescr = ImgDelayDescr;
   //TImgDelayDescr = ImgDelayDescr;
 
-// propidl.h line 386
-
-// Reserved global Property IDs
-const
-  PID_DICTIONARY         = $00000000; // integer count + array of entries
-  {$EXTERNALSYM PID_DICTIONARY}
-  PID_CODEPAGE           = $00000001; // short integer
-  {$EXTERNALSYM PID_CODEPAGE}
-  PID_FIRST_USABLE       = $00000002;
-  {$EXTERNALSYM PID_FIRST_USABLE}
-  PID_FIRST_NAME_DEFAULT = $00000FFF;
-  {$EXTERNALSYM PID_FIRST_NAME_DEFAULT}
-  PID_LOCALE             = $80000000;
-  {$EXTERNALSYM PID_LOCALE}
-  PID_MODIFY_TIME        = $80000001;
-  {$EXTERNALSYM PID_MODIFY_TIME}
-  PID_SECURITY           = $80000002;
-  {$EXTERNALSYM PID_SECURITY}
-  PID_BEHAVIOR           = $80000003;
-  {$EXTERNALSYM PID_BEHAVIOR}
-  PID_ILLEGAL            = $FFFFFFFF;
-  {$EXTERNALSYM PID_ILLEGAL}
-
-// Range which is read-only to downlevel implementations
-
-const
-  PID_MIN_READONLY = $80000000;
-  {$EXTERNALSYM PID_MIN_READONLY}
-  PID_MAX_READONLY = $BFFFFFFF;
-  {$EXTERNALSYM PID_MAX_READONLY}
-
-// Property IDs for the DiscardableInformation Property Set
-
-const
-  PIDDI_THUMBNAIL = $00000002; // VT_BLOB
-  {$EXTERNALSYM PIDDI_THUMBNAIL}
-
-// Property IDs for the SummaryInformation Property Set
-
-const
-  PIDSI_TITLE        = $00000002; // VT_LPSTR
-  {$EXTERNALSYM PIDSI_TITLE}
-  PIDSI_SUBJECT      = $00000003; // VT_LPSTR
-  {$EXTERNALSYM PIDSI_SUBJECT}
-  PIDSI_AUTHOR       = $00000004; // VT_LPSTR
-  {$EXTERNALSYM PIDSI_AUTHOR}
-  PIDSI_KEYWORDS     = $00000005; // VT_LPSTR
-  {$EXTERNALSYM PIDSI_KEYWORDS}
-  PIDSI_COMMENTS     = $00000006; // VT_LPSTR
-  {$EXTERNALSYM PIDSI_COMMENTS}
-  PIDSI_TEMPLATE     = $00000007; // VT_LPSTR
-  {$EXTERNALSYM PIDSI_TEMPLATE}
-  PIDSI_LASTAUTHOR   = $00000008; // VT_LPSTR
-  {$EXTERNALSYM PIDSI_LASTAUTHOR}
-  PIDSI_REVNUMBER    = $00000009; // VT_LPSTR
-  {$EXTERNALSYM PIDSI_REVNUMBER}
-  PIDSI_EDITTIME     = $0000000A; // VT_FILETIME (UTC)
-  {$EXTERNALSYM PIDSI_EDITTIME}
-  PIDSI_LASTPRINTED  = $0000000B; // VT_FILETIME (UTC)
-  {$EXTERNALSYM PIDSI_LASTPRINTED}
-  PIDSI_CREATE_DTM   = $0000000C; // VT_FILETIME (UTC)
-  {$EXTERNALSYM PIDSI_CREATE_DTM}
-  PIDSI_LASTSAVE_DTM = $0000000D; // VT_FILETIME (UTC)
-  {$EXTERNALSYM PIDSI_LASTSAVE_DTM}
-  PIDSI_PAGECOUNT    = $0000000E; // VT_I4
-  {$EXTERNALSYM PIDSI_PAGECOUNT}
-  PIDSI_WORDCOUNT    = $0000000F; // VT_I4
-  {$EXTERNALSYM PIDSI_WORDCOUNT}
-  PIDSI_CHARCOUNT    = $00000010; // VT_I4
-  {$EXTERNALSYM PIDSI_CHARCOUNT}
-  PIDSI_THUMBNAIL    = $00000011; // VT_CF
-  {$EXTERNALSYM PIDSI_THUMBNAIL}
-  PIDSI_APPNAME      = $00000012; // VT_LPSTR
-  {$EXTERNALSYM PIDSI_APPNAME}
-  PIDSI_DOC_SECURITY = $00000013; // VT_I4
-  {$EXTERNALSYM PIDSI_DOC_SECURITY}
-
-// Property IDs for the DocSummaryInformation Property Set
-
-const
-  PIDDSI_CATEGORY    = $00000002; // VT_LPSTR
-  {$EXTERNALSYM PIDDSI_CATEGORY}
-  PIDDSI_PRESFORMAT  = $00000003; // VT_LPSTR
-  {$EXTERNALSYM PIDDSI_PRESFORMAT}
-  PIDDSI_BYTECOUNT   = $00000004; // VT_I4
-  {$EXTERNALSYM PIDDSI_BYTECOUNT}
-  PIDDSI_LINECOUNT   = $00000005; // VT_I4
-  {$EXTERNALSYM PIDDSI_LINECOUNT}
-  PIDDSI_PARCOUNT    = $00000006; // VT_I4
-  {$EXTERNALSYM PIDDSI_PARCOUNT}
-  PIDDSI_SLIDECOUNT  = $00000007; // VT_I4
-  {$EXTERNALSYM PIDDSI_SLIDECOUNT}
-  PIDDSI_NOTECOUNT   = $00000008; // VT_I4
-  {$EXTERNALSYM PIDDSI_NOTECOUNT}
-  PIDDSI_HIDDENCOUNT = $00000009; // VT_I4
-  {$EXTERNALSYM PIDDSI_HIDDENCOUNT}
-  PIDDSI_MMCLIPCOUNT = $0000000A; // VT_I4
-  {$EXTERNALSYM PIDDSI_MMCLIPCOUNT}
-  PIDDSI_SCALE       = $0000000B; // VT_BOOL
-  {$EXTERNALSYM PIDDSI_SCALE}
-  PIDDSI_HEADINGPAIR = $0000000C; // VT_VARIANT | VT_VECTOR
-  {$EXTERNALSYM PIDDSI_HEADINGPAIR}
-  PIDDSI_DOCPARTS    = $0000000D; // VT_LPSTR | VT_VECTOR
-  {$EXTERNALSYM PIDDSI_DOCPARTS}
-  PIDDSI_MANAGER     = $0000000E; // VT_LPSTR
-  {$EXTERNALSYM PIDDSI_MANAGER}
-  PIDDSI_COMPANY     = $0000000F; // VT_LPSTR
-  {$EXTERNALSYM PIDDSI_COMPANY}
-  PIDDSI_LINKSDIRTY  = $00000010; // VT_BOOL
-  {$EXTERNALSYM PIDDSI_LINKSDIRTY}
-
-//  FMTID_MediaFileSummaryInfo - Property IDs
-
-const
-  PIDMSI_EDITOR      = $00000002; // VT_LPWSTR
-  {$EXTERNALSYM PIDMSI_EDITOR}
-  PIDMSI_SUPPLIER    = $00000003; // VT_LPWSTR
-  {$EXTERNALSYM PIDMSI_SUPPLIER}
-  PIDMSI_SOURCE      = $00000004; // VT_LPWSTR
-  {$EXTERNALSYM PIDMSI_SOURCE}
-  PIDMSI_SEQUENCE_NO = $00000005; // VT_LPWSTR
-  {$EXTERNALSYM PIDMSI_SEQUENCE_NO}
-  PIDMSI_PROJECT     = $00000006; // VT_LPWSTR
-  {$EXTERNALSYM PIDMSI_PROJECT}
-  PIDMSI_STATUS      = $00000007; // VT_UI4
-  {$EXTERNALSYM PIDMSI_STATUS}
-  PIDMSI_OWNER       = $00000008; // VT_LPWSTR
-  {$EXTERNALSYM PIDMSI_OWNER}
-  PIDMSI_RATING      = $00000009; // VT_LPWSTR
-  {$EXTERNALSYM PIDMSI_RATING}
-  PIDMSI_PRODUCTION  = $0000000A; // VT_FILETIME (UTC)
-  {$EXTERNALSYM PIDMSI_PRODUCTION}
-  PIDMSI_COPYRIGHT   = $0000000B; // VT_LPWSTR
-  {$EXTERNALSYM PIDMSI_COPYRIGHT}
-
-
 // msidefs.h line 349
 
 // PIDs given specific meanings for Installer
@@ -7183,13 +7107,154 @@ function StgOpenStorageEx(const pwcsName: PWideChar; grfMode: DWORD;
 {$EXTERNALSYM StgOpenStorageEx}
 
 
+// propidl.h line 386
+
+// Reserved global Property IDs
+const
+  PID_DICTIONARY         = $00000000; // integer count + array of entries
+  {$EXTERNALSYM PID_DICTIONARY}
+  PID_CODEPAGE           = $00000001; // short integer
+  {$EXTERNALSYM PID_CODEPAGE}
+  PID_FIRST_USABLE       = $00000002;
+  {$EXTERNALSYM PID_FIRST_USABLE}
+  PID_FIRST_NAME_DEFAULT = $00000FFF;
+  {$EXTERNALSYM PID_FIRST_NAME_DEFAULT}
+  PID_LOCALE             = $80000000;
+  {$EXTERNALSYM PID_LOCALE}
+  PID_MODIFY_TIME        = $80000001;
+  {$EXTERNALSYM PID_MODIFY_TIME}
+  PID_SECURITY           = $80000002;
+  {$EXTERNALSYM PID_SECURITY}
+  PID_BEHAVIOR           = $80000003;
+  {$EXTERNALSYM PID_BEHAVIOR}
+  PID_ILLEGAL            = $FFFFFFFF;
+  {$EXTERNALSYM PID_ILLEGAL}
+
+// Range which is read-only to downlevel implementations
+
+const
+  PID_MIN_READONLY = $80000000;
+  {$EXTERNALSYM PID_MIN_READONLY}
+  PID_MAX_READONLY = $BFFFFFFF;
+  {$EXTERNALSYM PID_MAX_READONLY}
+
+// Property IDs for the DiscardableInformation Property Set
+
+const
+  PIDDI_THUMBNAIL = $00000002; // VT_BLOB
+  {$EXTERNALSYM PIDDI_THUMBNAIL}
+
+// Property IDs for the SummaryInformation Property Set
+
+const
+  PIDSI_TITLE        = $00000002; // VT_LPSTR
+  {$EXTERNALSYM PIDSI_TITLE}
+  PIDSI_SUBJECT      = $00000003; // VT_LPSTR
+  {$EXTERNALSYM PIDSI_SUBJECT}
+  PIDSI_AUTHOR       = $00000004; // VT_LPSTR
+  {$EXTERNALSYM PIDSI_AUTHOR}
+  PIDSI_KEYWORDS     = $00000005; // VT_LPSTR
+  {$EXTERNALSYM PIDSI_KEYWORDS}
+  PIDSI_COMMENTS     = $00000006; // VT_LPSTR
+  {$EXTERNALSYM PIDSI_COMMENTS}
+  PIDSI_TEMPLATE     = $00000007; // VT_LPSTR
+  {$EXTERNALSYM PIDSI_TEMPLATE}
+  PIDSI_LASTAUTHOR   = $00000008; // VT_LPSTR
+  {$EXTERNALSYM PIDSI_LASTAUTHOR}
+  PIDSI_REVNUMBER    = $00000009; // VT_LPSTR
+  {$EXTERNALSYM PIDSI_REVNUMBER}
+  PIDSI_EDITTIME     = $0000000A; // VT_FILETIME (UTC)
+  {$EXTERNALSYM PIDSI_EDITTIME}
+  PIDSI_LASTPRINTED  = $0000000B; // VT_FILETIME (UTC)
+  {$EXTERNALSYM PIDSI_LASTPRINTED}
+  PIDSI_CREATE_DTM   = $0000000C; // VT_FILETIME (UTC)
+  {$EXTERNALSYM PIDSI_CREATE_DTM}
+  PIDSI_LASTSAVE_DTM = $0000000D; // VT_FILETIME (UTC)
+  {$EXTERNALSYM PIDSI_LASTSAVE_DTM}
+  PIDSI_PAGECOUNT    = $0000000E; // VT_I4
+  {$EXTERNALSYM PIDSI_PAGECOUNT}
+  PIDSI_WORDCOUNT    = $0000000F; // VT_I4
+  {$EXTERNALSYM PIDSI_WORDCOUNT}
+  PIDSI_CHARCOUNT    = $00000010; // VT_I4
+  {$EXTERNALSYM PIDSI_CHARCOUNT}
+  PIDSI_THUMBNAIL    = $00000011; // VT_CF
+  {$EXTERNALSYM PIDSI_THUMBNAIL}
+  PIDSI_APPNAME      = $00000012; // VT_LPSTR
+  {$EXTERNALSYM PIDSI_APPNAME}
+  PIDSI_DOC_SECURITY = $00000013; // VT_I4
+  {$EXTERNALSYM PIDSI_DOC_SECURITY}
+
+// Property IDs for the DocSummaryInformation Property Set
+
+const
+  PIDDSI_CATEGORY    = $00000002; // VT_LPSTR
+  {$EXTERNALSYM PIDDSI_CATEGORY}
+  PIDDSI_PRESFORMAT  = $00000003; // VT_LPSTR
+  {$EXTERNALSYM PIDDSI_PRESFORMAT}
+  PIDDSI_BYTECOUNT   = $00000004; // VT_I4
+  {$EXTERNALSYM PIDDSI_BYTECOUNT}
+  PIDDSI_LINECOUNT   = $00000005; // VT_I4
+  {$EXTERNALSYM PIDDSI_LINECOUNT}
+  PIDDSI_PARCOUNT    = $00000006; // VT_I4
+  {$EXTERNALSYM PIDDSI_PARCOUNT}
+  PIDDSI_SLIDECOUNT  = $00000007; // VT_I4
+  {$EXTERNALSYM PIDDSI_SLIDECOUNT}
+  PIDDSI_NOTECOUNT   = $00000008; // VT_I4
+  {$EXTERNALSYM PIDDSI_NOTECOUNT}
+  PIDDSI_HIDDENCOUNT = $00000009; // VT_I4
+  {$EXTERNALSYM PIDDSI_HIDDENCOUNT}
+  PIDDSI_MMCLIPCOUNT = $0000000A; // VT_I4
+  {$EXTERNALSYM PIDDSI_MMCLIPCOUNT}
+  PIDDSI_SCALE       = $0000000B; // VT_BOOL
+  {$EXTERNALSYM PIDDSI_SCALE}
+  PIDDSI_HEADINGPAIR = $0000000C; // VT_VARIANT | VT_VECTOR
+  {$EXTERNALSYM PIDDSI_HEADINGPAIR}
+  PIDDSI_DOCPARTS    = $0000000D; // VT_LPSTR | VT_VECTOR
+  {$EXTERNALSYM PIDDSI_DOCPARTS}
+  PIDDSI_MANAGER     = $0000000E; // VT_LPSTR
+  {$EXTERNALSYM PIDDSI_MANAGER}
+  PIDDSI_COMPANY     = $0000000F; // VT_LPSTR
+  {$EXTERNALSYM PIDDSI_COMPANY}
+  PIDDSI_LINKSDIRTY  = $00000010; // VT_BOOL
+  {$EXTERNALSYM PIDDSI_LINKSDIRTY}
+
+//  FMTID_MediaFileSummaryInfo - Property IDs
+
+const
+  PIDMSI_EDITOR      = $00000002; // VT_LPWSTR
+  {$EXTERNALSYM PIDMSI_EDITOR}
+  PIDMSI_SUPPLIER    = $00000003; // VT_LPWSTR
+  {$EXTERNALSYM PIDMSI_SUPPLIER}
+  PIDMSI_SOURCE      = $00000004; // VT_LPWSTR
+  {$EXTERNALSYM PIDMSI_SOURCE}
+  PIDMSI_SEQUENCE_NO = $00000005; // VT_LPWSTR
+  {$EXTERNALSYM PIDMSI_SEQUENCE_NO}
+  PIDMSI_PROJECT     = $00000006; // VT_LPWSTR
+  {$EXTERNALSYM PIDMSI_PROJECT}
+  PIDMSI_STATUS      = $00000007; // VT_UI4
+  {$EXTERNALSYM PIDMSI_STATUS}
+  PIDMSI_OWNER       = $00000008; // VT_LPWSTR
+  {$EXTERNALSYM PIDMSI_OWNER}
+  PIDMSI_RATING      = $00000009; // VT_LPWSTR
+  {$EXTERNALSYM PIDMSI_RATING}
+  PIDMSI_PRODUCTION  = $0000000A; // VT_FILETIME (UTC)
+  {$EXTERNALSYM PIDMSI_PRODUCTION}
+  PIDMSI_COPYRIGHT   = $0000000B; // VT_LPWSTR
+  {$EXTERNALSYM PIDMSI_COPYRIGHT}
+
+{$IFNDEF FPC}
+function PropVariantClear(var Prop: TPropVariant): HResult; stdcall;
+{$EXTERNALSYM PropVariantClear}
+{$ENDIF ~FPC}
+
+
 // NtSecApi.h line 566
 type
   PLSA_UNICODE_STRING = ^LSA_UNICODE_STRING;
   _LSA_UNICODE_STRING = record
     Length: USHORT;
     MaximumLength: USHORT;
-    Buffer: Windows.LPWSTR;
+    Buffer: {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.LPWSTR;
   end;
   LSA_UNICODE_STRING = _LSA_UNICODE_STRING;
   TLsaUnicodeString = LSA_UNICODE_STRING;
@@ -7208,7 +7273,7 @@ type
   PLSA_OBJECT_ATTRIBUTES = ^LSA_OBJECT_ATTRIBUTES;
   _LSA_OBJECT_ATTRIBUTES = record
     Length: ULONG;
-    RootDirectory: Windows.THandle;
+    RootDirectory: {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.THandle;
     ObjectName: PLSA_UNICODE_STRING;
     Attributes: ULONG;
     SecurityDescriptor: Pointer; // Points to type SECURITY_DESCRIPTOR
@@ -7330,7 +7395,7 @@ type
   PPOLICY_ACCOUNT_DOMAIN_INFO = ^POLICY_ACCOUNT_DOMAIN_INFO;
   _POLICY_ACCOUNT_DOMAIN_INFO = record
     DomainName: LSA_UNICODE_STRING;
-    DomainSid: Windows.PSID;
+    DomainSid: {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.PSID;
   end;
   POLICY_ACCOUNT_DOMAIN_INFO = _POLICY_ACCOUNT_DOMAIN_INFO;
   TPolicyAccountDomainInfo = POLICY_ACCOUNT_DOMAIN_INFO;
@@ -7510,6 +7575,8 @@ function NtQueryInformationThread(ThreadHandle: THandle; ThreadInformationClass:
 
 
 
+//DOM-IGNORE-END
+
 
 const
   RtdlSetNamedSecurityInfoW: function(pObjectName: LPWSTR; ObjectType: SE_OBJECT_TYPE;
@@ -7578,9 +7645,9 @@ const
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclWin32.pas $';
-    Revision: '$Revision: 3007 $';
-    Date: '$Date: 2009-09-12 22:52:07 +0200 (za, 12 sep 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/windows/JclWin32.pas $';
+    Revision: '$Revision: 3594 $';
+    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}
@@ -7669,16 +7736,16 @@ const
 type
   TReBaseImage = function (CurrentImageName: PAnsiChar; SymbolPath: PAnsiChar; fReBase: BOOL;
     fRebaseSysfileOk: BOOL; fGoingDown: BOOL; CheckImageSize: ULONG;
-    var OldImageSize: ULONG; var OldImageBase: ULONG_PTR; var NewImageSize: ULONG;
-    var NewImageBase: ULONG_PTR; TimeStamp: ULONG): BOOL; stdcall;
+    var OldImageSize: TJclAddr32; var OldImageBase: TJclAddr;
+    var NewImageSize: TJclAddr32; var NewImageBase: TJclAddr; TimeStamp: ULONG): BOOL; stdcall;
 
 var
   _ReBaseImage: TReBaseImage = nil;
 
 function ReBaseImage(CurrentImageName: PAnsiChar; SymbolPath: PAnsiChar; fReBase: BOOL;
   fRebaseSysfileOk: BOOL; fGoingDown: BOOL; CheckImageSize: ULONG;
-  var OldImageSize: ULONG; var OldImageBase: ULONG_PTR; var NewImageSize: ULONG;
-  var NewImageBase: ULONG_PTR; TimeStamp: ULONG): BOOL;
+  var OldImageSize: TJclAddr32; var OldImageBase: TJclAddr;
+  var NewImageSize: TJclAddr32; var NewImageBase: TJclAddr; TimeStamp: ULONG): BOOL;
 begin
   GetProcedureAddress(Pointer(@_ReBaseImage), ImageHlpLib, 'ReBaseImage');
   Result := _ReBaseImage(CurrentImageName, SymbolPath, fReBase, fRebaseSysfileOk, fGoingDown, CheckImageSize, OldImageSize, OldImageBase, NewImageSize, NewImageBase, TimeStamp);
@@ -7687,16 +7754,16 @@ end;
 type
   TReBaseImage64 = function (CurrentImageName: PAnsiChar; SymbolPath: PAnsiChar; fReBase: BOOL;
     fRebaseSysfileOk: BOOL; fGoingDown: BOOL; CheckImageSize: ULONG;
-    var OldImageSize: ULONG; var OldImageBase: TJclAddr64; var NewImageSize: ULONG;
-    var NewImageBase: TJclAddr64; TimeStamp: ULONG): BOOL; stdcall;
+    var OldImageSize: TJclAddr32; var OldImageBase: TJclAddr64;
+    var NewImageSize: TJclAddr32; var NewImageBase: TJclAddr64; TimeStamp: ULONG): BOOL; stdcall;
 
 var
   _ReBaseImage64: TReBaseImage64 = nil;
 
 function ReBaseImage64(CurrentImageName: PAnsiChar; SymbolPath: PAnsiChar; fReBase: BOOL;
   fRebaseSysfileOk: BOOL; fGoingDown: BOOL; CheckImageSize: ULONG;
-  var OldImageSize: ULONG; var OldImageBase: TJclAddr64; var NewImageSize: ULONG;
-  var NewImageBase: TJclAddr64; TimeStamp: ULONG): BOOL;
+  var OldImageSize: TJclAddr32; var OldImageBase: TJclAddr64;
+  var NewImageSize: TJclAddr32; var NewImageBase: TJclAddr64; TimeStamp: ULONG): BOOL;
 begin
   GetProcedureAddress(Pointer(@_ReBaseImage64), ImageHlpLib, 'ReBaseImage64');
   Result := _ReBaseImage64(CurrentImageName, SymbolPath, fReBase, fRebaseSysfileOk, fGoingDown, CheckImageSize, OldImageSize, OldImageBase, NewImageSize, NewImageBase, TimeStamp);
@@ -8203,6 +8270,20 @@ end;
 
 
 type
+  TNetWkstaGetInfo = function (servername: PWideChar; level: DWORD; out bufptr: PByte): NET_API_STATUS; stdcall;
+
+var
+  _NetWkstaGetInfo: TNetWkstaGetInfo = nil;
+
+function NetWkstaGetInfo(servername: PWideChar; level: DWORD; out bufptr: PByte): NET_API_STATUS; stdcall;
+begin
+  GetProcedureAddress(Pointer(@_NetWkstaGetInfo), netapi32, 'NetWkstaGetInfo');
+  Result := _NetWkstaGetInfo(servername, level, bufptr);
+end;
+
+
+
+type
   TNetbios = function (pncb: PNCB): UCHAR; stdcall;
 var
   _Netbios: TNetbios = nil;
@@ -8214,6 +8295,18 @@ begin
 end;
 
 
+
+type
+  TGlobalMemoryStatusEx = function (out lpBuffer: TMemoryStatusEx): BOOL; stdcall;
+
+var
+  _GlobalMemoryStatusEx: TGlobalMemoryStatusEx = nil;
+
+function GlobalMemoryStatusEx(out lpBuffer: TMemoryStatusEx): BOOL; stdcall;
+begin
+  GetProcedureAddress(Pointer(@_GlobalMemoryStatusEx), kernel32, 'GlobalMemoryStatusEx');
+  Result := _GlobalMemoryStatusEx(lpBuffer);
+end;
 
 type
   TBackupSeek = function (hFile: THandle; dwLowBytesToSeek, dwHighBytesToSeek: DWORD;
@@ -8486,7 +8579,7 @@ begin
 end;
 
 type
-  TSetExtendedFeaturesMask = procedure (ContextEx: PCONTEXT_EX; const FeatureMask: Int64);
+  TSetExtendedFeaturesMask = procedure (ContextEx: PCONTEXT_EX; const FeatureMask: Int64); stdcall;
 
 var
   _SetExtendedFeaturesMask: TSetExtendedFeaturesMask = nil;
@@ -8495,6 +8588,18 @@ procedure SetExtendedFeaturesMask(ContextEx: PCONTEXT_EX; const FeatureMask: Int
 begin
   GetProcedureAddress(Pointer(@_SetExtendedFeaturesMask), kernel32, 'SetExtendedFeaturesMask');
   _SetExtendedFeaturesMask(ContextEx, FeatureMask);
+end;
+
+type
+  TProcessIdToSessionId = function (dwProcessId: DWORD; out dwSessionId: DWORD): BOOL; stdcall;
+
+var
+  _ProcessIdToSessionId: TProcessIdToSessionId = nil;
+
+function ProcessIdToSessionId(dwProcessId: DWORD; out dwSessionId: DWORD): BOOL;
+begin
+  GetProcedureAddress(Pointer(@_ProcessIdToSessionId), kernel32, 'ProcessIdToSessionId');
+  Result := _ProcessIdToSessionId(dwProcessId, dwSessionId);
 end;
 
 
@@ -8757,6 +8862,21 @@ begin
 end;
 
 
+{$IFNDEF FPC}
+type
+  TPropVariantClear = function (var Prop: TPropVariant): HResult; stdcall;
+
+var
+  _PropVariantClear: TPropVariantClear = nil;
+
+function PropVariantClear(var Prop: TPropVariant): HResult;
+begin
+  GetProcedureAddress(Pointer(@_PropVariantClear), Ole32Lib, 'PropVariantClear');
+  Result := _PropVariantClear(Prop);
+end;
+{$ENDIF ~FPC}
+
+
 type
   TLsaOpenPolicy = function (SystemName: PLSA_UNICODE_STRING;
     var ObjectAttributes: LSA_OBJECT_ATTRIBUTES; DesiredAccess: ACCESS_MASK;
@@ -8899,8 +9019,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-
-{$WARNINGS ON}
 
 end.
 

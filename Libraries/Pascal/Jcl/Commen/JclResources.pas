@@ -38,8 +38,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-17 10:47:26 +0200 (za, 17 okt 2009)                             $ }
-{ Revision:      $Rev:: 3048                                                                     $ }
+{ Last modified: $Date:: 2011-08-18 07:42:53 +0200 (jeu., 18 août 2011)                         $ }
+{ Revision:      $Rev:: 3587                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -59,83 +59,6 @@ uses
 resourcestring
   RsCantConvertAddr64  = 'The address %s%.16x cannot be converted to 32 bit';
   RsEReplacementChar   = 'Failed to get ANSI replacement character';
-
-//=== JclBorlandTools ========================================================
-resourcestring
-  RsNeedUpdate          = 'You should install latest Update Pack #%d for %s';
-  RsUpdatePackName      = 'Update Pack #%d';
-  RsDelphiName          = 'Delphi';
-  RsBCBName             = 'C++Builder';
-  RsCSharpName          = 'C#Builder';
-  RsBDSName             = 'Borland Developer Studio';
-  RsRSName              = 'RAD Studio';
-  {$IFDEF MSWINDOWS}
-  RsClientServer        = 'Client/Server';
-  RsStandard            = 'Standard';
-  {$ENDIF MSWINDOWS}
-  RsArchitect           = 'Architect';
-  RsEnterprise          = 'Enterprise';
-  RsPersonal            = 'Personal';
-  RsProfessional        = 'Professional';
-
-  RsMsBuildNotSupported = 'MSBuild is not supported by this IDE';
-
-  RsPackageInstallationStarted    = 'Installing package %s';
-  RsPackageInstallationFinished   = 'Installation of package finished';
-  RsPackageUninstallationStarted  = 'Uninstalling package %s';
-  RsPackageUninstallationFinished = 'Uninstallation of package finished';
-  RsIdePackageInstallationStarted    = 'Installing ide package %s';
-  RsIdePackageInstallationFinished   = 'Installation of ide package finished';
-  RsIdePackageUninstallationStarted  = 'Uninstalling ide package %s';
-  RsIdePackageUninstallationFinished = 'Uninstallation of ide package finished';
-  RsExpertInstallationStarted     = 'Installing expert %s';
-  RsExpertInstallationFinished    = 'Installation of expert finished';
-  RsExpertUninstallationStarted   = 'Uninstalling expert %s';
-  RsExpertUninstallationFinished  = 'Uninstallation of expert finished';
-
-  RsCompilingPackage            = 'Compiling package %s';
-  RsCompilingProject            = 'Compiling project %s';
-  RsCompilationOk               = 'Compilation success';
-  RsCompilationFailed           = 'Compilation failure';
-  RsCreatingJdbg                = 'Creating JEDI Debug informations for %s';
-  RsInsertingJdbg               = 'Inserting JEDI Debug informations in %s';
-  RsJdbgInfo                    = 'Bug unit: %s; MAP size: %d; Debug size: %d';
-  RsJdbgInfoOk                  = 'JDBG successfully generated';
-  RsJdbgInfoFailed              = 'Cannot generate JDBG informations';
-  RsDeletingFile                = 'Deleting file %s';
-  RsFileDeletionOk              = 'File deletion success';
-  RsFileDeletionFailed          = 'File deletion failure';
-  RsRegisteringPackage          = 'Registering package %s';
-  RsRegisteringIdePackage       = 'Registering ide package %s';
-  RsRegisteringExpert           = 'Registering expert %s';
-  RsRegistrationOk              = 'Registration ok';
-  RsRegistrationFailed          = 'Registration failed';
-  RsUnregisteringPackage        = 'Removing from registry package %s';
-  RsUnregisteringIdePackage     = 'Removing from registry ide package %s';
-  RsUnregisteringExpert         = 'Removing from registry expert %s';
-  RsUnregistrationOk            = 'Unregistration ok';
-  RsUnregistrationFailed        = 'Unregistration failed';
-  RsCleaningPackageCache        = 'Cleaning package cache for %s';
-  RsCleaningOk                  = 'Cleaning ok';
-  RsCleaningFailed              = 'Cleaning failed';
-
-  RsEUnknownPackageExtension    = '%s not a known package extension';
-  RsEUnknownProjectExtension    = '%s not a known project extension';
-  RsEUnknownIdePackageExtension = '%s not a known IDE package extension';
-  RsEIndexOufOfRange            = 'Index out of range';
-  RsECmdLineToolOutputInvalid   = '%s: Output invalid, when OutputCallback assigned.';
-  RsENotABcbPackage             = '%s not a C++Builder package source file';
-  RsENotADelphiProject          = '%s not a Delphi project source file';
-  RsENotADelphiPackage          = '%s not a Delphi package source file';
-  RsENotFound                   = '%s not found';
-  RsECannotInstallRunOnly       = 'A run-only package cannot be installed';
-  RsENotABcbProject             = '%s not a C++Builder project source file';
-  RsENoSupportedPersonality     = 'No personalities supported';
-  RsEDualPackageNotSupported    = 'This installation of %s doesn''t support dual packages';
-  RsEx64PlatformNotValid        = 'This installation cannot generate x64 binaries';
-  {$IFDEF MSWINDOWS}
-  RsENoOpenHelp                 = 'open help not present in Borland Developer Studio';
-  {$ENDIF MSWINDOWS}
 
 //=== JclCharsets ============================================================
 resourcestring
@@ -1078,10 +1001,10 @@ resourcestring
   RsCompressionUnsupportedMethod     = 'Unsupported method';
   RsCompressionDataError             = 'Data error';
   RsCompressionCRCError              = 'CRC error';
+  RsCompressionNoNestedArchive       = 'Nested archive is not supported';
   RsCompressionUnknownError          = 'Unknown error';
   RsCompression7zLoadError           = 'Sevenzip: Failed to load 7z.dll';
   RsCompression7zReturnError         = 'Sevenzip: Error result (%.8x) "%s"';
-  RsCompression7zUnassignedStream    = 'Sevenzip: Stream object is not assigned';
   RsCompression7zOutArchiveError     = 'Sevenzip: Failed to get out archive interface for class %s';
   RsCompression7zInArchiveError      = 'Sevenzip: Failed to get in archive interface for class %s';
   RsCompression7zUnknownValueType    = 'Sevenzip: Unknown value type (%d) for property ID %d';
@@ -1089,21 +1012,39 @@ resourcestring
   RsCompression7zWindows             = 'Windows';
   RsCompression7zUnix                = 'Unix';
   RsCompressionZipName               = 'Zip archive';
-  RsCompressionZipExtensions         = '*.zip;*.jar;*.xpi';
+  RsCompressionZipExtensions         = '*.zip;' +   // Basic ZIP file
+                                       '*.jar;*.ear;*.war;' +  // JAVA files
+                                       '*.cbz;' + //Comic reader files - ZIP version
+                                       '*.apk;' + // Android application package
+                                       '*.wsz;*.wal;' + // Winamp Skins
+                                       '*.xpi;*.crx;' + // Firefox, Chrome extensions
+                                       '*.dfsz;' + // ???
+                                       '*.pcv;' + // MozBackup file
+                                       '*.bsz;' + // BSplayer skin
+                                       '*.mskin;' + // Maxthon skin
+                                       '*.wmz;' + // Windows Media Player skin
+                                       '*.ipa;' + // iPhone/iPad application
+                                       '*.docx;*.xlsx;*.pptx;' + // MsOffice
+                                       '*.sxw;*.sxi;*.sxt;*.sxd;*.sxc;*.sxm;*.sxg;*.stw;*.sti;*.std;*.stc;' + // OpenOffice.org 1.x documents and templates
+                                       '*.odh;*.odd;*.odt;*.odm;*.ods;*.ots;*.odg;*.otg;*.odp;*.otp;*.odf;*.odb'; // OpenOffice.org 2.x/3.x docs and templates
   RsCompressionBZip2Name             = 'BZip2 archive';
   RsCompressionBZip2Extensions       = '*.bz2;*.bzip2;*.tbz2;*.tbz';
+  RsCompressionBZip2SubExtensions    = '.tbz2=.tar;.tbz=.tar';
   RsCompressionRarName               = 'Rar archive';
-  RsCompressionRarExtensions         = '*.rar;*.r00';
+  RsCompressionRarExtensions         = '*.rar;*.r00;'+
+                                       '*.cbr'; // Comic reader file - RAR version
   RsCompressionArjName               = 'Arj archive';
   RsCompressionArjExtensions         = '*.arj';
   RsCompressionZName                 = 'Z archive';
   RsCompressionZExtensions           = '*.z;*.taz';
+  RsCompressionZSubExtensions        = '.taz=.tar';
   RsCompressionLzhName               = 'Lzh archive';
   RsCompressionLzhExtensions         = '*.lzh;*.lha';
   RsCompression7zName                = '7z archive';
   RsCompression7zExtensions          = '*.7z';
   RsCompressionCabName               = 'Cab archive';
-  RsCompressionCabExtensions         = '*.cab';
+  RsCompressionCabExtensions         = '*.cab;'+
+                                       '*.fwp'; // FrontPage Web Package
   RsCompressionNsisName              = 'Nsis archive';
   RsCompressionNsisExtensions        = '*.nsis';
   RsCompressionLzmaName              = 'Lzma archive';
@@ -1119,9 +1060,10 @@ resourcestring
   // TODO: extension might be *.*, but then TJclCompressionStreamFormats.FindDecompressFormat can fail
   RsCompressionMachoExtensions       = '*.';
   RsCompressionUdfName               = 'Udf archive';
-  RsCompressionUdfExtensions         = '*.iso';
+  RsCompressionUdfExtensions         = '*.iso;*.img';
   RsCompressionXarName               = 'Xar archive';
-  RsCompressionXarExtensions         = '*.xar';
+  RsCompressionXarExtensions         = '*.xar;'+
+                                       '*.safariextz'; // Safari extensions
   RsCompressionMubName               = 'Mub archive';
   // TODO: extension might be *.*, but then TJclCompressionStreamFormats.FindDecompressFormat can fail
   RsCompressionMubExtensions         = '*.';
@@ -1134,7 +1076,7 @@ resourcestring
   RsCompressionWimName               = 'Wim archive';
   RsCompressionWimExtensions         = '*.wim;*.swm';
   RsCompressionIsoName               = 'Iso archive';
-  RsCompressionIsoExtensions         = '*.iso';
+  RsCompressionIsoExtensions         = '*.iso;*.img';
   RsCompressionChmName               = 'Chm archive';
   RsCompressionChmExtensions         = '*.chm;*.chi;*.chq;*.chw;*.hxs;*.hxi;*.hxr;*.hxq;*.hxw;*.lit';
   RsCompressionSplitName             = 'Split archive';
@@ -1149,8 +1091,10 @@ resourcestring
   RsCompressionTarExtensions         = '*.tar';
   RsCompressionGZipName              = 'GZip archive';
   RsCompressionGZipExtensions        = '*.gz;*.gzip;*.tgz;*.tpz';
+  RsCompressionGZipSubExtensions     = '.tgz=.tar;.tpz=.tar';
   RsCompressionXzName                = 'Xz archive';
   RsCompressionXzExtensions          = '*.xz;*.txz';
+  RsCompressionXzSubExtensions       = '.txz=.tar';
   RsCompressionNtfsName              = 'Ntfs archive';
   RsCompressionNtfsExtensions        = '*.ntfs;*.img';
   RsCompressionFatName               = 'Fat archive';
@@ -1158,7 +1102,8 @@ resourcestring
   RsCompressionMbrName               = 'Mbr archive';
   RsCompressionMbrExtensions         = '*.mbr';
   RsCompressionVhdName               = 'Vhd archive';
-  RsCompressionVhdExtensions         = '*.vhd;*.mbr';
+  RsCompressionVhdExtensions         = '*.vhd';
+  RsCompressionVhdSubExtensions      = '.vhd=.mbr';
   RsCompressionFlvName               = 'Flv archive';
   RsCompressionFlvExtensions         = '*.flv';
   RsCompressionMsLZName              = 'MsLZ archive';
@@ -1168,6 +1113,20 @@ resourcestring
   RsCompressionSwfExtensions         = '*.swf';
   RsCompressionSwfcName              = 'Swf archive';
   RsCompressionSwfcExtensions        = '*.swf';
+  RsCompressionApmName               = 'APM archive';
+  RsCompressionApmExtensions         = '*.';
+  RsCompressionPpmdName              = 'PPMD archive';
+  RsCompressionPpmdExtensions        = '*.pmd';
+  RsCompressionTEName                = 'Terse Executable';
+  RsCompressionTEExtensions          = '*.te';
+  RsCompressionUEFIcName             = 'UEFIc archive';
+  RsCompressionUEFIcExtensions       = '*.scap';
+  RsCompressionUEFIsName             = 'UEFIs archive';
+  RsCompressionUEFIsExtensions       = '*.';
+  RsCompressionSquashFSName          = 'SquashFS archive';
+  RsCompressionSquashFSExtensions    = '*.squashfs';
+  RsCompressionCramFSName            = 'CramFS archive';
+  RsCompressionCramFSExtensions      = '*.cramfs';
   RsCompressionDuplicate             = 'The file %s already exists in the archive';
   RsCompressionReplaceError          = 'At least one compression volumes could not be replaced after an archive out-of-place update';
 
@@ -1203,167 +1162,13 @@ resourcestring
 resourcestring
   RsUnknownFunctionAt     = 'Unknown function at %s';
 
+//=== JclCppException ========================================================
+resourcestring
+  RsCppUnhandledExceptionMsg = 'Unhandled C++ exception of type ''%s'' occurred';
+
 //=== JclDotNet ==============================================================
 resourcestring
   RsEUnknownCLRVersion = '"%s" is not a known CLR version';
-
-//=== JclEDI =================================================================
-resourcestring
-  RsEDIError001 = 'Could not open edi file.  File not specified.';
-  RsEDIError002 = 'Could not save edi file.  File name and path not specified.';
-  RsEDIError003 = 'Could not get data object from %s at index [%s],';
-  RsEDIError004 = 'Could not get data object from %s at index [%s], Index too low.';
-  RsEDIError005 = 'Could not get data object from %s at index [%s], Index too high.';
-  RsEDIError006 = 'Could not get data object from %s at index [%s], ' +
-    'There was no data object assigned.';
-  RsEDIError007 = 'Could not set data object from %s at index [%s].';
-  RsEDIError008 = 'Could not set data object from %s at index [%s], Index too low.';
-  RsEDIError009 = 'Could not set data object from %s at index [%s], Index too high.';
-  RsEDIError010 = 'Could not delete data object from %s at index [%s]';
-  RsEDIError011 = 'Could not delete data objects from %s at index [%s]';
-  RsEDIError012 = 'Delimiters have not been assigned to interchange.  Dissassemble cancelled.';
-  RsEDIError013 = 'Delimiters have not been assigned to interchange.  Assemble cancelled.';
-  RsEDIError014 = 'Could not find interchange control header segment terminator.';
-  RsEDIError015 = 'Could not find interchange control header.';
-  RsEDIError016 = 'Could not find interchange control trailer segment terminator.';
-  RsEDIError017 = 'Could not find interchange control trailer.';
-  RsEDIError018 = 'Could not find interchange control trailer or garbage at end of file.';
-  RsEDIError019 = 'Could not assign delimiters to functional group.  Dissassemble cancelled.';
-  RsEDIError020 = 'Could not assign delimiters to functional group.  Assemble cancelled.';
-  RsEDIError021 = 'Could not find functional group header segment terminator.';
-  RsEDIError022 = 'Could not find functional group header.'; //conditional for UN/EDIFACT
-  RsEDIError023 = 'Could not find functional group trailer segment terminator.';
-  RsEDIError024 = 'Could not find functional group trailer.';
-  RsEDIError025 = 'Could not assign delimiters to transaction set.  Dissassemble cancelled.';
-  RsEDIError026 = 'Could not assign delimiters to transaction set.  Assemble cancelled.';
-  RsEDIError027 = 'Could not find transaction set header.';
-  RsEDIError028 = 'Could not find transaction set trailer segment terminator.';
-  RsEDIError029 = 'Could not find transaction set trailer.';
-  RsEDIError030 = 'Could not assign delimiters to message.  Dissassemble cancelled.';
-  RsEDIError031 = 'Could not assign delimiters to message.  Assemble cancelled.';
-  RsEDIError032 = 'Could not find message header.';
-  RsEDIError033 = 'Could not find message trailer segment terminator.';
-  RsEDIError034 = 'Could not find message trailer.';
-  RsEDIError035 = 'Could not assign delimiters to segment.  Dissassemble cancelled.';
-  RsEDIError036 = 'Could not assign delimiters to segment.  Assemble cancelled.';
-  RsEDIError037 = 'Could not assign delimiters to composite element.  Dissassemble cancelled.';
-  RsEDIError038 = 'Could not assign delimiters to composite element.  Assemble cancelled.';
-  RsEDIError039 = 'Could not get data object in transaction set loop at index [%s], ' +
-    'Data object does not exist.';
-  RsEDIError040 = 'Could not get data object in transaction set loop at index [%s], ' +
-    'Index too high.';
-  RsEDIError041 = 'Could not get data object in transaction set loop at index [%s], Index too low.';
-  RsEDIError042 = 'Could not get data object in transaction set loop at index [%s].';
-  RsEDIError043 = 'Could not set data object in transaction set loop at index [%s], ' +
-    'Index too high.';
-  RsEDIError044 = 'Could not set data object in transaction set loop at index [%s], Index too low.';
-  RsEDIError045 = 'Could not set data object in transaction set loop at index [%s].';
-  RsEDIError046 = 'Could not get data object in message loop at index [%s], ' +
-    'Data object does not exist.';
-  RsEDIError047 = 'Could not get data object in message loop at index [%s], Index too high.';
-  RsEDIError048 = 'Could not get data object in message loop at index [%s], Index too low.';
-  RsEDIError049 = 'Could not get data object in message loop at index [%s].';
-  RsEDIError050 = 'Could not set data object in message loop at index [%s], Index too high.';
-  RsEDIError051 = 'Could not set data object in message loop at index [%s], Index too low.';
-  RsEDIError052 = 'Could not set data object in message loop at index [%s].';
-  RsEDIError053 = 'Loop in loop stack record at index [%s] does not exist.';
-  RsEDIError054 = 'Could not get loop stack record at index [%s], Index too high.';
-  RsEDIError055 = 'Could not get loop stack record at index [%s], Index too low.';
-  RsEDIError056 = 'Could not get loop stack record at index [%s].';
-  RsEDIError057 = 'Could not get safe loop stack index [%s].';
-  RsEDIError058 = 'Could not assign element specification to element at index [%s] ' +
-    'in segment [%s] at index [%s] in transaction set.';
-
-  RsUnknownAttribute = 'Unknown Attribute';
-
-//== JclEDISEF ===============================================================
-resourcestring
-  // Transaction Set:850
-  SEFTextSetsCode_Set0_Desc = 'Transaction Set or message title.';
-  SEFTextSetsCode_Set1_Desc = 'Transaction Set functional group (X12).';
-  SEFTextSetsCode_Set2_Desc = 'Transaction Set or message purpose.';
-  SEFTextSetsCode_Set3_Desc = 'Level 1 note on transaction set or message.';
-  SEFTextSetsCode_Set4_Desc = 'Level 2 note on transaction set or message.';
-  SEFTextSetsCode_Set5_Desc = 'Level 3 note on transaction set or message.';
-  // Transaction Set~segment ordinal number: 850~1
-  SEFTextSetsCode_Seg0_Desc = 'Segment reference notes that are part of the transaction set in X12.';
-  SEFTextSetsCode_Seg1_Desc = 'Segment reference notes documented with the segment (like in VICS/UCS).';
-  SEFTextSetsCode_Seg2_Desc = 'Segment reference comment documented with the transaction set.';
-  SEFTextSetsCode_Seg3_Desc = 'Segment name.';
-  SEFTextSetsCode_Seg4_Desc = 'Level 1 note on segment.';
-  SEFTextSetsCode_Seg5_Desc = 'Level 2 note on segment.';
-  SEFTextSetsCode_Seg6_Desc = 'Segment purpose.';
-  SEFTextSetsCode_Seg7_Desc = 'Level 3 note on segment. See * below for other levels of notes.';
-  // Transaction Set~segment ordinal number~element or composite ordinal number: 850~1~4
-  SEFTextSetsCode_Elm0_Desc = 'Level 1 note on element or composite.';
-  SEFTextSetsCode_Elm1_Desc = 'Level 2 note on element or composite.';
-  SEFTextSetsCode_Elm2_Desc = 'Name of element or composite.';
-  SEFTextSetsCode_Elm4_Desc = 'Level 3 note on element or composite.';
-
-//=== JclEDIXML ==============================================================
-resourcestring
-  EDIXMLError001 = 'Could not open edi file.  File not specified.';
-  EDIXMLError002 = 'Could not save edi file.  File name and path not specified.';
-  EDIXMLError003 = 'Could not assign delimiters to edi file.  Disassemble cancelled.';
-  EDIXMLError004 = 'Could not assign delimiters to edi file.  Assemble cancelled.';
-  EDIXMLError005 = 'Could not assign delimiters to interchange control. Disassemble cancelled.';
-  EDIXMLError006 = 'Could not assign delimiters to interchange control. Assemble cancelled.';
-  EDIXMLError007 = 'Could not find interchange control end tag.';
-  EDIXMLError008 = 'Could not find interchange control end tag delimiter.';
-  EDIXMLError009 = 'Could not find interchange control header.';
-  EDIXMLError010 = 'Could not find interchange control header end tag.';
-  EDIXMLError011 = 'Could not find interchange control header end tag delimiter.';
-  EDIXMLError012 = 'Could not find interchange control trailer.';
-  EDIXMLError013 = 'Could not find interchange control trailer end tag.';
-  EDIXMLError014 = 'Could not find interchange control trailer end tag delimiter.';
-  EDIXMLError015 = 'Could not assign delimiters to functional group. Disassemble cancelled.';
-  EDIXMLError016 = 'Could not assign delimiters to functional group. Assemble cancelled.';
-  EDIXMLError017 = 'Could not find functional group end tag.';
-  EDIXMLError018 = 'Could not find functional group end tag delimiter.';
-  EDIXMLError019 = 'Could not find functional group header.';
-  EDIXMLError020 = 'Could not find functional group header end tag.';
-  EDIXMLError021 = 'Could not find functional group header end tag delimiter.';
-  EDIXMLError022 = 'Could not find functional group trailer.';
-  EDIXMLError023 = 'Could not find functional group trailer end tag.';
-  EDIXMLError024 = 'Could not find functional group trailer end tag delimiter.';
-  EDIXMLError025 = 'Could not assign delimiters to transactoin set. Disassemble cancelled.';
-  EDIXMLError026 = 'Could not assign delimiters to transactoin set. Assemble cancelled.';
-  EDIXMLError027 = 'Could not find transaction set end tag.';
-  EDIXMLError028 = 'Could not find transaction set end tag delimiter.';
-  EDIXMLError029 = 'Could not assign delimiters to transactoin set loop. Disassemble cancelled.';
-  EDIXMLError030 = 'Could not assign delimiters to transactoin set loop. Assemble cancelled.';
-  EDIXMLError031 = 'Could not find loop end tag';
-  EDIXMLError032 = 'Could not find loop end tag delimiter';
-  EDIXMLError033 = 'Could not set data object at index [%s].';
-  EDIXMLError034 = 'Could not set data object at index [%s], Index too low.';
-  EDIXMLError035 = 'Could not set data object at index [%s], Index too high.';
-  EDIXMLError036 = 'Could not get data object at index [%s], There was no data object to get.';
-  EDIXMLError037 = 'Could not get data object at index [%s], Index too low.';
-  EDIXMLError038 = 'Could not get data object at index [%s], Index too high.';
-  EDIXMLError039 = 'Could not get data object at index [%s], Data object does not exist.';
-  EDIXMLError040 = 'Could not delete EDI data object';
-  EDIXMLError041 = 'Could not assign delimiters to segment. Disassemble cancelled.';
-  EDIXMLError042 = 'Could not assign delimiters to segment. Assemble cancelled.';
-  EDIXMLError043 = 'Could not find segment begin tag';
-  EDIXMLError044 = 'Could not find segment end tag';
-  EDIXMLError045 = 'Could not find segment end tag delimiter';
-  EDIXMLError046 = 'Could not assign delimiters to element. Disassemble cancelled.';
-  EDIXMLError047 = 'Could not assign delimiters to element. Assemble cancelled.';
-  EDIXMLError048 = 'Could not find element tag';
-  EDIXMLError049 = 'Could not find element end tag';
-  EDIXMLError050 = 'Could not find element end tag delimiter';
-  EDIXMLError051 = 'Could not set element at index [%s].';
-  EDIXMLError052 = 'Could not set element at index [%s], Index too low.';
-  EDIXMLError053 = 'Could not set element at index [%s], Index too high.';
-  EDIXMLError054 = 'Could not get element at index [%s], There was no element to get.';
-  EDIXMLError055 = 'Could not get element at index [%s], Index too low.';
-  EDIXMLError056 = 'Could not get element at index [%s], Index too high.';
-  EDIXMLError057 = 'Could not get element at index [%s], Element does not exist.';
-  EDIXMLError058 = 'Could not delete element at index [%s].';
-  EDIXMLError059 = 'Could not find transaction set header.';
-  EDIXMLError060 = 'Could not find transaction set trailer.';
-  EDIXMLError061 = 'Could not find transaction set header and trailer.';
-  EDIXMLError062 = 'TEDIXMLANSIX12FormatTranslator: Unexpected object [%s] found.';
 
 //=== JclExprEval ============================================================
 resourcestring
@@ -1397,6 +1202,7 @@ resourcestring
 
   // TJclFileVersionInfo
   RsFileUtilsNoVersionInfo = 'File contains no version information';
+  RsFileUtilsFileDoesNotExist = 'The file %s does not exist';
   RsFileUtilsLanguageIndex = 'Illegal language index';
   RsFileUtilsEmptyValue = 'No value was supplied';
   RsFileUtilsValueNotFound = 'The value %s was not found.';
@@ -1834,6 +1640,7 @@ resourcestring
   RsRTTIValueOutOfRange   = 'Value out of range (%s).';
   RsRTTIUnknownIdentifier = 'Unknown identifier ''%s''.';
   RsRTTIInvalidBaseType   = 'Invalid base type (%s is of type %s).';
+  RsRTTINoStringValue     = 'The property %s of type %s has no string value'; 
 
   RsRTTIVar           = 'var ';
   RsRTTIConst         = 'const ';
@@ -1904,26 +1711,26 @@ resourcestring
 //=== JclSimpleXml ===========================================================
 resourcestring
   RsEInvalidXMLElementUnexpectedCharacte =
-    'Invalid XML Element: Unexpected character in property declaration ("%s" found)';
+    'Invalid XML Element: Unexpected character in property declaration ("%s" found at position %d)';
   RsEInvalidXMLElementUnexpectedCharacte_ =
-    'Invalid XML Element: Unexpected character in property declaration. Expecting " or '' but "%s"  found';
-  RsEUnexpectedValueForLPos = 'Unexpected value for lPos';
-  RsEInvalidXMLElementExpectedBeginningO = 'Invalid XML Element: Expected beginning of tag but "%s" found';
-  RsEInvalidXMLElementExpectedEndOfTagBu = 'Invalid XML Element: Expected end of tag but "%s" found';
-  RsEInvalidXMLElementMalformedTagFoundn = 'Invalid XML Element: malformed tag found (no valid name)';
+    'Invalid XML Element: Unexpected character in property declaration. Expecting " or '' but "%s"  found at position %d';
+  RsEUnexpectedValueForLPos = 'Unexpected value for lPos at position %d';
+  RsEInvalidXMLElementExpectedBeginningO = 'Invalid XML Element: Expected beginning of tag but "%s" found at position %d';
+  RsEInvalidXMLElementExpectedEndOfTagBu = 'Invalid XML Element: Expected end of tag but "%s" found at position %d';
+  RsEInvalidXMLElementMalformedTagFoundn = 'Invalid XML Element: malformed tag found (no valid name) at position %d';
   RsEInvalidXMLElementErroneousEndOfTagE =
-    'Invalid XML Element: Erroneous end of tag, expecting </%0:s> but </%1:s> found';
-  RsEInvalidCommentExpectedsButFounds = 'Invalid Comment: expected "%0:s" but found "%1:s"';
-  RsEInvalidCommentNotAllowedInsideComme = 'Invalid Comment: "--" not allowed inside comments';
-  RsEInvalidCommentUnexpectedEndOfData = 'Invalid Comment: Unexpected end of data';
-  RsEInvalidCDATAExpectedsButFounds = 'Invalid CDATA: expected "%0:s" but found "%1:s"';
-  RsEInvalidCDATAUnexpectedEndOfData = 'Invalid CDATA: Unexpected end of data';
-  RsEInvalidHeaderExpectedsButFounds = 'Invalid Header: expected "%0:s" but found "%1:s"';
-  RsEInvalidStylesheetExpectedsButFounds = 'Invalid Stylesheet: expected "%0:s" but found "%1:s"';
-  RsEInvalidStylesheetUnexpectedEndOfDat = 'Invalid Stylesheet: Unexpected end of data';
-  RsEInvalidMSOExpectedsButFounds = 'Invalid MSO: expected "%0:s" but found "%1:s"';
-  RsEInvalidMSOUnexpectedEndOfDat = 'Invalid MSO: Unexpected end of data';
-  RsEInvalidDocumentUnexpectedTextInFile = 'Invalid Document: Unexpected text in file prolog';
+    'Invalid XML Element: Erroneous end of tag, expecting </%0:s> but </%1:s> found at position %d';
+  RsEInvalidCommentExpectedsButFounds = 'Invalid Comment: expected "%0:s" but found "%1:s" at position %d';
+  RsEInvalidCommentNotAllowedInsideComme = 'Invalid Comment: "--" not allowed inside comments at position %d';
+  RsEInvalidCommentUnexpectedEndOfData = 'Invalid Comment: Unexpected end of data at position %d';
+  RsEInvalidCDATAExpectedsButFounds = 'Invalid CDATA: expected "%0:s" but found "%1:s" at position %d';
+  RsEInvalidCDATAUnexpectedEndOfData = 'Invalid CDATA: Unexpected end of data at position %d';
+  RsEInvalidHeaderExpectedsButFounds = 'Invalid Header: expected "%0:s" but found "%1:s" at position %d';
+  RsEInvalidStylesheetExpectedsButFounds = 'Invalid Stylesheet: expected "%0:s" but found "%1:s" at position %d';
+  RsEInvalidStylesheetUnexpectedEndOfDat = 'Invalid Stylesheet: Unexpected end of data at position %d';
+  RsEInvalidMSOExpectedsButFounds = 'Invalid MSO: expected "%0:s" but found "%1:s" at position %d';
+  RsEInvalidMSOUnexpectedEndOfDat = 'Invalid MSO: Unexpected end of data at position %d';
+  RsEInvalidDocumentUnexpectedTextInFile = 'Invalid Document: Unexpected text in file prolog at position %d';
 
 //=== JclStatistics ==========================================================
 resourcestring
@@ -2051,6 +1858,7 @@ resourcestring
   RsIntelCacheDescr71 = 'Trace cache: 16 K-Ops, 8-way set associative';
   RsIntelCacheDescr72 = 'Trace cache: 32 K-Ops, 8-way set associative';
   RsIntelCacheDescr73 = 'Trace cache: 64 K-Ops, 8-way set associative';
+  RsIntelCacheDescr76 = 'Instruction TLB: 2M/4M pages, fully associative, 8 entries';
   RsIntelCacheDescr78 = '2nd-level cache: 1 MBytes, 4-way set associative, 64 bytes line size';
   RsIntelCacheDescr79 = '2nd-level cache: 128 KBytes, 8-way set associative, 64 bytes line size, 2 lines per sector';
   RsIntelCacheDescr7A = '2nd-level cache: 256 KBytes, 8-way set associative, 64 bytes line size, 2 lines per sector';
@@ -2073,7 +1881,21 @@ resourcestring
   RsIntelCacheDescrBA = 'Data TLB1: 4 KByte pages, 4-way set associative, 64 entries';
   RsIntelCacheDescrC0 = 'Data TLB: 4 KByte and 4 MByte pages, 4-way set associative, 8 entries';
   RsIntelCacheDescrCA = 'Shared 2nd-Level TLB: 4 KByte pages, 4-way associative, 512 entries';
+  RsIntelCacheDescrD0 = '3rd-level cache: 512 KByte, 4-way set associative, 64 byte line size';
+  RsIntelCacheDescrD1 = '3rd-level cache: 1 MByte, 4-way set associative, 64 byte line size';
+  RsIntelCacheDescrD2 = '3rd-level cache: 2 MByte, 4-way set associative, 64 byte line size';
+  RsIntelCacheDescrD6 = '3rd-level cache: 1 MByte, 8-way set associative, 64 byte line size';
+  RsIntelCacheDescrD7 = '3rd-level cache: 2 MByte, 8-way set associative, 64 byte line size';
+  RsIntelCacheDescrD8 = '3rd-level cache: 4 MByte, 8-way set associative, 64 byte line size';
+  RsIntelCacheDescrDC = '3rd-level cache: 1.5 MByte, 12-way set associative, 64 byte line size';
+  RsIntelCacheDescrDD = '3rd-level cache: 3 MByte, 12-way set associative, 64 byte line size';
+  RsIntelCacheDescrDE = '3rd-level cache: 6 MByte, 12-way set associative, 64 byte line size';
+  RsIntelCacheDescrE2 = '3rd-level cache: 2 MByte, 16-way set associative, 64 byte line size';
+  RsIntelCacheDescrE3 = '3rd-level cache: 4 MByte, 16-way set associative, 64 byte line size';
   RsIntelCacheDescrE4 = '3rd-level cache: 8 MByte, 16-way set associative, 64 byte line size';
+  RsIntelCacheDescrEA = '3rd-level cache: 12 MByte, 24-way set associative, 64 byte line size';
+  RsIntelCacheDescrEB = '3rd-level cache: 18 MByte, 24-way set associative, 64 byte line size';
+  RsIntelCacheDescrEC = '3rd-level cache: 24 MByte, 24-way set associative, 64 byte line size';
   RsIntelCacheDescrF0 = '64-Byte Prefetching';
   RsIntelCacheDescrF1 = '128-Byte Prefetching';
   RsIntelCacheDescrFF = 'CPUID leaf 2 does not report cache descriptor information, use CPUID leaf 4 to query cache parameters';
@@ -2133,6 +1955,7 @@ resourcestring
   RsProductTypeWebEdition       = 'Web Edition';
 
   RsEOpenGLInfo = 'GetOpenGLVersion: %s failed';
+  RsENetWkstaGetInfo = 'NetWkstaGetInfo failed';
 
   {$IFDEF MSWINDOWS}
   RsSPInfo = 'SP%u';
@@ -2193,14 +2016,6 @@ resourcestring
   RsTempConvTypeError = 'An invalid type has been provided for the %s parameter';
   RsConvTempBelowAbsoluteZero = 'Temperature can not be below Absolute Zero!';
 
-//=== JclWideFormat ==========================================================
-resourcestring
-  RsFormatSyntaxError = 'Syntax error at index %u';
-  RsFormatNoArgument = 'No argument at index %u';
-  RsFormatBadArgumentType = 'Invalid argument type (%s) at index %u. Expected [%s]';
-  RsFormatBadArgumentTypeEx = 'Invalid argument type (%s) at index %u for format ''%s''. Expected [%s]';
-  RsFormatNoArgumentEx = 'No argument at index %u for format ''%s''';
-
 //=== JclWin32 ===============================================================
 resourcestring
   RsWin32Error        = 'Win32 error: %s (%u)%s%s';
@@ -2215,9 +2030,9 @@ resourcestring
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclResources.pas $';
-    Revision: '$Revision: 3048 $';
-    Date: '$Date: 2009-10-17 10:47:26 +0200 (za, 17 okt 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/common/JclResources.pas $';
+    Revision: '$Revision: 3587 $';
+    Date: '$Date: 2011-08-18 07:42:53 +0200 (jeu., 18 août 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

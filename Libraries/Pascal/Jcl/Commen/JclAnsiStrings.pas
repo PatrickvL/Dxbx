@@ -33,6 +33,7 @@
 {   Michael Winter                                                                                 }
 {   Nick Hodges                                                                                    }
 {   Olivier Sannier (obones)                                                                       }
+{   Patrick Kolla                                                                                  }
 {   Pelle F. S. Liljendal                                                                          }
 {   Petr Vones (pvones)                                                                            }
 {   Robert Lee                                                                                     }
@@ -46,8 +47,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-02 17:51:57 +0200 (wo, 02 sep 2009)                             $ }
-{ Revision:      $Rev:: 2986                                                                     $ }
+{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3594                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -62,6 +63,15 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF MSWINDOWS}
+  System.Classes, System.SysUtils,
+  {$IFDEF HAS_UNIT_ANSISTRINGS}
+  System.AnsiStrings,
+  {$ENDIF HAS_UNIT_ANSISTRINGS}
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
@@ -69,6 +79,7 @@ uses
   {$IFDEF HAS_UNIT_ANSISTRINGS}
   AnsiStrings,
   {$ENDIF HAS_UNIT_ANSISTRINGS}
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase;
 
 // Ansi types
@@ -85,11 +96,16 @@ type
   private
     FDelimiter: AnsiChar;
     FNameValueSeparator: AnsiChar;
-
+    FStrictDelimiter: Boolean;
+    FQuoteChar: AnsiChar;
     function GetText: AnsiString;
     procedure SetText(const Value: AnsiString);
-    function GetDelimitedText: AnsiString;
-    procedure SetDelimitedText(const Value: AnsiString);
+    function GetCommaText: AnsiString; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+    procedure SetCommaText(const Value: AnsiString); {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+    function GetDelimitedText: AnsiString; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+    function GetDelimitedText(const ADelimiter: AnsiString; AQuoteChar: AnsiChar): AnsiString; overload;
+    procedure SetDelimitedText(const Value: AnsiString); overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+    procedure SetDelimitedText(const Value, ADelimiter: AnsiString; AQuoteChar: AnsiChar); overload;
     function ExtractName(const S: AnsiString): AnsiString;
     function GetName(Index: Integer): AnsiString;
     function GetValue(const Name: AnsiString): AnsiString;
@@ -136,6 +152,9 @@ type
 
     property Delimiter: AnsiChar read FDelimiter write FDelimiter;
     property DelimitedText: AnsiString read GetDelimitedText write SetDelimitedText;
+    property CommaText: AnsiString read GetCommaText write SetCommaText;
+    property StrictDelimiter: Boolean read FStrictDelimiter write FStrictDelimiter;
+    property QuoteChar: AnsiChar read FQuoteChar write FQuoteChar;
 
     property Strings[Index: Integer]: AnsiString read GetString write SetString; default;
     property Objects[Index: Integer]: TObject read GetObject write SetObject;
@@ -161,11 +180,12 @@ type
     FCount: Integer;
     FDuplicates: TDuplicates;
     FSorted: Boolean;
-
+    FCaseSensitive: Boolean;
     procedure Grow;
     procedure QuickSort(L, R: Integer; SCompare: TJclAnsiStringListSortCompare);
     procedure SetSorted(Value: Boolean);
   protected
+    procedure AssignTo(Dest: TPersistent); override;
     function GetString(Index: Integer): AnsiString; override;
     procedure SetString(Index: Integer; const Value: AnsiString); override;
     function GetObject(Index: Integer): TObject; override;
@@ -173,8 +193,12 @@ type
     function GetCapacity: Integer; override;
     procedure SetCapacity(const Value: Integer); override;
     function GetCount: Integer; override;
+    function CompareStrings(const S1, S2: AnsiString): Integer; override;
   public
+    constructor Create;
+
     function AddObject(const S: AnsiString; AObject: TObject): Integer; override;
+    procedure Assign(Source: TPersistent); override;
     procedure InsertObject(Index: Integer; const S: AnsiString; AObject: TObject); override;
     procedure Delete(Index: Integer); override;
     function Find(const S: AnsiString; var Index: Integer): Boolean; virtual;
@@ -182,6 +206,7 @@ type
     procedure Sort; virtual;
     procedure Clear; override;
 
+    property CaseSensitive: Boolean read FCaseSensitive write FCaseSensitive;
     property Duplicates: TDuplicates read FDuplicates write FDuplicates;
     property Sorted: Boolean read FSorted write SetSorted;
   end;
@@ -333,6 +358,8 @@ function StrRepeatLength(const S: AnsiString; const L: SizeInt): AnsiString;
 function StrReverse(const S: AnsiString): AnsiString;
 procedure StrReverseInPlace(var S: AnsiString);
 function StrSingleQuote(const S: AnsiString): AnsiString;
+procedure StrSkipChars(var S: PAnsiChar; const Chars: TSysCharSet); overload;
+procedure StrSkipChars(const S: AnsiString; var Index: SizeInt; const Chars: TSysCharSet); overload;
 function StrSmartCase(const S: AnsiString; Delimiters: TSysCharSet): AnsiString;
 function StrStringToEscaped(const S: AnsiString): AnsiString;
 function StrStripNonNumberChars(const S: AnsiString): AnsiString;
@@ -341,7 +368,8 @@ function StrTrimCharLeft(const S: AnsiString; C: AnsiChar): AnsiString;
 function StrTrimCharsLeft(const S: AnsiString; const Chars: TSysCharSet): AnsiString;
 function StrTrimCharRight(const S: AnsiString; C: AnsiChar): AnsiString;
 function StrTrimCharsRight(const S: AnsiString; const Chars: TSysCharSet): AnsiString;
-function StrTrimQuotes(const S: AnsiString): AnsiString;
+function StrTrimQuotes(const S: AnsiString): AnsiString; overload;
+function StrTrimQuotes(const S: AnsiString; QuoteChar: AnsiChar): AnsiString; overload;
 function StrUpper(const S: AnsiString): AnsiString;
 procedure StrUpperInPlace(var S: AnsiString);
 procedure StrUpperBuff(S: PAnsiChar);
@@ -368,10 +396,15 @@ function StrCompareRange(const S1, S2: AnsiString; Index, Count: SizeInt; CaseSe
 function StrRepeatChar(C: AnsiChar; Count: SizeInt): AnsiString;
 function StrFind(const Substr, S: AnsiString; const Index: SizeInt = 1): SizeInt;
 function StrHasPrefix(const S: AnsiString; const Prefixes: array of AnsiString): Boolean;
-function StrIndex(const S: AnsiString; const List: array of AnsiString): SizeInt;
+function StrHasSuffix(const S: AnsiString; const Suffixes: array of AnsiString): Boolean;
+function StrIHasPrefix(const S: AnsiString; const Prefixes: array of AnsiString): Boolean;
+function StrIHasSuffix(const S: AnsiString; const Suffixes: array of AnsiString): Boolean;
+function StrIndex(const S: AnsiString; const List: array of AnsiString; CaseSensitive: Boolean = False): SizeInt;
 function StrILastPos(const SubStr, S: AnsiString): SizeInt;
 function StrIPos(const SubStr, S: AnsiString): SizeInt;
+function StrIPrefixIndex(const S: AnsiString; const Prefixes: array of AnsiString): SizeInt;
 function StrIsOneOf(const S: AnsiString; const List: array of AnsiString): Boolean;
+function StrISuffixIndex(const S: AnsiString; const Suffixes: array of AnsiString): SizeInt;
 function StrLastPos(const SubStr, S: AnsiString): SizeInt;
 function StrMatch(const Substr, S: AnsiString; Index: SizeInt = 1): SizeInt;
 function StrMatches(const Substr, S: AnsiString; const Index: SizeInt = 1): Boolean;
@@ -379,6 +412,7 @@ function StrNIPos(const S, SubStr: AnsiString; N: SizeInt): SizeInt;
 function StrNPos(const S, SubStr: AnsiString; N: SizeInt): SizeInt;
 function StrPrefixIndex(const S: AnsiString; const Prefixes: array of AnsiString): SizeInt;
 function StrSearch(const Substr, S: AnsiString; const Index: SizeInt = 1): SizeInt;
+function StrSuffixIndex(const S: AnsiString; const Suffixes: array of AnsiString): SizeInt;
 
 // String Extraction
 function StrAfter(const SubStr, S: AnsiString): AnsiString;
@@ -455,15 +489,17 @@ procedure TrimStringsLeft(const List: TJclAnsiStrings; DeleteIfEmpty: Boolean = 
 function AddStringToStrings(const S: AnsiString; Strings: TJclAnsiStrings; const Unique: Boolean): Boolean;
 
 // Miscellaneous
-{$IFDEF KEEP_DEPRECATED}
-function BooleanToStr(B: Boolean): AnsiString;
-{$ENDIF KEEP_DEPRECATED}
+// (OF) moved to JclSysUtils
+//function BooleanToStr(B: Boolean): AnsiString;
 function FileToString(const FileName: TFileName): AnsiString;
 procedure StringToFile(const FileName: TFileName; const Contents: AnsiString; Append: Boolean = False);
 function StrToken(var S: AnsiString; Separator: AnsiChar): AnsiString;
 procedure StrTokens(const S: AnsiString; const List: TJclAnsiStrings);
 procedure StrTokenToStrings(S: AnsiString; Separator: AnsiChar; const List: TJclAnsiStrings);
-function StrWord(var S: PAnsiChar; out Word: AnsiString): Boolean;
+function StrWord(const S: AnsiString; var Index: SizeInt; out Word: AnsiString): Boolean; overload;
+function StrWord(var S: PAnsiChar; out Word: AnsiString): Boolean; overload;
+function StrIdent(const S: AnsiString; var Index: SizeInt; out Ident: AnsiString): Boolean; overload;
+function StrIdent(var S: PAnsiChar; out Ident: AnsiString): Boolean; overload;
 function StrToFloatSafe(const S: AnsiString): Float;
 function StrToIntSafe(const S: AnsiString): Integer;
 procedure StrNormIndex(const StrLen: SizeInt; var Index: SizeInt; var Count: SizeInt); overload;
@@ -489,9 +525,9 @@ var
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAnsiStrings.pas $';
-    Revision: '$Revision: 2986 $';
-    Date: '$Date: 2009-09-02 17:51:57 +0200 (wo, 02 sep 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/common/JclAnsiStrings.pas $';
+    Revision: '$Revision: 3594 $';
+    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -505,11 +541,9 @@ uses
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
   {$IFDEF SUPPORTS_UNICODE}
-  {$IFDEF HAS_UNIT_RTLCONSTS}
   RtlConsts,
-  {$ENDIF HAS_UNIT_RTLCONSTS}
   {$ENDIF SUPPORTS_UNICODE}
-  JclLogic, JclResources, JclStreams, JclSynch;
+  JclLogic, JclResources, JclStreams, JclSynch, JclSysUtils;
 
 //=== Internal ===============================================================
 
@@ -575,8 +609,8 @@ begin
       {$IFDEF MSWINDOWS}
       LoCaseChar := CurrChar;
       UpCaseChar := CurrChar;
-      Windows.CharLowerBuffA(@LoCaseChar, 1);
-      Windows.CharUpperBuffA(@UpCaseChar, 1);
+      {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.CharLowerBuffA(@LoCaseChar, 1);
+      {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.CharUpperBuffA(@UpCaseChar, 1);
       {$DEFINE CASE_MAP_INITIALIZED}
       {$ENDIF MSWINDOWS}
       {$IFDEF LINUX}
@@ -639,7 +673,8 @@ begin
 end;
 
 {$IFDEF SUPPORTS_UNICODE}
-{ TJclAnsiStrings }
+
+//=== { TJclAnsiStrings } ====================================================
 
 constructor TJclAnsiStrings.Create;
 begin
@@ -647,29 +682,37 @@ begin
 
   FDelimiter := ',';
   FNameValueSeparator := '=';
+  FQuoteChar := '"';
+  FStrictDelimiter := False;
 end;
 
 procedure TJclAnsiStrings.Assign(Source: TPersistent);
+var
+  StringsSource: TStrings;
+  I: Integer;
 begin
-  if Source is TJclAnsiStrings then
+  if Source is TStrings then
   begin
+    StringsSource := TStrings(Source);
     BeginUpdate;
     try
       Clear;
-      FNameValueSeparator := TJclAnsiStrings(Source).FNameValueSeparator;
-      FDelimiter := TJclAnsiStrings(Source).FDelimiter;
-      AddStrings(TJclAnsiStrings(Source));
+      FDelimiter := AnsiChar(StringsSource.Delimiter);
+      FNameValueSeparator := AnsiChar(StringsSource.NameValueSeparator);
+      for I := 0 to StringsSource.Count - 1 do
+        AddObject(AnsiString(StringsSource.Strings[I]), StringsSource.Objects[I]);
     finally
       EndUpdate;
     end;
-    Exit;
-  end;
-  inherited Assign(Source);
+  end
+  else
+    inherited Assign(Source);
 end;
 
 procedure TJclAnsiStrings.AssignTo(Dest: TPersistent);
 var
   StringsDest: TStrings;
+  AnsiStringsDest: TJclAnsiStrings;
   I: Integer;
 begin
   if Dest is TStrings then
@@ -685,7 +728,24 @@ begin
     finally
       StringsDest.EndUpdate;
     end;
-  end;
+  end
+  else
+  if Dest is TJclAnsiStrings then
+  begin
+    AnsiStringsDest := TJclAnsiStrings(Dest);
+    BeginUpdate;
+    try
+      AnsiStringsDest.Clear;
+      AnsiStringsDest.FNameValueSeparator := FNameValueSeparator;
+      AnsiStringsDest.FDelimiter := FDelimiter;
+      for I := 0 to Count - 1 do
+        AnsiStringsDest.AddObject(Strings[I], Objects[I]);
+    finally
+      EndUpdate;
+    end;
+  end
+  else
+    inherited AssignTo(Dest);
 end;
 
 function TJclAnsiStrings.Add(const S: AnsiString): Integer;
@@ -719,7 +779,8 @@ end;
 function TJclAnsiStrings.IndexOf(const S: AnsiString): Integer;
 begin
   for Result := 0 to Count - 1 do
-    if CompareStrings(Strings[Result], S) = 0 then Exit;
+    if CompareStrings(Strings[Result], S) = 0 then
+      Exit;
   Result := -1;
 end;
 
@@ -728,19 +789,21 @@ var
   P: Integer;
   S: AnsiString;
 begin
-  for Result := 0 to GetCount - 1 do
+  for Result := 0 to Count - 1 do
   begin
-    S := GetString(Result);
+    S := Strings[Result];
     P := AnsiPos(NameValueSeparator, S);
-    if (P <> 0) and (CompareStrings(Copy(S, 1, P - 1), Name) = 0) then Exit;
+    if (P > 0) and (CompareStrings(Copy(S, 1, P - 1), Name) = 0) then
+      Exit;
   end;
   Result := -1;
 end;
 
 function TJclAnsiStrings.IndexOfObject(AObject: TObject): Integer;
 begin
-  for Result := 0 to GetCount - 1 do
-    if GetObject(Result) = AObject then Exit;
+  for Result := 0 to Count - 1 do
+    if Objects[Result] = AObject then
+      Exit;
   Result := -1;
 end;
 
@@ -762,15 +825,36 @@ begin
   end;
 end;
 
+function TJclAnsiStrings.GetCommaText: AnsiString;
+begin
+  Result := GetDelimitedText(AnsiComma, AnsiDoubleQuote);
+end;
+
 function TJclAnsiStrings.GetDelimitedText: AnsiString;
+begin
+  Result := GetDelimitedText(Delimiter, QuoteChar);
+end;
+
+function TJclAnsiStrings.GetDelimitedText(const ADelimiter: AnsiString; AQuoteChar: AnsiChar): AnsiString;
+
+  function Quoted(Item: AnsiString): AnsiString;
+  begin
+    if (not StrictDelimiter) and ((Pos(AnsiSpace, Item) > 0) or (Pos(FQuoteChar, Item) > 0)) then
+    begin
+      Result := AnsiQuotedStr(Item, AQuoteChar);
+    end
+    else
+      Result := Item;
+  end;
+
 var
   I: Integer;
 begin
   Result := '';
   for I := 0 to Count - 2 do
-    Result := Result + Strings[I] + Delimiter;
+    Result := Result + Quoted(Strings[I]) + ADelimiter;
   if Count > 0 then
-    Result := Result + Strings[Count - 1];
+    Result := Result + Quoted(Strings[Count - 1]);
 end;
 
 procedure TJclAnsiStrings.Insert(Index: Integer; const S: AnsiString);
@@ -778,19 +862,54 @@ begin
   InsertObject(Index, S, nil);
 end;
 
+procedure TJclAnsiStrings.SetCommaText(const Value: AnsiString);
+begin
+  SetDelimitedText(Value, AnsiComma, AnsiDoubleQuote);
+end;
+
 procedure TJclAnsiStrings.SetDelimitedText(const Value: AnsiString);
+begin
+  SetDelimitedText(Value, Delimiter, QuoteChar);
+end;
+
+procedure TJclAnsiStrings.SetDelimitedText(const Value, ADelimiter: AnsiString; AQuoteChar: AnsiChar);
+
+  procedure InternalAdd(Item: AnsiString);
+  begin
+    Item := StrTrimQuotes(Item, AQuoteChar);
+    StrReplace(Item, AQuoteChar + AQuoteChar, AQuoteChar, [rfReplaceAll]);
+    Add(Item);
+  end;
+
 var
-  LastStart: Integer;
-  Index: Integer;
+  ValueLength, LastStart, Index, QuoteCharCount: Integer;
+  ValueChar: AnsiChar;
 begin
   Clear;
   LastStart := 1;
-  for Index := 1 to Length(Value) do
+  QuoteCharCount := 0;
+  ValueLength := Length(Value);
+  for Index := 1 to ValueLength do
   begin
-    if Value[Index] = Delimiter then
+    ValueChar := Value[Index];
+    if ValueChar = AQuoteChar then
+      Inc(QuoteCharCount);
+    if ((ValueChar = ADelimiter) or ((ValueChar = ' ') and (not StrictDelimiter)))
+    and ((not Odd(QuoteCharCount) or (QuoteCharCount = 0))) then
     begin
-      Add(Copy(Value, LastStart, Index - LastStart));
+      if StrictDelimiter then
+        Add(Copy(Value, LastStart, Index - LastStart))
+      else
+        InternalAdd(Copy(Value, LastStart, Index - LastStart));
+      QuoteCharCount := 0;
       LastStart := Index + 1;
+    end;
+    if (Index = ValueLength) and (LastStart < ValueLength) then
+    begin
+      if StrictDelimiter then
+        Add(Copy(Value, LastStart, ValueLength - LastStart + 1))
+      else
+        InternalAdd(Copy(Value, LastStart, Index - LastStart + 1));
     end;
   end;
 end;
@@ -801,9 +920,9 @@ var
 begin
   Result := '';
   for I := 0 to Count - 2 do
-    Result := Result + Strings[I] + sLineBreak;
+    Result := Result + Strings[I] + AnsiLineBreak;
   if Count > 0 then
-    Result := Result + Strings[Count - 1];
+    Result := Result + Strings[Count - 1] + AnsiLineBreak;
 end;
 
 procedure TJclAnsiStrings.SetText(const Value: AnsiString);
@@ -813,23 +932,20 @@ var
 begin
   Clear;
   Len := Length(Value);
-  if Len > 0 then
+  Index := 1;
+  while Index <= Len do
   begin
-    Index := 1;
-    while Index <= Len do
-    begin
-      Start := Index;
-      while (Index <= Len) and not (Value[Index] in [#10, #13]) do
-        Inc(Index);
+    Start := Index;
+    while (Index <= Len) and not CharIsReturn(Value[Index]) do
+      Inc(Index);
 
-      S := Copy(Value, Start, Index - Start);
-      Add(S);
+    S := Copy(Value, Start, Index - Start);
+    Add(S);
 
-      if Value[Index] = #13 then
-        Inc(Index);
-      if Value[Index] = #10 then
-        Inc(Index);
-    end;
+    if (Index <= Len) and (Value[Index] = AnsiCarriageReturn) then
+      Inc(Index);
+    if (Index <= Len) and (Value[Index] = AnsiLineFeed) then
+      Inc(Index);
   end;
 end;
 
@@ -872,7 +988,7 @@ begin
   try
     Size := Stream.Size - Stream.Position;
     System.SetString(S, nil, Size);
-    Stream.Read(Pointer(S)^, Size);
+    Stream.Read(PAnsiChar(S)^, Size);
     SetText(S);
   finally
     EndUpdate;
@@ -896,7 +1012,7 @@ var
   S: AnsiString;
 begin
   S := GetText;
-  Stream.WriteBuffer(Pointer(S)^, Length(S));
+  Stream.WriteBuffer(PAnsiChar(S)^, Length(S));
 end;
 
 function TJclAnsiStrings.ExtractName(const S: AnsiString): AnsiString;
@@ -905,15 +1021,15 @@ var
 begin
   Result := S;
   P := AnsiPos(NameValueSeparator, Result);
-  if P <> 0 then
-    SetLength(Result, P-1)
+  if P > 0 then
+    SetLength(Result, P - 1)
   else
     SetLength(Result, 0);
 end;
 
 function TJclAnsiStrings.GetName(Index: Integer): AnsiString;
 begin
-  Result := ExtractName(GetString(Index));
+  Result := ExtractName(Strings[Index]);
 end;
 
 function TJclAnsiStrings.GetValue(const Name: AnsiString): AnsiString;
@@ -946,9 +1062,19 @@ begin
 end;
 
 function TJclAnsiStrings.GetValueFromIndex(Index: Integer): AnsiString;
+var
+  S: AnsiString;
+  P: Integer;
 begin
   if Index >= 0 then
-    Result := Copy(GetString(Index), Length(Names[Index]) + 2, MaxInt)
+  begin
+    S := Strings[Index];
+    P := AnsiPos(NameValueSeparator, S);
+    if P > 0 then
+      Result := Copy(S, P + 1, Length(S) - P)
+    else
+      Result := '';
+  end
   else
     Result := '';
 end;
@@ -957,16 +1083,71 @@ procedure TJclAnsiStrings.SetValueFromIndex(Index: Integer; const Value: AnsiStr
 begin
   if Value <> '' then
   begin
-    if Index < 0 then Index := Add('');
+    if Index < 0 then
+      Index := Add('');
     SetString(Index, Names[Index] + NameValueSeparator + Value);
   end
   else
   begin
-    if Index >= 0 then Delete(Index);
+    if Index >= 0 then
+      Delete(Index);
   end;
 end;
 
-{ TJclAnsiStringList }
+//=== { TJclAnsiStringList } =================================================
+
+constructor TJclAnsiStringList.Create;
+begin
+  inherited Create;
+  FCaseSensitive := True;
+end;
+
+procedure TJclAnsiStringList.Assign(Source: TPersistent);
+var
+  StringListSource: TStringList;
+begin
+  if Source is TStringList then
+  begin
+    StringListSource := TStringList(Source);
+    FDuplicates := StringListSource.Duplicates;
+    FSorted := StringListSource.Sorted;
+    FCaseSensitive := StringListSource.CaseSensitive;
+  end;
+  inherited Assign(Source);
+end;
+
+procedure TJclAnsiStringList.AssignTo(Dest: TPersistent);
+var
+  StringListDest: TStringList;
+  AnsiStringListDest: TJclAnsiStringList;
+begin
+  if Dest is TStringList then
+  begin
+    StringListDest := TStringList(Dest);
+    StringListDest.Clear; // make following assignments a lot faster
+    StringListDest.Duplicates := FDuplicates;
+    StringListDest.Sorted := FSorted;
+    StringListDest.CaseSensitive := FCaseSensitive;
+  end
+  else
+  if Dest is TJclAnsiStringList then
+  begin
+    AnsiStringListDest := TJclAnsiStringList(Dest);
+    AnsiStringListDest.Clear;
+    AnsiStringListDest.FDuplicates := FDuplicates;
+    AnsiStringListDest.FSorted := FSorted;
+    AnsiStringListDest.FCaseSensitive := FCaseSensitive;
+  end;
+  inherited AssignTo(Dest);
+end;
+
+function TJclAnsiStringList.CompareStrings(const S1: AnsiString; const S2: AnsiString): Integer;
+begin
+  if FCaseSensitive then
+    Result := CompareStr(S1, S2)
+  else
+    Result := CompareText(S1, S2);
+end;
 
 procedure TJclAnsiStringList.Grow;
 var
@@ -1043,7 +1224,7 @@ begin
   if Count = Capacity then
     Grow;
 
-  for I := Index to Count - 1 do
+  for I := Count - 1 downto Index do
     FStrings[I + 1] := FStrings[I];
 
   FStrings[Index].Str := S;
@@ -1059,11 +1240,15 @@ begin
   end
   else
   begin
-    if Find(S, Result) then
-      case Duplicates of
-        dupIgnore: Exit;
-        dupError: Error(@SDuplicateString, 0);
-      end;
+    case Duplicates of
+      dupAccept: ;
+      dupIgnore:
+        if Find(S, Result) then
+          Exit;
+      dupError:
+        if Find(S, Result) then
+          Error(@SDuplicateString, 0);
+    end;
   end;
 
   InsertObject(Result, S, AObject);
@@ -1077,7 +1262,11 @@ begin
     Error(@SListIndexError, Index);
 
   for I := Index to Count - 2 do
-    FStrings[Index] := FStrings[Index + 1];
+    FStrings[I] := FStrings[I + 1];
+    
+  SetLength(FStrings[FCount - 1].Str, 0);  // the last string is no longer useful
+    
+  Dec(FCount);
 end;
 
 procedure TJclAnsiStringList.Clear;
@@ -1103,13 +1292,16 @@ begin
   begin
     I := (L + H) shr 1;
     C := CompareStrings(FStrings[I].Str, S);
-    if C < 0 then L := I + 1 else
+    if C < 0 then
+      L := I + 1
+    else
     begin
       H := I - 1;
       if C = 0 then
       begin
         Result := True;
-        if Duplicates <> dupAccept then L := I;
+        if Duplicates <> dupAccept then
+          L := I;
       end;
     end;
   end;
@@ -1142,21 +1334,25 @@ begin
     J := R;
     P := (L + R) shr 1;
     repeat
-      while SCompare(Self, I, P) < 0 do Inc(I);
-      while SCompare(Self, J, P) > 0 do Dec(J);
+      while SCompare(Self, I, P) < 0 do
+        Inc(I);
+      while SCompare(Self, J, P) > 0 do
+        Dec(J);
       if I <= J then
       begin
         if I <> J then
           Exchange(I, J);
         if P = I then
           P := J
-        else if P = J then
+        else
+        if P = J then
           P := I;
         Inc(I);
         Dec(J);
       end;
     until I > J;
-    if L < J then QuickSort(L, J, SCompare);
+    if L < J then
+      QuickSort(L, J, SCompare);
     L := I;
   until I >= R;
 end;
@@ -1883,6 +2079,18 @@ begin
   Result := AnsiSingleQuote + S + AnsiSingleQuote;
 end;
 
+procedure StrSkipChars(var S: PAnsiChar; const Chars: TSysCharSet);
+begin
+  while S^ in Chars do
+    Inc(S);
+end;
+
+procedure StrSkipChars(const S: AnsiString; var Index: SizeInt; const Chars: TSysCharSet);
+begin
+  while S[Index] in Chars do
+    Inc(Index);
+end;
+
 function StrSmartCase(const S: AnsiString; Delimiters: TSysCharSet): AnsiString;
 var
   Source, Dest: PAnsiChar;
@@ -2057,6 +2265,25 @@ begin
     First := S[1];
     Last := S[L];
     if (First = Last) and ((First = AnsiSingleQuote) or (First = AnsiDoubleQuote)) then
+      Result := Copy(S, 2, L - 2)
+    else
+      Result := S;
+  end
+  else
+    Result := S;
+end;
+
+function StrTrimQuotes(const S: AnsiString; QuoteChar: AnsiChar): AnsiString;
+var
+  First, Last: AnsiChar;
+  L: SizeInt;
+begin
+  L := Length(S);
+  if L > 1 then
+  begin
+    First := S[1];
+    Last := S[L];
+    if (First = Last) and (First = QuoteChar) then
       Result := Copy(S, 2, L - 2)
     else
       Result := S;
@@ -2357,14 +2584,29 @@ begin
   Result := StrPrefixIndex(S, Prefixes) > -1;
 end;
 
-function StrIndex(const S: AnsiString; const List: array of AnsiString): SizeInt;
+function StrHasSuffix(const S: AnsiString; const Suffixes: array of AnsiString): Boolean;
+begin
+  Result := StrSuffixIndex(S, Suffixes) > -1;
+end;
+
+function StrIHasPrefix(const S: AnsiString; const Prefixes: array of AnsiString): Boolean;
+begin
+  Result := StrIPrefixIndex(S, Prefixes) > -1;
+end;
+
+function StrIHasSuffix(const S: AnsiString; const Suffixes: array of AnsiString): Boolean;
+begin
+  Result := StrISuffixIndex(S, Suffixes) > -1;
+end;
+
+function StrIndex(const S: AnsiString; const List: array of AnsiString; CaseSensitive: Boolean): SizeInt;
 var
   I: SizeInt;
 begin
   Result := -1;
   for I := Low(List) to High(List) do
   begin
-    if StrSame(S, List[I]) then
+    if StrCompare(S, List[I], CaseSensitive) = 0 then
     begin
       Result := I;
       Break;
@@ -2382,9 +2624,43 @@ begin
   Result := Pos(StrUpper(SubStr), StrUpper(S));
 end;
 
+function StrIPrefixIndex(const S: AnsiString; const Prefixes: array of AnsiString): SizeInt;
+var
+  I: SizeInt;
+  Test: AnsiString;
+begin
+  Result := -1;
+  for I := Low(Prefixes) to High(Prefixes) do
+  begin
+    Test := StrLeft(S, Length(Prefixes[I]));
+    if CompareText(Test, Prefixes[I]) = 0 then
+    begin
+      Result := I;
+      Break;
+    end;
+  end;
+end;
+
 function StrIsOneOf(const S: AnsiString; const List: array of AnsiString): Boolean;
 begin
   Result := StrIndex(S, List) > -1;
+end;
+
+function StrISuffixIndex(const S: AnsiString; const Suffixes: array of AnsiString): SizeInt;
+var
+  I: SizeInt;
+  Test: AnsiString;
+begin
+  Result := -1;
+  for I := Low(Suffixes) to High(Suffixes) do
+  begin
+    Test := StrRight(S, Length(Suffixes[I]));
+    if CompareText(Test, Suffixes[I]) = 0 then
+    begin
+      Result := I;
+      Break;
+    end;
+  end;
 end;
 
 function StrLastPos(const SubStr, S: AnsiString): SizeInt;
@@ -2621,7 +2897,7 @@ begin
   for I := Low(Prefixes) to High(Prefixes) do
   begin
     Test := StrLeft(S, Length(Prefixes[I]));
-    if StrSame(Test, Prefixes[I]) then
+    if CompareStr(Test, Prefixes[I]) = 0 then
     begin
       Result := I;
       Break;
@@ -2650,6 +2926,23 @@ begin
   end
   else
     Result := 0;
+end;
+
+function StrSuffixIndex(const S: AnsiString; const Suffixes: array of AnsiString): SizeInt;
+var
+  I: SizeInt;
+  Test: AnsiString;
+begin
+  Result := -1;
+  for I := Low(Suffixes) to High(Suffixes) do
+  begin
+    Test := StrRight(S, Length(Suffixes[I]));
+    if CompareStr(Test, Suffixes[I]) = 0 then
+    begin
+      Result := I;
+      Break;
+    end;
+  end;
 end;
 
 //=== String Extraction ======================================================
@@ -2781,15 +3074,19 @@ begin
   Result := (AnsiCharTypes[C] and C1_LOWER) <> 0;
 end;
 
+// JclSysUtils.TJclFormatSettings.GetDecimalSeparator is manually inlined in the 2 following functions
+// this fixes compiler warnings about functions not being inlined
+ 
 function CharIsNumberChar(const C: AnsiChar): Boolean;
 begin
-  Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or
-    (C = AnsiSignMinus) or (C = AnsiSignPlus) or (Char(C) = DecimalSeparator);
+  Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or (C = AnsiSignMinus) or (C = AnsiSignPlus) or
+    (Char(C) = {$IFDEF RTL220_UP}FormatSettings.DecimalSeparator{$ELSE}SysUtils.DecimalSeparator{$ENDIF});
 end;
 
 function CharIsNumber(const C: AnsiChar): Boolean;
 begin
-  Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or (Char(C) = DecimalSeparator);
+  Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or
+    (Char(C) = {$IFDEF RTL220_UP}FormatSettings.DecimalSeparator{$ELSE}SysUtils.DecimalSeparator{$ENDIF});
 end;
 
 function CharIsPrintable(const C: AnsiChar): Boolean;
@@ -3251,15 +3548,6 @@ end;
 
 //=== Miscellaneous ==========================================================
 
-{$IFDEF KEEP_DEPRECATED}
-function BooleanToStr(B: Boolean): AnsiString;
-const
-  Bools: array [Boolean] of AnsiString = ('False', 'True');
-begin
-  Result := Bools[B];
-end;
-{$ENDIF KEEP_DEPRECATED}
-
 function FileToString(const FileName: TFileName): AnsiString;
 var
   FS: TFileStream;
@@ -3359,6 +3647,54 @@ begin
   end;
 end;
 
+function StrWord(const S: AnsiString; var Index: SizeInt; out Word: AnsiString): Boolean;
+var
+  Start: SizeInt;
+  C: AnsiChar;
+begin
+  Word := '';
+  if (S = '') then
+  begin
+    Result := True;
+    Exit;
+  end;
+  Start := Index;
+  Result := False;
+  while True do
+  begin
+    C := S[Index];
+    case C of
+      #0:
+        begin
+          if Start <> 0 then
+            Word := Copy(S, Start, Index - Start);
+          Result := True;
+          Exit;
+        end;
+      AnsiSpace, AnsiLineFeed, AnsiCarriageReturn:
+        begin
+          if Start <> 0 then
+          begin
+            Word := Copy(S, Start, Index - Start);
+            Exit;
+          end
+          else
+          begin
+            while CharIsWhiteSpace(C) do
+            begin
+              Inc(Index);
+              C := S[Index];
+            end;
+          end;
+        end;
+    else
+      if Start = 0 then
+        Start := Index;
+      Inc(Index);
+    end;
+  end;
+end;
+
 function StrWord(var S: PAnsiChar; out Word: AnsiString): Boolean;
 var
   Start: PAnsiChar;
@@ -3375,28 +3711,110 @@ begin
   begin
     case S^ of
       #0:
-        begin
-          if Start <> nil then
-            SetString(Word, Start, S - Start);
-          Result := True;
-          Exit;
-        end;
+      begin
+        if Start <> nil then
+          SetString(Word, Start, S - Start);
+        Result := True;
+        Exit;
+      end;
       AnsiSpace, AnsiLineFeed, AnsiCarriageReturn:
+      begin
+        if Start <> nil then
         begin
-          if Start <> nil then
-          begin
-            SetString(Word, Start, S - Start);
-            Exit;
-          end
-          else
-            while S^ in [AnsiSpace, AnsiLineFeed, AnsiCarriageReturn] do
-              Inc(S);
-        end;
+          SetString(Word, Start, S - Start);
+          Exit;
+        end
+        else
+          while CharIsWhiteSpace(S^) do
+            Inc(S);
+      end;
     else
       if Start = nil then
         Start := S;
       Inc(S);
     end;
+  end;
+end;
+
+function StrIdent(const S: AnsiString; var Index: SizeInt; out Ident: AnsiString): Boolean;
+var
+  Start: SizeInt;
+  C: AnsiChar;
+begin
+  Ident := '';
+  if (S = '') then
+  begin
+    Result := True;
+    Exit;
+  end;
+  Start := Index;
+  Result := False;
+  while True do
+  begin
+    C := S[Index];
+    if CharIsValidIdentifierLetter(C) then
+    begin
+      if Start = 0 then
+        Start := Index;
+    end
+    else
+    if C = #0 then
+    begin
+      if Start <> 0 then
+        Ident := Copy(S, Start, Index - Start);
+      Result := True;
+      Exit;
+    end
+    else
+    begin
+      if Start <> 0 then
+      begin
+        Ident := Copy(S, Start, Index - Start);
+        Exit;
+      end;
+    end;
+    Inc(Index);
+  end;
+end;
+
+function StrIdent(var S: PAnsiChar; out Ident: AnsiString): Boolean;
+var
+  Start: PAnsiChar;
+  C: AnsiChar;
+begin
+  Ident := '';
+  if S = nil then
+  begin
+    Result := True;
+    Exit;
+  end;
+  Start := nil;
+  Result := False;
+  while True do
+  begin
+    C := S^;
+    if CharIsValidIdentifierLetter(C) then
+    begin
+      if Start = nil then
+        Start := S;
+    end
+    else
+    if C = #0 then
+    begin
+      if Start <> nil then
+        SetString(Ident, Start, S - Start);
+      Result := True;
+      Exit;
+    end
+    else
+    begin
+      if Start <> nil then
+      begin
+        SetString(Ident, Start, S - Start);
+        Exit;
+      end
+    end;
+    Inc(S);
   end;
 end;
 
@@ -3408,8 +3826,8 @@ var
   DecSep: AnsiChar;
   ThouSep: AnsiChar;
 begin
-  DecSep := AnsiChar(DecimalSeparator);
-  ThouSep := AnsiChar(ThousandSeparator);
+  DecSep := AnsiChar(JclFormatSettings.DecimalSeparator);
+  ThouSep := AnsiChar(JclFormatSettings.ThousandSeparator);
   Temp := S;
   SwapSeparators := False;
 
