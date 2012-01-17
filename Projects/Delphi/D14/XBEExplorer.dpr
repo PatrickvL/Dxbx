@@ -5,6 +5,13 @@ program XBEExplorer;
 uses
   Forms,
   SysUtils,
+  Winsock,
+  Dialogs,
+  IdHttp,
+  Classes,
+  Controls,
+  ShellApi,
+  Windows,
   uDisassembleViewer in '..\..\..\Source\Delphi\src\Tools\XBEExplorer\uDisassembleViewer.pas',
   uExploreFileSystem in '..\..\..\Source\Delphi\src\Tools\XBEExplorer\uExploreFileSystem.pas' {frmExploreFileSystem},
   uHexViewer in '..\..\..\Source\Delphi\src\Tools\XBEExplorer\uHexViewer.pas',
@@ -30,7 +37,65 @@ uses
 
 {$R *.res}
 
+function IAddrToHostName(const IP: string): string;
+var
+  i: Integer;
+  p: PHostEnt;
 begin
+  Result := '';
+  i      := inet_addr(PAnsiChar(IP));
+  if i <> u_long(INADDR_NONE) then
+  begin
+    p := GetHostByAddr(@i, SizeOf(Integer), PF_INET);
+    if p <> nil then Result := p^.h_name;
+  end
+  else
+    Result := 'Invalid IP address';
+end;
+
+function GetOnlineVersion: string;
+var
+  lHTTP: TIdHTTP;
+  lParamList: TStringList;
+begin
+  lParamList := TStringList.Create;
+  lHTTP := TIdHTTP.Create(nil);
+  try
+    Result := lHTTP.Post('http://dxbx.svn.sourceforge.net/viewvc/dxbx/version.xdktracker', lParamList);
+  finally
+    FreeAndNil(lHTTP);
+    FreeAndNil(lParamList);
+  end;
+end;
+
+var
+  MyVersion: Integer;
+  MyVersionString: string;
+  OnlineVersion: Integer;
+  OnlineVersionString: string;
+  Url: string;
+
+begin
+  // Check for internet connection by getting ip from dns
+  If IAddrToHostName('www.google.com') <> '' then
+  begin
+     MyVersionString := _XBE_EXPLORER_VERSION;
+     MyVersionString := StringReplace(MyVersionString, '.', '', [rfReplaceAll]);
+     MyVersion := StrToInt(MyVersionString);
+
+     OnlineVersionString := GetOnlineVersion;
+     OnlineVersion := StrToInt(StringReplace(OnlineVersionString, '.', '', [rfReplaceAll]));
+     if MyVersion < OnlineVersion then
+     begin
+       if (MessageDlg('There is a new version of Xbe Explorer, do you want to download it ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
+       begin
+         Url := 'http://sourceforge.net/projects/dxbx/files/XBE%20Explorer/' + OnlineVersionString + '%20Release/';
+         ShellExecute(0, 'open', PChar(Url), nil, nil, SW_SHOWNORMAL);
+         Exit;
+       end;
+     end;
+  end;
+
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TFormXBEExplorer, FormXBEExplorer);

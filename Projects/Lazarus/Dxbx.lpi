@@ -100,17 +100,17 @@
       <Unit6>
         <Filename Value="..\..\Libraries\Pascal\Jcl\Commen\JclSysUtils.pas"/>
         <UnitName Value="JclSysUtils"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="61"/>
-        <CursorPos X="5" Y="67"/>
+        <TopLine Value="2471"/>
+        <CursorPos X="70" Y="2779"/>
         <UsageCount Value="11"/>
         <Loaded Value="True"/>
       </Unit6>
       <Unit7>
         <Filename Value="C:\lazarus\fpc\2.4.2\source\rtl\win32\windows.pp"/>
         <UnitName Value="windows"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
@@ -119,7 +119,7 @@
         <Loaded Value="True"/>
       </Unit7>
     </Units>
-    <JumpHistory Count="29" HistoryIndex="28">
+    <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="..\..\Source\Lazarus\Src\uDxbxUtils.pas"/>
         <Caret Line="1" Column="1" TopLine="1"/>
@@ -236,6 +236,10 @@
         <Filename Value="..\..\Libraries\Pascal\Jcl\Commen\JclSysUtils.pas"/>
         <Caret Line="67" Column="5" TopLine="61"/>
       </Position29>
+      <Position30>
+        <Filename Value="..\..\Libraries\Pascal\Jcl\Commen\JclSysUtils.pas"/>
+        <Caret Line="2775" Column="11" TopLine="2756"/>
+      </Position30>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
