@@ -39,7 +39,7 @@
         <Filename Value="Dxbx.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="Dxbx"/>
-        <UsageCount Value="30"/>
+        <UsageCount Value="31"/>
       </Unit0>
       <Unit1>
         <Filename Value="..\..\Source\Lazarus\Src\mainfrm.pas"/>
@@ -51,7 +51,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="12"/>
-        <UsageCount Value="30"/>
+        <UsageCount Value="31"/>
         <Loaded Value="True"/>
       </Unit1>
       <Unit2>
@@ -62,7 +62,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="183"/>
         <CursorPos X="3" Y="202"/>
-        <UsageCount Value="28"/>
+        <UsageCount Value="29"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
@@ -75,7 +75,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="12" Y="15"/>
-        <UsageCount Value="26"/>
+        <UsageCount Value="27"/>
         <Loaded Value="True"/>
       </Unit3>
       <Unit4>
@@ -103,9 +103,9 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="61"/>
-        <CursorPos X="5" Y="67"/>
-        <UsageCount Value="10"/>
+        <TopLine Value="2756"/>
+        <CursorPos X="11" Y="2775"/>
+        <UsageCount Value="11"/>
         <Loaded Value="True"/>
       </Unit6>
       <Unit7>

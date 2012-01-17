@@ -25,6 +25,13 @@ program Dxbx;
 uses
   SysUtils,
   Forms,
+  Winsock,
+  Dialogs,
+  IdHttp,
+  Classes,
+  Controls,
+  ShellApi,
+  Windows,
   uEmuShared in '..\..\..\Source\Delphi\src\uEmuShared.pas',
   uError in '..\..\..\Source\Delphi\src\uError.pas',
   ufrm_About in '..\..\..\Source\Delphi\src\ufrm_About.pas' {frm_About},
@@ -75,12 +82,72 @@ var
 
 // Here, we create a static dependance on our actual emulation DLL,
 // by importing the function that takes over control and start emulation :
+
+function IAddrToHostName(const IP: string): string;
+var
+  i: Integer;
+  p: PHostEnt;
+begin
+  Result := '';
+  i      := inet_addr(PAnsiChar(IP));
+  if i <> u_long(INADDR_NONE) then
+  begin
+    p := GetHostByAddr(@i, SizeOf(Integer), PF_INET);
+    if p <> nil then Result := p^.h_name;
+  end
+  else
+    Result := 'Invalid IP address';
+end;
+
+function GetOnlineVersion: string;
+var
+  lHTTP: TIdHTTP;
+  lParamList: TStringList;
+begin
+  lParamList := TStringList.Create;
+  lHTTP := TIdHTTP.Create(nil);
+  try
+    Result := lHTTP.Post('http://dxbx.svn.sourceforge.net/viewvc/dxbx/version.dxbx', lParamList);
+  finally
+    FreeAndNil(lHTTP);
+    FreeAndNil(lParamList);
+  end;
+end;
+
 procedure DxbxMain(const aData: Pointer; const aSize: Cardinal); stdcall; external 'DxbxKrnl';
 
 var
   XBEFilePath: string;
   DummyStr: string;
+  MyVersion: Integer;
+  MyVersionString: string;
+  OnlineVersion: Integer;
+  OnlineVersionString: string;
+  Url: string;
 begin
+  // Check for internet connection by getting ip from dns
+  If IAddrToHostName('www.google.com') <> '' then
+  begin
+     MyVersionString := _DXBX_VERSION;
+     MyVersionString := StringReplace(MyVersionString, 'Release', '', [rfReplaceAll]);
+     MyVersionString := StringReplace(MyVersionString, 'Debug', '', [rfReplaceAll]);
+     MyVersionString := StringReplace(MyVersionString, ' ', '', [rfReplaceAll]);
+     MyVersionString := StringReplace(MyVersionString, '.', '', [rfReplaceAll]);
+     MyVersion := StrToInt(MyVersionString);
+
+     OnlineVersionString := GetOnlineVersion;
+     OnlineVersion := StrToInt(StringReplace(OnlineVersionString, '.', '', [rfReplaceAll]));
+     if MyVersion < OnlineVersion then
+     begin
+       if (MessageDlg('There is a new version of Dxbx, do you want to download it ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
+       begin
+         Url := 'http://sourceforge.net/projects/dxbx/files/dxbx/' + OnlineVersionString + '%20Release/';
+         ShellExecute(0, 'open', PChar(Url), nil, nil, SW_SHOWNORMAL);
+         Exit;
+       end;
+     end;
+  end;
+
   XBEFilePath := ParamStr(2);
 
   if (ParamStr(2) = '/SymbolScanOnly') and  (ParamStr(3) <> '') then
