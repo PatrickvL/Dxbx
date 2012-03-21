@@ -204,8 +204,7 @@ type
     procedure UpdateTitleInformation;
     function StartTool(aToolName: string; const aParameters: string = ''): Boolean;
     procedure ShowXbeInfo(const aXbeInfo: TXbeInfo);
-    function LoadXbe(const aFileName: string): Boolean;
-    procedure OpenXbeFile(aFileName: string = '');
+    function LoadXbe(const aFileName: string = ''; updateXmlAndFilter: Boolean = False): Boolean;
   private
     MyXBEList: TStringList;
     ApplicationDir: string;
@@ -1433,7 +1432,7 @@ begin
         or (CompareStr(XbeFiles[i], 'update.xbe') = 0) then
           continue;
 
-        OpenXbeFile(XbeFiles[i]);
+        LoadXbe(XbeFiles[i], True);
         Application.ProcessMessages;
       end;
 
@@ -1557,9 +1556,8 @@ var
 begin
   // Import another gamedata (next to the already loaded version)
   for lIndex :=  MyXBEList.Count -1 downto 0 do
-  begin
     MyXBEList.Delete(lIndex);
-  end;
+
   UpdateFilter;
   SaveXBEList(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aPublishedBy=}'');
 end;
@@ -1572,7 +1570,7 @@ end;
 procedure Tfrm_Main.actOpenXbeExecute(Sender: TObject);
 begin
   if XbeOpenDialog.Execute then
-    OpenXbeFile(XbeOpenDialog.FileName);
+    LoadXbe(XbeOpenDialog.FileName, True);
 end;
 
 procedure Tfrm_Main.actRemoveInvalidFromListExecute(Sender: TObject);
@@ -1782,24 +1780,35 @@ begin
   UpdateTitleInformation;
 end;
 
-function Tfrm_Main.LoadXbe(const aFileName: string): Boolean;
+function Tfrm_Main.LoadXbe(const aFileName: string = ''; updateXmlAndFilter: Boolean = False): Boolean;
+var
+  XbeXml: string;
 begin
   // This is to prevent loading files dropped in to GUI from a container :
   Result := FileExists(aFileName);
   if not Result then
     Exit;
 
-  CloseXbe();
-  Result := OpenXbe(aFileName, {var}DxbxEmu.Xbe);
-  if Result then
-  begin
-    RecentXbeAdd(XbeOpenDialog.FileName);
-    UpdateTitleInformation;
-  end
-  else
-  begin
-    MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
-    UpdateTitleInformation;
+  try
+    CloseXbe();
+    Result := OpenXbe(aFileName, {var}DxbxEmu.Xbe);
+    if Result then
+    begin
+      RecentXbeAdd(XbeOpenDialog.FileName);
+      UpdateTitleInformation;
+    end
+    else
+    begin
+      MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
+      UpdateTitleInformation;
+    end;
+  finally
+    if updateXmlAndFilter then
+    begin
+      DxbxXml.CreateXmlXbeDumpAsText(XbeXml, DxbxEmu.Xbe, aFileName);
+      LoadXBEListByXml(XbeXml);
+      UpdateFilter;
+    end;
   end;
 end; // LoadXbe
 
@@ -1827,8 +1836,7 @@ begin
     Exit;
   end;
 
-  CloseXbe();
-  OpenXbeFile(TempItem.Hint);
+  LoadXbe(TempItem.Hint);
 end; // ReopenXbe
 
 procedure Tfrm_Main.RecentXbeAdd(aFileName: string);
@@ -2149,21 +2157,6 @@ begin
   g_EmuShared.Save;
   AdjustMenu;
 end;
-
-procedure Tfrm_Main.OpenXbeFile(aFileName: string);
-var
-  XbeXml: string;
-begin
-  if FileExists(aFileName) then
-    if LoadXbe(aFileName) then
-    begin
-      DxbxXml.CreateXmlXbeDumpAsText(XbeXml, DxbxEmu.Xbe, aFileName);
-      LoadXBEListByXml(XbeXml);
-      UpdateFilter;
-    end;
-end;
-
-// Tfrm_Main.LoadXBEList
 
 function Tfrm_Main.SendCommandToXdkTracker: Boolean;
 var
