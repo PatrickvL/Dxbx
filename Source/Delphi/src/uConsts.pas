@@ -93,17 +93,11 @@ const
   XBE_SECTIONHEADER_FLAG_HeadPageRO = $00000010;
   XBE_SECTIONHEADER_FLAG_TailPageRO = $00000020;
 
-  XBE_SECTIONNAME_MAXLENGTH = 9;
-
   XBE_LIBRARYVERSION_FLAG_ApprovedNo = $00;
   XBE_LIBRARYVERSION_FLAG_ApprovedPossibly = $20;
   XBE_LIBRARYVERSION_FLAG_ApprovedYes = $40;
   XBE_LIBRARYVERSION_FLAG_ApprovedMask = $60;
   XBE_LIBRARYVERSION_FLAG_DebugBuild = $80;
-
-  XBE_LIBRARYNAME_MAXLENGTH = 8;
-
-  XBE_TITLENAME_MAXLENGTH = 40;
 
   XBE_DebugUnicodeFileName_MAXLENGTH = 40; // ?? 256;
 
@@ -137,11 +131,6 @@ const
   PE_HEADER_ALIGNMENT = $1000; // - Actually, there's no such thing; JclDebug calls this 'ModuleCodeOffset'
 
   // XPR constants
-  
-  XPR_IMAGE_HDR_SIZE = 2048; // 2K
-  XPR_IMAGE_WH = 128; // width and height
-  XPR_IMAGE_DATA_SIZE = (XPR_IMAGE_WH * XPR_IMAGE_WH) div 2; // DXT1 is 4 bits per pixel
-
   XBE_SECTIONNAME_GAMEICON = '$$XTIMAGE';
   XBE_SECTIONNAME_SAVEICON = '$$XSIMAGE';
 

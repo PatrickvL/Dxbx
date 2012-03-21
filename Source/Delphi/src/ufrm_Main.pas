@@ -35,6 +35,7 @@ uses
   // Dxbx
   uTypes,
   uConsts,
+  XbeHeaders,
   uLog,
   uWindows,
   uDxbxUtils,
