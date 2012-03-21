@@ -200,11 +200,9 @@ begin
 
   {var}aXbe := TXbe.Create({aXbe}aFileName);
   try
-    if aXbe.isValid then
-    begin
+    Result := aXbe.isValid;
+    if Result then
       XbeLoaded();
-      Result := True;
-    end;
   except
     FreeAndNil(aXbe);
     raise;
@@ -290,14 +288,14 @@ var
   I: DWord;
   Drive: PLogicalVolume;
 begin
-  FisValid := True;
   ConstructorInit();
 
   Drive := Drives.D;
-  if not Drive.OpenImage(aFileName, {out}FileName) then
+
+  FisValid := Drive.OpenImage(aFileName, {out}FileName);
+  if not FisValid then
   begin
     MessageDlg(DxbxFormat('Could not open path : %s', [aFileName]), mtError, [mbOk], 0);
-    FisValid := False;
     Exit;
   end;
 
@@ -318,10 +316,10 @@ begin
   // verify xbe file was opened
   sFileType := ExtractFileExt(aFileName);
 
-  if MyFile.Size = 0 then
+  FisValid := (MyFile.Size = 0);
+  if not FisValid then
   begin
     MessageDlg(DxbxFormat('Could not open %s file', [sFileType]), mtError, [mbOk], 0);
-    FisValid := False;
     Exit;
   end;
 
@@ -331,10 +329,10 @@ begin
   XbePath := aFileName;
   WriteLog(DxbxFormat('DXBX: Storing %s Path...Ok', [sFileType]));
 
-  if MyFile.Size < SizeOf(m_Header) then
+  FisValid := MyFile.Size < SizeOf(m_Header);
+  if not FisValid then
   begin
     MessageDlg(DxbxFormat('Unexpected end of file while reading %s Image Header', [sFileType]), mtError, [mbOk], 0);
-    FisValid := False;
     Exit;
   end;
 
@@ -343,10 +341,10 @@ begin
   Inc(i, SizeOf(m_Header));
 
   // check xbe image header
-  if m_Header.dwMagic <> _MagicNumber then
+  FisValid := m_Header.dwMagic <> _MagicNumber;
+  if not FisValid then
   begin
     MessageDlg(DxbxFormat('Invalid magic number in %s file', [sFileType]), mtError, [mbOk], 0);
-    FisValid := False;
     Exit;
   end;
 

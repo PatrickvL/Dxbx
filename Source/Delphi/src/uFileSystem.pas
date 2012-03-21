@@ -319,7 +319,10 @@ function TMappedFolderFileSystem.Close(const aFileHandle: TFileHandle): Boolean;
 begin
   Result := Assigned(aFileHandle);
   if Result then
+  begin
+    FileClose(TMappedFileHandle(aFileHandle).Handle);
     aFileHandle.Free;
+  end;
 end;
 
 function TMappedFolderFileSystem.FindFirst(const aFilePath: string = '\*'): TSearchInfo;
