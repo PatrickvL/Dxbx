@@ -41,7 +41,9 @@ uses
   uEmuD3D8Types, // X_D3DBaseTexture
   uFileSystem; // Drives
 
-
+const
+  PE_HEADER_ALIGNMENT = $1000; // - Actually, there's no such thing; JclDebug calls this 'ModuleCodeOffset'
+  _MagicNumber = 'XBEH'; // Xbe File Format
 
 
   // TODO -oDxbx : Remove most dependancies on this TXbe type in OpenXbe and it's callers.
@@ -55,21 +57,21 @@ type
   private
     MyFile: TMemoryStream;
     FRawData: MathPtr;
-    m_KernelLibraryVersion: XBE_LIBRARYVERSION;
-    m_XAPILibraryVersion: XBE_LIBRARYVERSION;
     procedure ConstructorInit;
     function GetFileSize: Int64;
   public
     FIsValid: boolean;
     XbePath: string;
-    m_Header: XBEIMAGE_HEADER;
-    m_Certificate: XBE_CERTIFICATE;
-    m_SectionHeader: array of XBE_SECTIONHEADER;
-    m_LibraryVersion: array of XBE_LIBRARYVERSION;
-    m_szSectionName: array of array of AnsiChar; // TODO -oDXBX: Use XBE_SECTIONNAME_MAXLENGTH
-    m_HeaderEx: array of Byte;
-    m_TLS: PXBE_TLS;
     m_bzSection: array of TRawSection;
+    m_Certificate: XBE_CERTIFICATE;
+    m_Header: XBEIMAGE_HEADER;
+    m_HeaderEx: array of Byte;
+    m_KernelLibraryVersion: XBE_LIBRARYVERSION;
+    m_LibraryVersion: array of XBE_LIBRARYVERSION;
+    m_SectionHeader: array of XBE_SECTIONHEADER;
+    m_szSectionName: array of array of AnsiChar; // TODO -oDXBX: Use XBE_SECTIONNAME_MAXLENGTH
+    m_TLS: PXBE_TLS;
+    m_XAPILibraryVersion: XBE_LIBRARYVERSION;
 
     property RawData: MathPtr read FRawData;
     property FileSize: Int64 read GetFileSize;
@@ -182,14 +184,14 @@ function GetReadableTitle(const pCertificate: PXBE_CERTIFICATE): string;
 begin
   // Use Title, or when that's empty, the parent folder name :
   Result := Trim(PWideCharMaxLenToString(pCertificate.wszTitleName, XBE_TITLENAME_MAXLENGTH));
-  if Result = '' then
-  begin
-    Result := ExtractFileName(g_Xbe_XbePath);
-    if SameText(Result, 'default.xbe') then
-      Result := ExtractFileName(ExtractFileDir(g_Xbe_XbePath))
-    else
-      Result := ChangeFileExt(Result, '');
-  end;
+  if Result <> '' then
+    Exit;
+
+  Result := ExtractFileName(g_Xbe_XbePath);
+  if SameText(Result, 'default.xbe') then
+    Result := ExtractFileName(ExtractFileDir(g_Xbe_XbePath))
+  else
+    Result := ChangeFileExt(Result, '');
 end;
 
 function OpenXbe(aFileName: string; var aXbe: TXbe{; var aExeFileName, aXbeFileName: string}): Boolean;
@@ -386,7 +388,7 @@ begin
 {$IFDEF DXBX_DEBUG}
       DbgPrintf('DXBX: Reading Section Header 0x%.4x... OK', [lIndex]);
 {$ENDIF}
-    end;
+    end; // for LIndex
   end;
 
   // Read xbe section names
@@ -400,7 +402,7 @@ begin
       RawAddr := GetAddr(m_SectionHeader[lIndex].dwSectionNameAddr);
       if RawAddr <> 0 then
       begin
-        for lIndex2 := 0 to XBE_SECTIONNAME_MAXLENGTH-1 do
+        for lIndex2 := 0 to XBE_SECTIONNAME_MAXLENGTH -1 do
         begin
           m_szSectionName[lIndex][lIndex2] := AnsiChar(RawData[RawAddr + lIndex2]);
           if m_szSectionName[lIndex][lIndex2] = #0 then
@@ -427,7 +429,7 @@ begin
       Inc(i, SizeOf(m_LibraryVersion[lIndex]));
 
       WriteLog(DxbxFormat('DXBX: Reading Library Version 0x%.4x... OK', [lIndex]));
-    end;
+    end; // for LIndex
 
     // read xbe kernel library version
     WriteLog('DXBX: Reading Kernel Library Version...');
@@ -444,7 +446,7 @@ begin
       MessageDlg('Could not locate Xapi Library Version', mtError, [mbOk], 0);
 
     i := m_Header.dwXAPILibraryVersionAddr - m_Header.dwBaseAddr;
-    CopyMemory({Dest=}@m_XAPILibraryVersion, @(RawData[i]), SizeOf(XBE_LIBRARYVERSION));
+    CopyMemory({Dest=}@m_XAPILibraryVersion, {Source=}@(RawData[i]), SizeOf(XBE_LIBRARYVERSION));
     WriteLog(DxbxFormat('DXBX: XAPI Library Version = %d... OK', [m_XAPILibraryVersion.wBuildVersion]));
   end;
 

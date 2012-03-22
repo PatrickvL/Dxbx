@@ -61,8 +61,6 @@ const
   XPR1_MAGIC_VALUE = $31525058; // MAKEFOURCC('XPR1'), bHasResourceOffsetsTable = TRUE;
 
   XPR_MAGIC_VALUE = XPR0_MAGIC_VALUE;
-
-  _MagicNumber = 'XBEH'; // Xbe File Format
   XBE_MAGIC_VALUE = $48454258; // "XBEH"
 
   // XOR keys
@@ -128,7 +126,6 @@ const
 
   PE_FILE_ALIGNMENT = $00000020; // Note : Delphi linker uses $200 ! Should we switch?
   PE_SECTION_ALIGNMENT = $00000020; // Note : Delphi linker uses $1000 ! Should we switch?
-  PE_HEADER_ALIGNMENT = $1000; // - Actually, there's no such thing; JclDebug calls this 'ModuleCodeOffset'
 
   // XPR constants
   XBE_SECTIONNAME_GAMEICON = '$$XTIMAGE';
