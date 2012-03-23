@@ -1027,32 +1027,6 @@ begin
   FreeAndNil({var}fmConfiguration);
 end;
 
-function CanRunXbe(const aXbe: TXbe; var NoRunReason: string): Boolean;
-var
-  i: Integer;
-begin
-  NoRunReason := '';
-  if Length(aXbe.m_LibraryVersion) = 0 then
-    NoRunReason := 'No linked libraries found!'
-  else
-    for i := 0 to Length(aXbe.m_LibraryVersion) - 1 do
-    begin
-      if Pos({D3D}'8LTCG', UpperCase(string(AnsiString(aXbe.m_LibraryVersion[i].szName)))) > 0 then
-      begin
-        NoRunReason := 'Cannot patch link-time optimized libraries!';
-        Break;
-      end;
-
-      if Pos({D3D}'8D', UpperCase(string(AnsiString(aXbe.m_LibraryVersion[i].szName)))) > 0 then
-      begin
-        NoRunReason := 'Cannot patch debug libraries!';
-        Break;
-      end;
-    end;
-
-  Result := (NoRunReason = '');
-end;
-
 procedure Tfrm_Main.actStartEmulationExecute(Sender: TObject);
 var
   NoRunReason: string;
@@ -1063,7 +1037,7 @@ begin
     Exit;
   end;
 
-  if CanRunXbe(DxbxEmu.Xbe, {var}NoRunReason) then
+  if DxbxEmu.Xbe.CanRunXbe({out}NoRunReason) then
     LaunchXBE
   else
     MessageDlg('Cannot launch xbe!'#13#10 + NoRunReason, mtError, [mbOk], 0);
@@ -1590,10 +1564,9 @@ begin
     else
     begin
       OpenXbe(TXBEInfo(MyXBEList.Objects[lIndex]).FileName, ThisXbe);
-      if not CanRunXbe(ThisXbe, {var}NoRunReason) then
-      begin
+      if not ThisXbe.CanRunXbe({out}NoRunReason) then
         MyXBEList.Delete(lIndex);
-      end;
+
       FreeAndNil(ThisXbe);
     end;
   end;
@@ -1947,7 +1920,7 @@ begin
         #13 + LibName + StringOfChar(' ', 8 - Length(LibName)) + ':' + Version;
     end;
 
-    if CanRunXbe(DxbxEmu.Xbe, {var}LibName) then
+    if DxbxEmu.Xbe.CanRunXbe({out}LibName) then
     begin
       // Update Xbe compatibility state only if not running already :
       if Emulation_State <> esRunning then
