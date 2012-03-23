@@ -83,6 +83,8 @@ type
 
     function GetTLSData: DWord;
 
+    function CanRunXbe(out NoRunReason: string): Boolean;
+
     function DetermineDumpFileName: string;
     function DumpInformation(FileName: string = ''): Boolean;
 
@@ -318,7 +320,7 @@ begin
   // verify xbe file was opened
   sFileType := ExtractFileExt(aFileName);
 
-  FisValid := (MyFile.Size = 0);
+  FisValid := (MyFile.Size <> 0);
   if not FisValid then
   begin
     MessageDlg(DxbxFormat('Could not open %s file', [sFileType]), mtError, [mbOk], 0);
@@ -331,7 +333,7 @@ begin
   XbePath := aFileName;
   WriteLog(DxbxFormat('DXBX: Storing %s Path...Ok', [sFileType]));
 
-  FisValid := MyFile.Size < SizeOf(m_Header);
+  FisValid := not (MyFile.Size < SizeOf(m_Header));
   if not FisValid then
   begin
     MessageDlg(DxbxFormat('Unexpected end of file while reading %s Image Header', [sFileType]), mtError, [mbOk], 0);
@@ -343,7 +345,7 @@ begin
   Inc(i, SizeOf(m_Header));
 
   // check xbe image header
-  FisValid := m_Header.dwMagic <> _MagicNumber;
+  FisValid := m_Header.dwMagic = _MagicNumber;
   if not FisValid then
   begin
     MessageDlg(DxbxFormat('Invalid magic number in %s file', [sFileType]), mtError, [mbOk], 0);
@@ -516,6 +518,32 @@ begin
   ConstructorInit();
 
   inherited Destroy;
+end;
+
+function TXbe.CanRunXbe(out NoRunReason: string): Boolean;
+var
+  i: Integer;
+begin
+  NoRunReason := '';
+  if Length(m_LibraryVersion) = 0 then
+    NoRunReason := 'No linked libraries found!'
+  else
+    for i := 0 to Length(m_LibraryVersion) - 1 do
+    begin
+      if Pos({D3D}'8LTCG', UpperCase(string(AnsiString(m_LibraryVersion[i].szName)))) > 0 then
+      begin
+        NoRunReason := 'Cannot patch link-time optimized libraries!';
+        Break;
+      end;
+
+      if Pos({D3D}'8D', UpperCase(string(AnsiString(m_LibraryVersion[i].szName)))) > 0 then
+      begin
+        NoRunReason := 'Cannot patch debug libraries!';
+        Break;
+      end;
+    end;
+
+  Result := (NoRunReason = '');
 end;
 
 function TXbe.GetTLSData: DWord;
