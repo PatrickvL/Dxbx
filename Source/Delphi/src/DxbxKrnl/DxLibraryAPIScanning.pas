@@ -1968,7 +1968,7 @@ begin
           // + CRC32 over XbeHeader :
           + '_' + IntToHex(CRC32(PByte(pXbeHeader), {Len=}pXbeHeader.dwSizeofHeaders), 8)
           // TitleName
-          + '_' + GetReadableTitle(m_Certificate)
+          + '_' + FixInvalidFilePath(GetReadableTitle(m_Certificate))
           + SymbolCacheFileExt;
   ReinitExeImageHeader;
 end;

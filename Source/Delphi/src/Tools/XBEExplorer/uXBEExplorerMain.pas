@@ -31,6 +31,7 @@ uses
   Math, // Min
   ShellAPI, // DragQueryFile
   ExtDlgs, // TSavePictureDialog
+  System.Actions,
   // Dxbx
   uConsts,
   uTypes,
@@ -556,7 +557,7 @@ begin
           // TODO : + CRC32 over XbeHeader :
           + '_*'
           // TitleName
-          + '_' + GetReadableTitle(@MyXBE.m_Certificate)
+          + '_' + FixInvalidFilePath(GetReadableTitle(@MyXBE.m_Certificate))
           + SymbolCacheFileExt;
   if SysUtils.FindFirst(CacheFileName, faAnyFile, SearchRec) = 0 then
   begin
