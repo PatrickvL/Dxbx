@@ -26,9 +26,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
-{ Revision:      $Rev:: 3594                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -97,9 +97,9 @@ function JclBelongsHookedCode(Address: Pointer): Boolean;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/windows/JclHookExcept.pas $';
-    Revision: '$Revision: 3594 $';
-    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -366,8 +366,13 @@ const
 begin
   if ((ExceptionFlags = cNonContinuable) or (ExceptionFlags = cNonContinuableException)) and
     (ExceptionCode = cDelphiException) and
-    (NumberOfArguments in [DelphiNumberOfArguments,CBuilderNumberOfArguments]) and
-    (TJclAddr(Arguments) = TJclAddr(@Arguments) + SizeOf(Pointer)) then
+    (NumberOfArguments in [DelphiNumberOfArguments, CBuilderNumberOfArguments])
+    //TODO: The difference for Win64 is bigger than 100 Byte and the comment of JVCS revision 0.3 of
+    //  JclDebug.pas, where HookedRaiseException has been added by Petr, isn't very informative
+    {$IFDEF CPU32}
+    and (TJclAddr(Arguments) = TJclAddr(@Arguments) + SizeOf(Pointer))
+    {$ENDIF CPU32}
+    then
   begin
     DoExceptNotify(Arguments.ExceptObj, Arguments.ExceptAddr, False, GetFramePointer);
   end;
@@ -569,20 +574,21 @@ begin
   NewResultExc := NewExceptObj;
 end;
 
+{$IFDEF BORLAND}
 function GetCppRtlBase: Pointer;
 const
   {$IFDEF COMPILER6} { Delphi/C++Builder 6 }
   CppRtlVersion = 60;
   {$ELSE ~COMPILER6}
-  {$IF (RtlVersion > 18.0) and (RtlVersion < 19.0)} { Delphi/C++Builder 2007 were aiming for
-                                                      binary compatibility with BDS2006, which
-                                                      complicates things a bit }
+  {$IFDEF RTL185} { Delphi/C++Builder 2007 were aiming for
+                    binary compatibility with BDS2006, which
+                    complicates things a bit }
   CppRtlVersion = 80;
-  {$ELSE}
+  {$ELSE ~RTL185}
   { Successive RTLDLL version numbers in the remaining cases: CB2006 has cc3270mt.dll,
     CB2009 (= CB2006 + 2 releases) has cc3290mt.dll, CB2010 has cc32100mt.dll etc. }
   CppRtlVersion = 70 + Trunc(RtlVersion - 18.0) * 10;
-  {$IFEND}
+  {$ENDIF ~RTL185}
   {$ENDIF ~COMPILER6}
 begin
   Result := Pointer(GetModuleHandle(PChar(Format('cc32%dmt.dll', [CppRtlVersion]))));
@@ -595,6 +601,7 @@ function HasCppRtl: Boolean;
 begin
   Result := GetCppRtlBase <> TJclPeMapImgHooks.SystemBase;
 end;
+{$ENDIF BORLAND}
 
 function JclHookExceptions: Boolean;
 var
@@ -604,8 +611,10 @@ begin
   { Detect C++Builder applications and C++ packages loaded into Delphi applications.
     Hook the C++ RTL regardless of ExceptionsHooked so that users can call JclHookException() after
     loading a C++ package which might pull in the C++ RTL DLL. }
+  {$IFDEF BORLAND}
   if HasCppRtl then
-    TJclPeMapImgHooks.ReplaceImport (GetCppRtlBase, kernel32, RaiseExceptionAddressCache, @HookedRaiseException);
+    TJclPeMapImgHooks.ReplaceImport(GetCppRtlBase, kernel32, RaiseExceptionAddressCache, @HookedRaiseException);
+  {$ENDIF BORLAND}
   if not ExceptionsHooked then
   begin
     Recursive := False;
@@ -631,8 +640,10 @@ end;
 
 function JclUnhookExceptions: Boolean;
 begin
+  {$IFDEF BORLAND}
   if HasCppRtl then
     TJclPeMapImgHooks.ReplaceImport (GetCppRtlBase, kernel32, @HookedRaiseException, @Kernel32_RaiseException);
+  {$ENDIF BORLAND}
   if ExceptionsHooked then
   begin
     with TJclPeMapImgHooks do

@@ -1,0 +1,9 @@
+*.identcache
+*.local
+*.ico
+*.res
+*.otares
+*.exe
+*.map
+*.dcu
+*.drc

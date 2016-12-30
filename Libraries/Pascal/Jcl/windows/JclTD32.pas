@@ -28,9 +28,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
-{ Revision:      $Rev:: 3594                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -861,9 +861,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/windows/JclTD32.pas $';
-    Revision: '$Revision: 3594 $';
-    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -911,7 +911,7 @@ end;
 constructor TJclTD32SourceModuleInfo.Create(pSrcFile: PSourceFileEntry; Base: TJclAddr);
 type
   PArrayOfWord = ^TArrayOfWord;
-  TArrayOfWord = array [0..0] of Word;
+  TArrayOfWord = array [0..MaxInt div SizeOf(Word) - 1] of Word;
 var
   I, J: Integer;
   pLineEntry: PLineMappingEntry;

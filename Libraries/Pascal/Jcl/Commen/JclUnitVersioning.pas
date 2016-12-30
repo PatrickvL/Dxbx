@@ -25,9 +25,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
-{ Revision:      $Rev:: 3594                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -155,9 +155,9 @@ procedure ExportUnitVersioningToFile(iFileName : string);
 
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/common/JclUnitVersioning.pas $';
-    Revision: '$Revision: 3594 $';
-    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -168,6 +168,7 @@ implementation
 uses
   // make TObjectList functions inlined
   {$IFDEF HAS_UNITSCOPE}
+  System.Types, // inlining of TObjectList.Remove
   System.Classes,
   {$ELSE ~HAS_UNITSCOPE}
   Classes,
@@ -683,18 +684,11 @@ begin
   UnitVersioningFinalized := True;
   try
     if UnitVersioningNPA <> nil then
-    begin
-      UnitVersioningMutex.WaitFor(INFINITE);
-      try
-        UnitVersioningNPA^ := nil;
-        SharedCloseMem(UnitVersioningNPA);
-      finally
-        UnitVersioningMutex.Release;
-      end;
-    end;
+      SharedCloseMem(UnitVersioningNPA);
     if (GlobalUnitVersioning <> nil) and UnitVersioningOwner then
-      GlobalUnitVersioning.Free;
-    GlobalUnitVersioning := nil;
+      FreeAndNil(GlobalUnitVersioning)
+    else
+      GlobalUnitVersioning := nil;
   except
     // ignore - should never happen
   end;

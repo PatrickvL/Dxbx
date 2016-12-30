@@ -33,9 +33,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
-{ Revision:      $Rev:: 3594                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -342,9 +342,9 @@ function MultiSzDup(const Source: PWideMultiSz): PWideMultiSz;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/common/JclWideStrings.pas $';
-    Revision: '$Revision: 3594 $';
-    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -371,9 +371,7 @@ uses
   {$ENDIF MSWINDOWS}
   Math,
   {$ENDIF ~HAS_UNITSCOPE}
-  {$IFNDEF UNICODE_RTL_DATABASE}
   JclUnicode,
-  {$ENDIF ~UNICODE_RTL_DATABASE}
   JclResources;
 
 procedure SwapWordByteOrder(P: PWideChar; Len: SizeInt);
@@ -847,11 +845,11 @@ asm
        // --> RCX Str
        XOR     RAX, RAX // clear high order byte to be able to use 64bit operand below
 @@1:
-       MOV     AX, WORD PTR [ECX]
+       MOV     AX, WORD PTR [RCX]
        OR      RAX, RAX
        JZ      @@2
        XCHG    AL, AH
-       MOV     WORD PTR [ECX], AX
+       MOV     WORD PTR [RCX], AX
        ADD     ECX, 2
        JMP     @@1
 @@2:

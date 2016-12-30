@@ -11,13 +11,13 @@
 {  The Original Code is: crossplatform.inc, released on 2004-05-16.                                }
 {                                                                                                  }
 {  You may retrieve the latest version of this file at the JCL home page,                          }
-{  located at http://jcl.sourceforge.net/                                                          }
+{  located at https://github.com/project-jedi/jcl                                                  }
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-08-16 13:55:02 +0200 (sam., 16 août 2008)                         $ }
-{ Revision:      $Rev:: 2423                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 

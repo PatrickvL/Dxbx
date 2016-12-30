@@ -33,9 +33,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                        $ }
-{ Revision:      $Rev:: 3594                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -55,7 +55,7 @@ uses
   {$ELSE ~HAS_UNITSCOPE}
   Windows, Classes, SysUtils, TypInfo, Contnrs,
   {$ENDIF ~HAS_UNITSCOPE}
-  JclBase, JclDateTime, JclFileUtils, JclSysInfo, JclWin32;
+  JclBase, JclDateTime, JclFileUtils, JclWin32;
 
 type
   // Smart name compare function
@@ -596,6 +596,7 @@ type
     FStatus: TJclPeImageStatus;
     FTarget: TJclPeTarget;
     FVersionInfo: TJclFileVersionInfo;
+    FStringTable: TStringList;
     function GetCertificateList: TJclPeCertificateList;
     function GetCLRHeader: TJclPeCLRHeader;
     function GetDebugList: TJclPeDebugList;
@@ -620,7 +621,11 @@ type
     function GetVersionInfo: TJclFileVersionInfo;
     function GetVersionInfoAvailable: Boolean;
     procedure ReadImageSections;
+    procedure ReadStringTable;
     procedure SetFileName(const Value: TFileName);
+    function GetStringTableCount: Integer;
+    function GetStringTableItem(Index: Integer): string;
+    function GetImageSectionFullNames(Index: Integer): string;
   protected
     procedure AfterOpen; dynamic;
     procedure CheckNotAttached;
@@ -640,6 +645,7 @@ type
     function DirectoryEntryToData(Directory: Word): Pointer;
     function GetSectionHeader(const SectionName: string; out Header: PImageSectionHeader): Boolean;
     function GetSectionName(Header: PImageSectionHeader): string;
+    function GetNameInStringTable(Offset: ULONG): string;
     function IsBrokenFormat: Boolean;
     function IsCLR: Boolean;
     function IsSystemImage: Boolean;
@@ -673,11 +679,14 @@ type
     property ImageSectionCount: Integer read GetImageSectionCount;
     property ImageSectionHeaders[Index: Integer]: TImageSectionHeader read GetImageSectionHeaders;
     property ImageSectionNames[Index: Integer]: string read GetImageSectionNames;
+    property ImageSectionFullNames[Index: Integer]: string read GetImageSectionFullNames;
     property ImageSectionNameFromRva[const Rva: DWORD]: string read GetImageSectionNameFromRva;
     property ImportList: TJclPeImportList read GetImportList;
     property LoadConfigValues[Index: TJclLoadConfig]: string read GetLoadConfigValues;
     property LoadedImage: TLoadedImage read FLoadedImage;
     property MappedAddress: TJclAddr read GetMappedAddress;
+    property StringTableCount: Integer read GetStringTableCount;
+    property StringTable[Index: Integer]: string read GetStringTableItem;
     // use the following properties
     // property OptionalHeader: TImageOptionalHeader
     property OptionalHeader32: TImageOptionalHeader32 read GetOptionalHeader32;
@@ -1090,9 +1099,9 @@ function PeUnmangleName(const Name: string; out Unmangled: string): TJclPeUmResu
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/windows/JclPeImage.pas $';
-    Revision: '$Revision: 3594 $';
-    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1104,6 +1113,7 @@ implementation
 uses
   {$IFDEF HAS_UNITSCOPE}
   System.RTLConsts,
+  System.Types, // for inlining TList.Remove
   {$IFDEF HAS_UNIT_CHARACTER}
   System.Character,
   {$ENDIF HAS_UNIT_CHARACTER}
@@ -1113,7 +1123,7 @@ uses
   Character,
   {$ENDIF HAS_UNIT_CHARACTER}
   {$ENDIF ~HAS_UNITSCOPE}
-  JclLogic, JclResources, JclSysUtils, JclStrings, JclStringConversions;
+  JclLogic, JclResources, JclSysUtils, JclAnsiStrings, JclStrings, JclStringConversions;
 
 const
   MANIFESTExtension = '.manifest';
@@ -1796,11 +1806,16 @@ begin
     DelayImportDesc := DirectoryEntryToData(IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
     if DelayImportDesc <> nil then
     begin
-      case Target of
-        taWin32:
-          CreateDelayImportList32(DelayImportDesc);
-        taWin64:
-          CreateDelayImportList64(DelayImportDesc);
+      try
+        case Target of
+          taWin32:
+            CreateDelayImportList32(DelayImportDesc);
+          taWin64:
+            CreateDelayImportList64(DelayImportDesc);
+        end;
+      except
+        on E: EAccessViolation do // Mantis #6177. Some users seem to have module loaded that is broken
+          ; // ignore
       end;
     end;
     BoundImports := DirectoryEntryToData(IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT);
@@ -3078,12 +3093,15 @@ begin
   FNoExceptions := ANoExceptions;
   FReadOnlyAccess := True;
   FImageSections := TStringList.Create;
+  FStringTable := TStringList.Create;
 end;
 
 destructor TJclPeImage.Destroy;
 begin
   Clear;
   FreeAndNil(FImageSections);
+  FStringTable.Free;
+
   inherited Destroy;
 end;
 
@@ -3117,6 +3135,7 @@ procedure TJclPeImage.AttachLoadedModule(const Handle: HMODULE);
       FLoadedImage.fDOSImage := False;
       FLoadedImage.SizeOfImage := NtHeaders^.OptionalHeader.SizeOfImage;
       ReadImageSections;
+      ReadStringTable;
       AfterOpen;
     end;
     RaiseStatusException;
@@ -3147,6 +3166,7 @@ procedure TJclPeImage.AttachLoadedModule(const Handle: HMODULE);
       FLoadedImage.fDOSImage := False;
       FLoadedImage.SizeOfImage := NtHeaders^.OptionalHeader.SizeOfImage;
       ReadImageSections;
+      ReadStringTable;
       AfterOpen;
     end;
     RaiseStatusException;
@@ -3190,6 +3210,7 @@ end;
 procedure TJclPeImage.Clear;
 begin
   FImageSections.Clear;
+  FStringTable.Clear;
   FreeAndNil(FCertificateList);
   FreeAndNil(FCLRHeader);
   FreeAndNil(FDebugList);
@@ -3645,6 +3666,15 @@ begin
   Result := FImageSections.Count;
 end;
 
+function TJclPeImage.GetImageSectionFullNames(Index: Integer): string;
+var
+  Offset: Integer;
+begin
+  Result := ImageSectionNames[Index];
+  if (Length(Result) > 0) and (Result[1] = '/') and TryStrToInt(Copy(Result, 2, MaxInt), Offset) then
+    Result := GetNameInStringTable(Offset);
+end;
+
 function TJclPeImage.GetImageSectionHeaders(Index: Integer): TImageSectionHeader;
 begin
   Result := PImageSectionHeader(FImageSections.Objects[Index])^;
@@ -3774,6 +3804,25 @@ begin
     Result := 0;
 end;
 
+function TJclPeImage.GetNameInStringTable(Offset: ULONG): string;
+var
+  Index: Integer;
+begin
+  Dec(Offset, SizeOf(ULONG));
+  Index := 0;
+  while (Offset > 0) and (Index < FStringTable.Count) do
+  begin
+    Dec(Offset, Length(FStringTable[Index]) + 1);
+    if Offset > 0 then
+      Inc(Index);
+  end;
+
+  if Offset = 0 then
+    Result := FStringTable[Index]
+  else
+    Result := '';
+end;
+
 function TJclPeImage.GetOptionalHeader32: TImageOptionalHeader32;
 begin
   if Target = taWin32 then
@@ -3836,6 +3885,16 @@ begin
     Result := ''
   else
     Result := FImageSections[I];
+end;
+
+function TJclPeImage.GetStringTableCount: Integer;
+begin
+  Result := FStringTable.Count;
+end;
+
+function TJclPeImage.GetStringTableItem(Index: Integer): string;
+begin
+  Result := FStringTable[Index];
 end;
 
 function TJclPeImage.GetUnusedHeaderBytes: TImageDataDirectory;
@@ -4084,6 +4143,41 @@ begin
   end;
 end;
 
+procedure TJclPeImage.ReadStringTable;
+var
+  SymbolTable: DWORD;
+  StringTablePtr: PAnsiChar;
+  Ptr: PAnsiChar;
+  ByteSize: ULONG;
+  Start: PAnsiChar;
+  StringEntry: AnsiString;
+begin
+  SymbolTable := LoadedImage.FileHeader.FileHeader.PointerToSymbolTable;
+  if SymbolTable = 0 then
+    Exit;
+
+  StringTablePtr := PAnsiChar(LoadedImage.MappedAddress) +
+                    SymbolTable +
+                    (LoadedImage.FileHeader.FileHeader.NumberOfSymbols * SizeOf(IMAGE_SYMBOL));
+
+  ByteSize := PULONG(StringTablePtr)^;
+  Ptr := StringTablePtr + SizeOf(ByteSize);
+
+  while Ptr < StringTablePtr + ByteSize do
+  begin
+    Start := Ptr;
+    while (Ptr^ <> #0) and (Ptr < StringTablePtr + ByteSize) do
+      Inc(Ptr);
+    if Start <> Ptr then
+    begin
+      SetLength(StringEntry, Ptr - Start);
+      Move(Start^, StringEntry[1], Ptr - Start);
+      FStringTable.Add(string(StringEntry));
+    end;
+    Inc(Ptr); // to skip the #0 character
+  end;
+end;
+
 function TJclPeImage.ResourceItemCreate(AEntry: PImageResourceDirectoryEntry;
   AParentItem: TJclPeResourceItem): TJclPeResourceItem;
 begin
@@ -4175,6 +4269,7 @@ begin
       begin
         FStatus := stOk;
         ReadImageSections;
+        ReadStringTable;
         AfterOpen;
       end
       else
@@ -5181,7 +5276,7 @@ function PeInsertSection(const FileName: TFileName; SectionStream: TStream; Sect
       // JCLDEBUG Section name
       if not TryStringToUTF8(SectionName, UTF8Name) then
         UTF8Name := TUTF8String(SectionName);
-      StrPLCopy(PAnsiChar(@NewSection^.Name), UTF8Name, IMAGE_SIZEOF_SHORT_NAME);
+      StrPLCopyA(PAnsiChar(@NewSection^.Name), UTF8Name, IMAGE_SIZEOF_SHORT_NAME);
       // JCLDEBUG Characteristics flags
       NewSection^.Characteristics := IMAGE_SCN_MEM_READ or IMAGE_SCN_CNT_INITIALIZED_DATA;
 
@@ -5203,7 +5298,7 @@ function PeInsertSection(const FileName: TFileName; SectionStream: TStream; Sect
       // Note: Delphi linker seems to generate incorrect (unaligned) size of
       // the executable when adding TD32 debug data so the position could be
       // behind the size of the file then.
-      ImageStream.Seek(NewSection^.PointerToRawData, soFromBeginning);
+      ImageStream.Seek(NewSection^.PointerToRawData, soBeginning);
       ImageStream.CopyFrom(SectionStream, 0);
       X := 0;
       for I := 1 to NeedFill do
@@ -5252,7 +5347,7 @@ function PeInsertSection(const FileName: TFileName; SectionStream: TStream; Sect
       // JCLDEBUG Section name
       if not TryStringToUTF8(SectionName, UTF8Name) then
         UTF8Name := TUTF8String(SectionName);
-      StrPLCopy(PAnsiChar(@NewSection^.Name), UTF8Name, IMAGE_SIZEOF_SHORT_NAME);
+      StrPLCopyA(PAnsiChar(@NewSection^.Name), UTF8Name, IMAGE_SIZEOF_SHORT_NAME);
       // JCLDEBUG Characteristics flags
       NewSection^.Characteristics := IMAGE_SCN_MEM_READ or IMAGE_SCN_CNT_INITIALIZED_DATA;
 
@@ -5274,7 +5369,7 @@ function PeInsertSection(const FileName: TFileName; SectionStream: TStream; Sect
       // Note: Delphi linker seems to generate incorrect (unaligned) size of
       // the executable when adding TD32 debug data so the position could be
       // behind the size of the file then.
-      ImageStream.Seek(NewSection^.PointerToRawData, soFromBeginning);
+      ImageStream.Seek(NewSection^.PointerToRawData, soBeginning);
       ImageStream.CopyFrom(SectionStream, 0);
       X := 0;
       for I := 1 to NeedFill do
@@ -6043,7 +6138,7 @@ begin
     P := PAnsiChar(UTF8Name);
     Header := PeMapImgSections32(NtHeaders);
     for I := 1 to NtHeaders^.FileHeader.NumberOfSections do
-      if StrLComp(PAnsiChar(@Header^.Name), P, IMAGE_SIZEOF_SHORT_NAME) = 0 then
+      if StrLCompA(PAnsiChar(@Header^.Name), P, IMAGE_SIZEOF_SHORT_NAME) = 0 then
       begin
         Result := Header;
         Break;
@@ -6069,7 +6164,7 @@ begin
     P := PAnsiChar(UTF8Name);
     Header := PeMapImgSections64(NtHeaders);
     for I := 1 to NtHeaders^.FileHeader.NumberOfSections do
-      if StrLComp(PAnsiChar(@Header^.Name), P, IMAGE_SIZEOF_SHORT_NAME) = 0 then
+      if StrLCompA(PAnsiChar(@Header^.Name), P, IMAGE_SIZEOF_SHORT_NAME) = 0 then
       begin
         Result := Header;
         Break;
@@ -6091,7 +6186,7 @@ begin
       UTF8Name := TUTF8String(SectionName);
     P := PAnsiChar(UTF8Name);
     for Result := Low(ImageSectionHeaders) to High(ImageSectionHeaders) do
-      if StrLComp(PAnsiChar(@ImageSectionHeaders[Result].Name), P, IMAGE_SIZEOF_SHORT_NAME) = 0 then
+      if StrLCompA(PAnsiChar(@ImageSectionHeaders[Result].Name), P, IMAGE_SIZEOF_SHORT_NAME) = 0 then
         Exit;
   end;
   Result := -1;
@@ -6165,7 +6260,12 @@ type
   PPackageThunk = ^TPackageThunk;
   TPackageThunk = packed record
     JmpInstruction: Word;
+  {$IFDEF CPU32}
     JmpAddress: PPointer;
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+    JmpOffset: Int32;
+  {$ENDIF CPU64}
   end;
 begin
   if not IsCompiledWithPackages then
@@ -6173,7 +6273,13 @@ begin
   else
   if not IsBadReadPtr(Address, SizeOf(TPackageThunk)) and
     (PPackageThunk(Address)^.JmpInstruction = JmpInstructionCode) then
+  {$IFDEF CPU32}
     Result := PPackageThunk(Address)^.JmpAddress^
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+    Result := PPointer(PByte(Address) + SizeOf(TPackageThunk) +
+      PPackageThunk(Address)^.JmpOffset)^
+  {$ENDIF CPU64}
   else
     Result := nil;
 end;
@@ -6386,26 +6492,36 @@ end;
 
 class function TJclPeMapImgHooks.ReplaceImport(Base: Pointer; const ModuleName: string;
   FromProc, ToProc: Pointer): Boolean;
-// TODO: 64 bit version
 var
+  {$IFDEF CPU32}
   FromProcDebugThunk32, ImportThunk32: PWin9xDebugThunk32;
   IsThunked: Boolean;
-  NtHeader32: PImageNtHeaders32;
+  NtHeader: PImageNtHeaders32;
+  ImportEntry: PImageThunkData32;
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  NtHeader: PImageNtHeaders64;
+  ImportEntry: PImageThunkData64;
+  {$ENDIF CPU64}
   ImportDir: TImageDataDirectory;
   ImportDesc: PImageImportDescriptor;
   CurrName, RefName: PAnsiChar;
-  ImportEntry32: PImageThunkData32;
   FoundProc: Boolean;
   WrittenBytes: Cardinal;
   UTF8Name: TUTF8String;
 begin
   Result := False;
+  {$IFDEF CPU32}
   FromProcDebugThunk32 := PWin9xDebugThunk32(FromProc);
-  IsThunked := not IsWinNT and IsWin9xDebugThunk(FromProcDebugThunk32);
-  NtHeader32 := PeMapImgNtHeaders32(Base);
-  if NtHeader32 = nil then
+  IsThunked := (Win32Platform <> VER_PLATFORM_WIN32_NT) and IsWin9xDebugThunk(FromProcDebugThunk32);
+  NtHeader := PeMapImgNtHeaders32(Base);
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  NtHeader := PeMapImgNtHeaders64(Base);
+  {$ENDIF CPU64}
+  if NtHeader = nil then
     Exit;
-  ImportDir := NtHeader32.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
+  ImportDir := NtHeader.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
   if ImportDir.VirtualAddress = 0 then
     Exit;
   ImportDesc := PImageImportDescriptor(TJclAddr(Base) + ImportDir.VirtualAddress);
@@ -6415,21 +6531,28 @@ begin
   while ImportDesc^.Name <> 0 do
   begin
     CurrName := PAnsiChar(Base) + ImportDesc^.Name;
-    if StrIComp(CurrName, RefName) = 0 then
+    if StrICompA(CurrName, RefName) = 0 then
     begin
-      ImportEntry32 := PImageThunkData32(TJclAddr(Base) + ImportDesc^.FirstThunk);
-      while ImportEntry32^.Function_ <> 0 do
+      {$IFDEF CPU32}
+      ImportEntry := PImageThunkData32(TJclAddr(Base) + ImportDesc^.FirstThunk);
+      {$ENDIF CPU32}
+      {$IFDEF CPU64}
+      ImportEntry := PImageThunkData64(TJclAddr(Base) + ImportDesc^.FirstThunk);
+      {$ENDIF CPU64}
+      while ImportEntry^.Function_ <> 0 do
       begin
+        {$IFDEF CPU32}
         if IsThunked then
         begin
-          ImportThunk32 := PWin9xDebugThunk32(ImportEntry32^.Function_);
+          ImportThunk32 := PWin9xDebugThunk32(ImportEntry^.Function_);
           FoundProc := IsWin9xDebugThunk(ImportThunk32) and (ImportThunk32^.Addr = FromProcDebugThunk32^.Addr);
         end
         else
-          FoundProc := Pointer(ImportEntry32^.Function_) = FromProc;
+        {$ENDIF CPU32}
+          FoundProc := Pointer(ImportEntry^.Function_) = FromProc;
         if FoundProc then
-          Result := WriteProtectedMemory(@ImportEntry32^.Function_, @ToProc, SizeOf(ToProc), WrittenBytes);
-        Inc(ImportEntry32);
+          Result := WriteProtectedMemory(@ImportEntry^.Function_, @ToProc, SizeOf(ToProc), WrittenBytes);
+        Inc(ImportEntry);
       end;
     end;
     Inc(ImportDesc);
@@ -6538,6 +6661,48 @@ end;
 
 // Borland BPL packages name unmangling
 
+{$IFDEF CPU64}
+function PeBorUnmangleName(const Name: string; out Unmangled: string;
+  out Description: TJclBorUmDescription; out BasePos: Integer): TJclBorUmResult;
+var
+  CurPos: Integer;
+  EndPos: Integer;
+  Len: Integer;
+  PrevBasePos: Integer;
+begin
+  if (Length(Name) > 3) and (Name[1] = '_') and (Name[2] = 'Z') and (Name[3] = 'N') then
+  begin
+    Result := urOk;
+    CurPos := 4;
+    BasePos := 0;
+    PrevBasePos := 0;
+    while CurPos < Length(Name) do
+    begin
+      EndPos := CurPos;
+      while CharInSet(Name[EndPos], ['0'..'9']) do
+        Inc(EndPos);
+      if not TryStrToInt(Copy(Name, CurPos, EndPos - CurPos), Len) then
+        Break;
+      BasePos := PrevBasePos;
+      PrevBasePos := Length(Unmangled);
+      if Unmangled <> '' then
+        Unmangled := Unmangled + '.';
+      Unmangled := Unmangled + Copy(Name, EndPos, Len);
+      CurPos := EndPos + Len;
+    end;
+    if BasePos = 0 then
+      BasePos := PrevBasePos + 2
+    else
+      BasePos := BasePos + 2;
+    Description.Kind := skFunction;
+    Description.Modifiers := [];
+  end
+  else
+    Result := urNotMangled;
+end;
+{$ENDIF CPU64}
+
+{$IFDEF CPU32}
 function PeBorUnmangleName(const Name: string; out Unmangled: string;
   out Description: TJclBorUmDescription; out BasePos: Integer): TJclBorUmResult;
 var
@@ -6581,7 +6746,7 @@ var
 
   procedure ReadRTTI;
   begin
-    if StrLComp(NameP, '$xp$', 4) = 0 then
+    if StrLCompA(NameP, '$xp$', 4) = 0 then
     begin
       Inc(NameP, 4);
       Description.Kind := skRTTI;
@@ -6693,10 +6858,11 @@ begin
     Result := urError;
   end;
   NameU^ := #0;
-  SetLength(UTF8Unmangled, {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.StrLen(PAnsiChar(UTF8Unmangled))); // SysUtils prefix due to compiler bug
+  SetLength(UTF8Unmangled, StrLenA(PAnsiChar(UTF8Unmangled))); // SysUtils prefix due to compiler bug
   if not TryUTF8ToString(UTF8Unmangled, Unmangled) then
     Unmangled := string(UTF8Unmangled);
 end;
+{$ENDIF CPU32}
 
 function PeBorUnmangleName(const Name: string; out Unmangled: string;
   out Description: TJclBorUmDescription): TJclBorUmResult;
@@ -6782,7 +6948,7 @@ begin
   if Assigned(UndecorateSymbolNameW) then
   begin
     SetLength(WideBuffer, BufferSize);
-    Res := UnDecorateSymbolNameW(PWideChar(WideString(DecoratedName)), PWideChar(WideBuffer), BufferSize, Flags);
+    Res := UnDecorateSymbolNameW(PWideChar({$IFNDEF UNICODE}WideString{$ENDIF}(DecoratedName)), PWideChar(WideBuffer), BufferSize, Flags);
     if Res > 0 then
     begin
       StrResetLength(WideBuffer);
@@ -6802,6 +6968,10 @@ begin
       Result := True;
     end;
   end;
+
+  // For some functions UnDecorateSymbolName returns 'long'
+  if Result and (UnMangled = 'long') then
+    UnMangled := DecoratedName;
 end;
 
 function PeUnmangleName(const Name: string; out Unmangled: string): TJclPeUmResult;

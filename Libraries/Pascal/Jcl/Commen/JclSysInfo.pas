@@ -50,9 +50,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
-{ Revision:      $Rev:: 3594                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -95,6 +95,7 @@ type
 
 function DelEnvironmentVar(const Name: string): Boolean;
 function ExpandEnvironmentVar(var Value: string): Boolean;
+function ExpandEnvironmentVarCustom(var Value: string; Vars: TStrings): Boolean;
 function GetEnvironmentVar(const Name: string; out Value: string): Boolean; overload;
 function GetEnvironmentVar(const Name: string; out Value: string; Expand: Boolean): Boolean; overload;
 function GetEnvironmentVars(const Vars: TStrings): Boolean; overload;
@@ -177,7 +178,7 @@ type
     fsSupportsEncryption,       // The file system supports the Encrypted File System (EFS).
     fsSupportsNamedStreams,     // The file system supports named streams.
     fsVolumeIsReadOnly          // The specified volume is read-only.
-                                //   Windows 2000/NT and Windows Me/98/95:  This value is not supported.
+                                // Windows 2000/NT and Windows Me/98/95:  This value is not supported.
    );
 
   TFileSystemFlags = set of TFileSystemFlag;
@@ -250,14 +251,18 @@ type
    (wvUnknown, wvWin95, wvWin95OSR2, wvWin98, wvWin98SE, wvWinME,
     wvWinNT31, wvWinNT35, wvWinNT351, wvWinNT4, wvWin2000, wvWinXP,
     wvWin2003, wvWinXP64, wvWin2003R2, wvWinVista, wvWinServer2008,
-    wvWin7, wvWinServer2008R2);
+    wvWin7, wvWinServer2008R2, wvWin8, wvWin8RT, wvWinServer2012,
+    wvWin81, wvWin81RT, wvWinServer2012R2, wvWin10, wvWinServer2016);
   TWindowsEdition =
    (weUnknown, weWinXPHome, weWinXPPro, weWinXPHomeN, weWinXPProN, weWinXPHomeK,
     weWinXPProK, weWinXPHomeKN, weWinXPProKN, weWinXPStarter, weWinXPMediaCenter,
     weWinXPTablet, weWinVistaStarter, weWinVistaHomeBasic, weWinVistaHomeBasicN,
     weWinVistaHomePremium, weWinVistaBusiness, weWinVistaBusinessN,
     weWinVistaEnterprise, weWinVistaUltimate, weWin7Starter, weWin7HomeBasic,
-    weWin7HomePremium, weWin7Professional, weWin7Enterprise, weWin7Ultimate);
+    weWin7HomePremium, weWin7Professional, weWin7Enterprise, weWin7Ultimate,
+    weWin8, weWin8Pro, weWin8Enterprise, weWin8RT, weWin81, weWin81Pro,
+    weWin81Enterprise, weWin81RT, weWin10, weWin10Home, weWin10Pro,
+    weWin10Enterprise, weWin10Education);
   TNtProductType =
    (ptUnknown, ptWorkStation, ptServer, ptAdvancedServer,
     ptPersonal, ptProfessional, ptDatacenterServer, ptEnterprise, ptWebEdition);
@@ -289,6 +294,14 @@ var
   IsWinServer2008: Boolean = False;
   IsWin7: Boolean = False;
   IsWinServer2008R2: Boolean = False;
+  IsWin8: Boolean = False;
+  IsWin8RT: Boolean = False;
+  IsWinServer2012: Boolean = False;
+  IsWin81: Boolean = False;
+  IsWin81RT: Boolean = False;
+  IsWinServer2012R2: Boolean = False;
+  IsWin10: Boolean = False;
+  IsWinServer2016: Boolean = False;
 
 const
   PROCESSOR_ARCHITECTURE_INTEL = 0;
@@ -307,12 +320,21 @@ function GetWindowsVersionString: string;
 function GetWindowsEditionString: string;
 function GetWindowsProductString: string;
 function NtProductTypeString: string;
+function GetWindowsBuildNumber: Integer;
+function GetWindowsMajorVersionNumber: Integer;
+function GetWindowsMinorVersionNumber: Integer;
+function GetWindowsVersionNumber: string;
 function GetWindowsServicePackVersion: Integer;
 function GetWindowsServicePackVersionString: string;
+function GetWindows10ReleaseId: Integer;
+function GetWindows10ReleaseName: String;
+function GetWindows10ReleaseCodeName: String;
+function GetWindows10ReleaseVersion: String;
 function GetOpenGLVersion(const Win: THandle; out Version, Vendor: AnsiString): Boolean;
 function GetNativeSystemInfo(var SystemInfo: TSystemInfo): Boolean;
 function GetProcessorArchitecture: TProcessorArchitecture;
 function IsWindows64: Boolean;
+function JclCheckWinVersion(Major, Minor: Integer): Boolean;
 {$ENDIF MSWINDOWS}
 
 function GetOSVersionString: string;
@@ -322,6 +344,9 @@ function GetOSVersionString: string;
 function GetMacAddresses(const Machine: string; const Addresses: TStrings): Integer;
 {$ENDIF MSWINDOWS}
 function ReadTimeStampCounter: Int64;
+{$IFDEF WIN64}
+{$EXTERNALSYM ReadTimeStampCounter}
+{$ENDIF WIN64}
 
 type
   TTLBInformation = (tiEntries, tiAssociativity);
@@ -635,7 +660,7 @@ const
   EINTEL_OSXSAVE   = BIT_27; // OS has enabled features present in EINTEL_XSAVE
   EINTEL_AVX       = BIT_28; // Advanced Vector Extensions
   EINTEL_BIT_29    = BIT_29; // Reserved, do not count on value
-  EINTEL_BIT_30    = BIT_30; // Reserved, do not count on value
+  EINTEL_RDRAND    = BIT_30; // the processor supports the RDRAND instruction.
   EINTEL_BIT_31    = BIT_31; // Always return 0
 
   { Extended Intel 64 Bits Feature Flags }
@@ -1379,9 +1404,9 @@ var
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/common/JclSysInfo.pas $';
-    Revision: '$Revision: 3594 $';
-    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1418,7 +1443,7 @@ uses
   {$ENDIF MSWINDOWS}
   {$ENDIF ~HAS_UNITSCOPE}
   Jcl8087, JclIniFiles,
-  JclSysUtils, JclFileUtils, JclStrings;
+  JclSysUtils, JclFileUtils, JclAnsiStrings, JclStrings;
 
 {$IFDEF FPC}
 {$IFDEF MSWINDOWS}
@@ -1491,6 +1516,102 @@ begin
   end;
 end;
 {$ENDIF MSWINDOWS}
+
+function ExpandEnvironmentVarCustom(var Value: string; Vars: TStrings): Boolean;
+
+  function FindClosingBrace(const R: string; var Position: Integer): Boolean;
+  var
+    Index, Len, BraceCount: Integer;
+    Quotes: string;
+  begin
+    Len := Length(R);
+    BraceCount := 0;
+    Quotes := '';
+    while (Position <= Len) do
+    begin
+      // handle quotes first
+      if (R[Position] = NativeSingleQuote) then
+      begin
+        Index := JclStrings.CharPos(Quotes, NativeSingleQuote);
+        if Index >= 0 then
+          SetLength(Quotes, Index - 1)
+        else
+          Quotes := Quotes + NativeSingleQuote;
+      end;
+
+      if (R[Position] = NativeDoubleQuote) then
+      begin
+        Index := JclStrings.CharPos(Quotes, NativeDoubleQuote);
+        if Index >= 0 then
+          SetLength(Quotes, Index - 1)
+        else
+          Quotes := Quotes + NativeDoubleQuote;
+      end;
+
+      if (R[Position] = '`') then
+      begin
+        Index := JclStrings.CharPos(Quotes, '`');
+        if Index >= 0 then
+          SetLength(Quotes, Index - 1)
+        else
+          Quotes := Quotes + '`';
+      end;
+
+      if Quotes = '' then
+      begin
+        if R[Position] = ')' then
+        begin
+          Dec(BraceCount);
+          if BraceCount = 0 then
+            Break;
+        end
+        else
+        if R[Position] = '(' then
+          Inc(BraceCount);
+      end;
+      Inc(Position);
+    end;
+    Result := Position <= Len;
+
+//    Delphi XE's CodeGear.Delphi.Targets has a bug where the closing paran is missing
+//    "'$(DelphiWin32DebugDCUPath'!=''". But it is still a valid string and not worth
+//    an exception.
+//
+//    if Position > Len then
+//      raise EJclMsBuildError.CreateResFmt(@RsEEndOfString, [S]);
+  end;
+
+var
+  Start, Position: Integer;
+  PropertyName, PropertyValue: string;
+begin
+  Result := True;
+  repeat
+    // start with the last match in order to convert $(some$(other))
+    // evaluate properties
+    Start := StrLastPos('$(', Value);
+    if Start > 0 then
+    begin
+      Position := Start;
+      if not FindClosingBrace(Value, Position) then
+        Break;
+      PropertyName := Copy(Value, Start + 2, Position - Start - 2);
+
+      PropertyValue := Vars.Values[PropertyName];
+
+      if PropertyValue <> '' then
+        StrReplace(Value,
+                   Copy(Value, Start, Position - Start + 1), // $(PropertyName)
+                   PropertyValue,
+                   [rfReplaceAll, rfIgnoreCase])
+      else
+      begin
+        Result := False;
+        Start := 0;
+      end;
+    end;
+  until Start = 0;
+end;
 
 {$IFDEF UNIX}
 
@@ -1988,8 +2109,8 @@ begin
   try
     Flags := 0;
     MaximumComponentLength := 0;
-    if GetVolumeInformation(PChar(DriveStr), Name, SizeOf(Name), @VolumeSerialNumber,
-      MaximumComponentLength, Flags, FileSystem, SizeOf(FileSystem)) then
+    if GetVolumeInformation(PChar(DriveStr), Name, Length(Name), @VolumeSerialNumber,
+      MaximumComponentLength, Flags, FileSystem, Length(FileSystem)) then
     case InfoKind of
       vikName:
         Result := StrPas(Name);
@@ -2339,8 +2460,8 @@ var
   snu: SID_NAME_USE;
 begin
   InfoBufferSize := 1000;
-  AccountSize := SizeOf(AccountName);
-  DomainSize := SizeOf(DomainName);
+  AccountSize := Length(AccountName);
+  DomainSize := Length(DomainName);
 
   hProcess := GetCurrentProcess;
   if OpenProcessToken(hProcess, TOKEN_READ, hAccessToken) then
@@ -2578,11 +2699,13 @@ function RunningProcessesList(const List: TStrings; FullPath: Boolean): Boolean;
     ProcEntry: TProcessEntry32;
     NextProc: Boolean;
     FileName: string;
+    Win2kOrNewer: Boolean;
   begin
     SnapProcHandle := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     Result := (SnapProcHandle <> INVALID_HANDLE_VALUE);
     if Result then
     try
+      Win2kOrNewer := JclCheckWinVersion(5, 0); // Win2k or newer
       ProcEntry.dwSize := SizeOf(ProcEntry);
       NextProc := Process32First(SnapProcHandle, ProcEntry);
       while NextProc do
@@ -2595,8 +2718,7 @@ function RunningProcessesList(const List: TStrings; FullPath: Boolean): Boolean;
         end
         else
         begin
-          if IsWin2k or IsWinXP or IsWin2003 or IsWin2003R2 or IsWinXP64 or
-            IsWinVista or IsWinServer2008 or IsWin7 or IsWinServer2008R2 then
+          if Win2kOrNewer then
           begin
             FileName := ProcessFileName(ProcEntry.th32ProcessID);
             if FileName = '' then
@@ -2690,7 +2812,7 @@ function LoadedModulesList(const List: TStrings; ProcessID: DWORD; HandlesOnly: 
       if HandlesOnly then
         List.AddObject('', Pointer(ModuleInfo.lpBaseOfDll))
       else
-      if GetModuleFileNameEx(ProcessHandle, Module, Filename, SizeOf(Filename)) > 0 then
+      if GetModuleFileNameEx(ProcessHandle, Module, Filename, Length(Filename)) > 0 then
         List.AddObject(FileName, Pointer(ModuleInfo.lpBaseOfDll));
     end;
   end;
@@ -2796,7 +2918,7 @@ function EnumTaskWindowsProc(Wnd: THandle; List: TStrings): Boolean; stdcall;
 var
   Caption: array [0..1024] of Char;
 begin
-  if IsMainAppWindow(Wnd) and (GetWindowText(Wnd, Caption, SizeOf(Caption)) > 0) then
+  if IsMainAppWindow(Wnd) and (GetWindowText(Wnd, Caption, Length(Caption)) > 0) then
     List.AddObject(Caption, Pointer(Wnd));
   Result := True;
 end;
@@ -2854,7 +2976,7 @@ begin
   if IsWindowVisible(Wnd) then
   begin
     ParentWnd := THandle(GetWindowLongPtr(Wnd, GWLP_HWNDPARENT));
-    ExStyle := GetWindowLongPtr(Wnd, GWL_EXSTYLE);
+    ExStyle := GetWindowLong(Wnd, GWL_EXSTYLE);
     Result := ((ParentWnd = 0) or (ParentWnd = GetDesktopWindow)) and
       ((ExStyle and WS_EX_TOOLWINDOW = 0) or (ExStyle and WS_EX_APPWINDOW <> 0));
   end
@@ -2903,6 +3025,8 @@ var
   Size: Integer;
 begin
   Size := GetWindowTextLength(Wnd);
+  if Size = 0 then
+    Size := 1;     // always allocate at least one byte, otherwise PChar(Buffer) returns nil
   SetLength(Buffer, Size);
   // strings always have an additional null character
   Size := GetWindowText(Wnd, PChar(Buffer), Size + 1);
@@ -3144,11 +3268,16 @@ var
   TrimmedWin32CSDVersion: string;
   SystemInfo: TSystemInfo;
   OSVersionInfoEx: TOSVersionInfoEx;
+  Win32MajorVersionEx, Win32MinorVersionEx: integer;
+  ProductName: string;
 const
   SM_SERVERR2 = 89;
 begin
+  Win32MajorVersionEx := -1;
+  Win32MinorVersionEx := -1;
   Result := wvUnknown;
   TrimmedWin32CSDVersion := Trim(Win32CSDVersion);
+
   case Win32Platform of
     VER_PLATFORM_WIN32_WINDOWS:
       case Win32MinorVersion of
@@ -3206,9 +3335,38 @@ begin
               end;
           end;
         6:
-          case Win32MinorVersion of
+        begin
+          // Starting with Windows 8.1, the GetVersion(Ex) API is deprecated and will detect the
+          // application as Windows 8 (kernel version 6.2) until an application manifest is included
+          // See https://msdn.microsoft.com/en-us/library/windows/desktop/dn302074.aspx
+
+          if Win32MinorVersion = 2 then
+          begin
+            ProductName := RegReadStringDef(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows NT\CurrentVersion', 'ProductName', '');
+            if (Pos(RsOSVersionWin81, ProductName) = 1) or (Pos(RsOSVersionWinServer2012R2, ProductName) = 1) then
+              Win32MinorVersionEx := 3 // Windows 8.1 and Windows Server 2012R2
+            else
+            if (Pos(RsOSVersionWin8, ProductName) = 1) or (Pos(RsOSVersionWinServer2012, ProductName) = 1) then
+              Win32MinorVersionEx := 2 // Windows 8 and Windows Server 2012
+            else
+            begin
+              Win32MajorVersionEx := GetWindowsMajorVersionNumber;
+              if Win32MajorVersionEx = 6 then
+                 Win32MinorVersionEx := 4 // Windows 10 (builds < 9926) and Windows Server 2016 (builds < 10074)
+              else
+              if Win32MajorVersionEx = 10 then
+                 Win32MinorVersionEx := -1 // Windows 10 (builds >= 9926) and Windows Server 2016 (builds >= 10074), set to -1 to escape case block
+              else
+                 Win32MinorVersionEx := Win32MinorVersion;
+            end;
+          end
+          else
+            Win32MinorVersionEx := Win32MinorVersion;
+
+          case Win32MinorVersionEx of
             0:
               begin
+                // Windows Vista and Windows Server 2008
                 OSVersionInfoEx.dwOSVersionInfoSize := SizeOf(OSVersionInfoEx);
                 if GetVersionEx(OSVersionInfoEx) and (OSVersionInfoEx.wProductType = VER_NT_WORKSTATION) then
                   Result := wvWinVista
@@ -3217,14 +3375,72 @@ begin
               end;
             1:
               begin
+                // Windows 7 and Windows Server 2008 R2
                 OSVersionInfoEx.dwOSVersionInfoSize := SizeOf(OSVersionInfoEx);
                 if GetVersionEx(OSVersionInfoEx) and (OSVersionInfoEx.wProductType = VER_NT_WORKSTATION) then
                   Result := wvWin7
                 else
                   Result := wvWinServer2008R2;
               end;
+            2:
+              begin
+                // Windows 8 and Windows Server 2012
+                OSVersionInfoEx.dwOSVersionInfoSize := SizeOf(OSVersionInfoEx);
+                if GetVersionEx(OSVersionInfoEx) and (OSVersionInfoEx.wProductType = VER_NT_WORKSTATION) then
+                  Result := wvWin8
+                else
+                  Result := wvWinServer2012;
+              end;
+            3:
+              begin
+                // Windows 8.1 and Windows Server 2012 R2
+                OSVersionInfoEx.dwOSVersionInfoSize := SizeOf(OSVersionInfoEx);
+                if GetVersionEx(OSVersionInfoEx) and (OSVersionInfoEx.wProductType = VER_NT_WORKSTATION) then
+                  Result := wvWin81
+                else
+                  Result := wvWinServer2012R2;
+              end;
+            4:
+              begin
+                // Windows 10 (builds < 9926) and Windows Server 2016 (builds < 10074)
+                OSVersionInfoEx.dwOSVersionInfoSize := SizeOf(OSVersionInfoEx);
+                if GetVersionEx(OSVersionInfoEx) and (OSVersionInfoEx.wProductType = VER_NT_WORKSTATION) then
+                  Result := wvWin10
+                else
+                  Result := wvWinServer2016;
+              end;
           end;
+        end;
+        10:
+        begin
+          // Windows 10 if manifest is present
+          Win32MajorVersionEx := Win32MajorVersion;
+          Win32MinorVersionEx := Win32MinorVersion;
+        end;
       end;
+  end;
+
+  // This part will only be hit with Windows 10 and Windows Server 2016 (and newer) where an application manifest is not included
+  if (Win32MajorVersionEx >= 10) then
+  begin
+    case Win32MajorVersionEx of
+      10:
+      begin
+        if (Win32MinorVersionEx = -1) then
+          Win32MinorVersionEx := GetWindowsMinorVersionNumber;
+        case Win32MinorVersionEx of
+          0:
+            begin
+              // Windows 10 (builds >= 9926) and Windows Server 2016 (builds >= 10074)
+              OSVersionInfoEx.dwOSVersionInfoSize := SizeOf(OSVersionInfoEx);
+              if GetVersionEx(OSVersionInfoEx) and (OSVersionInfoEx.wProductType = VER_NT_WORKSTATION) then
+                Result := wvWin10
+              else
+                Result := wvWinServer2016;
+            end;
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -3236,92 +3452,145 @@ var
 begin
   Result := weUnknown;
   Edition := RegReadStringDef(HKEY_LOCAL_MACHINE, ProductName, 'ProductName', '');
-  if (pos('Windows XP', Edition) = 1) then
+
+  // Remove (tm) in 'Windows (TM) Vista Ultimate'
+  Edition := StringReplace(Edition, '(TM) ', '', [rfReplaceAll, rfIgnoreCase]);
+
+  if Pos('Windows XP', Edition) = 1 then
   begin
    // Windows XP Editions
-   if (pos('Home Edition N', Edition) > 0) then
-      Result :=  weWinXPHomeN
+   if Pos('Home Edition N', Edition) > 0 then
+      Result := weWinXPHomeN
    else
-   if (pos('Professional N', Edition) > 0) then
-      Result :=  weWinXPProN
+   if Pos('Professional N', Edition) > 0 then
+      Result := weWinXPProN
    else
-   if (pos('Home Edition K', Edition) > 0) then
-      Result :=  weWinXPHomeK
+   if Pos('Home Edition K', Edition) > 0 then
+      Result := weWinXPHomeK
    else
-   if (pos('Professional K', Edition) > 0) then
-      Result :=  weWinXPProK
+   if Pos('Professional K', Edition) > 0 then
+      Result := weWinXPProK
    else
-   if (pos('Home Edition KN', Edition) > 0) then
-      Result :=  weWinXPHomeKN
+   if Pos('Home Edition KN', Edition) > 0 then
+      Result := weWinXPHomeKN
    else
-   if (pos('Professional KN', Edition) > 0) then
-      Result :=  weWinXPProKN
+   if Pos('Professional KN', Edition) > 0 then
+      Result := weWinXPProKN
    else
-   if (pos('Home', Edition) > 0) then
-      Result :=  weWinXPHome
+   if Pos('Home', Edition) > 0 then
+      Result := weWinXPHome
    else
-   if (pos('Professional', Edition) > 0) then
-      Result :=  weWinXPPro
+   if Pos('Professional', Edition) > 0 then
+      Result := weWinXPPro
    else
-   if (pos('Starter', Edition) > 0) then
-      Result :=  weWinXPStarter
+   if Pos('Starter', Edition) > 0 then
+      Result := weWinXPStarter
    else
-   if (pos('Media Center', Edition) > 0) then
-      Result :=  weWinXPMediaCenter
+   if Pos('Media Center', Edition) > 0 then
+      Result := weWinXPMediaCenter
    else
-   if (pos('Tablet', Edition) > 0) then
-      Result :=  weWinXPTablet;
+   if Pos('Tablet', Edition) > 0 then
+      Result := weWinXPTablet;
   end
   else
-  if (pos('Windows Vista', Edition) = 1) then
+  if (Pos('Windows Vista', Edition) = 1) then
   begin
    // Windows Vista Editions
-   if (pos('Starter', Edition) > 0) then
+   if Pos('Starter', Edition) > 0 then
       Result := weWinVistaStarter
    else
-   if (pos('Home Basic N', Edition) > 0) then
+   if Pos('Home Basic N', Edition) > 0 then
       Result := weWinVistaHomeBasicN
    else
-   if (pos('Home Basic', Edition) > 0) then
+   if Pos('Home Basic', Edition) > 0 then
       Result := weWinVistaHomeBasic
    else
-   if (pos('Home Premium', Edition) > 0) then
+   if Pos('Home Premium', Edition) > 0 then
       Result := weWinVistaHomePremium
    else
-   if (pos('Business N', Edition) > 0) then
+   if Pos('Business N', Edition) > 0 then
       Result := weWinVistaBusinessN
    else
-   if (pos('Business', Edition) > 0) then
+   if Pos('Business', Edition) > 0 then
       Result := weWinVistaBusiness
    else
-   if (pos('Enterprise', Edition) > 0) then
+   if Pos('Enterprise', Edition) > 0 then
       Result := weWinVistaEnterprise
    else
-   if (pos('Ultimate', Edition) > 0) then
+   if Pos('Ultimate', Edition) > 0 then
       Result := weWinVistaUltimate;
   end
   else
-  if (pos('Windows 7', Edition) = 1) then
+  if Pos('Windows 7', Edition) = 1 then
   begin
    // Windows 7 Editions
-   if (pos('Starter', Edition) > 0) then
+   if Pos('Starter', Edition) > 0 then
       Result := weWin7Starter
    else
-   if (pos('Home Basic', Edition) > 0) then
+   if Pos('Home Basic', Edition) > 0 then
       Result := weWin7HomeBasic
    else
-   if (pos('Home Premium', Edition) > 0) then
+   if Pos('Home Premium', Edition) > 0 then
       Result := weWin7HomePremium
    else
-   if (pos('Professional', Edition) > 0) then
+   if Pos('Professional', Edition) > 0 then
       Result := weWin7Professional
    else
-   if (pos('Enterprise', Edition) > 0) then
+   if Pos('Enterprise', Edition) > 0 then
       Result := weWin7Enterprise
    else
-   if (pos('Ultimate', Edition) > 0) then
+   if Pos('Ultimate', Edition) > 0 then
       Result := weWin7Ultimate;
-  end;
+  end
+  else
+  if Pos('Windows 8.1', Edition) = 1 then
+  begin
+   // Windows 8.1 Editions
+   if Pos('Pro', Edition) > 0 then
+      Result := weWin81Pro
+   else
+   if Pos('Enterprise', Edition) > 0 then
+      Result := weWin81Enterprise
+   else
+      Result := weWin81;
+  end
+  else
+  if Pos('Windows 8', Edition) = 1 then
+  begin
+   // Windows 8 Editions
+   if Pos('Pro', Edition) > 0 then
+      Result := weWin8Pro
+   else
+   if Pos('Enterprise', Edition) > 0 then
+      Result := weWin8Enterprise
+   else
+      Result := weWin8;
+  end
+  else
+  if Pos('Windows RT 8.1', Edition) = 1 then
+    Result := weWin81RT
+  else
+  if Pos('Windows RT', Edition) = 1 then
+    Result := weWin8RT
+  else
+  if Pos('Windows 10', Edition) = 1 then
+  begin
+   // Windows 10 Editions
+   if Pos('Home', Edition) > 0 then
+      Result := weWin10Home
+   else
+   if Pos('Pro', Edition) > 0 then
+      Result := weWin10Pro
+   else
+   if Pos('Enterprise', Edition) > 0 then
+      Result := weWin10Enterprise
+   else
+   if Pos('Education', Edition) > 0 then
+      Result := weWin10Education
+   else
+      Result := weWin10;
+  end
+
 end;
 
 function NtProductType: TNtProductType;
@@ -3357,7 +3626,7 @@ begin
   begin
     if GetVersionEx(OSVersionInfo) then
     begin
-      if OSVersionInfo.wProductType  in [VER_NT_SERVER,VER_NT_DOMAIN_CONTROLLER] then
+      if OSVersionInfo.wProductType  in [VER_NT_SERVER, VER_NT_DOMAIN_CONTROLLER] then
       begin
         if (OSVersionInfo.wSuiteMask and VER_SUITE_DATACENTER) <> 0 then
           Result := ptDatacenterServer
@@ -3376,7 +3645,7 @@ begin
   begin
     if GetVersionEx(OSVersionInfo) then
     begin
-      if OSVersionInfo.wProductType in [VER_NT_SERVER,VER_NT_DOMAIN_CONTROLLER] then
+      if OSVersionInfo.wProductType in [VER_NT_SERVER, VER_NT_DOMAIN_CONTROLLER] then
       begin
         if (OSVersionInfo.wSuiteMask and VER_SUITE_DATACENTER) = VER_SUITE_DATACENTER then
           Result := ptDatacenterServer
@@ -3395,31 +3664,30 @@ begin
     end;
   end
   else
-  if IsWinXP or IsWinVista or IsWin7 then // workstation
+  if JclCheckWinVersion(5, 1) then // Windows XP or newer
   begin
     if GetVersionEx(OSVersionInfo) then
     begin
-      if OSVersionInfo.wProductType = VER_NT_WORKSTATION then
+      //if IsWinXP or IsWinVista or IsWin7 or IsWin8 or IsWin81 or IsWin10 then
+      if OSVersionInfo.wProductType = VER_NT_WORKSTATION then // workstation
       begin
         if (OSVersionInfo.wSuiteMask and VER_SUITE_PERSONAL) = VER_SUITE_PERSONAL then
           Result := ptPersonal
         else
           Result := ptProfessional;
+      end
+      else
+      //if IsWinServer2008 or IsWinServer2008R2 or IsWinServer2012 or IsWinServer2012R2 then
+      if OSVersionInfo.wProductType in [VER_NT_SERVER, VER_NT_DOMAIN_CONTROLLER] then // server
+      begin
+        if (OSVersionInfo.wSuiteMask and VER_SUITE_DATACENTER) = VER_SUITE_DATACENTER then
+          Result := ptDatacenterServer
+        else
+        if (OSVersionInfo.wSuiteMask and VER_SUITE_ENTERPRISE) = VER_SUITE_ENTERPRISE then
+          Result := ptEnterprise
+        else
+          Result := ptServer;
       end;
-    end;
-  end
-  else
-  if IsWinServer2008 or IsWinServer2008R2 then // server
-  begin
-    if OSVersionInfo.wProductType in [VER_NT_SERVER,VER_NT_DOMAIN_CONTROLLER] then
-    begin
-      if (OSVersionInfo.wSuiteMask and VER_SUITE_DATACENTER) = VER_SUITE_DATACENTER then
-        Result := ptDatacenterServer
-      else
-      if (OSVersionInfo.wSuiteMask and VER_SUITE_ENTERPRISE) = VER_SUITE_ENTERPRISE then
-        Result := ptEnterprise
-      else
-        Result := ptServer;
     end;
   end;
 
@@ -3475,6 +3743,22 @@ begin
       Result := LoadResString(@RsOSVersionWin7);
     wvWinServer2008R2:
       Result := LoadResString(@RsOSVersionWinServer2008R2);
+    wvWin8:
+      Result := LoadResString(@RsOSVersionWin8);
+    wvWin8RT:
+      Result := LoadResString(@RsOSVersionWin8RT);
+    wvWinServer2012:
+      Result := LoadResString(@RsOSVersionWinServer2012);
+    wvWin81:
+      Result := LoadResString(@RsOSVersionWin81);
+    wvWin81RT:
+      Result := LoadResString(@RsOSVersionWin81RT);
+    wvWinServer2012R2:
+      Result := LoadResString(@RsOSVersionWinServer2012R2);
+    wvWin10:
+      Result := LoadResString(@RsOSVersionWin10);
+    wvWinServer2016:
+      Result := LoadResString(@RsOSVersionWinServer2016);
   else
     Result := '';
   end;
@@ -3533,6 +3817,26 @@ begin
       Result := LoadResString(@RsEditionWin7Enterprise);
     weWin7Ultimate:
       Result := LoadResString(@RsEditionWin7Ultimate);
+    weWin8Pro:
+      Result := LoadResString(@RsEditionWin8Pro);
+    weWin8Enterprise:
+      Result := LoadResString(@RsEditionWin8Enterprise);
+    weWin8RT:
+      Result := LoadResString(@RsEditionWin8RT);
+    weWin81Pro:
+      Result := LoadResString(@RsEditionWin81Pro);
+    weWin81Enterprise:
+      Result := LoadResString(@RsEditionWin81Enterprise);
+    weWin81RT:
+      Result := LoadResString(@RsEditionWin81RT);
+    weWin10Home:
+      Result := LoadResString(@RsEditionWin10Home);
+    weWin10Pro:
+      Result := LoadResString(@RsEditionWin10Pro);
+    weWin10Enterprise:
+      Result := LoadResString(@RsEditionWin10Enterprise);
+    weWin10Education:
+      Result := LoadResString(@RsEditionWin10Education);
   else
     Result := '';
   end;
@@ -3541,32 +3845,93 @@ end;
 function GetWindowsProductString: string;
 begin
   Result := GetWindowsVersionString;
-  if (GetWindowsEditionString <> '') then
+  if GetWindowsEditionString <> '' then
     Result := Result + ' ' + GetWindowsEditionString;
 end;
 
 function NtProductTypeString: string;
 begin
   case NtProductType of
-   ptWorkStation:
-     Result := LoadResString(@RsProductTypeWorkStation);
-   ptServer:
-     Result := LoadResString(@RsProductTypeServer);
-   ptAdvancedServer:
-     Result := LoadResString(@RsProductTypeAdvancedServer);
-   ptPersonal:
-     Result := LoadResString(@RsProductTypePersonal);
-   ptProfessional:
-     Result := LoadResString(@RsProductTypeProfessional);
-   ptDatacenterServer:
-     Result := LoadResString(@RsProductTypeDatacenterServer);
-   ptEnterprise:
-     Result := LoadResString(@RsProductTypeEnterprise);
-   ptWebEdition:
-     Result := LoadResString(@RsProductTypeWebEdition);
+    ptWorkStation:
+      Result := LoadResString(@RsProductTypeWorkStation);
+    ptServer:
+      Result := LoadResString(@RsProductTypeServer);
+    ptAdvancedServer:
+      Result := LoadResString(@RsProductTypeAdvancedServer);
+    ptPersonal:
+      Result := LoadResString(@RsProductTypePersonal);
+    ptProfessional:
+      Result := LoadResString(@RsProductTypeProfessional);
+    ptDatacenterServer:
+      Result := LoadResString(@RsProductTypeDatacenterServer);
+    ptEnterprise:
+      Result := LoadResString(@RsProductTypeEnterprise);
+    ptWebEdition:
+      Result := LoadResString(@RsProductTypeWebEdition);
   else
     Result := '';
   end;
+end;
+
+function GetWindowsBuildNumber: Integer;
+begin
+  // Starting with Windows 8.1, the GetVersion(Ex) API is deprecated and will detect the
+  // application as Windows 8 (kernel version 6.2) until an application manifest is included
+  // See https://msdn.microsoft.com/en-us/library/windows/desktop/dn302074.aspx
+  if ((Win32MajorVersion = 6) and (Win32MinorVersion = 2)) or (Win32MajorVersion = 10) then
+    Result := StrToInt(RegReadStringDef(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows NT\CurrentVersion', 'CurrentBuildNumber', IntToStr(Win32BuildNumber)))
+  else
+    Result := Win32BuildNumber;
+end;
+
+function GetWindowsMajorVersionNumber: Integer;
+var
+  Ver: string;
+begin
+  // Starting with Windows 8.1, the GetVersion(Ex) API is deprecated and will detect the
+  // application as Windows 8 (kernel version 6.2) until an application manifest is included
+  // See https://msdn.microsoft.com/en-us/library/windows/desktop/dn302074.aspx
+  if ((Win32MajorVersion = 6) and (Win32MinorVersion = 2)) or (Win32MajorVersion = 10) then
+  begin
+    // CurrentMajorVersionNumber present in registry starting with Windows 10
+    // If CurrentMajorVersionNumber not present in registry then use CurrentVersion
+    Result := RegReadIntegerDef(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows NT\CurrentVersion', 'CurrentMajorVersionNumber', -1);
+    if Result = -1 then
+    begin
+      Ver := RegReadStringDef(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows NT\CurrentVersion', 'CurrentVersion', IntToStr(Win32MajorVersion) + '.' + IntToStr(Win32MinorVersion));
+      Result := StrToIntDef(Copy(Ver, 1, Pos('.', Ver) - 1), 2); // don't use StrBefore because it uses StrCaseMap that may not be initialized yet
+    end;
+  end
+  else
+    Result := Win32MajorVersion;
+end;
+
+function GetWindowsMinorVersionNumber: Integer;
+var
+  Ver: string;
+begin
+  // Starting with Windows 8.1, the GetVersion(Ex) API is deprecated and will detect the
+  // application as Windows 8 (kernel version 6.2) until an application manifest is included
+  // See https://msdn.microsoft.com/en-us/library/windows/desktop/dn302074.aspx
+  if ((Win32MajorVersion = 6) and (Win32MinorVersion = 2)) or (Win32MajorVersion = 10) then
+  begin
+    // CurrentMinorVersionNumber present in registry starting with Windows 10
+    // If CurrentMinorVersionNumber not present then use CurrentVersion
+    Result := RegReadIntegerDef(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows NT\CurrentVersion', 'CurrentMinorVersionNumber', -1);
+    if Result = -1 then
+    begin
+      Ver := RegReadStringDef(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows NT\CurrentVersion', 'CurrentVersion', IntToStr(Win32MajorVersion) + '.' + IntToStr(Win32MinorVersion));
+      Result := StrToIntDef(Copy(Ver, Pos('.', Ver) + 1, Length(Ver)), 2);  // don't use StrAfter because it uses StrCaseMap that may not be initialized yet
+    end;
+  end
+  else
+    Result := Win32MinorVersion;
+end;
+
+function GetWindowsVersionNumber: string;
+begin
+  // Returns version number as MajorVersionNumber.MinorVersionNumber (string type)
+  Result := IntToStr(GetWindowsMajorVersionNumber) + '.' + IntToStr(GetWindowsMinorVersionNumber);
 end;
 
 function GetWindowsServicePackVersion: Integer;
@@ -3598,6 +3963,68 @@ begin
   SP := GetWindowsServicePackVersion;
   if SP > 0 then
     Result := Format(LoadResString(@RsSPInfo), [SP])
+  else
+    Result := '';
+end;
+
+function GetWindows10ReleaseId: Integer;
+begin
+if IsWin10 then
+  Result := StrToInt(RegReadStringDef(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows NT\CurrentVersion', 'ReleaseId', '0'))
+else
+  Result := -1;
+end;
+
+function GetWindows10ReleaseName: String;
+begin
+  if IsWin10 then
+  begin
+    case GetWindows10ReleaseId of
+       1507:
+          Result := 'Windows 10';
+       1511:
+          Result := 'Windows 10 November Update';
+       1607:
+          Result := 'Windows 10 Anniversary Update';
+    else
+      Result := '';
+    end;
+  end
+  else
+    Result := '';
+end;
+
+function GetWindows10ReleaseCodeName: String;
+begin
+  if IsWin10 then
+  begin
+    case GetWindows10ReleaseId of
+       1507:
+          Result := 'Threshold 1';
+       1511:
+          Result := 'Threshold 2';
+       1607:
+          Result := 'Redstone 1';
+    else
+      Result := '';
+    end;
+  end
+  else
+    Result := '';
+end;
+
+function GetWindows10ReleaseVersion: String;
+var
+  WindowsReleaseId: Integer;
+begin
+  if IsWin10 then
+  begin
+    WindowsReleaseId := GetWindows10ReleaseId;
+    if WindowsReleaseId > 0 then
+      Result := 'Windows 10 Version ' + IntToStr(WindowsReleaseId)
+    else
+      Result := '';
+  end
   else
     Result := '';
 end;
@@ -3750,7 +4177,7 @@ begin
         begin
           { TODO : Store this information in a Global Variable, and return that??
                    This would save this work being performed again with later calls }
-          sOpenGLVersion := StrPas(pcTemp);
+          sOpenGLVersion := StrPasA(pcTemp);
         end
         else
         begin
@@ -3768,7 +4195,7 @@ begin
         begin
           { TODO : Store this information in a Global Variable, and return that??
                    This would save this work being performed again with later calls }
-          sOpenGLVendor := StrPas(pcTemp);
+          sOpenGLVendor := StrPasA(pcTemp);
         end
         else
         begin
@@ -3813,7 +4240,7 @@ begin
 
   if LibraryHandle <> 0 then
   begin
-    _GetNativeSystemInfo := GetProcAddress(LibraryHandle,'GetNativeSystemInfo');
+    _GetNativeSystemInfo := GetProcAddress(LibraryHandle, PAnsiChar('GetNativeSystemInfo'));
     if Assigned(_GetNativeSystemInfo) then
     begin
       _GetNativeSystemInfo(SystemInfo);
@@ -3851,6 +4278,17 @@ begin
   ASystemInfo.dwOemId := 0;
   GetNativeSystemInfo(ASystemInfo);
   Result := ASystemInfo.wProcessorArchitecture in [PROCESSOR_ARCHITECTURE_IA64,PROCESSOR_ARCHITECTURE_AMD64];
+end;
+
+function JclCheckWinVersion(Major, Minor: Integer): Boolean;
+begin
+  {$IFDEF RTL150_UP}
+  Result := CheckWin32Version(Major, Minor);
+  {$ELSE}
+  // Delphi 6 and older have a wrong implementation
+  Result := (Win32MajorVersion > Major) or
+            ((Win32MajorVersion = Major) and (Win32MinorVersion >= Minor));
+  {$ENDIF RTL150_UP}
 end;
 
 {$ENDIF MSWINDOWS}
@@ -3918,7 +4356,7 @@ function GetMacAddresses(const Machine: string; const Addresses: TStrings): Inte
       Result := NetBiosLib <> 0;
       if Result then
       begin
-        @_NetBios := GetProcAddress(NetBiosLib, PChar('Netbios'));
+        @_NetBios := GetProcAddress(NetBiosLib, PAnsiChar('Netbios'));
         Result := @_NetBios <> nil;
         if not Result then
           ExitNetbios;
@@ -4279,7 +4717,8 @@ function GetOSEnabledFeatures: TOSEnabledFeatures;
 var
   EnabledFeatures: Int64;
 begin
-  if IsWin7 or IsWinServer2008 or IsWinServer2008R2 then
+  // Windows 7 or newer
+  if JclCheckWinVersion(6, 1) then
   begin
     EnabledFeatures := $FFFFFFFF;
     EnabledFeatures := EnabledFeatures shl 32;
@@ -4321,6 +4760,9 @@ function CPUID: TCpuInfo;
       SETNZ   Result
       {$ENDIF CPU32}
       {$IFDEF CPU64}
+      {$IFDEF FPC}
+        {$DEFINE DELPHI64_TEMPORARY}
+      {$ENDIF FPC}
       {$IFDEF DELPHI64_TEMPORARY}
       PUSHFQ
       {$ELSE ~DELPHI64_TEMPORARY}
@@ -4345,6 +4787,9 @@ function CPUID: TCpuInfo;
       AND     RAX, ID_FLAG
       XOR     RAX, RCX
       SETNZ   Result
+      {$IFDEF FPC}
+        {$UNDEF DELPHI64_TEMPORARY}
+      {$ENDIF FPC}
       {$ENDIF CPU64}
     end;
   {$IFNDEF DELPHI64_TEMPORARY}
@@ -4609,7 +5054,7 @@ function CPUID: TCpuInfo;
             11:
               CPUInfo.CpuName := 'Pentium III';
           else
-            StrPCopy(CPUInfo.CpuName, AnsiString(Format('P6 (Model %d)', [CPUInfo.Model])));
+            StrPCopyA(CPUInfo.CpuName, AnsiString(Format('P6 (Model %d)', [CPUInfo.Model])));
           end;
         15:
           case CPUInfo.IntelSpecific.BrandID of
@@ -4623,7 +5068,7 @@ function CPUID: TCpuInfo;
             CPUInfo.CpuName := 'Pentium 4';
           end;
       else
-        StrPCopy(CPUInfo.CpuName, AnsiString(Format('P%d', [CPUInfo.Family])));
+        StrPCopyA(CPUInfo.CpuName, AnsiString(Format('P%d', [CPUInfo.Family])));
       end;
     end;
 
@@ -4754,7 +5199,7 @@ function CPUID: TCpuInfo;
             9:
               CPUInfo.CpuName := 'AMD-K6®-III (Model 9)';
             else
-              StrFmt(CPUInfo.CpuName, PAnsiChar(AnsiString(LoadResString(@RsUnknownAMDModel))),[CPUInfo.Model]);
+              StrFmtA(CPUInfo.CpuName, PAnsiChar(AnsiString(LoadResString(@RsUnknownAMDModel))), [CPUInfo.Model]);
           end;
         6:
           case CPUInfo.Model of
@@ -4775,7 +5220,7 @@ function CPUID: TCpuInfo;
             10:
               CPUInfo.CpuName := 'AMD Athlon™ XP (Model 10)';
             else
-              StrFmt(CPUInfo.CpuName, PAnsiChar(AnsiString(LoadResString(@RsUnknownAMDModel))), [CPUInfo.Model]);
+              StrFmtA(CPUInfo.CpuName, PAnsiChar(AnsiString(LoadResString(@RsUnknownAMDModel))), [CPUInfo.Model]);
           end;
         8:
 
@@ -4859,7 +5304,7 @@ function CPUID: TCpuInfo;
         6:
           CPUInfo.CpuName := '6x86MX';
       else
-        StrPCopy(CPUInfo.CpuName, AnsiString(Format('%dx86', [CPUInfo.Family])));
+        StrPCopyA(CPUInfo.CpuName, AnsiString(Format('%dx86', [CPUInfo.Family])));
       end;
     end;
   end;
@@ -5496,7 +5941,7 @@ function IsSystemResourcesMeterPresent: Boolean;
     ResmeterLibHandle := SafeLoadLibrary('rsrc32.dll', SEM_FAILCRITICALERRORS);
     if ResmeterLibHandle <> 0 then
     begin
-      @MyGetFreeSystemResources := GetProcAddress(ResmeterLibHandle, '_MyGetFreeSystemResources32@4');
+      @MyGetFreeSystemResources := GetProcAddress(ResmeterLibHandle, PAnsiChar('_MyGetFreeSystemResources32@4'));
       if not Assigned(MyGetFreeSystemResources) then
         UnloadSystemResourcesMeterLib;
     end;
@@ -5679,6 +6124,22 @@ begin
       IsWin7 := True;
     wvWinServer2008R2:
       IsWinServer2008R2 := True;
+    wvWin8:
+      IsWin8 := True;
+    wvWin8RT:
+      IsWin8RT := True;
+    wvWinServer2012:
+      IsWinServer2012 := True;
+    wvWin81:
+      IsWin81 := True;
+    wvWin81RT:
+      IsWin81RT := True;
+    wvWinServer2012R2:
+      IsWinServer2012R2 := True;
+    wvWin10:
+      IsWin10 := True;
+    wvWinServer2016:
+      IsWinServer2016 := True;
   end;
 end;
 

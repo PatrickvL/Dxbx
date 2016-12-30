@@ -27,9 +27,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
-{ Revision:      $Rev:: 3594                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -37,6 +37,9 @@
 {$LONGSTRINGS ON}     // Long strings
 {$WRITEABLECONST OFF} // Read-only typed constants
 {$TYPEDADDRESS OFF}   // Type checked pointers off
+{$LOCALSYMBOLS ON}    // Local symbol information
+{$DEFINITIONINFO ON}  // Symbol definition information
+{$REFERENCEINFO ON}   // Symbol reference information
 
 {$I jedi\jedi.inc} // Pull in the JCL/J-VCL shared directives
 
@@ -51,16 +54,25 @@ ALERT_jedi_inc_incompatible
     { BDS                        }
     {----------------------------}
     {$IFDEF BDS3}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld9.net.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS3}
     {----------------------------}
     {$IFDEF BDS4}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld10.net.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS4}
     {----------------------------}
     {$IFDEF BDS5}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld11.net.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS5}
@@ -70,11 +82,17 @@ ALERT_jedi_inc_incompatible
     { C++Builder                 }
     {----------------------------}
     {$IFDEF BCB5}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jclc5.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BCB5}
     {----------------------------}
     {$IFDEF BCB6}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jclc6.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BCB6}
@@ -82,60 +100,93 @@ ALERT_jedi_inc_incompatible
     { Delphi                     }
     {----------------------------}
     {$IFDEF DELPHI5}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld5.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF DELPIH5}
     {----------------------------}
     {$IFDEF DELPHI6}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld6.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF DELPIH6}
     {----------------------------}
     {$IFDEF DELPHI7}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld7.inc}
       {$DEFINE JCL_CONFIGURED}
-    {$ENDIF DELPIH7}  
+    {$ENDIF DELPIH7}
     {----------------------------}
     { BDS                        }
     {----------------------------}
     // BDS 1 and BDS 2 have the same version numbers for their native compilers
     // no compiler defines are used for BDS 1 and BDS 2
     {$IFDEF BDS1}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       //{$I jclcs1.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS1}
     {----------------------------}
     {$IFDEF BDS2}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       //{$I jcld8.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS2}
     {----------------------------}
     {$IFDEF BDS3}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld9.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS3}
     {----------------------------}
     {$IFDEF BDS4}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld10.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS4}
     {----------------------------}
     {$IFDEF BDS5}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld11.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS5}
     {----------------------------}
     {$IFDEF BDS6}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld12.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS6}
     {----------------------------}
     {$IFDEF BDS7}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld14.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS7}
     {----------------------------}
     {$IFDEF BDS8}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld15.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS8}
@@ -143,16 +194,169 @@ ALERT_jedi_inc_incompatible
     {$IFDEF BDS9}
       {$IFDEF MSWINDOWS}
       {$IFDEF CPUX86}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld16win32.inc}
       {$ENDIF CPUX86}
       {$IFDEF CPUX64}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jcld16win64.inc}
       {$ENDIF CPUX64}
       {$DEFINE JCL_CONFIGURED}
       {$ENDIF MSWINDOWS}
     {$ENDIF BDS9}
     {----------------------------}
+    {$IFDEF BDS10}
+      {$IFDEF MSWINDOWS}
+      {$IFDEF CPUX86}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld17win32.inc}
+      {$ENDIF CPUX86}
+      {$IFDEF CPUX64}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld17win64.inc}
+      {$ENDIF CPUX64}
+      {$DEFINE JCL_CONFIGURED}
+      {$ENDIF MSWINDOWS}
+    {$ENDIF BDS10}
+    {----------------------------}
+    {$IFDEF BDS11}
+      {$IFDEF MSWINDOWS}
+      {$IFDEF CPUX86}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld18win32.inc}
+      {$ENDIF CPUX86}
+      {$IFDEF CPUX64}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld18win64.inc}
+      {$ENDIF CPUX64}
+      {$DEFINE JCL_CONFIGURED}
+      {$ENDIF MSWINDOWS}
+    {$ENDIF BDS11}
+    {----------------------------}
+    {$IFDEF BDS12}
+      {$IFDEF MSWINDOWS}
+      {$IFDEF CPUX86}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld19win32.inc}
+      {$ENDIF CPUX86}
+      {$IFDEF CPUX64}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld19win64.inc}
+      {$ENDIF CPUX64}
+      {$DEFINE JCL_CONFIGURED}
+      {$ENDIF MSWINDOWS}
+    {$ENDIF BDS12}
+    {----------------------------}
+    {$IFDEF BDS14}
+      {$IFDEF MSWINDOWS}
+      {$IFDEF CPUX86}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld20win32.inc}
+      {$ENDIF CPUX86}
+      {$IFDEF CPUX64}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld20win64.inc}
+      {$ENDIF CPUX64}
+      {$DEFINE JCL_CONFIGURED}
+      {$ENDIF MSWINDOWS}
+    {$ENDIF BDS14}
+    {----------------------------}
+    {$IFDEF BDS15}
+      {$IFDEF MSWINDOWS}
+      {$IFDEF CPUX86}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld21win32.inc}
+      {$ENDIF CPUX86}
+      {$IFDEF CPUX64}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld21win64.inc}
+      {$ENDIF CPUX64}
+      {$DEFINE JCL_CONFIGURED}
+      {$ENDIF MSWINDOWS}
+    {$ENDIF BDS15}
+    {----------------------------}
+    {$IFDEF BDS16}
+      {$IFDEF MSWINDOWS}
+      {$IFDEF CPUX86}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld22win32.inc}
+      {$ENDIF CPUX86}
+      {$IFDEF CPUX64}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld22win64.inc}
+      {$ENDIF CPUX64}
+      {$DEFINE JCL_CONFIGURED}
+      {$ENDIF MSWINDOWS}
+    {$ENDIF BDS16}
+    {----------------------------}
+    {$IFDEF BDS17}
+      {$IFDEF MSWINDOWS}
+      {$IFDEF CPUX86}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld23win32.inc}
+      {$ENDIF CPUX86}
+      {$IFDEF CPUX64}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld23win64.inc}
+      {$ENDIF CPUX64}
+      {$DEFINE JCL_CONFIGURED}
+      {$ENDIF MSWINDOWS}
+    {$ENDIF BDS17}
+    {----------------------------}
+    {$IFDEF BDS18}
+      {$IFDEF MSWINDOWS}
+      {$IFDEF CPUX86}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld24win32.inc}
+      {$ENDIF CPUX86}
+      {$IFDEF CPUX64}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld24win64.inc}
+      {$ENDIF CPUX64}
+      {$DEFINE JCL_CONFIGURED}
+      {$ENDIF MSWINDOWS}
+    {$ENDIF BDS18}
+    {----------------------------}
     {$IFDEF FPC}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
       {$I jclfpc.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF FPC}
@@ -212,22 +416,68 @@ ALERT_jedi_inc_incompatible
 {$IFDEF PCRE_STATICLINK}
   {$UNDEF PCRE_LINKDLL}
   {$UNDEF PCRE_LINKONREQUEST}
+  {$UNDEF PCRE_RTL}
 {$ENDIF PCRE_STATICLINK}
 {$IFDEF PCRE_LINKDLL}
   {$UNDEF PCRE_LINKONREQUEST}
+  {$UNDEF PCRE_RTL}
 {$ENDIF PCRE_LINKDLL}
+{$IFDEF PCRE_LINKONREQUEST}
+  {$UNDEF PCRE_RTL}
+{$ENDIF PCRE_LINKONREQUEST}
 
 {$IFNDEF PCRE_STATICLINK}
   {$IFNDEF PCRE_LINKDLL}
     {$IFNDEF PCRE_LINKONREQUEST}
-      {$DEFINE PCRE_LINKONREQUEST}
+      {$IFNDEF PCRE_RTL}
+        {$DEFINE PCRE_LINKONREQUEST}
+      {$ENDIF ~PCRE_RTL}
     {$ENDIF ~PCRE_LINKONREQUEST}
   {$ENDIF ~PCRE_LINKDLL}
 {$ENDIF ~PCRE_STATICLINK}
 
 {$IFNDEF PCRE_STATICLINK}
-  {$DEFINE PCRE_EXPORT_CDECL}
+  {$IFNDEF PCRE_RTL}
+    {$DEFINE PCRE_EXPORT_CDECL}
+  {$ENDIF ~PCRE_RTL}
 {$ENDIF ~PCRE_STATICLINK}
+
+{$IFNDEF PCRE_STATICLINK}
+  {$UNDEF PCRE_16}
+{$ENDIF ~PCRE_STATICLINK}
+
+{$IFNDEF PCRE_8}
+  {$IFNDEF PCRE_16}
+    {$DEFINE PCRE_RTL}
+    {$UNDEF PCRE_STATICLINK}
+    {$UNDEF PCRE_LINKDLL}
+    {$UNDEF PCRE_LINKONREQUEST}
+  {$ENDIF ~PCRE_16}
+{$ENDIF ~PCRE_8}
+
+{$IFDEF PCRE_8}
+  {$IFDEF PCRE_16}
+    {$IFDEF PCRE_PREFER_16}
+      {$DEFINE JCL_PCRE_16}
+    {$ELSE ~PCRE_PREFER_16}
+      {$DEFINE JCL_PCRE_8}
+    {$ENDIF ~PCRE_PREFER_16}
+  {$ELSE ~PCRE_16}
+    {$DEFINE JCL_PCRE_8}
+  {$ENDIF ~PCRE_16}
+{$ELSE ~PCRE_8}
+  {$IFDEF PCRE_16}
+    {$DEFINE JCL_PCRE_16}
+  {$ENDIF PCRE_16}
+{$ENDIF ~PCRE_8}
+
+{$IFDEF JCL_PCRE_8}
+  {$DEFINE JCL_PCRE}
+{$ENDIF JCL_PCRE_8}
+
+{$IFDEF JCL_PCRE_16}
+  {$DEFINE JCL_PCRE}
+{$ENDIF JCL_PCRE_16}
 
 // BZip2 options
 {$IFDEF BZIP2_STATICLINK}
@@ -263,15 +513,22 @@ ALERT_jedi_inc_incompatible
 {$IFDEF ZLIB_STATICLINK}
   {$UNDEF ZLIB_LINKDLL}
   {$UNDEF ZLIB_LINKONREQUEST}
+  {$UNDEF ZLIB_RTL}
 {$ENDIF ZLIB_STATICLINK}
 {$IFDEF ZLIB_LINKDLL}
   {$UNDEF ZLIB_LINKONREQUEST}
+  {$UNDEF ZLIB_RTL}
 {$ENDIF ZLIB_LINKDLL}
+{$IFDEF ZLIB_LINKONREQUEST}
+  {$UNDEF ZLIB_RTL}
+{$ENDIF ZLIB_LINKONREQUEST}
 
 {$IFNDEF ZLIB_STATICLINK}
   {$IFNDEF ZLIB_LINKDLL}
     {$IFNDEF ZLIB_LINKONREQUEST}
-      {$DEFINE ZLIB_STATICLINK}
+      {$IFNDEF ZLIB_RTL}
+        {$DEFINE ZLIB_STATICLINK}
+      {$ENDIF ~ZLIB_RTL}
     {$ENDIF ~ZLIB_LINKONREQUEST}
   {$ENDIF ~ZLIB_LINKDLL}
 {$ENDIF ~ZLIB_STATICLINK}

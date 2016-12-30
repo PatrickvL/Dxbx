@@ -27,9 +27,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                        $ }
-{ Revision:      $Rev:: 3594                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -342,7 +342,7 @@ type
   end;
 
   // ancestor classes for streams with checksums and encrypted streams
-  // data are stored in sectors: each BufferSize-d buffer is followed by FBlockOverHeader bytes
+  // data are stored in sectors: each BufferSize-d buffer is followed by FSectorOverHead bytes
   // containing the checksum. In case of an encrypted stream, there is no byte
   // but sector is encrypted
 
@@ -555,6 +555,7 @@ type
   private
     FCodePage: Word;
     FEncoding: TJclStringEncoding;
+    procedure SetCodePage(Value: Word);
   protected
     function InternalGetNextChar(S: TStream; out Ch: UCS4): Boolean; override;
     function InternalGetNextBuffer(S: TStream; var Buffer: TUCS4Array; Start, Count: SizeInt): Longint; override;
@@ -563,7 +564,7 @@ type
   public
     constructor Create(AStream: TStream; AOwnsStream: Boolean = False); override;
     function SkipBOM: LongInt; override;
-    property CodePage: Word read FCodePage write FCodePage;
+    property CodePage: Word read FCodePage write SetCodePage;
     property Encoding: TJclStringEncoding read FEncoding;
   end;
 
@@ -585,9 +586,9 @@ function CompareFiles(const FileA, FileB: TFileName; BufferSize: Longint = Strea
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/common/JclStreams.pas $';
-    Revision: '$Revision: 3594 $';
-    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -597,7 +598,13 @@ const
 implementation
 
 uses
-  JclResources, JclCharsets, JclMath, JclSysUtils;
+  {$IFDEF HAS_UNITSCOPE}
+  System.Types,
+  {$ENDIF HAS_UNITSCOPE}
+  JclResources,
+  JclCharsets,
+  JclMath,
+  JclSysUtils;
 
 function StreamCopy(Source: TStream; Dest: TStream; BufferSize: Longint): Int64;
 var
@@ -1544,11 +1551,10 @@ begin
   CurrPos := Position;
   repeat
   until ReadAnsiChar = #0;
-  StrSize := Position - CurrPos - 1;
-  SetLength(Result, StrSize);
-  Position := CurrPos;
-  ReadBuffer(Result[1], StrSize * SizeOf(Result[1]));
-  Position := Position + 1;
+  StrSize := Position - CurrPos;                       // Get number of bytes
+  SetLength(Result, StrSize div SizeOf(AnsiChar) - 1); // Set number of chars without #0
+  Position := CurrPos;                                 // Seek to start read
+  ReadBuffer(Result[1], StrSize);                      // Read ansi data and #0
 end;
 
 function TJclEasyStream.ReadCWideString: WideString;
@@ -1559,11 +1565,10 @@ begin
   CurrPos := Position;
   repeat
   until ReadWideChar = #0;
-  StrSize := Position - CurrPos - 1;
-  SetLength(Result, StrSize);
-  Position := CurrPos;
-  ReadBuffer(Result[1], StrSize * SizeOf(Result[1]));
-  Position := Position + 1;
+  StrSize := Position - CurrPos;                       // Get number of bytes
+  SetLength(Result, StrSize div SizeOf(WideChar) - 1); // Set number of chars without #0
+  Position := CurrPos;                                 // Seek to start read
+  ReadBuffer(Result[1], StrSize);                      // Read wide data and #0
 end;
 
 function TJclEasyStream.ReadShortString: string;
@@ -2056,7 +2061,6 @@ end;
 function TJclSplitStream.InternalLoadVolume(Index: Integer): Boolean;
 var
   OldVolumeIndex: Integer;
-  OldVolumeMaxSize: Int64;
   OldVolumePosition: Int64;
   OldVolume: TStream;
 begin
@@ -2066,22 +2070,21 @@ begin
   begin
     // save current pointers
     OldVolumeIndex := FVolumeIndex;
-    OldVolumeMaxSize := FVolumeMaxSize;
     OldVolumePosition := FVolumePosition;
     OldVolume := FVolume;
 
     FVolumeIndex := Index;
     FVolumePosition := 0;
     FVolume := GetVolume(Index);
-    FVolumeMaxSize := GetVolumeMaxSize(Index);
     Result := Assigned(FVolume);
-    if Result then
+    if Result then begin
+      FVolumeMaxSize := GetVolumeMaxSize(Index);
       FVolume.Seek(0, soBeginning)
+    end
     else
     begin
       // restore old pointers if volume load failed
       FVolumeIndex := OldVolumeIndex;
-      FVolumeMaxSize := OldVolumeMaxSize;
       FVolumePosition := OldVolumePosition;
       FVolume := OldVolume;
     end;
@@ -2117,8 +2120,8 @@ begin
       Break;
 
     // with next volume
-    Dec(Count, Result);
-    Inc(Data, Result);
+    Dec(Count, LoopRead);
+    Inc(Data, LoopRead);
     if not InternalLoadVolume(FVolumeIndex + 1) then
       Break;
   until False;
@@ -2191,8 +2194,10 @@ begin
         RemainingOffset := RemainingOffset - FVolumeMaxSize + FVolumePosition;
         Result := Result + FVolumeMaxSize - FVolumePosition;
         FPosition := Result;
-        if not InternalLoadVolume(FVolumeIndex + 1) then
+        if not InternalLoadVolume(FVolumeIndex + 1) then begin
+          FVolumePosition := FVolumeMaxSize;
           Break;
+        end;
       end;
     end;
   until RemainingOffset = 0;
@@ -2348,6 +2353,11 @@ begin
   FStream := AStream;
   FOwnStream := AOwnsStream;
   FBufferSize := StreamDefaultBufferSize;
+
+  // Must call this method so that buffer initial values are properly set.
+  // This is most useful when AStream is not located at position zero
+  // before being used by us.
+  InvalidateBuffers;
 end;
 
 destructor TJclStringStream.Destroy;
@@ -3084,6 +3094,21 @@ begin
   else
     Result := AnsiSetNextCharToStream(S, CodePage, Ch);
   end;
+end;
+
+procedure TJclAutoStream.SetCodePage(Value: Word);
+begin
+  if Value = CP_UTF8 then
+    FEncoding := seUTF8
+  else
+  if Value = CP_UTF16LE then
+    FEncoding := seUTF16
+  else
+  if Value = CP_ACP then
+    FEncoding := seAnsi
+  else
+    FEncoding := seAuto;
+  FCodePage := Value;
 end;
 
 function TJclAutoStream.SkipBOM: LongInt;

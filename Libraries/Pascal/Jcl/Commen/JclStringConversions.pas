@@ -34,9 +34,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
-{ Revision:      $Rev:: 3594                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -113,8 +113,8 @@ function UTF8SetNextBufferToStream(S: TStream; const Buffer: TUCS4Array; var Sta
 function UTF16GetNextChar(const S: TUTF16String; var StrPos: SizeInt): UCS4; overload;
 function UTF16GetNextBuffer(const S: TUTF16String; var StrPos: SizeInt; var Buffer: TUCS4Array; var Start: SizeInt; Count: SizeInt): SizeInt; overload;
 {$IFDEF SUPPORTS_UNICODE_STRING}
-function UTF16GetNextChar(const S: UnicodeString; var StrPos: SizeInt): UCS4; overload;
-function UTF16GetNextBuffer(const S: UnicodeString; var StrPos: SizeInt; var Buffer: TUCS4Array; var Start: SizeInt; Count: SizeInt): SizeInt; overload;
+function UTF16GetNextChar(const S: WideString; var StrPos: SizeInt): UCS4; overload;
+function UTF16GetNextBuffer(const S: WideString; var StrPos: SizeInt; var Buffer: TUCS4Array; var Start: SizeInt; Count: SizeInt): SizeInt; overload;
 {$ENDIF SUPPORTS_UNICODE_STRING}
 function UTF16GetNextCharFromStream(S: TStream; out Ch: UCS4): Boolean;
 function UTF16GetNextBufferFromStream(S: TStream; var Buffer: TUCS4Array; var Start: SizeInt; Count: SizeInt): SizeInt;
@@ -125,7 +125,7 @@ function UTF16GetNextBufferFromStream(S: TStream; var Buffer: TUCS4Array; var St
 // StrPos will be decremented by the number of chars that were read
 function UTF16GetPreviousChar(const S: TUTF16String; var StrPos: SizeInt): UCS4; overload;
 {$IFDEF SUPPORTS_UNICODE_STRING}
-function UTF16GetPreviousChar(const S: UnicodeString; var StrPos: SizeInt): UCS4; overload;
+function UTF16GetPreviousChar(const S: WideString; var StrPos: SizeInt): UCS4; overload;
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
 // UTF16SkipChars = skip NbSeq UTF16 sequences starting from StrPos
@@ -135,7 +135,7 @@ function UTF16GetPreviousChar(const S: UnicodeString; var StrPos: SizeInt): UCS4
 // On return, NbChar contains the number of UTF16 sequences that were skipped
 function UTF16SkipChars(const S: TUTF16String; var StrPos: SizeInt; var NbSeq: SizeInt): Boolean; overload;
 {$IFDEF SUPPORTS_UNICODE_STRING}
-function UTF16SkipChars(const S: UnicodeString; var StrPos: SizeInt; var NbSeq: SizeInt): Boolean; overload;
+function UTF16SkipChars(const S: WideString; var StrPos: SizeInt; var NbSeq: SizeInt): Boolean; overload;
 {$ENDIF SUPPORTS_UNICODE_STRING}
 function UTF16SkipCharsFromStream(S: TStream; var NbSeq: SizeInt): Boolean;
 
@@ -149,8 +149,8 @@ function UTF16SkipCharsFromStream(S: TStream; var NbSeq: SizeInt): Boolean;
 function UTF16SetNextChar(var S: TUTF16String; var StrPos: SizeInt; Ch: UCS4): Boolean; overload;
 function UTF16SetNextBuffer(var S: TUTF16String; var StrPos: SizeInt; const Buffer: TUCS4Array; var Start: SizeInt; Count: SizeInt): SizeInt; overload;
 {$IFDEF SUPPORTS_UNICODE_STRING}
-function UTF16SetNextChar(var S: UnicodeString; var StrPos: SizeInt; Ch: UCS4): Boolean; overload;
-function UTF16SetNextBuffer(var S: UnicodeString; var StrPos: SizeInt; const Buffer: TUCS4Array; var Start: SizeInt; Count: SizeInt): SizeInt; overload;
+function UTF16SetNextChar(var S: WideString; var StrPos: SizeInt; Ch: UCS4): Boolean; overload;
+function UTF16SetNextBuffer(var S: WideString; var StrPos: SizeInt; const Buffer: TUCS4Array; var Start: SizeInt; Count: SizeInt): SizeInt; overload;
 {$ENDIF SUPPORTS_UNICODE_STRING}
 function UTF16SetNextCharToStream(S: TStream; Ch: UCS4): Boolean;
 function UTF16SetNextBufferToStream(S: TStream; const Buffer: TUCS4Array; var Start: SizeInt; Count: SizeInt): SizeInt;
@@ -283,9 +283,9 @@ function CharToUCS4(Value: Char): UCS4; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/common/JclStringConversions.pas $';
-    Revision: '$Revision: 3594 $';
-    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1835,7 +1835,7 @@ end;
 // otherwise StrPos is set to -1 on return to flag an error (invalid UTF16 sequence)
 // StrPos will be incremented by the number of chars that were read
 {$IFDEF SUPPORTS_UNICODE_STRING}
-function UTF16GetNextChar(const S: UnicodeString; var StrPos: SizeInt): UCS4;
+function UTF16GetNextChar(const S: WideString; var StrPos: SizeInt): UCS4;
 var
   StrLength: SizeInt;
   Ch: UCS4;
@@ -1879,7 +1879,7 @@ begin
   end;
 end;
 
-function UTF16GetNextBuffer(const S: UnicodeString; var StrPos: SizeInt; var Buffer: TUCS4Array; var Start: SizeInt; Count: SizeInt): SizeInt; overload;
+function UTF16GetNextBuffer(const S: WideString; var StrPos: SizeInt; var Buffer: TUCS4Array; var Start: SizeInt; Count: SizeInt): SizeInt; overload;
 var
   StrLength: SizeInt;
   Ch, ChNext: UCS4;
@@ -2054,7 +2054,7 @@ end;
 // otherwise StrPos is set to -1 on return to flag an error (invalid UTF16 sequence)
 // StrPos will be decremented by the number of chars that were read
 {$IFDEF SUPPORTS_UNICODE_STRING}
-function UTF16GetPreviousChar(const S: UnicodeString; var StrPos: SizeInt): UCS4;
+function UTF16GetPreviousChar(const S: WideString; var StrPos: SizeInt): UCS4;
 var
   StrLength: SizeInt;
   ChPrev: UCS4;
@@ -2190,7 +2190,7 @@ end;
 // StrPos will be incremented by the number of chars that were skipped
 // On return, NbSeq contains the number of UTF16 sequences that were skipped
 {$IFDEF SUPPORTS_UNICODE_STRING}
-function UTF16SkipChars(const S: UnicodeString; var StrPos: SizeInt; var NbSeq: SizeInt): Boolean;
+function UTF16SkipChars(const S: WideString; var StrPos: SizeInt; var NbSeq: SizeInt): Boolean;
 var
   StrLength, Index: SizeInt;
   Ch: UCS4;
@@ -2423,7 +2423,7 @@ begin
 end;
 
 {$IFDEF SUPPORTS_UNICODE_STRING}
-function UTF16SetNextChar(var S: UnicodeString; var StrPos: SizeInt; Ch: UCS4): Boolean;
+function UTF16SetNextChar(var S: WideString; var StrPos: SizeInt; Ch: UCS4): Boolean;
 var
   StrLength: SizeInt;
 begin
@@ -2469,7 +2469,7 @@ begin
   end;
 end;
 
-function UTF16SetNextBuffer(var S: UnicodeString; var StrPos: SizeInt; const Buffer: TUCS4Array; var Start: SizeInt; Count: SizeInt): SizeInt; overload;
+function UTF16SetNextBuffer(var S: WideString; var StrPos: SizeInt; const Buffer: TUCS4Array; var Start: SizeInt; Count: SizeInt): SizeInt; overload;
 var
   StrLength: SizeInt;
   Ch: UCS4;
@@ -3400,7 +3400,7 @@ end;
 
 function TryUCS4ToString(const S: TUCS4Array; out D: string): Boolean;
 var
-  WS: WideString;
+  WS: TUTF16String;
 begin
   Result := TryUCS4ToUTF16(S, WS);
   D := string(WS);
@@ -3786,7 +3786,7 @@ begin
   end;
 end;
 
-function GetUCS4CharAt(const WideStr: WideString; Index: SizeInt; out Value: UCS4; IsUTF16: Boolean): Boolean; overload;
+function GetUCS4CharAt(const WideStr: TUTF16String; Index: SizeInt; out Value: UCS4; IsUTF16: Boolean): Boolean; overload;
 var
   StrPos: SizeInt;
 begin

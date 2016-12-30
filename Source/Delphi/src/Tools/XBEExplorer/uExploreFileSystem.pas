@@ -106,7 +106,7 @@ begin
 end;
 
 
-function FileNodesSort(lParam1, lParam2, lParamSort: Longint): Integer; stdcall;
+function FileNodesSort(lParam1, lParam2, lParamSort: LPARAM): Integer; stdcall;
 begin
   if TTreenode(lParam1).HasChildren = TTreenode(lParam2).HasChildren then
   begin

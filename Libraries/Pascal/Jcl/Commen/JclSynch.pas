@@ -31,9 +31,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
-{ Revision:      $Rev:: 3594                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -86,8 +86,10 @@ function LockedExchangeSub(var Target: Int64; Value: Int64): Int64; overload;
 function LockedInc(var Target: Int64): Int64; overload;
 function LockedSub(var Target: Int64; Value: Int64): Int64; overload;
 
+{$IFDEF BORLAND}
 function LockedDec(var Target: NativeInt): NativeInt; overload;
 function LockedInc(var Target: NativeInt): NativeInt; overload;
+{$ENDIF BORLAND}
 {$ENDIF CPU64}
 
 // TJclDispatcherObject
@@ -343,9 +345,9 @@ function ValidateMutexName(const aName: string): string;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/common/JclSynch.pas $';
-    Revision: '$Revision: 3594 $';
-    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -729,6 +731,8 @@ asm
         ADD     RAX, RDX
 end;
 
+{$IFDEF BORLAND}
+
 function LockedDec(var Target: NativeInt): NativeInt;
 asm
         // --> RCX Target
@@ -746,6 +750,9 @@ asm
         LOCK XADD [RCX], RAX
         INC     RAX
 end;
+
+{$ENDIF BORLAND}
+
 {$ENDIF CPU64}
 
 //=== { TJclDispatcherObject } ===============================================
@@ -1068,7 +1075,7 @@ constructor TJclMutex.Create(SecAttr: PSecurityAttributes; InitialOwner: Boolean
 begin
   inherited Create;
   FName := Name;
-  FHandle := JclWin32.CreateMutex(SecAttr, Ord(InitialOwner), PChar(Name));
+  FHandle := JclWin32.CreateMutex(SecAttr, InitialOwner, PChar(Name));
   if FHandle = 0 then
     raise EJclMutexError.CreateRes(@RsSynchCreateMutex);
   FExisted := GetLastError = ERROR_ALREADY_EXISTS;

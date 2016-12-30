@@ -37,9 +37,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                        $ }
-{ Revision:      $Rev:: 3594                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -88,6 +88,24 @@ const
   HKPD = DelphiHKEY(HKEY_PERFORMANCE_DATA);
   HKCC = DelphiHKEY(HKEY_CURRENT_CONFIG);
   HKDD = DelphiHKEY(HKEY_DYN_DATA);
+{$IFDEF CPU64}
+{$NODEFINE DelphiHKEY}
+{$NODEFINE HKCR}
+{$NODEFINE HKCU}
+{$NODEFINE HKLM}
+{$NODEFINE HKUS}
+{$NODEFINE HKPD}
+{$NODEFINE HKCC}
+{$NODEFINE HKDD}
+{$HPPEMIT 'typedef HKEY DelphiHKEY;'}
+{$HPPEMIT 'static const DelphiHKEY HKCR = HKEY_CLASSES_ROOT;'}
+{$HPPEMIT 'static const DelphiHKEY HKCU = HKEY_CURRENT_USER;'}
+{$HPPEMIT 'static const DelphiHKEY HKLM = HKEY_LOCAL_MACHINE;'}
+{$HPPEMIT 'static const DelphiHKEY HKUS = HKEY_USERS;'}
+{$HPPEMIT 'static const DelphiHKEY HKPD = HKEY_PERFORMANCE_DATA;'}
+{$HPPEMIT 'static const DelphiHKEY HKCC = HKEY_CURRENT_CONFIG;'}
+{$HPPEMIT 'static const DelphiHKEY HKDD = HKEY_DYN_DATA;'}
+{$ENDIF CPU64}
 {$ENDIF FPC}
 
 function RootKeyName(const RootKey: THandle): string;
@@ -363,9 +381,9 @@ procedure RegSetWOW64AccessMode(Access: TJclRegWOW64Access);
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/windows/JclRegistry.pas $';
-    Revision: '$Revision: 3594 $';
-    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -459,12 +477,7 @@ begin
     HKDD : Result := HKDDLongName;
     {$ENDIF ~DELPHI64_TEMPORARY}
   else
-    {$IFDEF DELPHICOMPILER}
-    Result := Format('$%.8x', [RootKey]);
-    {$ENDIF DELPHICOMPILER}
-    {$IFDEF BCB}
-    Result := Format('0x%.8x', [RootKey]);
-    {$ENDIF BCB}
+    Result := Format(HexFmt, [RootKey]);
   end;
 end;
 
@@ -532,7 +545,7 @@ begin
   if Result^ = RegKeyDelimiter then
     Inc(Result);
   for I := Low(RootKeys) to High(RootKeys) do
-    if StrPos(Key, PAnsiChar(RootKeys[I].AnsiName + RegKeyDelimiter)) = Result then
+    if StrPosA(Key, PAnsiChar(RootKeys[I].AnsiName + RegKeyDelimiter)) = Result then
     begin
       if RootKey <> RootKeys[I].Key then
         raise EJclRegistryError.CreateResFmt(@RsInconsistentPath, [Key])

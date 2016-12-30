@@ -50,9 +50,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011)                         $ }
-{ Revision:      $Rev:: 3594                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -278,14 +278,25 @@ function StrSearch(const Substr, S: string; const Index: SizeInt = 1): SizeInt;
 function StrSuffixIndex(const S: string; const Suffixes: array of string): SizeInt;
 
 // String Extraction
+/// Returns the string after SubStr
 function StrAfter(const SubStr, S: string): string;
+/// Returns the String before SubStr
 function StrBefore(const SubStr, S: string): string;
+/// Splits a string at SubStr, returns true when SubStr is found, Left contains the
+/// string before the SubStr and Right the string behind SubStr
+function StrSplit(const SubStr, S: string;var Left, Right : string): boolean;
+/// Returns the string between Start and Stop
 function StrBetween(const S: string; const Start, Stop: Char): string;
-function StrChopRight(const S: string; N: SizeInt): string;
-function StrLeft(const S: string; Count: SizeInt): string;
-function StrMid(const S: string; Start, Count: SizeInt): string;
-function StrRestOf(const S: string; N: SizeInt): string;
-function StrRight(const S: string; Count: SizeInt): string;
+/// Returns all but rightmost N characters of the string
+function StrChopRight(const S: string; N: SizeInt): string;{$IFDEF SUPPORTS_INLINE} {$IFDEF COMPILER16_UP} inline; {$ENDIF} {$ENDIF}
+/// Returns the left Count characters of the string
+function StrLeft(const S: string; Count: SizeInt): string; {$IFDEF SUPPORTS_INLINE} {$IFDEF COMPILER16_UP} inline; {$ENDIF} {$ENDIF}
+/// Returns the string starting from position Start for the Count Characters
+function StrMid(const S: string; Start, Count: SizeInt): string; {$IFDEF SUPPORTS_INLINE} {$IFDEF COMPILER16_UP} inline; {$ENDIF} {$ENDIF}
+/// Returns the string starting from position N to the end
+function StrRestOf(const S: string; N: SizeInt): string;{$IFDEF SUPPORTS_INLINE} {$IFDEF COMPILER16_UP} inline; {$ENDIF} {$ENDIF}
+/// Returns the right Count characters of the string
+function StrRight(const S: string; Count: SizeInt): string;{$IFDEF SUPPORTS_INLINE} {$IFDEF COMPILER16_UP} inline; {$ENDIF} {$ENDIF}
 
 // Character Test Routines
 function CharEqualNoCase(const C1, C2: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
@@ -298,8 +309,8 @@ function CharIsDigit(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {
 function CharIsFracDigit(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 function CharIsHexDigit(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 function CharIsLower(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
-function CharIsNumberChar(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
-function CharIsNumber(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+function CharIsNumberChar(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} {$IFDEF COMPILER16_UP} inline; {$ENDIF} {$ENDIF}
+function CharIsNumber(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} {$IFDEF COMPILER16_UP} inline; {$ENDIF} {$ENDIF}
 function CharIsPrintable(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 function CharIsPunctuation(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 function CharIsReturn(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
@@ -412,8 +423,8 @@ type
 
   // The TStringBuilder class is a Delphi implementation of the .NET
   // System.Text.StringBuilder.
-  // It is zero based and the method that allow an TObject (Append, Insert,
-  // AppendFormat) are limited to IToString implementors.
+  // It is zero based and the methods that have a TObject argument (Append, Insert,
+  // AppendFormat) are limited to IToString implementors or Delphi 2009+ RTL.
   // This class is not threadsafe. Any instance of TStringBuilder should not
   // be used in different threads at the same time.
   TJclStringBuilder = class(TInterfacedObject, IToString)
@@ -469,6 +480,7 @@ type
 
     function Remove(StartIndex, Length: SizeInt): TJclStringBuilder;
     function EnsureCapacity(Capacity: SizeInt): SizeInt;
+    procedure Clear;
 
     { IToString }
     function ToString: string; {$IFDEF RTL200_UP} override; {$ENDIF RTL200_UP}
@@ -613,9 +625,9 @@ var
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net:443/svnroot/jcl/tags/JCL-2.3-Build4197/jcl/source/common/JclStrings.pas $';
-    Revision: '$Revision: 3594 $';
-    Date: '$Date: 2011-09-02 23:25:25 +0200 (ven., 02 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -641,8 +653,8 @@ uses
 
 type
   TStrRec = packed record
-    RefCount: Longint;
-    Length: Longint;
+    RefCount: Integer;
+    Length: Integer;
   end;
   PStrRec = ^TStrRec;
 
@@ -1203,7 +1215,7 @@ begin
     P := PChar(S);
     for I := 1 to L do
     begin
-      P^ := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.ToLower(P^);
+      P^ := TCharacter.ToLower(P^);
       Inc(P);
     end;
   end;
@@ -1220,7 +1232,7 @@ begin
   if S <> nil then
   begin
     repeat
-      S^ := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.ToLower(S^);
+      S^ := TCharacter.ToLower(S^);
       Inc(S);
     until S^ = #0;
   end;
@@ -1959,7 +1971,7 @@ begin
     P := PChar(S);
     for I := 1 to L do
     begin
-      P^ := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.ToUpper(P^);
+      P^ := TCharacter.ToUpper(P^);
       Inc(P);
     end;
   end;
@@ -1976,7 +1988,7 @@ begin
   if S <> nil then
   begin
     repeat
-      S^ := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.ToUpper(S^);
+      S^ := TCharacter.ToUpper(S^);
       Inc(S);
     until S^ = #0;
   end;
@@ -2715,6 +2727,23 @@ begin
     Result := StrLeft(S, P - 1);
 end;
 
+function StrSplit(const SubStr, S: string;var Left, Right : string): boolean;
+var
+  P: SizeInt;
+begin
+  P := StrFind(SubStr, S, 1);
+  Result:= p > 0;
+  if Result then
+  begin
+    Left := StrLeft(S, P - 1);
+    Right := StrRestOf(S, P + Length(SubStr));
+  end
+  else
+  begin
+    Left := '';
+    Right := '';
+  end;
+end;
 
 function StrBetween(const S: string; const Start, Stop: Char): string;
 var
@@ -2771,7 +2800,7 @@ end;
 function CharIsAlpha(const C: Char): Boolean;
 begin
   {$IFDEF UNICODE_RTL_DATABASE}
-  Result := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.IsLetter(C);
+  Result := TCharacter.IsLetter(C);
   {$ELSE ~UNICODE_RTL_DATABASE}
   Result := (StrCharTypes[C] and C1_ALPHA) <> 0;
   {$ENDIF ~UNICODE_RTL_DATABASE}
@@ -2780,7 +2809,7 @@ end;
 function CharIsAlphaNum(const C: Char): Boolean;
 begin
   {$IFDEF UNICODE_RTL_DATABASE}
-  Result := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.IsLetterOrDigit(C);
+  Result := TCharacter.IsLetterOrDigit(C);
   {$ELSE ~UNICODE_RTL_DATABASE}
   Result := ((StrCharTypes[C] and C1_ALPHA) <> 0) or ((StrCharTypes[C] and C1_DIGIT) <> 0);
   {$ENDIF ~UNICODE_RTL_DATABASE}
@@ -2799,7 +2828,7 @@ end;
 function CharIsControl(const C: Char): Boolean;
 begin
   {$IFDEF UNICODE_RTL_DATABASE}
-  Result := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.IsControl(C);
+  Result := TCharacter.IsControl(C);
   {$ELSE ~UNICODE_RTL_DATABASE}
   Result := (StrCharTypes[C] and C1_CNTRL) <> 0;
   {$ENDIF ~UNICODE_RTL_DATABASE}
@@ -2813,7 +2842,7 @@ end;
 function CharIsDigit(const C: Char): Boolean;
 begin
   {$IFDEF UNICODE_RTL_DATABASE}
-  Result := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.IsDigit(C);
+  Result := TCharacter.IsDigit(C);
   {$ELSE ~UNICODE_RTL_DATABASE}
   Result := (StrCharTypes[C] and C1_DIGIT) <> 0;
   {$ENDIF ~UNICODE_RTL_DATABASE}
@@ -2838,7 +2867,7 @@ end;
 function CharIsLower(const C: Char): Boolean;
 begin
   {$IFDEF UNICODE_RTL_DATABASE}
-  Result := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.IsLower(C);
+  Result := TCharacter.IsLower(C);
   {$ELSE ~UNICODE_RTL_DATABASE}
   Result := (StrCharTypes[C] and C1_LOWER) <> 0;
   {$ENDIF ~UNICODE_RTL_DATABASE}
@@ -2862,7 +2891,7 @@ end;
 function CharIsPunctuation(const C: Char): Boolean;
 begin
   {$IFDEF UNICODE_RTL_DATABASE}
-  Result := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.IsPunctuation(C);
+  Result := TCharacter.IsPunctuation(C);
   {$ELSE ~UNICODE_RTL_DATABASE}
   Result := ((StrCharTypes[C] and C1_PUNCT) <> 0);
   {$ENDIF ~UNICODE_RTL_DATABASE}
@@ -2876,7 +2905,7 @@ end;
 function CharIsSpace(const C: Char): Boolean;
 begin
   {$IFDEF UNICODE_RTL_DATABASE}
-  Result := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.IsWhiteSpace(C);
+  Result := TCharacter.IsWhiteSpace(C);
   {$ELSE ~UNICODE_RTL_DATABASE}
   Result := (StrCharTypes[C] and C1_SPACE) <> 0;
   {$ENDIF ~UNICODE_RTL_DATABASE}
@@ -2885,7 +2914,7 @@ end;
 function CharIsUpper(const C: Char): Boolean;
 begin
   {$IFDEF UNICODE_RTL_DATABASE}
-  Result := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.IsUpper(C);
+  Result := TCharacter.IsUpper(C);
   {$ELSE ~UNICODE_RTL_DATABASE}
   Result := (StrCharTypes[C] and C1_UPPER) <> 0;
   {$ENDIF ~UNICODE_RTL_DATABASE}
@@ -3035,7 +3064,7 @@ end;
 function CharLower(const C: Char): Char;
 begin
   {$IFDEF UNICODE_RTL_DATABASE}
-  Result := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.ToLower(C);
+  Result := TCharacter.ToLower(C);
   {$ELSE ~UNICODE_RTL_DATABASE}
   Result := StrCaseMap[Ord(C) + StrLoOffset];
   {$ENDIF ~UNICODE_RTL_DATABASE}
@@ -3058,7 +3087,7 @@ end;
 function CharUpper(const C: Char): Char;
 begin
   {$IFDEF UNICODE_RTL_DATABASE}
-  Result := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Character.ToUpper(C);
+  Result := TCharacter.ToUpper(C);
   {$ELSE ~UNICODE_RTL_DATABASE}
   Result := StrCaseMap[Ord(C) + StrUpOffset];
   {$ENDIF ~UNICODE_RTL_DATABASE}
@@ -3299,8 +3328,8 @@ begin
       Delete(S, 1, I + L - 1);
       I := Pos(Sep, S);
     end;
-    if S <> '' then
-      List.Add(S);  // Ignore empty strings at the end.
+    if (S <> '') or AllowEmptyString then
+      List.Add(S);  // Ignore empty strings at the end (only if AllowEmptyString = False).
   finally
     List.EndUpdate;
   end;
@@ -3329,8 +3358,8 @@ begin
       Delete(LowerCaseStr, 1, I + L - 1);
       I := Pos(Sep, LowerCaseStr);
     end;
-    if S <> '' then
-      List.Add(S);  // Ignore empty strings at the end.
+    if (S <> '') or AllowEmptyString then
+      List.Add(S);  // Ignore empty strings at the end (only if AllowEmptyString = False).
   finally
     List.EndUpdate;
   end;
@@ -3954,10 +3983,15 @@ var
           Dec(TInterfacedObjectAccess(V.VObject).FRefCount);
         end
         else
-        if InheritsFrom(V.VObject.ClassType, 'TComponent') and V.VObject.GetInterface(IToString, Intf) then
+        if ((V.VObject is TComponent) or (V.VObject is TInterfacedPersistent)) and V.VObject.GetInterface(IToString, Intf) then
           Result := Intf.ToString
+        {$IFDEF RTL200_UP}
         else
-          raise ArgumentNullException.CreateResFmt(@RsDotNetFormatArgumentNotSupported, [Index]);
+          Result := V.VObject.ToString;
+        {$ELSE}
+        else
+          raise ArgumentNullException.CreateResFmt(@RsDotNetFormatObjectArgumentNotSupported, [V.VObject.ClassName, Index]);
+        {$ENDIF RTL200_UP}
       vtClass:
         Result := V.VClass.ClassName;
       vtWideChar:
@@ -4079,8 +4113,7 @@ begin
   Append(Value);
 end;
 
-constructor TJclStringBuilder.Create(const Value: string; StartIndex,
-  Length, Capacity: SizeInt);
+constructor TJclStringBuilder.Create(const Value: string; StartIndex, Length, Capacity: SizeInt);
 begin
   Create(Capacity);
   Append(Value, StartIndex + 1, Length);
@@ -4099,6 +4132,11 @@ begin
   if System.Length(FChars) < Capacity then
     SetCapacity(Capacity);
   Result := System.Length(FChars);
+end;
+
+procedure TJclStringBuilder.Clear;
+begin
+  Length := 0;
 end;
 
 procedure TJclStringBuilder.SetCapacity(const Value: SizeInt);
@@ -4353,7 +4391,7 @@ end;
 
 function TJclStringBuilder.Insert(Index: SizeInt; Obj: TObject): TJclStringBuilder;
 begin
-  Result := Insert(Index, Format('{0}', [Obj]));
+  Result := Insert(Index, DotNetFormat('{0}', [Obj]));
 end;
 
 function TJclStringBuilder.Remove(StartIndex, Length: SizeInt): TJclStringBuilder;
