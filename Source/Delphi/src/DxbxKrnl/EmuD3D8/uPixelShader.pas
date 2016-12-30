@@ -1182,7 +1182,7 @@ begin
   if Type_ = PARAM_VALUE then
   begin
     Result := Format('%f', [GetConstValue]);
-    if Pos(DecimalSeparator, Result) > 0 then
+    if Pos(FormatSettings.DecimalSeparator, Result) > 0 then
       Result := Result + 'f';
 
     Exit;

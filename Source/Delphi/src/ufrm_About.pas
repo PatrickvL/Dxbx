@@ -23,7 +23,7 @@ interface
 
 uses
   // Delphi
-  Types, SysUtils, Classes, Controls, ExtCtrls, Forms, Graphics, jpeg,
+  Types, SysUtils, Classes, Controls, ExtCtrls, Forms, Graphics, Vcl.Imaging.jpeg,
   // Dxbx
   uConsts,
   uDxbxUtils;

@@ -55,6 +55,9 @@
 
 {$ENDIF}
 
+{$UNDEF USE_SVN} // Define when this repository is hosted on subversion
+{$DEFINE USE_GITHUB} // Define when this repository is hosted on github
+
 {.$DEFINE DXBX_RECTYPE} // Include RecType info in PatternTrie
 {.$DEFINE DXBX_TRIE_COMPRESS_STRINGS} // Apply prefix reduction to string stored in the Trie
 {.$DEFINE DXBX_TRACE_MEMLEAKS} // Enable memleak-tracing (FastMM4 needed)
@@ -175,6 +178,10 @@
   {$WARN UNSAFE_TYPE OFF}
   {$WARN UNSAFE_CODE OFF}
   {$WARN UNSAFE_CAST OFF}
+{$ENDIF}
+
+{$IFDEF SUPPORTS_POINTERMATH}
+  {$POINTERMATH ON}
 {$ENDIF}
 
 {$IFDEF COMPILER12_UP} // TODO : Use SUPPORTS_WEAKLINKRTTI once jedi.inc offers this

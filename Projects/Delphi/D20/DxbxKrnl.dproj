@@ -48,7 +48,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <Debugger_HostApplication>..\..\bin\Dxbx.exe</Debugger_HostApplication>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_UnitSearchPath>..\..\..\Libraries\Pascal\GlScene</DCC_UnitSearchPath>
@@ -121,7 +121,6 @@
             </Delphi.Personality>
             <ModelSupport>False</ModelSupport>
             <Platforms>
-                <Platform value="OSX32">False</Platform>
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">False</Platform>
             </Platforms>
@@ -132,10 +131,6 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <RcCompile Include="..\..\..\Resources\SvnRevision.rc">
-            <ContainerId>RC</ContainerId>
-            <Form>SvnRevision.res</Form>
-        </RcCompile>
         <DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uConvert.pas"/>
         <DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uMiniport.pas"/>
         <DCCReference Include="..\..\..\Source\Delphi\src\DxbxKrnl\EmuD3D8\uNV2A.pas"/>

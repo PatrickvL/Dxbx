@@ -32,8 +32,9 @@ library DxbxKrnl;
 
 
 
-
+{$IFDEF USE_SVN}
 {$R 'SvnRevision.res' '..\..\..\Resources\SvnRevision.rc'}
+{$ENDIF}
 
 uses
   Windows,

@@ -89,11 +89,11 @@ var
 procedure PrepareXBoxMemoryMap;
 var
   ExeNtHeader: PImageNtHeaders32;
-  ExeOptionalHeader: PImageOptionalHeader;
+  ExeOptionalHeader: PImageOptionalHeader32;
   ExeHeaderSize: DWord;
 
   NewNtHeader: PImageNtHeaders32;
-  NewOptionalHeader: PImageOptionalHeader;
+  NewOptionalHeader: PImageOptionalHeader32;
 
   ExeSectionHeader: PImageSectionHeader;
   NewSectionHeader: PImageSectionHeader;
@@ -182,7 +182,7 @@ end;
 
 procedure DxbxKrnlSetup();
 begin
-  DecimalSeparator := '.'; // Dxbx addition, to log floats with dots
+  FormatSettings.DecimalSeparator := '.'; // Dxbx addition, to log floats with dots
   CreateLogs(KernelDebugMode, string(KernelDebugFileName)); // Initialize logging interface
   WriteLog('Dxbx was started using the commandline:');
   WriteLog(CommandLine);

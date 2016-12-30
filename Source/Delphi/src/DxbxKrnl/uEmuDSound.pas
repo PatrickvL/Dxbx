@@ -1677,7 +1677,7 @@ begin
       _(pdwSpeakerConfig, 'pdwSpeakerConfig').
     LogEnd();
 
-  Result := IDirectSound(g_pDSound8).GetSpeakerConfig({out}pdwSpeakerConfig^);
+  Result := IDirectSound(g_pDSound8).GetSpeakerConfig({out}DWORD(pdwSpeakerConfig^));
 
   // Convert return value from native to Xbox :
   if Result = DS_OK then
@@ -3420,7 +3420,7 @@ begin
 
   if (Self <> nil) and (Self.EmuDirectSoundBuffer8 <> nil) then
   begin
-    hRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).GetStatus({out}pdwStatus^);
+    hRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).GetStatus({out}DWORD(pdwStatus^));
   end
   else
   begin

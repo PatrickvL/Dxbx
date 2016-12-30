@@ -3224,7 +3224,7 @@ begin
 {$IFDEF DXBX_USE_D3D9}
   Result := g_pD3DDevice.CreateStateBlock(Type_, PIDirect3DStateBlock9(pToken));
 {$ELSE}
-  Result := g_pD3DDevice.CreateStateBlock(Type_, {out}pToken^);
+  Result := g_pD3DDevice.CreateStateBlock(Type_, {out}DWord(pToken^));
 {$ENDIF}
 
   if (FAILED(Result)) then
@@ -3348,7 +3348,7 @@ begin
 {$IFDEF DXBX_USE_D3D9}
   Result := g_pD3DDevice.EndStateBlock(PIDirect3DStateBlock(pToken));
 {$ELSE}
-  Result := g_pD3DDevice.EndStateBlock({out}pToken^);
+  Result := g_pD3DDevice.EndStateBlock({out}DWord(pToken^));
 {$ENDIF}
 
   EmuSwapFS(fsXbox);
@@ -5386,7 +5386,7 @@ begin
     if DxbxTextureStageStateInfo[Type_VersionIndependent].X then
       PValue^ := XTL_EmuD3DDeferredTextureState[Stage, Ord(Type_)]
     else
-      IDirect3DDevice_GetTextureStageState(g_pD3DDevice, Stage, Type_VersionIndependent, {out}pValue^);
+      IDirect3DDevice_GetTextureStageState(g_pD3DDevice, Stage, Type_VersionIndependent, {out}DWORD(pValue^));
   end;
 
   Result := D3D_OK;
@@ -5596,7 +5596,7 @@ begin
     if DxbxRenderStateInfo[State_VersionIndependent].PC = D3DRS_UNSUPPORTED then // Xbox extensions have no PC state
       PValue^ := XTL_EmuMappedD3DRenderState[State_VersionIndependent]^
     else
-      g_pD3DDevice.GetRenderState(DxbxRenderStateInfo[State_VersionIndependent].PC, {out}PValue^);
+      g_pD3DDevice.GetRenderState(DxbxRenderStateInfo[State_VersionIndependent].PC, {out}DWord(PValue^));
   end;
 
   Result := S_OK;

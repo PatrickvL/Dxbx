@@ -54,7 +54,7 @@
         <DCC_DependencyCheckOutputName>..\..\..\Source\Delphi\Bin\Dxbx.exe</DCC_DependencyCheckOutputName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -152,10 +152,6 @@
         <RcCompile Include="..\..\..\Resources\DxbxResources.rc">
             <ContainerId>RC</ContainerId>
             <Form>DxbxResources.res</Form>
-        </RcCompile>
-        <RcCompile Include="..\..\..\Resources\SvnRevision.rc">
-            <ContainerId>RC</ContainerId>
-            <Form>SvnRevision.res</Form>
         </RcCompile>
         <DCCReference Include="..\..\..\Source\Delphi\src\uEmuShared.pas"/>
         <DCCReference Include="..\..\..\Source\Delphi\src\uError.pas"/>

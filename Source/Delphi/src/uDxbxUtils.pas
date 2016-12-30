@@ -24,7 +24,7 @@ uses
   Windows,
   SysUtils,
   Classes,
-  Graphics,
+  Vcl.Graphics,
   ShlObj, // SHGetSpecialFolderPath
   // Jedi
   JwaWinType,

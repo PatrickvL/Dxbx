@@ -25,7 +25,7 @@ uses
   // Delphi
   Windows, SysUtils, StrUtils, Classes, Messages, Controls, StdCtrls, ComCtrls, ExtCtrls,
   Types, GraphUtil,
-  Grids, Menus, ActnList, Forms, Dialogs, Graphics, jpeg,
+  Grids, Menus, ActnList, Forms, Dialogs, Graphics, Vcl.Imaging.jpeg,
   ShellAPI, IniFiles, ShlObj,
   xmldom, XMLIntf, msxmldom, XMLDoc,
   // Jedi Win32API
@@ -46,7 +46,7 @@ uses
   uData,
   ufrm_Configuration,
   uImportGames,
-  ufrm_About;
+  ufrm_About, System.Actions;
 
 const
   clXboxGreen = $22CC88;//22BB77;//27BB73;//00DE97;//0DB366;//0FB869;

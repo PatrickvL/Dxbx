@@ -26,7 +26,7 @@ uses
   Windows, // ERROR_SUCCESS
   SysUtils, // CompareStr, FreeAndNil
   Classes, // TList
-  Forms, // Application
+  Vcl.Forms, // Application
   Contnrs, // TObjectList
   Math, // Min
   // Dxbx

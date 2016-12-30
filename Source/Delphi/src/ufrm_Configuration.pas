@@ -24,7 +24,7 @@ interface
 uses
   // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComCtrls, ExtCtrls, jpeg, IniFiles
+  Dialogs, StdCtrls, ComCtrls, ExtCtrls, Vcl.Imaging.jpeg, IniFiles
   // DirectX
   , DirectDraw
   , DirectSound
@@ -35,7 +35,7 @@ uses
   , uXBController
   , uXbVideo
   , uXBSound
-  , uEmuShared, ImgList, Menus, ActnList
+  , uEmuShared, ImgList, Menus, ActnList, System.Actions
   ;
 
 // The Xbox controller image is borrowed from http://halo.wikia.com/wiki/Halo_Controls

@@ -1021,7 +1021,7 @@ begin
       _(lpExitCode, 'lpExitCode').
     LogEnd();
 
-  Result := BOOL(GetExitCodeThread(hThread, {var}lpExitCode^));
+  Result := BOOL(GetExitCodeThread(hThread, {var}DWORD(lpExitCode^)));
 
   EmuSwapFS(fsXbox);
 end;
@@ -1322,7 +1322,7 @@ begin
       _(bWait, 'bWait').
     LogEnd();
 
-  Result := BOOL(GetOverlappedResult(hFile, lpOverlapped^, {var}lpNumberOfBytesTransferred^, JwaWinType.BOOL(bWait)));
+  Result := BOOL(GetOverlappedResult(hFile, lpOverlapped^, {var}DWORD(lpNumberOfBytesTransferred^), JwaWinType.BOOL(bWait)));
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuXapi : EmuGetOverlappedResult lpNumberOfBytesTransferred^ = 0x%.08X', [lpNumberOfBytesTransferred^]);
