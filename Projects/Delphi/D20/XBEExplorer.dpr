@@ -76,6 +76,7 @@ var
   Url: string;
 
 begin
+{ TODO : Get this working under XE6 again :
   // Check for internet connection by getting ip from dns
   If IAddrToHostName('www.google.com') <> '' then
   begin
@@ -95,7 +96,7 @@ begin
        end;
      end;
   end;
-
+}
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TFormXBEExplorer, FormXBEExplorer);

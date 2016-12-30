@@ -124,6 +124,7 @@ var
   OnlineVersionString: string;
   Url: string;
 begin
+{ TODO : Get this working under XE6 again :
   // Check for internet connection by getting ip from dns
   If IAddrToHostName('www.google.com') <> '' then
   begin
@@ -146,7 +147,7 @@ begin
        end;
      end;
   end;
-
+}
   XBEFilePath := ParamStr(2);
 
   if (ParamStr(2) = '/SymbolScanOnly') and  (ParamStr(3) <> '') then

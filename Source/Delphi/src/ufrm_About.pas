@@ -89,7 +89,9 @@ procedure Tfrm_About.FormCreate(Sender: TObject);
 var
   JPEGImage: TJPEGImage;
 begin
-  Caption := 'Dxbx version ' + _DXBX_VERSION + ' (svn revision ' + IntToStr(SvnRevision) + ')';
+  Caption := 'Dxbx version ' + _DXBX_VERSION
+{$IFDEF USE_SVN} + ' (svn revision ' + IntToStr(SvnRevision) + ')' {$ENDIF}
+  ;
 
   JPEGImage := GetJPEGResource('About');
   Self.Width := JPEGImage.Width;

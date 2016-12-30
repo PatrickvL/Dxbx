@@ -315,6 +315,7 @@ begin
   if Result > 0 then
     Exit;
 
+{$IFDEF USE_SVN}
   ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'SvnRevision', RT_RCDATA);
   try
     VerPtr := PAnsiChar(ResourceStream.Memory);
@@ -340,6 +341,7 @@ begin
     FreeAndNil(ResourceStream);
     Result := _SvnRevision;
   end;
+{$ENDIF}
 end;
 
 {$STACKFRAMES OFF}

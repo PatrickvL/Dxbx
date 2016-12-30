@@ -656,7 +656,9 @@ begin
   SetLogMode(aDebugMode);
 
   WriteLog('Started logging at ' + DateTimeToStr(Now));
-  WriteLog('Dxbx version ' + _DXBX_VERSION + ' (svn revision ' + IntToStr(SvnRevision) + ')');
+  WriteLog('Dxbx version ' + _DXBX_VERSION
+{$IFDEF USE_SVN} + ' (svn revision ' + IntToStr(SvnRevision) + ')' {$ENDIF}
+  );
 end; // CreateLogs
 
 procedure CloseLogs;

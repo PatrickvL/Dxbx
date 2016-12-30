@@ -463,10 +463,11 @@ begin
   else
 {$ENDIF}
 {$IFDEF DXBX_USE_D3D}
-  begin
     g_pD3DDevice.SetRenderState(PCRenderState, {PCValue=}Result);
 {$ENDIF}
+{$IFDEF DXBX_USE_D3D9}
   end;
+{$ENDIF}
 end; // Dxbx_SetRenderState
 
 var

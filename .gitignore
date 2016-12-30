@@ -8,3 +8,5 @@
 *.dcu
 *.drc
 *.dll
+Source/Delphi/Bin/Dxbx.Ini
+Source/Delphi/Bin/Tools/translationchecker.Ini
