@@ -422,10 +422,10 @@ var
     {367}@xboxkrnl_UnknownAPI367,
     {368}@xboxkrnl_UnknownAPI368,
     {369}@xboxkrnl_UnknownAPI369,
-    {370}@xboxkrnl_UnknownAPI370,
-    {371}@xboxkrnl_UnknownAPI371,
-    {372}@xboxkrnl_UnknownAPI372,
-    {373}@xboxkrnl_UnknownAPI373,
+    {370}@xboxkrnl_UnknownAPI370, // XProfpControl
+    {371}@xboxkrnl_UnknownAPI371, // XProfpGetData
+    {372}@xboxkrnl_UnknownAPI372, // IrtClientInitFast
+    {373}@xboxkrnl_UnknownAPI373, // IrtSweep
     {374}@xboxkrnl_MmDbgAllocateMemory,
     {375}@xboxkrnl_MmDbgFreeMemory, // Returns number of pages released.
     {376}@xboxkrnl_MmDbgQueryAvailablePages,

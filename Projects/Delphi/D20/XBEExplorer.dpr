@@ -98,6 +98,7 @@ begin
   end;
 }
   Application.Initialize;
+  Application.Title := 'XBEExplorer';
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TFormXBEExplorer, FormXBEExplorer);
   Application.CreateForm(TfrmExploreFileSystem, frmExploreFileSystem);
