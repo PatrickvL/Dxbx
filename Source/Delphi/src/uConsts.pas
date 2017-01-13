@@ -65,8 +65,6 @@ const
 
   // XOR keys
 
-  XOR_MAX_VIRTUAL_ADDRESS = $01000000;
-  
   XOR_EP_DEBUG = $94859D4B; // Entry Point (Debug)
   XOR_EP_RETAIL = $A8FC57AB; // Entry Point (Retail)
   XOR_KT_DEBUG = $EFB1F152; // Kernel Thunk (Debug)

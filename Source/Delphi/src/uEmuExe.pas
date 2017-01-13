@@ -175,9 +175,7 @@ end;
 // Decode entry point address :
 function GetEntryPoint(const aXbeHeader: PXbeHeader): UIntPtr;
 begin
-  Result := aXbeHeader.dwEntryAddr xor XOR_EP_RETAIL;
-  if Result > XOR_MAX_VIRTUAL_ADDRESS then
-    Result := aXbeHeader.dwEntryAddr xor XOR_EP_DEBUG;
+  Result := aXbeHeader.dwEntryAddr xor XOR_EP_KEY[GetXbeType(aXbeHeader)];
 end;
 
 procedure DxbxKrnlSetup();
@@ -302,11 +300,7 @@ begin
   end;
 
   // Decode kernel thunk table address :
-  begin
-    kt := XbeHeader.dwKernelImageThunkAddr xor XOR_KT_RETAIL;
-    if kt > XOR_MAX_VIRTUAL_ADDRESS then
-      kt := XbeHeader.dwKernelImageThunkAddr xor XOR_KT_DEBUG;
-  end;
+  kt := XbeHeader.dwKernelImageThunkAddr xor XOR_KT_KEY[GetXbeType(XbeHeader)];
 
   // Process the Kernel thunk table to map Kernel function calls to their actual address :
   begin

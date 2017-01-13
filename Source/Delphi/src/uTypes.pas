@@ -27,9 +27,9 @@ interface
 
 uses
   // Delphi
-  Windows,
+  Windows, // DWORD
   MMSystem, // SEEK_SET
-  SysUtils,
+  SysUtils, // CharInSet, StrCopy, StrLCopy, StrLen
   // Jedi Win32API
   JwaWinType;
 

@@ -307,9 +307,11 @@ var
   _SvnRevision: Integer = 0;
 
 function SvnRevision: Integer;
+{$IFDEF USE_SVN}
 var
   ResourceStream: TResourceStream;
   VerPtr: PAnsiChar;
+{$ENDIF}
 begin
   Result := _SvnRevision;
   if Result > 0 then

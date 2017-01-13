@@ -37,7 +37,7 @@ uses
 
 {$R *.res}
 
-function IAddrToHostName(const IP: string): string;
+function IAddrToHostName(const IP: AnsiString): string;
 var
   i: Integer;
   p: PHostEnt;
@@ -47,7 +47,7 @@ begin
   if i <> u_long(INADDR_NONE) then
   begin
     p := GetHostByAddr(@i, SizeOf(Integer), PF_INET);
-    if p <> nil then Result := p^.h_name;
+    if p <> nil then Result := string(AnsiString(p^.h_name));
   end
   else
     Result := 'Invalid IP address';
@@ -68,12 +68,12 @@ begin
   end;
 end;
 
-var
-  MyVersion: Integer;
-  MyVersionString: string;
-  OnlineVersion: Integer;
-  OnlineVersionString: string;
-  Url: string;
+//var
+//  MyVersion: Integer;
+//  MyVersionString: string;
+//  OnlineVersion: Integer;
+//  OnlineVersionString: string;
+//  Url: string;
 
 begin
 { TODO : Get this working under XE6 again :

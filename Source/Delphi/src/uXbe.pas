@@ -31,6 +31,7 @@ uses
   Controls,
   Dialogs, // for MessageDlg
   Graphics, // for TBitmap
+  UITypes, // prevents H2443 Inline function 'MessageDlg' has not been expanded
   // Dxbx
   XbeHeaders,
   uConsts,
@@ -41,10 +42,17 @@ uses
   uEmuD3D8Types, // X_D3DBaseTexture
   uFileSystem; // Drives
 
+type
+  TXbeType = (xtRetail, xtDebug, xtChihiro);
+
 const
+  // Entry point address XOR keys per Xbe type (Retail, Debug or Chihiro) :
+  XOR_EP_KEY: array [TXbeType] of DWORD = (XOR_EP_RETAIL, XOR_EP_DEBUG, XOR_ENTRY_POINT_CHIHIRO);
+  // Kernel thunk address XOR keys per Xbe type (Retail, Debug or Chihiro) :
+  XOR_KT_KEY: array [TXbeType] of DWORD = (XOR_KT_RETAIL, XOR_KT_DEBUG, XOR_KERNEL_THUNK_CHIHIRO);
+
   PE_HEADER_ALIGNMENT = $1000; // - Actually, there's no such thing; JclDebug calls this 'ModuleCodeOffset'
   _MagicNumber = 'XBEH'; // Xbe File Format
-
 
   // TODO -oDxbx : Remove most dependancies on this TXbe type in OpenXbe and it's callers.
   // Instead, start accessesing Xbe's (and other resources) via Drives.D.FileSystem,
@@ -114,6 +122,9 @@ procedure XbeLoaded;
 function GetReadableTitle(const pCertificate: PXBE_CERTIFICATE): string;
 function GameRegionToString(const aGameRegion: Cardinal): string;
 function GameDisplayFrequency(const aGameRegion: Cardinal): int;
+function XbeHeaderInitFlagsToString(const Flag: DWORD): string;
+function GetXbeType(const aXbeHeader: PXbeHeader): TXbeType;
+function XbeTypeToString(const aXbeType: TXbeType): string;
 
 procedure AddSymbolToList(const aStringList: TStringList; const Address: Pointer; MangledName: string);
 procedure LoadSymbolsFromCache(const aStringList: TStringList; const aCacheFile: string);
@@ -256,6 +267,45 @@ begin
     else
       Result := 'REGION ' + IntToStr(aGameRegion);
   end;
+end;
+
+function XbeHeaderInitFlagsToString(const Flag: DWORD): string;
+begin
+  Result := '';
+  if (Flag and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
+    Result := Result + '[Mount Utility Drive] ';
+
+  if (Flag and XBE_INIT_FLAG_FormatUtilityDrive) > 0 then
+    Result := Result + '[Format Utility Drive] ';
+
+  if (Flag and XBE_INIT_FLAG_Limit64MB) > 0 then
+    Result := Result + '[Limit Devkit Run Time Memory to 64MB] ';
+
+  if (Flag and XBE_INIT_FLAG_DontSetupHarddisk) > 0 then
+    Result := Result + '[Setup Harddisk] ';
+end;
+
+function GetXbeType(const aXbeHeader: PXbeHeader): TXbeType;
+begin
+  // Detect if the XBE is for Chihiro (Untested!) :
+  // This is based on https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L45
+  if (aXbeHeader.dwEntryAddr and $f0000000) = $40000000 then
+    Result := xtChihiro
+  else
+    // Check for Debug XBE, using high bit of the kernel thunk address :
+    // (DO NOT test like https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L49 !)
+    if (aXbeHeader.dwKernelImageThunkAddr and $80000000) > 0 then
+      Result := xtDebug
+    else
+      // Otherwise, the XBE is a Retail build :
+      Result := xtRetail;
+end;
+
+function XbeTypeToString(const aXbeType: TXbeType): string;
+const
+  XbeTypeString: array [TXbeType] of string = ('Retail', 'Debug', 'Chihiro');
+begin
+  Result := XbeTypeString[aXbeType];
 end;
 
 { TXbe }
@@ -645,24 +695,7 @@ begin
   _LogEx(DxbxFormat('Certificate Address              : 0x%.8x', [m_Header.dwCertificateAddr]));
   _LogEx(DxbxFormat('Number of Sections               : 0x%.8x', [m_Header.dwSections]));
   _LogEx(DxbxFormat('Section Headers Address          : 0x%.8x', [m_header.dwSectionHeadersAddr]));
-
-  // Print init flags
-  TmpStr := DxbxFormat('Init Flags                       : 0x%.8x ', [m_Header.dwInitFlags]);
-  Flag := m_Header.dwInitFlags;
-
-  if (Flag and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
-    TmpStr := TmpStr + '[Mount Utility Drive] ';
-
-  if (Flag and XBE_INIT_FLAG_FormatUtilityDrive) > 0 then
-    TmpStr := TmpStr + '[Format Utility Drive] ';
-
-  if (Flag and XBE_INIT_FLAG_Limit64MB) > 0 then
-    TmpStr := TmpStr + '[Limit Devkit Run Time Memory to 64MB] ';
-
-  if (Flag and XBE_INIT_FLAG_DontSetupHarddisk) > 0 then
-    TmpStr := TmpStr + '[Setup Harddisk] ';
-
-  _LogEx(TmpStr);
+  _LogEx(DxbxFormat('Init Flags                       : 0x%.8x ', [m_Header.dwInitFlags]) + XbeHeaderInitFlagsToString(m_Header.dwInitFlags));
 
   lIndex := GetAddr(m_Header.dwDebugUnicodeFileNameAddr);
   lIndex2 := 0;
