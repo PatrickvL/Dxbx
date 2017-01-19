@@ -18,6 +18,9 @@
         <Projects Include="d20\XBEExplorer.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="D20\PatternMerger.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -71,14 +74,23 @@
     <Target Name="XBEExplorer:Make">
         <MSBuild Projects="d20\XBEExplorer.dproj" Targets="Make"/>
     </Target>
+    <Target Name="PatternMerger">
+        <MSBuild Projects="D20\PatternMerger.dproj"/>
+    </Target>
+    <Target Name="PatternMerger:Clean">
+        <MSBuild Projects="D20\PatternMerger.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="PatternMerger:Make">
+        <MSBuild Projects="D20\PatternMerger.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="TranslationChecker;PatternTrieBuilder;DxbxKrnl;Dxbx;XBEExplorer"/>
+        <CallTarget Targets="TranslationChecker;PatternTrieBuilder;DxbxKrnl;Dxbx;XBEExplorer;PatternMerger"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="TranslationChecker:Clean;PatternTrieBuilder:Clean;DxbxKrnl:Clean;Dxbx:Clean;XBEExplorer:Clean"/>
+        <CallTarget Targets="TranslationChecker:Clean;PatternTrieBuilder:Clean;DxbxKrnl:Clean;Dxbx:Clean;XBEExplorer:Clean;PatternMerger:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="TranslationChecker:Make;PatternTrieBuilder:Make;DxbxKrnl:Make;Dxbx:Make;XBEExplorer:Make"/>
+        <CallTarget Targets="TranslationChecker:Make;PatternTrieBuilder:Make;DxbxKrnl:Make;Dxbx:Make;XBEExplorer:Make;PatternMerger:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
