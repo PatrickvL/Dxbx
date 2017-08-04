@@ -120,6 +120,7 @@ function OpenXbe(aFileName: string; var aXbe: TXbe{; var aExeFileName, aXbeFileN
 
 procedure XbeLoaded;
 function GetReadableTitle(const pCertificate: PXBE_CERTIFICATE): string;
+function AllowedMediaToString(const aAllowedMedia: Cardinal): string;
 function GameRegionToString(const aGameRegion: Cardinal): string;
 function GameDisplayFrequency(const aGameRegion: Cardinal): int;
 function XbeHeaderInitFlagsToString(const Flag: DWORD): string;
@@ -237,6 +238,58 @@ begin
   Result := 60;
   if (aGameRegion and XBEIMAGE_GAME_REGION_ALL) = XBEIMAGE_GAME_REGION_RESTOFWORLD then
     Result := 50;
+end;
+
+function AllowedMediaToString(const aAllowedMedia: Cardinal): string;
+begin
+  Result := '';
+  if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_MEDIA_MASK) > 0 then
+  begin
+    if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_HARD_DISK) > 0 then
+      Result := Result + ' HARD_DISK';
+
+    if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_DVD_X2) > 0 then
+      Result := Result + ' DVD_X2';
+
+    if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_DVD_CD) > 0 then
+      Result := Result + ' DVD_CD';
+
+    if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_CD) > 0 then
+      Result := Result + ' CD';
+
+    if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_DVD_5_RO) > 0 then
+      Result := Result + ' DVD_5_RO';
+
+    if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_DVD_9_RO) > 0 then
+      Result := Result + ' DVD_9_RO';
+
+    if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_DVD_5_RW) > 0 then
+      Result := Result + ' DVD_5_RW';
+
+    if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_DVD_9_RW) > 0 then
+      Result := Result + ' DVD_9_RW';
+
+    if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_DONGLE) > 0 then
+      Result := Result + ' DONGLE';
+
+    if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_MEDIA_BOARD) > 0 then
+      Result := Result + ' BOARD';
+
+    if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_MEDIA_MASK) >= (XBEIMAGE_MEDIA_TYPE_MEDIA_BOARD * 2) then
+      Result := Result + ' UNKNOWN '; // IntToStr(aAllowedMedia)
+
+    Result := 'MEDIA_TYPE:' + StringReplace(Trim(Result), ' ', '+', [rfReplaceAll]);
+  end;
+
+  if (aAllowedMedia and (not XBEIMAGE_MEDIA_TYPE_MEDIA_MASK)) > 0 then
+  begin
+    Result := Result + ' NONSECURE:';
+    if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_NONSECURE_HARD_DISK) > 0 then
+      Result := Result + 'HARD_DISK';
+
+    if (aAllowedMedia and XBEIMAGE_MEDIA_TYPE_NONSECURE_MODE) > 0 then
+      Result := Result + ' MODE';
+  end;
 end;
 
 function GameRegionToString(const aGameRegion: Cardinal): string;
@@ -748,7 +801,7 @@ begin
   for lIndex := 1 to 15 do
     _LogEx(DxbxFormat('                                   0x%.8x', [m_Certificate.dwAlternateTitleId[lIndex]]));
 
-  _LogEx(DxbxFormat('Allowed Media                    : 0x%.8x', [m_Certificate.dwAllowedMedia]));
+  _LogEx(DxbxFormat('Allowed Media                    : 0x%.8x (%s)', [m_Certificate.dwAllowedMedia, AllowedMediaToString(m_Certificate.dwAllowedMedia)]));
   _LogEx(DxbxFormat('Game Region                      : 0x%.8x (%s)', [m_Certificate.dwGameRegion, GameRegionToString(m_Certificate.dwGameRegion)]));
   _LogEx(DxbxFormat('Game Ratings                     : 0x%.8x', [m_Certificate.dwGameRatings]));
   _LogEx(DxbxFormat('Disk Number                      : 0x%.8x', [m_Certificate.dwDiskNumber]));
