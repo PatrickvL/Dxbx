@@ -118,11 +118,11 @@ procedure DxbxMain(const aData: Pointer; const aSize: Cardinal); stdcall; extern
 var
   XBEFilePath: string;
   DummyStr: string;
-  MyVersion: Integer;
-  MyVersionString: string;
-  OnlineVersion: Integer;
-  OnlineVersionString: string;
-  Url: string;
+//  MyVersion: Integer;
+//  MyVersionString: string;
+//  OnlineVersion: Integer;
+//  OnlineVersionString: string;
+//  Url: string;
 begin
 { TODO : Get this working under XE6 again :
   // Check for internet connection by getting ip from dns
