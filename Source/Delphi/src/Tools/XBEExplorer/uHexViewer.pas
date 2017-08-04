@@ -21,7 +21,7 @@ interface
 
 uses
   // Delphi
-  Windows, Classes, SysUtils, Controls, ExtCtrls, Forms, Grids, Dialogs, Menus,
+  Windows, Types, Classes, SysUtils, Controls, ExtCtrls, Forms, Grids, Dialogs, Menus,
   // Dxbx
   uTypes,
   uDxbxUtils,
@@ -30,12 +30,16 @@ uses
 type
   THexViewer = class(TPanel)
   private
-    function GetOffset: DWord;
-    procedure SetOffset(const Value: DWord);
+    function ColRowToOffset(const aCol, aRow: Integer): DWORD;
+    function RegionByOffset(const aOffset: DWord): PByte;
+    function RegionByColRow(const aCol, aRow: Integer): PByte;
+    function GetSelectionOffset: DWord;
+    procedure SetSelectionOffset(const Value: DWord);
   protected
     MyHeader: TPanel;
     MyDrawGrid: TDrawGrid;
     FRegionInfo: RRegionInfo;
+    procedure DoMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure DoDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
     procedure GotoOffsetExecute(Sender: TObject);
 
@@ -43,13 +47,32 @@ type
     procedure StringGridSelectCell(Sender: TObject; ACol, ARow: Integer;  var CanSelect: Boolean);
 
   public
-    property Offset: DWord read GetOffset write SetOffset;
+    property SelectionOffset: DWord read GetSelectionOffset write SetSelectionOffset;
     constructor Create(Owner: TComponent); override;
 
     procedure SetRegion(const aRegionInfo: RRegionInfo);
   end;
 
+  function DWordToHexString(const aValue: DWord): string;
+
 implementation
+
+function DWordToHexString(const aValue: DWord): string;
+begin
+  Result := Format('%.08x', [aValue]);
+end;
+
+procedure ChangeHint(C: TControl; const Hint: string; p: TPoint);
+var
+  OldHint: string;
+begin
+  OldHint := C.Hint;
+  if Hint <> OldHint then
+  begin
+    C.Hint := Hint;
+    Application.ActivateHint(p);
+  end;
+end;
 
 { THexViewer }
 
@@ -97,6 +120,8 @@ begin
     Options := [goRangeSelect, goDrawFocusSelected, goThumbTracking];
     OnDrawCell := DoDrawCell;
     OnSelectCell := StringGridSelectCell;
+    OnMouseMove := DoMouseMove;
+    ShowHint := True;
   end;
 
   PopupMenu := TPopupMenu.Create(Self);
@@ -113,19 +138,40 @@ var
   NewOffset: Integer;
   OffsetStr: string;
 begin
-  OffsetStr := DWord2Str(Offset);
+  OffsetStr := DWord2Str(SelectionOffset);
   OffsetStr := InputBox('Goto offset', 'Enter hexadecimal offset', OffsetStr);
   if ScanHexDWord(PChar(OffsetStr), {var}NewOffset) then
   begin
-    Offset := NewOffset;
-    if Offset = DWord(NewOffset) then
+    SelectionOffset := NewOffset;
+    if SelectionOffset = DWord(NewOffset) then
       Exit;
   end;
 
   ShowMessage('Goto failed');
 end;
 
-procedure THexViewer.SetOffset(const Value: DWord);
+function THexViewer.ColRowToOffset(const aCol, aRow: Integer): DWORD;
+begin
+  if (aCol in [1..16]) and (aRow >= 1) then
+    Result := ((aRow - 1) * 16) + aCol - 1
+  else
+    Result := High(Result); // Anything >= FRegionInfo.Size is out of range
+end;
+
+function THexViewer.RegionByOffset(const aOffset: DWord): PByte;
+begin
+  if aOffset >= FRegionInfo.Size then
+    Result := nil
+  else
+    Result := @(PAnsiChar(FRegionInfo.Buffer)[aOffset]);
+end;
+
+function THexViewer.RegionByColRow(const aCol, aRow: Integer): PByte;
+begin
+  Result := RegionByOffset(ColRowToOffset(aCol, aRow));
+end;
+
+procedure THexViewer.SetSelectionOffset(const Value: DWord);
 var
   GridRect: TGridRect;
 begin
@@ -140,15 +186,26 @@ begin
   end;
 end;
 
-function THexViewer.GetOffset: DWord;
+function THexViewer.GetSelectionOffset: DWord;
 var
   GridRect: TGridRect;
 begin
   GridRect := MyDrawGrid.Selection;
-  Result := ((GridRect.Top - 1) * 16) + GridRect.Left - 1
+  Result := ColRowToOffset(GridRect.Left, GridRect.Top);
 end;
 
 function THexViewer.GetTextByCell(ACol, ARow: Integer): string;
+
+  function _AsByte: string;
+  var
+    Ptr: PByte;
+  begin
+    Ptr := RegionByColRow(aCol, aRow);
+    if Ptr = nil then
+      Result := ''
+    else
+      Result := PByteToHexString(Ptr, 1);
+  end;
 
   function _Ascii(Offset, Len: Integer): string;
   var
@@ -188,14 +245,10 @@ begin
   begin
     case aCol of
       0:
-        Result := Format('%.08x', [(aRow - 1) * 16]);
+        Result := DWordToHexString((aRow - 1) * 16);
       1..16:
         begin
-          Offset := ((aRow - 1) * 16) + aCol - 1;
-          if Offset >= FRegionInfo.Size then
-            Result := ''
-          else
-            Result := PByteToHexString(@(PAnsiChar(FRegionInfo.Buffer)[Offset]), 1);
+          Result := _AsByte;
         end;
       17:
         begin
@@ -246,6 +299,27 @@ begin
   aStr := GetTextByCell(ACol, ARow);
   MyDrawGrid.Canvas.FillRect(Rect);
   MyDrawGrid.Canvas.TextOut(Rect.Left, Rect.Top, aStr);
+end;
+
+procedure THexViewer.DoMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+var
+  Cell: TGridCoord;
+  Offset: DWord;
+  HintText: string;
+begin
+  if MyDrawGrid = nil then
+    Exit;
+
+  Cell := MyDrawGrid.MouseCoord(X, Y);
+  Offset := ColRowToOffset(Cell.X, Cell.Y);
+  if Offset >= FRegionInfo.Size then
+  begin
+    Application.HideHint;
+    Exit;
+  end;
+
+  HintText := FRegionInfo.Name + '+' + DWordToHexString(Offset);
+  ChangeHint(MyDrawGrid, HintText, TControl(Sender).ClientToScreen(Point(X, Y)));
 end;
 
 end.
