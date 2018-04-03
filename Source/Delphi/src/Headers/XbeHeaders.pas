@@ -52,6 +52,9 @@ type
     dwXAPILibraryVersionAddr: DWord; // 0x016C - xapi library version address
     dwLogoBitmapAddr: DWord; // 0x0170 - logo bitmap address
     dwSizeofLogoBitmap: DWord; // 0x0174 - logo bitmap size
+    dwExtraLibraryVersionsAddr: DWord; // 0x0178
+    dwExtraLibraryVersions: DWord; // 0x017C
+    dwUnknown: DWord; // 0x0180
   end;
   XBEIMAGE_HEADER = _XBEIMAGE_HEADER;
   PXBEIMAGE_HEADER = ^XBEIMAGE_HEADER;
@@ -75,6 +78,8 @@ type
     bzLanKey: XBOX_KEY_DATA; // 0x00B0 - lan key
     bzSignatureKey: XBOX_KEY_DATA; // 0x00C0 - signature key
     bzTitleAlternateSignatureKey: array [0..XBEIMAGE_ALTERNATE_TITLE_ID_COUNT-1] of XBOX_KEY_DATA; // 0x00D0 - alternate signature keys
+    dwOriginalSizeOfCertificate: DWord;
+    dwOnlineServiceName: DWord;
   end;
   XBE_CERTIFICATE = _XBE_CERTIFICATE;
   PXBE_CERTIFICATE = ^XBE_CERTIFICATE;
@@ -133,7 +138,7 @@ type _XBE_SECTIONHEADER = packed record
     wMajorVersion: Word; // major version
     wMinorVersion: Word; // minor version
     wBuildVersion: Word; // build version
-    dwFlags: array [0..1] of Byte;
+    wFlags: Word;
            { struct Flags
             {
                 uint16 QFEVersion       : 13;      // QFE Version

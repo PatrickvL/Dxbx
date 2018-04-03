@@ -629,7 +629,7 @@ end;
 procedure TFormXBEExplorer.About1Click(Sender: TObject);
 begin
   TaskMessageDlg('About ' + Application.Title,
-    Application.Title + ' version ' + _XBE_EXPLORER_VERSION + ' '#$A9' 2011-2017, PatrickvL.  Released under GPL3.'#13#13 +
+    Application.Title + ' version ' + _XBE_EXPLORER_VERSION + ' '#$A9' 2011-2018, PatrickvL.  Released under GPL3.'#13#13 +
     Application.Title + ' is part of Dxbx - the Delphi Xbox1 emulator.'#13#13 +
     'Website : http://github.com/PatrickvL/Dxbx',
     mtInformation, [mbOK], 0);
@@ -715,14 +715,15 @@ begin
 
   Grid := TStringGrid(Sender);
   i := Grid.Row - Grid.FixedRows;
-  i := (i * SizeOf(TXbeLibraryVersion)) + MyXBE.m_Header.dwLibraryVersionsAddr - MyXBE.m_Header.dwBaseAddr;
+  i := (i * SizeOf(TXbeLibraryVersion)) + DWord(Grid.Tag) - MyXBE.m_Header.dwBaseAddr;
 
-  Grid.Cells[1, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).szName));
-  Grid.Cells[2, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).wMajorVersion));
-  Grid.Cells[3, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).wMinorVersion));
-  Grid.Cells[4, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).wBuildVersion));
-  Grid.Cells[5, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).dwFlags));
-end;
+  Grid.Cells[1, 2] := DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).szName));
+  Grid.Cells[2, 2] := DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).wMajorVersion));
+  Grid.Cells[3, 2] := DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).wMinorVersion));
+  Grid.Cells[4, 2] := DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).wBuildVersion));
+  Grid.Cells[5, 2] := DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).wFlags));
+  Grid.Cells[6, 2] := '';
+end; // LibVersionClick
 
 function SortByColumn(Item1, Item2: TListItem; Data: Integer): Integer; stdcall;
 begin
@@ -817,8 +818,6 @@ begin
   end;
 end;
 
-// LibVersionClick
-
 procedure TFormXBEExplorer.HandleGridDrawCell(Sender: TObject; aCol, aRow: Integer;
   Rect: TRect; State: TGridDrawState);
 var
@@ -830,6 +829,12 @@ begin
   and (aCol = TStringGrid(Sender).ColCount - 1)
   and (TStringGrid(Sender).Cells[aCol, 0] = 'Meaning') then
   begin
+    // RowSelect-ed text is always drawn left-aligned;
+    // Since this cannot seem to be altered, avoid drawing twice :
+    if goRowSelect in TStringGrid(Sender).Options then
+      if gdSelected in State then
+        Exit;
+
     // Redraw cell, but right-aligned :
     TStringGrid(Sender).Canvas.FillRect(Rect);
     Str := TStringGrid(Sender).Cells[aCol, aRow];
@@ -1069,6 +1074,8 @@ var
   begin
     Result := TMemo.Create(Self);
     Result.SetTextBuf(PChar(string(aIni)));
+    Result.ScrollBars := ssBoth;
+    Result.Font.Name := 'Consolas';
   end;
 
   function _Initialize_KernelThunkTable(
@@ -1084,7 +1091,7 @@ var
     Result := NewGrid(1, ['Entry', 'Thunk', 'Symbol name']);
     // TODO : Add symbol type (func/variable), column sorting ability
     NrEntries := 0;
-    KernelThunkTable := PDWORD(IntPtr(aSectionData) + aKernelThunkOffset);
+    KernelThunkTable := PDWORD(UIntPtr(aSectionData) + aKernelThunkOffset);
     while KernelThunkTable[NrEntries] <> 0 do
     begin
       KernelThunkNumber := KernelThunkTable[NrEntries] and $7FFFFFFF;
@@ -1153,6 +1160,14 @@ var
     GridAddRow(Result, ['dwXAPILibraryVersionAddr', 'Dword', _offset(PXbeHeader(nil).dwXAPILibraryVersionAddr), DWord2Str(Hdr.dwXAPILibraryVersionAddr)]);
     GridAddRow(Result, ['dwLogoBitmapAddr', 'Dword', _offset(PXbeHeader(nil).dwLogoBitmapAddr), DWord2Str(Hdr.dwLogoBitmapAddr)]);
     GridAddRow(Result, ['dwSizeofLogoBitmap', 'Dword', _offset(PXbeHeader(nil).dwSizeofLogoBitmap), DWord2Str(Hdr.dwSizeofLogoBitmap), BytesToString(Hdr.dwSizeofLogoBitmap)]);
+    if Hdr.dwSizeofImageHeader > FIELD_OFFSET(PXbeHeader(nil).dwExtraLibraryVersionsAddr) then
+      GridAddRow(Result, ['dwExtraLibraryVersionsAddr', 'Dword', _offset(PXbeHeader(nil).dwExtraLibraryVersionsAddr), DWord2Str(Hdr.dwExtraLibraryVersionsAddr)]);
+
+    if Hdr.dwSizeofImageHeader > FIELD_OFFSET(PXbeHeader(nil).dwExtraLibraryVersions) then
+      GridAddRow(Result, ['dwExtraLibraryVersions', 'Dword', _offset(PXbeHeader(nil).dwExtraLibraryVersions), DWord2Str(Hdr.dwExtraLibraryVersions)]);
+
+    if Hdr.dwSizeofImageHeader > FIELD_OFFSET(PXbeHeader(nil).dwUnknown) then
+      GridAddRow(Result, ['dwUnknown', 'Dword', _offset(PXbeHeader(nil).dwUnknown), DWord2Str(Hdr.dwUnknown)]);
 
     _AddRange(0, SizeOf(TXbeHeader), 'XBE Header');
     _AddRange(Hdr.dwCertificateAddr - Hdr.dwBaseAddr, SizeOf(TXbeCertificate), 'Certificate');
@@ -1188,6 +1203,12 @@ var
     GridAddRow(Result, ['bzSignatureKey', 'Byte[16]', _offset(PXbeCertificate(nil).bzSignatureKey, o), PByteToHexString(@Cert.bzSignatureKey[0], 16)]);
     for i := Low(Cert.bzTitleAlternateSignatureKey) to High(Cert.bzTitleAlternateSignatureKey) do
       GridAddRow(Result, ['bzTitleAlternateSignatureKey[' + IntToStr(i) + ']', 'Byte[16]', _offset(PXbeCertificate(nil).bzTitleAlternateSignatureKey[i], o), PByteToHexString(@Cert.bzTitleAlternateSignatureKey[i][0], 16)]);
+
+    if Cert.dwSize > FIELD_OFFSET(PXbeCertificate(nil).dwOriginalSizeOfCertificate) then
+      GridAddRow(Result, ['dwOriginalSizeOfCertificate', 'Dword', _offset(PXbeCertificate(nil).dwOriginalSizeOfCertificate, o), DWord2Str(Cert.dwOriginalSizeOfCertificate), BytesToString(Cert.dwOriginalSizeOfCertificate)]);
+
+    if Cert.dwSize > FIELD_OFFSET(PXbeCertificate(nil).dwOnlineServiceName) then
+      GridAddRow(Result, ['dwOnlineServiceName', 'Dword', _offset(PXbeCertificate(nil).dwOnlineServiceName, o), DWord2Str(Cert.dwOnlineServiceName), string(PCharToString(@Cert.dwOnlineServiceName, 4))]);
   end; // _Initialize_Certificate
 
   function _Initialize_SectionHeaders: TPanel;
@@ -1197,6 +1218,8 @@ var
     ItemName: string;
     Splitter: TSplitter;
     SectionViewer: TSectionViewer;
+    SharedRefCountStart: DWord;
+    SharedRefCountEnd: DWord;
   begin
     if Length(MyXBE.m_SectionHeader)  = 0 then
     begin
@@ -1217,6 +1240,8 @@ var
     GridAddRow(SectionsGrid, [' ', 'Type:', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Byte[20]']);
     GridAddRow(SectionsGrid, ['Section', 'Offset', '-Click row-']); // This is the offset-row
 
+    SharedRefCountStart := MaxInt;
+    SharedRefCountEnd := 0;
     o := MyXBE.m_Header.dwSectionHeadersAddr - MyXBE.m_Header.dwBaseAddr;
     for i := 0 to Length(MyXBE.m_SectionHeader) - 1 do
     begin
@@ -1242,7 +1267,8 @@ var
         if Assigned(MyXBE.m_bzSection[i]) then
         begin
           // Add image tab when this section seems to contain a XPR resource :
-          if PXPR_IMAGE(MyXBE.m_bzSection[i]).hdr.Header.dwMagic = XPR_MAGIC_VALUE then
+          if (PXPR_IMAGE(MyXBE.m_bzSection[i]).hdr.Header.dwMagic = XPR0_MAGIC_VALUE)
+          or (PXPR_IMAGE(MyXBE.m_bzSection[i]).hdr.Header.dwMagic = XPR1_MAGIC_VALUE) then
             _CreateNode(NodeResources, 'Image ' + ItemName,
               _Initialize_XPRSection(PXPR_IMAGE(MyXBE.m_bzSection[i])));
 
@@ -1259,6 +1285,15 @@ var
                   {aSectionData=}MyXBE.m_bzSection[i],
                   {aSectionRawAddr=}Hdr.dwRawAddr,
                   {aKernelThunkOffset=}KernelThunkAddress - Hdr.dwVirtualAddr));
+
+          // Determine start and end addresses of the shared refcount words :
+          if Hdr.dwHeadSharedRefCountAddr > 0 then
+            if SharedRefCountStart > Hdr.dwHeadSharedRefCountAddr then
+              SharedRefCountStart := Hdr.dwHeadSharedRefCountAddr;
+
+          if Hdr.dwTailSharedRefCountAddr > 0 then
+            if SharedRefCountEnd < Hdr.dwTailSharedRefCountAddr then
+              SharedRefCountEnd := Hdr.dwTailSharedRefCountAddr;
         end;
 
         _AddRange(o, SizeOf(TXbeSectionHeader), 'SectionHeader ' + ItemName);
@@ -1270,6 +1305,9 @@ var
 
       Inc(o, SizeOf(TXbeSectionHeader));
     end;
+
+    if SharedRefCountStart < SharedRefCountEnd then
+      _AddRange(SharedRefCountStart - MyXBE.m_Header.dwBaseAddr, SharedRefCountEnd + SizeOf(Word) - SharedRefCountStart, 'SectionSharedRefCounts');
 
     // Resize SectionsGrid to fit into 40% of the height or less :
     ResizeGrid(SectionsGrid, 0.4);
@@ -1283,24 +1321,46 @@ var
     SectionViewer.Parent := Result;
     SectionViewer.Align := alClient;
 
-    SectionsGrid.Tag := Integer(SectionViewer);
+    SectionsGrid.Tag := NativeInt(SectionViewer);
     SectionsGrid.OnClick := SectionClick;
   end; // _Initialize_SectionHeaders
 
-  function _Initialize_LibraryVersions: TStringGrid;
+  function LibraryVersionFlagsToString(const aFlags: Word): string;
+  var
+    QFEVersion: Word;
+  begin
+    QFEVersion := aFlags and ((1 shl 13) - 1); // wFlags shr 3;
+
+    Result := 'QFEVersion:' + IntToStr(QFEVersion);
+    if (aFlags and XBE_LIBRARYVERSION_FLAG_DebugBuild) > 0 then
+      Result := Result + ' Debug, '
+    else
+      Result := Result + ' Retail, ';
+
+    if (aFlags and XBE_LIBRARYVERSION_FLAG_ApprovedYes) > 0 then
+      Result := Result + 'Approved'
+    else
+      if (aFlags and XBE_LIBRARYVERSION_FLAG_ApprovedPossibly) > 0 then
+        Result := Result + 'Possibly Approved'
+      else
+        Result := Result + 'Unapproved';
+  end;
+
+  function _Initialize_LibraryVersions(const aLibraryVersion: XBE_LIBRARYVERSIONs; const dwLibraryVersionsAddr: DWord): TStringGrid;
   var
     o: DWord;
     i: Integer;
     LibVer: PXbeLibraryVersion;
     ItemName: string;
   begin
-    if Length(MyXBE.m_LibraryVersion) = 0 then
+    if Length(aLibraryVersion) = 0 then
     begin
       Result := nil;
       Exit;
     end;
 
-    Result := NewGrid(1, ['Member:', 'szName', 'wMajorVersion', 'wMinorVersion', 'wBuildVersion', 'dwFlags']);
+    Result := NewGrid(1, ['Member:', 'szName', 'wMajorVersion', 'wMinorVersion', 'wBuildVersion', 'wFlags', 'Meaning']);
+    Result.Tag := NativeInt(dwLibraryVersionsAddr);
     Result.RowCount := 4;
     Result.Options := Result.Options + [goRowSelect];
     Result.FixedRows := 3;
@@ -1308,10 +1368,10 @@ var
     GridAddRow(Result, ['Type:', 'Char[8]', 'Word', 'Word', 'Word', 'Byte[2]']);
     GridAddRow(Result, ['Offset', '-Click row-']); // This is the offset-row
 
-    o := MyXBE.m_Header.dwLibraryVersionsAddr - MyXBE.m_Header.dwBaseAddr;
-    for i := 0 to Length(MyXBE.m_LibraryVersion) - 1 do
+    o := DWord(Result.Tag) - MyXBE.m_Header.dwBaseAddr;
+    for i := 0 to Length(aLibraryVersion) - 1 do
     begin
-      LibVer := @(MyXBE.m_LibraryVersion[i]);
+      LibVer := @(aLibraryVersion[i]);
       ItemName := string(PCharToString(PAnsiChar(@LibVer.szName[0]), 8));
       GridAddRow(Result, [
         DWord2Str(o),
@@ -1319,7 +1379,8 @@ var
         DWord2Str(LibVer.wMajorVersion),
         DWord2Str(LibVer.wMinorVersion),
         IntToStr(LibVer.wBuildVersion),
-        PByteToHexString(@LibVer.dwFlags[0], 2)
+        PByteToHexString(@LibVer.wFlags, 2),
+        LibraryVersionFlagsToString(LibVer.wFlags)
         ]);
 
       _AddRange(o, SizeOf(TXbeLibraryVersion), 'LibraryVersion ' + ItemName);
@@ -1439,7 +1500,8 @@ begin // OpenFile
 
   _CreateNode(NodeXBEHeader, 'Certificate', _Initialize_Certificate);
   _CreateNode(NodeXBEHeader, 'Section Headers', _Initialize_SectionHeaders); // Also adds various resource nodes
-  _CreateNode(NodeXBEHeader, 'Library Versions', _Initialize_LibraryVersions);
+  _CreateNode(NodeXBEHeader, 'Library Versions', _Initialize_LibraryVersions(MyXBE.m_LibraryVersion, MyXBE.m_Header.dwLibraryVersionsAddr));
+  _CreateNode(NodeXBEHeader, 'Extra Library Versions', _Initialize_LibraryVersions(MyXBE.m_ExtraLibraryVersion, MyXBE.m_Header.dwExtraLibraryVersionsAddr));
   _CreateNode(NodeXBEHeader, 'TLS', _Initialize_TLS);
 
   _CreateNode(Node0, 'Contents', _Initialize_HexViewer);

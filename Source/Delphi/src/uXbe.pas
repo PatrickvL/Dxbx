@@ -61,6 +61,8 @@ const
   // setup... but even if this happens, we could still use the FileSystem abstraction
   // but bypass it for the special cases (which means we can only do this on MappedFolders)
 type
+  XBE_LIBRARYVERSIONs = array of XBE_LIBRARYVERSION;
+
   TXbe = class(TObject)
   private
     MyFile: TMemoryStream;
@@ -75,7 +77,8 @@ type
     m_Header: XBEIMAGE_HEADER;
     m_HeaderEx: array of Byte;
     m_KernelLibraryVersion: XBE_LIBRARYVERSION;
-    m_LibraryVersion: array of XBE_LIBRARYVERSION;
+    m_LibraryVersion: XBE_LIBRARYVERSIONs;
+    m_ExtraLibraryVersion: XBE_LIBRARYVERSIONs;
     m_SectionHeader: array of XBE_SECTIONHEADER;
     m_szSectionName: array of array of AnsiChar; // TODO -oDXBX: Use XBE_SECTIONNAME_MAXLENGTH
     m_TLS: PXBE_TLS;
@@ -372,6 +375,7 @@ begin
   SetLength(m_SectionHeader, 0);
   SetLength(m_szSectionName, 0);
   SetLength(m_LibraryVersion, 0);
+  SetLength(m_ExtraLibraryVersion, 0);
   FreeMem({var}m_TLS);
   SetLength(m_bzSection, 0);
 end; // TXbe.ConstructorInit
@@ -535,25 +539,47 @@ begin
 
       WriteLog(DxbxFormat('DXBX: Reading Library Version 0x%.4x... OK', [lIndex]));
     end; // for LIndex
+  end;
 
-    // read xbe kernel library version
-    WriteLog('DXBX: Reading Kernel Library Version...');
-    if m_Header.dwKernelLibraryVersionAddr = 0 then
-      MessageDlg('Could not locate kernel library version', mtError, [mbOk], 0);
-
+  // read xbe kernel library version
+  WriteLog('DXBX: Reading Kernel Library Version...');
+  if m_Header.dwKernelLibraryVersionAddr = 0 then
+    MessageDlg('Could not locate kernel library version', mtError, [mbOk], 0)
+  else
+  begin
     i := m_Header.dwKernelLibraryVersionAddr - m_Header.dwBaseAddr;
     CopyMemory({Dest=}@m_KernelLibraryVersion, {Source=}@(RawData[i]), SizeOf(XBE_LIBRARYVERSION));
     WriteLog(DxbxFormat('DXBX: Kernel Library Version = %d... OK', [m_KernelLibraryVersion.wBuildVersion]));
+  end;
 
-    // read xbe xapi library version
-    WriteLog('DXBX: Reading Xapi Library Version...');
-    if m_Header.dwXAPILibraryVersionAddr = 0 then
-      MessageDlg('Could not locate Xapi Library Version', mtError, [mbOk], 0);
-
+  // read xbe xapi library version
+  WriteLog('DXBX: Reading Xapi Library Version...');
+  if m_Header.dwXAPILibraryVersionAddr = 0 then
+    MessageDlg('Could not locate Xapi Library Version', mtError, [mbOk], 0)
+  else
+  begin
     i := m_Header.dwXAPILibraryVersionAddr - m_Header.dwBaseAddr;
     CopyMemory({Dest=}@m_XAPILibraryVersion, {Source=}@(RawData[i]), SizeOf(XBE_LIBRARYVERSION));
     WriteLog(DxbxFormat('DXBX: XAPI Library Version = %d... OK', [m_XAPILibraryVersion.wBuildVersion]));
   end;
+
+  // Does the header contain extra library versions?
+  if m_Header.dwSizeofImageHeader > FIELD_OFFSET(PXbeHeader(nil).dwExtraLibraryVersions) then
+    // Read xbe extra library versions
+    if m_Header.dwExtraLibraryVersionsAddr <> 0 then
+    begin
+      WriteLog('DXBX: Reading Extra Library Versions...');
+
+      i := m_Header.dwExtraLibraryVersionsAddr - m_Header.dwBaseAddr;
+      SetLength(m_ExtraLibraryVersion, m_Header.dwExtraLibraryVersions);
+      for lIndex := 0 to m_Header.dwExtraLibraryVersions - 1 do
+      begin
+        CopyMemory(@(m_ExtraLibraryVersion[lIndex]), @(RawData[i]), SizeOf(m_ExtraLibraryVersion[lIndex]));
+        Inc(i, SizeOf(m_ExtraLibraryVersion[lIndex]));
+
+        WriteLog(DxbxFormat('DXBX: Reading Extra Library Version 0x%.4x... OK', [lIndex]));
+      end; // for LIndex
+    end;
 
   // read Xbe sections
   begin
@@ -687,7 +713,7 @@ var
   lIndex, lIndex2: Integer;
   TmpStr: string;
   StrAsciiFileName: string;
-  Flag: Byte;
+  Flag: Word;
 //  BIndex: Byte;
   QVersion: Word;
 
@@ -919,10 +945,9 @@ begin
 
       //Some bit maths the QVersion Flag is only 13 bits long so i convert the 13 bits to a number
 
-      QVersion := m_LibraryVersion[lIndex].dwFlags[0]
-              + ((m_LibraryVersion[lIndex].dwFlags[1] and 31) shl 8);
+      QVersion := m_LibraryVersion[lIndex].wFlags and ((1 shl 13) - 1);
 
-      Flag := m_LibraryVersion[lIndex].dwFlags[1] and (not 31);
+      Flag := m_LibraryVersion[lIndex].wFlags;
 
       TmpStr := DxbxFormat('Flags                            : QFEVersion : 0x%.4x, ', [QVersion]);
 
@@ -1209,7 +1234,8 @@ begin
   Result := False;
 
   // Check if it's an XPR (Xbox Packed Resources) :
-  if XprImage.hdr.Header.dwMagic = XPR_MAGIC_VALUE then
+  if (XprImage.hdr.Header.dwMagic = XPR0_MAGIC_VALUE)
+  or (XprImage.hdr.Header.dwMagic = XPR1_MAGIC_VALUE) then
   begin
     // Determine image dimensions :
     Width := 1 shl ((XprImage.hdr.Texture.Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
@@ -1218,32 +1244,34 @@ begin
     // Prepare easy access to the bitmap data :
     aBitmap.SetSize(Width, Height);
     if (XprImage.hdr.Header.dwTotalSize - XprImage.hdr.Header.dwHeaderSize)/Width/Height = 2 then
-      begin // 16 bit per pixel textures
-        aBitmap.PixelFormat := pf16bit;
-        Scanlines16.Initialize(aBitmap);
+    begin // 16 bit per pixel textures
+      aBitmap.PixelFormat := pf16bit;
+      Scanlines16.Initialize(aBitmap);
 
-        // Read the texture into the 16bit bitmap :
-        Result := ReadD3D16bitTextureFormatIntoBitmap(
-          {Format=}(XprImage.hdr.Texture.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT,
-          {Data=}PBytes(@(XprImage.pBits[0])),
-          {DataSize=}XprImage.hdr.Header.dwTotalSize - XprImage.hdr.Header.dwHeaderSize,
-          {Output=}@Scanlines16);
-      end else
-      begin // 32 bit per pixel textures
-        aBitmap.PixelFormat := pf32bit;
-        Scanlines32.Initialize(aBitmap);
+      // Read the texture into the 16bit bitmap :
+      Result := ReadD3D16bitTextureFormatIntoBitmap(
+        {Format=}(XprImage.hdr.Texture.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT,
+        {Data=}PBytes(@(XprImage.pBits[0])),
+        {DataSize=}XprImage.hdr.Header.dwTotalSize - XprImage.hdr.Header.dwHeaderSize,
+        {Output=}@Scanlines16);
+    end
+    else
+    begin // 32 bit per pixel textures
+      aBitmap.PixelFormat := pf32bit;
+      Scanlines32.Initialize(aBitmap);
 
-        // Read the texture into the 32bit bitmap :
-        Result := ReadD3DTextureFormatIntoBitmap(
-          {Format=}(XprImage.hdr.Texture.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT,
-          {Data=}PBytes(@(XprImage.pBits[0])),
-          {DataSize=}XprImage.hdr.Header.dwTotalSize - XprImage.hdr.Header.dwHeaderSize,
-          {Output=}@Scanlines32);
-      end;
+      // Read the texture into the 32bit bitmap :
+      Result := ReadD3DTextureFormatIntoBitmap(
+        {Format=}(XprImage.hdr.Texture.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT,
+        {Data=}PBytes(@(XprImage.pBits[0])),
+        {DataSize=}XprImage.hdr.Header.dwTotalSize - XprImage.hdr.Header.dwHeaderSize,
+        {Output=}@Scanlines32);
+    end;
+
     Exit;
   end;
 
-// TODO -oDXBX: Check for 'DDS' format, and read that too, perhaps using these resources :
+// TODO -oDXBX: Check for 'DDS ' format, and read that too, perhaps using these resources :
 // http://www.imageconverterplus.com/help-center/about-icp/supported-formats/dds/
 // http://archive.netbsd.se/view_attachment.php?id=2463254.32112
 //      if StrLPas(PAnsiChar(@XprImage.hdr.Header.dwMagic), 3) = 'DDS' then

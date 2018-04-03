@@ -294,7 +294,7 @@ var
   f: THandle;
 begin
   Result := nil;
-  f := THandle(FileOpen(MountPoint + '\' + aFilePath, fmOpenRead));
+  f := THandle(FileOpen(MountPoint + '\' + aFilePath, fmOpenRead or fmShareDenyWrite));
   if f = THandle(-1) then
   begin
     // Handle GetLastError
