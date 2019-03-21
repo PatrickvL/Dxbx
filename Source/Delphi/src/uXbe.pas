@@ -126,6 +126,7 @@ procedure XbeLoaded;
 function GetReadableTitle(const pCertificate: PXBE_CERTIFICATE): string;
 function AllowedMediaToString(const aAllowedMedia: Cardinal): string;
 function GameRegionToString(const aGameRegion: Cardinal): string;
+function GameRatingToString(const aGameRating: Cardinal): string;
 function GameDisplayFrequency(const aGameRegion: Cardinal): int;
 function XbeHeaderInitFlagsToString(const Flag: DWORD): string;
 function GetXbeType(const aXbeHeader: PXbeHeader): TXbeType;
@@ -324,6 +325,25 @@ begin
     else
       Result := 'REGION ' + IntToStr(aGameRegion);
   end;
+end;
+
+function GameRatingToString(const aGameRating: Cardinal): string;
+const
+  GameRatingStrings: array [0..6] of string = (
+    // Info from: http://xboxdevwiki.net/EEPROM
+    '(RP) Rating Pending',
+    '(AO) Adults Only',
+    '(M) Mature',
+    '(T) Teen',
+    '(E) Everyone',
+    '(K-A) Kids to Adults',
+    '(EC) Early Childhood'
+  );
+begin
+  if aGameRating < Length(GameRatingStrings) then
+    Result := GameRatingStrings[aGameRating]
+  else
+    Result := 'ERROR: Unknown rating';
 end;
 
 function XbeHeaderInitFlagsToString(const Flag: DWORD): string;
@@ -849,7 +869,7 @@ begin
 
   _LogEx(DxbxFormat('Allowed Media                    : 0x%.8x (%s)', [m_Certificate.dwAllowedMedia, AllowedMediaToString(m_Certificate.dwAllowedMedia)]));
   _LogEx(DxbxFormat('Game Region                      : 0x%.8x (%s)', [m_Certificate.dwGameRegion, GameRegionToString(m_Certificate.dwGameRegion)]));
-  _LogEx(DxbxFormat('Game Ratings                     : 0x%.8x', [m_Certificate.dwGameRatings]));
+  _LogEx(DxbxFormat('Game Ratings                     : 0x%.8x (%s)', [m_Certificate.dwGameRatings, GameRatingToString(m_Certificate.dwGameRatings)]));
   _LogEx(DxbxFormat('Disk Number                      : 0x%.8x', [m_Certificate.dwDiskNumber]));
   _LogEx(DxbxFormat('Version                          : 0x%.8x', [m_Certificate.dwVersion]));
 
