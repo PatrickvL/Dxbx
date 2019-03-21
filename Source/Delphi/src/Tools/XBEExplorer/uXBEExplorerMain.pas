@@ -1190,10 +1190,10 @@ var
     Result := NewGrid(3, ['Member', 'Type', 'Offset', 'Value', 'Meaning']);
     GridAddRow(Result, ['dwSize', 'Dword', _offset(PXbeCertificate(nil).dwSize, o), DWord2Str(Cert.dwSize), BytesToString(Cert.dwSize)]);
     GridAddRow(Result, ['dwTimeDate', 'Dword', _offset(PXbeCertificate(nil).dwTimeDate, o), DWord2Str(Cert.dwTimeDate), BetterTime(Cert.dwTimeDate)]);
-    GridAddRow(Result, ['dwTitleId', 'Dword', _offset(PXbeCertificate(nil).dwTitleId, o), DWord2Str(Cert.dwTitleId)]);
+    GridAddRow(Result, ['dwTitleId', 'Dword', _offset(PXbeCertificate(nil).dwTitleId, o), DWord2Str(Cert.dwTitleId), TitleIDToString(Cert.dwTitleId)]);
     GridAddRow(Result, ['wszTitleName', 'WChar[40]', _offset(PXbeCertificate(nil).wszTitleName, o), PWideCharToString(@Cert.wszTitleName[0], 40)]);
     for i := Low(Cert.dwAlternateTitleId) to High(Cert.dwAlternateTitleId) do
-      GridAddRow(Result, ['dwAlternateTitleId[' + IntToStr(i) + ']', 'Dword', _offset(PXbeCertificate(nil).dwAlternateTitleId[i], o), DWord2Str(Cert.dwAlternateTitleId[i])]);
+      GridAddRow(Result, ['dwAlternateTitleId[' + IntToStr(i) + ']', 'Dword', _offset(PXbeCertificate(nil).dwAlternateTitleId[i], o), DWord2Str(Cert.dwAlternateTitleId[i]), TitleIDToString(Cert.dwAlternateTitleId[i])]);
     GridAddRow(Result, ['dwAllowedMedia', 'Dword', _offset(PXbeCertificate(nil).dwAllowedMedia, o), DWord2Str(Cert.dwAllowedMedia), AllowedMediaToString(Cert.dwAllowedMedia)]);
     GridAddRow(Result, ['dwGameRegion', 'Dword', _offset(PXbeCertificate(nil).dwGameRegion, o), DWord2Str(Cert.dwGameRegion), GameRegionToString(Cert.dwGameRegion)]);
     GridAddRow(Result, ['dwGameRatings', 'Dword', _offset(PXbeCertificate(nil).dwGameRatings, o), DWord2Str(Cert.dwGameRatings)]);

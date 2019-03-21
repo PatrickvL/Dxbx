@@ -118,6 +118,7 @@ var
 function GetDWordVal(aBuffer: MathPtr; i: Integer): DWord;
 
 function BetterTime(x_timeDate: uint32): string;
+function TitleIDToString(TitleID: DWord): string;
 
 function OpenXbe(aFileName: string; var aXbe: TXbe{; var aExeFileName, aXbeFileName: string}): Boolean;
 
@@ -707,6 +708,25 @@ begin
   DateTimeToString(Result, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(x_timeDate));
 end;
 
+function TitleIDToString(TitleID: DWord): string;
+var
+  Char1: AnsiChar;
+  Char2: AnsiChar;
+begin
+  Result := '';
+  Char1 := AnsiChar(TitleID shr 24);
+  Char2 := AnsiChar(TitleID shr 16);
+	// If the Title ID prefix is a printable character, parse it
+	// This shows the correct game serial number for retail titles!
+	// EG: MS-001 for 1st tile published by MS, EA-002 for 2nd title by EA, etc
+	// Some special Xbes (Dashboard, XDK Samples) use non-alphanumeric serials
+	// We fall back to Hex for those
+	// ergo720: we cannot use isalnum() here because it will treat chars in the range -1 - 255 as valid ascii chars which can
+	// lead to unicode characters being printed in the title (e.g.: dashboard uses 0xFE and 0xFF)
+  if (Char1 in ['A'..'Z']) and (Char2 in ['A'..'Z']) then
+    Result := Format('%s%s-%.3d', [Char1, Char2, TitleID and $FFFF]);
+end;
+
 function TXbe.DumpInformation(FileName: string): Boolean;
 var
   FileEx: TextFile;
@@ -819,13 +839,13 @@ begin
 
   _LogEx(DxbxFormat('Size of Certificate              : 0x%.8x', [m_Certificate.dwSize]));
   _LogEx(DxbxFormat('TimeDate Stamp                   : 0x%.8x (%s)', [m_Certificate.dwTimeDate, BetterTime(m_Certificate.dwTimeDate)]));
-  _LogEx(DxbxFormat('Title ID                         : 0x%.8x', [m_Certificate.dwTitleId]));
+  _LogEx(DxbxFormat('Title ID                         : 0x%.8x (%s)', [m_Certificate.dwTitleId, TitleIDToString(m_Certificate.dwTitleId)]));
   _LogEx(DxbxFormat('Title                            : "%s"', [m_szAsciiTitle]));
 
   // print alternate titles
-  _LogEx(DxbxFormat('Alternate Titles IDs             : 0x%.8x', [m_Certificate.dwAlternateTitleId[0]]));
+  _LogEx(DxbxFormat('Alternate Titles IDs             : 0x%.8x (%s)', [m_Certificate.dwAlternateTitleId[0], TitleIDToString(m_Certificate.dwAlternateTitleId[0])]));
   for lIndex := 1 to 15 do
-    _LogEx(DxbxFormat('                                   0x%.8x', [m_Certificate.dwAlternateTitleId[lIndex]]));
+    _LogEx(DxbxFormat('                                   0x%.8x (%s)', [m_Certificate.dwAlternateTitleId[lIndex], TitleIDToString(m_Certificate.dwAlternateTitleId[lIndex])]));
 
   _LogEx(DxbxFormat('Allowed Media                    : 0x%.8x (%s)', [m_Certificate.dwAllowedMedia, AllowedMediaToString(m_Certificate.dwAllowedMedia)]));
   _LogEx(DxbxFormat('Game Region                      : 0x%.8x (%s)', [m_Certificate.dwGameRegion, GameRegionToString(m_Certificate.dwGameRegion)]));

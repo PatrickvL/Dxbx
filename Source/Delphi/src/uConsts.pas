@@ -154,18 +154,18 @@ const
   DxbxDefaultXbeVolumeLetter = 'C'; // For now, assume 'C' is the default volume for an Xbe
 
   // TitleIDs - you can find these at http://www.xbox-games.org/ :
-  TITLEID_Azurik = $4D530007;
-  TITLEID_CrazyTaxi = $53450004;
-  TITLEID_DeadToRights_NTSC = $4E4D0005;
-  TITLEID_DeadToRights_PAL = $4541002C;
-  TITLEID_Halo = $4D530004;
-  TITLEID_Halo2 = $4D530064;
-  TITLEID_PetitCopter = $41510001;
-  TITLEID_SmashingDrive = $4E4D0001;
-  TITLEID_TurokNTSC = $41430004;
-  TITLEID_UnrealChampionship = $49470024;
-  TITLEID_UnrealChampionship2 = $4D570021;
-  TITLEID_UnrealII = $4947003C;
+  TITLEID_Azurik = $4D530007; // MS-007
+  TITLEID_CrazyTaxi = $53450004; // SE-004
+  TITLEID_DeadToRights_NTSC = $4E4D0005; // NM-005
+  TITLEID_DeadToRights_PAL = $4541002C; // EA-044
+  TITLEID_Halo = $4D530004; // MS-004
+  TITLEID_Halo2 = $4D530064; // MS-100
+  TITLEID_PetitCopter = $41510001; // AQ-001
+  TITLEID_SmashingDrive = $4E4D0001; // NM-001
+  TITLEID_TurokNTSC = $41430004; // AC-004
+  TITLEID_UnrealChampionship = $49470024; // IG-036
+  TITLEID_UnrealChampionship2 = $4D570021; // MW-033
+  TITLEID_UnrealII = $4947003C; // IG-060
 
   // Aliases, used in code
   TITLEID_DeadToRights = TITLEID_DeadToRights_NTSC; // Caustic/Blueshogun probably used the NTSC version
